@@ -1,0 +1,15 @@
+version: '3.6'
+services:
+  ia-grafana:
+    environment:
+      GF_SERVER_PROTOCOL: https
+    entrypoint: ["/bin/sh", "-c", "/entrypoint.sh"]
+    volumes:
+      - ./grafana/entrypoint.sh:/entrypoint.sh
+      - ./grafana/dashboards/datasources_prod.yml:/etc/grafana/provisioning/datasources/datasources.yml
+  ia-telegraf:
+    environment:
+      TELEGRAF_CONFIG_PATH: /etc/telegraf/Telegraf.conf
+  ia-influxdb:
+    environment:
+      INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb.conf"

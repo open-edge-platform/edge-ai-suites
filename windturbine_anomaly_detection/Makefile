@@ -2,14 +2,11 @@
 
 DOCKER_COMPOSE_FILE = ./docker-compose.yml
 DOCKER_COMPOSE_SECURE_MODE_FILE = ./docker-compose-secure-mode.override.yml
-DOCKER_COMPOSE_WINDTURBINE = ./docker-compose-windturbine.override.yml
 DOCKER_COMPOSE = docker compose
 
-STACK_PATH = $(PWD)/../../stack
-
 # Define the path to the .env file
-ENV_FILE = $(STACK_PATH)/.env
-CERT_SCRIPT = ./../tools/cert_gen.sh
+ENV_FILE = ./.env
+CERT_SCRIPT = ./../../tools/cert_gen.sh
 
 include $(ENV_FILE)
 export $(shell sed 's/=.*//' $(ENV_FILE))
@@ -22,29 +19,27 @@ all: build up
 .PHONY: build
 build:
 	@echo "Building Docker containers..."
-	cd $(STACK_PATH); \
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(PWD)/$(DOCKER_COMPOSE_WINDTURBINE) build
+	$(DOCKER_COMPOSE) build
 
 # Run Docker containers
 .PHONY: up
 up:
 	@if [ $(SECURE_MODE) = 'false' ]; then \
 		echo "Starting Docker containers..."; \
-		$(DOCKER_COMPOSE) -f $(STACK_PATH)/$(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_WINDTURBINE) up -d --scale ia-mqtt-publisher=0; \
+		$(DOCKER_COMPOSE) up -d ;\
 	else \
-		cd $(STACK_PATH); \
 		echo "Generating Certificates"; \
 		$(CERT_SCRIPT); \
 		echo "Certificates generated"; \
 		echo "Starting Docker containers..."; \
-		$(DOCKER_COMPOSE) -f $(STACK_PATH)/$(DOCKER_COMPOSE_FILE) -f $(STACK_PATH)/$(DOCKER_COMPOSE_SECURE_MODE_FILE) -f $(PWD)/$(DOCKER_COMPOSE_WINDTURBINE) up -d --scale ia-mqtt-publisher=0; \
+		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) up -d; \
 	fi
 
 # Stop Docker containers
 .PHONY: down
 down:
 	@echo "Stopping Docker containers..."
-	$(DOCKER_COMPOSE) -f $(STACK_PATH)/$(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_WINDTURBINE) down -v
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE)  down -v
 
 # Restart Docker containers
 .PHONY: restart
@@ -59,7 +54,7 @@ clean:
 # Push the docker images to docker registry
 push_images:
 	@echo "Pushing the images to docker registry"
-	docker compose -f $(STACK_PATH)/$(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_WINDTURBINE) push
+	docker compose -f $(DOCKER_COMPOSE_FILE) push
 
 # Help
 .PHONY: help

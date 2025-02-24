@@ -1,0 +1,214 @@
+version: '3.6'
+services:
+  ia-telegraf:
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    container_name: ia-telegraf
+    hostname: ia-telegraf
+    image: telegraf:1.33.1
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges
+    read_only: true
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    environment:
+      no_proxy: "ia-influxdb,ia-mqtt-broker,ia-opcua-server"
+      NO_PROXY: "ia-influxdb,ia-mqtt-broker,ia-opcua-server"
+      MQTT_BROKER_HOST: "ia-mqtt-broker"
+      INFLUX_SERVER: "ia-influxdb"
+      INFLUXDB_PORT: 8086
+      INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
+      INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
+      INFLUXDB_DBNAME: datain
+      TELEGRAF_CONFIG_PATH: /etc/telegraf/Telegraf_devmode.conf
+      OPCUA_SERVER: opc.tcp://ia-opcua-server:4840/freeopcua/server/
+    networks:
+    - timeseries_network
+    volumes:
+    - "./telegraf/config/:/etc/telegraf"
+    - ./Certificates/Telegraf:/run/secrets/Telegraf:ro
+    - ./telegraf/input_data:/tmp/input_data:ro
+
+  ia-influxdb:
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    image: influxdb:1.8.10
+    container_name: ia-influxdb
+    hostname: ia-influxdb
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+    - no-new-privileges
+    networks:
+    - timeseries_network
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    environment:
+      INFLUXDB_DB: datain
+      INFLUXDB_ADMIN_USER: ${INFLUXDB_ADMIN_USERNAME}
+      INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
+      INFLUXDB_USER : ${INFLUXDB_USERNAME}
+      INFLUXDB_USER_PASSWORD: ${INFLUXDB_PASSWORD}
+      no_proxy: ${timeseries_no_proxy}, ia-kapacitor
+      NO_PROXY: ${timeseries_no_proxy}, ia-kapacitor
+      INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb_devmode.conf"
+      INFLUXDB_TLS_CIPHERS: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+    volumes:
+      # Mount for influxdb data directory and configuration
+    - vol_influxdb_conf:/var/lib/influxdb:rw
+    - ./Certificates/influxdb_Server/:/run/secrets/influxdb:ro
+    - ./influxdb/config:/etc/influxdb
+  
+  ia-kapacitor:
+    build:
+      context: $PWD/../../microservices/kapacitor
+      dockerfile: $PWD/../../microservices/kapacitor/Dockerfile
+      args:
+        KAPACITOR_VERSION: 1.7.6
+        TIMESERIES_UID: ${TIMESERIES_UID}
+        TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
+        PYTHON_VERSION: "3.10"
+        no_proxy: ${timeseries_no_proxy}
+        INSTALL_SOURCES: "no"
+    container_name: ia-kapacitor
+    hostname: ia-kapacitor
+    image: ${DOCKER_REGISTRY}ia_kapacitor:1.0.0
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges
+    read_only: true
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    environment:
+      AppName: "Kapacitor"
+      SECURE_MODE: ${SECURE_MODE}
+      no_proxy: "ia-kapacitor,ia-influxdb,ia-mqtt-broker"
+      NO_PROXY: "ia-kapacitor,ia-influxdb,ia-mqtt-broker"
+      MQTT_BROKER_HOST: "ia_mqtt_broker"
+      MQTT_BROKER_PORT: 1883
+      KAPACITOR_PORT: ${KAPACITOR_PORT}
+      INFLUX_SERVER: "ia-influxdb"
+      INFLUXDB_USERNAME: ${INFLUXDB_ADMIN_USERNAME}
+      INFLUXDB_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
+      PROFILING_MODE: "false"
+      KAPACITOR_URL: http://ia-kapacitor:$KAPACITOR_PORT/
+      KAPACITOR_UNSAFE_SSL: "true"
+      KAPACITOR_INFLUXDB_0_URLS_0: http://ia-influxdb:8086/
+      KAPACITOR_SERVER: 'ia-kapacitor'
+      INFLUXDB_PORT: 8086
+      PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
+    networks:
+    - timeseries_network
+    volumes:
+    - "vol_temp_kapacitor:/tmp/"
+    - ./Certificates/Kapacitor:/run/secrets/Kapacitor:ro
+    - ./Certificates/Kapacitor_Server:/run/secrets/Kapacitor_Server:ro
+    - ./kapacitor/config/:/app/config/
+    - ./kapacitor/udfs/:/app/udfs/
+    - ./kapacitor/tick_scripts/:/app/tick_scripts/
+    - ./kapacitor/config.json:/app/config.json
+    - ./kapacitor/models/:/app/models/
+    ports:
+    - "${KAPACITOR_PORT}:${KAPACITOR_PORT}"
+
+  ia-grafana:
+    image: grafana/grafana:11.2.2-ubuntu
+    container_name: ia-grafana
+    hostname: ia-grafana
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    restart: unless-stopped
+    read_only: false
+    security_opt:
+    - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    environment:
+      SECURE_MODE: ${SECURE_MODE}
+      no_proxy: ia-influxdb
+      NO_PROXY: ia-influxdb
+      INFLUX_SERVER: "ia-influxdb"
+      GRAFANA_SERVER: '0.0.0.0'
+      INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
+      INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
+      INFLUXDB_DB: datain
+      GF_SECURITY_ADMIN_USER: ${VISUALIZER_GRAFANA_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${VISUALIZER_GRAFANA_PASSWORD}
+      GF_PROVISIONING_ENABLE: "true"
+      GF_PROVISIONING_DASHBOARDS: /etc/grafana/provisioning/dashboards
+      GF_SERVER_CERT_FILE: /etc/grafana/certs/grafana_Server_server_certificate.pem
+      GF_SERVER_CERT_KEY: /etc/grafana/certs/grafana_Server_server_key.pem
+      GF_SERVER_CACERT: /etc/grafana/certs/ca_certificate.pem
+      GF_SERVER_PROTOCOL: http
+    networks:
+    - timeseries_network
+    volumes:
+    - "vol_temp_grafana:/tmp"
+    - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    - ./grafana/dashboards/datasources_dev.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    - ./Certificates/grafana_Server:/etc/grafana/certs:ro
+    - ./grafana/entrypoint.sh:/entrypoint.sh
+    ports:
+    - 3000:3000
+
+  ia-mqtt-broker:
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    container_name: ia-mqtt-broker
+    hostname: ia-mqtt-broker
+    read_only: true
+    image: eclipse-mosquitto:2.0.19
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    networks:
+    - timeseries_network
+    ports:
+    - "1883:1883"
+    volumes:
+    - ../../tools/mqtt/broker/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+  ia-opcua-server:
+    build:
+      context: $PWD/../../tools/opcua_server/
+      dockerfile: $PWD/../../tools/opcua_server/Dockerfile
+      args:
+        TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
+        TIMESERIES_UID: ${TIMESERIES_UID}
+    container_name: ia-opcua-server
+    hostname: ia-opcua-server
+    read_only: true
+    image: ${DOCKER_REGISTRY}ia_opcua_server:1.0.0
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    networks:
+    - timeseries_network
+
+networks:
+  timeseries_network:
+    driver: bridge
+volumes:
+  vol_influxdb_conf:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_temp_kapacitor:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_temp_grafana:
+    name: "visualization_grafana_vol"
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
