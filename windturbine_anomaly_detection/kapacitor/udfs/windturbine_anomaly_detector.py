@@ -21,8 +21,9 @@ from sklearn.linear_model import LinearRegression
 from sklearnex import patch_sklearn
 patch_sklearn()
 # import paho.mqtt.client as mqtt
-import pandas as pd
+import modin.pandas as pd
 import datetime
+import time
 # from gcp_mqtt_client import get_client
 
 logging.basicConfig(level=logging.DEBUG,
@@ -100,6 +101,7 @@ class AnomalyDetectorHandler(Handler):
     def point(self, point):
         """ A point has arrived.
         """
+        start_time = time.time()
         is_anomaly = 0
         is_alarm = 0
         anomaly_type = None
@@ -192,7 +194,9 @@ class AnomalyDetectorHandler(Handler):
         # for topic in mqtt_topics.keys():
         #     # msg = json.dumps(pub_point_dict)
         #     self.client.publish(topic, mqtt_topics[topic])
-
+        end_time = time.time()
+        process_time = (end_time - start_time)*1000
+        logger.debug(f"Function point took {process_time:.4f} milliseconds to complete.")
 
     def end_batch(self, end_req):
         """ The batch is complete.
