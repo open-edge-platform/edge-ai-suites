@@ -1,0 +1,113 @@
+# Copyright (c) 2022 Intel Corporation.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Values.config.grafana.name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  type: NodePort
+  selector:
+    app: Grafana
+  ports:
+  - name: grafana-port
+    port: {{ $.Values.config.grafana.int.port }}
+    targetPort: {{ $.Values.config.grafana.int.port }}
+    nodePort: {{ $.Values.config.grafana.ext.port }}
+  
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  labels:
+    app: Grafana
+  name: deployment-grafana
+  namespace: {{ $.Values.namespace }}
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: Grafana
+  template:
+    metadata:
+      labels:
+        app: Grafana
+    spec:
+      {{- if and $.Values.DOCKER_USERNAME $.Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: ia-grafana
+        image: grafana/grafana:11.2.2-ubuntu
+        imagePullPolicy: {{ $.Values.imagePullPolicy }}
+        securityContext:
+          readOnlyRootFilesystem: false
+        volumeMounts:
+        - name: vol-temp-grafana
+          mountPath: /tmp
+        - name: grafana-dashboard-json
+          mountPath: /etc/grafana/provisioning/dashboards/dashboard.json
+          subPath: dashboard.json
+        - name: grafana-dashboard-yml
+          mountPath: /etc/grafana/provisioning/dashboards/dashboards.yml
+          subPath: dashboards.yml
+        {{ if eq .Values.env.SECURE_MODE false}}
+        - name: grafana-datasource-dev
+          mountPath: /etc/grafana/provisioning/datasources/datasources.yml
+          subPath: datasources.yml
+        {{- else }}
+        - name: grafana-datasource
+          mountPath: /etc/grafana/provisioning/datasources/
+          subPath: datasources.yml
+        {{- end }}
+        - name: grafana-entrypoint
+          mountPath: /entrypoint.sh
+          subPath: entrypoint.sh
+        env:
+        - name: SECURE_MODE
+          value: '{{ $.Values.env.SECURE_MODE }}'
+        - name: INFLUXDB_USERNAME
+          value: '{{ $.Values.env.INFLUXDB_USERNAME }}'
+        - name: INFLUXDB_PASSWORD
+          value: '{{ $.Values.env.INFLUXDB_PASSWORD }}'
+        - name: INFLUX_SERVER
+          value: "influxdb"
+        - name: GRAFANA_SERVER
+          value: "0.0.0.0"
+        - name: GF_SECURITY_ADMIN_USER
+          value: '{{ $.Values.env.VISUALIZER_GRAFANA_USER }}'
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: '{{ $.Values.env.VISUALIZER_GRAFANA_PASSWORD }}'
+        - name: GF_PROVISIONING_ENABLE
+          value: "true"
+        - name: GF_SERVER_CERT_FILE
+          value: "/etc/grafana/certs/grafana_Server_server_certificate.pem"
+        - name: GF_SERVER_CERT_KEY
+          value: "/etc/grafana/certs/grafana_Server_server_key.pem"
+        - name: GF_SERVER_CACERT
+          value: "/etc/grafana/certs/ca_certificate.pem"
+        - name: GF_SERVER_PROTOCOL
+          value: "http"
+        - name: INFLUXDB_DB
+          value: "datain"
+      volumes:
+      - name: vol-temp-grafana
+        emptyDir: {}
+      - name: grafana-dashboard-json
+        configMap:
+          name: grafana-dashboard-json
+      - name: grafana-datasource-dev
+        configMap:
+          name: grafana-datasource-dev
+      - name: grafana-datasource
+        configMap:
+          name: grafana-datasource
+      - name: grafana-entrypoint
+        configMap:
+          name: grafana-entrypoint
+      - name: grafana-dashboard-yml
+        configMap:
+          name: grafana-dashboard-yml
+          

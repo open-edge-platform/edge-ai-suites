@@ -1,0 +1,43 @@
+# Copyright Intel Corporation
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.config.opcuaserver.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: opcua-server
+  ports:
+    - name: opcua-port
+      port: {{ .Values.config.opcuaserver.int.pub_port }}
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: opcua-server
+  name: deployment-opcua-server
+  namespace: {{ .Values.namespace }}
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opcua-server
+  template:
+    metadata:
+      labels:
+        app: opcua-server
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: ia-opcua-server
+        image: {{ .Values.DOCKER_REGISTRY }}ia-opcua-server:1.0.0
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          readOnlyRootFilesystem: true

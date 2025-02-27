@@ -182,7 +182,7 @@ services:
     container_name: ia-opcua-server
     hostname: ia-opcua-server
     read_only: true
-    image: ${DOCKER_REGISTRY}ia_opcua_server:1.0.0
+    image: ${DOCKER_REGISTRY}ia-opcua-server:1.0.0
     restart: unless-stopped
     security_opt:
     - no-new-privileges

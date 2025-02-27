@@ -1,0 +1,73 @@
+# Copyright Intel Corporation
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.config.kapacitor.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - port: {{ .Values.config.kapacitor.kapacitor_port }}
+    name: kapacitor-port
+  selector:
+    app: kapacitor
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kapacitor
+  name: deployment-kapacitor
+  namespace: {{ .Values.namespace }}
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kapacitor
+  template:
+    metadata:
+      labels:
+        app: kapacitor
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: ia-kapacitor
+        image: {{ .Values.DOCKER_REGISTRY }}edgeinsights/ia_kapacitor:4.2.0
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - name: vol-temp-kapacitor
+          mountPath: /tmp
+        env:
+        - name: SECURE_MODE
+          value: '{{ .Values.env.SECURE_MODE }}'
+        - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+          value: python
+        - name: INFLUXDB_USERNAME
+          value: '{{ .Values.env.INFLUXDB_USERNAME }}'
+        - name: KAPACITOR_PORT
+          value: '{{ .Values.config.kapacitor.kapacitor_port }}'
+        - name: INFLUXDB_PASSWORD
+          value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
+        - name: KAPACITOR_URL
+          value: "http://kapacitor:{{ .Values.config.kapacitor.kapacitor_port }}/"
+        - name: KAPACITOR_UNSAFE_SSL
+          value: "true"
+        - name: KAPACITOR_INFLUXDB_0_URLS_0
+          value: "http://influxdb:{{ .Values.config.influx_db_server.influx_http }}/"
+        - name: INFLUX_SERVER
+          value: "influxdb"
+        - name: KAPACITOR_SERVER
+          value: "kapacitor"
+        - name: INFLUXDB_PORT
+          value: "8086"
+        - name: PROFILING_MODE
+          value: "false"
+      volumes:
+      - name: vol-temp-kapacitor
+        emptyDir: {}

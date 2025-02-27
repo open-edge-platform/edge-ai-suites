@@ -1,0 +1,86 @@
+# Copyright Intel Corporation
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.config.influx_db_server.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - port: {{ .Values.config.influx_db_server.influx_http }} 
+    name: influx-db-port
+  selector:
+    app: influxdb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: influxdb
+  name: deployment-influxdb
+  namespace: {{ .Values.namespace }}
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: influxdb
+  template:
+    metadata:
+      labels:
+        app: influxdb
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: ia-influxdb
+        image: influxdb:1.8.10
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+          runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+          readOnlyRootFilesystem: true
+        env:
+        {{ if eq .Values.env.SECURE_MODE false}}
+        - name: INFLUXDB_CONFIG_PATH
+          value: /etc/influxdb/influxdb_devmode.conf
+        {{- else }}
+        - name: INFLUXDB_CONFIG_PATH
+          value: /etc/influxdb/influxdb.conf
+        {{- end }}
+        - name: INFLUXDB_DB
+          value: 'datain'
+        - name: INFLUXDB_ADMIN_PASSWORD
+          value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
+        - name: INFLUXDB_ADMIN_USER
+          value: '{{ .Values.env.INFLUXDB_USERNAME }}'
+        - name: INFLUXDB_PASSWORD
+          value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
+        - name: INFLUXDB_USERNAME
+          value: '{{ .Values.env.INFLUXDB_USERNAME }}'
+        - name: INFLUXDB_ENDPOINT
+          value: "0.0.0.0:{{ .Values.config.influx_db_server.influx_http }}"
+        volumeMounts:
+        - name: tmpfs-data-volume
+          mountPath: /var/lib/influxdb
+        {{ if eq .Values.env.DEV_MODE false}}
+        - name: influx-certs
+          mountPath: /run/secrets/influxdb
+        {{ end }}
+        - name: influx-config
+          mountPath: /etc/influxdb/influxdb.conf
+          subPath: influxdb.conf
+        - name: influx-dev-config
+          mountPath: /etc/influxdb/influxdb_devmode.conf
+          subPath: influxdb_devmode.conf
+      volumes:
+        - name: influx-config
+          configMap:
+            name: influxdb-conf-input
+        - name: influx-dev-config
+          configMap:
+            name: influxdb-dev-conf-input
+        - name: tmpfs-data-volume
+          emptyDir: {}

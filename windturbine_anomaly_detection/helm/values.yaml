@@ -1,0 +1,46 @@
+# Copyright Intel Corporation
+
+namespace: apps
+DOCKER_REGISTRY: ''
+DOCKER_USERNAME: ''
+DOCKER_PASSWORD: ''
+imagePullPolicy: IfNotPresent
+storageClassName: manual
+env:
+  SECURE_MODE: false
+  PROFILING_MODE: false
+  TIMESERIES_USER_NAME: timeseries_user
+  TIMESERIES_UID: 1999
+  INFLUXDB_ADMIN_USERNAME:  
+  INFLUXDB_ADMIN_PASSWORD: 
+  INFLUXDB_USERNAME: 
+  INFLUXDB_PASSWORD: 
+  VISUALIZER_GRAFANA_USER: 
+  VISUALIZER_GRAFANA_PASSWORD: 
+  timeseries_no_proxy: localhost,127.0.0.1,.intel.com
+config:
+  influx_db_server:
+    name: influxdb
+    influx_http: 8086
+  grafana:
+    name: grafana
+    int:
+      port: "3000"
+    ext:
+      port: "30001"
+  telegraf:
+    name: telegraf
+    MQTT_BROKER_HOST: "mqttbroker"
+  kapacitor:
+    name: kapacitor
+    kapacitor_port: 9092
+  mqttbroker:
+    name: mqttbroker
+    int:
+      port: 1883
+    ext:
+      port: 30006
+  opcuaserver:
+    name: opcua-server
+    int:
+      pub_port: 4840

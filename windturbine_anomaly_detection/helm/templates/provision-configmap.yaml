@@ -1,0 +1,94 @@
+# Copyright Intel Corporation
+
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: telegraf-dev-conf-input
+data:
+  Telegraf_devmode.conf: |-
+{{ .Files.Get "Telegraf_devmode.conf" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: telegraf-conf-input
+data:
+  Telegraf.conf: |-
+{{ .Files.Get "Telegraf.conf" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: influxdb-dev-conf-input
+data:
+  influxdb_devmode.conf: |-
+{{ .Files.Get "influxdb_devmode.conf" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: influxdb-conf-input
+data:
+  influxdb.conf: |-
+{{ .Files.Get "influxdb.conf" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: mosquitto-conf
+data:
+  mosquitto.conf: |-
+{{ .Files.Get "mosquitto.conf" | indent 4 }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: grafana-dashboard-json
+data:
+  dashboard.json: |-
+{{ .Files.Get "windturbine_dashboard.json" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: grafana-datasource-dev
+data:
+  datasources.yml: |-
+{{ .Files.Get "datasources_dev.yml" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: grafana-datasource
+data:
+  datasources.yml: |-
+{{ .Files.Get "datasources_prod.yml" | indent 4 }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: grafana-entrypoint
+data:
+  entrypoint.sh: |-
+{{ .Files.Get "entrypoint.sh" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: grafana-dashboard-yml
+data:
+  dashboards.yml: |-
+{{ .Files.Get "dashboards.yml" | indent 4 }}

@@ -4,9 +4,10 @@ DOCKER_COMPOSE_FILE = ./docker-compose.yml
 DOCKER_COMPOSE_SECURE_MODE_FILE = ./docker-compose-secure-mode.override.yml
 DOCKER_COMPOSE = docker compose
 
-# Define the path to the .env file
+# Define the path to the .env file and scripts
 ENV_FILE = ./.env
 CERT_SCRIPT = ./../../tools/cert_gen.sh
+HELM_PACKAGE_SCRIPT = ./package_helm.sh
 
 include $(ENV_FILE)
 export $(shell sed 's/=.*//' $(ENV_FILE))
@@ -56,6 +57,15 @@ push_images:
 	@echo "Pushing the images to docker registry"
 	docker compose -f $(DOCKER_COMPOSE_FILE) push
 
+# Generate helm packages
+.PHONY: gen_helm_charts
+gen_helm_charts:
+	@echo "Generating Helm packages"
+	$(HELM_PACKAGE_SCRIPT)
+	@echo "Helm packages generated"
+
+
+
 # Help
 .PHONY: help
 help:
@@ -66,4 +76,5 @@ help:
 	@echo "  make restart  - Restart Docker containers"
 	@echo "  make clean    - Remove all stopped containers and unused images"
 	@echo "  make push_images     - Push the images to docker registry"
+	@echo "  make gen_helm_charts	- Generate helm packages"
 	@echo "  make help     - Display this help message"
