@@ -73,7 +73,7 @@ services:
         INSTALL_SOURCES: "no"
     container_name: ia-kapacitor
     hostname: ia-kapacitor
-    image: ${DOCKER_REGISTRY}ia_kapacitor:1.0.0
+    image: ${DOCKER_REGISTRY}ia-kapacitor:1.0.0
     restart: unless-stopped
     security_opt:
     - no-new-privileges
@@ -86,7 +86,7 @@ services:
       SECURE_MODE: ${SECURE_MODE}
       no_proxy: "ia-kapacitor,ia-influxdb,ia-mqtt-broker"
       NO_PROXY: "ia-kapacitor,ia-influxdb,ia-mqtt-broker"
-      MQTT_BROKER_HOST: "ia_mqtt_broker"
+      MQTT_BROKER_HOST: "ia-mqtt-broker"
       MQTT_BROKER_PORT: 1883
       KAPACITOR_PORT: ${KAPACITOR_PORT}
       INFLUX_SERVER: "ia-influxdb"

@@ -36,7 +36,7 @@ spec:
       {{- end }}
       containers:
       - name: ia-kapacitor
-        image: {{ .Values.DOCKER_REGISTRY }}edgeinsights/ia_kapacitor:4.2.0
+        image: {{ .Values.DOCKER_REGISTRY }}edgeinsights/ia-kapacitor:1.0.0
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true
