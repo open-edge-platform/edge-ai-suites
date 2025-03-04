@@ -26,8 +26,16 @@ import datetime
 import time
 # from gcp_mqtt_client import get_client
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)s:%(name)s: %(message)s')
+log_level = os.getenv('KAPACITOR_LOGGING_LEVEL', 'INFO').upper()
+
+logging_level = getattr(logging, log_level, logging.INFO)
+
+# Configure logging
+logging.basicConfig(
+    level=logging_level,  # Set the log level to DEBUG
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Log format
+)
+
 logger = logging.getLogger()
         
 

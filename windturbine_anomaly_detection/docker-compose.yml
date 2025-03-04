@@ -23,6 +23,10 @@ services:
       INFLUXDB_DBNAME: datain
       TELEGRAF_CONFIG_PATH: /etc/telegraf/Telegraf_devmode.conf
       OPCUA_SERVER: opc.tcp://ia-opcua-server:4840/freeopcua/server/
+      LOG_LEVEL: ${LOG_LEVEL}
+    entrypoint: >
+      /bin/sh -c "export DEBUG_MODE=$( [ \"$LOG_LEVEL\" = \"DEBUG\" ] && echo true || echo false ) &&
+      telegraf"
     networks:
     - timeseries_network
     volumes:
@@ -53,6 +57,7 @@ services:
       no_proxy: ${timeseries_no_proxy}, ia-kapacitor
       NO_PROXY: ${timeseries_no_proxy}, ia-kapacitor
       INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb_devmode.conf"
+      INFLUXDB_LOGGING_LEVEL: ${LOG_LEVEL}
       INFLUXDB_TLS_CIPHERS: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
     volumes:
       # Mount for influxdb data directory and configuration
@@ -90,14 +95,15 @@ services:
       MQTT_BROKER_PORT: 1883
       KAPACITOR_PORT: ${KAPACITOR_PORT}
       INFLUX_SERVER: "ia-influxdb"
-      INFLUXDB_USERNAME: ${INFLUXDB_ADMIN_USERNAME}
-      INFLUXDB_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
+      KAPACITOR_INFLUXDB_0_USERNAME: ${INFLUXDB_ADMIN_USERNAME}
+      KAPACITOR_INFLUXDB_0_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
       PROFILING_MODE: "false"
       KAPACITOR_URL: http://ia-kapacitor:$KAPACITOR_PORT/
       KAPACITOR_UNSAFE_SSL: "true"
       KAPACITOR_INFLUXDB_0_URLS_0: http://ia-influxdb:8086/
       KAPACITOR_SERVER: 'ia-kapacitor'
       INFLUXDB_PORT: 8086
+      KAPACITOR_LOGGING_LEVEL: ${LOG_LEVEL}
       PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
     networks:
     - timeseries_network
@@ -142,6 +148,8 @@ services:
       GF_SERVER_CERT_KEY: /etc/grafana/certs/grafana_Server_server_key.pem
       GF_SERVER_CACERT: /etc/grafana/certs/ca_certificate.pem
       GF_SERVER_PROTOCOL: http
+      GF_LOG_LEVEL: ${LOG_LEVEL}
+      GRAFANA_PORT: ${GRAFANA_PORT}
     networks:
     - timeseries_network
     volumes:
@@ -151,7 +159,7 @@ services:
     - ./Certificates/grafana_Server:/etc/grafana/certs:ro
     - ./grafana/entrypoint.sh:/entrypoint.sh
     ports:
-    - 3000:3000
+    - ${GRAFANA_PORT}:${GRAFANA_PORT}
 
   ia-mqtt-broker:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
