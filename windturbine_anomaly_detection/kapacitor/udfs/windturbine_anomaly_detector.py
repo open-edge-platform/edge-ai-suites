@@ -6,7 +6,6 @@ import os
 import sys
 import json
 from collections import deque
-from distutils.util import strtobool
 from kapacitor.udf.agent import Agent, Handler, Server
 from kapacitor.udf import udf_pb2
 import signal
@@ -24,6 +23,7 @@ patch_sklearn()
 import modin.pandas as pd
 import datetime
 import time
+import requests
 # from gcp_mqtt_client import get_client
 
 log_level = os.getenv('KAPACITOR_LOGGING_LEVEL', 'INFO').upper()
