@@ -177,7 +177,8 @@ services:
     ports:
     - "1883:1883"
     volumes:
-    - ../../tools/mqtt/broker/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    - ../../tools/mqtt/broker/config/mosquitto_devmode.conf:/mosquitto/config/mosquitto.conf:ro
+    - ./Certificates/mqtt-broker:/mosquitto/config/certs:ro
 
   ia-opcua-server:
     build:

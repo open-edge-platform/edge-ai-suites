@@ -13,3 +13,7 @@ services:
   ia-influxdb:
     environment:
       INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb.conf"
+
+  ia-mqtt-broker:
+    volumes:
+    - ../../tools/mqtt/broker/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
