@@ -36,7 +36,7 @@ services:
 
   ia-influxdb:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
-    image: influxdb:1.8.10
+    image: influxdb:1.11.8
     container_name: ia-influxdb
     hostname: ia-influxdb
     restart: unless-stopped
@@ -119,7 +119,7 @@ services:
     - "${KAPACITOR_PORT}:${KAPACITOR_PORT}"
 
   ia-grafana:
-    image: grafana/grafana:11.2.2-ubuntu
+    image: grafana/grafana-oss:11.5.2-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
