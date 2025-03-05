@@ -111,7 +111,6 @@ services:
     - "vol_temp_kapacitor:/tmp/"
     - ./Certificates/Kapacitor:/run/secrets/Kapacitor:ro
     - ./Certificates/Kapacitor_Server:/run/secrets/Kapacitor_Server:ro
-    - ./kapacitor/config/:/app/config/
     - ./kapacitor/udfs/:/app/udfs/
     - ./kapacitor/tick_scripts/:/app/tick_scripts/
     - ./kapacitor/config.json:/app/config.json

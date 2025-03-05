@@ -1,11 +1,5 @@
 {
     "config": {
-        "cert_type": ["pem"],
-        "logging": {
-            "C_LOG_LEVEL": "INFO",
-            "PY_LOG_LEVEL": "INFO"
-        },
-        "influxdb": {},
         "task": [{
         "tick_script": "windturbine_anomaly_detector.tick",
             "task_name": "windturbine_anomaly_detector",
@@ -16,6 +10,5 @@
              }]
            }
         ]
-    },
-    "interfaces": {}
+    }
 }
