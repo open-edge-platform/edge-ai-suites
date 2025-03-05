@@ -24,7 +24,7 @@ build:
 
 # Run Docker containers
 .PHONY: up
-up:
+up: down
 	@if [ $(SECURE_MODE) = 'false' ]; then \
 		echo "Starting Docker containers..."; \
 		$(DOCKER_COMPOSE) up -d ;\
