@@ -54,6 +54,7 @@ services:
       INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
       INFLUXDB_USER : ${INFLUXDB_USERNAME}
       INFLUXDB_USER_PASSWORD: ${INFLUXDB_PASSWORD}
+      RETENTION_DURATION: ${INFLUXDB_RETENTION_DURATION}
       no_proxy: ${timeseries_no_proxy}, ia-kapacitor
       NO_PROXY: ${timeseries_no_proxy}, ia-kapacitor
       INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb_devmode.conf"
@@ -64,6 +65,7 @@ services:
     - vol_influxdb_conf:/var/lib/influxdb:rw
     - ./Certificates/influxdb_Server/:/run/secrets/influxdb:ro
     - ./influxdb/config:/etc/influxdb
+    - ./influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
   
   ia-kapacitor:
     build:
