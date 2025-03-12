@@ -12,10 +12,6 @@ HELM_PACKAGE_SCRIPT = ./package_helm.sh
 include $(ENV_FILE)
 export $(shell sed 's/=.*//' $(ENV_FILE))
 
-# Default target
-.PHONY: all
-all: build up
-
 # Build Docker containers
 .PHONY: build
 build:
@@ -23,17 +19,34 @@ build:
 	$(DOCKER_COMPOSE) build
 
 # Run Docker containers
-.PHONY: up
-up: down
-	@if [ $(SECURE_MODE) = 'false' ]; then \
+
+.PHONY: up_mqtt_ingestion
+up_mqtt_ingestion: down
+	@export TELEGRAF_INPUT_PLUGIN="mqtt_consumer"; \
+    if [ $(SECURE_MODE) = 'false' ]; then \
+        echo "Starting Docker containers..."; \
+        $(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d ;\
+    else \
+        echo "Generating Certificates"; \
+        $(CERT_SCRIPT); \
+        echo "Certificates generated"; \
+        echo "Starting Docker containers..."; \
+        $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) up --scale ia-opcua-server=0 -d; \
+    fi
+
+# Run Docker containers
+.PHONY: up_opcua_ingestion
+up_opcua_ingestion: down
+	@export TELEGRAF_INPUT_PLUGIN="opcua"; \
+	if [ $(SECURE_MODE) = 'false' ]; then \
 		echo "Starting Docker containers..."; \
-		$(DOCKER_COMPOSE) up -d ;\
+		$(DOCKER_COMPOSE) up --scale ia-mqtt-publisher=0 -d ;\
 	else \
 		echo "Generating Certificates"; \
 		$(CERT_SCRIPT); \
 		echo "Certificates generated"; \
 		echo "Starting Docker containers..."; \
-		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) up -d; \
+		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) up --scale ia-mqtt-publisher=0 -d; \
 	fi
 
 # Stop Docker containers
@@ -41,10 +54,6 @@ up: down
 down:
 	@echo "Stopping Docker containers..."
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE)  down -v
-
-# Restart Docker containers
-.PHONY: restart
-restart: down up
 
 # Remove all stopped containers and unused images
 .PHONY: clean
@@ -71,7 +80,8 @@ gen_helm_charts:
 help:
 	@echo "Makefile commands:"
 	@echo "  make build    - Build Docker containers"
-	@echo "  make up       - Start Docker containers"
+	@echo "  make up_mqtt_ingestion     - Start Docker containers using mqtt ingestion"
+	@echo "  make up_opcua_ingestion    - Start Docker containers using opcua ingestion"
 	@echo "  make down     - Stop Docker containers"
 	@echo "  make restart  - Restart Docker containers"
 	@echo "  make clean    - Remove all stopped containers and unused images"

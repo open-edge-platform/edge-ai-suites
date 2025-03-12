@@ -24,12 +24,12 @@ services:
       TELEGRAF_CONFIG_PATH: /etc/telegraf/Telegraf_devmode.conf
       OPCUA_SERVER: opc.tcp://ia-opcua-server:4840/freeopcua/server/
       LOG_LEVEL: ${LOG_LEVEL}
-    entrypoint: >
-      /bin/sh -c "export DEBUG_MODE=$( [ \"$LOG_LEVEL\" = \"DEBUG\" ] && echo true || echo false ) &&
-      telegraf"
+      TELEGRAF_INPUT_PLUGIN: ${TELEGRAF_INPUT_PLUGIN}
+    entrypoint: ["/bin/sh", "-c", "/entrypoint.sh"]
     networks:
     - timeseries_network
     volumes:
+    - ./telegraf/entrypoint.sh:/entrypoint.sh
     - "./telegraf/config/:/etc/telegraf"
     - ./Certificates/Telegraf:/run/secrets/Telegraf:ro
     - ./telegraf/input_data:/tmp/input_data:ro
@@ -201,7 +201,35 @@ services:
       interval: 5m
     networks:
     - timeseries_network
-
+  
+  ia-mqtt-publisher:
+    build:
+      context: $PWD/../../tools/mqtt/publisher
+      dockerfile: $PWD/../../tools/mqtt/publisher/Dockerfile
+      args:
+        TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
+        TIMESERIES_UID: ${TIMESERIES_UID}
+    container_name: ia-mqtt-publisher
+    hostname: ia-mqtt-publisher
+    read_only: false
+    image: ${DOCKER_REGISTRY}ia_mqtt_publisher:1.0.0
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    environment:
+      AppName: "mqtt-publisher"
+      no_proxy: "ia-mqtt-broker"
+      NO_PROXY: "ia-mqtt-broker"
+      HOST_IP: ia-mqtt-broker
+      SECURE_MODE: ${SECURE_MODE}
+    networks:
+    - timeseries_network
+    command: ["--csv", "/windturbine/T1.csv"]
+    volumes:
+    - ./Certificates/mqtt-publisher_Server:/run/secrets/mqtt-publisher_Server:ro
 networks:
   timeseries_network:
     driver: bridge
