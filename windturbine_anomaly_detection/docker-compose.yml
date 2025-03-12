@@ -31,7 +31,7 @@ services:
     volumes:
     - ./telegraf/entrypoint.sh:/entrypoint.sh
     - "./telegraf/config/:/etc/telegraf"
-    - ./Certificates/Telegraf:/run/secrets/Telegraf:ro
+    - ./Certificates/Telegraf_Server:/run/secrets/Telegraf_Server:ro
     - ./telegraf/input_data:/tmp/input_data:ro
 
   ia-influxdb:
@@ -111,7 +111,6 @@ services:
     - timeseries_network
     volumes:
     - "vol_temp_kapacitor:/tmp/"
-    - ./Certificates/Kapacitor:/run/secrets/Kapacitor:ro
     - ./Certificates/Kapacitor_Server:/run/secrets/Kapacitor_Server:ro
     - ./kapacitor/udfs/:/app/udfs/
     - ./kapacitor/tick_scripts/:/app/tick_scripts/
@@ -150,7 +149,6 @@ services:
       GF_SERVER_CACERT: /etc/grafana/certs/ca_certificate.pem
       GF_SERVER_PROTOCOL: http
       GF_LOG_LEVEL: ${LOG_LEVEL}
-      GRAFANA_PORT: ${GRAFANA_PORT}
     networks:
     - timeseries_network
     volumes:
@@ -160,7 +158,7 @@ services:
     - ./Certificates/grafana_Server:/etc/grafana/certs:ro
     - ./grafana/entrypoint.sh:/entrypoint.sh
     ports:
-    - ${GRAFANA_PORT}:${GRAFANA_PORT}
+    - ${GRAFANA_PORT}:3000
 
   ia-mqtt-broker:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -180,7 +178,7 @@ services:
     - "1883:1883"
     volumes:
     - ../../tools/mqtt/broker/config/mosquitto_devmode.conf:/mosquitto/config/mosquitto.conf:ro
-    - ./Certificates/mqtt-broker:/mosquitto/config/certs:ro
+    - ./Certificates/mqtt-broker_Server:/mosquitto/config/certs:ro
 
   ia-opcua-server:
     build:
