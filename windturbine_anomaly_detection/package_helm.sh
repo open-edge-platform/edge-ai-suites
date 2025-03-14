@@ -7,4 +7,7 @@ cp -f influxdb/config/*.conf helm/
 cp -f ../../tools/mqtt/broker/config/*.conf helm/
 cp -f telegraf/config/*.conf helm
 cp -f grafana/entrypoint.sh helm/
+cp -f kapacitor/config.json helm/
+
+
 

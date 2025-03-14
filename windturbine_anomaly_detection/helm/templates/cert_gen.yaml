@@ -1,0 +1,37 @@
+# Copyright Intel Corporation
+{{ if eq .Values.env.SECURE_MODE true}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: cert-generator
+  name: job-cert-generator
+  namespace: {{ .Values.namespace }}
+
+spec:
+  template:
+    metadata:
+      labels:
+        app: cert-generator
+    spec:
+      serviceAccountName: pod-read-sa
+      
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: cert-generator
+        image: cert-generator:1.0.0
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          readOnlyRootFilesystem: true
+            
+        volumeMounts:
+        - name: tmpfs-volume
+          mountPath: /app/Certificates
+      restartPolicy: Never
+      volumes:
+        - name: tmpfs-volume
+          emptyDir: {}
+{{ end }}

@@ -9,7 +9,6 @@ metadata:
   namespace: {{ .Values.namespace }}
 
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: telegraf
@@ -28,40 +27,68 @@ spec:
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true
+        command: ["/bin/sh", "-c", "export DEBUG_MODE=$( [ \"$LOG_LEVEL\" = \"DEBUG\" ] && echo true || echo false ) && telegraf"]
         volumeMounts:
         - name: tmpfs-volume
           mountPath: /tmp
-        - name: telegraf-dev-config
-          mountPath: /etc/telegraf/Telegraf_devmode.conf
-          subPath: Telegraf_devmode.conf
-        - name: telegraf-config
+                
+        {{ if eq .Values.env.SECURE_MODE true}}
+        - name: certs
+          mountPath: /run/secrets/Telegraf
+        - name: telegraf-conf-input
           mountPath: /etc/telegraf/Telegraf.conf
           subPath: Telegraf.conf
+        {{- else }}
+        - name: telegraf-dev-conf-input
+          mountPath: /etc/telegraf/Telegraf_devmode.conf
+          subPath: Telegraf_devmode.conf
+        {{ end }}
+        
         env:
         - name: SECURE_MODE
           value: '{{ .Values.env.SECURE_MODE }}'
         - name: MQTT_BROKER_HOST
           value: {{ .Values.config.telegraf.MQTT_BROKER_HOST }}
         - name: INFLUXDB_USERNAME
-          value: '{{ .Values.env.INFLUXDB_USERNAME }}'
+          value: '{{ .Values.env.INFLUXDB_ADMIN_USERNAME }}'
         - name: INFLUXDB_PASSWORD
-          value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
+          value: '{{ .Values.env.INFLUXDB_ADMIN_PASSWORD }}'
         - name: INFLUX_SERVER
           value: "influxdb"
         - name: INFLUXDB_DBNAME
           value: "datain"
         - name: INFLUXDB_PORT
           value: "8086"
+        - name: LOG_LEVEL
+          value: '{{ .Values.env.LOG_LEVEL }}'
+        
+        {{ if eq .Values.env.SECURE_MODE false}}
         - name: TELEGRAF_CONFIG_PATH
           value: /etc/telegraf/Telegraf_devmode.conf
+        {{- else }}
+        - name: TELEGRAF_CONFIG_PATH
+          value: /etc/telegraf/Telegraf.conf
+        {{ end }}
         - name: OPCUA_SERVER
           value: "opc.tcp://opcua-server:4840/freeopcua/server/"
       volumes:
       - name: tmpfs-volume
         emptyDir: {}
-      - name: telegraf-dev-config
+      - name: telegraf-dev-conf-input
         configMap:
           name: telegraf-dev-conf-input
-      - name: telegraf-config
+      - name: telegraf-conf-input
         configMap:
           name: telegraf-conf-input
+      {{ if eq .Values.env.SECURE_MODE true}}
+      - name: certs
+        secret:
+          secretName: ts-certs
+          items:
+          - key: ca_certificate.pem
+            path: ca_certificate.pem 
+          - key: Telegraf_Server_server_certificate.pem
+            path: Telegraf_Server_server_certificate.pem
+          - key: Telegraf_Server_server_key.pem
+            path: Telegraf_Server_server_key.pem
+      {{ end }}

@@ -21,7 +21,6 @@ metadata:
   namespace: {{ .Values.namespace }}
 
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: kapacitor
@@ -36,24 +35,44 @@ spec:
       {{- end }}
       containers:
       - name: ia-kapacitor
-        image: {{ .Values.DOCKER_REGISTRY }}edgeinsights/ia-kapacitor:1.0.0
+        image: {{ .Values.DOCKER_REGISTRY }}ia-kapacitor:1.0.0
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true
         volumeMounts:
         - name: vol-temp-kapacitor
           mountPath: /tmp
+        - name: {{ .Values.volumes.models.name }}
+          mountPath: {{ .Values.volumes.models.location }}
+        - name: {{ .Values.volumes.tick.name }}
+          mountPath: {{ .Values.volumes.tick.location }}
+        - name: {{ .Values.volumes.udfs.name }}
+          mountPath: {{ .Values.volumes.udfs.location }}
+        - name: kapacitor-config
+          mountPath: /app/config.json
+          subPath: config.json
+        {{ if eq .Values.env.SECURE_MODE true}}
+        - name: certs
+          mountPath: /run/secrets/Kapacitor_Server
+        {{ end }}
+
         env:
+        - name: HTTP_PROXY
+          value: '{{ .Values.env.HTTP_PROXY }}'
+        - name: HTTPS_PROXY
+          value: '{{ .Values.env.HTTPS_PROXY }}'
+        - name: NO_PROXY
+          value: "influxdb,kapacitor,ia-mqtt-broker"
         - name: SECURE_MODE
           value: '{{ .Values.env.SECURE_MODE }}'
         - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
           value: python
-        - name: INFLUXDB_USERNAME
-          value: '{{ .Values.env.INFLUXDB_USERNAME }}'
+        - name: KAPACITOR_INFLUXDB_0_USERNAME
+          value: '{{ .Values.env.INFLUXDB_ADMIN_USERNAME }}'
         - name: KAPACITOR_PORT
           value: '{{ .Values.config.kapacitor.kapacitor_port }}'
-        - name: INFLUXDB_PASSWORD
-          value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
+        - name: KAPACITOR_INFLUXDB_0_PASSWORD
+          value: '{{ .Values.env.INFLUXDB_ADMIN_PASSWORD }}'
         - name: KAPACITOR_URL
           value: "http://kapacitor:{{ .Values.config.kapacitor.kapacitor_port }}/"
         - name: KAPACITOR_UNSAFE_SSL
@@ -68,6 +87,37 @@ spec:
           value: "8086"
         - name: PROFILING_MODE
           value: "false"
+        - name: KAPACITOR_LOGGING_LEVEL
+          value: '{{ .Values.env.LOG_LEVEL }}'
+        - name: MQTT_BROKER_HOST
+          value: "ia-mqtt-broker" 
+        - name: MQTT_BROKER_PORT
+          value: "1883" 
       volumes:
       - name: vol-temp-kapacitor
         emptyDir: {}
+      - name: kapacitor-config
+        configMap:
+          name: kapacitor-config
+      - name: {{ .Values.volumes.models.name }}
+        hostPath:
+          path: {{ .Values.volumes.models.hostpath }}
+      - name: {{ .Values.volumes.tick.name }}
+        hostPath:
+          path: {{ .Values.volumes.tick.hostpath }}
+      - name: {{ .Values.volumes.udfs.name }}
+        hostPath:
+          path: {{ .Values.volumes.udfs.hostpath }}
+
+      {{ if eq .Values.env.SECURE_MODE true}}
+      - name: certs
+        secret:
+          secretName: ts-certs
+          items:
+          - key: ca_certificate.pem
+            path: ca_certificate.pem 
+          - key: Kapacitor_Server_server_certificate.pem
+            path: Kapacitor_Server_server_certificate.pem
+          - key: Kapacitor_Server_server_key.pem
+            path: Kapacitor_Server_server_key.pem
+      {{ end }}

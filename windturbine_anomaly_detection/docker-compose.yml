@@ -89,7 +89,6 @@ services:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
     environment:
-      AppName: "Kapacitor"
       SECURE_MODE: ${SECURE_MODE}
       no_proxy: "ia-kapacitor,ia-influxdb,ia-mqtt-broker"
       NO_PROXY: "ia-kapacitor,ia-influxdb,ia-mqtt-broker"

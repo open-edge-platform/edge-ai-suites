@@ -24,7 +24,6 @@ metadata:
   namespace: {{ .Values.namespace }}
 
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: mqtt-broker
@@ -44,11 +43,36 @@ spec:
         env:
         - name: AppName
           value: "mqtt-broker"
+        
         volumeMounts:
+        {{ if eq .Values.env.SECURE_MODE true}}
         - name: mosquitto-conf
           mountPath: /mosquitto/config/mosquitto.conf
           subPath: mosquitto.conf
+        - name: certs
+          mountPath: /mosquitto/config/certs
+        {{- else }}
+        - name: mosquitto-dev-conf
+          mountPath: /mosquitto/config/mosquitto.conf
+          subPath: mosquitto.conf
+        {{ end }}
+
       volumes:
         - name: mosquitto-conf
           configMap:
             name: mosquitto-conf
+        - name: mosquitto-dev-conf
+          configMap:
+            name: mosquitto-dev-conf
+      {{ if eq .Values.env.SECURE_MODE true}}
+        - name: certs
+          secret:
+            secretName: ts-certs
+            items:
+            - key: ca_certificate.pem
+              path: ca_certificate.pem
+            - key: mqtt-broker_Server_server_certificate.pem
+              path: mqtt-broker_Server_server_certificate.pem
+            - key: mqtt-broker_Server_server_key.pem
+              path: mqtt-broker_Server_server_key.pem
+      {{ end }}

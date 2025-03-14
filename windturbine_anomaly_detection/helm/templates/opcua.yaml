@@ -22,7 +22,6 @@ metadata:
   namespace: {{ .Values.namespace }}
 
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: opcua-server

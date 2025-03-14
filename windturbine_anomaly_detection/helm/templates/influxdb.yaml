@@ -21,7 +21,6 @@ metadata:
   namespace: {{ .Values.namespace }}
 
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: influxdb
@@ -49,32 +48,41 @@ spec:
         {{- else }}
         - name: INFLUXDB_CONFIG_PATH
           value: /etc/influxdb/influxdb.conf
-        {{- end }}
+        {{ end }}
         - name: INFLUXDB_DB
           value: 'datain'
         - name: INFLUXDB_ADMIN_PASSWORD
-          value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
+          value: '{{ .Values.env.INFLUXDB_ADMIN_PASSWORD }}'
         - name: INFLUXDB_ADMIN_USER
-          value: '{{ .Values.env.INFLUXDB_USERNAME }}'
+          value: '{{ .Values.env.INFLUXDB_ADMIN_USERNAME }}'
         - name: INFLUXDB_PASSWORD
           value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
         - name: INFLUXDB_USERNAME
           value: '{{ .Values.env.INFLUXDB_USERNAME }}'
+        - name: INFLUXDB_LOGGING_LEVEL
+          value: '{{ .Values.env.LOG_LEVEL }}'
+        - name: RETENTION_DURATION
+          value: '{{ .Values.env.INFLUXDB_RETENTION_DURATION }}'
+        - name: INFLUXDB_TLS_CIPHERS
+          value: "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
         - name: INFLUXDB_ENDPOINT
           value: "0.0.0.0:{{ .Values.config.influx_db_server.influx_http }}"
         volumeMounts:
         - name: tmpfs-data-volume
           mountPath: /var/lib/influxdb
-        {{ if eq .Values.env.DEV_MODE false}}
-        - name: influx-certs
+        {{ if eq .Values.env.SECURE_MODE true}}
+        - name: certs
           mountPath: /run/secrets/influxdb
-        {{ end }}
         - name: influx-config
           mountPath: /etc/influxdb/influxdb.conf
           subPath: influxdb.conf
+        {{- else }}
         - name: influx-dev-config
           mountPath: /etc/influxdb/influxdb_devmode.conf
           subPath: influxdb_devmode.conf
+        {{ end }}
+        
+       
       volumes:
         - name: influx-config
           configMap:
@@ -84,3 +92,15 @@ spec:
             name: influxdb-dev-conf-input
         - name: tmpfs-data-volume
           emptyDir: {}
+        {{ if eq .Values.env.SECURE_MODE true}}
+        - name: certs
+          secret:
+            secretName: ts-certs
+            items:
+            - key: ca_certificate.pem
+              path: ca_certificate.pem 
+            - key: influxdb_Server_server_certificate.pem
+              path: influxdb_Server_server_certificate.pem
+            - key: influxdb_Server_server_key.pem
+              path: influxdb_Server_server_key.pem
+          {{ end }}
