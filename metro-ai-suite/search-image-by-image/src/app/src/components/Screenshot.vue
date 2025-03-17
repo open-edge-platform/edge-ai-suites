@@ -1,0 +1,353 @@
+<template>
+    <div ref="videoFrame" class="video-frame">
+      <iframe
+        ref="iframe"
+        class="responsive-iframe"
+        src="/stream/"
+        title="Local Stream"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+        @load="onIframeLoad"
+      ></iframe>
+    </div>
+    <div class="btn-group" style="width: 100%">
+      <button @click="startAnalysis" v-if="pipeline == null" :style="{ width: screenshot ? '20%' : '25%' }">Analyze Stream</button>
+      <button @click="stopAnalysis" v-if="pipeline != null" :style="{ width: screenshot ? '20%' : '25%' }">Stop Analysis</button>
+      <button @click="captureScreenshot" :style="{ width: screenshot ? '20%' : '25%' }">Capture Frame</button>
+      <button @click="triggerFileUpload" :style="{ width: screenshot ? '20%' : '25%' }">Upload Image</button>
+      <input type="file" ref="fileInput" @change="handleFileUpload" style="display: none;" accept="image/*" />
+      <button @click="clearDatabase" :style="{ width: screenshot ? '20%' : '25%' }">Clear Database</button>
+      <div v-if="screenshot">
+        <button @click="cropImage" style="width: 20%" >Search Object</button>
+      </div>
+    </div>
+    <div v-if="screenshot" class="screenshot-preview">      
+          <vue-cropper
+            ref="cropper"
+            :src="screenshot"
+            @change="onCropChange"
+          />
+    </div>
+    <div v-if="imageData.length" class="image-list">
+      <h4>Image List:</h4>
+      <div class="datetime-filter">
+        <label for="from-date">From:</label>
+        <input type="datetime-local" id="from-date" v-model="fromDatetime" />
+        <label for="to-date">To:</label>
+        <input type="datetime-local" id="to-date" v-model="toDatetime" />
+      </div>
+      <ul>
+        <li v-for="data in filteredImageData" :key="data.url">
+          <img :src="data.url" :alt="data.url" width="280" height="157.5" />
+          <div style="display: flex; flex-direction: column; margin-left: 3px;">
+            <span>Distance: {{ data.distance.toFixed(4) }}</span>
+            <span>Label: {{ data.label }}</span>
+            <span>Timestamp: {{ data.datetime }}</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+</template>
+
+<script type="ts">
+import { defineComponent } from 'vue';
+import axios from "axios";
+import html2canvas from "html2canvas";
+import { Cropper } from "vue-advanced-cropper";
+import "vue-advanced-cropper/dist/style.css";
+
+export default defineComponent({
+  name: 'Screenshot',
+  components: {
+    VueCropper: Cropper,
+  },
+  data() {
+    return {
+      screenshot: null, // To store the screenshot as a base64 image
+      croppedImage: null, // To store the cropped image
+      coordinates: null, // To store the cropper coordinates
+      canvas: null, // To store the cropper canvas
+      video: null, // To store the video element
+      pipeline: null, // To store the pipeline id
+      imageData: [], // To store the image data
+      fromDatetime: '1970-01-01T00:00', // To store the initial datetime to filter
+      toDatetime: new Date().toISOString().slice(0, 16), // To store the final datetime to filter
+    };
+  },
+  computed: {
+    filteredImageData() {
+      return this.imageData
+          .filter(data => {
+            const date = new Date(data.datetime);
+            const from = this.fromDatetime ? new Date(this.fromDatetime) : null;
+            const to = this.toDatetime ? new Date(this.toDatetime) : null;
+            return (!from || date >= from) && (!to || date <= to);
+          })
+          .sort((a, b) => b.timestamp - a.timestamp);
+    }
+  },
+  methods: {
+    onIframeLoad() {
+      const iframe = this.$refs.iframe;
+      const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+      const video = iframeDocument.querySelector('video');
+
+      if (video) {
+        this.video = video;
+      } else {
+        console.error('Video element not found in iframe.');
+      }
+    },
+    async captureScreenshot() {
+      if (this.video) {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = this.video.videoWidth;
+          canvas.height = this.video.videoHeight;
+          const context = canvas.getContext('2d');
+          context.drawImage(this.video, 0, 0, canvas.width, canvas.height);
+          this.screenshot = canvas.toDataURL('image/png');
+          this.imageData = [];
+        } catch (error) {
+          console.error('Failed to capture screenshot of video frame:', error);
+        }
+      } else {
+        console.error('Video element not found for screenshot capture.');
+      }
+    },
+    triggerFileUpload() {
+      this.imageData = [];
+      this.screenshot = null;
+      this.$refs.fileInput.click();
+    },
+    handleFileUpload(event) {
+      /**
+       * TODO: When the same image is uploaded multiple times,
+       * the cropper does not update. The way to handle cropper updates
+       * are described in the component documentation.
+       * See https://github.com/fengyuanchen/cropperjs#replaceurl-hassamesize
+       * 
+       * As a workaround, you can upload another image and then re-upload the
+       * original image to update the cropper.
+       */
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.screenshot = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+    async startAnalysis() {
+      const body = {
+          source: {
+              uri: "rtsp://sibi-mediamtx:8554/stream",
+              type: "uri"
+          },
+          destination: {
+              frame: {
+                  type: "rtsp",
+                  path: "filter-pipeline"
+              }
+          },
+          parameters: {
+              mqtt_publisher: {
+                  host: "sibi-broker",
+                  port: 1883,
+                  publish_frame: "true",
+                  include_feature_vector: "true"
+              }
+          }
+      };
+
+      fetch("/pipelines/user_defined_pipelines/filter-pipeline", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
+      })
+      .then(response => response.json())
+      .then(data => {
+          console.log("Pipeline created successfully:", data);
+          this.pipeline = data;
+      })
+      .catch(error => console.error('Error:', error))
+    },
+    async stopAnalysis() {
+      if (this.pipeline) {
+        fetch(`/pipelines/${this.pipeline}`, {
+            method: "DELETE"
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Pipeline stopped successfully:", data);
+            this.pipeline = null;
+        })
+        .catch(error => console.error('Error:', error))
+      } else {
+        console.error('No pipeline to stop.');
+      }
+    },
+    async clearDatabase() {
+      fetch("/clear/", {
+          method: "POST"
+      })
+      .then(response => response.json())
+      .then(data => console.log("Database reloaded successfully:", data))
+      .catch(error => console.error('Error:', error))
+    },
+    onCropChange({ coordinates, canvas }) {
+      this.coordinates = coordinates;
+      this.canvas = canvas;
+    },
+    cropImage() {
+      if (this.canvas) {
+        this.croppedImage = this.canvas.toDataURL('image/png');
+        this.sendCroppedImage();
+      }
+    },
+    async sendCroppedImage() {
+      if (this.croppedImage) {
+        try {
+          const blob = await fetch(this.croppedImage).then(res => res.blob());
+          const formData = new FormData();
+          formData.append('images', blob, 'cropped_image.png');
+
+          const response = await axios.post('/search/', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+
+          console.log('Image sent successfully:', response.data[0]);
+
+          // Reset cropped image
+          this.screenshot = null;
+
+          // Iterate over response.data and fetch images
+          let results = await Promise.all(response.data[0].map(async (data) => {
+            console.log("data", data);
+            if (typeof data.entity.filename === 'string') {
+              return {
+                url: data.entity.filename,
+                distance: data.distance,
+                label: data.entity.label,
+                timestamp: data.entity.timestamp,
+                datetime: new Date(Number(data.entity.timestamp) / 1000000).toLocaleString()
+              };
+            } else {
+              console.error('Filename is not a string:', data.entity.filename);
+              return null;
+            }
+          }).filter(url => url !== null));
+
+          this.imageData = results.sort((a, b) => b.timestamp - a.timestamp);
+
+        } catch (error) {
+          console.error('Failed to send cropped image:', error);
+        }
+      } else {
+        console.error('No cropped image to send.');
+      }
+    }
+  },
+});
+</script>
+
+<style>
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.video-frame {
+  width: 100%; /* Set the width */
+  height: 35%; /* Set the height */
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column; /* Ensure the iframe is aligned vertically */
+  align-items: flex-start; /* Align items to the top */
+  justify-content: flex-start; /* Align items to the top */
+}
+
+.responsive-iframe {
+  width: 100%; /* Set the width */
+  height: 100%; /* Set the height */
+  border: none; /* Remove the border */
+  display: block; /* Ensure the iframe is displayed as a block element */
+}
+
+.screenshot-preview {
+  width: 100%; /* Set the width */
+  /* height: 157.5px; Set the height */
+  /* margin-left:15%;   */
+}
+
+.image-list {
+  width: 95%; /* Set a fixed width */
+  height: 50.5%; /* Set a fixed height */
+  overflow-y: auto; /* Enable vertical scrolling */
+  padding: 10px; /* Add padding */
+}
+
+.image-list h4 {
+  background-color: #663c1f; /* Set background color */
+  margin: 0; /* Remove margin */
+  color:white;
+}
+
+.image-list ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.image-list li {
+  display: flex;
+  align-items: center; /* Align items vertically */
+  margin-bottom: 2px;
+}
+
+.datetime-filter {
+  margin-top: 8px;
+  margin-bottom: -8px;
+}
+
+.datetime-filter input {
+  margin-left: 5px;
+}
+
+.datetime-filter label {
+  margin-left: 10px;
+}
+
+.btn-group button {
+  background-color: #04AA6D; /* Green background */
+  border: 1px solid green; /* Green border */
+  color: white; /* White text */
+  cursor: pointer; /* Pointer/hand icon */
+  float: left; /* Float the buttons side by side */
+  border-radius: 0 /* Make the button squared */
+}
+
+/* Clear floats (clearfix hack) */
+.btn-group:after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.btn-group button:not(:last-child) {
+  border-right: none; /* Prevent double borders */
+}
+
+/* Add a background color on hover */
+.btn-group button:hover {
+  background-color: #3e8e41;
+}
+
+</style>

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    katenary.v3/compose-hash: 4dd006301f669d044c60fd579bb24fb08133f26f
+    katenary.v3/version: release-3.0.0-rc2
+  labels:
+    {{- include "search_image_by_image.labels" . | nindent 4 }}
+    katenary.v3/component: evam
+  name: '{{ include "search_image_by_image.fullname" . }}-evam'
+spec:
+  ports:
+  - name: evam-8080
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    {{- include "search_image_by_image.selectorLabels" . | nindent 4 }}
+    katenary.v3/component: evam

@@ -1,0 +1,8 @@
+src/filter-pipeline/models/*
+*.pyc
+src/feature-matching/static/*
+*.bin
+*.xml
+*.onnx
+*.pth
+k8s/*

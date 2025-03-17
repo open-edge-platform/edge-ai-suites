@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    katenary.v3/compose-hash: 4dd006301f669d044c60fd579bb24fb08133f26f
+    katenary.v3/version: release-3.0.0-rc2
+  labels:
+    {{- include "search_image_by_image.labels" . | nindent 4 }}
+    katenary.v3/component: evam
+  name: '{{ include "search_image_by_image.fullname" . }}-evam'
+spec:
+  replicas: {{ .Values.evam.replicas }}
+  selector:
+    matchLabels:
+      {{- include "search_image_by_image.selectorLabels" . | nindent 6 }}
+      katenary.v3/component: evam
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        {{- include "search_image_by_image.selectorLabels" . | nindent 8 }}
+        katenary.v3/component: evam
+    spec:
+      containers:
+      - name: openvino-container
+        image: openvino/ubuntu22_dev:2024.6.0
+        env:
+          {{- if .Values.httpProxy }}
+          - name: http_proxy
+            value: "{{ .Values.httpProxy }}"
+          - name: HTTP_PROXY
+            value: "{{ .Values.httpProxy }}"
+          {{- end }}
+          {{- if .Values.httpsProxy }}
+          - name: https_proxy
+            value: "{{ .Values.httpsProxy }}"
+          - name: HTTPS_PROXY
+            value: "{{ .Values.httpsProxy }}"
+          {{- end }}
+          {{- if .Values.noProxy }}
+          - name: no_proxy
+            value: "{{ .Values.noProxy }}"
+          - name: NO_PROXY
+            value: "{{ .Values.noProxy }}"
+          {{- end }}
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            test -d /output/resnet-50-pytorch || (
+              rm -fr /output/resnet-50-pytorch &&
+              omz_downloader --name resnet-50-pytorch --output_dir models &&
+              omz_converter --name resnet-50-pytorch --download_dir models --output_dir models &&
+              cp -r ./models/public/resnet-50-pytorch /output
+            ) &&
+            test -d /output/person-vehicle-bike-detection-2004 || (
+              rm -fr /output/person-vehicle-bike-detection-2004 &&
+              omz_downloader --name person-vehicle-bike-detection-2004 --output_dir models &&
+              omz_converter --name person-vehicle-bike-detection-2004 --download_dir models --output_dir models &&
+              cp -r ./models/intel/person-vehicle-bike-detection-2004 /output
+            ) &&
+            tail -f /dev/null
+        volumeMounts:
+        - name: '{{ include "search_image_by_image.fullname" . }}-evam-models'
+          mountPath: /output
+      - envFrom:
+        - configMapRef:
+            name: '{{ include "search_image_by_image.fullname" . }}-evam-env'
+        image: '{{ tpl .Values.evam.repository.image $ }}:{{ tpl .Values.evam.repository.tag $ | default "latest" }}'
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          fsGroup: 0
+        imagePullPolicy: {{ .Values.evam.imagePullPolicy }}
+        name: evam
+        command: ["/bin/bash", "-c"]
+        args: 
+          - |
+            cp /tmp/pipeline/config.json . &&
+            cp /tmp/pipeline/person-vehicle-bike-detection-2004.json . &&
+            cp /tmp/pipeline/resnet-50-pytorch.json . &&
+            runuser -u eiiuser ./run.sh
+        ports:
+        - containerPort: 8080
+          name: port-8080
+        volumeMounts:
+        - name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline'
+          mountPath: /tmp/pipeline
+          subpath: config.json
+        - name: '{{ include "search_image_by_image.fullname" . }}-evam-udf'
+          mountPath: /home/pipeline-server/gvapython/mqtt_publisher
+          subpath: mqtt_publisher.py
+        - name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline-root'
+          mountPath: /var/cache/pipeline_root
+        - name: '{{ include "search_image_by_image.fullname" . }}-evam-tmp'
+          mountPath: /tmp
+        - name: '{{ include "search_image_by_image.fullname" . }}-evam-models'
+          mountPath: /models
+        {{- if .Values.evam.resources }}
+        resources:
+          {{ .Values.evam.resources | toYaml | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline'
+        configMap:
+          name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline'
+      - name: '{{ include "search_image_by_image.fullname" . }}-evam-udf'
+        configMap:
+          name: '{{ include "search_image_by_image.fullname" . }}-evam-udf'
+      - name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline-root'
+        emptyDir:
+          sizeLimit: 1Gi
+          medium: Memory
+      - name: '{{ include "search_image_by_image.fullname" . }}-evam-tmp'
+        emptyDir:
+          sizeLimit: 1Gi
+          medium: Memory
+      - name: '{{ include "search_image_by_image.fullname" . }}-evam-models'
+        emptyDir:
+          sizeLimit: 10Gi
+      {{- if .Values.pullSecrets }}
+      imagePullSecrets:
+      {{- .Values.pullSecrets | toYaml | nindent 6 }}
+      {{- end }}
+      {{- if .Values.evam.nodeSelector }}
+      nodeSelector:
+        {{- .Values.evam.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if ne .Values.evam.serviceAccount "" }}
+      serviceAccountName: {{ .Values.evam.serviceAccount | quote }}
+      {{- end }}
