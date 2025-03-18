@@ -103,8 +103,8 @@ Before you begin, ensure the following:
 4. **Example Output**:
    - Here is an example output:
      <div align="center">
-         <img src="../images/imagesearch1.png" width="45%" style="margin-right:1rem"/>
-         <img src="../images/imagesearch2.png" width="45%" />
+         <img src="./_static/imagesearch1.png" width="45%" style="margin-right:1rem"/>
+         <img src="./_static/imagesearch2.png" width="45%" />
      </div>
 
 ## Troubleshooting
