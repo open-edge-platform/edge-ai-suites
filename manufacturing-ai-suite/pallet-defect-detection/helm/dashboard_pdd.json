@@ -1,0 +1,438 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": {
+    "Panel" :{
+      "collapsed": false,
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 17,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "Pipeline Server Stream Status",
+      "type": "row"
+    },
+    "Panel1" :{
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "PD0067CAD9A63E081"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "max": 50,
+          "min": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "#EF843C",
+                "value": 8
+              },
+              {
+                "color": "#6ED0E0",
+                "value": 12
+              },
+              {
+                "color": "green",
+                "value": 30
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 14,
+      "interval": "5s",
+      "links": [
+        {
+          "title": "",
+          "url": "http://127.0.0.1:30107/pipelines/status"
+        }
+      ],
+      "maxDataPoints": 200,
+      "options": {
+        "displayMode": "lcd",
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "/^FPS \\(avg\\)$/",
+          "limit": 6,
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {},
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.2.2",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "avg_fps",
+              "text": "FPS (avg)",
+              "type": "number"
+            },
+            {
+              "selector": "id",
+              "text": "Pipeline",
+              "type": "string"
+            },
+            {
+              "selector": "state",
+              "text": "Status",
+              "type": "string"
+            },
+            {
+              "selector": "elapsed_time",
+              "text": "Elapsed",
+              "type": "number"
+            }
+          ],
+          "data": "",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "PD0067CAD9A63E081"
+          },
+          "filters": [
+            {
+              "field": "Status",
+              "operator": "in",
+              "value": [
+                "QUEUED,RUNNING"
+              ]
+            },
+            {
+              "field": "Elapsed",
+              "operator": ">",
+              "value": [
+                "0"
+              ]
+            },
+            {
+              "field": "FPS (avg)",
+              "operator": ">",
+              "value": [
+                "0"
+              ]
+            }
+          ],
+          "format": "table",
+          "global_query_id": "",
+          "json_options": {
+            "columnar": false,
+            "root_is_not_array": false
+          },
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:30107/pipelines/status",
+          "url_options": {
+            "data": "",
+            "method": "GET"
+          }
+        }
+      ],
+      "timeFrom": "now-5s",
+      "title": "Active Streams",
+      "type": "bargauge"
+    },
+    "Panel2" :{
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "PD0067CAD9A63E081"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "max": 50,
+          "min": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "#007dc3",
+                "value": 8
+              },
+              {
+                "color": "#007dc3",
+                "value": 12
+              },
+              {
+                "color": "green",
+                "value": 30
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "id": 15,
+      "interval": "5s",
+      "links": [
+        {
+          "title": "",
+          "url": "http://127.0.0.1:30107/pipelines/status"
+        }
+      ],
+      "maxDataPoints": 200,
+      "options": {
+        "displayMode": "lcd",
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "/^FPS \\(avg\\)$/",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {},
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.2.2",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "avg_fps",
+              "text": "FPS (avg)",
+              "type": "number"
+            },
+            {
+              "selector": "id",
+              "text": "Pipeline",
+              "type": "string"
+            },
+            {
+              "selector": "state",
+              "text": "Status",
+              "type": "string"
+            },
+            {
+              "selector": "elapsed_time",
+              "text": "Elapsed",
+              "type": "number"
+            }
+          ],
+          "data": "",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "PD0067CAD9A63E081"
+          },
+          "filters": [
+            {
+              "field": "Status",
+              "operator": "notin",
+              "value": [
+                "QUEUED,RUNNING"
+              ]
+            },
+            {
+              "field": "Elapsed",
+              "operator": ">",
+              "value": [
+                "0"
+              ]
+            },
+            {
+              "field": "FPS (avg)",
+              "operator": ">",
+              "value": [
+                "0"
+              ]
+            }
+          ],
+          "format": "table",
+          "global_query_id": "",
+          "json_options": {
+            "columnar": false,
+            "root_is_not_array": false
+          },
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:30107/pipelines/status",
+          "url_options": {
+            "data": "",
+            "method": "GET"
+          }
+        }
+      ],
+      "timeFrom": "now-5s",
+      "title": "Completed Pipeline Streams",
+      "type": "bargauge"
+    },
+    "VideoPanel" :{
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "gridPos": {
+        "h": 16,
+        "w": 13,
+        "x": 0,
+        "y": 5
+      },
+      "header_js": "{}",
+      "id": 4,
+      "method": "iframe",
+      "mode": "html",
+      "params_js": "{ }",
+      "pluginVersion": "7.3.4",
+      "request": "http",
+      "responseType": "text",
+      "showErrors": true,
+      "showTime": false,
+      "showTimeFormat": "LTS",
+      "showTimeValue": "request",
+      "skipSameURL": true,
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "queryType": "randomWalk",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "json",
+          "url": "https://jsonplaceholder.typicode.com/users",
+          "url_options": {
+            "data": "",
+            "method": "GET"
+          }
+        }
+      ],
+      "templateResponse": true,
+      "timeFrom": "now-1d",
+      "title": "edge_video_analytics_results",
+      "type": "ryantxu-ajax-panel",
+      "url": "http://127.0.0.1:30108/edge_video_analytics_results",
+      "withCredentials": false
+    }
+},
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-3h",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": false,
+    "refresh_intervals": [
+      "5s",
+      "15s",
+      "1m",
+      "10m",
+      "30m",
+      "1h",
+      "6h",
+      "12h",
+      "1d",
+      "7d",
+      "14d",
+      "30d"
+    ]
+  },
+  "timezone": "",
+  "title": "Video Analytics Dashboard",
+  "uid": "kzGVerJnz2",
+  "version": 1,
+  "weekStart": ""
+}

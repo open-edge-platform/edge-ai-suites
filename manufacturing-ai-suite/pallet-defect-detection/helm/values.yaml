@@ -1,0 +1,96 @@
+# Copyright Intel Corporation
+
+namespace: apps
+DOCKER_REGISTRY: ''
+DOCKER_USERNAME: ''
+DOCKER_PASSWORD: ''
+imagePullPolicy: Always
+storageClassName: manual
+num_video_instances: 1
+env:
+  DEV_MODE: true
+  PROFILING_MODE: false
+  READ_CONFIG_FROM_FILE_ENV: true
+  EII_INSTALL_PATH: /opt/intel/eii
+  EII_USER_NAME: eiiuser
+  EII_UID: '1999'
+  SOCKET_DIR: /EII/sockets
+  HOST_IP: localhost
+  VISUALIZER_GRAFANA_USER: 
+  VISUALIZER_GRAFANA_PASSWORD: 
+  RTSP_CAMERA_IP: 
+  APPLICATION_RESTART_FREQ_SECS: '86400'
+  RUNTIME_LICENSE_CHECK_FREQ_SECS: '86400'
+  LICENSE_ENABLED: 'false'
+  eii_no_proxy: localhost,127.0.0.1,.intel.com
+  models_dir: "/EII/models"
+  pipelines_dir: "/EII/pipelines"
+  APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC: true
+  ENABLE_HTTPS_MODE: false
+  MIN_LOG_LEVEL: DEBUG
+  MINIO_ACCESS_KEY: 
+  MINIO_BUCKET_NAME: model-registry
+  MINIO_HOSTNAME: mraas-minio
+  MINIO_SECRET_KEY: 
+  MINIO_SERVER_PORT: "8000"
+  MLFLOW_S3_ENDPOINT_URL: http://127.0.0.1:8000
+  SERVER_PORT: "8111"
+  https_proxy: 
+  http_proxy: 
+  no_proxy: mraas-minio
+  NO_PROXY: mraas-minio
+  POSTGRES_DB: model_registry_db
+  POSTGRES_PASSWORD: 
+  S3_STORAGE_PORT: 30800
+images:
+  minio: minio/minio:RELEASE.2020-12-12T08-39-07Z
+  model_registry: intel/model-registry:1.0.2
+config:
+  etcd:
+    name: configmgragent
+    client_port: 8379
+    peer_port: 8380
+    ext:
+      client_port: 32379
+    etcdui_int_port: 7071
+    etcdui_ext_port: 30010
+  edge_video_analytics_microservice:
+    name: edge-video-analytics-microservice
+    gige_camera: false
+    accelerator: ""
+    int:
+      rest_api_port: "8080"
+      rtsp_output_port: "8554"
+    ext:
+      rest_api_port: "30107"
+      rtsp_output_port: "30125"
+  multimodal_data_visualization_streaming:
+    name: multimodal-data-visualization-streaming
+    grpc_port: "65138"
+    int:
+      http_port: "5003"
+    ext:
+      http_port: "30108"
+  multimodal_data_visualization:
+    name: multimodal-data-visualization
+    int:
+      port: "3000"
+    ext:
+      port: "30101"
+  model_registry:
+    name: model-registry
+    int:
+      port: "8111"
+    ext:
+      port: "32002"
+volumes:
+  pipelines:
+    name: vol-pipelines
+    size: 100Mi
+    location: "/home/pipeline-server/pipelines"
+    hostpath: "/opt/intel/eii/pipelines"
+  models:
+    name: vol-models
+    size: 500Mi
+    location: "/home/pipeline-server/models"
+    hostpath: "/opt/intel/eii/models"

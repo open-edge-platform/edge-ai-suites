@@ -1,0 +1,300 @@
+services:
+  ia_edge_video_analytics_microservice:
+    depends_on:
+      model_registry:
+        condition: service_healthy
+    image: ${DOCKER_REGISTRY}intel/edge-video-analytics-microservice:2.3.0
+    container_name: ia_edge_video_analytics_microservice
+    hostname: ia_edge_video_analytics_microservice
+    networks:
+    - mraas
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges
+    ports:
+    - '8080:8080'
+    - '8554:8554'
+    environment:
+      AppName: "EdgeVideoAnalyticsMicroservice"
+      no_proxy: ${ETCD_HOST},${no_proxy},${HOST_IP},ia-datastore,multimodal-data-visualization-streaming,${RTSP_CAMERA_IP}
+      ETCD_HOST: ${ETCD_HOST}
+      ETCD_CLIENT_PORT: ${ETCD_CLIENT_PORT}
+      ETCD_PREFIX: ${ETCD_PREFIX}
+      READ_CONFIG_FROM_FILE_ENV: ${READ_CONFIG_FROM_FILE_ENV}
+      MODELS_DIR: "/EII/models"
+      PIPELINES_DIR: "/EII/pipelines"
+      GENICAM: "Balluff"
+      RUN_MODE: "EVA"
+      GST_DEBUG: "1,gencamsrc:2"
+      LSHOST: host.docker.internal
+      LSFEATURE_NAME: "EVAM"
+      LICENSE_ENABLED: ${LICENSE_ENABLED}
+      RUNTIME_LICENSE_CHECK_FREQ_SECS: ${RUNTIME_LICENSE_CHECK_FREQ_SECS}
+      APPLICATION_RESTART_FREQ_SECS: ${APPLICATION_RESTART_FREQ_SECS}
+      APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC: "true"
+      REST_SERVER_PORT: 8080
+      S3_STORAGE_HOST: ${HOST_IP}
+      S3_STORAGE_PORT: ${MR_MINIO_SERVER_PORT}
+      S3_STORAGE_USER: ${MR_MINIO_ACCESS_KEY}
+      S3_STORAGE_PASS: ${MR_MINIO_SECRET_KEY}
+    volumes:
+    - vol_evam_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
+    - /var/tmp:/var/tmp
+    - ./resources/:/home/pipeline-server/resources/
+    - ./evam_config.json:/home/pipeline-server/config.json
+      # Following devices under /dev filesystem will be needed based on usecase
+      # dri - GPU
+      # USB camera devices
+      # Selective mount can be done for deployment as mounting whole /dev is not recommended
+    - "/dev:/dev"
+    - "/tmp:/tmp"
+      # volume mount the udev database with read-only permission,so the USB3 Vision interfaces can be enumerated correctly in the container
+    - "/run/udev:/run/udev:ro"
+      # Volume mount the directory in host system where the images are stored onto the container directory system.
+      # - <absolute or relative path to the images directory>:/app/img_dir
+      #- ../EdgeVideoAnalyticsMicroservice/udfs:/home/pipeline-server/udfs/
+    group_add:
+      # render group ID for ubuntu 20.04 host OS
+    - "109"
+      # render group ID for ubuntu 22.04 host OS
+    - "110"
+    device_cgroup_rules:
+      # Default run - device-cgroup-rule='c 189:* rmw'
+      # Selective rules can be applied for deployment
+    - 'c 189:* rmw'
+    - 'c 209:* rmw'
+    - 'a 189:* rwm'
+    devices:
+      # Following devices under /dev filesystem will be needed based on usecase
+      # dri - GPU
+      # USB camera devices
+      # Selective mount can be done for deployment as mounting whole /dev is not recommended
+    - "/dev:/dev"
+
+  multimodal-data-visualization-streaming:
+    image: ${DOCKER_REGISTRY}intel/multimodal-data-visualization-streaming:5.0.0
+    container_name: multimodal-data-visualization-streaming
+    hostname: multimodal-data-visualization-streaming
+    read_only: true
+    restart: unless-stopped
+    ipc: "none"
+    security_opt:
+    - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    tmpfs:
+    - /etc/nginx/sites-enabled:uid=1999,gid=1999
+    - /usr/share/nginx:uid=1999,gid=1999
+    - /var/log/nginx:uid=1999,gid=1999
+    - /var/cache/nginx:uid=1999,gid=1999
+    - /var/lib/nginx:uid=1999,gid=1999
+    - /run:uid=1999,gid=1999
+    - /tmp:uid=1999,gid=1999
+    - /opt:uid=1999,gid=1999
+    environment:
+      PROFILING_MODE: ${PROFILING_MODE}
+      AppName: "MultiModalVisualizationStreaming"
+      DEV_MODE: ${DEV_MODE}
+      no_proxy: "${ETCD_HOST}, ${no_proxy}, ${HOST_IP}"
+      NO_PROXY: "${ETCD_HOST}, ${no_proxy}, ${HOST_IP}"
+      ETCD_HOST: ${ETCD_HOST}
+      ETCD_CLIENT_PORT: ${ETCD_CLIENT_PORT}
+      ETCD_PREFIX: ${ETCD_PREFIX}
+      HOST_IP: ${HOST_IP}
+      MODE: "EII"
+      PROVISION_MODE: ${PROVISION_MODE}
+      READ_CONFIG_FROM_FILE_ENV: ${READ_CONFIG_FROM_FILE_ENV}
+      LSHOST: host.docker.internal
+      LSFEATURE_NAME: "MultiModalVisStreaming"
+      RUNTIME_LICENSE_CHECK_FREQ_SECS: ${RUNTIME_LICENSE_CHECK_FREQ_SECS}
+      APPLICATION_RESTART_FREQ_SECS: ${APPLICATION_RESTART_FREQ_SECS}
+      LICENSE_ENABLED: ${LICENSE_ENABLED}
+    networks:
+    - mraas
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
+    volumes:
+    - ./viz_str_config.json:/app/eii/config.json
+    ports:
+    - 5003:5003
+    - 65138:65138
+
+  multimodal-data-visualization:
+    image: ${DOCKER_REGISTRY}intel/multimodal-data-visualization:5.0.0
+    container_name: multimodal-data-visualization
+    hostname: multimodal-data-visualization
+    restart: unless-stopped
+    read_only: true
+    ipc: "none"
+    security_opt:
+    - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    environment:
+      AppName: "MultiModalVisualization"
+      DEV_MODE: ${DEV_MODE}
+      no_proxy: ${ETCD_HOST},ia_influxdb,multimodal-data-visualization-streaming, ${no_proxy}, ${HOST_IP}
+      NO_PROXY: ${ETCD_HOST},ia_influxdb,multimodal-data-visualization-streaming, ${no_proxy}, ${HOST_IP}
+      ETCD_HOST: ${ETCD_HOST}
+      ETCD_CLIENT_PORT: ${ETCD_CLIENT_PORT}
+      ETCD_PREFIX: ${ETCD_PREFIX}
+      HOST_IP: ${HOST_IP}
+      MODE: "EII"
+      INFLUX_SERVER: "ia_influxdb"
+      GRAFANA_SERVER: '0.0.0.0'
+      INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
+      INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
+      GF_SECURITY_ADMIN_USER: ${VISUALIZER_GRAFANA_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${VISUALIZER_GRAFANA_PASSWORD}
+      GRAFANA_DATA_PATH: "/tmp/grafana/lib/grafana"
+      GRAFANA_LOGS_PATH: "/tmp/grafana/log/grafana"
+      GRAFANA_PLUGINS_PATH: "/tmp/grafana/lib/grafana/plugins"
+      GF_PATHS_DATA: "/tmp/grafana/lib/grafana"
+      GF_PATHS_LOGS: "/tmp/grafana/log/grafana"
+      GF_PATHS_PLUGINS: "/tmp/grafana/lib/grafana/plugins"
+      GF_PATHS_PROVISIONING: "/tmp/grafana/conf/provisioning"
+      PROVISION_MODE: ${PROVISION_MODE}
+      READ_CONFIG_FROM_FILE_ENV: ${READ_CONFIG_FROM_FILE_ENV}
+      LSFEATURE_NAME: "MultiModalVisualization"
+      LSHOST: host.docker.internal
+      RUNTIME_LICENSE_CHECK_FREQ_SECS: ${RUNTIME_LICENSE_CHECK_FREQ_SECS}
+      APPLICATION_RESTART_FREQ_SECS: ${APPLICATION_RESTART_FREQ_SECS}
+      LICENSE_ENABLED: ${LICENSE_ENABLED}
+    networks:
+    - mraas
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
+    volumes:
+    - "vol_temp_grafana:/tmp"
+    - ./viz_config.json:/app/config.json
+    - ./dashboard_pdd.json:/app/eii/dashboard.json
+    ports:
+    - 3000:3000
+
+  model_registry:
+    image: ${DOCKER_REGISTRY}intel/model-registry:1.0.2
+    container_name: model_registry
+    hostname: model_registry
+    ipc: "none"
+    ports:
+    - "${HOST_IP}:32002:${MR_SERVER_PORT}"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4096mb
+          cpus: '0.30'
+          pids: 200
+        reservations:
+          memory: 2048mb
+          cpus: '0.15'
+    security_opt:
+      - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+    environment:
+      AppName: "ModelRegistry"
+      MIN_LOG_LEVEL: ${MR_MIN_LOG_LEVEL}
+      ENABLE_HTTPS_MODE: ${ENABLE_HTTPS_MODE}
+      MLFLOW_TRACKING_URI: postgresql+psycopg2://${EII_USER_NAME}:${MR_PSQL_PASSWORD}@mraas_postgres:${MR_PSQL_PORT}/${MR_PSQL_DATABASE}
+      MLFLOW_S3_ENDPOINT_URL: ${MR_MLFLOW_S3_ENDPOINT_URL}
+      MINIO_HOSTNAME: ${MR_MINIO_HOSTNAME}
+      MINIO_SERVER_PORT: ${MR_MINIO_SERVER_PORT}
+      MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
+      MINIO_BUCKET_NAME: ${MR_MINIO_BUCKET_NAME}
+      SERVER_PORT: ${MR_SERVER_PORT}
+      LSHOST: host.docker.internal
+      SERVER_CERT: /run/secrets/ModelRegistry_Server/public.crt
+      CA_CERT: /run/secrets/ModelRegistry_Server/server-ca.crt
+      SERVER_PRIVATE_KEY: /run/secrets/ModelRegistry_Server/private.key
+      no_proxy: mraas_minio
+      NO_PROXY: mraas_minio
+    volumes:
+      - ./Certificates/ssl/:/run/secrets/ModelRegistry_Server:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - mraas
+  mraas_postgres:
+    image: postgres:13
+    container_name: mraas_postgres
+    hostname: mraas_postgres
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    environment:
+      AppName: "ModelRegistry"
+      POSTGRES_USER: ${EII_USER_NAME}
+      POSTGRES_PASSWORD: ${MR_PSQL_PASSWORD}
+      POSTGRES_DB: ${MR_PSQL_DATABASE}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - mr_postgres_data:/var/lib/postgresql/data
+    expose:
+      - ${MR_PSQL_PORT}
+    user: "${EII_UID}:${EII_UID}"
+    networks:
+      - mraas
+  mraas_minio:
+    image: minio/minio:RELEASE.2020-12-12T08-39-07Z
+    container_name: mraas_minio
+    hostname: mraas_minio
+    ipc: "none"
+    expose:
+      - ${MR_MINIO_SERVER_PORT}
+    volumes:
+      - ./Certificates/ssl/:/certs/:rw
+      - "vol_minio_data:/data"
+    networks:
+      - mraas
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    ports:
+    - '8000:8000'
+    environment:
+      EII_USER_NAME: ${EII_USER_NAME}
+      AppName: "ModelRegistry"
+      MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
+      ENABLE_HTTPS_MODE: ${ENABLE_HTTPS_MODE}
+    command: server --address ":8000" --certs-dir /certs /data
+networks:
+  mraas:
+    driver: bridge
+volumes:
+  vol_evam_pipeline_root:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_etcd_keeper:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_etcd_keeper_nginx_cache:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_etcd_keeper_nginx_pid:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_cma_status_file:
+    driver: local
+  vol_temp_grafana:
+    name: "visualization_grafana_vol"
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_minio_data:
+    driver: local
+  mr_postgres_data:
+    driver: local

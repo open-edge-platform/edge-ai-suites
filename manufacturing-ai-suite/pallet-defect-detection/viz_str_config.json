@@ -1,0 +1,19 @@
+{
+    "config": {
+        "cert_type": ["pem", "grpc"],
+        "logging": {
+            "C_LOG_LEVEL": "INFO",
+            "PY_LOG_LEVEL": "INFO"
+        },
+        "port": 5003
+    },
+    "interfaces": {
+        "Servers": [
+            {
+                "Name": "default",
+                "Type": "grpc",
+                "EndPoint": "0.0.0.0:65138"
+            }
+        ]
+    }
+}

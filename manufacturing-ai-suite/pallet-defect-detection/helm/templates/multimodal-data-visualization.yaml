@@ -1,0 +1,145 @@
+# Copyright (c) 2022 Intel Corporation.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Values.config.multimodal_data_visualization.name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  type: NodePort
+  selector:
+    app: MultiModalVisualization
+  ports:
+  - name: multimodal-data-visualization-port
+    port: {{ $.Values.config.multimodal_data_visualization.int.port }}
+    targetPort: {{ $.Values.config.multimodal_data_visualization.int.port }}
+    nodePort: {{ $.Values.config.multimodal_data_visualization.ext.port }}
+  
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  labels:
+    app: MultiModalVisualization
+  name: deployment-multimodal-data-visualization
+  namespace: {{ $.Values.namespace }}
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: MultiModalVisualization
+  template:
+    metadata:
+      labels:
+        app: MultiModalVisualization
+    spec:
+      {{- if and $.Values.DOCKER_USERNAME $.Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: ia-multimodal-data-visualization
+        image: {{ $.Values.DOCKER_REGISTRY }}intel/multimodal-data-visualization:5.0.0
+        imagePullPolicy: {{ $.Values.imagePullPolicy }}
+        securityContext:
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - name: vol-temp-grafana
+          mountPath: /tmp
+        - name: das-input
+          mountPath: /app/eii/dashboard.json
+          subPath: dashboard.json
+        - name: vis-config
+          mountPath: /app/config.json
+          subPath: config.json
+        {{ if eq $.Values.env.DEV_MODE false}}
+        - name: etcd-certs
+          mountPath: /run/secrets/etcd/
+        {{ end }}
+        env:
+        - name: AppName
+          value: 'MultiModalVisualization'
+        - name: DEV_MODE
+          value: '{{ $.Values.env.DEV_MODE }}'
+        - name: READ_CONFIG_FROM_FILE_ENV
+          value: '{{ $.Values.env.READ_CONFIG_FROM_FILE_ENV }}'
+        - name: ETCD_HOST
+          value: '{{ $.Values.config.etcd.name }}'
+        - name: ETCD_CLIENT_PORT
+          value: '{{ $.Values.config.etcd.client_port }}'
+        - name:  ETCD_PREFIX
+          value: ''
+        - name: HOST_IP
+          value: '{{ $.Values.env.HOST_IP }}'
+        - name: INFLUXDB_USERNAME
+          value: '{{ $.Values.env.INFLUXDB_USERNAME }}'
+        - name: INFLUXDB_PASSWORD
+          value: '{{ $.Values.env.INFLUXDB_PASSWORD }}'
+        - name: INFLUX_SERVER
+          value: "influxdb"
+        - name: GRAFANA_SERVER
+          value: "0.0.0.0"
+        - name: GF_SECURITY_ADMIN_USER
+          value: '{{ $.Values.env.VISUALIZER_GRAFANA_USER }}'
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: '{{ $.Values.env.VISUALIZER_GRAFANA_PASSWORD }}'
+        - name: GRAFANA_DATA_PATH
+          value: "/tmp/grafana/lib/grafana"
+        - name: GRAFANA_LOGS_PATH
+          value: "/tmp/grafana/log/grafana"
+        - name: GRAFANA_PLUGINS_PATH
+          value: "/tmp/grafana/lib/grafana/plugins"
+        - name: GF_PATHS_DATA
+          value: "/tmp/grafana/lib/grafana"
+        - name: GF_PATHS_LOGS
+          value: "/tmp/grafana/log/grafana"
+        - name: GF_PATHS_PLUGINS
+          value: "/tmp/grafana/lib/grafana/plugins"
+        - name: GF_PATHS_PROVISIONING
+          value: "/tmp/grafana/conf/provisioning"
+        - name: MODE
+          value: "EII"
+        - name: PROVISION_MODE
+          value: "k8s"
+        - name: RUNTIME_LICENSE_CHECK_FREQ_SECS
+          value: "{{ .Values.env.RUNTIME_LICENSE_CHECK_FREQ_SECS }}" 
+        - name: APPLICATION_RESTART_FREQ_SECS
+          value: "{{ .Values.env.APPLICATION_RESTART_FREQ_SECS }}" 
+        - name: LICENSE_ENABLED
+          value: "{{ .Values.env.LICENSE_ENABLED }}" 
+        - name: LSHOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: LSFEATURE_NAME
+          value: "MultiModalVisualization"
+        {{ if eq $.Values.env.DEV_MODE false}}
+        - name: CONFIGMGR_CACERT
+          value: "/run/secrets/etcd/cacert.pem"
+        - name: CONFIGMGR_CERT
+          value: "/run/secrets/etcd/MultiModalVisualization_client_certificate.pem"
+        - name: CONFIGMGR_KEY
+          value: "/run/secrets/etcd/MultiModalVisualization_client_key.pem"
+        {{ end }}
+      volumes:
+      - name: das-input
+        configMap:
+          name: dashboard-input
+      - name: vis-config
+        configMap:
+          name: vis-config-input
+      - name: vol-temp-grafana
+        emptyDir: {}
+      {{ if eq $.Values.env.DEV_MODE false}}
+      - name: etcd-certs
+        secret:
+          secretName: eii-certs
+          items:
+          - key: cacert.pem
+            path: cacert.pem
+          - key: MultiModalVisualization_client_certificate.pem
+            path: MultiModalVisualization_client_certificate.pem
+          - key: MultiModalVisualization_client_key.pem
+            path: MultiModalVisualization_client_key.pem
+      {{ end }}

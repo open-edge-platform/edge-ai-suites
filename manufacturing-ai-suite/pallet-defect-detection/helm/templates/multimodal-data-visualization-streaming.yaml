@@ -1,0 +1,148 @@
+# Copyright (c) 2022 Intel Corporation.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Values.config.multimodal_data_visualization_streaming.name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  type: NodePort
+  ports:
+  - name: grpc
+    port: {{ $.Values.config.multimodal_data_visualization_streaming.grpc_port }}
+  - name: http
+    port: {{ $.Values.config.multimodal_data_visualization_streaming.int.http_port }}
+    targetPort: {{ $.Values.config.multimodal_data_visualization_streaming.int.http_port }}
+    nodePort: {{ $.Values.config.multimodal_data_visualization_streaming.ext.http_port }}
+  selector:
+          app: MultiModalVisualizationStreaming
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: MultiModalVisualizationStreaming
+  name: deployment-multimodal-data-visualization-streaming
+  namespace: {{ $.Values.namespace }}
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: MultiModalVisualizationStreaming
+  template:
+    metadata:
+      labels:
+        app: MultiModalVisualizationStreaming
+    spec:
+      {{- if and $.Values.DOCKER_USERNAME $.Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: ia-multimodal-data-visualization-streaming
+        image: {{ $.Values.DOCKER_REGISTRY }}intel/multimodal-data-visualization-streaming:5.0.0
+        imagePullPolicy: {{ $.Values.imagePullPolicy }}
+        securityContext:
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /etc/nginx/sites-enabled
+          name: multimodal-data-visualization-streaming-tmpfs0
+        - mountPath: /usr/share/nginx
+          name: multimodal-data-visualization-streaming-tmpfs1
+        - mountPath: /var/log/nginx
+          name: multimodal-data-visualization-streaming-tmpfs2
+        - mountPath: /var/cache/nginx
+          name: multimodal-data-visualization-streaming-tmpfs3
+        - mountPath: /var/lib/nginx
+          name: multimodal-data-visualization-streaming-tmpfs4
+        - mountPath: /run
+          name: multimodal-data-visualization-streaming-tmpfs5
+        - mountPath: /tmp
+          name: multimodal-data-visualization-streaming-tmpfs6
+        {{ if eq $.Values.env.DEV_MODE false}}
+        - name: certs
+          mountPath: /run/secrets/etcd/
+        - name: certs
+          mountPath: /run/secrets/MultiModalVisualizationStreaming_gRPC/
+        {{ end }}
+        - name: vis-str-input
+          mountPath: /app/eii/config.json
+          subPath: config.json
+        env:
+        - name: AppName
+          value: 'MultiModalVisualizationStreaming'
+        - name: DEV_MODE
+          value: '{{ $.Values.env.DEV_MODE }}'
+        - name: READ_CONFIG_FROM_FILE_ENV
+          value: '{{ $.Values.env.READ_CONFIG_FROM_FILE_ENV }}'
+        - name: ETCD_HOST
+          value: '{{ $.Values.config.etcd.name }}'
+        - name: ETCD_CLIENT_PORT
+          value: '{{ $.Values.config.etcd.client_port }}'
+        - name:  ETCD_PREFIX
+          value: ''
+        - name: HOST_IP
+          value: '{{ $.Values.env.HOST_IP }}'
+        - name: MODE
+          value: "EII"
+        - name: PROVISION_MODE
+          value: "k8s"
+        - name: RUNTIME_LICENSE_CHECK_FREQ_SECS
+          value: "{{ .Values.env.RUNTIME_LICENSE_CHECK_FREQ_SECS }}" 
+        - name: APPLICATION_RESTART_FREQ_SECS
+          value: "{{ .Values.env.APPLICATION_RESTART_FREQ_SECS }}" 
+        - name: LICENSE_ENABLED
+          value: "{{ .Values.env.LICENSE_ENABLED }}" 
+        - name: LSHOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: LSFEATURE_NAME
+          value: "MultiModalVisStreaming"
+        {{- $visualizer_port := "" }}
+        {{- $visualizer_port = $.Values.config.multimodal_data_visualization_streaming.grpc_port }}
+        {{ if eq $.Values.env.DEV_MODE false}}
+        - name: CONFIGMGR_CACERT
+          value: "/run/secrets/etcd/cacert.pem"
+        - name: CONFIGMGR_CERT
+          value: "/run/secrets/etcd/MultiModalVisualizationStreaming_client_certificate.pem"
+        - name: CONFIGMGR_KEY
+          value: "/run/secrets/etcd/MultiModalVisualizationStreaming_client_key.pem"
+        {{ end }}
+      
+      
+      volumes:
+      - name: multimodal-data-visualization-streaming-tmpfs0
+        emptyDir: {}
+      - name: multimodal-data-visualization-streaming-tmpfs1
+        emptyDir: {}
+      - name: multimodal-data-visualization-streaming-tmpfs2
+        emptyDir: {}
+      - name: multimodal-data-visualization-streaming-tmpfs3
+        emptyDir: {}
+      - name: multimodal-data-visualization-streaming-tmpfs4
+        emptyDir: {}
+      - name: multimodal-data-visualization-streaming-tmpfs5
+        emptyDir: {}
+      - name: multimodal-data-visualization-streaming-tmpfs6
+        emptyDir: {}
+      - name: vis-str-input
+        configMap:
+          name: vis-str-config-input
+      {{ if eq $.Values.env.DEV_MODE false}}
+      - name: certs
+        secret:
+          secretName: eii-certs
+          items:
+          - key: cacert.pem
+            path: cacert.pem
+          - key: MultiModalVisualizationStreaming_client_certificate.pem
+            path: MultiModalVisualizationStreaming_client_certificate.pem
+          - key: MultiModalVisualizationStreaming_client_key.pem
+            path: MultiModalVisualizationStreaming_client_key.pem
+          - key: MultiModalVisualizationStreaming_gRPC_server_certificate.pem
+            path: MultiModalVisualizationStreaming_gRPC_server_certificate.pem
+          - key: MultiModalVisualizationStreaming_gRPC_server_key.pem
+            path: MultiModalVisualizationStreaming_gRPC_server_key.pem
+      {{ end }}

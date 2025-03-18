@@ -1,0 +1,89 @@
+{
+    "config": {
+        "logging": {
+            "C_LOG_LEVEL": "INFO",
+            "PY_LOG_LEVEL": "INFO"
+        },
+        "cert_type": [
+            "grpc"
+        ],
+        "model_registry": {
+            "url": "http://<HOST_IP_where_MRaaS_is_running>:32002",
+            "request_timeout": 300,
+            "saved_models_dir": "./mr_models"
+        },
+        "pipelines": [
+            {
+                "name": "pallet_defect_detection_mlops",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/warehouse.avi name=source ! h264parse ! decodebin ! queue max-size-buffers=10 ! videoconvert ! gvadetect name=detection ! queue ! gvawatermark ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "pallet_defect_detection",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! queue ! gvawatermark ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "pallet_defect_detection_s3write",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! queue ! gvawatermark ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "S3_write": {
+                    "bucket": "ecgdemo",
+                    "folder_prefix": "camera1",
+                    "block":"false"
+                },
+                "auto_start": false
+            }
+        ]
+    },
+    "interfaces": {
+        "Clients": [
+            {
+                "EndPoint": "multimodal-data-visualization-streaming:65138",
+                "Name": "visualizer",
+                "Topics": [
+                    "edge_video_analytics_results"
+                ],
+                "Type": "grpc"
+            }
+        ]
+    }
+}
