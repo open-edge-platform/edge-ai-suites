@@ -56,20 +56,23 @@ up_opcua_ingestion: down
 status:
 	@echo "Status of the deployed containers..."; \
 	docker ps -a --filter "name=^ia-" --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"; \
-	echo "Status check completed"; \
-	echo "Fetching logs of the containers which are not in running state..."; \
-	containers=$$(docker ps -a --filter "name=^ia-" --filter "status=exited" --format "{{.Names}}"); \
-	if [ -n "$$containers" ]; then \
-		for container in $$containers; do \
-			echo "===================================="; \
-			echo "Logs for container: $$container"; \
-			echo "===================================="; \
-			docker logs --tail 20 $$container; \
+	echo "Wait for few seconds for deployed containers to come up fully..."; \
+	sleep 10; \
+	containers=$$(docker ps -a --filter "name=^ia-" --format "{{.Names}}"); \
+	for container in $$containers; do \
+		errors=$$(docker logs --tail 10 $$container 2>&1 | grep -i "error"); \
+		error_count=0; \
+		if [ -n "$$errors" ]; then \
+			error_count=$$(echo "$$errors" | wc -l); \
+		fi; \
+		if [ $$error_count -gt 0 ]; then \
 			echo ""; \
-		done \
-	else \
-		echo "No failed containers found."; \
-	fi
+			echo "=============Found errors in container $$container========"; \
+			echo "$$errors"; \
+			echo "******************************************************"; \
+			echo ""; \
+		fi; \
+	done \
 	
 # Stop Docker containers
 .PHONY: down
