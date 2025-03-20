@@ -148,7 +148,6 @@ services:
       - MQTT_PORT=1883
     volumes:
       - "./src/evam/configs/filter-pipeline/config.json:/home/pipeline-server/config.json"
-      - "./src/evam/user_scripts/gvapython/mqtt_publisher:/home/pipeline-server/gvapython/mqtt_publisher"
       - "evam-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999"
       # - "../certificates:/MqttCerts:ro"
       # - "../Certificates/ssl_server/:/run/secrets/EdgeVideoAnalyticsMicroservice_Server:ro"

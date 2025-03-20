@@ -9,27 +9,18 @@
                 "name": "filter-pipeline",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! video/x-raw ! videoconvert ! gvadetect model=/models/person-vehicle-bike-detection-2004/FP32/person-vehicle-bike-detection-2004.xml model-proc=/models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json inference-interval=3 threshold=0.4 device=AUTO model-instance-id=detect1 ! gvaclassify model=/models/resnet50/FP32/resnet-50-pytorch.xml model-proc=/models/resnet50/resnet-50-pytorch.json name=classification model-instance-id=classify1 ! queue ! videoconvertscale ! gvametaconvert name=metaconvert ! gvapython class=MQTTPublisher function=process module=/home/pipeline-server/gvapython/mqtt_publisher/mqtt_publisher.py name=mqtt_publisher ! gvametapublish ! appsink name=destination",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "mqtt_publisher": {
-                            "element": {
-                                "name": "mqtt_publisher",
-                                "property": "kwarg",
-                                "format": "json"
-                            },
-                            "type": "object"
-                        }
-                    }
-                },
-                "auto_start": false
+                "pipeline": "{auto_source} name=source ! decodebin ! video/x-raw ! videoconvert ! gvadetect model=/models/person-vehicle-bike-detection-2004/FP32/person-vehicle-bike-detection-2004.xml model-proc=/models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json inference-interval=3 threshold=0.4 device=AUTO model-instance-id=detect1 ! queue ! gvainference model=/models/resnet50/FP32/resnet-50-pytorch.xml inference-region=1 name=classification model-instance-id=classify1 ! queue ! videoconvertscale ! gvametaconvert add-tensor-data=true name=metaconvert ! jpegenc ! appsink name=destination",
+                "auto_start": false,
+                "mqtt_publisher": {
+                    "publish_frame": true,
+                    "topic": "edge_video_analytics_results"
+                }
             },
             {
                 "name": "search_image",
                 "source": "image_ingestor",
                 "queue_maxsize": 50,
-                "pipeline": "appsrc name=source  ! decodebin ! videoconvert ! gvainference model=/models/resnet50/FP32/resnet-50-pytorch.xml device=CPU model-instance-id=infer1 ! gvametaconvert ! appsink name=destination"
+                "pipeline": "appsrc name=source  ! decodebin ! videoconvert ! gvainference model=/models/resnet50/FP32/resnet-50-pytorch.xml device=CPU model-instance-id=infer1 ! gvametaconvert add-tensor-data=true ! appsink name=destination"
             }
         ]
     }
