@@ -26,7 +26,7 @@ from milvus_utils import (
     get_milvus_client,
     get_search_results,
 )
-from schemas import ObjectDetectionSchema
+from schemas import PayloadSchema, TensorSchema
 
 load_dotenv()
 
@@ -64,42 +64,6 @@ except CollectionExists:
     print(f"Collection {COLLECTION_NAME} already exists. Will not create a new one.")
 
 
-# Function to decode base64 tensor blobs
-def process_tensor_blobs(tensor_blobs):
-    """
-    Processes a list of Base64-encoded tensor blobs and returns a list of embeddings in list format.
-
-    Args:
-        tensor_blobs (list): List of Base64-encoded strings representing tensor blobs.
-
-    Returns:
-        list: A list of embeddings, each represented as a list of floats.
-    """
-    if not isinstance(tensor_blobs, list):
-        print("Error: 'tensor_blobs' is not a list")
-        return []
-
-    embeddings = []
-    for item in tensor_blobs:
-        try:
-            # Decode Base64 string
-            decoded = base64.b64decode(item)
-
-            # Convert binary to numpy array (assumes float32 embeddings; update dtype if needed)
-            embedding = np.frombuffer(
-                decoded, dtype=np.float32
-            )  # Replace `float32` with actual data type
-            embeddings.append(embedding)
-        except Exception as e:
-            print(f"Error processing item: {e}")
-
-    if len(embeddings) > 0:
-        # Convert embeddings to a list of lists (Milvus format)
-        return [embedding.tolist() for embedding in embeddings]
-
-    return []
-
-
 # Define the on_connect callback
 def on_connect(client, userdata, flags, rc):
     print(f"Connected with result code {rc}")
@@ -109,45 +73,70 @@ def on_connect(client, userdata, flags, rc):
 # Define the on_message callback
 def on_message(client, userdata, message):
     payload = json.loads(message.payload.decode())
+    timestamp = payload["metadata"]["time"]
+    metadata = payload.get("metadata", {})
+
     try:
-        to_insert = []
-        timestamp = payload["metadata"]["time"]
-        metadata = payload.get("metadata", {})
+        # Parse and validate the payload
+        payload = json.loads(message.payload.decode())
+        validated_payload = PayloadSchema().load(payload)
+
+        # Extract metadata and objects
+        metadata = validated_payload["metadata"]
+        timestamp = metadata["time"]
         objects = metadata.get("objects", [])
-        data = ObjectDetectionSchema().load(metadata)
+        frame = payload.get("blob", None)  # Get the frame from the blob
 
-        for detected_object in objects:
-            detection = detected_object.get("detection", {})
-            label_name = detection.get("label", "").lower().replace(" ", "_")
-            confidence = detection.get("confidence", 0)
-            data = payload["tensor_blobs"]
-            frame = payload["blob"]
+        # Prepare data for Milvus insertion
+        to_insert = []
 
+        if frame:
             # Decode the frame
             image_bytes = base64.b64decode(frame)
             image = Image.open(io.BytesIO(image_bytes))
 
-            if confidence > CONFIDENCE_THRESHOLD:
-                # Process tensor blobs and get embeddings_list
-                embeddings_list = process_tensor_blobs(data)
-                frame_path = f"static/{payload['metadata']['time']}_{label_name}.jpg"
-                image.save(frame_path)
-                to_insert.append(
-                    {
-                        "vector": embeddings_list[0],
-                        "filename": frame_path,
-                        "label": label_name,
-                        "timestamp": timestamp,
-                    }
-                )
-                if len(data) > 0:
-                    milvus_client.insert(
-                        collection_name=COLLECTION_NAME,
-                        data=to_insert,
-                    )
-    except ValidationError as err:
-        print(f"Error deserializing payload: {err.messages}")
+        for obj in objects:
+            tensors = obj.get("tensors", [])
+            label_name = obj.get("detection", {}).get("label", "unknown").lower().replace(" ", "_")
+            confidence = obj.get("detection", {}).get("confidence", 0)
+            for tensor in tensors:
+                try:
+                    # Validate tensor schema
+                    validated_tensor = TensorSchema().load(tensor)
 
+                    # Process only tensors with layer_name == "prob"
+                    if validated_tensor["layer_name"] == "prob":
+                        tensor_data = validated_tensor["data"]
+
+                        if confidence > CONFIDENCE_THRESHOLD:
+                            # Save the frame as an image
+                            frame_path = f"static/{timestamp}_{label_name}.jpg"
+                            image.save(frame_path)
+
+                            # Prepare data for Milvus
+                            to_insert.append(
+                                {
+                                "vector": tensor_data,
+                                "filename": frame_path,
+                                "label": label_name,
+                                "timestamp": timestamp,
+                                }
+                            )  
+                except ValidationError as e:
+                    logging.warning(f"Invalid tensor skipped: {e.messages}")
+                    continue
+            # Insert data into Milvus
+            if to_insert:
+                milvus_client.insert(
+                    collection_name=COLLECTION_NAME,
+                    data=to_insert,
+                )
+                logging.info(f"Inserted tensors into Milvus.")
+
+    except ValidationError as e:
+        logging.error(f"Invalid payload: {e.messages}")
+    except Exception as e:
+        logging.error(f"Error processing message: {str(e)}")
 
 # Assign the callbacks
 mqtt_client.on_connect = on_connect
@@ -259,20 +248,33 @@ async def search(
             second_response.raise_for_status()  # Raise HTTP error for non-2xx responses
 
             second_pipeline_result = second_response.json()  # Parse the response
-            # Parse the JSON string
             second_pipeline_result_parsed = json.loads(second_pipeline_result)
-            tensor_blobs = second_pipeline_result_parsed["tensor_blobs"]
+            objects = second_pipeline_result_parsed.get("metadata", {}).get("objects", [])
+
+            # Initialize a list to store tensor data
+            tensor_data_list = []
+
+            # Iterate through objects and extract tensor data
+            for obj in objects:
+                tensors = obj.get("tensors", [])
+                for tensor in tensors:
+                    if tensor.get("layer_name") == "prob":  # Filter by layer_name
+                        tensor_data = tensor.get("data", [])
+                        if tensor_data:
+                            tensor_data_list.append(tensor_data)
+            # Print the extracted tensor data
+            print("Extracted Tensor Data:", tensor_data_list[0])
 
     except httpx.RequestError as e:
         return {
             "error": f"An error occurred while making the second pipeline request: {str(e)}"
         }
-    embeddings_list = process_tensor_blobs(tensor_blobs)
+    
     try:
         results = get_search_results(
             milvus_client=milvus_client,
             collection_name=COLLECTION_NAME,
-            query_vector=embeddings_list[0],
+            query_vector=tensor_data_list[0],
             output_fields=["filename", "label", "timestamp"],
         )
         return results

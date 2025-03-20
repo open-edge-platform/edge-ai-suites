@@ -1,62 +1,36 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, ValidationError
 
+# Define a schema for validation
+class TensorSchema(Schema):
+    data = fields.List(fields.Float(), required=False)
+    layer_name = fields.Str(required=False)
+    dims = fields.List(fields.Int(), required=False)
+    model_name = fields.Str(required=False)
+    name = fields.Str(required=False)
+    precision = fields.Str(required=False)
+    layout = fields.Str(required=False)
+    label_id = fields.Int(required=False)
+    confidence = fields.Float(required=False)
+    
 
-class BoundingBoxSchema(Schema):
-    x_max = fields.Float(required=True)
-    x_min = fields.Float(required=True)
-    y_max = fields.Float(required=True)
-    y_min = fields.Float(required=True)
-
-
-class DetectionSchema(Schema):
-    bounding_box = fields.Nested(BoundingBoxSchema, required=True)
-    confidence = fields.Float(required=True)
-    label = fields.Str(required=True)
-    label_id = fields.Int(required=True)
-
-
-class ModelSchema(Schema):
-    name = fields.Str(required=True)
-
-
-class ClassificationSchema(Schema):
-    confidence = fields.Float(required=True)
-    label = fields.Str(required=True)
-    label_id = fields.Int(required=True)
-    model = fields.Nested(ModelSchema, required=True)
-
-
-class ObjectSchema(Schema):
-    classification = fields.Nested(ClassificationSchema, required=False)
-    detection = fields.Nested(DetectionSchema, required=False)
-    h = fields.Int(required=True)
-    region_id = fields.Int(required=False)
-    roi_type = fields.Str(required=False)
-    w = fields.Int(required=True)
-    x = fields.Int(required=True)
-    y = fields.Int(required=True)
-
-
-class ResolutionSchema(Schema):
-    height = fields.Int(required=True)
-    width = fields.Int(required=True)
-
-
-class TensorMetadataSchema(Schema):
-    dims = fields.List(
-        fields.List(fields.Int()), required=True
-    )  # Nested list of integers
-    name = fields.List(fields.Str(), required=True)
-
-
-class ObjectDetectionSchema(Schema):
-    objects = fields.List(fields.Nested(ObjectSchema), required=True)
-    resolution = fields.Nested(ResolutionSchema, required=True)
-    tags = fields.Dict(keys=fields.Str(), values=fields.Raw(), required=True)
-    timestamp = fields.Int(required=True)
-    frame_id = fields.Int(required=True)
+class MetadataSchema(Schema):
     time = fields.Int(required=True)
-    img_format = fields.Str(required=True)  # Add img_format as a string field
-    tensor_metadata = fields.Nested(
-        TensorMetadataSchema, required=True
-    )  # Add tensor_metadata as a nested schema
+    objects = fields.List(fields.Dict(), required=False)
+    caps = fields.Str(required=False)
+    frame_id = fields.Int(required=False)
+    width = fields.Int(required=False)
+    height = fields.Int(required=False)
+    encoding_level = fields.Int(required=False)
+    pipeline = fields.Dict(required=False)
+    encoding_type = fields.Str(required=False)
+    img_format = fields.Str(required=False)
+    gva_meta = fields.List(fields.Dict(), required=False)
+    img_handle = fields.Str(required=False)
+    channels = fields.Int(required=False)
+    resolution = fields.Dict(required=False)
+    tags = fields.Dict(required=False)
+    timestamp = fields.Int(required=False)
+
+class PayloadSchema(Schema):
+    metadata = fields.Nested(MetadataSchema, required=True)
+    blob = fields.Raw(required=False)
