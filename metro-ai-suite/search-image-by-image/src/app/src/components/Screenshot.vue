@@ -29,14 +29,20 @@
     </div>
     <div v-if="imageData.length" class="image-list">
       <h4>Search Results:</h4>
-      <div class="datetime-filter">
+      <div class="filters">
         <label for="from-date">From:</label>
         <input type="datetime-local" id="from-date" v-model="fromDatetime" />
         <label for="to-date">To:</label>
         <input type="datetime-local" id="to-date" v-model="toDatetime" />
+        <label for="sort-by">Sort by:</label>
+        <select id="sort-by" v-model="sortBy">
+          <option value="date">Date</option>
+          <option value="distance">Distance</option>
+          <option value="label">Label</option>
+        </select>
       </div>
       <ul>
-        <li v-for="data in filteredImageData" :key="data.url">
+        <li v-for="(data, index) in filteredImageData" :key="data.url + '-' + index">
           <img :src="data.url" :alt="data.url" width="280" height="157.5" />
           <div style="display: flex; flex-direction: column;">
             <span>Distance: {{ data.distance.toFixed(4) }}</span>
@@ -71,6 +77,7 @@ export default defineComponent({
       imageData: [], // To store the image data
       fromDatetime: '1970-01-01T00:00', // To store the initial datetime to filter
       toDatetime: new Date().toISOString().slice(0, 16), // To store the final datetime to filter
+      sortBy: 'date' // To store the sort by option
     };
   },
   computed: {
@@ -82,7 +89,15 @@ export default defineComponent({
             const to = this.toDatetime ? new Date(this.toDatetime) : null;
             return (!from || date >= from) && (!to || date <= to);
           })
-          .sort((a, b) => b.timestamp - a.timestamp);
+          .sort((a, b) => {
+            if (this.sortBy === 'distance') {
+              return b.distance - a.distance;
+            } else if (this.sortBy === 'label') {
+              return a.label.localeCompare(b.label);
+            }
+            
+            return b.timestamp - a.timestamp;
+          });
     }
   },
   methods: {
@@ -234,7 +249,15 @@ export default defineComponent({
             }
           }).filter(url => url !== null));
 
-          this.imageData = results.sort((a, b) => b.timestamp - a.timestamp);
+          this.imageData = results.sort((a, b) => {
+            if (this.sortBy === 'distance') {
+              return b.distance - a.distance;
+            } else if (this.sortBy === 'label') {
+              return a.label.localeCompare(b.label);
+            }
+            
+            return b.timestamp - a.timestamp;
+          });
 
         } catch (error) {
           console.error('Failed to send cropped image:', error);
