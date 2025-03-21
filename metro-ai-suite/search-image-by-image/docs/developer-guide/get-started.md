@@ -79,8 +79,8 @@ a pre-step to prepare models may be needed
     - **Expected Results**:
       - Matched search results, including metadata, timestamps, distance to show the confidence rate of the prediction, and frames that include detected objects (e.g., vehicles, pedestrians, bikes).
     <div align="center">
-        <img src="./_static/imagesearch1.png" width="45%" style="margin-right:1rem"/>
-        <img src="./_static/imagesearch2.png" width="45%" />
+        <img src="./images/imagesearch1.png" width="45%" style="margin-right:1rem"/>
+        <img src="./images/imagesearch2.png" width="45%" />
     </div>
 <!--
 

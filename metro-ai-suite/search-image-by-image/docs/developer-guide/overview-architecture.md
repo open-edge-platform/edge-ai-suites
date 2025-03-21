@@ -1,4 +1,4 @@
-# Search Image by Image Application
+# Architecture Overview
 
 The Search Image by Image Application is a modular reference implementation designed to help developers create vision-based search systems utilizing Vision AI and third-party microservices. This page provides a technical overview of the application’s architecture, components, and extensibility.
 
@@ -10,10 +10,10 @@ The Search Image by Image Application is designed to:
 - Serve as a blueprint for building scalable, modular search systems.
 - Showcase optimization techniques for Intel® hardware and software tools.
 
-## Detailed Architecture Overview
+## Architecture
 
 ### Technical Architecture Diagram
-![Technical Architecture Diagram](./_static/architecture.png)
+![Technical Architecture Diagram](images/architecture.png)
 *Figure 1: Detailed Architecture of the Search Image by Image Application.*
 
 ### Data Flow

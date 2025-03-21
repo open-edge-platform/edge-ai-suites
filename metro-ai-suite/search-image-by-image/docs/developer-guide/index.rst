@@ -1,30 +1,27 @@
-Search Image by Image
-============================================
+Search Image by Image Sample Application
+========================================
 
-The Search Image by Image application is a reference application that demonstrates how developers can leverage edge AI technologies to solve real-world challenges. It enables efficient processing and searching of video data to identify objects of interest, providing actionable insights in real-time.
+Performs near real-time analysis and image-based search to detect and retrieve objects of interest in large video datasets.
 
-This guide is designed to you build and use the application.
+This guide is designed to help developers understand the architecture, setup, and customization of the sample application.
 
 
 .. toctree::
-   :maxdepth: 2
    :caption: Get Started
 
-   Overview <Overview>
+   Overview
+   overview-architecture
    system-requirements
-   get-started
    release-notes
+   get-started
 
 .. toctree::
-   :maxdepth: 2
    :caption: How to
 
    how-to-build-source
    how-to-deploy-helm
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Community and Support
-   
-   support
+   :caption: Support and Community
 
+   support

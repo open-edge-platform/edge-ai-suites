@@ -1,4 +1,4 @@
-# How to Build from Source
+# Build from Source
 
 Build the Search Image by Image reference application from source to customize, debug, or extend its functionality. In this guide, you will:
 - Set up your development environment.
@@ -87,7 +87,7 @@ Before you begin, ensure the following:
 1. **Start Containers**:
    - Run:
      ```sh
-     docker compose up -d 
+     docker compose up -d
      ```
 
 2. **Access the Application**:
@@ -103,8 +103,8 @@ Before you begin, ensure the following:
 4. **Example Output**:
    - Here is an example output:
      <div align="center">
-         <img src="./_static/imagesearch1.png" width="45%" style="margin-right:1rem"/>
-         <img src="./_static/imagesearch2.png" width="45%" />
+         <img src="./images/imagesearch1.png" width="45%" style="margin-right:1rem"/>
+         <img src="./images/imagesearch2.png" width="45%" />
      </div>
 
 ## Troubleshooting

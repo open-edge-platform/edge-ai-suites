@@ -1,4 +1,4 @@
-# How to Deploy with Helm
+Deploy with Helm
 
 Use Helm to deploy {{Microservice Name}} to a Kubernetes cluster. This guide will help you:
 - Add the Helm chart repository.
@@ -23,7 +23,7 @@ Before You Begin, ensure the following:
 helm upgrade \
     --install sibi oci://registry-1.docker.io/intel/search-image-by-image \
     --create-namespace \
-    -n sibi 
+    -n sibi
 ```
 
 Some containers in the deployment requires network access.
