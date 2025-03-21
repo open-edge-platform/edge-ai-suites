@@ -1,0 +1,58 @@
+# Copyright Intel Corporation
+{{ if eq .Values.env.TELEGRAF_INPUT_PLUGIN "mqtt_consumer"}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mqtt-publisher
+  name: deployment-mqtt-publisher
+  namespace: {{ .Values.namespace }}
+
+spec:
+  selector:
+    matchLabels:
+      app: mqtt-publisher
+  template:
+    metadata:
+      labels:
+        app: mqtt-publisher
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: mqtt-publisher
+        image: {{ .Values.DOCKER_REGISTRY }}ia-mqtt-publisher:1.0.0
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+          runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+          readOnlyRootFilesystem: true
+        command: ["python3", "-u", "publisher.py", "--csv", "/windturbine/T1.csv"]
+        env:
+        - name: HOST_IP
+          value: "ia-mqtt-broker"
+        - name: SECURE_MODE
+          value: '{{ .Values.env.SECURE_MODE }}'
+                
+        volumeMounts:
+        {{ if eq .Values.env.SECURE_MODE true}}
+        - name: certs
+          mountPath: /run/secrets/mqtt-publisher_Server
+        {{ end }}
+
+      volumes:
+      {{ if eq .Values.env.SECURE_MODE true}}
+        - name: certs
+          secret:
+            secretName: ts-certs
+            items:
+            - key: ca_certificate.pem
+              path: ca_certificate.pem
+            - key: mqtt-publisher_Server_server_certificate.pem
+              path: mqtt-publisher_Server_server_certificate.pem
+            - key: mqtt-publisher_Server_server_key.pem
+              path: mqtt-publisher_Server_server_key.pem
+      {{ end }}
+{{ end }}

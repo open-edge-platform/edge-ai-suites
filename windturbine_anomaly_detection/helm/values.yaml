@@ -7,10 +7,12 @@ DOCKER_PASSWORD: ''
 imagePullPolicy: IfNotPresent
 storageClassName: manual
 env:
-  SECURE_MODE: true
+  SECURE_MODE: true 
   PROFILING_MODE: false
+  TELEGRAF_INPUT_PLUGIN: opcua
   TIMESERIES_USER_NAME: timeseries_user
   TIMESERIES_UID: 1999
+  TIMESERIES_NO_PROXY: influxdb,kapacitor,mqttbroker,ia-mqtt-broker,opcua-server
   INFLUXDB_ADMIN_USERNAME: 
   INFLUXDB_ADMIN_PASSWORD: 
   INFLUXDB_USERNAME: 
@@ -19,7 +21,8 @@ env:
   VISUALIZER_GRAFANA_PASSWORD: 
   timeseries_no_proxy: localhost,127.0.0.1,.intel.com
   HTTP_PROXY: 
-  HTTPS_PROXY: 
+  HTTPS_PROXY:
+  INFLUXDB_RETENTION_DURATION: 1h0m0s
 config:
   influx_db_server:
     name: influxdb
@@ -32,12 +35,12 @@ config:
       port: "30001"
   telegraf:
     name: telegraf
-    MQTT_BROKER_HOST: "mqttbroker"
+    MQTT_BROKER_HOST: "ia-mqtt-broker"
   kapacitor:
     name: kapacitor
     kapacitor_port: 9092
   mqttbroker:
-    name: mqttbroker
+    name: ia-mqtt-broker
     int:
       port: 1883
     ext:
@@ -46,19 +49,21 @@ config:
     name: opcua-server
     int:
       pub_port: 4840
+  mqttpublisher:
+      name: mqttpublisher
 volumes:
   models:
     name: vol-models
     size: 500Mi
-    hostpath: "/home/eisval-d12-l3t8/Timeseries/frameworks.ai.ai-suite-for-timeseries/sample_apps/windturbine_anomaly_detection/kapacitor/models/"
+    hostpath: "/opt/intel/kapacitor/models/"
     location: "/app/models"
   tick:
     name: vol-tick-scripts
     size: 100Mi
-    hostpath: "/home/eisval-d12-l3t8/Timeseries/frameworks.ai.ai-suite-for-timeseries/sample_apps/windturbine_anomaly_detection/kapacitor/tick_scripts/"
+    hostpath: "/opt/intel/kapacitor/tick_scripts/"
     location: "/app/tick_scripts"
   udfs:
     name: vol-udfs
     size: 100Mi
-    hostpath: "/home/eisval-d12-l3t8/Timeseries/frameworks.ai.ai-suite-for-timeseries/sample_apps/windturbine_anomaly_detection/kapacitor/udfs/"
+    hostpath: "/opt/intel/kapacitor/udfs/"
     location: "/app/udfs"

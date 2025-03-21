@@ -21,8 +21,8 @@ spec:
       - name: registryauth
       {{- end }}
       containers:
-      - name: cert-generator
-        image: cert-generator:1.0.0
+      - name: ia-cert-generator
+        image: ia-cert-generator:1.0.0
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true

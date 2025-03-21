@@ -25,16 +25,19 @@ spec:
       - name: ia-telegraf
         image: telegraf:1.33.1
         imagePullPolicy: {{ .Values.imagePullPolicy }}
+        command: ["/bin/sh"]
+        args: ["/entrypoint.sh"]
         securityContext:
           readOnlyRootFilesystem: true
-        command: ["/bin/sh", "-c", "export DEBUG_MODE=$( [ \"$LOG_LEVEL\" = \"DEBUG\" ] && echo true || echo false ) && telegraf"]
         volumeMounts:
         - name: tmpfs-volume
           mountPath: /tmp
-                
+        - name: telegraf-entrypoint
+          mountPath: /entrypoint.sh
+          subPath: entrypoint.sh     
         {{ if eq .Values.env.SECURE_MODE true}}
         - name: certs
-          mountPath: /run/secrets/Telegraf
+          mountPath: /run/secrets/Telegraf_Server
         - name: telegraf-conf-input
           mountPath: /etc/telegraf/Telegraf.conf
           subPath: Telegraf.conf
@@ -47,8 +50,10 @@ spec:
         env:
         - name: SECURE_MODE
           value: '{{ .Values.env.SECURE_MODE }}'
+        - name: TELEGRAF_INPUT_PLUGIN
+          value: '{{ .Values.env.TELEGRAF_INPUT_PLUGIN }}'
         - name: MQTT_BROKER_HOST
-          value: {{ .Values.config.telegraf.MQTT_BROKER_HOST }}
+          value: '{{ .Values.config.telegraf.MQTT_BROKER_HOST }}'
         - name: INFLUXDB_USERNAME
           value: '{{ .Values.env.INFLUXDB_ADMIN_USERNAME }}'
         - name: INFLUXDB_PASSWORD
@@ -74,6 +79,9 @@ spec:
       volumes:
       - name: tmpfs-volume
         emptyDir: {}
+      - name: telegraf-entrypoint
+        configMap:
+          name: telegraf-entrypoint
       - name: telegraf-dev-conf-input
         configMap:
           name: telegraf-dev-conf-input

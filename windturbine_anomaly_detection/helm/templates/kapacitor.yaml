@@ -63,6 +63,8 @@ spec:
           value: '{{ .Values.env.HTTPS_PROXY }}'
         - name: NO_PROXY
           value: "influxdb,kapacitor,ia-mqtt-broker"
+        - name: TIMESERIES_NO_PROXY
+          value: '{{ .Values.env.TIMESERIES_NO_PROXY }}'
         - name: SECURE_MODE
           value: '{{ .Values.env.SECURE_MODE }}'
         - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION

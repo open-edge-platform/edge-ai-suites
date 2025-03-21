@@ -8,7 +8,7 @@ metadata:
 spec:
   type: NodePort
   selector:
-    app: mqtt-broker
+    app: ia-mqtt-broker
   ports:
     - name: broker-port
       port: {{ .Values.config.mqttbroker.int.port }}
@@ -19,18 +19,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: mqtt-broker
+    app: ia-mqtt-broker
   name: deployment-mqtt-broker
   namespace: {{ .Values.namespace }}
 
 spec:
   selector:
     matchLabels:
-      app: mqtt-broker
+      app: ia-mqtt-broker
   template:
     metadata:
       labels:
-        app: mqtt-broker
+        app: ia-mqtt-broker
     spec:
       containers:
       - name: ia-mqtt-broker
@@ -39,11 +39,7 @@ spec:
         securityContext:
           runAsUser: {{ $.Values.env.TIMESERIES_UID }}
           runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
-          readOnlyRootFilesystem: true
-        env:
-        - name: AppName
-          value: "mqtt-broker"
-        
+          readOnlyRootFilesystem: true        
         volumeMounts:
         {{ if eq .Values.env.SECURE_MODE true}}
         - name: mosquitto-conf

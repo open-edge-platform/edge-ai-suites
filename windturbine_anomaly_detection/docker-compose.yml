@@ -208,8 +208,8 @@ services:
         TIMESERIES_UID: ${TIMESERIES_UID}
     container_name: ia-mqtt-publisher
     hostname: ia-mqtt-publisher
-    read_only: false
-    image: ${DOCKER_REGISTRY}ia_mqtt_publisher:1.0.0
+    read_only: true
+    image: ${DOCKER_REGISTRY}ia-mqtt-publisher:1.0.0
     restart: unless-stopped
     security_opt:
     - no-new-privileges

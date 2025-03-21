@@ -39,6 +39,15 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   namespace: {{ .Values.namespace }}
+  name: init-influxdb
+data:
+  init-influxdb.sh: |-
+{{ .Files.Get "init-influxdb.sh" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
   name: mosquitto-conf
 data:
   mosquitto.conf: |-
@@ -87,7 +96,16 @@ metadata:
   name: grafana-entrypoint
 data:
   entrypoint.sh: |-
-{{ .Files.Get "entrypoint.sh" | indent 4 }}
+{{ .Files.Get "grafana_entrypoint.sh" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: telegraf-entrypoint
+data:
+  entrypoint.sh: |-
+{{ .Files.Get "telegraf_entrypoint.sh" | indent 4 }}
 ---
 apiVersion: v1
 kind: ConfigMap

@@ -1,5 +1,6 @@
 # Copyright Intel Corporation
 
+{{ if eq .Values.env.TELEGRAF_INPUT_PLUGIN "opcua"}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -40,3 +41,4 @@ spec:
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true
+{{ end }}
