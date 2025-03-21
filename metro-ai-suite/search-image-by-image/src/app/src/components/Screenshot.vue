@@ -43,7 +43,7 @@
       </div>
       <ul>
         <li v-for="(data, index) in filteredImageData" :key="data.url + '-' + index">
-          <img :src="data.url" :alt="data.url" width="280" height="157.5" />
+          <img :src="data.url" :alt="data.url" />
           <div style="display: flex; flex-direction: column;">
             <span>Distance: {{ data.distance.toFixed(4) }}</span>
             <span>Label: {{ data.label }}</span>
@@ -324,6 +324,11 @@ body, html {
   display: flex;
   align-items: center; /* Align items vertically */
   margin-bottom: 2px;
+  width: 100%;
+}
+
+.image-list li img {
+  width: 60%;
 }
 
 .image-list li > div {
@@ -331,16 +336,20 @@ body, html {
   margin: 0px 0px 0px 20px;
 }
 
-.datetime-filter {
+.filters {
   margin-top: 8px;
   margin-bottom: -8px;
 }
 
-.datetime-filter input {
+.filters input {
   margin-left: 5px;
 }
 
-.datetime-filter label {
+.filters select {
+  margin-left: 5px;
+}
+
+.filters label {
   margin-left: 10px;
 }
 
