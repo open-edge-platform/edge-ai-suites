@@ -57,6 +57,8 @@ services:
         condition: service_healthy
       broker:
         condition: service_started
+    volumes:
+      - image-data:/user/src/app/static
     restart: on-failure:5
   streaming-pipeline:
     image: docker.io/intel/streaming-pipeline:v1.0.0
@@ -188,6 +190,7 @@ services:
 
 volumes:
   milvus-data:
+  image-data:
   evam-pipeline-root:
     driver: local
     driver_opts:
