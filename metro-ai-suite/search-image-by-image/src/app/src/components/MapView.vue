@@ -32,14 +32,16 @@ export default defineComponent({
   },
   methods: {
     initMap() {
-      this.map = L.map('map').setView([33.4484, -112.0740], 13); // Phoenix coordinates
+      this.map = L.map('map').setView([33.4484, -112.0740], 25); // Phoenix coordinates
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(this.map);
 
-      L.marker([33.4484, -112.0740]).addTo(this.map)
-        .bindPopup('Phoenix, AZ')
+      L.marker(
+        [33.4484, -112.0740]
+      ).addTo(this.map)
+        .bindPopup('11 N Central Ave #4, Phoenix, AZ')
         .openPopup();
 
       this.resizeMap();
@@ -71,7 +73,7 @@ html, body {
 
 #map {
   width: 65%;
-  height: 98%;
+  height: 100%;
 }
 
 #text {

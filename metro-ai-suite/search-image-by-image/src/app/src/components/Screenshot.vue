@@ -17,10 +17,8 @@
       <button @click="captureScreenshot" :style="{ width: screenshot ? '20%' : '25%' }">Capture Frame</button>
       <button @click="triggerFileUpload" :style="{ width: screenshot ? '20%' : '25%' }">Upload Image</button>
       <input type="file" ref="fileInput" @change="handleFileUpload" style="display: none;" accept="image/*" />
-      <button @click="clearDatabase" :style="{ width: screenshot ? '20%' : '25%' }">Clear Database</button>
-      <div v-if="screenshot">
-        <button @click="cropImage" style="width: 20%" >Search Object</button>
-      </div>
+      <button v-if="screenshot" @click="cropImage" style="width: 20%" >Search Object</button>
+      <button @click="clearDatabase" :style="{ width: screenshot ? '20%' : '25%', backgroundColor: pipeline ? 'gray' : 'darkorange' }">Clear Database</button>
     </div>
     <div v-if="screenshot" class="screenshot-preview">      
           <vue-cropper
@@ -30,7 +28,7 @@
           />
     </div>
     <div v-if="imageData.length" class="image-list">
-      <h4>Image List:</h4>
+      <h4>Search Results:</h4>
       <div class="datetime-filter">
         <label for="from-date">From:</label>
         <input type="datetime-local" id="from-date" v-model="fromDatetime" />
@@ -40,7 +38,7 @@
       <ul>
         <li v-for="data in filteredImageData" :key="data.url">
           <img :src="data.url" :alt="data.url" width="280" height="157.5" />
-          <div style="display: flex; flex-direction: column; margin-left: 3px;">
+          <div style="display: flex; flex-direction: column;">
             <span>Distance: {{ data.distance.toFixed(4) }}</span>
             <span>Label: {{ data.label }}</span>
             <span>Timestamp: {{ data.datetime }}</span>
@@ -150,14 +148,6 @@ export default defineComponent({
               frame: {
                   type: "rtsp",
                   path: "filter-pipeline"
-              }
-          },
-          parameters: {
-              mqtt_publisher: {
-                  host: "sibi-broker",
-                  port: 1883,
-                  publish_frame: "true",
-                  include_feature_vector: "true"
               }
           }
       };
@@ -283,6 +273,7 @@ body, html {
 }
 
 .screenshot-preview {
+  margin-top: 10px;
   width: 100%; /* Set the width */
   /* height: 157.5px; Set the height */
   /* margin-left:15%;   */
@@ -290,7 +281,7 @@ body, html {
 
 .image-list {
   width: 95%; /* Set a fixed width */
-  height: 50.5%; /* Set a fixed height */
+  height: 59%; /* Set a fixed height */
   overflow-y: auto; /* Enable vertical scrolling */
   padding: 10px; /* Add padding */
 }
@@ -312,6 +303,11 @@ body, html {
   margin-bottom: 2px;
 }
 
+.image-list li > div {
+  text-align: left;
+  margin: 0px 0px 0px 20px;
+}
+
 .datetime-filter {
   margin-top: 8px;
   margin-bottom: -8px;
@@ -325,13 +321,18 @@ body, html {
   margin-left: 10px;
 }
 
+.btn-group {
+  height: 6%;
+}
+
 .btn-group button {
   background-color: #04AA6D; /* Green background */
   border: 1px solid green; /* Green border */
   color: white; /* White text */
   cursor: pointer; /* Pointer/hand icon */
   float: left; /* Float the buttons side by side */
-  border-radius: 0 /* Make the button squared */
+  border-radius: 0; /* Make the button squared */
+  height: 100%; /* Make the button take full height */
 }
 
 /* Clear floats (clearfix hack) */
