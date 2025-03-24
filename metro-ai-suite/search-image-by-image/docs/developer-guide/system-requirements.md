@@ -31,4 +31,4 @@ This page provides detailed hardware, software, and platform requirements to hel
 - GPU optimizations require Intel® integrated graphics or compatible accelerators.
 -->
 ## Validation
-- Ensure all dependencies are installed and configured before proceeding to [Get Started](./Get-Started.md).
+- Ensure all dependencies are installed and configured before proceeding to [Get Started](./get-started.md).

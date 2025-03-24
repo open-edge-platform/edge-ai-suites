@@ -1,9 +1,9 @@
 Deploy with Helm
 
-Use Helm to deploy {{Microservice Name}} to a Kubernetes cluster. This guide will help you:
+Use Helm to deploy Search Image by Image to a Kubernetes cluster. This guide will help you:
 - Add the Helm chart repository.
 - Configure the Helm chart to match your deployment needs.
-- Deploy and verify the microservice.
+- Deploy and verify the application.
 
 Helm simplifies Kubernetes deployments by streamlining configurations and enabling easy scaling and updates. For more details, see [Helm Documentation](https://helm.sh/docs/).
 

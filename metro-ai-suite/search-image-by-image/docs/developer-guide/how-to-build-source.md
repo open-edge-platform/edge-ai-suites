@@ -1,6 +1,6 @@
 # Build from Source
 
-Build the Search Image by Image reference application from source to customize, debug, or extend its functionality. In this guide, you will:
+Build the Search Image by Image sample application from source to customize, debug, or extend its functionality. In this guide, you will:
 - Set up your development environment.
 - Compile the source code and resolve dependencies.
 - Generate a runnable build for local testing or deployment.
