@@ -22,7 +22,7 @@ spec:
       {{- end }}
       containers:
       - name: ia-cert-generator
-        image: ia-cert-generator:1.0.0
+        image: {{ .Values.DOCKER_REGISTRY }}ia-cert-generator:1.0.0
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true

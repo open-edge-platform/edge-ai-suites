@@ -23,6 +23,7 @@ env:
   HTTP_PROXY: 
   HTTPS_PROXY:
   INFLUXDB_RETENTION_DURATION: 1h0m0s
+  DEPLOYMENT_METHOD_ITEP: false
 config:
   influx_db_server:
     name: influxdb

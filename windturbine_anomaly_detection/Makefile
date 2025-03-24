@@ -87,9 +87,14 @@ clean:
 	docker system prune -f
 
 # Push the docker images to docker registry
-push_images:
+push_images: build
+	bash ./package_helm.sh
 	@echo "Pushing the images to docker registry"
 	docker compose -f $(DOCKER_COMPOSE_FILE) push
+	docker tag ia-cert-generator:1.0.0 $(DOCKER_REGISTRY)ia-cert-generator:1.0.0 
+	docker push $(DOCKER_REGISTRY)ia-cert-generator:1.0.0
+	docker build -t $(DOCKER_REGISTRY)ia-kapacitor-windturbine:1.0.0 kapacitor/.
+	docker push $(DOCKER_REGISTRY)ia-kapacitor-windturbine:1.0.0
 
 # Generate helm packages
 .PHONY: gen_helm_charts
