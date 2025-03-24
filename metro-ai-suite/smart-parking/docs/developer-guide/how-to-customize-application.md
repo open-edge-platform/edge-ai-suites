@@ -1,5 +1,4 @@
-
-# Comprehensive Guide to Object Tracking and Loitering Detection with EVAM, Node-RED, and Grafana
+# Customize Application
 
 **Table of Contents**
 
@@ -33,13 +32,13 @@
         *   5.3.1. [Install and Launch Grafana](#install-and-launch-grafana)
         *   5.3.2. [Add Your Data Source](#add-your-data-source)
         *   5.3.3. [Create Your Dashboard](#create-your-dashboard)
-    *   5.4. [Grafana Use Cases for Object Tracking and Loitering Detection](#grafana-use-cases-for-object-tracking-and-loitering-detection)
+    *   5.4. [Grafana Use Cases for Smart Parking](#grafana-use-cases-for-smart-parking)
 6.  [End-to-End Integration](#end-to-end-integration)
 7.  [Conclusion](#conclusion)
 
 ## 1. Introduction <a name="introduction"></a>
 
-This comprehensive guide provides a detailed walkthrough of building a complete object tracking and loitering detection system. We will utilize a combination of technologies designed for ease of use: the EVAM edge video analytics microservice, the visual programming tool Node-RED, and the data visualization platform Grafana. This approach caters to no-code/low-code users, enabling the creation of sophisticated analytics solutions with minimal programming.
+This comprehensive guide provides a detailed walkthrough of building a complete object tracking and smart parking system. We will utilize a combination of technologies designed for ease of use: the EVAM edge video analytics microservice, the visual programming tool Node-RED, and the data visualization platform Grafana. This approach caters to no-code/low-code users, enabling the creation of sophisticated analytics solutions with minimal programming.
 
 ## 2. Overall System Architecture <a name="overall-system-architecture"></a>
 
@@ -47,18 +46,18 @@ The system follows a modular architecture:
 
 *   **Video Input:** Cameras or video streams provide the raw data.
 *   **EVAM (Edge Video Analytics Microservice):** Processes video streams locally using AI models to detect and track objects.
-*   **Node-RED:** Consumes object tracking data from EVAM, performs further analysis (like calculating distances and loitering times), and publishes results.
+*   **Node-RED:** Consumes object tracking data from EVAM, performs further analysis (like calculating distances), and publishes results.
 *   **Grafana:** Visualizes the processed data from Node-RED (or a database fed by Node-RED), providing real-time dashboards.
 
 ## 3. EVAM Edge Video Analytics Microservice <a name="evam-edge-video-analytics-microservice"></a>
 
-> For detailed documentation on EVAM, visit the [Intel Edge Insights Video Analytics Microservice Documentation](https://eiidocs.intel.com/IEdgeInsights/EdgeVideoAnalyticsMicroservice/eii/README.html)
-
-![Pipeline Architecture](public/pipeline.png)
+> For detailed documentation on EVAM, visit the [Intel Edge Insights Video Analytics Microservice Documentation](https://docs.edgeplatform.intel.com/edge-video-analytics-microservice/2.3.0/user-guide/Overview.html)
 
 ### 3.1. Overview of EVAM <a name="overview-of-evam"></a>
 
 EVAM (Edge Video Analytics Microservice) is a powerful tool designed to process video feeds directly on edge devices. It leverages GStreamer pipelines and OpenVINO-optimized AI models to perform real-time object detection and tracking, minimizing latency and reducing bandwidth consumption.
+
+![Pipeline Architecture](_static/pipeline.png)
 
 ### 3.2. Key EVAM Components <a name="key-evam-components"></a>
 
@@ -130,9 +129,9 @@ To share the results of the video analysis with other parts of your system, EVAM
 
 Node-RED is a flow-based programming tool that lets you visually wire together devices, APIs, and online services. This guide demonstrates how Node-RED can be used to process video analytics data from EVAM for tasks such as object tracking and loitering detection. Using a drag-and-drop interface, you can build complex workflows with minimal coding, making it ideal for no-code/low-code environments.
 
-![Node-RED Flow 1](public/node-red1.png)
+![Node-RED Flow 1](_static/node-red1.png)
 
-![Node-RED Flow 2](public/node-red2.png)
+![Node-RED Flow 2](_static/node-red2.png)
 
 ### 4.1. Overview of the Node-RED Flow <a name="overview-of-the-node-red-flow"></a>
 
@@ -308,7 +307,7 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 
 > For detailed Grafana documentation, visit the [Official Grafana Documentation](https://grafana.com/docs/)
 
-![Grafana Dashboard](public/grafana.png)
+![Grafana Dashboard](_static/grafana.png)
 
 ### 5.1. Overview of Grafana <a name="overview-of-grafana"></a>
 
@@ -348,10 +347,10 @@ Grafana is a powerful, open-source visualization tool that helps you create dyna
     3.  Configure each panel with queries to fetch data from your connected MQTT data source.
     4.  Use drag-and-drop controls to arrange panels for the best view of your metrics.
 
-### 5.4. Grafana Use Cases for Object Tracking and Loitering Detection <a name="grafana-use-cases-for-object-tracking-and-loitering-detection"></a>
+### 5.4. Grafana Use Cases for Smart Parking <a name="grafana-use-cases-for-smart-parking"></a>
 
 *   **Real-Time Object Detection Visualization:** Display a graph that shows the number of objects detected per minute to monitor activity levels.
-*   **Loitering Event Monitoring:** Create a panel that highlights loitering events.
+*   **Event Monitoring:** Create a panel that highlights events.
 *   **Historical Trend Analysis:** Use Grafana's time-series graphs to analyze trends over days or weeks, helping you identify peak activity times or recurring patterns.
 
 ## 6. End-to-End Integration <a name="end-to-end-integration"></a>
@@ -390,4 +389,4 @@ The system operates as follows:
 
 ## 7. Conclusion <a name="conclusion"></a>
 
-This guide has demonstrated a complete object tracking and loitering detection system using EVAM, Node-RED, and Grafana. The system provides a balance of edge processing, flexible data manipulation, and powerful visualization. The low-code nature of Node-RED and the user-friendly interface of Grafana make this solution accessible to users without extensive programming knowledge. This allows for quick deployment, easy customization for specific use cases, and scalability to handle multiple cameras and locations.
+This guide has demonstrated a complete smart parking system using EVAM, Node-RED, and Grafana. The system provides a balance of edge processing, flexible data manipulation, and powerful visualization. The low-code nature of Node-RED and the user-friendly interface of Grafana make this solution accessible to users without extensive programming knowledge. This allows for quick deployment, easy customization for specific use cases, and scalability to handle multiple cameras and locations.

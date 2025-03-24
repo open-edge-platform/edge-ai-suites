@@ -1,45 +1,19 @@
-# Rapid_RI
-## Setup Instructions
 
-1. Modify the `HOST_IP` variable in the `.env` file to your actual host IP address.
-2. Execute the `update_dashboard.sh` script to adjust all config files based on the device IP.
-3. Execute the `install.sh` script to download the required models and videos.
-4. These 4 steps need to be done for the first time setup and whenever a new commit is pulled.
+# Smart Parking
+Effortlessly manage parking spaces with AI-driven video analytics for real-time insights and enhanced efficiency.
 
-## Deployment
+## Overview
 
-1. Start the microservice using one of the following commands:
-   - `make start`
-2. Access the application at [http://localhost:3000](http://localhost:3000) (for local use) or [http://<actual_ip>:3000](http://<actual_ip>:3000) (for external access).
-3. Log in with the following credentials:
-   - **Username:** `admin`
-   - **Password:** `admin`
-4. To stop the microservice, using one of the following commands:
-   - `make stop`
+The Smart Parking application uses AI-driven video analytics to optimize parking management. It identifies and counts available parking spaces in real-time, ensuring accurate detection of empty slots. By continuously monitoring parking areas, it tracks changes in occupancy and provides up-to-date information on parking availability.
 
-## Pipeline Example
+This solution also records the status of occupied parking spaces, enabling efficient utilization and reporting. Designed to enhance parking efficiency, the application improves user experience by delivering real-time insights into parking operations.
 
-1. Execute run_sample.sh.
+By leveraging cutting-edge technologies and pre-trained deep learning models, this application enables real-time processing and analysis of video streams, making it an ideal solution. Built on a modular architecture and integration capabilities ensure that users can easily customize and extend its functionalities to meet their specific needs.
 
-## FAQ
+## Table of Contents
 
-1. If unable to deploy grafana container successfully due to fail to GET "https://grafana.com/api/plugins/yesoreyeram-infinity-datasource/versions": context deadline exceeded, please ensure the proxy is configured in the ~/.docker/config.json as shown below:
-
-```bash
-         "proxies": {
-                "default": {
-                        "httpProxy": "<Enter http proxy>",
-                        "httpsProxy": "<Enter https proxy>",
-                        "noProxy": "<Enter no proxy>"
-                }
-        }
-```
-
-After editing the file, remember to reload and restart docker before deploying the microservice again.
-
-```bash
-systemctl daemon-reload
-systemctl restart docker
-```
-
+- [How it works](docs/developer-guide/Overview.md)
+- [System Requirements](docs/developer-guide/system-requirements.md)
+- [Get Started](docs/developer-guide/get-started.md)
+- [How to customize application](docs/developer-guide/how-to-customize-application.md)
 
