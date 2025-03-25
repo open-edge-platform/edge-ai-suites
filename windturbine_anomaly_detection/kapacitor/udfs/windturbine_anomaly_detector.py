@@ -109,7 +109,7 @@ class AnomalyDetectorHandler(Handler):
     def point(self, point):
         """ A point has arrived.
         """
-        start_time = time.time()
+        start_time = time.time_ns()
         is_anomaly = 0
         is_alarm = 0
         anomaly_type = None
@@ -163,47 +163,34 @@ class AnomalyDetectorHandler(Handler):
                     self.anomalies.append((x,y))     
                     if (error<0.3):
                         point.fieldsDouble['anomaly_status'] = 0.3
-                        anomaly_type="LOW"
+                        # anomaly_type="LOW"
                     elif(error<0.6):
-                        anomaly_type = "MEDIUM"
+                        # anomaly_type = "MEDIUM"
                         point.fieldsDouble['anomaly_status'] = 0.6
                     else:
-                        anomaly_type = "HIGH"                    
+                        # anomaly_type = "HIGH"                    
                         point.fieldsDouble['anomaly_status'] = 1.0
                 else:
                     self.last_states.append(0)
-
-        # create a new dict from existing, as there is some problem in serializing the point_dict
-        pub_point_dict = {'wind_speed':point_dict['wind_speed'], 
-                       'grid_active_power':point_dict['grid_active_power']
-                       }
-        pub_point_dict = {key:value for key,value in point_dict.items()}
-        for key, value in point.fieldsString.items():
-            pub_point_dict[key] = value
-        for key, value in point.fieldsBool.items():
-            pub_point_dict[key] = value            
-        pub_point_dict['time'] = ts.strftime('%Y-%m-%d %X')
         
         # write data back to db if it is an anomaly point or there is an alarm for the point
         response = udf_pb2.Response()
+        point_dict = point.fieldsDouble
+        point.fieldsDouble['analytic'] = True
+        if not 'anomaly_status' in point_dict:
+            point.fieldsDouble['anomaly_status'] = 0.0
+        time_now = time.time_ns()
+        point.fieldsDouble['processing_time'] = time_now-start_time
+        
+        point.fieldsDouble['end_end_time'] = time_now-point.time
+        # logger.info(f"*********************************{point.fieldsDouble['processing_time'] } { point.fieldsDouble['end_end_time']}") 
         response.point.CopyFrom(point)
-        # Commenting out publishing this topic, as now the requirement is to publish just one topic
-        # which has turbine name and anomaly value
-        # base_mqtt_topic_name = point.name
-        # mqtt_topics = {}
-        # mqtt_topics[base_mqtt_topic_name+"/opcdata"] = str(pub_point_dict)
-        if(is_anomaly):
-            self._agent.write_response(response, True)
-            # pub_point_dict['anomaly_type'] = anomaly_type
-            # mqtt_topics[os.path.join(base_mqtt_topic_name,"anomaly")] = str(pub_point_dict)
 
-        # mqtt_topics["events"] = str(pub_point_dict)
+        # if(is_anomaly):
+        self._agent.write_response(response, True)
 
-        # for topic in mqtt_topics.keys():
-        #     # msg = json.dumps(pub_point_dict)
-        #     self.client.publish(topic, mqtt_topics[topic])
-        end_time = time.time()
-        process_time = (end_time - start_time)*1000
+        end_time = time.time_ns()
+        process_time = (end_time - start_time)/1000
         logger.debug(f"Function point took {process_time:.4f} milliseconds to complete.")
 
     def end_batch(self, end_req):
