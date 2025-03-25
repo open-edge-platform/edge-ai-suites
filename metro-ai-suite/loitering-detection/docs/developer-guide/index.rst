@@ -1,9 +1,9 @@
-Rapid RI
+Loitering Detection
 ============================================
 
-Rapid RI is an prototyping framework designed to streamline the deployment of AI-driven video analytics at the edge. By leveraging cutting-edge technologies and pre-trained deep learning models, Rapid RI enables real-time processing and analysis of video streams, making it an ideal solution for various applications such as security surveillance, traffic monitoring, and retail analytics. The framework's modular architecture and integration capabilities ensure that users can easily customize and extend its functionalities to meet their specific needs.
+Loitering Detection leverages advanced AI algorithms to monitor and analyze real-time video feeds, identifying individuals lingering in designated areas. By proactively detecting suspicious behavior, this system helps to address potential security threats effectively.
 
-This guide is designed to you build and use the tool.
+By utilizing cutting-edge technologies and pre-trained deep learning models, this application enables real-time processing and analysis of video streams, making it an ideal solution. Its modular architecture and integration capabilities ensure that users can easily customize and extend its functionalities to meet their specific needs.
 
 
 .. toctree::

@@ -1,9 +1,11 @@
-Rapid RI
+Smart Parking
 ============================================
 
-Rapid RI is an prototyping framework designed to streamline the deployment of AI-driven video analytics at the edge. By leveraging cutting-edge technologies and pre-trained deep learning models, Rapid RI enables real-time processing and analysis of video streams, making it an ideal solution for various applications such as security surveillance, traffic monitoring, and retail analytics. The framework's modular architecture and integration capabilities ensure that users can easily customize and extend its functionalities to meet their specific needs.
+The Smart Parking application uses AI-driven video analytics to optimize parking management. It identifies and counts available parking spaces in real-time, ensuring accurate detection of empty slots. By continuously monitoring parking areas, it tracks changes in occupancy and provides up-to-date information on parking availability.
 
-This guide is designed to you build and use the tool.
+This solution also records the status of occupied parking spaces, enabling efficient utilization and reporting. Designed to enhance parking efficiency, the application improves user experience by delivering real-time insights into parking operations.
+
+By leveraging cutting-edge technologies and pre-trained deep learning models, this application enables real-time processing and analysis of video streams, making it an ideal solution. Built on a modular architecture and integration capabilities ensure that users can easily customize and extend its functionalities to meet their specific needs.
 
 
 .. toctree::
