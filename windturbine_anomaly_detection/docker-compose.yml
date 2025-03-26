@@ -90,10 +90,8 @@ services:
       interval: 5m
     environment:
       SECURE_MODE: ${SECURE_MODE}
-      no_proxy: "ia-kapacitor,ia-influxdb,ia-mqtt-broker"
-      NO_PROXY: "ia-kapacitor,ia-influxdb,ia-mqtt-broker"
-      MQTT_BROKER_HOST: "ia-mqtt-broker"
-      MQTT_BROKER_PORT: 1883
+      no_proxy: "ia-kapacitor,ia-influxdb,ia-mqtt-broker,ia-opcua-server"
+      NO_PROXY: "ia-kapacitor,ia-influxdb,ia-mqtt-broker,ia-opcua-server"
       KAPACITOR_PORT: ${KAPACITOR_PORT}
       INFLUX_SERVER: "ia-influxdb"
       KAPACITOR_INFLUXDB_0_USERNAME: ${INFLUXDB_ADMIN_USERNAME}
@@ -179,6 +177,7 @@ services:
     - ../../tools/mqtt/broker/config/mosquitto_devmode.conf:/mosquitto/config/mosquitto.conf:ro
     - ./Certificates/mqtt-broker_Server:/mosquitto/config/certs:ro
 
+
   ia-opcua-server:
     build:
       context: $PWD/../../tools/opcua_server/
@@ -198,7 +197,7 @@ services:
       interval: 5m
     networks:
     - timeseries_network
-  
+
   ia-mqtt-publisher:
     build:
       context: $PWD/../../tools/mqtt/publisher

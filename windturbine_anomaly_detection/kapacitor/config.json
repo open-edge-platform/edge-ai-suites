@@ -9,6 +9,13 @@
                 "models": "windturbine_anomaly_detector.pkl"
              }]
            }
-        ]
+        ],
+        "alerts": {
+            "mqtt": {
+                "mqtt_broker_host": "ia-mqtt-broker",
+                "mqtt_broker_port": 1883,
+                "name": "my_mqtt_broker"
+            }
+        }
     }
 }
