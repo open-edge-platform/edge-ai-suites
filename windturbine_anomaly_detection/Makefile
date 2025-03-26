@@ -1,7 +1,10 @@
 # Copyright Intel Corporation
 
+TARGET ?= default_target
+
 DOCKER_COMPOSE_FILE = ./docker-compose.yml
 DOCKER_COMPOSE_SECURE_MODE_FILE = ./docker-compose-secure-mode.override.yml
+DOCKER_COMPOSE_VALIDATION_FILE=./docker-compose-validation.override.yml
 DOCKER_COMPOSE = docker compose
 
 # Define the path to the .env file and scripts
@@ -22,23 +25,27 @@ build:
 
 .PHONY: up_mqtt_ingestion
 up_mqtt_ingestion: down
-	@export TELEGRAF_INPUT_PLUGIN="mqtt_consumer"; \
+	export TELEGRAF_INPUT_PLUGIN=$$(if [ $(TARGET) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
     if [ $(SECURE_MODE) = 'false' ]; then \
         echo "Starting Docker containers..."; \
         $(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d ;\
-    else \
-        echo "Generating Certificates"; \
-        $(CERT_SCRIPT); \
-        echo "Certificates generated"; \
-        echo "Starting Docker containers..."; \
-        $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) up --scale ia-opcua-server=0 -d; \
+	else \
+		echo "Generating Certificates"; \
+		$(CERT_SCRIPT); \
+		echo "Certificates generated"; \
+		echo "Starting Docker containers..."; \
+		if [ $(TARGET) = 'validation' ]; then \
+			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-opcua-server=0 -d; \
+		else \
+			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) up --scale ia-opcua-server=0 -d; \
+		fi \
     fi
 	${MAKE} status
 
 # Run Docker containers
 .PHONY: up_opcua_ingestion
 up_opcua_ingestion: down
-	@export TELEGRAF_INPUT_PLUGIN="opcua"; \
+	export TELEGRAF_INPUT_PLUGIN=$$(if [ $(TARGET) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	if [ $(SECURE_MODE) = 'false' ]; then \
 		echo "Starting Docker containers..."; \
 		$(DOCKER_COMPOSE) up --scale ia-mqtt-publisher=0 -d ;\
@@ -47,7 +54,11 @@ up_opcua_ingestion: down
 		$(CERT_SCRIPT); \
 		echo "Certificates generated"; \
 		echo "Starting Docker containers..."; \
-		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) up --scale ia-mqtt-publisher=0 -d; \
+		if [ $(TARGET) = 'validation' ]; then \
+			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-mqtt-publisher=0 -d; \
+		else \
+			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) up --scale ia-mqtt-publisher=0 -d; \
+		fi \
 	fi
 	${MAKE} status
 
