@@ -76,11 +76,11 @@ spec:
         - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
           value: python
         - name: KAPACITOR_INFLUXDB_0_USERNAME
-          value: '{{ .Values.env.INFLUXDB_ADMIN_USERNAME }}'
+          value: '{{ .Values.env.INFLUXDB_USERNAME }}'
         - name: KAPACITOR_PORT
           value: '{{ .Values.config.kapacitor.kapacitor_port }}'
         - name: KAPACITOR_INFLUXDB_0_PASSWORD
-          value: '{{ .Values.env.INFLUXDB_ADMIN_PASSWORD }}'
+          value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
         - name: KAPACITOR_URL
           value: "http://kapacitor:{{ .Values.config.kapacitor.kapacitor_port }}/"
         - name: KAPACITOR_UNSAFE_SSL
