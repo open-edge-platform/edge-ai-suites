@@ -85,9 +85,6 @@ spec:
         - name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline'
           mountPath: /tmp/pipeline
           subpath: config.json
-        - name: '{{ include "search_image_by_image.fullname" . }}-evam-udf'
-          mountPath: /home/pipeline-server/gvapython/mqtt_publisher
-          subpath: mqtt_publisher.py
         - name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline-root'
           mountPath: /var/cache/pipeline_root
         - name: '{{ include "search_image_by_image.fullname" . }}-evam-tmp'
@@ -102,9 +99,6 @@ spec:
       - name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline'
         configMap:
           name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline'
-      - name: '{{ include "search_image_by_image.fullname" . }}-evam-udf'
-        configMap:
-          name: '{{ include "search_image_by_image.fullname" . }}-evam-udf'
       - name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline-root'
         emptyDir:
           sizeLimit: 1Gi
