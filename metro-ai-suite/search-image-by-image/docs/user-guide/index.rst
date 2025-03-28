@@ -22,6 +22,12 @@ This guide is designed to help developers understand the architecture, setup, an
    how-to-deploy-helm
 
 .. toctree::
+   :caption: Source Code
+
+   GitHub <https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/search-image-by 
+    -image>
+
+.. toctree::
    :caption: Support and Community
 
    support

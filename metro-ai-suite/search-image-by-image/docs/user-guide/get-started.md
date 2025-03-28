@@ -215,7 +215,7 @@ a pre-step to prepare models may be needed
                         "name": "filter-pipeline",
                         "source": "gstreamer",
                         "queue_maxsize": 50,
-                        "pipeline": "{auto_source} name=source ! decodebin ! video/x-raw ! videoconvert ! gvadetect model=/models/person-vehicle-bike-detection-2004/FP32/person-vehicle-bike-detection-2004.xml model-proc=/models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json inference-interval=3 threshold=0.4 model-instance-id=detect1 device=CPU ! queue ! gvainference model=/models/resnet50/FP32/resnet-50-pytorch.xml inference-region=1 name=classification model-instance-id=infer1 device=CPU ! queue ! videoconvertscale ! gvametaconvert add-tensor-data=true name=metaconvert ! jpegenc ! appsink name=destination",
+                        "pipeline": "{auto_source} name=source ! decodebin ! video/x-raw ! videoconvert ! gvadetect model=/models/your-detection-model/FP32/your-detection-model.xml model-proc=/models/your-detection-model/your-detection-model.json inference-interval=3 threshold=0.4 model-instance-id=detect1 device=CPU ! queue ! gvainference model=/models/your-classification-model/FP32/your-classification-model.xml inference-region=1 name=classification model-instance-id=infer1 device=CPU ! queue ! videoconvertscale ! gvametaconvert add-tensor-data=true name=metaconvert ! jpegenc ! appsink name=destination",
                         "auto_start": false,
                         "mqtt_publisher": {
                             "publish_frame": true,
@@ -226,7 +226,7 @@ a pre-step to prepare models may be needed
                         "name": "search_image",
                         "source": "image_ingestor",
                         "queue_maxsize": 50,
-                        "pipeline": "appsrc name=source  ! decodebin ! videoconvert ! gvainference model=/models/resnet50/FP32/resnet-50-pytorch.xml model-instance-id=infer2 device=CPU ! gvametaconvert add-tensor-data=true ! appsink name=destination"
+                        "pipeline": "appsrc name=source  ! decodebin ! videoconvert ! gvainference model=/models/your-classification-model/FP32/your-classification-model.xml model-instance-id=infer2 device=CPU ! gvametaconvert add-tensor-data=true ! appsink name=destination"
                     }
                 ]
             }
