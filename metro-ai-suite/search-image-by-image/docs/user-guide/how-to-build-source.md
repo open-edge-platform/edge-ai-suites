@@ -33,8 +33,8 @@ Before you begin, ensure the following:
 1. **Clone the Repository**:
    - Run:
      ```bash
-     git clone https://github.com/intel/metro-ai-suite.git
-     cd search-image-by-image
+     git clone https://github.com/open-edge-platform/edge-ai-suites.git
+     cd ./edge-ai-suites/metro-ai-suite/search-image-by-image
      ```
 
 2. **Build Containers**:
