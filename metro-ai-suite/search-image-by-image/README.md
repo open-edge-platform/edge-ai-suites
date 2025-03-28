@@ -27,7 +27,7 @@ The reference implementation utilizes Vision AI and third-party microservices to
     ```
     docker pull docker.io/library/node:23
     docker pull docker.io/library/python:3.11
-    docker pull docker.io/intel/dlstreamer:2024.2.2-ubuntu24
+    docker pull docker.io/intel/dlstreamer:2025.0.1.2-ubuntu24
     docker pull openvino/ubuntu22_dev:2024.6.0
     ```
 3. Make sure that proxy configuration is not propagated to all containers except streaming-pipeline. You can do this by setting `NO_PROXY`, `HTTP_PROXY` and `HTTPS_PROXY` environment variables to empty string in the `compose.yml` file for all services except streaming-pipeline. For example:
