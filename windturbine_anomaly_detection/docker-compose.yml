@@ -189,12 +189,17 @@ services:
     hostname: ia-opcua-server
     read_only: true
     image: ${DOCKER_REGISTRY}ia-opcua-server:1.0.0
+    environment:
+      SECURE_MODE: ${SECURE_MODE}
+      LOG_LEVEL: ${LOG_LEVEL}
     restart: unless-stopped
     security_opt:
     - no-new-privileges
     healthcheck:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
+    volumes:
+    - ./Certificates/opcua-server_Server:/run/secrets/opcua-server_Server:ro
     networks:
     - timeseries_network
 

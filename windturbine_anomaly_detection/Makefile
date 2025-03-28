@@ -25,7 +25,7 @@ build:
 
 .PHONY: up_mqtt_ingestion
 up_mqtt_ingestion: down
-	export TELEGRAF_INPUT_PLUGIN=$$(if [ $(TARGET) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
+	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(TARGET) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
     if [ $(SECURE_MODE) = 'false' ]; then \
         echo "Starting Docker containers..."; \
         $(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d ;\
@@ -45,7 +45,7 @@ up_mqtt_ingestion: down
 # Run Docker containers
 .PHONY: up_opcua_ingestion
 up_opcua_ingestion: down
-	export TELEGRAF_INPUT_PLUGIN=$$(if [ $(TARGET) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
+	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(TARGET) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	if [ $(SECURE_MODE) = 'false' ]; then \
 		echo "Starting Docker containers..."; \
 		$(DOCKER_COMPOSE) up --scale ia-mqtt-publisher=0 -d ;\
