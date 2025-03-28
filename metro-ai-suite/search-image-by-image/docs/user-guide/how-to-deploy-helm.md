@@ -94,4 +94,3 @@ helm uninstall -n sibi sibi
 
 - [Kubernetes Documentation](https://kubernetes.io/docs/home/)
 - [Helm Documentation](https://helm.sh/docs/)
-- [API Reference](./API.md)
