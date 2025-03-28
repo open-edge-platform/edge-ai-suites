@@ -102,10 +102,8 @@ a pre-step to prepare models may be needed
         curl -L -o embedEtcd.yaml "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/milvus-db/embedEtcd.yaml"
         curl -L -o user.yaml "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/milvus-db/user.yaml"
         curl -L -o config.json "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/evam/configs/filter-pipeline/config.json"
-        curl -L -o mqtt_publisher.py "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/evam/user_scripts/gvapython/mqtt_publisher/mqtt_publisher.py"
         curl -L -o mosquitto.conf "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/broker/mosquitto.conf"
         curl -L -o ./models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/evam/models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json"
-        curl -L -o ./models/resnet-50-pytorch/resnet-50-pytorch.json "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/evam/models/resnet-50-pytorch/resnet-50-pytorch.json"
       ```
 
 4. **Start the Application**:
