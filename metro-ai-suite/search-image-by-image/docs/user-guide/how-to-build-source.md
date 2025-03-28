@@ -24,7 +24,7 @@ Before you begin, ensure the following:
     ```
     docker pull docker.io/library/node:23
     docker pull docker.io/library/python:3.11
-    docker pull docker.io/intel/dlstreamer:2024.2.2-ubuntu24
+    docker pull docker.io/intel/dlstreamer:2025.0.1.2-ubuntu24
     docker pull openvino/ubuntu22_dev:2024.6.0
     ```
 
