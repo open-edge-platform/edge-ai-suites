@@ -77,8 +77,7 @@ spec:
           - |
             cp /tmp/pipeline/config.json . &&
             cp /tmp/pipeline/person-vehicle-bike-detection-2004.json . &&
-            cp /tmp/pipeline/resnet-50-pytorch.json . &&
-            runuser -u eiiuser ./run.sh
+            runuser -u intelmicroserviceuser ./run.sh
         ports:
         - containerPort: 8080
           name: port-8080

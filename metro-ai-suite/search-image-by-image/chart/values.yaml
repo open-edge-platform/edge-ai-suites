@@ -52,7 +52,7 @@ evam:
     # key: evam.repository.image
     image: docker.io/intel/edge-video-analytics-microservice
     # key: evam.repository.tag
-    tag: 2.2.0
+    tag: 2.4.0
   # key: evam.replicas
   replicas: 1
   # key: evam.nodeSelector
