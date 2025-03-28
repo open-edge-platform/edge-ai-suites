@@ -31,7 +31,7 @@ By following this guide, you will learn how to:
       ```
     - Download the Docker Compose file:
       ```bash
-        curl -L -o compose.yml "https://raw.githubusercontent.com/intel/metro-ai-suite/refs/heads/main/search-image-by-image/compose/compose-linux-v1.0.0/compose-linux-v1.0.0.yml"
+        curl -L -o compose.yml "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/compose/compose-linux-v1.0.0/compose-linux-v1.0.0.yml"
       ```
 <!--
 a pre-step to prepare models may be needed
@@ -99,11 +99,11 @@ a pre-step to prepare models may be needed
 3. **Download the Artifacts**:
     - Download the artifacts:
       ```bash
-        curl -L -o embedEtcd.yaml "https://raw.githubusercontent.com/intel/metro-ai-suite/refs/heads/main/search-image-by-image/src/milvus-db/embedEtcd.yaml"
-        curl -L -o user.yaml "https://raw.githubusercontent.com/intel/metro-ai-suite/refs/heads/main/search-image-by-image/src/milvus-db/user.yaml"
-        curl -L -o config.json "https://raw.githubusercontent.com/intel/metro-ai-suite/refs/heads/main/search-image-by-image/src/evam/configs/filter-pipeline/config.json"
-        curl -L -o mosquitto.conf "https://raw.githubusercontent.com/intel/metro-ai-suite/refs/heads/main/search-image-by-image/src/broker/mosquitto.conf"
-        curl -L -o ./models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json "https://raw.githubusercontent.com/intel/metro-ai-suite/refs/heads/main/search-image-by-image/src/evam/models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json"
+        curl -L -o embedEtcd.yaml "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/milvus-db/embedEtcd.yaml"
+        curl -L -o user.yaml "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/milvus-db/user.yaml"
+        curl -L -o config.json "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/evam/configs/filter-pipeline/config.json"
+        curl -L -o mosquitto.conf "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/broker/mosquitto.conf"
+        curl -L -o ./models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/evam/models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json"
       ```
 
 4. **Start the Application**:
