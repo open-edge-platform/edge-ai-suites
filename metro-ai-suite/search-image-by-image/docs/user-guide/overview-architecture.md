@@ -13,7 +13,7 @@ The Search Image by Image Application is designed to:
 ## Architecture
 
 ### Technical Architecture Diagram
-![Technical Architecture Diagram](images/architecture.png)
+![Technical Architecture Diagram](_images/architecture.png)
 *Figure 1: Detailed Architecture of the Search Image by Image Application.*
 
 ### Data Flow

@@ -1,4 +1,4 @@
-Deploy with Helm
+# Deploy with Helm
 
 Use Helm to deploy Search Image by Image to a Kubernetes cluster. This guide will help you:
 - Add the Helm chart repository.

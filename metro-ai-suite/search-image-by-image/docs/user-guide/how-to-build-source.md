@@ -7,7 +7,7 @@ Build the Search Image by Image sample application from source to customize, deb
 
 This guide is ideal for developers who want to work directly with the source code.
 
-### Prerequisites
+## Prerequisites
 
 Before you begin, ensure the following:
 - **System Requirements**: Verify your system meets the minimum requirements.
@@ -16,7 +16,7 @@ Before you begin, ensure the following:
     - **Docker**: [Install Docker](https://docs.docker.com/engine/install/)
 - **Permissions**: Confirm you have permissions to install software and modify environment configurations.
 
-### Installing behind a proxy
+## Installing behind a proxy
 
 1. Follow this guide to configure your Docker environment: [Use a proxy server with the Docker CLI | Docker Documentation](https://docs.docker.com/engine/cli/proxy/)
 2. Pull base images:
@@ -28,13 +28,13 @@ Before you begin, ensure the following:
     docker pull openvino/ubuntu22_dev:2024.6.0
     ```
 
-### Steps to Build
+## Steps to Build
 
 1. **Clone the Repository**:
    - Run:
      ```bash
-     git clone https://github.com/open-edge-platform/edge-ai-suites.git
-     cd ./edge-ai-suites/metro-ai-suite/search-image-by-image
+     git clone https://github.com/intel/metro-ai-suite.git
+     cd search-image-by-image
      ```
 
 2. **Build Containers**:
@@ -82,7 +82,7 @@ Before you begin, ensure the following:
           cp -r ./models/intel/person-vehicle-bike-detection-2004 /output"
      ```
 
-### Validation
+## Validation
 
 1. **Start Containers**:
    - Run:
@@ -103,8 +103,8 @@ Before you begin, ensure the following:
 4. **Example Output**:
    - Here is an example output:
      <div align="center">
-         <img src="./images/imagesearch1.png" width="45%" style="margin-right:1rem"/>
-         <img src="./images/imagesearch2.png" width="45%" />
+         <img src="./_images/imagesearch1.png" width="45%" style="margin-right:1rem"/>
+         <img src="./_images/imagesearch2.png" width="45%" />
      </div>
 
 ## Troubleshooting
