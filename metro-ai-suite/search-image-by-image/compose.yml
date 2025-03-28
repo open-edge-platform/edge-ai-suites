@@ -111,7 +111,7 @@ services:
       - "1883:1883"
     restart: on-failure:5
   evam:
-    image: docker.io/intel/edge-video-analytics-microservice:2.3.0
+    image: docker.io/intel/edge-video-analytics-microservice:2.4.0
     hostname: evam
     container_name: sibi-evam
     read_only: true
