@@ -77,6 +77,7 @@ spec:
           - |
             cp /tmp/pipeline/config.json . &&
             cp /tmp/pipeline/person-vehicle-bike-detection-2004.json . &&
+            chown 1999 -R /home/pipeline-server &&
             runuser -u intelmicroserviceuser ./run.sh
         ports:
         - containerPort: 8080
