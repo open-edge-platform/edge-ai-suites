@@ -123,7 +123,6 @@ services:
       - REST_SERVER_PORT=8080
     volumes:
       - "./config.json:/home/pipeline-server/config.json"
-      - "./mqtt_publisher.py:/home/pipeline-server/gvapython/mqtt_publisher/mqtt_publisher.py"
       - "evam-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999"
       - "/run/udev:/run/udev:ro"
       - "/dev:/dev"
