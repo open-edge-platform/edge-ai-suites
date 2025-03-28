@@ -115,7 +115,7 @@ a pre-step to prepare models may be needed
 5. **Verify the Application**:
     - Check that the application is running:
       ```bash
-      docker ps
+      docker compose ps
       ```
 
 6. **Access the Application**:
