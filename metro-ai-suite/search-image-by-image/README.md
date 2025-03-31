@@ -40,6 +40,7 @@ The application includes a demonstration video for testing. The video loops cont
 - [Architecture Overview](docs/user-guide/overview-architecture.md)
 - [How to Build Source](docs/user-guide/how-to-build-source.md)
 - [How to Deploy Helm](docs/user-guide/how-to-deploy-helm.md)
+- [How to Deploy Edge Manageability Framework](docs/user-guide/how-to-deploy-edge-manageability-framework.md)
 - [Release Notes](docs/user-guide/release-notes.md)
 
 ## Important Notice

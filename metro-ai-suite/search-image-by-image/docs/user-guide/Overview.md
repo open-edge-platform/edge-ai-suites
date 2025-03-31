@@ -34,10 +34,15 @@ The application includes a demonstration video for testing. The video loops cont
 
 ![Screenshot of the Search Image by Image sample application interface displaying search input and matched results](_images/imagesearch2.png)
 
+## Deployment with Edge Manageability Framework
+
+- This reference implementation is ready for deployment with the Edge Manageability Framework. Follow the instructions using the [Deployment with Edge Managemability Framework](how-to-deploy-edge-manageability-framework.md)
+
 ## Learn More
 - [System Requirements](system-requirements.md)
 - [Get Started](get-started.md)
 - [Architecture Overview](overview-architecture.md)
 - [How to Build Source](how-to-build-source.md)
 - [How to Deploy Helm](how-to-deploy-helm.md)
+- [How to Deploy Edge Manageability Framework](how-to-deploy-edge-manageability-framework.md)
 - [Release Notes](release-notes.md)
