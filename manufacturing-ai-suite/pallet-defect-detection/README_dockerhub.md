@@ -1,13 +1,19 @@
-# Pallet Defect Detection Reference Implementation
+# Pallet Defect Detection Sample Application
 
-Use this reference implementation to run inference workflows for multiple models and visualize the annotated output. An example use case for this reference implementation is to detect the condition of pallets in a warehouse by connecting multiple video streams from cameras to AI pipelines running on a single industrial PC.
+This Sample Application enables real-time pallet condition monitoring by running inference workflows across multiple AI models. It connects multiple video streams from warehouse cameras to AI-powered pipelines, all operating efficiently on a single industrial PC. This solution enhances logistics efficiency and inventory management by detecting defects before they impact operations.
 
+## Deploy using Docker Compose
+---
+For more details on deployment, refer to the [documentation](https://docs.edgeplatform.intel.com/warehouse-defect-detection/2.2.0/user-guide/get-started.html).
+ 
 ## Deployment using Kubernetes Charts
 ---
-For more details on deployment, refer to the [documentation](https://docs.edgeplatform.intel.com/warehouse-defect-detection/2.1.0/user-guide/Get-Started-Guide.html).
+For more details on deployment, refer to the [documentation](https://docs.edgeplatform.intel.com/warehouse-defect-detection/2.2.0/user-guide/how-to-deploy-with-helm.html).
 
 ## Supported version
 ---
+2.2.0
+
 2.1.0
 
 2.0.0
@@ -24,7 +30,5 @@ http://www.apache.org/licenses/LICENSE-2.0
 ## Legal Information
 ---
 Intel, the Intel logo, and Xeon are trademarks of Intel Corporation in the U.S. and/or other countries.
-
-GStreamer is an open source framework licensed under LGPL. See [GStreamer licensing](https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html)⁠. You are solely responsible for determining if your use of GStreamer requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of GStreamer.
 
 *Other names and brands may be claimed as the property of others.

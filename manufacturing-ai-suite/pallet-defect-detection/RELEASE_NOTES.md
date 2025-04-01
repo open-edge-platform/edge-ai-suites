@@ -1,5 +1,20 @@
 # Release Notes
 
+## v2.2.0 (March 2025)
+
+### Added
+- Architectural changes to include MediaMTX for signaling and Coturn server for NAT traversal. Removed Visualizer microservice.
+- WebRTC protocol for streaming the inference output.
+- Open Telemetry dashboard for viewing metrics.
+- Frame and metadata publishing support over OPCUA protocol.
+
+### Updates
+- Pallet Defect Detection AI model updated to Geti 2.7.1
+- Updated EVAM image to v2.4.0 and model-registry image to v1.0.3.
+- Updated documentation.
+
+---
+
 ## v2.1.0 (March 2025)
 
 ### Added

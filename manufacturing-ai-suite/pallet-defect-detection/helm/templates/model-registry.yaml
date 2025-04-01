@@ -59,7 +59,7 @@ spec:
             - name: MLFLOW_S3_ENDPOINT_URL
               value: "{{ .Values.env.MLFLOW_S3_ENDPOINT_URL }}"
             - name: MLFLOW_TRACKING_URI
-              value: postgresql+psycopg2://{{ .Values.env.EII_USER_NAME }}:{{ .Values.env.POSTGRES_PASSWORD }}@mraas-postgres:5432/{{ .Values.env.POSTGRES_DB }}
+              value: postgresql+psycopg2://{{ .Values.env.POSTGRES_USER }}:{{ .Values.env.POSTGRES_PASSWORD }}@mraas-postgres:5432/{{ .Values.env.POSTGRES_DB }}
             - name: SERVER_PORT
               value: "{{ .Values.env.SERVER_PORT }}"
             - name: https_proxy

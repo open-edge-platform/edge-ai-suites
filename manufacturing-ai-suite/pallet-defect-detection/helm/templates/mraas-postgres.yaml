@@ -43,7 +43,7 @@ spec:
           - name: POSTGRES_PASSWORD
             value: "{{ .Values.env.POSTGRES_PASSWORD }}"
           - name: POSTGRES_USER
-            value: "{{ .Values.env.EII_USER_NAME }}"
+            value: "{{ .Values.env.POSTGRES_USER }}"
         image: postgres:13
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         volumeMounts:

@@ -1,37 +1,42 @@
-# Pallet Defect Detection Reference Implementation
+# Pallet Defect Detection Sample Application
 
-Connect video streams to multiple AI pipelines on a single industrial PC to detect the condition of pallets in a warehouse.
+Automated quality control with AI-driven vision systems.
 
 ## Overview
 
-Use this reference implementation to run inference workflows for multiple models and visualize the annotated output. An example use case for this reference implementation is to detect the condition of pallets in a warehouse by connecting multiple video streams from cameras to AI pipelines running on a single industrial PC.
-
-### Features
-
-This reference implementation offers the following features:
-
--   High-speed data exchange with low-latency compute.
--   AI-assisted defect detection in real-time as pallets are received at the warehouse.
--   On-premise data processing for data privacy and efficient use of bandwidth.
--   Interconnected warehouses deliver analytics for quick and informed tracking and decision making.
+This Sample Application enables real-time pallet condition monitoring by running inference workflows across multiple AI models. It connects multiple video streams from warehouse cameras to AI-powered pipelines, all operating efficiently on a single industrial PC. This solution enhances logistics efficiency and inventory management by detecting defects before they impact operations.
 
 ## How It Works
 
-This reference implementation consists of three microservices: Edge Video Analytics Microservice (EVAM), Model Registry Microservice(MRaaS) and Multimodal Data Visualization Microservice (MDVM), as shown in Figure 1.
+This sample application consists of the following microservices: Edge Video Analytics Microservice (EVAM), Model Registry Microservice(MRaaS), MediaMTX server, Coturn server, Open Telemetry Collector, Prometheus, Postgres and Minio.
 
-You start the pallet defect detection pipeline with a REST request using Client URL (cURL). The REST request will return a pipeline instance ID. EVAM then sends the images with overlaid bounding boxes via gRPC to MDVM. EVAM also sends the images to S3 compliant storage. To retrieve statistics of the running pipelines, MDVM sends a REST STATUS call and displays the received details. Any desired AI model from the Model Registry Microservice can be pulled into EVAM and used for inference in the reference implementation.
+You start the pallet defect detection pipeline with a REST request using Client URL (cURL). The REST request will return a pipeline instance ID. EVAM then sends the images with overlaid bounding boxes through webrtc protocol to webrtc browser client. This is done via the MediaMTX server used for signaling. Coturn server is used to facilitate NAT traversal and ensure that the webrtc stream is accessible on a non-native browser client and helps in cases where firewall is enabled. EVAM also sends the images to S3 compliant storage. The Open Telemetry Data exported by EVAM to Open Telemetry Collector is scraped by Prometheus and can be seen on Prometheus UI. Any desired AI model from the Model Registry Microservice (which can interact with Postgres, Minio and Geti Server for getting the model) can be pulled into EVAM and used for inference in the sample application.
 
 ![Architecture and high-level representation of the flow of data through the architecture](./images/defect-detection-arch-diagram.png)
 
 Figure 1: Architecture diagram
 
-This reference implementation is built with these components:
+This sample application is built with the following Intel Edge AI Stack Microservices:
 
--   <a href="https://docs.edgeplatform.intel.com/edge-video-analytics-microservice/2.3.0/user-guide/Overview.html">**Edge Video Analytics Microservice (EVAM)**</a> is an interoperable containerized microservice based on Python for video ingestion and deep learning inferencing functions.
--   <a href="https://docs.edgeplatform.intel.com/visualization-microservice/user-guide/Overview.html">**Multimodal Data Visualization Microservice**</a> enables the visualization of video streams and time-series data.
+-   <a href="https://docs.edgeplatform.intel.com/edge-video-analytics-microservice/2.4.0/user-guide/Overview.html">**Edge Video Analytics Microservice (EVAM)**</a> is an interoperable containerized microservice based on Python for video ingestion and deep learning inferencing functions.
 -   <a href="https://docs.edgeplatform.intel.com/model-registry-as-a-service/1.0.2/user-guide/Overview.html">**Model Registry Microservice**</a> provides a centralized repository that facilitates the management of AI models
 
-## Learn More
+It also consists of the below Third-party microservices:
 
--   Get started with the Pallet Defect Detection Reference Implementation by using the [Get Started Guide](../user-guide/Get-Started-Guide.md).
+- [MediaMTX Server](https://hub.docker.com/r/bluenviron/mediamtx)
+- [Coturn Server](https://hub.docker.com/r/coturn/coturn)
+- [Open telemetry Collector](https://hub.docker.com/r/otel/opentelemetry-collector-contrib)
+- [Prometheus](https://hub.docker.com/r/prom/prometheus)
+- [Postgres](https://hub.docker.com/_/postgres)
+- [Minio](https://hub.docker.com/r/minio/minio)
+
+
+## Features
+
+This sample application offers the following features:
+
+-   High-speed data exchange with low-latency compute.
+-   AI-assisted defect detection in real-time as pallets are received at the warehouse.
+-   On-premise data processing for data privacy and efficient use of bandwidth.
+-   Interconnected warehouses deliver analytics for quick and informed tracking and decision making.
 

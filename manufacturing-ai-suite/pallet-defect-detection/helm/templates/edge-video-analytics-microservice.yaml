@@ -18,29 +18,13 @@ spec:
     targetPort: {{ $.Values.config.edge_video_analytics_microservice.int.rtsp_output_port }}
     nodePort: {{ $.Values.config.edge_video_analytics_microservice.ext.rtsp_output_port }}
 ---
-{{- $global := . -}}
-{{- range $instance_idx := until (int .Values.num_video_instances) -}}
-{{- $instance := "" }}
-{{- $datastore_port := "" }}
-{{- $visualizer_port := "" }}
-{{- if $.Values.config.datastore}}
-{{- $datastore_port = $global.Values.config.datastore.grpc_port }}
-{{- end }}
-{{- if $.Values.config.multimodal_data_visualization_streaming}}
-{{- $visualizer_port = $global.Values.config.multimodal_data_visualization_streaming.grpc_port }}
-{{- end }}
-{{- if gt (int $global.Values.num_video_instances) 1 }}
-{{- $instance = "" }}
-{{- $instance = add 1 $instance_idx }}
-{{- end }}
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     app: edge-video-analytics-microservice
-  name: deployment-{{ $global.Values.config.edge_video_analytics_microservice.name }}{{ $instance }}
-  namespace: {{ $global.Values.namespace }}
+  name: deployment-{{ $.Values.config.edge_video_analytics_microservice.name }}
+  namespace: {{ $.Values.namespace }}
 spec:
   replicas: 1
   selector:
@@ -50,28 +34,18 @@ spec:
     metadata:
       labels:
         app: edge-video-analytics-microservice
-      {{ if eq $global.Values.config.edge_video_analytics_microservice.gige_camera true }}
-      annotations:
-        k8s.v1.cni.cncf.io/networks: macvlan-conf
-      {{ end }}
     spec:
       securityContext:
         supplementalGroups: [109,110]
-      {{- if eq $global.Values.config.edge_video_analytics_microservice.accelerator "hddl" }}
-      nodeSelector:
-        hddl: "true"
-      {{- else if eq $global.Values.config.edge_video_analytics_microservice.accelerator "ncs2" }}
-      nodeSelector:
-        ncs2: "true"
-      {{- end }}
-      {{- if and $global.Values.DOCKER_USERNAME $global.Values.DOCKER_PASSWORD }}
+      {{- if and $.Values.DOCKER_USERNAME $.Values.DOCKER_PASSWORD }}
       imagePullSecrets:
       - name: registryauth
       {{- end }}
+      # hostNetwork: true
       containers:
-      - name: ia-{{ $global.Values.config.edge_video_analytics_microservice.name }}{{ $instance }}
-        image: {{ $global.Values.DOCKER_REGISTRY }}intel/edge-video-analytics-microservice:2.3.0
-        imagePullPolicy: {{ $global.Values.imagePullPolicy }}
+      - name: {{ $.Values.config.edge_video_analytics_microservice.name }}
+        image: {{ $.Values.DOCKER_REGISTRY }}intel/edge-video-analytics-microservice:2.4.0
+        imagePullPolicy: {{ $.Values.imagePullPolicy }}
         securityContext:
           privileged: true  # Required for direct access to /dev
         volumeMounts:
@@ -87,16 +61,10 @@ spec:
           mountPath: /var/tmp
         - name: run-udev
           mountPath: /run/udev
-        - name: {{ $global.Values.volumes.pipelines.name }}
-          mountPath: {{ $global.Values.volumes.pipelines.location }}
-        - name: {{ $global.Values.volumes.models.name }}
-          mountPath: {{ $global.Values.volumes.models.location }}
-        {{ if eq $global.Values.env.DEV_MODE false}}
-        - name: certs
-          mountPath: /run/secrets/etcd/
-        - name: certs
-          mountPath: /run/secrets/EdgeVideoAnalyticsMicroservice{{ $instance }}_gRPC
-        {{ end }}
+        - name: {{ $.Values.volumes.pipelines.name }}
+          mountPath: {{ $.Values.volumes.pipelines.location }}
+        - name: {{ $.Values.volumes.models.name }}
+          mountPath: {{ $.Values.volumes.models.location }}
         - name: evam-input
           mountPath: /home/pipeline-server/config.json
           subPath: config.json
@@ -104,71 +72,27 @@ spec:
           mountPath: /home/pipeline-server/mr_models
         env:
         - name: AppName
-          value: 'EdgeVideoAnalyticsMicroservice{{ $instance }}'
-        - name: DEV_MODE
-          value: '{{ $global.Values.env.DEV_MODE }}'
-        - name: READ_CONFIG_FROM_FILE_ENV
-          value: '{{ $.Values.env.READ_CONFIG_FROM_FILE_ENV }}'
-        - name: PROFILING_MODE
-          value: '{{ $global.Values.env.PROFILING_MODE }}'
-        - name: ETCD_HOST
-          value: {{ $global.Values.config.etcd.name }}
-        - name: ETCD_CLIENT_PORT
-          value: '{{ $global.Values.config.etcd.client_port }}'
-        - name:  ETCD_PREFIX
-          value: ''
-        - name: MODELS_DIR
-          value: "{{ $global.Values.env.models_dir }}"
-        - name: PIPELINES_DIR
-          value: "{{ $global.Values.env.pipelines_dir }}"
-        - name:  GENICAM
-          value: "Balluff"
+          value: 'EdgeVideoAnalyticsMicroservice'
+        - name: ENABLE_WEBRTC
+          value: "{{ $.Values.env.ENABLE_WEBRTC }}"
+        - name: ENABLE_RTSP
+          value: "{{ $.Values.env.ENABLE_RTSP }}"
+        - name: WEBRTC_SIGNALING_SERVER
+          value: "http://{{ $.Values.env.HOST_IP }}:{{ $.Values.config.mediamtx.ext.mediamtx_port }}"
         - name: RUN_MODE
           value: "EVA"
-        - name: APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC
-          value: "{{ $.Values.env.APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC }}"
+        - name: SERVICE_NAME
+          value: "evam"
         - name: REST_SERVER_PORT
           value: "8080"
-        - name: RUNTIME_LICENSE_CHECK_FREQ_SECS
-          value: "{{ $global.Values.env.RUNTIME_LICENSE_CHECK_FREQ_SECS }}"
-        - name: APPLICATION_RESTART_FREQ_SECS
-          value: "{{ $global.Values.env.APPLICATION_RESTART_FREQ_SECS }}"
-        - name: LICENSE_ENABLED
-          value: "{{ $global.Values.env.LICENSE_ENABLED }}"
-        - name: LSHOST
-          valueFrom:
-            fieldRef:
-              fieldPath: status.hostIP
-        - name: LSFEATURE_NAME
-          value: "EVAM"
         - name: no_proxy
-          value: localhost,127.0.0.1,.intel.com,multimodal-data-visualization-streaming,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }}
+          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector
         - name: NO_PROXY
-          value: localhost,127.0.0.1,.intel.com,multimodal-data-visualization-streaming,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }}
+          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
         - name: https_proxy
           value: {{ $.Values.env.https_proxy }}
-        {{- if $.Values.config.datastore }}
-        - name: no_proxy
-          value: $(no_proxy),{{ $.Values.config.datastore.name }}
-        - name: NO_PROXY
-          value: $(NO_PROXY),{{ $.Values.config.datastore.name }}
-        {{- end }}
-        {{- if $.Values.config.multimodal_data_visualization_streaming}}  
-        - name: no_proxy
-          value: $(no_proxy),{{ $.Values.config.multimodal_data_visualization_streaming.name }},{{ $.Values.config.model_registry.name }},{{ $.Values.env.HOST_IP }}
-        - name: NO_PROXY
-          value: $(NO_PROXY),{{ $.Values.config.multimodal_data_visualization_streaming.name }},{{ $.Values.config.model_registry.name }},{{ $.Values.env.HOST_IP }}
-        {{- end }}
-        {{ if eq $global.Values.env.DEV_MODE false}}
-        - name: CONFIGMGR_CACERT
-          value: "/run/secrets/etcd/cacert.pem"
-        - name: CONFIGMGR_CERT
-          value: "/run/secrets/etcd/EdgeVideoAnalyticsMicroservice{{ $instance }}_client_certificate.pem"
-        - name: CONFIGMGR_KEY
-          value: "/run/secrets/etcd/EdgeVideoAnalyticsMicroservice{{ $instance }}_client_key.pem"
-        {{ end }}
         - name: S3_STORAGE_HOST
           value: "{{ $.Values.env.HOST_IP }}"
         - name: S3_STORAGE_PORT
@@ -177,6 +101,22 @@ spec:
           value: "{{ $.Values.env.MINIO_ACCESS_KEY }}"
         - name: S3_STORAGE_PASS
           value: "{{ $.Values.env.MINIO_SECRET_KEY }}"
+        - name: ENABLE_OPEN_TELEMETRY
+          value: "{{ $.Values.env.ENABLE_OPEN_TELEMETRY }}"
+        - name: OTEL_COLLECTOR_HOST
+          value: {{ $.Values.env.HOST_IP }}
+        - name: OTEL_COLLECTOR_PORT
+          value: "{{ $.Values.env.OTEL_COLLECTOR_PORT }}"
+        - name: OTEL_EXPORT_INTERVAL_MILLIS
+          value: "{{ $.Values.env.OTEL_EXPORT_INTERVAL_MILLIS }}"
+        - name: OPCUA_SERVER_IP
+          value: "{{ $.Values.env.OPCUA_SERVER_IP }}"
+        - name: OPCUA_SERVER_PORT
+          value: "{{ $.Values.env.OPCUA_SERVER_PORT }}"
+        - name: OPCUA_SERVER_USERNAME
+          value: "{{ $.Values.env.OPCUA_SERVER_USERNAME }}"
+        - name: OPCUA_SERVER_PASSWORD
+          value: "{{ $.Values.env.OPCUA_SERVER_PASSWORD }}"
       initContainers:
       - name: wait-for-model-registry
         image: busybox
@@ -201,32 +141,14 @@ spec:
           path: /run/udev
       - name: model-registry-temp-models
         emptyDir: {}
-      - name: {{ $global.Values.volumes.models.name }}
+      - name: {{ $.Values.volumes.models.name }}
         hostPath:
-          path: {{ $global.Values.volumes.models.hostpath }}
+          path: {{ $.Values.volumes.models.hostpath }}
           #type: DirectoryOrCreate
-      - name: {{ $global.Values.volumes.pipelines.name }}
+      - name: {{ $.Values.volumes.pipelines.name }}
         hostPath:
-          path: {{ $global.Values.volumes.pipelines.hostpath }}
+          path: {{ $.Values.volumes.pipelines.hostpath }}
           #type: DirectoryOrCreate
       - name: evam-input
         configMap:
           name: evam-config-input
-      {{ if eq $global.Values.env.DEV_MODE false}}
-      - name: certs
-        secret:
-          secretName: eii-certs
-          items:
-          - key: cacert.pem
-            path: cacert.pem
-          - key: EdgeVideoAnalyticsMicroservice{{ $instance }}_client_certificate.pem
-            path: EdgeVideoAnalyticsMicroservice{{ $instance }}_client_certificate.pem
-          - key: EdgeVideoAnalyticsMicroservice{{ $instance }}_client_key.pem
-            path: EdgeVideoAnalyticsMicroservice{{ $instance }}_client_key.pem
-          - key: EdgeVideoAnalyticsMicroservice{{ $instance }}_gRPC_server_certificate.pem
-            path: EdgeVideoAnalyticsMicroservice{{ $instance }}_gRPC_server_certificate.pem
-          - key: EdgeVideoAnalyticsMicroservice{{ $instance }}_gRPC_server_key.pem
-            path: EdgeVideoAnalyticsMicroservice{{ $instance }}_gRPC_server_key.pem
-      {{ end }}
----
-{{- end }}

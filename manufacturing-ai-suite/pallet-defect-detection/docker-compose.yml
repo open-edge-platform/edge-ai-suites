@@ -1,11 +1,11 @@
 services:
-  ia_edge_video_analytics_microservice:
+  edge-video-analytics-microservice:
     depends_on:
       model_registry:
         condition: service_healthy
-    image: ${DOCKER_REGISTRY}intel/edge-video-analytics-microservice:2.3.0
-    container_name: ia_edge_video_analytics_microservice
-    hostname: ia_edge_video_analytics_microservice
+    image: ${DOCKER_REGISTRY}intel/edge-video-analytics-microservice:2.4.0
+    container_name: edge-video-analytics-microservice
+    hostname: edge-video-analytics-microservice
     networks:
     - mraas
     restart: unless-stopped
@@ -16,32 +16,36 @@ services:
     - '8554:8554'
     environment:
       AppName: "EdgeVideoAnalyticsMicroservice"
-      no_proxy: ${ETCD_HOST},${no_proxy},${HOST_IP},ia-datastore,multimodal-data-visualization-streaming,${RTSP_CAMERA_IP}
+      ENABLE_WEBRTC: true
+      WEBRTC_SIGNALING_SERVER: http://${HOST_IP}:${WHIP_SERVER_PORT}
+      ENABLE_RTSP: false
+      no_proxy: ${ETCD_HOST},${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector
       ETCD_HOST: ${ETCD_HOST}
       ETCD_CLIENT_PORT: ${ETCD_CLIENT_PORT}
       ETCD_PREFIX: ${ETCD_PREFIX}
       READ_CONFIG_FROM_FILE_ENV: ${READ_CONFIG_FROM_FILE_ENV}
-      MODELS_DIR: "/EII/models"
-      PIPELINES_DIR: "/EII/pipelines"
-      GENICAM: "Balluff"
       RUN_MODE: "EVA"
-      GST_DEBUG: "1,gencamsrc:2"
-      LSHOST: host.docker.internal
-      LSFEATURE_NAME: "EVAM"
-      LICENSE_ENABLED: ${LICENSE_ENABLED}
-      RUNTIME_LICENSE_CHECK_FREQ_SECS: ${RUNTIME_LICENSE_CHECK_FREQ_SECS}
-      APPLICATION_RESTART_FREQ_SECS: ${APPLICATION_RESTART_FREQ_SECS}
+      GST_DEBUG: "1"
       APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC: "true"
       REST_SERVER_PORT: 8080
       S3_STORAGE_HOST: ${HOST_IP}
       S3_STORAGE_PORT: ${MR_MINIO_SERVER_PORT}
       S3_STORAGE_USER: ${MR_MINIO_ACCESS_KEY}
       S3_STORAGE_PASS: ${MR_MINIO_SECRET_KEY}
+      SERVICE_NAME: "evam"
+      ENABLE_OPEN_TELEMETRY: true
+      OTEL_COLLECTOR_HOST: ${OTEL_COLLECTOR_HOST}
+      OTEL_COLLECTOR_PORT: ${OTEL_COLLECTOR_PORT}
+      OTEL_EXPORT_INTERVAL_MILLIS: ${OTEL_EXPORT_INTERVAL_MILLIS}
+      OPCUA_SERVER_IP: ${OPCUA_SERVER_IP}
+      OPCUA_SERVER_PORT: ${OPCUA_SERVER_PORT}
+      OPCUA_SERVER_USERNAME: ${OPCUA_SERVER_USERNAME}
+      OPCUA_SERVER_PASSWORD: ${OPCUA_SERVER_PASSWORD}
     volumes:
     - vol_evam_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
     - /var/tmp:/var/tmp
     - ./resources/:/home/pipeline-server/resources/
-    - ./evam_config.json:/home/pipeline-server/config.json
+    - ./configs/evam_config.json:/home/pipeline-server/config.json
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
       # USB camera devices
@@ -71,110 +75,37 @@ services:
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
     - "/dev:/dev"
 
-  multimodal-data-visualization-streaming:
-    image: ${DOCKER_REGISTRY}intel/multimodal-data-visualization-streaming:5.0.0
-    container_name: multimodal-data-visualization-streaming
-    hostname: multimodal-data-visualization-streaming
-    read_only: true
-    restart: unless-stopped
-    ipc: "none"
-    security_opt:
-    - no-new-privileges
-    healthcheck:
-      test: ["CMD-SHELL", "exit", "0"]
-      interval: 5m
-    tmpfs:
-    - /etc/nginx/sites-enabled:uid=1999,gid=1999
-    - /usr/share/nginx:uid=1999,gid=1999
-    - /var/log/nginx:uid=1999,gid=1999
-    - /var/cache/nginx:uid=1999,gid=1999
-    - /var/lib/nginx:uid=1999,gid=1999
-    - /run:uid=1999,gid=1999
-    - /tmp:uid=1999,gid=1999
-    - /opt:uid=1999,gid=1999
+  mediamtx:
+    image: bluenviron/mediamtx:1.11.3
+    container_name: mediamtx-server
     environment:
-      PROFILING_MODE: ${PROFILING_MODE}
-      AppName: "MultiModalVisualizationStreaming"
-      DEV_MODE: ${DEV_MODE}
-      no_proxy: "${ETCD_HOST}, ${no_proxy}, ${HOST_IP}"
-      NO_PROXY: "${ETCD_HOST}, ${no_proxy}, ${HOST_IP}"
-      ETCD_HOST: ${ETCD_HOST}
-      ETCD_CLIENT_PORT: ${ETCD_CLIENT_PORT}
-      ETCD_PREFIX: ${ETCD_PREFIX}
-      HOST_IP: ${HOST_IP}
-      MODE: "EII"
-      PROVISION_MODE: ${PROVISION_MODE}
-      READ_CONFIG_FROM_FILE_ENV: ${READ_CONFIG_FROM_FILE_ENV}
-      LSHOST: host.docker.internal
-      LSFEATURE_NAME: "MultiModalVisStreaming"
-      RUNTIME_LICENSE_CHECK_FREQ_SECS: ${RUNTIME_LICENSE_CHECK_FREQ_SECS}
-      APPLICATION_RESTART_FREQ_SECS: ${APPLICATION_RESTART_FREQ_SECS}
-      LICENSE_ENABLED: ${LICENSE_ENABLED}
+      - MTX_LOGLEVEL=debug
+      - MTX_RTSP=no
+      - MTX_RTMP=no
+      - MTX_HLS=no
+      - MTX_SRT=no
+      - MTX_WEBRTCICESERVERS2_0_URL=turn:${HOST_IP}:${COTURN_UDP_PORT}
+      - MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME}
+      - MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}
+    ports:
+      - "${WHIP_SERVER_PORT}:8889"
+      - "8189:8189"
+      - "9997:9997"
     networks:
     - mraas
-    extra_hosts:
-    - "host.docker.internal:host-gateway"
-    volumes:
-    - ./viz_str_config.json:/app/eii/config.json
-    ports:
-    - 5003:5003
-    - 65138:65138
 
-  multimodal-data-visualization:
-    image: ${DOCKER_REGISTRY}intel/multimodal-data-visualization:5.0.0
-    container_name: multimodal-data-visualization
-    hostname: multimodal-data-visualization
-    restart: unless-stopped
-    read_only: true
-    ipc: "none"
-    security_opt:
-    - no-new-privileges
-    healthcheck:
-      test: ["CMD-SHELL", "exit", "0"]
-      interval: 5m
-    environment:
-      AppName: "MultiModalVisualization"
-      DEV_MODE: ${DEV_MODE}
-      no_proxy: ${ETCD_HOST},ia_influxdb,multimodal-data-visualization-streaming, ${no_proxy}, ${HOST_IP}
-      NO_PROXY: ${ETCD_HOST},ia_influxdb,multimodal-data-visualization-streaming, ${no_proxy}, ${HOST_IP}
-      ETCD_HOST: ${ETCD_HOST}
-      ETCD_CLIENT_PORT: ${ETCD_CLIENT_PORT}
-      ETCD_PREFIX: ${ETCD_PREFIX}
-      HOST_IP: ${HOST_IP}
-      MODE: "EII"
-      INFLUX_SERVER: "ia_influxdb"
-      GRAFANA_SERVER: '0.0.0.0'
-      INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
-      INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
-      GF_SECURITY_ADMIN_USER: ${VISUALIZER_GRAFANA_USER}
-      GF_SECURITY_ADMIN_PASSWORD: ${VISUALIZER_GRAFANA_PASSWORD}
-      GRAFANA_DATA_PATH: "/tmp/grafana/lib/grafana"
-      GRAFANA_LOGS_PATH: "/tmp/grafana/log/grafana"
-      GRAFANA_PLUGINS_PATH: "/tmp/grafana/lib/grafana/plugins"
-      GF_PATHS_DATA: "/tmp/grafana/lib/grafana"
-      GF_PATHS_LOGS: "/tmp/grafana/log/grafana"
-      GF_PATHS_PLUGINS: "/tmp/grafana/lib/grafana/plugins"
-      GF_PATHS_PROVISIONING: "/tmp/grafana/conf/provisioning"
-      PROVISION_MODE: ${PROVISION_MODE}
-      READ_CONFIG_FROM_FILE_ENV: ${READ_CONFIG_FROM_FILE_ENV}
-      LSFEATURE_NAME: "MultiModalVisualization"
-      LSHOST: host.docker.internal
-      RUNTIME_LICENSE_CHECK_FREQ_SECS: ${RUNTIME_LICENSE_CHECK_FREQ_SECS}
-      APPLICATION_RESTART_FREQ_SECS: ${APPLICATION_RESTART_FREQ_SECS}
-      LICENSE_ENABLED: ${LICENSE_ENABLED}
-    networks:
-    - mraas
-    extra_hosts:
-    - "host.docker.internal:host-gateway"
-    volumes:
-    - "vol_temp_grafana:/tmp"
-    - ./viz_config.json:/app/config.json
-    - ./dashboard_pdd.json:/app/eii/dashboard.json
+  coturn:
+    image: coturn/coturn:latest
+    container_name: coturn
     ports:
-    - 3000:3000
+      - "${COTURN_UDP_PORT}:3478"
+      - "${COTURN_UDP_PORT}:3478/udp"
+    command: ["-v"]  # Verbose mode for logging
+    networks:
+      - mraas
 
   model_registry:
-    image: ${DOCKER_REGISTRY}intel/model-registry:1.0.2
+    image: ${DOCKER_REGISTRY}intel/model-registry:1.0.3
     container_name: model_registry
     hostname: model_registry
     ipc: "none"
@@ -198,7 +129,7 @@ services:
       AppName: "ModelRegistry"
       MIN_LOG_LEVEL: ${MR_MIN_LOG_LEVEL}
       ENABLE_HTTPS_MODE: ${ENABLE_HTTPS_MODE}
-      MLFLOW_TRACKING_URI: postgresql+psycopg2://${EII_USER_NAME}:${MR_PSQL_PASSWORD}@mraas_postgres:${MR_PSQL_PORT}/${MR_PSQL_DATABASE}
+      MLFLOW_TRACKING_URI: postgresql+psycopg2://${POSTGRES_USER}:${MR_PSQL_PASSWORD}@mraas_postgres:${MR_PSQL_PORT}/${MR_PSQL_DATABASE}
       MLFLOW_S3_ENDPOINT_URL: ${MR_MLFLOW_S3_ENDPOINT_URL}
       MINIO_HOSTNAME: ${MR_MINIO_HOSTNAME}
       MINIO_SERVER_PORT: ${MR_MINIO_SERVER_PORT}
@@ -227,7 +158,7 @@ services:
       - no-new-privileges
     environment:
       AppName: "ModelRegistry"
-      POSTGRES_USER: ${EII_USER_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${MR_PSQL_PASSWORD}
       POSTGRES_DB: ${MR_PSQL_DATABASE}
       PGDATA: /var/lib/postgresql/data/pgdata
@@ -235,7 +166,6 @@ services:
       - mr_postgres_data:/var/lib/postgresql/data
     expose:
       - ${MR_PSQL_PORT}
-    user: "${EII_UID}:${EII_UID}"
     networks:
       - mraas
   mraas_minio:
@@ -256,15 +186,46 @@ services:
     ports:
     - '8000:8000'
     environment:
-      EII_USER_NAME: ${EII_USER_NAME}
       AppName: "ModelRegistry"
       MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
       ENABLE_HTTPS_MODE: ${ENABLE_HTTPS_MODE}
     command: server --address ":8000" --certs-dir /certs /data
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    environment:
+      - HTTP_PROXY=${http_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - NO_PROXY=$no_proxy,otel-collector,localhost,127.0.0.1
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    volumes:
+      - ./configs/open_telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - mraas
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.94.0
+    container_name: otel-collector
+    environment:
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: $no_proxy,prometheus,edge-video-analytics-microservice,localhost,127.0.0.1
+    ports:
+      - "4317:4317"  # OTLP gRPC receiver (default for metrics)
+      - "4318:4318"  # Prometheus scrape target
+    volumes:
+      - ./configs/open_telemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml  # OpenTelemetry Collector config
+    restart: always
+    networks:
+      - mraas
+
 networks:
   mraas:
     driver: bridge
+
 volumes:
   vol_evam_pipeline_root:
     driver: local
@@ -272,24 +233,6 @@ volumes:
       type: tmpfs
       device: tmpfs
   vol_etcd_keeper:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-  vol_etcd_keeper_nginx_cache:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-  vol_etcd_keeper_nginx_pid:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-  vol_cma_status_file:
-    driver: local
-  vol_temp_grafana:
-    name: "visualization_grafana_vol"
     driver: local
     driver_opts:
       type: tmpfs

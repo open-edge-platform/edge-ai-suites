@@ -1,22 +1,34 @@
-Pallet Defect Detection Reference Implementation
-===================================================
+.. toctree::
+   :hidden:
+
+   Overview
 
 .. toctree::
-   :caption: Introduction
-   
-   Overview <Overview>
-   Get Started <Get-Started-Guide>
+
+   overview-architecture
+   system-requirements
+   get-started
 
 .. toctree::
-   :caption: How-To
+   :caption: How to
 
-   Manage-Pipelines
-   Geti-Pipeline
-   Scale-Video-Resolution
-   Change-Input-Video-Source
+   how-to-deploy-with-helm
+   how-to-change-the-input-video-source
+   how-to-scale-video-resolution
+   how-to-manage-pipelines
+   how-to-use-an-ai-model-and-video-file-of-your-own
+   how-to-use-opcua-publisher
 
 .. toctree::
-   :includehidden:
-   :caption: Version Updates
+   :caption: References
+
+   api-reference
+   environment-variables
+
+
+.. toctree::
 
    release_notes/Overview
+
+
+
