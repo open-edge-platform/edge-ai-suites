@@ -17,7 +17,7 @@
                 "name": "pallet_defect_detection_mlops",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/warehouse.avi name=source ! h264parse ! decodebin ! queue max-size-buffers=10 ! videoconvert ! gvadetect name=detection ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/warehouse.avi name=source ! h264parse ! decodebin ! queue max-size-buffers=10 ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
