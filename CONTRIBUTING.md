@@ -1,7 +1,7 @@
 
 # Edge-AI-Suites Contributor Guide
 
-The following are guidelines for contributing to the Edge-AI-Suites project, including the code of conduct, submitting issues, and contributing code.  
+The following are guidelines for contributing to the Edge AI Suites project, including the code of conduct, submitting issues, and contributing code.  
 
 # Table of Contents
 
@@ -166,13 +166,17 @@ By making a contribution to this project, I certify that:
     personal information I submit with it, including my sign-off) is
     maintained indefinitely and may be redistributed consistent with
     this project or the open source license(s) involved.
-Then you just add a line to every git commit message:
 ```
 
+Then you just add a line to every git commit message:
+
+```
 Signed-off-by: Your Name <your.name@email.com>
+```
+
 Use your real name (sorry, no pseudonyms or anonymous contributions.)
 
-If you set your user.name and user.email git configs, you can sign your commit automatically with git commit -s.
+If you set your `user.name` and `user.email` git configs, you can sign your commit automatically with `git commit -s`.
 
 # License
 
