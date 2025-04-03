@@ -6,7 +6,7 @@ The following are guidelines for contributing to the Edge AI Suites project, inc
 # Table of Contents
 
 - [`Code of Conduct`](#code-of-conduct)
-- [`Security <URL>`](#security)
+- [`Security`](#security)
 - [`Get Started`](#get-started)
 - [`How to Contribute`](#how-to-contribute)
 - [`Development Guidelines`](#development-guidelines)
