@@ -229,7 +229,7 @@ services:
       SECURE_MODE: ${SECURE_MODE}
     networks:
     - timeseries_network
-    command: ["--csv", "/windturbine/T1.csv"]
+    command: ["--csv", "/windturbine/windturbine_data.csv"]
     volumes:
     - ./Certificates/mqtt-publisher_Server:/run/secrets/mqtt-publisher_Server:ro
 networks:

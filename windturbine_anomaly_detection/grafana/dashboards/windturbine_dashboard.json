@@ -171,7 +171,7 @@
           }
         }
       ],
-      "title": "Alarm, Anomaly vs Power",
+      "title": "Anomaly Prediction for Grid Active Power",
       "type": "timeseries"
     },
     {
@@ -313,7 +313,7 @@
           }
         }
       ],
-      "title": "Timestamp vs Power",
+      "title": "Timestamp vs Grid Active Power",
       "type": "timeseries"
     },
     {

@@ -29,7 +29,7 @@ spec:
           runAsUser: {{ $.Values.env.TIMESERIES_UID }}
           runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
           readOnlyRootFilesystem: true
-        command: ["python3", "-u", "publisher.py", "--csv", "/windturbine/T1.csv"]
+        command: ["python3", "-u", "publisher.py", "--csv", "/windturbine/windturbine_data.csv"]
         env:
         - name: HOST_IP
           value: "ia-mqtt-broker"
