@@ -9,6 +9,8 @@ __pycache__/
 *.mp4
 *.mov
 **/deployment*
+!/deployment-package/
+!/deployment-package/**
 
 # C extensions
 *.so
