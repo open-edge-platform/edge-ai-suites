@@ -17,9 +17,25 @@ The **Edge-AI-Suites** project hosts a collection of sample applications for Edg
 
 Please visit each sample application for the **Getting Started** guide.   
 
+| Sample Application | Documentation |
+|:------|:-------------------|
+| Loitering Detection | [Get Started](metro-ai-suite/loitering-detection/docs/developer-guide/get-started.md) |
+| Search Image by Image | [Get Started](metro-ai-suite/search-image-by-image/docs/user-guide/get-started.md) |
+| Smart Parking | [Get Started](metro-ai-suite/smart-parking/docs/developer-guide/get-started.md) |
+| Pallet Defect Detection | [Get Started](manufacturing-ai-suite/pallet-defect-detection#get-started) |
+| Weld Porosity | [Get Started](manufacturing-ai-suite/weld-porosity#get-started) |
+
 ## Develop
 
 Please visit each sample application for the **Develop** guide.  
+
+| Sample Application | Documentation |
+|:------|:-------------------|
+| Loitering Detection | [Customize the Application](metro-ai-suite/loitering-detection/docs/developer-guide/how-to-customize-application.md) |
+| Search Image by Image | [Build](search-image-by-image/docs/user-guide/how-to-build-source.md) and [Deployment](metro-ai-suite/search-image-by-image/docs/user-guide/how-to-deploy-helm.md) instructions |
+| Smart Parking | [Customize the Application](metro-ai-suite/smart-parking/docs/developer-guide/how-to-customize-application.md) |
+| Pallet Defect Detection | |
+| Weld Porosity | |
 
 ## Contribute
 
