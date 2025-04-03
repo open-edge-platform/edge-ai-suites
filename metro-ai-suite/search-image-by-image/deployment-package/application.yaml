@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: LicenseRef-Intel
+---
+specSchema: "Application"
+schemaVersion: "0.1"
+$schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
+
+name: sibi-app
+version: 1.0.0
+description: "Search Image by Image Application"
+
+helmRegistry: "docker-hub"
+chartName: "intel/search-image-by-image"
+chartVersion: "1.0.0"
+
+profiles:
+  - name: "default"
+    valuesFileName: "sibi-values.yaml"
+    parameterTemplates:
+      - name: httpProxy
+        displayName: "Http proxy"
+        type: string
+        default: ""
+      - name: httpsProxy
+        displayName: "Https proxy"
+        type: string
+        default: ""
+      - name: noProxy
+        displayName: "No proxy"
+        type: string
+        default: "localhost,127.0.0.1"
