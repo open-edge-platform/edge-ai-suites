@@ -103,6 +103,7 @@ services:
       KAPACITOR_SERVER: 'ia-kapacitor'
       INFLUXDB_PORT: 8086
       KAPACITOR_LOGGING_LEVEL: ${LOG_LEVEL}
+      INFLUXDB_DBNAME: datain
       PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
       SSL_CERT_FILE: /run/secrets/Kapacitor_Server/ca_certificate.pem
     networks:
