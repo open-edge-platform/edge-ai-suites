@@ -116,7 +116,7 @@ class AnomalyDetectorHandler(Handler):
         anomaly_type = None
         check_for_anomalies = 1
 
-        # logger.info(f"**************Recvd point {point}")
+        logger.info(f"Processing point {point.time} {time.time()}")
 
         def process_the_point(x,y):
             if (math.isnan(x) or math.isnan(y)):

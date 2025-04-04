@@ -10,7 +10,7 @@ data0
         |influxDBOut()
                 .buffer(0)
                 .database('datain')
-                .measurement('wind_turbine_data')
+                .measurement('wind_turbine_anomaly_data')
                 .retentionPolicy('autogen')
 data0
         |alert()
