@@ -88,13 +88,14 @@ Consistently following coding standards helps maintain readability and quality. 
 - Meaningful variable and function names
 - Inline comments and API documentation generator for complex logic
 
-## Commit Messages
+## Commit Messages and Pull Requests
 
 Clear and informative commit messages make it easier to understand the history of the project. Follow these guidelines:
 - Use the present tense (e.g., "Add feature" not "Added feature")
 - Capitalize the first letter
 - Keep the message concise, ideally under 50 characters
-- Use the following format for commit messages:
+
+Use the following format for pull requests descriptions:
 
 ```
 ### Description
