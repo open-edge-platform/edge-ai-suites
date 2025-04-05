@@ -23,7 +23,7 @@ The Search Image by Image Application is designed to:
    - **User-provided images for search**: Allows users to upload images or for searching within the video streams.
 
 2. **Video Analysis Pipeline**:
-   - **Intel® DL Streamer Pipeline Server**:
+   - **Deep Learning Streamer Pipeline Server**:
      - Consumes RTSP streams for object detection and feature extraction.
      - Publishes metadata to an MQTT Broker.
    - **Feature Matching Microservice**:
@@ -45,7 +45,7 @@ The Search Image by Image Application is designed to:
    - **How it’s used**: Replays videos as RTSP/WebRTC streams for processing and display.
    - **Benefits**: Allows testing of video search features without physical cameras.
 
-2. **Intel® DL Streamer Pipeline Server (Microservice for Feature Extraction)**
+2. **DL Streamer Pipeline Server (Microservice for Feature Extraction)**
    - **What it is**: A microservice that processes video streams for object detection and feature extraction.
    - **How it’s used**: Converts RTSP streams into feature vectors and publishes metadata.
    - **Benefits**: Enables efficient AI-powered video analysis.
