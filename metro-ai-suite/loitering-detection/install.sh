@@ -228,6 +228,33 @@ if [ -d "dlstreamer" ]; then
     rm -rf dlstreamer
 fi
 
+##############################################################################
+# Download and setup videos for Smart Parking
+##############################################################################
+echo "Setting up videos for Smart Parking..."
+# Create videos directory if it doesn't exist
+VIDEO_DIR="evam/videos"
+create_dir "$VIDEO_DIR"
+
+# Download and rename videos
+declare -A video_urls=(
+    ["VIRAT_S_000101.mp4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000101.mp4"
+    ["VIRAT_S_000102.mp4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000102.mp4"
+    ["VIRAT_S_000103.mp4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000103.mp4"
+    ["VIRAT_S_000104.mp4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000104.mp4"
+)
+
+for video_name in "${!video_urls[@]}"; do
+    echo "Downloading ${video_name}..."
+    curl -L "${video_urls[$video_name]}" -o "${VIDEO_DIR}/${video_name}"
+    if [ ! -f "${VIDEO_DIR}/${video_name}" ]; then
+        echo "Error: Failed to download ${video_name}"
+        exit 1
+    fi
+done
+
+echo "Videos setup completed."
+
 deactivate
 echo "=== All tasks completed successfully. ==="
 
