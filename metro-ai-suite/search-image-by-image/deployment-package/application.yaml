@@ -7,7 +7,7 @@ $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 
 name: sibi-app
 version: 1.0.0
-description: "Search Image by Image Application"
+description: "Search Image by Image Sample Application"
 
 helmRegistry: "docker-hub"
 chartName: "intel/search-image-by-image"
