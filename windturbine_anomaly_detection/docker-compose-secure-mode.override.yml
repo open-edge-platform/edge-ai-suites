@@ -3,17 +3,82 @@ services:
   ia-grafana:
     environment:
       GF_SERVER_PROTOCOL: https
+      GF_SERVER_CERT_FILE: /run/secrets/grafana_Server_server_certificate.pem
+      GF_SERVER_CERT_KEY: /run/secrets/grafana_Server_server_key.pem
+      GF_SERVER_CACERT: /run/secrets/ca_certificate.pem
     entrypoint: ["/bin/sh", "-c", "/entrypoint.sh"]
     volumes:
       - ./grafana/entrypoint.sh:/entrypoint.sh
       - ./grafana/dashboards/datasources_prod.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    secrets:
+      - ca_certificate.pem
+      - grafana_Server_server_certificate.pem
+      - grafana_Server_server_key.pem
+  ia-kapacitor:
+    secrets:
+      - ca_certificate.pem
+      - Kapacitor_Server_server_certificate.pem
+      - Kapacitor_Server_server_key.pem
   ia-telegraf:
     environment:
       TELEGRAF_CONFIG_PATH: /etc/telegraf/Telegraf.conf
+    secrets:
+      - ca_certificate.pem
+      - Telegraf_Server_server_certificate.pem
+      - Telegraf_Server_server_key.pem
   ia-influxdb:
     environment:
       INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb.conf"
-
+    secrets:
+      - ca_certificate.pem
+      - influxdb_Server_server_certificate.pem
+      - influxdb_Server_server_key.pem
   ia-mqtt-broker:
     volumes:
     - ../../tools/mqtt/broker/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    secrets:
+      - ca_certificate.pem
+      - mqtt-broker_Server_server_certificate.pem
+      - mqtt-broker_Server_server_key.pem
+  ia-mqtt-publisher:
+    secrets:
+      - ca_certificate.pem
+      - mqtt-publisher_Server_server_certificate.pem
+      - mqtt-publisher_Server_server_key.pem
+  ia-opcua-server:
+    secrets:
+      - ca_certificate.pem
+      - opcua-server_Server_server_certificate.pem
+      - opcua-server_Server_server_key.pem
+
+secrets:
+  opcua-server_Server_server_certificate.pem:
+    file: ./Certificates/opcua-server_Server/opcua-server_Server_server_certificate.pem
+  opcua-server_Server_server_key.pem:
+    file: ./Certificates/opcua-server_Server/opcua-server_Server_server_key.pem
+  mqtt-broker_Server_server_certificate.pem:
+    file: ./Certificates/mqtt-broker_Server/mqtt-broker_Server_server_certificate.pem
+  mqtt-broker_Server_server_key.pem:
+    file: ./Certificates/mqtt-broker_Server/mqtt-broker_Server_server_key.pem
+  mqtt-publisher_Server_server_certificate.pem:
+    file: ./Certificates/mqtt-publisher_Server/mqtt-publisher_Server_server_certificate.pem
+  mqtt-publisher_Server_server_key.pem:
+    file: ./Certificates/mqtt-publisher_Server/mqtt-publisher_Server_server_key.pem
+  grafana_Server_server_certificate.pem:
+    file: ./Certificates/grafana_Server/grafana_Server_server_certificate.pem
+  grafana_Server_server_key.pem:
+    file: ./Certificates/grafana_Server/grafana_Server_server_key.pem
+  Kapacitor_Server_server_certificate.pem:
+    file: ./Certificates/Kapacitor_Server/Kapacitor_Server_server_certificate.pem
+  Kapacitor_Server_server_key.pem:
+    file: ./Certificates/Kapacitor_Server/Kapacitor_Server_server_key.pem
+  influxdb_Server_server_certificate.pem:
+    file: ./Certificates/influxdb_Server/influxdb_Server_server_certificate.pem
+  influxdb_Server_server_key.pem:
+    file: ./Certificates/influxdb_Server/influxdb_Server_server_key.pem
+  Telegraf_Server_server_certificate.pem:
+    file: ./Certificates/Telegraf_Server/Telegraf_Server_server_certificate.pem
+  Telegraf_Server_server_key.pem:
+    file: ./Certificates/Telegraf_Server/Telegraf_Server_server_key.pem
+  ca_certificate.pem:
+    file: ./Certificates/ca_certificate.pem

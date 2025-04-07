@@ -68,7 +68,14 @@ spec:
           mountPath: /etc/grafana/provisioning/datasources/datasources.yml
           subPath: datasources.yml
         - name: certs
-          mountPath: /etc/grafana/certs
+          mountPath: /run/secrets/ca_certificate.pem
+          subPath: ca_certificate.pem
+        - name: certs
+          mountPath: /run/secrets/grafana_Server_server_certificate.pem
+          subPath: grafana_Server_server_certificate.pem
+        - name: certs
+          mountPath: /run/secrets/grafana_Server_server_key.pem
+          subPath: grafana_Server_server_key.pem
         {{ end }}
         - name: grafana-entrypoint
           mountPath: /entrypoint.sh
@@ -98,11 +105,11 @@ spec:
         - name: GF_PROVISIONING_ENABLE
           value: "true"
         - name: GF_SERVER_CERT_FILE
-          value: "/etc/grafana/certs/grafana_Server_server_certificate.pem"
+          value: "/run/secrets/grafana_Server_server_certificate.pem"
         - name: GF_SERVER_CERT_KEY
-          value: "/etc/grafana/certs/grafana_Server_server_key.pem"
+          value: "/run/secrets/grafana_Server_server_key.pem"
         - name: GF_SERVER_CACERT
-          value: "/etc/grafana/certs/ca_certificate.pem"
+          value: "/run/secrets/ca_certificate.pem"
         - name: INFLUXDB_DB
           value: "datain"
         - name: GF_PROVISIONING_DASHBOARDS

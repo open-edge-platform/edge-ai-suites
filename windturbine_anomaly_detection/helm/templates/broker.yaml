@@ -46,7 +46,14 @@ spec:
           mountPath: /mosquitto/config/mosquitto.conf
           subPath: mosquitto.conf
         - name: certs
-          mountPath: /mosquitto/config/certs
+          mountPath: /run/secrets/ca_certificate.pem
+          subPath: ca_certificate.pem
+        - name: certs
+          mountPath: /run/secrets/mqtt-broker_Server_server_certificate.pem
+          subPath: mqtt-broker_Server_server_certificate.pem
+        - name: certs
+          mountPath: /run/secrets/mqtt-broker_Server_server_key.pem
+          subPath: mqtt-broker_Server_server_key.pem
         {{- else }}
         - name: mosquitto-dev-conf
           mountPath: /mosquitto/config/mosquitto.conf

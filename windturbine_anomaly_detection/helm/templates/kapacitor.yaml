@@ -59,7 +59,14 @@ spec:
           subPath: config.json
         {{ if eq .Values.env.SECURE_MODE true}}
         - name: certs
-          mountPath: /run/secrets/Kapacitor_Server
+          mountPath: /run/secrets/ca_certificate.pem
+          subPath: ca_certificate.pem
+        - name: certs
+          mountPath: /run/secrets/Kapacitor_Server_server_certificate.pem
+          subPath: Kapacitor_Server_server_certificate.pem
+        - name: certs
+          mountPath: /run/secrets/Kapacitor_Server_server_key.pem
+          subPath: Kapacitor_Server_server_key.pem
         {{ end }}
 
         env:

@@ -31,8 +31,7 @@ services:
     volumes:
     - ./telegraf/entrypoint.sh:/entrypoint.sh
     - "./telegraf/config/:/etc/telegraf"
-    - ./Certificates/Telegraf_Server:/run/secrets/Telegraf_Server:ro
-    - ./telegraf/input_data:/tmp/input_data:ro
+    - ./telegraf/input_data:/tmp/input_data:ro    
 
   ia-influxdb:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -63,7 +62,6 @@ services:
     volumes:
       # Mount for influxdb data directory and configuration
     - vol_influxdb_conf:/var/lib/influxdb:rw
-    - ./Certificates/influxdb_Server/:/run/secrets/influxdb:ro
     - ./influxdb/config:/etc/influxdb
     - ./influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
   
@@ -110,7 +108,6 @@ services:
     - timeseries_network
     volumes:
     - "vol_temp_kapacitor:/tmp/"
-    - ./Certificates/Kapacitor_Server:/run/secrets/Kapacitor_Server:ro
     - ./kapacitor/udfs/:/app/udfs/
     - ./kapacitor/tick_scripts/:/app/tick_scripts/
     - ./kapacitor/config.json:/app/config.json
@@ -143,9 +140,6 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${VISUALIZER_GRAFANA_PASSWORD}
       GF_PROVISIONING_ENABLE: "true"
       GF_PROVISIONING_DASHBOARDS: /etc/grafana/provisioning/dashboards
-      GF_SERVER_CERT_FILE: /etc/grafana/certs/grafana_Server_server_certificate.pem
-      GF_SERVER_CERT_KEY: /etc/grafana/certs/grafana_Server_server_key.pem
-      GF_SERVER_CACERT: /etc/grafana/certs/ca_certificate.pem
       GF_SERVER_PROTOCOL: http
       GF_LOG_LEVEL: ${LOG_LEVEL}
     networks:
@@ -154,7 +148,6 @@ services:
     - "vol_temp_grafana:/tmp"
     - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
     - ./grafana/dashboards/datasources_dev.yml:/etc/grafana/provisioning/datasources/datasources.yml
-    - ./Certificates/grafana_Server:/etc/grafana/certs:ro
     - ./grafana/entrypoint.sh:/entrypoint.sh
     ports:
     - ${GRAFANA_PORT}:3000
@@ -177,8 +170,6 @@ services:
     - "1883:1883"
     volumes:
     - ../../tools/mqtt/broker/config/mosquitto_devmode.conf:/mosquitto/config/mosquitto.conf:ro
-    - ./Certificates/mqtt-broker_Server:/mosquitto/config/certs:ro
-
 
   ia-opcua-server:
     build:
@@ -200,8 +191,6 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
-    volumes:
-    - ./Certificates/opcua-server_Server:/run/secrets/opcua-server_Server:ro
     networks:
     - timeseries_network
 
@@ -231,11 +220,11 @@ services:
     networks:
     - timeseries_network
     command: ["--csv", "/windturbine/windturbine_data.csv"]
-    volumes:
-    - ./Certificates/mqtt-publisher_Server:/run/secrets/mqtt-publisher_Server:ro
 networks:
   timeseries_network:
     driver: bridge
+
+
 volumes:
   vol_influxdb_conf:
     driver: local

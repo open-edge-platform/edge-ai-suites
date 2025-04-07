@@ -37,7 +37,14 @@ spec:
           subPath: entrypoint.sh     
         {{ if eq .Values.env.SECURE_MODE true}}
         - name: certs
-          mountPath: /run/secrets/Telegraf_Server
+          mountPath: /run/secrets/ca_certificate.pem
+          subPath: ca_certificate.pem
+        - name: certs
+          mountPath: /run/secrets/Telegraf_Server_server_certificate.pem
+          subPath: Telegraf_Server_server_certificate.pem
+        - name: certs
+          mountPath: /run/secrets/Telegraf_Server_server_key.pem
+          subPath: Telegraf_Server_server_key.pem
         - name: telegraf-conf-input
           mountPath: /etc/telegraf/Telegraf.conf
           subPath: Telegraf.conf
