@@ -139,15 +139,6 @@ export default defineComponent({
       this.$refs.fileInput.click();
     },
     handleFileUpload(event) {
-      /**
-       * TODO: When the same image is uploaded multiple times,
-       * the cropper does not update. The way to handle cropper updates
-       * are described in the component documentation.
-       * See https://github.com/fengyuanchen/cropperjs#replaceurl-hassamesize
-       * 
-       * As a workaround, you can upload another image and then re-upload the
-       * original image to update the cropper.
-       */
       const file = event.target.files[0];
       if (file) {
         const reader = new FileReader();
@@ -155,6 +146,7 @@ export default defineComponent({
           this.screenshot = e.target.result;
         };
         reader.readAsDataURL(file);
+        this.$refs.fileInput.value = null; // Reset the file input value
       }
     },
     async startAnalysis() {
