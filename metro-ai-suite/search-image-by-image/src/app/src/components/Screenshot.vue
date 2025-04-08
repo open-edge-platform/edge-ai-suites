@@ -361,6 +361,7 @@ body, html {
   float: left; /* Float the buttons side by side */
   border-radius: 0; /* Make the button squared */
   height: 100%; /* Make the button take full height */
+  font-size: calc(min(1.5vh, 1.5vw)); /* Responsive text size */
 }
 
 /* Clear floats (clearfix hack) */
