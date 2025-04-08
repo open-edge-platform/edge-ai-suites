@@ -8,7 +8,6 @@
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowfullscreen
-        @load="onIframeLoad"
       ></iframe>
     </div>
     <div class="btn-group" style="width: 100%">
@@ -105,18 +104,20 @@ export default defineComponent({
     }
   },
   methods: {
-    onIframeLoad() {
-      const iframe = this.$refs.iframe;
-      const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-      const video = iframeDocument.querySelector('video');
-
-      if (video) {
-        this.video = video;
-      } else {
-        console.error('Video element not found in iframe.');
-      }
-    },
     async captureScreenshot() {
+      if (!this.video) {
+        console.log("Get video from iframe")
+        const iframe = this.$refs.iframe;
+        const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+        const video = iframeDocument.querySelector('video');
+
+        if (video) {
+          this.video = video;
+        } else {
+          console.error('Video element not found in iframe.');
+        }
+      }
+
       if (this.video) {
         try {
           const canvas = document.createElement('canvas');
