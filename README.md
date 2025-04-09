@@ -3,17 +3,19 @@
 
 ## Overview
 
-Edge AI Suites are open, industry-specific AI software development kits (SDKs) for independent software vendors (ISVs), system integrators and solutions builders. 
+Edge AI Suites are collections of open, industry-specific AI software development kits (SDKs), microservices, and sample applications for independent software vendors (ISVs), system integrators and solutions builders. 
 
-These suites simplify the creation of custom AI solutions for specific industries by providing curated reference applications, sample code and benchmarks to accelerate application development. Optimized code for AI, media and end-to-end workloads are enabled to save development time and improve solution performance. 
+These suites simplify the creation of custom AI solutions for specific industries by providing curated sample applications, example code and benchmarks to accelerate application development. Optimized code for AI, media, and end-to-end workloads are enabled to save development time and improve solution performance. 
 
-The Metro AI Suite accelerates the development of solutions for Edge AI video, safety and security, smart city and transportation use cases. 
+[The Metro AI Suite](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite) accelerates the development of solutions for Edge AI video, safety and security, smart city and transportation use cases. 
 
-The Manufacturing AI Suite enhances output quality and volume with automated defect detection, asset tracking, software-defined controls, and other capabilities, empowering smart factories with Vision, Time Series and Generative AI capabilities. 
+[The Manufacturing AI Suite](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite) enhances output quality and volume with automated defect detection, asset tracking, software-defined controls, and other capabilities, empowering smart factories with Vision, Time Series and Generative AI capabilities. 
 
-The Retail AI Suite **https://github.com/intel-retail** accelerates hardware decisions for Retail AI workloads at the edge, developing automated and assisted customer checkout experiences with built-in inventory management and omnichannel analytics.
+[The Retail AI Suite](https://github.com/open-edge-platform/edge-ai-suites/tree/main/retail-ai-suite) **https://github.com/intel-retail** accelerates hardware decisions for Retail AI workloads at the edge, developing automated and assisted customer checkout experiences with built-in inventory management and omnichannel analytics.
 
-The Edge-AI-Suites project hosts a collection of sample applications organized as follows:
+The Media & Entertainment AI Suite provides libraries and sample applications to accelerate solution development for high-performance, high-quality, live video production helping improve viewer experience.
+
+The Edge AI Suites project hosts a collection of sample applications organized as follows:
 
 | Suite | Sample Application | Get Started | Developers Docs |
 |:------|:-------------------|:------------|:----------------|
