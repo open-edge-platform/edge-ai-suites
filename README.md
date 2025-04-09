@@ -11,7 +11,7 @@ These suites simplify the creation of custom AI solutions for specific industrie
 
 [The Manufacturing AI Suite](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite) enhances output quality and volume with automated defect detection, asset tracking, software-defined controls, and other capabilities, empowering smart factories with Vision, Time Series and Generative AI capabilities. 
 
-[The Retail AI Suite](https://github.com/open-edge-platform/edge-ai-suites/tree/main/retail-ai-suite) **https://github.com/intel-retail** accelerates hardware decisions for Retail AI workloads at the edge, developing automated and assisted customer checkout experiences with built-in inventory management and omnichannel analytics.
+[The Retail AI Suite](https://github.com/open-edge-platform/edge-ai-suites/tree/main/retail-ai-suite) accelerates hardware decisions for Retail AI workloads at the edge, developing automated and assisted customer checkout experiences with built-in inventory management and omnichannel analytics.
 
 The Media & Entertainment AI Suite provides libraries and sample applications to accelerate solution development for high-performance, high-quality, live video production helping improve viewer experience.
 
