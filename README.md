@@ -13,43 +13,19 @@ The Manufacturing AI Suite enhances output quality and volume with automated def
 
 The Retail AI Suite **https://github.com/intel-retail** accelerates hardware decisions for Retail AI workloads at the edge, developing automated and assisted customer checkout experiences with built-in inventory management and omnichannel analytics.
 
-The Media and Entertainment AI Suite delivers pre-trained models and pre-configured containers with optimized throughput for Intel-platforms enabling high-performance, high-quality live video production that supports analog video upscale to improve viewer experiences.
-
 The Edge-AI-Suites project hosts a collection of sample applications organized as follows:
 
-| Suite | Sample Application |
-|:------|:-------------------|
-| Metro AI Suite | [Loitering Detection](metro-ai-suite/loitering-detection) |
-| Metro AI Suite | [Search Image by Image](metro-ai-suite/search-image-by-image) |
-| Metro AI Suite | [Smart Parking](metro-ai-suite/smart-parking) |
-| Manufacturing AI Suite | [Pallet Defect Detection](manufacturing-ai-suite/pallet-defect-detection) |
-| Manufacturing AI Suite | [Weld Porosity](manufacturing-ai-suite/weld-porosity) |
-| Retail AI Suite | [Automated Self Checkout](https://github.com/intel-retail/automated-self-checkout) |
-| Retail AI Suite | [Loss Prevention](https://github.com/intel-retail/loss-prevention) |
+| Suite | Sample Application | Get Started | Developers Docs |
+|:------|:-------------------|:------------|:----------------|
+| Metro AI Suite | [Loitering Detection](metro-ai-suite/loitering-detection) | [link](metro-ai-suite/loitering-detection/docs/user-guide/get-started.md) | [Customize the Application](metro-ai-suite/loitering-detection/docs/user-guide/how-to-customize-application.md) |
+| Metro AI Suite | [Search Image by Image](metro-ai-suite/search-image-by-image) | [link](metro-ai-suite/search-image-by-image/docs/user-guide/get-started.md) | [Build](metro-ai-suite/search-image-by-image/docs/user-guide/how-to-build-source.md) and [Deployment](metro-ai-suite/search-image-by-image/docs/user-guide/how-to-deploy-helm.md) instructions |
+| Metro AI Suite | [Smart Parking](metro-ai-suite/smart-parking) | [link](metro-ai-suite/smart-parking/docs/user-guide/get-started.md) | [Customize the Application](metro-ai-suite/smart-parking/docs/user-guide/how-to-customize-application.md) |
+| Manufacturing AI Suite | [Pallet Defect Detection](manufacturing-ai-suite/pallet-defect-detection) | [link](manufacturing-ai-suite/pallet-defect-detection#get-started) | [Customize the Application](manufacturing-ai-suite/pallet-defect-detection/docs/user-guide/how-to-use-an-ai-model-and-video-file-of-your-own.md) |
+| Manufacturing AI Suite | [Weld Porosity](manufacturing-ai-suite/weld-porosity) | [link](manufacturing-ai-suite/weld-porosity#get-started) | [Customize the Application](manufacturing-ai-suite/weld-porosity/docs/user-guide/how-to-use-an-ai-model-and-video-file-of-your-own.md) |
+| Retail AI Suite | [Automated Self Checkout](https://github.com/intel-retail/automated-self-checkout) | | |
+| Retail AI Suite | [Loss Prevention](https://github.com/intel-retail/loss-prevention) | | |
 
-## Get Started
-
-Please visit each sample application for the **Getting Started** guide.   
-
-| Sample Application | Documentation |
-|:------|:-------------------|
-| Loitering Detection | [Get Started](metro-ai-suite/loitering-detection/docs/developer-guide/get-started.md) |
-| Search Image by Image | [Get Started](metro-ai-suite/search-image-by-image/docs/user-guide/get-started.md) |
-| Smart Parking | [Get Started](metro-ai-suite/smart-parking/docs/developer-guide/get-started.md) |
-| Pallet Defect Detection | [Get Started](manufacturing-ai-suite/pallet-defect-detection#get-started) |
-| Weld Porosity | [Get Started](manufacturing-ai-suite/weld-porosity#get-started) |
-
-## Develop
-
-Please visit each sample application for the **Develop** guide.  
-
-| Sample Application | Documentation |
-|:------|:-------------------|
-| Loitering Detection | [Customize the Application](metro-ai-suite/loitering-detection/docs/developer-guide/how-to-customize-application.md) |
-| Search Image by Image | [Build](search-image-by-image/docs/user-guide/how-to-build-source.md) and [Deployment](metro-ai-suite/search-image-by-image/docs/user-guide/how-to-deploy-helm.md) instructions |
-| Smart Parking | [Customize the Application](metro-ai-suite/smart-parking/docs/developer-guide/how-to-customize-application.md) |
-| Pallet Defect Detection | |
-| Weld Porosity | |
+Please visit each sample application sub-directory for respective **Getting Started**, **Customization** instructions.
 
 ## Contribute
 
