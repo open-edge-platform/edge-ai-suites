@@ -1,9 +1,7 @@
-The Manufacturing AI Suite empowers smart factories with responsive, scalable edge AI. With an open ecosystem, seamless integration with new and existing systems, and strong data privacy controls, it accelerates AI deployment on the factory floor. Optimized for Intel, it delivers real-time insights, enabling more efficient operations and an agile factory. 
+The Metro AI Suite helps accelerate application development for sophisticated edge AI video safety, security, and smart city use cases. Some of the sample applications offered within Metro AI Suite are:
 
-The Manufacturing AI Suite helps you develop solutions for:
-- Production Workflow: Efficiency optimizations, product quality (detect anomalies, defects, or variations)
-- Workplace Safety: AI-based safety insights to help reduce risks
-- Real-Time Insights: Improve the production process (local data processing, integration with existing manufacturing executions systems, tracking defect rates, identifying trends)
-- Automation: Correct problems almost immediately (instant alerts, implementation of corrective actions)
+- [Loitering Detection](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/loitering-detection): Effortlessly monitor and manage areas with AI-driven video analytics for real-time insights and enhanced security
+- [Video Based Image Search](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/search-image-by-image): Performs near real-time analysis and image-based search to detect and retrieve objects of interest in large video datasets.
+- [Smart Parking](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/smart-parking): Effortlessly manage parking spaces with AI-driven video analytics for real-time insights and enhanced efficiency.
 
-Please see sample applications such as [Pallet Defect Detection](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/pallet-defect-detection), [Weld Porosity](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/weld-porosity) to learn utilizing these workflows to accelerate your solution development for AI in manufacturing use cases.
+See respective sample applications to learn more about using them in your application development as well as customizing them to meet your use case needs.
