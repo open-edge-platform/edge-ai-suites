@@ -52,6 +52,12 @@ config:
       pub_port: 4840
   mqttpublisher:
       name: mqttpublisher
+  gradio_ui:
+    name: gradio-ui
+    int:
+      port: "7860"
+    ext:
+      port: "30002"
 volumes:
   models:
     name: vol-models

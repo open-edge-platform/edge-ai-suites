@@ -50,6 +50,11 @@ services:
       - ca_certificate.pem
       - opcua-server_Server_server_certificate.pem
       - opcua-server_Server_server_key.pem
+  ia-gradio-ui:
+    secrets:
+      - ca_certificate.pem
+      - gradio-ui_Server_server_certificate.pem
+      - gradio-ui_Server_server_key.pem
 
 secrets:
   opcua-server_Server_server_certificate.pem:
@@ -80,5 +85,9 @@ secrets:
     file: ./Certificates/Telegraf_Server/Telegraf_Server_server_certificate.pem
   Telegraf_Server_server_key.pem:
     file: ./Certificates/Telegraf_Server/Telegraf_Server_server_key.pem
+  gradio-ui_Server_server_certificate.pem:
+    file: ./Certificates/gradio-ui_Server/gradio-ui_Server_server_certificate.pem
+  gradio-ui_Server_server_key.pem:
+    file: ./Certificates/gradio-ui_Server/gradio-ui_Server_server_key.pem
   ca_certificate.pem:
     file: ./Certificates/ca_certificate.pem

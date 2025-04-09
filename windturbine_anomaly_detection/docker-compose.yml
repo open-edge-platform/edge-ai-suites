@@ -220,6 +220,43 @@ services:
     networks:
     - timeseries_network
     command: ["--csv", "/windturbine/windturbine_data.csv"]
+
+  ia-gradio-ui:
+    build:
+      context: $PWD/gradio
+      dockerfile: $PWD/gradio/Dockerfile
+      args:
+        TIMESERIES_UID: ${TIMESERIES_UID}
+        TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
+        no_proxy: ${timeseries_no_proxy}
+        INSTALL_SOURCES: "no"
+    image: ia-gradio-ui:1.0.0
+    container_name: ia-gradio-ui
+    hostname: ia-gradio-ui
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+    - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    environment:
+      SECURE_MODE: ${SECURE_MODE}
+      no_proxy: localhost,ia-influxdb
+      NO_PROXY: locahost,ia-influxdb
+      INFLUX_SERVER: "ia-influxdb"
+      INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
+      INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
+      INFLUXDB_DB: datain
+      LOG_LEVEL: ${LOG_LEVEL}
+    networks:
+    - timeseries_network
+    ports:
+    - ${GRADIO_PORT}:7860
+    volumes:
+    - vol_temp_gradio:/tmp
+
 networks:
   timeseries_network:
     driver: bridge
@@ -238,6 +275,11 @@ volumes:
       device: tmpfs
   vol_temp_grafana:
     name: "visualization_grafana_vol"
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_temp_gradio:
     driver: local
     driver_opts:
       type: tmpfs
