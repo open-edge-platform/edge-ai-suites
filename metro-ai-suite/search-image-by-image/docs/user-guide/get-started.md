@@ -123,7 +123,7 @@ a pre-step to prepare models may be needed
       - Stream UI: `http://localhost:8889/stream`
       - App UI: `http://localhost:3000`
       - Search UI: `http://localhost:9000/docs`
-      - Milvus UI: `http://localhost:8000/`
+      - MilvusDB UI: `http://localhost:8000/`
 
 
 7. **Run the Application**:
