@@ -54,8 +54,8 @@ services:
       INFLUXDB_USER : ${INFLUXDB_USERNAME}
       INFLUXDB_USER_PASSWORD: ${INFLUXDB_PASSWORD}
       RETENTION_DURATION: ${INFLUXDB_RETENTION_DURATION}
-      no_proxy: ${timeseries_no_proxy}, ia-kapacitor
-      NO_PROXY: ${timeseries_no_proxy}, ia-kapacitor
+      no_proxy: ${timeseries_no_proxy}, ia-time-series-analytics-microservice
+      NO_PROXY: ${timeseries_no_proxy}, ia-time-series-analytics-microservice
       INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb_devmode.conf"
       INFLUXDB_LOGGING_LEVEL: ${LOG_LEVEL}
       INFLUXDB_TLS_CIPHERS: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
@@ -65,10 +65,10 @@ services:
     - ./influxdb/config:/etc/influxdb
     - ./influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
   
-  ia-kapacitor:
+  ia-time-series-analytics-microservice:
     build:
-      context: $PWD/../../microservices/kapacitor
-      dockerfile: $PWD/../../microservices/kapacitor/Dockerfile
+      context: $PWD/../../microservices/time_series_analytics_microservice
+      dockerfile: $PWD/../../microservices/time_series_analytics_microservice/Dockerfile
       args:
         KAPACITOR_VERSION: 1.7.6
         TIMESERIES_UID: ${TIMESERIES_UID}
@@ -76,9 +76,9 @@ services:
         PYTHON_VERSION: "3.10"
         no_proxy: ${timeseries_no_proxy}
         INSTALL_SOURCES: "no"
-    container_name: ia-kapacitor
-    hostname: ia-kapacitor
-    image: ${DOCKER_REGISTRY}ia-kapacitor:1.0.0
+    container_name: ia-time-series-analytics-microservice
+    hostname: ia-time-series-analytics-microservice
+    image: ${DOCKER_REGISTRY}ia-time-series-analytics-microservice:1.0.0
     restart: unless-stopped
     security_opt:
     - no-new-privileges
@@ -88,30 +88,30 @@ services:
       interval: 5m
     environment:
       SECURE_MODE: ${SECURE_MODE}
-      no_proxy: "ia-kapacitor,ia-influxdb,ia-mqtt-broker,ia-opcua-server"
-      NO_PROXY: "ia-kapacitor,ia-influxdb,ia-mqtt-broker,ia-opcua-server"
+      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost"
+      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost"
       KAPACITOR_PORT: ${KAPACITOR_PORT}
       INFLUX_SERVER: "ia-influxdb"
       KAPACITOR_INFLUXDB_0_USERNAME: ${INFLUXDB_USERNAME}
       KAPACITOR_INFLUXDB_0_PASSWORD: ${INFLUXDB_PASSWORD}
       PROFILING_MODE: "false"
-      KAPACITOR_URL: http://ia-kapacitor:$KAPACITOR_PORT/
+      KAPACITOR_URL: http://ia-time-series-analytics-microservice:$KAPACITOR_PORT/
       KAPACITOR_UNSAFE_SSL: "true"
       KAPACITOR_INFLUXDB_0_URLS_0: http://ia-influxdb:8086/
-      KAPACITOR_SERVER: 'ia-kapacitor'
+      KAPACITOR_SERVER: 'ia-time-series-analytics-microservice'
       INFLUXDB_PORT: 8086
       KAPACITOR_LOGGING_LEVEL: ${LOG_LEVEL}
       INFLUXDB_DBNAME: datain
       PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
-      SSL_CERT_FILE: /run/secrets/Kapacitor_Server/ca_certificate.pem
+      SSL_CERT_FILE: /run/secrets/ca_certificate.pem
     networks:
     - timeseries_network
     volumes:
-    - "vol_temp_kapacitor:/tmp/"
-    - ./kapacitor/udfs/:/app/udfs/
-    - ./kapacitor/tick_scripts/:/app/tick_scripts/
-    - ./kapacitor/config.json:/app/config.json
-    - ./kapacitor/models/:/app/models/
+    - "vol_temp_time_series_analytics_microservice:/tmp/"
+    - ./time_series_analytics_microservice/udfs/:/app/udfs/
+    - ./time_series_analytics_microservice/tick_scripts/:/app/tick_scripts/
+    - ./time_series_analytics_microservice/config.json:/app/config.json
+    - ./time_series_analytics_microservice/models/:/app/models/
     ports:
     - "${KAPACITOR_PORT}:${KAPACITOR_PORT}"
 
@@ -268,7 +268,7 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
-  vol_temp_kapacitor:
+  vol_temp_time_series_analytics_microservice:
     driver: local
     driver_opts:
       type: tmpfs

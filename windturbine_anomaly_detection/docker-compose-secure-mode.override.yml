@@ -14,11 +14,11 @@ services:
       - ca_certificate.pem
       - grafana_Server_server_certificate.pem
       - grafana_Server_server_key.pem
-  ia-kapacitor:
+  ia-time-series-analytics-microservice:
     secrets:
       - ca_certificate.pem
-      - Kapacitor_Server_server_certificate.pem
-      - Kapacitor_Server_server_key.pem
+      - time_series_analytics_microservice_Server_server_certificate.pem
+      - time_series_analytics_microservice_Server_server_key.pem
   ia-telegraf:
     environment:
       TELEGRAF_CONFIG_PATH: /etc/telegraf/Telegraf.conf
@@ -73,10 +73,10 @@ secrets:
     file: ./Certificates/grafana_Server/grafana_Server_server_certificate.pem
   grafana_Server_server_key.pem:
     file: ./Certificates/grafana_Server/grafana_Server_server_key.pem
-  Kapacitor_Server_server_certificate.pem:
-    file: ./Certificates/Kapacitor_Server/Kapacitor_Server_server_certificate.pem
-  Kapacitor_Server_server_key.pem:
-    file: ./Certificates/Kapacitor_Server/Kapacitor_Server_server_key.pem
+  time_series_analytics_microservice_Server_server_certificate.pem:
+    file: ./Certificates/time_series_analytics_microservice_Server/time_series_analytics_microservice_Server_server_certificate.pem
+  time_series_analytics_microservice_Server_server_key.pem:
+    file: ./Certificates/time_series_analytics_microservice_Server/time_series_analytics_microservice_Server_server_key.pem
   influxdb_Server_server_certificate.pem:
     file: ./Certificates/influxdb_Server/influxdb_Server_server_certificate.pem
   influxdb_Server_server_key.pem:

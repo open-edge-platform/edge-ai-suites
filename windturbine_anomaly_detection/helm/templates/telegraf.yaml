@@ -62,9 +62,9 @@ spec:
         - name: MQTT_BROKER_HOST
           value: '{{ .Values.config.telegraf.MQTT_BROKER_HOST }}'
         - name: INFLUXDB_USERNAME
-          value: '{{ .Values.env.INFLUXDB_ADMIN_USERNAME }}'
+          value: '{{ .Values.env.INFLUXDB_USERNAME }}'
         - name: INFLUXDB_PASSWORD
-          value: '{{ .Values.env.INFLUXDB_ADMIN_PASSWORD }}'
+          value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
         - name: INFLUX_SERVER
           value: "influxdb"
         - name: INFLUXDB_DBNAME
@@ -82,7 +82,7 @@ spec:
           value: /etc/telegraf/Telegraf.conf
         {{ end }}
         - name: OPCUA_SERVER
-          value: "opc.tcp://opcua-server:4840/freeopcua/server/"
+          value: "opc.tcp://ia-opcua-server:4840/freeopcua/server/"
       volumes:
       - name: tmpfs-volume
         emptyDir: {}

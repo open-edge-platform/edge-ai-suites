@@ -104,8 +104,8 @@ push_images: build
 	docker compose -f $(DOCKER_COMPOSE_FILE) push
 	docker tag ia-cert-generator:1.0.0 $(DOCKER_REGISTRY)ia-cert-generator:1.0.0 
 	docker push $(DOCKER_REGISTRY)ia-cert-generator:1.0.0
-	docker build -t $(DOCKER_REGISTRY)ia-kapacitor-windturbine:1.0.0 kapacitor/.
-	docker push $(DOCKER_REGISTRY)ia-kapacitor-windturbine:1.0.0
+	docker build -t $(DOCKER_REGISTRY)ia-time-series-analytics-microservice-windturbine:1.0.0 time_series_analytics_microservice/.
+	docker push $(DOCKER_REGISTRY)ia-time-series-analytics-microservice-windturbine:1.0.0
 
 # Generate helm packages
 .PHONY: gen_helm_charts

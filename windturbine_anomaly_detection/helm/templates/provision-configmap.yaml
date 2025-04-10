@@ -75,6 +75,15 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   namespace: {{ .Values.namespace }}
+  name: grafana-metric-dashboard
+data:
+  metric_dashboard-1741962756286.json: |-
+{{ .Files.Get "metric_dashboard-1741962756286.json" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
   name: grafana-datasource-dev
 data:
   datasources.yml: |-
@@ -111,7 +120,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   namespace: {{ .Values.namespace }}
-  name: kapacitor-config
+  name: time-series-analytics-microservice-config
 data:
   config.json: |-
 {{ .Files.Get "config.json" | indent 4 }}

@@ -8,7 +8,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 spec:
   selector:
-    app: opcua-server
+    app: ia-opcua-server
   ports:
     - name: opcua-port
       port: {{ .Values.config.opcuaserver.int.pub_port }}
@@ -18,18 +18,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: opcua-server
+    app: ia-opcua-server
   name: deployment-opcua-server
   namespace: {{ .Values.namespace }}
 
 spec:
   selector:
     matchLabels:
-      app: opcua-server
+      app: ia-opcua-server
   template:
     metadata:
       labels:
-        app: opcua-server
+        app: ia-opcua-server
     spec:
       {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
       imagePullSecrets:

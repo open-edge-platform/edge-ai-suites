@@ -12,7 +12,7 @@ env:
   TELEGRAF_INPUT_PLUGIN: opcua
   TIMESERIES_USER_NAME: timeseries_user
   TIMESERIES_UID: 1999
-  TIMESERIES_NO_PROXY: influxdb,kapacitor,mqttbroker,ia-mqtt-broker,opcua-server
+  TIMESERIES_NO_PROXY: influxdb,time-series-analytics-microservice,mqttbroker,ia-mqtt-broker,ia-opcua-server
   INFLUXDB_ADMIN_USERNAME: 
   INFLUXDB_ADMIN_PASSWORD: 
   INFLUXDB_USERNAME: 
@@ -37,8 +37,8 @@ config:
   telegraf:
     name: telegraf
     MQTT_BROKER_HOST: "ia-mqtt-broker"
-  kapacitor:
-    name: kapacitor
+  time_series_analytics_microservice:
+    name: time-series-analytics-microservice
     kapacitor_port: 9092
   mqttbroker:
     name: ia-mqtt-broker
@@ -47,7 +47,7 @@ config:
     ext:
       port: 30006
   opcuaserver:
-    name: opcua-server
+    name: ia-opcua-server
     int:
       pub_port: 4840
   mqttpublisher:
@@ -62,15 +62,15 @@ volumes:
   models:
     name: vol-models
     size: 500Mi
-    hostpath: "/opt/intel/kapacitor/models/"
+    hostpath: "/opt/intel/time_series_analytics_microservice/models/"
     location: "/app/models"
   tick:
     name: vol-tick-scripts
     size: 100Mi
-    hostpath: "/opt/intel/kapacitor/tick_scripts/"
+    hostpath: "/opt/intel/time_series_analytics_microservice/tick_scripts/"
     location: "/app/tick_scripts"
   udfs:
     name: vol-udfs
     size: 100Mi
-    hostpath: "/opt/intel/kapacitor/udfs/"
+    hostpath: "/opt/intel/time_series_analytics_microservice/udfs/"
     location: "/app/udfs"

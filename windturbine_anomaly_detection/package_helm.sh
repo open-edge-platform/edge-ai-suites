@@ -8,7 +8,11 @@ cp -f influxdb/init-influxdb.sh helm/
 cp -f ../../tools/mqtt/broker/config/*.conf helm/
 cp -f telegraf/config/*.conf helm
 cp -f grafana/entrypoint.sh helm/grafana_entrypoint.sh
-cp -f kapacitor/config.json helm/
+cp -f time_series_analytics_microservice/config.json helm/
+sudo mkdir -p /opt/intel/time_series_analytics_microservice
+sudo cp -rf time_series_analytics_microservice/udfs /opt/intel/time_series_analytics_microservice
+sudo cp -rf time_series_analytics_microservice/tick_scripts /opt/intel/time_series_analytics_microservice
+sudo cp -rf time_series_analytics_microservice/models /opt/intel/time_series_analytics_microservice
 cp -f telegraf/entrypoint.sh helm/telegraf_entrypoint.sh
 cd ../../tools/k8s_secrets
 cp ../cert_gen.sh .
