@@ -8,7 +8,6 @@
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowfullscreen
-        @load="onIframeLoad"
       ></iframe>
     </div>
     <div class="btn-group" style="width: 100%">
@@ -105,18 +104,20 @@ export default defineComponent({
     }
   },
   methods: {
-    onIframeLoad() {
-      const iframe = this.$refs.iframe;
-      const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-      const video = iframeDocument.querySelector('video');
-
-      if (video) {
-        this.video = video;
-      } else {
-        console.error('Video element not found in iframe.');
-      }
-    },
     async captureScreenshot() {
+      if (!this.video) {
+        console.log("Get video from iframe")
+        const iframe = this.$refs.iframe;
+        const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+        const video = iframeDocument.querySelector('video');
+
+        if (video) {
+          this.video = video;
+        } else {
+          console.error('Video element not found in iframe.');
+        }
+      }
+
       if (this.video) {
         try {
           const canvas = document.createElement('canvas');
@@ -139,15 +140,6 @@ export default defineComponent({
       this.$refs.fileInput.click();
     },
     handleFileUpload(event) {
-      /**
-       * TODO: When the same image is uploaded multiple times,
-       * the cropper does not update. The way to handle cropper updates
-       * are described in the component documentation.
-       * See https://github.com/fengyuanchen/cropperjs#replaceurl-hassamesize
-       * 
-       * As a workaround, you can upload another image and then re-upload the
-       * original image to update the cropper.
-       */
       const file = event.target.files[0];
       if (file) {
         const reader = new FileReader();
@@ -155,6 +147,7 @@ export default defineComponent({
           this.screenshot = e.target.result;
         };
         reader.readAsDataURL(file);
+        this.$refs.fileInput.value = null; // Reset the file input value
       }
     },
     async startAnalysis() {
@@ -369,6 +362,7 @@ body, html {
   float: left; /* Float the buttons side by side */
   border-radius: 0; /* Make the button squared */
   height: 100%; /* Make the button take full height */
+  font-size: calc(min(1.5vh, 1.5vw)); /* Responsive text size */
 }
 
 /* Clear floats (clearfix hack) */
