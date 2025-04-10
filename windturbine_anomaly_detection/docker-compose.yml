@@ -25,6 +25,7 @@ services:
       OPCUA_SERVER: opc.tcp://ia-opcua-server:4840/freeopcua/server/
       LOG_LEVEL: ${LOG_LEVEL}
       TELEGRAF_INPUT_PLUGIN: ${TELEGRAF_INPUT_PLUGIN}
+      TELEGRAF_METRIC_BATCH_SIZE: ${TELEGRAF_METRIC_BATCH_SIZE}
     entrypoint: ["/bin/sh", "-c", "/entrypoint.sh"]
     networks:
     - timeseries_network

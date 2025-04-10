@@ -23,7 +23,9 @@ env:
   HTTP_PROXY: 
   HTTPS_PROXY:
   INFLUXDB_RETENTION_DURATION: 1h0m0s
+  TELEGRAF_METRIC_BATCH_SIZE: 100
   DEPLOYMENT_METHOD_ITEP: false
+  LOG_LEVEL: INFO
 config:
   influx_db_server:
     name: influxdb
