@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: LicenseRef-Intel
+---
+specSchema: "DeploymentPackage"
+schemaVersion: "0.1"
+$schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
+
+name: "sibi"
+displayName: "sibi"
+description: "Search Image by Image Sample Application"
+version: "1.0.0"
+
+applications:
+  - name: sibi-app
+    version: 1.0.0
+
+defaultNamespaces:
+  sibi-app: sibi
+
+deploymentProfiles:
+  - name: "default"
+    applicationProfiles:
+      - application: "sibi-app"
+        profile: "default"

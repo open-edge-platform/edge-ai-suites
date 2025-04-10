@@ -1,0 +1,11 @@
+embeddings
+yml
+runnable
+Kubernetes
+kubectl
+http
+localhost
+scalable
+modularity
+Pinecone
+frontend

@@ -20,13 +20,13 @@ By following this guide, you will learn how to:
 1. **Download the Compose File**:
     - Download the Docker Compose file and configuration:
       ```bash
-        git clone https://github.com/intel/metro-ai-suite.git
+        git clone https://github.com/open-edge-platform/edge-ai-suites.git
       ```
 
 2. **Navigate to the Directory**:
     - Go to the directory where you saved the Compose file:
       ```bash
-      cd metro-ai-suite/smart-parking/
+      cd edge-ai-suites/metro-ai-suite/smart-parking/
       ```
 
 3. **Update the IP Address**:
@@ -54,7 +54,7 @@ By following this guide, you will learn how to:
 6. **Start the Application**:
     - Run the application using Docker Compose:
       ```bash
-      make start
+      docker compose up -d
       ```
 
 7. **Verify the Application**:
@@ -86,7 +86,7 @@ By following this guide, you will learn how to:
 1.  To stop the application, use the following commands:
 
     ```bash
-    make stop
+    docker compose down
     ```
 
 ## Next Steps

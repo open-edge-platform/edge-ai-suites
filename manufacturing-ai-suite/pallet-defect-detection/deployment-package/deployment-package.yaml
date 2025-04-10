@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: LicenseRef-Intel
+---
+specSchema: "DeploymentPackage"
+schemaVersion: "0.1"
+$schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
+
+name: "pdd"
+displayName: "pdd"
+description: "Pallet Defect Detection Sample Application"
+version: "2.2.0"
+
+applications:
+  - name: pdd-app
+    version: 2.2.0
+
+defaultNamespaces:
+  pdd-app: pdd
+
+deploymentProfiles:
+  - name: "default"
+    applicationProfiles:
+      - application: "pdd-app"
+        profile: "default"

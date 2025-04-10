@@ -98,47 +98,16 @@ echo "Found OMZ models: ${OMZ_MODELS[@]}"
 # 4. Process YOLO model (if any)
 ##############################################################################
 if [ -n "$YOLO_MODEL" ]; then
-    echo ">>> Processing YOLO model: $YOLO_MODEL"
-
-    pip install ultralytics==8.3.50 openvino==2025.0.0
-
-    if [ ! -f "${YOLO_MODEL}.pt" ]; then
-        echo "Warning: ${YOLO_MODEL}.pt not found in current directory. If not local, ultralytics will try to download."
-    fi
-
-    echo "Exporting ${YOLO_MODEL} to OpenVINO..."
-    yolo export model="${YOLO_MODEL}.pt" format=openvino
-
-    EXPORTED_DIR="${YOLO_MODEL}_openvino_model"
-    if [ ! -d "$EXPORTED_DIR" ]; then
-        echo "Error: Expected folder $EXPORTED_DIR not found after export!"
-        deactivate
-        exit 1
-    fi
-
     if [ -d "evam/models/public/${YOLO_MODEL}" ]; then
         rm -rf "evam/models/public/${YOLO_MODEL}"
     fi
     create_dir "evam/models/public"
-    mv "$EXPORTED_DIR" "evam/models/public/${YOLO_MODEL}"
-
-    XML_FILE="evam/models/public/${YOLO_MODEL}/${YOLO_MODEL}.xml"
-    if [ -f "$XML_FILE" ]; then
-        sed -i '11172s/YOLO/yolo_v10/' "$XML_FILE" || true
-        echo "XML file updated for ${YOLO_MODEL} (if line 11172 existed)."
-    else
-        echo "Warning: XML file not found for ${YOLO_MODEL}"
-    fi
-
-    create_dir "evam/models/public/${YOLO_MODEL}/FP32"
-
-    if [ -f "${YOLO_MODEL}.pt" ]; then
-        mv "${YOLO_MODEL}.pt" "evam/models/public/${YOLO_MODEL}/FP32/"
-    fi
-
-    mv "evam/models/public/${YOLO_MODEL}/${YOLO_MODEL}.xml" "evam/models/public/${YOLO_MODEL}/FP32/" 2>/dev/null || true
-    mv "evam/models/public/${YOLO_MODEL}/${YOLO_MODEL}.bin" "evam/models/public/${YOLO_MODEL}/FP32/" 2>/dev/null || true
-    mv "evam/models/public/${YOLO_MODEL}/"*.yaml "evam/models/public/${YOLO_MODEL}/FP32/" 2>/dev/null || true
+    YOLO_DOWNLOAD_SCRIPT="https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/tags/v2025.0.1.2/samples/download_public_models.sh"
+    curl -L -o "evam/models/download_public_models.sh" "${YOLO_DOWNLOAD_SCRIPT}" || \
+        echo "Warning: Could not download ${YOLO_DOWNLOAD_SCRIPT}"
+    chmod +x evam/models/download_public_models.sh
+    MODELS_PATH=evam/models ./evam/models/download_public_models.sh "$YOLO_MODEL"
+    rm evam/models/download_public_models.sh
 fi
 
 ##############################################################################
