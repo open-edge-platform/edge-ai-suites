@@ -6,4 +6,4 @@ The Manufacturing AI Suite helps you develop solutions for:
 - Real-Time Insights: Improve the production process (local data processing, integration with existing manufacturing executions systems, tracking defect rates, identifying trends)
 - Automation: Correct problems almost immediately (instant alerts, implementation of corrective actions)
 
-Please see sample applications such as [Pallet Defect Detection](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/pallet-defect-detection), [Weld Porosity](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/weld-porosity) to learn utilizing these workflows to accelerate your solution development for AI in manufacturing use cases.
+Please see sample applications such as [Pallet Defect Detection](pallet-defect-detection), [Weld Porosity](weld-porosity) to learn utilizing these workflows to accelerate your solution development for AI in manufacturing use cases.
