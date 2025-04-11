@@ -162,6 +162,8 @@ services:
     restart: unless-stopped
     security_opt:
     - no-new-privileges
+    environment:
+      SECURE_MODE: ${SECURE_MODE}
     healthcheck:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
