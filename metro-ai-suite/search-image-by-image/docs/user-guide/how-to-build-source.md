@@ -95,7 +95,7 @@ Before you begin, ensure the following:
      - Stream UI: [http://localhost:8889/stream](http://localhost:8889/stream)
      - App UI: [http://localhost:3000](http://localhost:3000)
      - Search UI: [http://localhost:9000/docs](http://localhost:9000/docs)
-     - Milvus UI: [http://localhost:8000](http://localhost:8000)
+     - MilvusDB UI: [http://localhost:8000](http://localhost:8000)
 
 3. **Verify Build Success**:
    - Check the logs. Look for confirmation messages indicating the microservice started successfully.

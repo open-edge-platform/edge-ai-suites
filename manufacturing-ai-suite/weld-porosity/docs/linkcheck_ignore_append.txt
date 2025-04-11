@@ -1,0 +1,4 @@
+https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/api-reference.html
+https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/environment-variables.html
+https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/how-to-autostart-pipelines.html
+https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/how-to-launch-configurable-pipelines.html

@@ -1,0 +1,9 @@
+https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/api-reference.html
+https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/environment-variables.html
+https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/how-to-autostart-pipelines.html
+https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/how-to-launch-configurable-pipelines.html
+https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/deploy_packages.html#deploy-packages
+https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/setup_deploy.html#setup-deploy
+https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/accessing_clusters.html#accessing-clusters
+https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/deployment_details.html#deployment-details
+https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/create_clusters.html#create-clusters
