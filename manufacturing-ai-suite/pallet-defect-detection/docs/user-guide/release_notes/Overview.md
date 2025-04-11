@@ -8,4 +8,5 @@
 :hidden:
 march-2025.md
 february-2025.md
+april-2025.md
 ```

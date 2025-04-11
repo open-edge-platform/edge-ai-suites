@@ -1,17 +1,21 @@
-# Pallet Defect Detection Sample Application
+# Pallet Defect Detection Reference Implementation
 
-This Sample Application enables real-time pallet condition monitoring by running inference workflows across multiple AI models. It connects multiple video streams from warehouse cameras to AI-powered pipelines, all operating efficiently on a single industrial PC. This solution enhances logistics efficiency and inventory management by detecting defects before they impact operations.
+This Application enables real-time pallet condition monitoring by running inference workflows across multiple AI models. It connects multiple video streams from warehouse cameras to AI-powered pipelines, all operating efficiently on a single industrial PC. This solution enhances logistics efficiency and inventory management by detecting defects before they impact operations.
 
 ## Deploy using Docker Compose
 ---
-For more details on deployment, refer to the [documentation](https://docs.edgeplatform.intel.com/warehouse-defect-detection/2.2.0/user-guide/get-started.html).
+For more details on deployment, refer to the [documentation](https://docs.edgeplatform.intel.com/warehouse-defect-detection/2.3.0/user-guide/get-started.html).
  
-## Deployment using Kubernetes Charts
----
-For more details on deployment, refer to the [documentation](https://docs.edgeplatform.intel.com/warehouse-defect-detection/2.2.0/user-guide/how-to-deploy-with-helm.html).
+## Deploy using Kubernetes Charts
 
-## Supported version
 ---
+For more details on deployment, refer to the [documentation](https://docs.edgeplatform.intel.com/warehouse-defect-detection/2.3.0/user-guide/how-to-deploy-with-helm.html).
+
+## Supported versions
+
+---
+2.3.0
+
 2.2.0
 
 2.1.0

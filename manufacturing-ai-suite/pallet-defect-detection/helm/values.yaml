@@ -38,6 +38,11 @@ env:
   OPCUA_SERVER_PORT:
   OPCUA_SERVER_USERNAME:
   OPCUA_SERVER_PASSWORD:
+privileged_access_required: false
+gpu:
+  enabled: false
+  type: "gpu.intel.com/i915"
+  count: 1
 webrtcturnserver:
   username:
   password:
@@ -79,8 +84,8 @@ config:
     ext:
       coturn_tcp_port: "30478"
       coturn_udp_port: "30478"
-  edge_video_analytics_microservice:
-    name: edge-video-analytics-microservice
+  dlstreamer_pipeline_server:
+    name: dlstreamer-pipeline-server
     int:
       rest_api_port: "8080"
       rtsp_output_port: "8554"

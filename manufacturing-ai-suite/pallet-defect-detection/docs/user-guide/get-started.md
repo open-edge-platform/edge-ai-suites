@@ -26,7 +26,7 @@
     MTX_WEBRTCICESERVERS2_0_PASSWORD= # example: MTX_WEBRTCICESERVERS2_0_PASSWORD=mypassword
     ```
 
-2. Update HOST_IP_where_MRaaS_is_running in `evam_config.json` file present in the repository inside the `configs` folder.
+2. Update HOST_IP_where_MRaaS_is_running in `config.json` file present in the repository inside the `configs` folder.
 
     ```shell
          "model_registry": {
@@ -103,7 +103,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 
 ## MLOps Flow: At runtime, download a new model from model registry and restart the pipeline with the new model.
 ```
-Note: We have removed "model-instance-id=inst0" from the pallet_defect_detection_mlops pipeline in evam_config.json to ensure the proper loading of the new AI model in the MLOps flow. However, as a general rule, keeping "model-instance-id=inst0" in a pipeline is recommended for better performance if you are running multiple instances of the same pipeline.
+Note: We have removed "model-instance-id=inst0" from the pallet_defect_detection_mlops pipeline in config.json to ensure the proper loading of the new AI model in the MLOps flow. However, as a general rule, keeping "model-instance-id=inst0" in a pipeline is recommended for better performance if you are running multiple instances of the same pipeline.
 ```
 
 1. Get all the registered models in the model registry
@@ -167,9 +167,9 @@ Note: We have removed "model-instance-id=inst0" from the pallet_defect_detection
    curl --location -X DELETE http://<HOST_IP>:8080/pipelines/{instance_id}
    ```
 
-## EVAM S3 frame storage
+## DL Streamer Pipeline Server S3 frame storage
 
-Follow this procedure to test the EVAM S3 storage using the docker.
+Follow this procedure to test the DL Streamer Pipeline Server S3 storage using the docker.
 
 1. Install the pip package boto3 once if not installed with the following command
       > pip3 install boto3==1.36.17
@@ -222,10 +222,10 @@ Follow this procedure to test the EVAM S3 storage using the docker.
 
 ## View Open Telemetry Data
 
-EVAM supports gathering metrics over Open Telemetry. The supported metrics currently are:
-- `cpu_usage_percentage`: Tracks CPU usage percentage of EVAM python process
-- `memory_usage_bytes`: Tracks memory usage in bytes of EVAM python process
-- `fps_per_pipeline`: Tracks FPS for each active pipeline instance in EVAM
+DL Streamer Pipeline Server supports gathering metrics over Open Telemetry. The supported metrics currently are:
+- `cpu_usage_percentage`: Tracks CPU usage percentage of DL Streamer Pipeline Server python process
+- `memory_usage_bytes`: Tracks memory usage in bytes of DL Streamer Pipeline Server python process
+- `fps_per_pipeline`: Tracks FPS for each active pipeline instance in DL Streamer Pipeline Server
 
 - Open `http://<HOST_IP>:<PROMETHEUS_PORT>` in your browser to view the prometheus console and try out the below queries (`PROMETHEUS_PORT` is by default configured as 9999 in `.env` file):
     - `cpu_usage_percentage`
@@ -250,7 +250,7 @@ Follow this procedure to stop the sample application and end this demonstration.
 
 ## Summary
 
-In this guide, you installed and validated the Pallet Defect Detection Sample Application. You also completed a demonstration where multiple pipelines run on a single system with near real-time defect detection, saw the MLOps flow and S3 frame storage as well. You also saw the Open Telemetry data over a web dashboard.
+In this guide, you installed and validated Pallet Defect Detection. You also completed a demonstration where multiple pipelines run on a single system with near real-time defect detection, saw the MLOps flow and S3 frame storage as well. You also saw the Open Telemetry data over a web dashboard.
 
 
 ## Advanced Setup Options
