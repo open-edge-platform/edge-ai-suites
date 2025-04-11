@@ -17,7 +17,7 @@ These suites simplify the creation of custom AI solutions for specific industrie
 
 [The Retail AI Suite](retail-ai-suite) accelerates hardware decisions for Retail AI workloads at the edge, developing automated and assisted customer checkout experiences with built-in inventory management and omnichannel analytics.
 
-The Media & Entertainment AI Suite provides libraries and sample applications to accelerate solution development for high-performance, high-quality, live video production helping improve viewer experience.
+[The Media & Entertainment AI Suite](media-and-entertainment-ai-suite) provides libraries and sample applications to accelerate solution development for high-performance, high-quality, live video production helping improve viewer experience.
 
 The Edge AI Suites project hosts a collection of sample applications organized as follows:
 
