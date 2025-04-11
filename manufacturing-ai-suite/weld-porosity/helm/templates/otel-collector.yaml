@@ -58,7 +58,7 @@ spec:
             - name: HTTPS_PROXY
               value: {{ $.Values.env.https_proxy }}
             - name: NO_PROXY
-              value: prometheus,edge-video-analytics-microservice,localhost,127.0.0.1,{{ $.Values.env.HOST_IP }}
+              value: prometheus,dlstreamer-pipeline-server,localhost,127.0.0.1,{{ $.Values.env.HOST_IP }}
           volumeMounts:
             - name: otel-config-input
               mountPath: /etc/otelcol-contrib/config.yaml

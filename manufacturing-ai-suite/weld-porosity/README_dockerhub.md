@@ -4,14 +4,18 @@ AI and machine vision enable real-time detection of welding defects, ensuring im
 
 ## Deploy using Docker Compose
 ---
-For more details on deployment, refer to the [documentation](https://docs.edgeplatform.intel.com/weld-porosity-sample-application/1.0.0/user-guide/get-started.html).
+For more details on deployment, refer to the [documentation](https://docs.edgeplatform.intel.com/weld-porosity-sample-application/1.1.0/user-guide/get-started.html).
  
-## Deployment using Kubernetes Charts
----
-For more details on deployment, refer to the [documentation](https://docs.edgeplatform.intel.com/weld-porosity-sample-application/1.0.0/user-guide/how-to-deploy-with-helm.html).
+## Deploy using Kubernetes Charts
 
-## Supported version
 ---
+For more details on deployment, refer to the [documentation](https://docs.edgeplatform.intel.com/weld-porosity-sample-application/1.1.0/user-guide/how-to-deploy-with-helm.html).
+
+## Supported versions
+
+---
+1.1.0
+
 1.0.0
 
 ## License Agreement

@@ -2,8 +2,6 @@ boto
 namespace
 edgesoftware
 webrtc
-evam
-EVAM
 inferencing
 RTSP
 rtsp
@@ -60,3 +58,4 @@ geti
 ntp
 Postgres
 Minio
+rebranded

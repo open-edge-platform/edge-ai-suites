@@ -28,11 +28,11 @@ Follow this procedure on the target system to install the package.
 
 1. Download helm chart with the following command
 
-    `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.0.0`
+    `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.1.0`
 
 2. unzip the package using the following command
 
-    `tar xvf weld-porosity-sample-application-1.0.0.tgz`
+    `tar xvf weld-porosity-sample-application-1.1.0.tgz`
     
 - Get into the helm directory
 
@@ -55,18 +55,9 @@ Follow this procedure on the target system to install the package.
         password: # example: password: mypassword
     ```
 
-2. Update HOST_IP_where_MRaaS_is_running in `evam_config.json` file in the helm chart
+## Copy the welding model and video for helm deployment to DL Streamer Pipeline Server
 
-    ```shell
-         "model_registry": {
-            "url": "http://<HOST_IP_where_MRaaS_is_running>:32002",
-            "request_timeout": 300,
-            "saved_models_dir": "./mr_models"
-        },
-    ```
-## Copy the welding model and video for helm deployment to EVAM
-
-You need to copy your own or existing model into EVAM inorder to run this sample application in kubernates enviornment:
+You need to copy your own or existing model into DL Streamer Pipeline Server inorder to run this sample application in kubernates enviornment:
 
 1. The weld porosity classification model is placed as below in the repository under `models`. You can also find the input video file source for inference under `videos`.
 
@@ -86,34 +77,34 @@ You need to copy your own or existing model into EVAM inorder to run this sample
    > You can organize the directory structure for models for different use cases.
 
 
-2. Build EVAM by including your new AI model (weld porosity classification model used here as an example) and video file. Example steps below:
+2. Build DL Streamer Pipeline Server by including your new AI model (weld porosity classification model used here as an example) and video file. Example steps below:
     - Create the below `Dockerfile` at the root of the repository
       ```sh
-      FROM intel/edge-video-analytics-microservice:2.4.0
+      FROM intel/dlstreamer-pipeline-server:3.0.0
       # Copy the application files
       COPY ./resources/models/weld_porosity /home/pipeline-server/resources/models/weld_porosity
       COPY ./resources/videos/welding.avi /home/pipeline-server/resources/videos/welding.avi
       # Define the command to run the application
       ENTRYPOINT ["./run.sh"]
       ```
-    - Build a new EVAM image with the below command from the root of the repository
+    - Build a new DL Streamer Pipeline Server image with the below command from the root of the repository
       ```sh
-      docker build -t intel/edge-video-analytics-microservice:2.4.0 .
+      docker build -t intel/dlstreamer-pipeline-server:3.0.0 .
       ```
     - Please update `imagePullPolicy` as `imagePullPolicy: IfNotPresent` in `values.yaml` in order to use the above built image.
 
-3. Since this is a classification model, ensure to use gvaclassify in the pipeline. For example: See the `weld_porosity_classification` pipeline in `evam_config.json` (present in the repository) where gvaclassify is used.
+3. Since this is a classification model, ensure to use gvaclassify in the pipeline. For example: See the `weld_porosity_classification` pipeline in `config.json` (present in the repository) where gvaclassify is used.
 
-4. The `evam_config.json` is volume mounted into EVAM in `provision-configmap.yaml` as follows:
+4. The `config.json` is volume mounted into DL Streamer Pipeline Server in `provision-configmap.yaml` as follows:
     ```sh
     apiVersion: v1
     kind: ConfigMap
     metadata:
       namespace: {{ .Values.namespace }}
-      name: evam-config-input
+      name: dlstreamer-pipeline-server-config-input
     data:
       config.json: |-
-    {{ .Files.Get "evam_config.json" | indent 4 }}
+    {{ .Files.Get "config.json" | indent 4 }}
     ```
 
 5. Provide the model path and video file path in the REST/curl command for starting an inferencing workload. Example:
@@ -214,7 +205,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 ## MLOps Flow: At runtime, download a new model from model registry and restart the pipeline with the new model.
 
 ```
-Note: We have removed "model-instance-id=inst0" from the weld_porosity_classification_mlops pipeline in evam_config.json to ensure the proper loading of the new AI model in the MLOps flow. However, as a general rule, keeping "model-instance-id=inst0" in a pipeline is recommended for better performance if you are running multiple instances of the same pipeline.
+Note: We have removed "model-instance-id=inst0" from the weld_porosity_classification_mlops pipeline in config.json to ensure the proper loading of the new AI model in the MLOps flow. However, as a general rule, keeping "model-instance-id=inst0" in a pipeline is recommended for better performance if you are running multiple instances of the same pipeline.
 ```
 
 1. Get all the registered models in the model registry
@@ -279,9 +270,9 @@ Note: We have removed "model-instance-id=inst0" from the weld_porosity_classific
    curl --location -X DELETE http://<HOST_IP>:30107/pipelines/{instance_id}
    ```
 
-## EVAM S3 frame storage
+## DL Streamer Pipeline Server S3 frame storage
 
-Follow this procedure to test the EVAM S3 storage using the helm.
+Follow this procedure to test the DL Streamer Pipeline Server S3 storage using the helm.
 
 1. Install the pip package boto3 once if not installed with the following command
       > pip3 install boto3==1.36.17
@@ -335,10 +326,10 @@ Follow this procedure to test the EVAM S3 storage using the helm.
 
 ## View Open Telemetry Data
 
-EVAM supports gathering metrics over Open Telemetry. The supported metrics currently are:
-- `cpu_usage_percentage`: Tracks CPU usage percentage of EVAM python process
-- `memory_usage_bytes`: Tracks memory usage in bytes of EVAM python process
-- `fps_per_pipeline`: Tracks FPS for each active pipeline instance in EVAM
+DL Streamer Pipeline Server supports gathering metrics over Open Telemetry. The supported metrics currently are:
+- `cpu_usage_percentage`: Tracks CPU usage percentage of DL Streamer Pipeline Server python process
+- `memory_usage_bytes`: Tracks memory usage in bytes of DL Streamer Pipeline Server python process
+- `fps_per_pipeline`: Tracks FPS for each active pipeline instance in DL Streamer Pipeline Server
 
 - Open `http://<HOST_IP>:30909` in your browser to view the prometheus console and try out the below queries:
     - `cpu_usage_percentage`
@@ -368,7 +359,7 @@ Follow this procedure to stop the sample application and end this demonstration.
 
 ## Summary
 
-In this guide, you installed and validated the Weld Porosity Sample Application. You also completed a demonstration where multiple pipelines run on a single system with near real-time classification.
+In this guide, you installed and validated Weld Porosity Detection. You also completed a demonstration where multiple pipelines run on a single system with near real-time classification.
 
 
 ## Troubleshooting
@@ -377,11 +368,19 @@ The following are options to help you resolve issues with the sample application
 
 ### Deploying with Intel GPU K8S Extension on ITEP
 
-If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `evam_config.json`) with Intel GPU k8s Extension on ITEP, ensure to add the below under `containers` section in the Deployment present in the file `helm/templates/edge-video-analytics-microservice.yaml` in order to utilize the underlying GPU.
+If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) with Intel GPU k8s Extension on ITEP, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
 ```sh
-resources:
-    limits:
-    gpu.intel.com/i915: 1
+gpu:
+  enabled: true
+  type: "gpu.intel.com/i915"
+  count: 1
+```
+
+### Deploying without Intel GPU K8S Extension
+
+If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) without Intel GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
+```sh
+privileged_access_required: true
 ```
 
 ### Error Logs
