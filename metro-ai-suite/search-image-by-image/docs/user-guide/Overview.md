@@ -36,7 +36,7 @@ The application includes a demonstration video for testing. The video loops cont
 
 ## Deployment with Edge Manageability Framework
 
-- This reference implementation is ready for deployment with the Edge Manageability Framework. Follow the instructions using the [Deployment with Edge Managemability Framework](how-to-deploy-edge-manageability-framework.md)
+- This reference implementation is ready for deployment with the Edge Manageability Framework. Follow the instructions using the [Deployment with Edge Manageability Framework](how-to-deploy-edge-manageability-framework.md)
 
 ## Learn More
 - [System Requirements](system-requirements.md)
