@@ -28,11 +28,11 @@ Follow this procedure on the target system to install the package.
 
 1. Download helm chart with the following command
 
-    `helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.2.0`
+    `helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.3.0`
 
 2. unzip the package using the following command
 
-    `tar xvf pallet-defect-detection-reference-implementation-2.2.0.tgz`
+    `tar xvf pallet-defect-detection-reference-implementation-2.3.0.tgz`
     
 - Get into the helm directory
 
@@ -53,16 +53,6 @@ Follow this procedure on the target system to install the package.
     webrtcturnserver:
         username: # example: username: myuser 
         password: # example: password: mypassword
-    ```
-
-2. Update HOST_IP_where_MRaaS_is_running in `evam_config.json` file in the helm chart
-
-    ```shell
-         "model_registry": {
-            "url": "http://<HOST_IP_where_MRaaS_is_running>:32002",
-            "request_timeout": 300,
-            "saved_models_dir": "./mr_models"
-        },
     ```
 
 ## Run multiple AI pipelines
@@ -141,7 +131,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 ## MLOps Flow: At runtime, download a new model from model registry and restart the pipeline with the new model.
 
 ```
-Note: We have removed "model-instance-id=inst0" from the pallet_defect_detection_mlops pipeline in evam_config.json to ensure the proper loading of the new AI model in the MLOps flow. However, as a general rule, keeping "model-instance-id=inst0" in a pipeline is recommended for better performance if you are running multiple instances of the same pipeline.
+Note: We have removed "model-instance-id=inst0" from the pallet_defect_detection_mlops pipeline in config.json to ensure the proper loading of the new AI model in the MLOps flow. However, as a general rule, keeping "model-instance-id=inst0" in a pipeline is recommended for better performance if you are running multiple instances of the same pipeline.
 ```
 
 1. Get all the registered models in the model registry
@@ -206,9 +196,9 @@ Note: We have removed "model-instance-id=inst0" from the pallet_defect_detection
    curl --location -X DELETE http://<HOST_IP>:30107/pipelines/{instance_id}
    ```
 
-## EVAM S3 frame storage
+## DL Streamer Pipeline Server S3 frame storage
 
-Follow this procedure to test the EVAM S3 storage using the helm.
+Follow this procedure to test the DL Streamer Pipeline Server S3 storage using the helm.
 
 1. Install the pip package boto3 once if not installed with the following command
       > pip3 install boto3==1.36.17
@@ -262,10 +252,10 @@ Follow this procedure to test the EVAM S3 storage using the helm.
 
 ## View Open Telemetry Data
 
-EVAM supports gathering metrics over Open Telemetry. The supported metrics currently are:
-- `cpu_usage_percentage`: Tracks CPU usage percentage of EVAM python process
-- `memory_usage_bytes`: Tracks memory usage in bytes of EVAM python process
-- `fps_per_pipeline`: Tracks FPS for each active pipeline instance in EVAM
+DL Streamer Pipeline Server supports gathering metrics over Open Telemetry. The supported metrics currently are:
+- `cpu_usage_percentage`: Tracks CPU usage percentage of DL Streamer Pipeline Server python process
+- `memory_usage_bytes`: Tracks memory usage in bytes of DL Streamer Pipeline Server python process
+- `fps_per_pipeline`: Tracks FPS for each active pipeline instance in DL Streamer Pipeline Server
 
 - Open `http://<HOST_IP>:30909` in your browser to view the prometheus console and try out the below queries:
     - `cpu_usage_percentage`
@@ -295,7 +285,7 @@ Follow this procedure to stop the sample application and end this demonstration.
 
 ## Summary
 
-In this guide, you installed and validated the Pallet Defect Detection Sample Application. You also completed a demonstration where multiple pipelines run on a single system with near real-time defect detection, saw the MLOps flow and S3 frame storage as well. You also saw the Open Telemetry data over a web dashboard.
+In this guide, you installed and validated Pallet Defect Detection. You also completed a demonstration where multiple pipelines run on a single system with near real-time defect detection, saw the MLOps flow and S3 frame storage as well. You also saw the Open Telemetry data over a web dashboard.
 
 
 ## Troubleshooting
@@ -304,11 +294,19 @@ The following are options to help you resolve issues with the sample application
 
 ### Deploying with Intel GPU K8S Extension on ITEP
 
-If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `evam_config.json`) with Intel GPU k8s Extension on ITEP, ensure to add the below under `containers` section in the Deployment present in the file `helm/templates/edge-video-analytics-microservice.yaml` in order to utilize the underlying GPU.
+If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) with Intel GPU k8s Extension on ITEP, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
 ```sh
-resources:
-    limits:
-    gpu.intel.com/i915: 1
+gpu:
+  enabled: true
+  type: "gpu.intel.com/i915"
+  count: 1
+```
+
+### Deploying without Intel GPU K8S Extension
+
+If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) without Intel GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
+```sh
+privileged_access_required: true
 ```
 
 ### Error Logs

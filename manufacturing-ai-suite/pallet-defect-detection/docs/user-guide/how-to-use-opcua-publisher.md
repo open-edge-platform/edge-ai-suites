@@ -1,6 +1,6 @@
 # How to use OPC UA publisher
 
-Follow this procedure to test the EVAM OPC UA publishing using the docker or helm.
+Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing using the docker or helm.
 
 1. Configure and start the OPC UA Server
    If you already have a functioning OPC UA server, you can skip this step. Otherwise, this section provides instructions for using the OPC UA server provided by [Unified Automation](https://www.unified-automation.com).
@@ -18,7 +18,7 @@ Follow this procedure to test the EVAM OPC UA publishing using the docker or hel
     OPCUA_SERVER_PASSWORD= # example: secret
     ```
 
-3. Update the OPC UA `variable` to appropriate value for the pipeline `pallet_defect_detection_opcua` in `configs/evam_config.json` for docker or `helm/evam_config.json` for helm.
+3. Update the OPC UA `variable` to appropriate value for the pipeline `pallet_defect_detection_opcua` in `configs/config.json` for docker or `helm/config.json` for helm.
 
     ```shell
         "opcua_publisher": {
@@ -55,7 +55,7 @@ Follow this procedure to test the EVAM OPC UA publishing using the docker or hel
     }'
    ```
 
-6. Run the following sample OPC UA subscriber on the different machine by updating the `<IP-Address of OPCUA Server>` to read the meta-data written to server variable from EVAM.
+6. Run the following sample OPC UA subscriber on the different machine by updating the `<IP-Address of OPCUA Server>` to read the meta-data written to server variable from DL Streamer Pipeline Server.
    ```python
    import asyncio
    from asyncua import Client, Node
