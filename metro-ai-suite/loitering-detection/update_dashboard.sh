@@ -80,18 +80,18 @@ if [ -n "$NR_FILE" ]; then
 fi
 
 #############################################
-# Update run_sample.sh for video paths and  #
+# Update sample_start.sh for video paths and  #
 # MQTT host IP                              #
 #############################################
 
-# Check if the run_sample.sh exists in the folder for the current case
-if [ -f "./run_sample.sh" ]; then
+# Check if the sample_start.sh exists in the folder for the current case
+if [ -f "./sample_start.sh" ]; then
   # Update the video source path to point to the folder
-  sed -i "s|file:///home/pipeline-server/videos/|file:///home/pipeline-server/videos/|g" ./run_sample.sh
+  sed -i "s|file:///home/pipeline-server/videos/|file:///home/pipeline-server/videos/|g" ./sample_start.sh
   
   # Update the MQTT host IP in the file
-  sed -i "s|\"host\": *\"[0-9]\{1,3\}\(\.[0-9]\{1,3\}\)\{3\}:|\"host\": \"$HOST_IP:|g" ./run_sample.sh
+  sed -i "s|\"host\": *\"[0-9]\{1,3\}\(\.[0-9]\{1,3\}\)\{3\}:|\"host\": \"$HOST_IP:|g" ./sample_start.sh
   
 else
-  echo "Warning: run_sample.sh not found in folder"
+  echo "Warning: sample_start.sh not found in folder"
 fi

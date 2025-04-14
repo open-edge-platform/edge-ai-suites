@@ -1,0 +1,6 @@
+[submodule "retail-ai-suite/automated-self-checkout"]
+	path = retail-ai-suite/automated-self-checkout
+	url = https://github.com/intel-retail/automated-self-checkout.git
+[submodule "retail-ai-suite/lose-prevention"]
+	path = retail-ai-suite/loss-prevention
+	url = https://github.com/intel-retail/loss-prevention.git

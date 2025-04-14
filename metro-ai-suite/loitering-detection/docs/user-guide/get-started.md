@@ -20,13 +20,13 @@ By following this guide, you will learn how to:
 1. **Download the Compose File**:
     - Download the Docker Compose file and configuration:
       ```bash
-        git clone https://github.com/intel/metro-ai-suite.git
+        git clone https://github.com/open-edge-platform/edge-ai-suites.git
       ```
 
 2. **Navigate to the Directory**:
     - Go to the directory where you saved the Compose file:
       ```bash
-      cd metro-ai-suite/loitering-detection/
+      cd edge-ai-suites/metro-ai-suite/loitering-detection/
       ```
 
 3. **Update the IP Address**:
@@ -54,7 +54,7 @@ By following this guide, you will learn how to:
 6. **Start the Application**:
     - Run the application using Docker Compose:
       ```bash
-      make start
+      docker compose up -d
       ```
 
 7. **Verify the Application**:
@@ -71,14 +71,22 @@ By following this guide, you will learn how to:
         - **Password:** `admin`
     - Check under the Dashboards section for the default dashboard named "Video Analytics Dashboard".
     
-
 9. **Run a Predefined Pipeline**:
-    - Run the following commands to start the pipeline
+    - Run the following command to start the pipelines:
         ```bash
-        ./run_sample.sh
+        ./sample_start.sh
         ```
+    - [Optionally] To check the status:
+         ```bash
+        ./sample_status.sh
+        ```
+    - [Optionally] To stop the pipelines without waiting for the sample application to finish:
+        ```bash
+        ./sample_stop.sh
+        ```
+
     - **Expected Results**:
-    - The dashboard displays detected cars.
+    - The dashboard displays detected people and cars.
     - ![Dashboard Example](_images/grafana.png)
 
 ## Stop the Containers
@@ -86,7 +94,7 @@ By following this guide, you will learn how to:
 1.  To stop the application, use the following commands:
 
     ```bash
-    make stop
+    docker compose down -v
     ```
 
 ## Next Steps
@@ -127,4 +135,4 @@ By following this guide, you will learn how to:
 
 ## Supporting Resources
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Edge Video Analytics Microservice](https://docs.edgeplatform.intel.com/edge-video-analytics-microservice/2.3.0/user-guide/Overview.html)
+- [DL Streamer Pipeline Server](https://docs.edgeplatform.intel.com/edge-video-analytics-microservice/2.3.0/user-guide/Overview.html)

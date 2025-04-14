@@ -6,7 +6,7 @@ AI and machine vision enable real-time detection of welding defects, ensuring im
 
 ### High-Level Architecture Diagram
 ![Architecture Diagram](./images/defect-detection-arch-diagram.png)
-*Figure 1: Architecture Diagram for Weld Porosity Sample Application Impementation.*
+*Figure 1: Architecture Diagram for Weld Porosity Detection Implementation.*
 
 ## Supporting Resources
 * [Get Started Guide](get-started.md)

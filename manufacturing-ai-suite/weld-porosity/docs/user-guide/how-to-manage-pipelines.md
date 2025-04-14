@@ -4,9 +4,9 @@ This section describes how to create custom AI pipelines for the sample applicat
 
 ## Create Pipelines
 
-The AI pipelines are defined by the **evam_config.json** file present at the root of the repository (for docker compose deployment) and present inside the helm directory (for helm based deployment. Please also note that the port in the cURL/REST requests needs to be changed from 8080 to 30107 for helm based deployment).
+The AI pipelines are defined by the **config.json** file present at the root of the repository (for docker compose deployment) and present inside the helm directory (for helm based deployment. Please also note that the port in the cURL/REST requests needs to be changed from 8080 to 30107 for helm based deployment).
 
-The following is an example of the weld porosity classification pipeline, which is included in the **evam_config.json** file.
+The following is an example of the weld porosity classification pipeline, which is included in the **config.json** file.
 
 
          "pipelines": [
@@ -29,16 +29,16 @@ The following is an example of the weld porosity classification pipeline, which 
                 "auto_start": false
             },
 
-Customize the pipeline according to your needs. For details, see the following Edge Video Analytics Microservice documentation:
-- [Launch configurable pipelines](https://docs.edgeplatform.intel.com/edge-video-analytics-microservice/2.4.0/user-guide/how-to-launch-configurable-pipelines.html)
-- [Autostart pipelines](https://docs.edgeplatform.intel.com/edge-video-analytics-microservice/2.4.0/user-guide/how-to-autostart-pipelines.html)
+Customize the pipeline according to your needs. For details, see the following DL Streamer Pipeline Server documentation:
+- [Launch configurable pipelines](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/how-to-launch-configurable-pipelines.html)
+- [Autostart pipelines](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/how-to-autostart-pipelines.html)
 
 
 ## Start the Pipeline
 
 Follow this procedure to start the pipeline.
 
-1. In the **evam_config.json** file, identify the name of the pipeline you want to start.
+1. In the **config.json** file, identify the name of the pipeline you want to start.
 
    The name of the pipeline is defined by the **name** parameter.
 

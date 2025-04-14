@@ -2,38 +2,38 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ $.Values.config.edge_video_analytics_microservice.name }}
+  name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
   namespace: {{ $.Values.namespace }}
 spec:
   type: NodePort
   selector:
-    app: edge-video-analytics-microservice
+    app: dlstreamer-pipeline-server
   ports:
   - name: "rest-api"
-    port: {{ $.Values.config.edge_video_analytics_microservice.int.rest_api_port }}
-    targetPort: {{ $.Values.config.edge_video_analytics_microservice.int.rest_api_port }}
-    nodePort: {{ $.Values.config.edge_video_analytics_microservice.ext.rest_api_port }}
+    port: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
+    targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
+    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rest_api_port }}
   - name: "rtsp-output-streaming"
-    port: {{ $.Values.config.edge_video_analytics_microservice.int.rtsp_output_port }}
-    targetPort: {{ $.Values.config.edge_video_analytics_microservice.int.rtsp_output_port }}
-    nodePort: {{ $.Values.config.edge_video_analytics_microservice.ext.rtsp_output_port }}
+    port: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
+    targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
+    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rtsp_output_port }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: edge-video-analytics-microservice
-  name: deployment-{{ $.Values.config.edge_video_analytics_microservice.name }}
+    app: dlstreamer-pipeline-server
+  name: deployment-{{ $.Values.config.dlstreamer_pipeline_server.name }}
   namespace: {{ $.Values.namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: edge-video-analytics-microservice
+      app: dlstreamer-pipeline-server
   template:
     metadata:
       labels:
-        app: edge-video-analytics-microservice
+        app: dlstreamer-pipeline-server
     spec:
       securityContext:
         supplementalGroups: [109,110]
@@ -43,14 +43,21 @@ spec:
       {{- end }}
       # hostNetwork: true
       containers:
-      - name: {{ $.Values.config.edge_video_analytics_microservice.name }}
-        image: {{ $.Values.DOCKER_REGISTRY }}intel/edge-video-analytics-microservice:2.4.0
+      - name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
+        image: {{ $.Values.DOCKER_REGISTRY }}intel/dlstreamer-pipeline-server:3.0.0
         imagePullPolicy: {{ $.Values.imagePullPolicy }}
+        {{- if $.Values.privileged_access_required }}
         securityContext:
           privileged: true  # Required for direct access to /dev
+        {{- end }}
+        {{- if $.Values.gpu.enabled }}
+        resources:
+          limits:
+            {{ $.Values.gpu.type }}: {{ $.Values.gpu.count }}
+        {{- end }}
         volumeMounts:
         - mountPath: /var/cache/pipeline_root
-          name: vol-evam-pipeline-root-tmpfs0
+          name: vol-pipeline-root-tmpfs0
         - name: dev
           mountPath: /dev
         - name: dev-shm
@@ -65,14 +72,14 @@ spec:
           mountPath: {{ $.Values.volumes.pipelines.location }}
         - name: {{ $.Values.volumes.models.name }}
           mountPath: {{ $.Values.volumes.models.location }}
-        - name: evam-input
+        - name: dlstreamer-pipeline-server-input
           mountPath: /home/pipeline-server/config.json
           subPath: config.json
         - name: model-registry-temp-models
           mountPath: /home/pipeline-server/mr_models
         env:
         - name: AppName
-          value: 'EdgeVideoAnalyticsMicroservice'
+          value: 'DLStreamerPipelineServer'
         - name: ENABLE_WEBRTC
           value: "{{ $.Values.env.ENABLE_WEBRTC }}"
         - name: ENABLE_RTSP
@@ -82,7 +89,7 @@ spec:
         - name: RUN_MODE
           value: "EVA"
         - name: SERVICE_NAME
-          value: "evam"
+          value: "dlstreamer-pipeline-server"
         - name: REST_SERVER_PORT
           value: "8080"
         - name: no_proxy
@@ -109,12 +116,20 @@ spec:
           value: "{{ $.Values.env.OTEL_COLLECTOR_PORT }}"
         - name: OTEL_EXPORT_INTERVAL_MILLIS
           value: "{{ $.Values.env.OTEL_EXPORT_INTERVAL_MILLIS }}"
+        - name: OPCUA_SERVER_IP
+          value: "{{ $.Values.env.OPCUA_SERVER_IP }}"
+        - name: OPCUA_SERVER_PORT
+          value: "{{ $.Values.env.OPCUA_SERVER_PORT }}"
+        - name: OPCUA_SERVER_USERNAME
+          value: "{{ $.Values.env.OPCUA_SERVER_USERNAME }}"
+        - name: OPCUA_SERVER_PASSWORD
+          value: "{{ $.Values.env.OPCUA_SERVER_PASSWORD }}"
       initContainers:
       - name: wait-for-model-registry
         image: busybox
         command: ['sh', '-c', 'wget --spider --quiet --tries=5 --timeout=3 http://model-registry:8111/docs']
       volumes:
-      - name: vol-evam-pipeline-root-tmpfs0
+      - name: vol-pipeline-root-tmpfs0
         emptyDir: {}
       - name: dev
         hostPath:
@@ -141,6 +156,6 @@ spec:
         hostPath:
           path: {{ $.Values.volumes.pipelines.hostpath }}
           #type: DirectoryOrCreate
-      - name: evam-input
+      - name: dlstreamer-pipeline-server-input
         configMap:
-          name: evam-config-input
+          name: dlstreamer-pipeline-server-config-input

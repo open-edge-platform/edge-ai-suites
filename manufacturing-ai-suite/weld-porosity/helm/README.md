@@ -5,10 +5,10 @@
   - [Features](#features)
   - [How It Works](#how-it-works)
   - [Prerequisites](#prerequisites)
-  - [Deploy Weld Porosity Sample Application in the Kubernetes Node](#deploy-weld-porosity-sample-application-in-the-kubernetes-node)
+  - [Deploy Weld Porosity Detection in the Kubernetes Node](#deploy-weld-porosity-sample-application-in-the-kubernetes-node)
   - [Troubleshooting](#troubleshooting)
 
-# Weld Porosity Sample Application
+# Weld Porosity Detection
 
 Prevent defects in real time with AI-powered monitoring.
 
@@ -27,9 +27,9 @@ This sample application offers the following features:
 
 ## How It Works
 
-This sample application consists of the following microservices: Edge Video Analytics Microservice (EVAM), Model Registry Microservice(MRaaS), MediaMTX server, Coturn server, Open Telemetry Collector, Prometheus, Postgres and Minio.
+This sample application consists of the following microservices: DL Streamer Pipeline Server, Model Registry Microservice(MRaaS), MediaMTX server, Coturn server, Open Telemetry Collector, Prometheus, Postgres and Minio.
 
-You start the weld porosity classification pipeline with a REST request using Client URL (cURL). The REST request will return a pipeline instance ID. EVAM then sends the images with overlaid bounding boxes through webrtc protocol to webrtc browser client. This is done via the MediaMTX server used for signalling. Coturn server is used to facilitate NAT traversal and ensure that the webrtc stream is accessible on a non-native browser client and helps in cases where firewall is enabled. EVAM also sends the images to S3 compliant storage. The Open Telemetry Data exported by EVAM to Open Telemetry Collector is scraped by Prometheus and can be seen on Prometheus UI. Any desired AI model from the Model Registry Microservice (which can interact with Postgres, Minio and Geti Server for getting the model) can be pulled into EVAM and used for inference in the sample application.
+You start the weld porosity classification pipeline with a REST request using Client URL (cURL). The REST request will return a pipeline instance ID. DL Streamer Pipeline Server then sends the images with overlaid bounding boxes through webrtc protocol to webrtc browser client. This is done via the MediaMTX server used for signalling. Coturn server is used to facilitate NAT traversal and ensure that the webrtc stream is accessible on a non-native browser client and helps in cases where firewall is enabled. DL Streamer Pipeline Server also sends the images to S3 compliant storage. The Open Telemetry Data exported by DL Streamer Pipeline Server to Open Telemetry Collector is scraped by Prometheus and can be seen on Prometheus UI. Any desired AI model from the Model Registry Microservice (which can interact with Postgres, Minio and Geti Server for getting the model) can be pulled into DL Streamer Pipeline Server and used for inference in the sample application.
 
 ![Architecture and high-level representation of the flow of data through the architecture](../docs/user-guide/images/defect-detection-arch-diagram.png)
 
@@ -37,8 +37,8 @@ Figure 1: Architecture diagram
 
 This sample application is built with the following Intel Edge AI Stack Microservices:
 
--   <a href="https://docs.edgeplatform.intel.com/edge-video-analytics-microservice/2.4.0/user-guide/Overview.html">**Edge Video Analytics Microservice (EVAM)**</a> is an interoperable containerized microservice based on Python for video ingestion and deep learning inferencing functions.
--   <a href="https://docs.edgeplatform.intel.com/model-registry-as-a-service/1.0.3/user-guide/Overview.html">**Model Registry Microservice**</a> provides a centralized repository that facilitates the management of AI models
+-   <a href="https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/dlstreamer-pipeline-server">**DL Streamer Pipeline Server**</a> is an interoperable containerized microservice based on Python for video ingestion and deep learning inferencing functions.
+-   <a href="https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-registry">**Model Registry Microservice**</a> provides a centralized repository that facilitates the management of AI models
 
 It also consists of the below Third-party microservices:
 
@@ -56,11 +56,11 @@ It also consists of the below Third-party microservices:
   online tutorials to setup kubernetes cluster on the web with host OS as ubuntu 22.04.
 - For helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
 
-## Deploy Weld Porosity Sample Application in the Kubernetes Node
+## Deploy Weld Porosity Detection in the Kubernetes Node
 
-### Copy the welding model and video for helm deployment to EVAM
+### Copy the welding model and video for helm deployment to DL Streamer Pipeline Server
 
-You need to copy your own or existing model into EVAM inorder to run this sample application in kubernates enviornment:
+You need to copy your own or existing model into DL Streamer Pipeline Server inorder to run this sample application in kubernates enviornment:
 
 1. The weld porosity classification model is placed as below in the repository under `models`. You can also find the input video file source for inference under `videos`.
 
@@ -80,35 +80,35 @@ You need to copy your own or existing model into EVAM inorder to run this sample
    > You can organize the directory structure for models for different use cases.
 
 
-2. Build EVAM by including your new AI model (weld porosity classification model used here as an example) and video file. Example steps below:
+2. Build DL Streamer Pipeline Server by including your new AI model (weld porosity classification model used here as an example) and video file. Example steps below:
     - Create the below `Dockerfile` at the root of the repository
       ```sh
-      FROM intel/edge-video-analytics-microservice:2.4.0
+      FROM intel/dlstreamer-pipeline-server:3.0.0
       # Copy the application files
       COPY ./resources/models/weld_porosity /home/pipeline-server/resources/models/weld_porosity
       COPY ./resources/videos/welding.avi /home/pipeline-server/resources/videos/welding.avi
       # Define the command to run the application
       ENTRYPOINT ["./run.sh"]
       ```
-    - Build a new EVAM image with the below command from the root of the repository
+    - Build a new DL Streamer Pipeline Server image with the below command from the root of the repository
       ```sh
-      docker build -t intel/edge-video-analytics-microservice:2.4.0 .
+      docker build -t intel/dlstreamer-pipeline-server:3.0.0 .
       ```
     - Please update `imagePullPolicy` as `imagePullPolicy: IfNotPresent` in `values.yaml` in order to use the above built image.
 
 
-3. Since this is a classification model, ensure to use gvaclassify in the pipeline. For example: See the `weld_porosity_classification` pipeline in `evam_config.json` (present in the repository) where gvaclassify is used.
+3. Since this is a classification model, ensure to use gvaclassify in the pipeline. For example: See the `weld_porosity_classification` pipeline in `config.json` (present in the repository) where gvaclassify is used.
 
-4. The `evam_config.json` is volume mounted into EVAM in `provision-configmap.yaml` as follows:
+4. The `config.json` is volume mounted into DL Streamer Pipeline Server in `provision-configmap.yaml` as follows:
     ```sh
     apiVersion: v1
     kind: ConfigMap
     metadata:
       namespace: {{ .Values.namespace }}
-      name: evam-config-input
+      name: dlstreamer-pipeline-server-config-input
     data:
       config.json: |-
-    {{ .Files.Get "evam_config.json" | indent 4 }}
+    {{ .Files.Get "config.json" | indent 4 }}
     ```
 
 5. Provide the model path and video file path in the REST/curl command for starting an inferencing workload. Example:
@@ -147,16 +147,6 @@ You need to copy your own or existing model into EVAM inorder to run this sample
     webrtcturnserver:
         username: # example: username: myuser
         password: # example: password: mypassword
-    ```
-
-2. Update HOST_IP_where_MRaaS_is_running in [evam_config.json](./evam_config.json)
-
-    ```shell
-         "model_registry": {
-            "url": "http://<HOST_IP_where_MRaaS_is_running>:32002",
-            "request_timeout": 300,
-            "saved_models_dir": "./mr_models"
-        },
     ```
 
 ### Step 2: Run multiple AI pipelines
@@ -235,7 +225,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 
 ### Step 3: MLOps Flow: At runtime, download a new model from model registry and restart the pipeline with the new model.
 ```
-Note: We have removed "model-instance-id=inst0" from the weld_porosity_classification_mlops pipeline in evam_config.json to ensure the proper loading of the new AI model in the MLOps flow. However, as a general rule, keeping "model-instance-id=inst0" in a pipeline is recommended for better performance if you are running multiple instances of the same pipeline.
+Note: We have removed "model-instance-id=inst0" from the weld_porosity_classification_mlops pipeline in config.json to ensure the proper loading of the new AI model in the MLOps flow. However, as a general rule, keeping "model-instance-id=inst0" in a pipeline is recommended for better performance if you are running multiple instances of the same pipeline.
 ```
 
 1. Get all the registered models in the model registry
@@ -300,9 +290,9 @@ Note: We have removed "model-instance-id=inst0" from the weld_porosity_classific
    curl --location -X DELETE http://<HOST_IP>:30107/pipelines/{instance_id}
    ```
 
-### Step 4: EVAM S3 frame storage
+### Step 4: DL Streamer Pipeline Server S3 frame storage
 
-Follow this procedure to test the EVAM S3 storage using the helm.
+Follow this procedure to test the DL Streamer Pipeline Server S3 storage using the helm.
 
 1. Install the pip package boto3 once if not installed with the following command
       > pip3 install boto3==1.36.17
@@ -355,10 +345,10 @@ Follow this procedure to test the EVAM S3 storage using the helm.
 
 ### Step 5: View Open Telemetry Data
 
-EVAM supports gathering metrics over Open Telemetry. The supported metrics currently are:
-- `cpu_usage_percentage`: Tracks CPU usage percentage of EVAM python process
-- `memory_usage_bytes`: Tracks memory usage in bytes of EVAM python process
-- `fps_per_pipeline`: Tracks FPS for each active pipeline instance in EVAM
+DL Streamer Pipeline Server supports gathering metrics over Open Telemetry. The supported metrics currently are:
+- `cpu_usage_percentage`: Tracks CPU usage percentage of DL Streamer Pipeline Server python process
+- `memory_usage_bytes`: Tracks memory usage in bytes of DL Streamer Pipeline Server python process
+- `fps_per_pipeline`: Tracks FPS for each active pipeline instance in DL Streamer Pipeline Server
 
 - Open `http://<HOST_IP>:30909` in your browser to view the prometheus console and try out the below queries:
     - `cpu_usage_percentage`
@@ -388,7 +378,7 @@ Follow this procedure to stop the sample application and end this demonstration.
 
 ## Summary
 
-In this guide, you installed and validated the Weld Porosity Sample Application. You also completed a demonstration where multiple pipelines run on a single system with near real-time classification.
+In this guide, you installed and validated Weld Porosity Detection. You also completed a demonstration where multiple pipelines run on a single system with near real-time classification.
 
 
 ## Troubleshooting
