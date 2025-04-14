@@ -3,6 +3,6 @@ The Retail AI Suite is an open-source software framework designed to accelerate 
 - [Loss Prevention](https://github.com/intel-retail/loss-prevention): Fake scans, items in basket, multi-product identification, product switching, shopper behavior (obscuring/hiding an item), event video summation
 - Order Accuracy: [**Coming soon**] Order validation (product recognition), packing video summation
 
-Performance evaluation: For Computer Vision pipeline benchmarking for retail use cases, a detailed guide is provided [here](https://github.com/intel-retail/performance-tools?tab=readme-ov-file).
+Performance evaluation: For computer vision pipeline benchmarking for retail use cases, a detailed guide is provided [here](https://github.com/intel-retail/performance-tools?tab=readme-ov-file).
 
 Additional details and documentation are available [here](https://github.com/intel-retail).
