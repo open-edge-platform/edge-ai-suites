@@ -1,0 +1,47 @@
+name: Publish Docs
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which target to build'
+        type: choice
+        options:
+        - all-documentation
+        - search-image-by-image
+        - smart-parking
+        - loitering-detection
+        - smart-intersection
+        - vippet
+
+jobs:
+  build_search-image-by-image:
+    if: ${{ (github.event.inputs.target == 'search-image-by-image') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: reference_apps/search-image-by-image
+  build_smart-parking:
+    if: ${{ (github.event.inputs.target == 'smart-parking') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: reference_apps/smart-parking
+  build_loitering-detection:
+    if: ${{ (github.event.inputs.target == 'loitering-detection') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: reference_apps/loitering-detection
+  build_smart-intersection:
+    if: ${{ (github.event.inputs.target == 'smart-intersection') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: reference_apps/smart_intersection
+  build_vippet:
+    if: ${{ (github.event.inputs.target == 'vippet') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: tools/visual-pipeline-and-platform-evaluation-tool
