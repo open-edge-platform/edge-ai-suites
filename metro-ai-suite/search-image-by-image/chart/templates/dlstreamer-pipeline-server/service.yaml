@@ -6,14 +6,14 @@ metadata:
     katenary.v3/version: release-3.0.0-rc2
   labels:
     {{- include "search_image_by_image.labels" . | nindent 4 }}
-    katenary.v3/component: evam
-  name: '{{ include "search_image_by_image.fullname" . }}-evam'
+    katenary.v3/component: dlstreamer-pipeline-server
+  name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server'
 spec:
   ports:
-  - name: evam-8080
+  - name: dlstreamer-pipeline-server-8080
     port: 8080
     protocol: TCP
     targetPort: 8080
   selector:
     {{- include "search_image_by_image.selectorLabels" . | nindent 4 }}
-    katenary.v3/component: evam
+    katenary.v3/component: dlstreamer-pipeline-server

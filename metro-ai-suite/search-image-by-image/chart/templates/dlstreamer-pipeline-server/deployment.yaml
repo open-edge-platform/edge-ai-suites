@@ -6,20 +6,20 @@ metadata:
     katenary.v3/version: release-3.0.0-rc2
   labels:
     {{- include "search_image_by_image.labels" . | nindent 4 }}
-    katenary.v3/component: evam
-  name: '{{ include "search_image_by_image.fullname" . }}-evam'
+    katenary.v3/component: dlstreamer-pipeline-server
+  name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server'
 spec:
-  replicas: {{ .Values.evam.replicas }}
+  replicas: {{ .Values.dlstreamerpipelineserver.replicas }}
   selector:
     matchLabels:
       {{- include "search_image_by_image.selectorLabels" . | nindent 6 }}
-      katenary.v3/component: evam
+      katenary.v3/component: dlstreamer-pipeline-server
   strategy: {}
   template:
     metadata:
       labels:
         {{- include "search_image_by_image.selectorLabels" . | nindent 8 }}
-        katenary.v3/component: evam
+        katenary.v3/component: dlstreamer-pipeline-server
     spec:
       containers:
       - name: openvino-container
@@ -60,18 +60,18 @@ spec:
             ) &&
             tail -f /dev/null
         volumeMounts:
-        - name: '{{ include "search_image_by_image.fullname" . }}-evam-models'
+        - name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-models'
           mountPath: /output
       - envFrom:
         - configMapRef:
-            name: '{{ include "search_image_by_image.fullname" . }}-evam-env'
-        image: '{{ tpl .Values.evam.repository.image $ }}:{{ tpl .Values.evam.repository.tag $ | default "latest" }}'
+            name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-env'
+        image: '{{ tpl .Values.dlstreamerpipelineserver.repository.image $ }}:{{ tpl .Values.dlstreamerpipelineserver.repository.tag $ | default "latest" }}'
         securityContext:
           runAsUser: 0
           runAsGroup: 0
           fsGroup: 0
-        imagePullPolicy: {{ .Values.evam.imagePullPolicy }}
-        name: evam
+        imagePullPolicy: {{ .Values.dlstreamerpipelineserver.imagePullPolicy }}
+        name: dlstreamer-pipeline-server
         command: ["/bin/bash", "-c"]
         args: 
           - |
@@ -83,42 +83,42 @@ spec:
         - containerPort: 8080
           name: port-8080
         volumeMounts:
-        - name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline'
+        - name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-pipeline'
           mountPath: /tmp/pipeline
           subpath: config.json
-        - name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline-root'
+        - name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-pipeline-root'
           mountPath: /var/cache/pipeline_root
-        - name: '{{ include "search_image_by_image.fullname" . }}-evam-tmp'
+        - name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-tmp'
           mountPath: /tmp
-        - name: '{{ include "search_image_by_image.fullname" . }}-evam-models'
+        - name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-models'
           mountPath: /models
-        {{- if .Values.evam.resources }}
+        {{- if .Values.dlstreamerpipelineserver.resources }}
         resources:
-          {{ .Values.evam.resources | toYaml | nindent 10 }}
+          {{ .Values.dlstreamerpipelineserver.resources | toYaml | nindent 10 }}
         {{- end }}
       volumes:
-      - name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline'
+      - name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-pipeline'
         configMap:
-          name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline'
-      - name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline-root'
+          name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-pipeline'
+      - name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-pipeline-root'
         emptyDir:
           sizeLimit: 1Gi
           medium: Memory
-      - name: '{{ include "search_image_by_image.fullname" . }}-evam-tmp'
+      - name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-tmp'
         emptyDir:
           sizeLimit: 1Gi
           medium: Memory
-      - name: '{{ include "search_image_by_image.fullname" . }}-evam-models'
+      - name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-models'
         emptyDir:
           sizeLimit: 10Gi
       {{- if .Values.pullSecrets }}
       imagePullSecrets:
       {{- .Values.pullSecrets | toYaml | nindent 6 }}
       {{- end }}
-      {{- if .Values.evam.nodeSelector }}
+      {{- if .Values.dlstreamerpipelineserver.nodeSelector }}
       nodeSelector:
-        {{- .Values.evam.nodeSelector | toYaml | nindent 8 }}
+        {{- .Values.dlstreamerpipelineserver.nodeSelector | toYaml | nindent 8 }}
       {{- end }}
-      {{- if ne .Values.evam.serviceAccount "" }}
-      serviceAccountName: {{ .Values.evam.serviceAccount | quote }}
+      {{- if ne .Values.dlstreamerpipelineserver.serviceAccount "" }}
+      serviceAccountName: {{ .Values.dlstreamerpipelineserver.serviceAccount | quote }}
       {{- end }}

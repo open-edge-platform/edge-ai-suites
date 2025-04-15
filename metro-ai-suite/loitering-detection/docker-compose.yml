@@ -16,7 +16,7 @@ services:
   edge_video_analytics_microservice:
     image: intel/edge-video-analytics-microservice:2.3.0
     container_name: edge_video_analytics_microservice
-    entrypoint: ["./run.sh"]
+    entrypoint: [ "./run.sh" ]
     ports:
       - '8080:8080'
     environment:
@@ -30,11 +30,11 @@ services:
       - EMIT_SOURCE_AND_DESTINATION=true
       - REST_SERVER_PORT=8080
     volumes:
-      - vol_evam_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
-      - "./evam/models:/home/pipeline-server/models"
-      - "./evam/videos:/home/pipeline-server/videos"
-      - "./evam/pipelines:/home/pipeline-server/pipelines"
-      - "./evam/config.json:/home/pipeline-server/config.json"
+      - vol_dlsps_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
+      - "./dlsps/models:/home/pipeline-server/models"
+      - "./dlsps/videos:/home/pipeline-server/videos"
+      - "./dlsps/pipelines:/home/pipeline-server/pipelines"
+      - "./dlsps/config.json:/home/pipeline-server/config.json"
       - "/run/udev:/run/udev:ro"
       - "/dev:/dev"
       - "/tmp:/tmp"
@@ -135,9 +135,9 @@ services:
       no_proxy: ${no_proxy}
     volumes:
       - "./node-red:/data"
-      - "./evam/videos:/data/public/videos"
+      - "./dlsps/videos:/data/public/videos"
     ipc: "none"
-    entrypoint: ["/bin/bash", "-c", "/data/install_package.sh && /usr/src/node-red/entrypoint.sh"]
+    entrypoint: [ "/bin/bash", "-c", "/data/install_package.sh && /usr/src/node-red/entrypoint.sh" ]
     user: root
     networks:
       - app_network
@@ -149,8 +149,8 @@ networks:
     driver: "bridge"
 
 volumes:
-  postgres_data: { }
-  vol_evam_pipeline_root:
+  postgres_data: {}
+  vol_dlsps_pipeline_root:
     driver: local
     driver_opts:
       type: tmpfs

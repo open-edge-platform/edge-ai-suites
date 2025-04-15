@@ -95,10 +95,10 @@ services:
     ports:
       - "1883:1883"
     restart: on-failure:5
-  evam:
-    image: docker.io/intel/edge-video-analytics-microservice:2.4.0
-    hostname: evam
-    container_name: sibi-evam
+  dlstreamer-pipeline-server:
+    image: docker.io/intel/dlstreamer-pipeline-server:3.0.0
+    hostname: dlstreamer-pipeline-server
+    container_name: sibi-dlstreamer-pipeline-server
     read_only: true
     security_opt:
       - no-new-privileges
@@ -118,7 +118,7 @@ services:
       - DETECTION_DEVICE=CPU
       - CLASSIFICATION_DEVICE=CPU
       - ADD_UTCTIME_TO_METADATA=true
-      - LSFEATURE_NAME="EVAM"
+      - LSFEATURE_NAME="dlstreamer-pipeline-server"
       - HTTPS=false
       - MTLS_VERIFICATION=false
       - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=false
@@ -127,10 +127,10 @@ services:
       - MQTT_PORT=1883
     volumes:
       - "./config.json:/home/pipeline-server/config.json"
-      - "evam-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999"
+      - "dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999"
       - "/run/udev:/run/udev:ro"
       - "/dev:/dev"
-      - evam-tmp:/tmp
+      - dlstreamer-pipeline-server-tmp:/tmp
       - "./models/person-vehicle-bike-detection-2004:/models/person-vehicle-bike-detection-2004"
       - "./models/resnet-50-pytorch:/models/resnet50"
     group_add:
@@ -153,18 +153,18 @@ services:
     depends_on:
       - streaming-pipeline
       - feature-matching
-      - evam
+      - dlstreamer-pipeline-server
     restart: on-failure:5
 
 volumes:
   milvus-data:
   image-data:
-  evam-pipeline-root:
+  dlstreamer-pipeline-server-pipeline-root:
     driver: local
     driver_opts:
       type: tmpfs
       device: tmpfs
-  evam-tmp:
+  dlstreamer-pipeline-server-tmp:
     driver: local
     driver_opts:
       type: tmpfs

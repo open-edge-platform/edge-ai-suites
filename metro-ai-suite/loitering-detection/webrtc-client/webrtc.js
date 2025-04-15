@@ -1,6 +1,6 @@
 /* 
 /*
-Copyright (C) 2022 Intel Corporation
+Copyright (C) 2025 Intel Corporation
 SPDX-License-Identifier: MIT
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -64,8 +64,8 @@ window.addEventListener('load', (event) => {
     setPipelinePort();
 });
 
-function setPipelinePort(){
-    console.log("Checking EVAM server status at", PIPELINE_SERVER)
+function setPipelinePort() {
+    console.log("Checking DL Streamer Pipeline Server status at", PIPELINE_SERVER)
     fetch(PIPELINE_SERVER + "/pipelines/status", {
         method: 'GET',
         })
@@ -90,7 +90,7 @@ function resetState() {
     // This will call onServerClose()
     if (ws_conn) {
         ws_conn.close();
-    
+
     } else {
         console.log("INFO: resetState called with no active connection.")
     }
@@ -346,7 +346,6 @@ function websocketServerConnect() {
     if (typeof autoPlayVideo.scrollIntoView !== "undefined"){
         autoPlayVideo.scrollIntoView(false);
     }
-    
 
     var ws_url = 'ws://' + ws_server + ':' + ws_port;
     setStatus("Connecting to server " + ws_url);
@@ -398,7 +397,6 @@ const handleDataChannelMessageReceived = (event) =>{
         send_channel.send("Hi! (from browser)");
     }
 };
-   
 
 const handleDataChannelError = (error) =>{
     console.log("dataChannel.OnError:", error);

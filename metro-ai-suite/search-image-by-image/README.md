@@ -23,10 +23,10 @@ The application includes a demonstration video for testing. The video loops cont
 
 ### Processing
 
-- **Video analysis with Edge Video Analytics Microservice (EVAM) and MediaMTX**: Select **Analyze Stream** to start the EVAM pipeline. EVAM processes video through **MediaMTX**, which simulates remote video cameras and publishes live streams. EVAM extracts frames and detects objects in each frame, publishing predictions through **MQTT**.
-- **Feature extraction with Feature Matching**: EVAM sends metadata and images through MQTT to the Feature Matching microservice. Feature Matching generates feature vectors. If predictions exceed the threshold, the system stores vector embeddings in MilvusDB and saves frames in the Docker file system.
+- **Video analysis with Deep Learning Streamer Pipeline Server and MediaMTX**: Select **Analyze Stream** to start the DL Streamer Pipeline Server pipeline. The Pipeline Server processes video through **MediaMTX**, which simulates remote video cameras and publishes live streams. The Pipeline Server extracts frames and detects objects in each frame, publishing predictions through **MQTT**.
+- **Feature extraction with Feature Matching**: DL Streamer Pipeline Server sends metadata and images through MQTT to the Feature Matching microservice. Feature Matching generates feature vectors. If predictions exceed the threshold, the system stores vector embeddings in MilvusDB and saves frames in the Docker file system.
 - **Storage and retrieval in MilvusDB**: MilvusDB stores feature vectors. You can review them in MilvusUI.
-- **Video search with ImageIngestor**: To search, first analyze the stream by selecting **Analyze Stream**. Then upload an image or capture an object from the video using **Upload Image** or **Capture Frame**. You can adjust the frame to capture a specific object. The system ingests images via ImageIngestor, processes them with EVAM, and matches them against stored feature vectors in MilvusDB.
+- **Video search with ImageIngestor**: To search, first analyze the stream by selecting **Analyze Stream**. Then upload an image or capture an object from the video using **Upload Image** or **Capture Frame**. You can adjust the frame to capture a specific object. The system ingests images via ImageIngestor, processes them with DL Streamer Pipeline Server, and matches them against stored feature vectors in MilvusDB.
 
 ### Outputs
 

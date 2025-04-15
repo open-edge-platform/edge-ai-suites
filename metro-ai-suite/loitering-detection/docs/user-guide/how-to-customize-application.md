@@ -4,16 +4,16 @@
 
 1.  [Introduction](#introduction)
 2.  [Overall System Architecture](#overall-system-architecture)
-3.  [EVAM Edge Video Analytics Microservice](#evam-edge-video-analytics-microservice)
-    *   3.1. [Overview of EVAM](#overview-of-evam)
-    *   3.2. [Key EVAM Components](#key-evam-components)
+3.  [DL Streamer Pipeline Server (DLSPS)](#dlsps-edge-video-analytics-microservice)
+    *   3.1. [Overview of DLSPS](#overview-of-dlsps)
+    *   3.2. [Key DLSPS Components](#key-dlsps-components)
         *   3.2.1. [Logging and General Configuration](#logging-and-general-configuration)
         *   3.2.2. [Video Processing Pipelines](#video-processing-pipelines)
             *   3.2.2.1. [Object Detection Pipelines (YOLOv10 Series)](#object-detection-pipelines-yolov10-series)
             *   3.2.2.2. [Object Tracking Pipelines](#object-tracking-pipelines)
         *   3.2.3. [Configurable Parameters](#configurable-parameters)
         *   3.2.4. [Messaging Interface (MQTT)](#messaging-interface-mqtt)
-    *   3.3. [EVAM Workflow](#evam-workflow)
+    *   3.3. [DLSPS Workflow](#dlsps-workflow)
 4.  [Node-RED Flow for Data Processing](#node-red-flow-for-data-processing)
     *   4.1. [Overview of the Node-RED Flow](#overview-of-the-node-red-flow)
     *   4.2. [Key Node-RED Components](#key-node-red-components)
@@ -38,28 +38,28 @@
 
 ## 1. Introduction <a name="introduction"></a>
 
-This comprehensive guide provides a detailed walkthrough of building a complete object tracking and loitering detection system. We will utilize a combination of technologies designed for ease of use: the EVAM edge video analytics microservice, the visual programming tool Node-RED, and the data visualization platform Grafana. This approach caters to no-code/low-code users, enabling the creation of sophisticated analytics solutions with minimal programming.
+This comprehensive guide provides a detailed walkthrough of building a complete object tracking and loitering detection system. We will utilize a combination of technologies designed for ease of use: the DL Streamer Pipeline Server, the visual programming tool Node-RED, and the data visualization platform Grafana. This approach caters to no-code/low-code users, enabling the creation of sophisticated analytics solutions with minimal programming.
 
 ## 2. Overall System Architecture <a name="overall-system-architecture"></a>
 
 The system follows a modular architecture:
 
 *   **Video Input:** Cameras or video streams provide the raw data.
-*   **EVAM (Edge Video Analytics Microservice):** Processes video streams locally using AI models to detect and track objects.
-*   **Node-RED:** Consumes object tracking data from EVAM, performs further analysis (like calculating distances and loitering times), and publishes results.
+*   **DL Streamer Pipeline Server (DLSPS):** Processes video streams locally using AI models to detect and track objects.
+*   **Node-RED:** Consumes object tracking data from the DL Streamer Pipeline Server, performs further analysis (like calculating distances and loitering times), and publishes results.
 *   **Grafana:** Visualizes the processed data from Node-RED (or a database fed by Node-RED), providing real-time dashboards.
 
-## 3. EVAM Edge Video Analytics Microservice <a name="evam-edge-video-analytics-microservice"></a>
+## 3. DL Streamer Pipeline Server (DLSPS) <a name="dlsps-edge-video-analytics-microservice"></a>
 
-> For detailed documentation on EVAM, visit the [Intel Edge Insights Video Analytics Microservice Documentation](https://eiidocs.intel.com/IEdgeInsights/EdgeVideoAnalyticsMicroservice/eii/README.html)
+> For detailed documentation on DL Streamer Pipeline Server (DLSPS), visit the [DL Streamer Pipeline Server Documentation](https://eiidocs.intel.com/IEdgeInsights/EdgeVideoAnalyticsMicroservice/eii/README.html)
 
 ![Pipeline Architecture](_images/pipeline.png)
 
-### 3.1. Overview of EVAM <a name="overview-of-evam"></a>
+### 3.1. Overview of DLSPS <a name="overview-of-dlsps"></a>
 
-EVAM (Edge Video Analytics Microservice) is a powerful tool designed to process video feeds directly on edge devices. It leverages GStreamer pipelines and OpenVINO-optimized AI models to perform real-time object detection and tracking, minimizing latency and reducing bandwidth consumption.
+The DL Streamer Pipeline Server is a powerful tool designed to process video feeds directly on edge devices. It leverages GStreamer pipelines and OpenVINO-optimized AI models to perform real-time object detection and tracking, minimizing latency and reducing bandwidth consumption.
 
-### 3.2. Key EVAM Components <a name="key-evam-components"></a>
+### 3.2. Key DLSPS Components <a name="key-dlsps-components"></a>
 
 #### 3.2.1. Logging and General Configuration <a name="logging-and-general-configuration"></a>
 
@@ -68,7 +68,7 @@ EVAM (Edge Video Analytics Microservice) is a powerful tool designed to process 
 
 #### 3.2.2. Video Processing Pipelines <a name="video-processing-pipelines"></a>
 
-EVAM utilizes GStreamer pipelines to define the flow of video data through various processing elements.
+The DL Streamer Pipeline Server utilizes GStreamer pipelines to define the flow of video data through various processing elements.
 
 ##### 3.2.2.1. Object Detection Pipelines (YOLOv10 Series) <a name="object-detection-pipelines-yolov10-series"></a>
 
@@ -109,7 +109,7 @@ Each pipeline is designed to be user-friendly and customizable:
 
 #### 3.2.4. Messaging Interface (MQTT) <a name="messaging-interface-mqtt"></a>
 
-To share the results of the video analysis with other parts of your system, EVAM uses a messaging interface based on MQTT:
+To share the results of the video analysis with other parts of your system, the DL Streamer Pipeline Server uses a messaging interface based on MQTT:
 
 *   **Publisher Configuration:**
     *   `Name: default`
@@ -117,7 +117,7 @@ To share the results of the video analysis with other parts of your system, EVAM
     *   `Endpoint: tcp://0.0.0.0:1883`
     *   `Topics: Messages are published under topics like yolov5 and yolov5_effnet (you can update these as needed).`
     *   `Allowed Clients: All (*), ensuring that any subscribed system can receive the data.`
-### 3.3. EVAM Workflow <a name="evam-workflow"></a>
+### 3.3. DLSPS Workflow <a name="dlsps-workflow"></a>
 
 1.  **Capture and Decode:** Live video is captured and decoded using GStreamer.
 2.  **Detection and Tracking:** The object detection pipelines analyze each frame to identify objects. The tracking pipelines then follow these objects over time, ensuring that moving objects are continuously monitored.
@@ -127,7 +127,7 @@ To share the results of the video analysis with other parts of your system, EVAM
 
 > For comprehensive Node-RED documentation, visit the [Official Node-RED Documentation](https://nodered.org/docs/)
 
-Node-RED is a flow-based programming tool that lets you visually wire together devices, APIs, and online services. This guide demonstrates how Node-RED can be used to process video analytics data from EVAM for tasks such as object tracking and loitering detection. Using a drag-and-drop interface, you can build complex workflows with minimal coding, making it ideal for no-code/low-code environments.
+Node-RED is a flow-based programming tool that lets you visually wire together devices, APIs, and online services. This guide demonstrates how Node-RED can be used to process video analytics data from the DL Streamer Pipeline Server for tasks such as object tracking and loitering detection. Using a drag-and-drop interface, you can build complex workflows with minimal coding, making it ideal for no-code/low-code environments.
 
 ![Node-RED Flow 1](_images/node-red1.png)
 
@@ -135,13 +135,13 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 
 ### 4.1. Overview of the Node-RED Flow <a name="overview-of-the-node-red-flow"></a>
 
-Node-RED is a flow-based programming tool that lets you visually wire together devices, APIs, and online services. This guide demonstrates how Node-RED can be used to process video analytics data from EVAM for tasks such as object tracking and loitering detection. Using a drag-and-drop interface, you can build complex workflows with minimal coding, making it ideal for no-code/low-code environments.
+Node-RED is a flow-based programming tool that lets you visually wire together devices, APIs, and online services. This guide demonstrates how Node-RED can be used to process video analytics data from the DL Streamer Pipeline Server for tasks such as object tracking and loitering detection. Using a drag-and-drop interface, you can build complex workflows with minimal coding, making it ideal for no-code/low-code environments.
 
 ### 4.2. Key Node-RED Components <a name="key-node-red-components"></a>
 
 #### 4.2.1. MQTT Input Nodes <a name="mqtt-input-nodes"></a>
 
-*   **Purpose:** To receive real-time object tracking data from EVAM via MQTT. Assume EVAM is configured to forward its MQTT messages to an MQTT broker.
+*   **Purpose:** To receive real-time object tracking data from DLSPS via MQTT. Assume the DL Streamer Pipeline Server is configured to forward its MQTT messages to an MQTT broker.
 *   **Configuration Details:**
     *   `Server Address: 0.0.0.0:1883 (Example - replace with your MQTT broker's address)`
     *   `Topics: For example, object_tracking_1, object_tracking_2, etc.`
@@ -296,7 +296,7 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 
 ### 4.3. Node-RED Workflow <a name="node-red-workflow"></a>
 
-1.  **Data Ingestion:** MQTT Input Nodes receive live data from EVAM (relayed via MQTT broker).
+1.  **Data Ingestion:** MQTT Input Nodes receive live data from the DL Streamer Pipeline Server (relayed via MQTT broker).
 2.  **Data Processing:**
     *   Data Extraction Nodes filter and enrich the data by adding timestamps and applying confidence thresholds.
     *   Euclidean Distance calculation and loitering detection.
@@ -311,13 +311,13 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 
 ### 5.1. Overview of Grafana <a name="overview-of-grafana"></a>
 
-Grafana is a powerful, open-source visualization tool that helps you create dynamic dashboards for monitoring real-time data. With Grafana, you can easily visualize the outputs from your EVAM and Node-RED systems without deep coding skills. Here's how you can leverage Grafana in your analytics workflow.
+Grafana is a powerful, open-source visualization tool that helps you create dynamic dashboards for monitoring real-time data. With Grafana, you can easily visualize the outputs from your the DL Streamer Pipeline Server and Node-RED systems without deep coding skills. Here's how you can leverage Grafana in your analytics workflow.
 
 ### 5.2. Key Grafana Components <a name="key-grafana-components"></a>
 
 #### 5.2.1. Data Sources <a name="data-sources"></a>
 
-*   **MQTT Integration:** Directly query data from EVAM or Node-RED endpoints via MQTT datasource.
+*   **MQTT Integration:** Directly query data from the DL Streamer Pipeline Server or Node-RED endpoints via MQTT datasource.
 
 #### 5.2.2. Dashboards and Panels <a name="dashboards-and-panels"></a>
 
@@ -360,17 +360,17 @@ Grafana is a powerful, open-source visualization tool that helps you create dyna
 
 The system operates as follows:
 
-1.  **Video Input:** A camera captures video and sends the stream to EVAM.
-2.  **EVAM Processing:** EVAM processes the video, detects and tracks objects using its AI models. It publishes metadata about the detected objects (ID, bounding box coordinates, object type, timestamps) to MQTT.
-3.  **MQTT Bridging (EVAM Configuration):** EVAM is configured to relay the MQTT messages to an MQTT broker. This broker acts as a central hub for the data.
+1.  **Video Input:** A camera captures video and sends the stream to the DL Streamer Pipeline Server.
+2.  **DL Streamer Pipeline Server Processing:** The DL Streamer Pipeline Server processes the video, detects and tracks objects using its AI models. It publishes metadata about the detected objects (ID, bounding box coordinates, object type, timestamps) to MQTT.
+3.  **MQTT Bridging (DLSPS Configuration):** The DL Streamer Pipeline Server is configured to relay the MQTT messages to an MQTT broker. This broker acts as a central hub for the data.
 4.  **Node-RED Processing:** Node-RED subscribes to the relevant MQTT topics. It receives the object metadata, filters the data, calculates the Euclidean distance to determine loitering, and adds the loitering flag to the data.
 5.  **Grafana Visualization:** Grafana directly consumes MQTT topics through its MQTT datasource to create dashboards showing real-time object counts and loitering events.
 
 **Data at Each Step:**
 
-*   **EVAM Output (MQTT):** JSON payload containing an array of detected objects. Each object has properties like `id`, `type`, `confidence`, `x1`, `y1`, `x2`, `y2`, and `timestamp`.
+*   **DL Streamer Pipeline Server Output (MQTT):** JSON payload containing an array of detected objects. Each object has properties like `id`, `type`, `confidence`, `x1`, `y1`, `x2`, `y2`, and `timestamp`.
 *   **Node-RED Processed Data:** JSON payload with the same object properties as above, plus the calculated `loitering` flag and any other derived metrics.
 
 ## 7. Conclusion <a name="conclusion"></a>
 
-This guide has demonstrated a complete object tracking and loitering detection system using EVAM, Node-RED, and Grafana. The system provides a balance of edge processing, flexible data manipulation, and powerful visualization. The low-code nature of Node-RED and the user-friendly interface of Grafana make this solution accessible to users without extensive programming knowledge. This allows for quick deployment, easy customization for specific use cases, and scalability to handle multiple cameras and locations.
+This guide has demonstrated a complete object tracking and loitering detection system using the DL Streamer Pipeline Server, Node-RED, and Grafana. The system provides a balance of edge processing, flexible data manipulation, and powerful visualization. The low-code nature of Node-RED and the user-friendly interface of Grafana make this solution accessible to users without extensive programming knowledge. This allows for quick deployment, easy customization for specific use cases, and scalability to handle multiple cameras and locations.

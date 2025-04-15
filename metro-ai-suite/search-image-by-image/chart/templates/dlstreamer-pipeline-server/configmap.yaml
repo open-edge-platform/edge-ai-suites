@@ -10,7 +10,7 @@ data:
   DETECTION_DEVICE: "CPU"
   CLASSIFICATION_DEVICE: "CPU"
   ADD_UTCTIME_TO_METADATA: "true"
-  LSFEATURE_NAME: "EVAM"
+  LSFEATURE_NAME: "dlstreamer-pipeline-server"
   HTTPS: "false"
   MTLS_VERIFICATION: "false"
   APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC: "false"
@@ -24,8 +24,8 @@ metadata:
     katenary.v3/version: release-3.0.0-rc2
   labels:
     {{- include "search_image_by_image.labels" . | nindent 4 }}
-    katenary.v3/component: evam
-  name: '{{ include "search_image_by_image.fullname" . }}-evam-env'
+    katenary.v3/component: dlstreamer-pipeline-server
+  name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-env'
 ---
 apiVersion: v1
 data:
@@ -79,5 +79,5 @@ metadata:
     katenary.v3/version: release-3.0.0-rc2
   labels:
     {{- include "search_image_by_image.labels" . | nindent 4 }}
-    katenary.v3/component: evam
-  name: '{{ include "search_image_by_image.fullname" . }}-evam-pipeline'
+    katenary.v3/component: dlstreamer-pipeline-server
+  name: '{{ include "search_image_by_image.fullname" . }}-dlstreamer-pipeline-server-pipeline'

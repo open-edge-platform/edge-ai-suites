@@ -166,7 +166,7 @@ async def search(
     try:
         async with httpx.AsyncClient() as client:
             # Fetch pipelines status
-            response = await client.get("http://sibi-evam:8080/pipelines/status")
+            response = await client.get("http://sibi-dlstreamer-pipeline-server:8080/pipelines/status")
             response.raise_for_status()
             pipelines = response.json()
             
@@ -177,7 +177,7 @@ async def search(
                 if pipeline["state"] != "RUNNING":
                     continue
 
-                _pipeline_response = await client.get(f"http://sibi-evam:8080/pipelines/{pipeline['id']}")
+                _pipeline_response = await client.get(f"http://sibi-dlstreamer-pipeline-server:8080/pipelines/{pipeline['id']}")
                 _pipeline_response.raise_for_status()
                 _pipeline_response_json = _pipeline_response.json()
 
@@ -192,7 +192,7 @@ async def search(
 
     # Step 1: When the search_image pipeline is not running, start the pipeline with sync mode as true
     if not pipeline_id:
-        pipeline_endpoint = "http://sibi-evam:8080/pipelines/user_defined_pipelines/search_image"
+        pipeline_endpoint = "http://sibi-dlstreamer-pipeline-server:8080/pipelines/user_defined_pipelines/search_image"
         body = {"sync": True}
 
         try:
@@ -231,7 +231,7 @@ async def search(
     # Ensure pipeline_id has no extra quotes
     pipeline_id = pipeline_id.strip('"').strip()  # Remove surrounding quotes, if any
     second_pipeline_endpoint = (
-        f"http://sibi-evam:8080/pipelines/user_defined_pipelines/search_image/{pipeline_id}"
+        f"http://sibi-dlstreamer-pipeline-server:8080/pipelines/user_defined_pipelines/search_image/{pipeline_id}"
     )
 
     second_pipeline_body = {

@@ -30,7 +30,7 @@ By following this guide, you will learn how to:
       ```
 
 3. **Update the IP Address**:
-      
+
       - Open the `.env` file:
         ```bash
         nano .env
@@ -70,13 +70,22 @@ By following this guide, you will learn how to:
         - **Username:** `admin`
         - **Password:** `admin`
     - Check under the Dashboards section for the default dashboard named "Video Analytics Dashboard".
-    
+
 
 9. **Run a Predefined Pipeline**:
     - Run the following commands to start the pipeline
         ```bash
-        ./run_sample.sh
+        ./sample_start.sh #(optional) to run the pipelines on GPU "./sample_start.sh gpu"
         ```
+    - To check the status
+         ```bash
+        ./sample_status.sh
+        ```
+    - To stop the sample pipeline:
+        ```bash
+        ./sample_stop.sh
+        ```
+
     - **Expected Results**:
     - The dashboard displays detected cars.
     - ![Dashboard Example](_images/grafana.png)
@@ -86,7 +95,7 @@ By following this guide, you will learn how to:
 1.  To stop the application, use the following commands:
 
     ```bash
-    docker compose down
+    docker compose down -v
     ```
 
 ## Next Steps
@@ -102,10 +111,10 @@ By following this guide, you will learn how to:
 
 2. **No Video Streaming on Grafana Dashboard**
     - Go to the Grafana "Video Analytics Dashboard".
-    - Click on the Edit option (located on the right side) under the WebRTC Stream panel. 
+    - Click on the Edit option (located on the right side) under the WebRTC Stream panel.
     - Update the URL from `http://localhost:8083` to `http://host-ip:8083`.
 
-3. **Failed Grafana Deployment** 
+3. **Failed Grafana Deployment**
     - If unable to deploy grafana container successfully due to fail to GET "https://grafana.com/api/plugins/yesoreyeram-infinity-datasource/versions": context deadline exceeded, please ensure the proxy is configured in the ~/.docker/config.json as shown below:
 
       ```bash
@@ -127,4 +136,4 @@ By following this guide, you will learn how to:
 
 ## Supporting Resources
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Edge Video Analytics Microservice](https://docs.edgeplatform.intel.com/edge-video-analytics-microservice/2.3.0/user-guide/Overview.html)
+- [DL Streamer Pipeline Server](https://docs.edgeplatform.intel.com/edge-video-analytics-microservice/2.3.0/user-guide/Overview.html)

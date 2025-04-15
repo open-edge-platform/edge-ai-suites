@@ -23,7 +23,7 @@ The Search Image by Image Application is designed to:
    - **User-provided images for search**: Allows users to upload images or for searching within the video streams.
 
 2. **Video Analysis Pipeline**:
-   - **EVAM Microservice**:
+   - **Deep Learning Streamer Pipeline Server**:
      - Consumes RTSP streams for object detection and feature extraction.
      - Publishes metadata to an MQTT Broker.
    - **Feature Matching Microservice**:
@@ -32,7 +32,7 @@ The Search Image by Image Application is designed to:
 
 3. **Video Search Pipeline**:
    - **Feature Matching Microservice**:
-     - Queries EVAM for feature vectors of user-provided images.
+     - Queries DL Streamer Pipeline Server for feature vectors of user-provided images.
      - Searches MilvusDB to find matching frames.
 
 4. **Output Generation**:
@@ -45,7 +45,7 @@ The Search Image by Image Application is designed to:
    - **How it’s used**: Replays videos as RTSP/WebRTC streams for processing and display.
    - **Benefits**: Allows testing of video search features without physical cameras.
 
-2. **EVAM (Microservice for Feature Extraction)**
+2. **DL Streamer Pipeline Server (Microservice for Feature Extraction)**
    - **What it is**: A microservice that processes video streams for object detection and feature extraction.
    - **How it’s used**: Converts RTSP streams into feature vectors and publishes metadata.
    - **Benefits**: Enables efficient AI-powered video analysis.
@@ -57,7 +57,7 @@ The Search Image by Image Application is designed to:
 
 4. **MQTT Broker (Third-Party Microservice)**
    - **What it is**: A message broker for streaming metadata between services.
-   - **How it’s used**: Transfers feature metadata between EVAM and Feature Matching.
+   - **How it’s used**: Transfers feature metadata between DL Streamer Pipeline Server and Feature Matching.
    - **Benefits**: Ensures smooth, real-time metadata communication.
 
 5. **MilvusDB (Vector Database)**
