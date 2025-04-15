@@ -12,3 +12,8 @@ env:
 webrtcturnserver:
     username: # example: username: myuser
     password: # example: password: mypassword
+config:
+  coturn:
+    ext:
+      coturn_tcp_port: "31478"
+      coturn_udp_port: "31478"
