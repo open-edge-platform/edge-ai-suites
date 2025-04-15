@@ -8,11 +8,11 @@ $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 name: "wpd"
 displayName: "wpd"
 description: "Weld Porosity Detection Sample Application"
-version: "1.0.0"
+version: "1.1.0"
 
 applications:
   - name: wpd-app
-    version: 1.0.0
+    version: 1.1.0
 
 defaultNamespaces:
   wpd-app: wpd

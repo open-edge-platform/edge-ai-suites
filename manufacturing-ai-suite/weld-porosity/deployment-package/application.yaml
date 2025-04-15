@@ -6,12 +6,12 @@ schemaVersion: "0.1"
 $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 
 name: wpd-app
-version: 1.0.0
+version: 1.1.0
 description: "Weld Porosity Detection Sample Application"
 
 helmRegistry: "docker-hub"
 chartName: "intel/weld-porosity-sample-application"
-chartVersion: "1.0.0"
+chartVersion: "1.1.0"
 
 profiles:
   - name: "default"
