@@ -14,7 +14,7 @@ services:
       - app_network
 
   dlstreamer_pipeline_server_microservice:
-    image: intel/dlstreamer-pipeline-server:3.0.0
+    image: intel/edge-video-analytics-microservice:2.3.0
     container_name: dlstreamer_pipeline_server_microservice
     entrypoint: [ "./run.sh" ]
     ports:
