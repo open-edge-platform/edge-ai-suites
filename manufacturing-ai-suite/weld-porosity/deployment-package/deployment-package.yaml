@@ -22,3 +22,11 @@ deploymentProfiles:
     applicationProfiles:
       - application: "wpd-app"
         profile: "default"
+  - name: "with-intel-gpu-extension"
+    applicationProfiles:
+      - application: "wpd-app"
+        profile: "with-intel-gpu-extension"
+  - name: "without-intel-gpu-extension"
+    applicationProfiles:
+      - application: "wpd-app"
+        profile: "without-intel-gpu-extension"
