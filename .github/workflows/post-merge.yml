@@ -20,60 +20,36 @@ jobs:
       search-image-by-image_changed: ${{ steps.filter.outputs.search-image-by-image }}
       smart_intersection_changed: ${{ steps.filter.outputs.smart_intersection }}
       smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
-      smart_tolling_changed: ${{ steps.filter.outputs.smart_tolling }}
-      vippet_changed: ${{ steps.filter.outputs.vippet }}
     steps:
       - name: Set paths filter
         id: filter
         uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
         with:
           filters: |
-            automated_self_checkout:
-              - 'reference_apps/automated_self_checkout/docs/**'
             loitering-detection:
               - 'reference_apps/loitering-detection/docs/**'
             search-image-by-image:
               - 'reference_apps/search-image-by-image/docs/**'
-            smart_intersection:
-              - 'reference_apps/smart_intersection/docs/**'
             smart-parking:
               - 'reference_apps/smart-parking/docs/**'
-            smart_tolling:
-              - 'reference_apps/smart_tolling/docs/**'
-            vippet:
-              - 'tools/visual-pipeline-and-platform-evaluation-tool/docs/**'
   build_search-image-by-image:
     needs: filter
     if: ${{ needs.filter.outputs.search-image-by-image_changed == 'true' }}
     uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
     secrets: inherit
     with:
-      docs_directory: reference_apps/search-image-by-image
+      docs_directory: metro-ai-suite/search-image-by-image
   build_smart-parking:
     needs: filter
     if: ${{ needs.filter.outputs.smart-parking_changed == 'true' }}
     uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
     secrets: inherit
     with:
-      docs_directory: reference_apps/smart-parking
+      docs_directory: metro-ai-suite/smart-parking
   build_loitering-detection:
     needs: filter
     if: ${{ needs.filter.outputs.loitering-detection_changed == 'true' }}
     uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
     secrets: inherit
     with:
-      docs_directory: reference_apps/loitering-detection
-  build_smart_intersection:
-    needs: filter
-    if: ${{ needs.filter.outputs.smart_intersection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
-    secrets: inherit
-    with:
-      docs_directory: reference_apps/smart_intersection
-  build_vippet:
-    needs: filter
-    if: ${{ needs.filter.outputs.vippet_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
-    secrets: inherit
-    with:
-      docs_directory: tools/visual-pipeline-and-platform-evaluation-tool
+      docs_directory: metro-ai-suite/loitering-detection

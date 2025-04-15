@@ -11,8 +11,6 @@ on:
         - search-image-by-image
         - smart-parking
         - loitering-detection
-        - smart-intersection
-        - vippet
 
 jobs:
   build_search-image-by-image:
@@ -20,28 +18,16 @@ jobs:
     uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
     secrets: inherit
     with:
-      docs_directory: reference_apps/search-image-by-image
+      docs_directory: metro-ai-suite/search-image-by-image
   build_smart-parking:
     if: ${{ (github.event.inputs.target == 'smart-parking') || (github.event.inputs.target == 'all-documentation') }}
     uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
     secrets: inherit
     with:
-      docs_directory: reference_apps/smart-parking
+      docs_directory: metro-ai-suite/smart-parking
   build_loitering-detection:
     if: ${{ (github.event.inputs.target == 'loitering-detection') || (github.event.inputs.target == 'all-documentation') }}
     uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
     secrets: inherit
     with:
-      docs_directory: reference_apps/loitering-detection
-  build_smart-intersection:
-    if: ${{ (github.event.inputs.target == 'smart-intersection') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
-    secrets: inherit
-    with:
-      docs_directory: reference_apps/smart_intersection
-  build_vippet:
-    if: ${{ (github.event.inputs.target == 'vippet') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
-    secrets: inherit
-    with:
-      docs_directory: tools/visual-pipeline-and-platform-evaluation-tool
+      docs_directory: metro-ai-suite/loitering-detection
