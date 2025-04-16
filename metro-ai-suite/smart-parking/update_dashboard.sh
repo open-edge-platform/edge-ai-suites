@@ -86,6 +86,7 @@ fi
 
 # Check if the run_sample.sh exists in the folder for the current case
 if [ -f "./sample_start.sh" ]; then
+  echo "Found sample start file: ./sample_start.sh"
   # Update the video source path to point to the folder
   sed -i "s|file:///home/pipeline-server/videos/|file:///home/pipeline-server/videos/|g" ./sample_start.sh
   
