@@ -18,6 +18,8 @@ jobs:
       loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
       search-image-by-image_changed: ${{ steps.filter.outputs.search-image-by-image }}
       smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
+      pallet-defect-detection_changed: ${{ steps.filter.outputs.pallet-defect-detection }}
+      weld-porosity_changed: ${{ steps.filter.outputs.weld-porosity }}
     steps:
       - name: Set paths filter
         id: filter
@@ -25,11 +27,15 @@ jobs:
         with:
           filters: |
             loitering-detection:
-              - 'reference_apps/loitering-detection/docs/**'
+              - 'metro-ai-suite/loitering-detection/docs/**'
             search-image-by-image:
-              - 'reference_apps/search-image-by-image/docs/**'
+              - 'metro-ai-suite/search-image-by-image/docs/**'
             smart-parking:
-              - 'reference_apps/smart-parking/docs/**'
+              - 'metro-ai-suite/smart-parking/docs/**'
+            defect-detection:
+              - 'manufacturing-ai-suite/pallet-defect-detection/docs/**'
+            weld-porosity:
+              - 'manufacturing-ai-suite/weld-porosity/docs/**'
   build_search-image-by-image:
     needs: filter
     if: ${{ needs.filter.outputs.search-image-by-image_changed == 'true' }}
@@ -51,3 +57,17 @@ jobs:
     secrets: inherit
     with:
       docs_directory: metro-ai-suite/loitering-detection
+  build_pallet-defect-detection:
+    needs: filter
+    if: ${{ needs.filter.outputs.pallet-defect-detection_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: manufacturing-ai-suite/pallet-defect-detection
+  build_weld-porosity:
+    needs: filter
+    if: ${{ needs.filter.outputs.weld-porosity_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: manufacturing-ai-suite/weld-porosity

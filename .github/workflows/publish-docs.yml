@@ -11,6 +11,8 @@ on:
         - search-image-by-image
         - smart-parking
         - loitering-detection
+        - pallet-defect-detection
+        - weld-porosity
 
 jobs:
   build_search-image-by-image:
@@ -31,3 +33,15 @@ jobs:
     secrets: inherit
     with:
       docs_directory: metro-ai-suite/loitering-detection
+  build_pallet-defect-detection:
+    if: ${{ (github.event.inputs.target == 'pallet-defect-detection') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: manufacturing-ai-suite/pallet-defect-detection
+  build_weld-porosity:
+    if: ${{ (github.event.inputs.target == 'weld-pororsity') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: manufacturing-ai-suite/weld-porosity
