@@ -1,0 +1,47 @@
+name: Publish Docs
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which target to build'
+        type: choice
+        options:
+        - all-documentation
+        - search-image-by-image
+        - smart-parking
+        - loitering-detection
+        - pallet-defect-detection
+        - weld-porosity
+
+jobs:
+  build_search-image-by-image:
+    if: ${{ (github.event.inputs.target == 'search-image-by-image') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: metro-ai-suite/search-image-by-image
+  build_smart-parking:
+    if: ${{ (github.event.inputs.target == 'smart-parking') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: metro-ai-suite/smart-parking
+  build_loitering-detection:
+    if: ${{ (github.event.inputs.target == 'loitering-detection') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: metro-ai-suite/loitering-detection
+  build_pallet-defect-detection:
+    if: ${{ (github.event.inputs.target == 'pallet-defect-detection') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: manufacturing-ai-suite/pallet-defect-detection
+  build_weld-porosity:
+    if: ${{ (github.event.inputs.target == 'weld-porosity') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: manufacturing-ai-suite/weld-porosity
