@@ -1,10 +1,10 @@
 # Architecture Overview
 
-The Search Image by Image Application is a modular reference implementation designed to help developers create vision-based search systems utilizing Vision AI and third-party microservices. This page provides a technical overview of the application’s architecture, components, and extensibility.
+The Image-Based Video Search Application is a modular reference implementation designed to help developers create vision-based search systems utilizing Vision AI and third-party microservices. This page provides a technical overview of the application’s architecture, components, and extensibility.
 
 ## Purpose
 
-The Search Image by Image Application is designed to:
+The Image-Based Video Search Application is designed to:
 
 - Demonstrate how Vision AI and vector databases enable real-time image search in live video streams.
 - Serve as a blueprint for building scalable, modular search systems.
@@ -14,7 +14,7 @@ The Search Image by Image Application is designed to:
 
 ### Technical Architecture Diagram
 ![Technical Architecture Diagram](_images/architecture.png)
-*Figure 1: Detailed Architecture of the Search Image by Image Application.*
+*Figure 1: Detailed Architecture of the Image-Based Video Search Application.*
 
 ### Data Flow
 
@@ -67,7 +67,7 @@ The Search Image by Image Application is designed to:
 
 ## Extensibility
 
-The Search Image by Image Application is designed with modularity in mind, allowing developers to:
+The Image-Based Video Search Application is designed with modularity in mind, allowing developers to:
 
 1. **Add Input Sources**:
    - Example: Integrate real IP cameras for live video feeds.

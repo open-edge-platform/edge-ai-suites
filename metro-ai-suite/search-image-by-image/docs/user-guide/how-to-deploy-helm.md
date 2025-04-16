@@ -1,6 +1,6 @@
 # Deploy with Helm
 
-Use Helm to deploy Search Image by Image to a Kubernetes cluster. This guide will help you:
+Use Helm to deploy Image-Based Video Search to a Kubernetes cluster. This guide will help you:
 - Add the Helm chart repository.
 - Configure the Helm chart to match your deployment needs.
 - Deploy and verify the application.
@@ -30,7 +30,7 @@ Some containers in the deployment requires network access.
 If you are in a proxy environment, pass the proxy environment variables as follows:
 
 ```bash
-# Install the Search Image by Image chart in the sibi namespace
+# Install the Image-Based Video Search chart in the sibi namespace
 # Replace the proxy values with the specific ones for your environment:
 helm upgrade \
     --install sibi oci://registry-1.docker.io/intel/search-image-by-image \
