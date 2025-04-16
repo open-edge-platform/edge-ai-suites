@@ -11,3 +11,4 @@ Pinecone
 frontend
 kubeconfig
 onboarding
+Orchestrator
