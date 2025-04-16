@@ -32,7 +32,7 @@ jobs:
               - 'metro-ai-suite/search-image-by-image/docs/**'
             smart-parking:
               - 'metro-ai-suite/smart-parking/docs/**'
-            defect-detection:
+            pallet-defect-detection:
               - 'manufacturing-ai-suite/pallet-defect-detection/docs/**'
             weld-porosity:
               - 'manufacturing-ai-suite/weld-porosity/docs/**'
