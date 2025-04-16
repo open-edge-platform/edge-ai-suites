@@ -34,13 +34,13 @@ The application includes a demonstration video for testing. The video loops cont
 
 ![Screenshot of the Search Image by Image sample application interface displaying search input and matched results](docs/user-guide/_images/imagesearch2.png)
 
-## Learn More
+### Learn More
 - [System Requirements](docs/user-guide/system-requirements.md)
 - [Get Started](docs/user-guide/get-started.md)
 - [Architecture Overview](docs/user-guide/overview-architecture.md)
-- [How to Build Source](docs/user-guide/how-to-build-source.md)
-- [How to Deploy Helm](docs/user-guide/how-to-deploy-helm.md)
-- [How to Deploy Edge Manageability Framework](docs/user-guide/how-to-deploy-edge-manageability-framework.md)
+- [How to Build from Source](docs/user-guide/how-to-build-source.md)
+- [How to Deploy with Helm](docs/user-guide/how-to-deploy-helm.md)
+- [How to Deploy with the Edge Orchestrator](docs/user-guide/how-to-deploy-edge-orchestrator.md)
 - [Release Notes](docs/user-guide/release-notes.md)
 
 ## Important Notice
