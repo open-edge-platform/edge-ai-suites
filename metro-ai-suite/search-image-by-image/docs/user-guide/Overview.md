@@ -34,15 +34,15 @@ The application includes a demonstration video for testing. The video loops cont
 
 ![Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results](_images/imagesearch2.png)
 
-## Deployment with Edge Manageability Framework
+### Deployment with Edge Orchestrator
 
-- This reference implementation is ready for deployment with the Edge Manageability Framework. Follow the instructions using the [Deployment with Edge Manageability Framework](how-to-deploy-edge-manageability-framework.md)
+- [This sample application is ready for deployment with Edge Orchestrator. Download the deployment package and follow the instructions](how-to-deploy-edge-orchestrator.md).
 
-## Learn More
+### Learn More
 - [System Requirements](system-requirements.md)
 - [Get Started](get-started.md)
 - [Architecture Overview](overview-architecture.md)
-- [How to Build Source](how-to-build-source.md)
-- [How to Deploy Helm](how-to-deploy-helm.md)
-- [How to Deploy Edge Manageability Framework](how-to-deploy-edge-manageability-framework.md)
+- [How to Build from Source](how-to-build-source.md)
+- [How to Deploy with Helm](how-to-deploy-helm.md)
+- [How to Deploy with the Edge Orchestrator](how-to-deploy-edge-orchestrator.md)
 - [Release Notes](release-notes.md)
