@@ -6,11 +6,12 @@ DLSPS_PORT=8080
 function stop_all_pipelines() {
   echo
   echo -n ">>>>>Stopping all running pipelines."
-  pipelines=$(curl -s -X GET "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/status" -H "accept: application/json" | grep id | awk ' { print $2 } ' | tr -d \"  | tr -d '\n')
+  status=$(curl -s -X GET "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/status" -H "accept: application/json")
   if [ $? -ne 0 ]; then
-    echo -e "\nError: curl command failed."
+    echo -e "\nError: curl command failed. Check the deployment status."
     return 1
   fi
+  pipelines=$(echo $status  | grep -o '"id": "[^"]*"' | awk ' { print $2 } ' | tr -d \"  | paste -sd ',' -)
   IFS=','
   for pipeline in $pipelines; do
     response=$(curl -s --location -X DELETE "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/${pipeline}")
