@@ -19,12 +19,12 @@ defaultNamespaces:
 
 deploymentProfiles:
   - name: "default"
-    description: "uses cpu for inferencing"
+    description: "Uses CPU for inferencing"
     applicationProfiles:
       - application: "pdd-app"
         profile: "default"
   - name: "with-intel-gpu"
-    description: "uses intel gpu for inferencing, needs intel gpu extension"
+    description: "Uses Intel GPU for inferencing, needs Intel GPU extension"
     applicationProfiles:
       - application: "pdd-app"
         profile: "with-intel-gpu"
