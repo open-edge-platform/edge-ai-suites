@@ -12,9 +12,9 @@ function run_sample() {
   else
     pipeline_name="yolov10_1_cpu"
   fi
-  
   pipeline_list=()
-
+  echo
+  echo -n ">>>>>Initialization..."
   for x in $(seq 1 $pipelines); do
     payload=$(cat <<EOF
    {
@@ -41,8 +41,11 @@ function run_sample() {
   }
 EOF
 )
-
     response=$(curl  -s "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/user_defined_pipelines/${pipeline_name}" -X POST -H "Content-Type: application/json" -d "$payload")
+    if [ $? -ne 0 ]; then
+      echo -e "\nError: curl command failed. Check the deployment status."
+      return 1
+    fi
     pipeline_list+=("$response")
   done
   running=false
@@ -50,9 +53,12 @@ EOF
     status=$(curl -s --location -X GET "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/status" | grep state | awk ' { print $2 } ' | tr -d \")
     if [[ "$status" == *"QUEUED"* ]]; then
       running=false
+      echo -n "."
+      sleep 1
     else
       running=true
-      echo -e "\n>>>>>Pipelines initialized."
+      echo -n "Pipelines initialized."
+      echo
     fi
   done
 }
@@ -60,11 +66,12 @@ EOF
 function stop_all_pipelines() {
   echo
   echo -n ">>>>>Stopping all running pipelines."
-  pipelines=$(curl -s -X GET "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/status" -H "accept: application/json" | grep id | awk ' { print $2 } ' | tr -d \"  | tr -d '\n')
+  status=$(curl -s -X GET "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/status" -H "accept: application/json")
   if [ $? -ne 0 ]; then
-    echo -e "\nError: curl command failed."
+    echo -e "\nError: curl command failed. Check the deployment status."
     return 1
   fi
+  pipelines=$(echo $status  | grep -o '"id": "[^"]*"' | awk ' { print $2 } ' | tr -d \"  | paste -sd ',' - )
   IFS=','
   for pipeline in $pipelines; do
     response=$(curl -s --location -X DELETE "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/${pipeline}")
@@ -111,6 +118,9 @@ if $forcedGPU; then
   if ls /dev/dri/renderD* 1> /dev/null 2>&1; then
     echo -e "\n>>>>>GPU device selected."
     run_sample 4 GPU
+    if [ $? -ne 0 ]; then
+      exit 1
+    fi
   else
     echo -e "\n>>>>>No GPU device found. Please check your GPU driver installation or use CPU."
     exit 0
@@ -118,6 +128,9 @@ if $forcedGPU; then
 elif $forcedCPU; then
   echo -e "\n>>>>>CPU device selected."
   run_sample 4 CPU
+  if [ $? -ne 0 ]; then
+      exit 1
+    fi
 fi
 
 echo -e "\n>>>>>Results are visualized in Grafana at 'http://localhost:3000' "
