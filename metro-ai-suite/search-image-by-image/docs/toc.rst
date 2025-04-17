@@ -1,4 +1,4 @@
-Search Image by Image Sample Application
+Image-Based Video Search Sample Application
 
 .. toctree::
 

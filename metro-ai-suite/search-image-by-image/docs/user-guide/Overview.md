@@ -1,9 +1,9 @@
-# Search Image by Image Sample Application
+# Image-Based Video Search Sample Application
 <!--REQUIRED: Add a short description without including the name of the RI/Application/microservice in the description. Ensure it's at least 50 characters (excluding spaces) and doesn't exceed 150 characters (excluding spaces). This will enable the content to be properly displayed in the catalog's card layout.-->
 Performs near real-time analysis and image-based search to detect and retrieve objects of interest in large video datasets.
 
 ## Overview
-The **Search Image by Image** sample application lets users search live or recorded camera feeds by providing an image and view matching objects with location, timestamp, and confidence score details.
+The **Image-Based Video Search** sample application lets users search live or recorded camera feeds by providing an image and view matching objects with location, timestamp, and confidence score details.
 
 This sample provides a working example of how to combine edge AI microservices for video ingestion, object detection, feature extraction, and vector-based search.
 
@@ -12,7 +12,7 @@ You can use this foundation to build solutions for diverse use cases, including 
 ## How it Works
 The application workflow has three stages: inputs, processing, and outputs.
 
-![Diagram illustrating the components and interactions within the Search Image by Image system, including inputs, processing, and outputs.](_images/architecture_simplified.png)
+![Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.](_images/architecture_simplified.png)
 
 ### Inputs
 
@@ -32,7 +32,7 @@ The application includes a demonstration video for testing. The video loops cont
 
 - Matched search results, including metadata, timestamps, confidence scores, and frames
 
-![Screenshot of the Search Image by Image sample application interface displaying search input and matched results](_images/imagesearch2.png)
+![Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results](_images/imagesearch2.png)
 
 ### Deployment with Edge Orchestrator
 

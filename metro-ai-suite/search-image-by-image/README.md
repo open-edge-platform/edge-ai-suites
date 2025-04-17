@@ -1,9 +1,9 @@
-# Search Image by Image Sample Application
+# Image-Based Video Search Sample Application
 <!--REQUIRED: Add a short description without including the name of the RI/Application/microservice in the description. Ensure it's at least 50 characters (excluding spaces) and doesn't exceed 150 characters (excluding spaces). This will enable the content to be properly displayed in the catalog's card layout.-->
 Performs near real-time analysis and image-based search to detect and retrieve objects of interest in large video datasets.
 
 ## Overview
-The **Search Image by Image** sample application lets users search live or recorded camera feeds by providing an image and view matching objects with location, timestamp, and confidence score details.
+The **Image-Based Video Search** sample application lets users search live or recorded camera feeds by providing an image and view matching objects with location, timestamp, and confidence score details.
 
 This sample provides a working example of how to combine edge AI microservices for video ingestion, object detection, feature extraction, and vector-based search.
 
@@ -12,7 +12,7 @@ You can use this foundation to build solutions for diverse use cases, including 
 ## How it Works
 The application workflow has three stages: inputs, processing, and outputs.
 
-![Diagram illustrating the components and interactions within the Search Image by Image system, including inputs, processing, and outputs.](docs/user-guide/_images/architecture_simplified.png)
+![Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.](docs/user-guide/_images/architecture_simplified.png)
 
 ### Inputs
 
@@ -32,7 +32,7 @@ The application includes a demonstration video for testing. The video loops cont
 
 - Matched search results, including metadata, timestamps, confidence scores, and frames
 
-![Screenshot of the Search Image by Image sample application interface displaying search input and matched results](docs/user-guide/_images/imagesearch2.png)
+![Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results](docs/user-guide/_images/imagesearch2.png)
 
 ### Learn More
 - [System Requirements](docs/user-guide/system-requirements.md)
@@ -47,7 +47,7 @@ The application includes a demonstration video for testing. The video loops cont
 
 This reference implementation is designed to facilitate smart cities application development. It is not intended for police, military or similar surveillance uses, use as part of critical infrastructure operations, determining access to education or other significant resource, managing workers or evaluating employment performance.
 
-This reference implementation is intended to allow users to examine and evaluate Search Image by Image application and the associated performance of Intel technology solutions. The accuracy of computer models is a function of the relation between the data used to train them and the data that the models encounter after deployment. This model has been tested using datasets that may not be sufficient for use in production applications. Accordingly, while the model may serve as a strong foundation, Intel recommends and requests that this model be tested against data the model is likely to encounter in specific deployments.
+This reference implementation is intended to allow users to examine and evaluate Image-Based Video Search application and the associated performance of Intel technology solutions. The accuracy of computer models is a function of the relation between the data used to train them and the data that the models encounter after deployment. This model has been tested using datasets that may not be sufficient for use in production applications. Accordingly, while the model may serve as a strong foundation, Intel recommends and requests that this model be tested against data the model is likely to encounter in specific deployments.
 
 Intel is committed to respecting human rights and avoiding causing or contributing to adverse impacts on human rights. See Intel’s Global Human Rights Principles. Intel’s products and software are intended only to be used in applications that do not cause or contribute to adverse impacts on human rights.
 
