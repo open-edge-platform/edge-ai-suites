@@ -13,27 +13,27 @@ services:
     networks:
       - app_network
 
-  edge_video_analytics_microservice:
-    image: intel/edge-video-analytics-microservice:2.3.0
-    container_name: edge_video_analytics_microservice
-    entrypoint: [ "./run.sh" ]
+  dlstreamer-pipeline-server:
+    image: intel/dlstreamer-pipeline-server:3.0.0
+    container_name: dlstreamer-pipeline-server
     ports:
-      - '8080:8080'
+    - '8080:8080'
+    - '8554:8554'
     environment:
       - ENABLE_WEBRTC=true
-      - no_proxy=${no_proxy},${RTSP_CAMERA_IP}
-      - WEBRTC_SIGNALING_SERVER=ws://localhost:8443
+      - no_proxy=${no_proxy},${HOST_IP}
+      - WEBRTC_SIGNALING_SERVER=http://${HOST_IP}:8889
       - http_proxy=${http_proxy}
+      - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true
       - https_proxy=${https_proxy}
       - RUN_MODE=EVA
-      - DETECTION_DEVICE=CPU
       - EMIT_SOURCE_AND_DESTINATION=true
       - REST_SERVER_PORT=8080
+      - SERVICE_NAME=dlstreamer-pipeline-server
     volumes:
-      - vol_evam_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
+      - vol_dlsps_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
       - "./dlsps/models:/home/pipeline-server/models"
       - "./dlsps/videos:/home/pipeline-server/videos"
-      - "./dlsps/pipelines:/home/pipeline-server/pipelines"
       - "./dlsps/config.json:/home/pipeline-server/config.json"
       - "/run/udev:/run/udev:ro"
       - "/dev:/dev"
@@ -48,13 +48,41 @@ services:
       - 'a 189:* rwm'
     devices:
       - "/dev:/dev"
-    network_mode: host
+    networks:
+    - app_network
     deploy:
       restart_policy:
         condition: on-failure
         max_attempts: 5
-    tmpfs:
-      - /tmp/results.json:uid=1999,gid=1999
+  
+  mediamtx:
+    image: bluenviron/mediamtx:1.11.3
+    container_name: mediamtx-server
+    environment:
+      - MTX_LOGLEVEL=debug
+      - MTX_RTSP=no
+      - MTX_RTMP=no
+      - MTX_HLS=no
+      - MTX_SRT=no
+      - MTX_WEBRTCICESERVERS2_0_URL=turn:${HOST_IP}:3478
+      - MTX_WEBRTCICESERVERS2_0_USERNAME=myusername
+      - MTX_WEBRTCICESERVERS2_0_PASSWORD=mypassword
+    ports:
+      - "8889:8889"
+      - "8189:8189"
+      - "9997:9997"
+    networks:
+    - app_network
+
+  coturn:
+    image: coturn/coturn:latest
+    container_name: coturn
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+    command: ["-v"]  # Verbose mode for logging
+    networks:
+      - app_network
 
   grafana:
     image: grafana/grafana:latest
@@ -72,59 +100,6 @@ services:
     environment:
       - GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource,ryantxu-ajax-panel,grafana-mqtt-datasource
       - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=intel-custom-panel
-    env_file:
-      - .env
-
-  multimodal-data-visualization-streaming:
-    image: intel/multimodal-data-visualization-streaming:5.0.0
-    container_name: multimodal-data-visualization-streaming
-    ipc: "none"
-    tmpfs:
-      - /etc/nginx/sites-enabled:uid=1999,gid=1999
-      - /usr/share/nginx:uid=1999,gid=1999
-      - /var/log/nginx:uid=1999,gid=1999
-      - /var/cache/nginx:uid=1999,gid=1999
-      - /var/lib/nginx:uid=1999,gid=1999
-      - /run:uid=1999,gid=1999
-    environment:
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy}
-      AppName: "MultiModalVisualizationStreaming"
-      LSHOST: host.docker.internal
-      LSFEATURE_NAME: "MultiModalVisStreaming"
-      RUNTIME_LICENSE_CHECK_FREQ_SECS: 3600
-      APPLICATION_RESTART_FREQ_SECS: 60
-    volumes:
-      - ./webrtc-client/styles.css:/app/eva_ui_default/www/styles.css
-      - ./webrtc-client/index.html:/app/eva_ui_default/www/index.html
-      - ./webrtc-client/main.d4287178.css:/app/eva/build/static/css/main.d4287178.css
-      - ./webrtc-client/main.d4287178.css.map:/app/eva/build/static/css/main.d4287178.css.map
-      - ./webrtc-client/main.fb2b29be.js:/app/eva/build/static/js/main.fb2b29be.js
-      - ./webrtc-client/main.fb2b29be.js.map:/app/eva/build/static/js/main.fb2b29be.js.map
-    networks:
-      - app_network
-    deploy:
-      restart_policy:
-        condition: on-failure
-        max_attempts: 5
-    ports:
-      - "8082:8082"
-      - "8083:8083"
-
-  webrtc-signaling-server:
-    image: intel/simple-signaling-server:4.0.3
-    container_name: webrtc-signaling-server
-    read_only: true
-    environment:
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy}
-    ipc: "none"
-    networks:
-      - app_network
-    ports:
-      - "8443:8443"
 
   node-red:
     image: nodered/node-red
@@ -149,8 +124,7 @@ networks:
     driver: "bridge"
 
 volumes:
-  postgres_data: {}
-  vol_evam_pipeline_root:
+  vol_dlsps_pipeline_root:
     driver: local
     driver_opts:
       type: tmpfs

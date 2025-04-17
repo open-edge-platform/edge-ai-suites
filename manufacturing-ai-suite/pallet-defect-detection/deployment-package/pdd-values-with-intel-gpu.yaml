@@ -16,3 +16,7 @@ env:
 webrtcturnserver:
     username: # example: username: myuser
     password: # example: password: mypassword
+gpu:
+  enabled: true
+  type: "gpu.intel.com/i915"
+  count: 1

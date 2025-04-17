@@ -19,12 +19,18 @@ create_dir() {
 }
 
 ##############################################################################
-# 0. Check for python3.12-venv (only place we use sudo)
+# 0. Check for python3.12-venv and ffmpeg (only place we use sudo)
 ##############################################################################
 if ! dpkg -s python3.12-venv &>/dev/null; then
     echo "Package python3.12-venv not installed. Attempting to install..."
     sudo apt update
     sudo apt install -y python3.12-venv
+fi
+
+if ! dpkg -s ffmpeg &>/dev/null; then
+    echo "Package FFMpeg is not installed. Attempting to install..."
+    sudo apt update
+    sudo apt install -y ffmpeg
 fi
 
 ##############################################################################
@@ -102,7 +108,7 @@ if [ -n "$YOLO_MODEL" ]; then
         rm -rf "dlsps/models/public/${YOLO_MODEL}"
     fi
     create_dir "dlsps/models/public"
-    YOLO_DOWNLOAD_SCRIPT="https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/tags/v2025.0.1.2/samples/download_public_models.sh"
+    YOLO_DOWNLOAD_SCRIPT="https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/tags/v2025.0.1.3/samples/download_public_models.sh"
     curl -L -o "dlsps/models/download_public_models.sh" "${YOLO_DOWNLOAD_SCRIPT}" || \
         echo "Warning: Could not download ${YOLO_DOWNLOAD_SCRIPT}"
     chmod +x dlsps/models/download_public_models.sh
@@ -207,17 +213,18 @@ create_dir "$VIDEO_DIR"
 
 # Download and rename videos
 declare -A video_urls=(
-    ["new_video_1.mp4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_1.mp4"
-    ["new_video_2.mp4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_2.mp4"
-    ["new_video_3.mp4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_3.mp4"
-    ["new_video_4.mp4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_4.mp4"
+    ["new_video_1"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_1.mp4"
+    ["new_video_2"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_2.mp4"
+    ["new_video_3"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_3.mp4"
+    ["new_video_4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_4.mp4"
 )
 
 for video_name in "${!video_urls[@]}"; do
     echo "Downloading ${video_name}..."
-    curl -L "${video_urls[$video_name]}" -o "${VIDEO_DIR}/${video_name}"
-    if [ ! -f "${VIDEO_DIR}/${video_name}" ]; then
-        echo "Error: Failed to download ${video_name}"
+    curl -L "${video_urls[$video_name]}" -o "${VIDEO_DIR}/${video_name}_4k.mp4"
+    ffmpeg -y -i ${VIDEO_DIR}/${video_name}_4k.mp4 -vf "scale=1280:720" ${VIDEO_DIR}/${video_name}.mp4
+    if [ ! -f "${VIDEO_DIR}/${video_name}.mp4" ]; then
+        echo "Error: Failed to download or convert ${video_name}"
         exit 1
     fi
 done
@@ -226,6 +233,3 @@ echo "Videos setup completed."
 
 deactivate
 echo "=== All tasks completed successfully. ==="
-
-
-
