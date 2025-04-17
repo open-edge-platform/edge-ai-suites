@@ -110,10 +110,10 @@ services:
     ports:
       - "1883:1883"
     restart: on-failure:5
-  evam:
-    image: docker.io/intel/edge-video-analytics-microservice:2.4.0
-    hostname: evam
-    container_name: sibi-evam
+  dlstreamer-pipeline-server:
+    image: docker.io/intel/dlstreamer-pipeline-server:3.0.0
+    hostname: dlstreamer-pipeline-server
+    container_name: sibi-dlstreamer-pipeline-server
     read_only: true
     security_opt:
       - no-new-privileges
@@ -135,7 +135,7 @@ services:
       - DETECTION_DEVICE=CPU
       - CLASSIFICATION_DEVICE=CPU
       - ADD_UTCTIME_TO_METADATA=true
-      - LSFEATURE_NAME="EVAM"
+      - LSFEATURE_NAME="dlstreamer-pipeline-server"
       # - RUNTIME_LICENSE_CHECK_FREQ_SECS=${RUNTIME_LICENSE_CHECK_FREQ_SECS}
       # - APPLICATION_RESTART_FREQ_SECS=${APPLICATION_RESTART_FREQ_SECS}
       - HTTPS=false # Make it "true" to enable SSL/TLS secure mode, mount the generated certificates
@@ -149,17 +149,17 @@ services:
       - MQTT_HOST=sibi-broker
       - MQTT_PORT=1883
     volumes:
-      - "./src/evam/configs/filter-pipeline/config.json:/home/pipeline-server/config.json"
-      - "evam-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999"
+      - "./src/dlstreamer-pipeline-server/configs/filter-pipeline/config.json:/home/pipeline-server/config.json"
+      - "dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999"
       # - "../certificates:/MqttCerts:ro"
       # - "../Certificates/ssl_server/:/run/secrets/EdgeVideoAnalyticsMicroservice_Server:ro"
       # - "../Certificates/model_registry/:/run/secrets/ModelRegistry_Server:ro"
       - "/run/udev:/run/udev:ro"
       - "/dev:/dev"
-      - evam-tmp:/tmp
+      - dlstreamer-pipeline-server-tmp:/tmp
       # - "../mr_models:/home/pipeline-server/mr_models:rw"
-      - "./src/evam/models/person-vehicle-bike-detection-2004:/models/person-vehicle-bike-detection-2004"
-      - "./src/evam/models/resnet-50-pytorch:/models/resnet50"
+      - "./src/dlstreamer-pipeline-server/models/person-vehicle-bike-detection-2004:/models/person-vehicle-bike-detection-2004"
+      - "./src/dlstreamer-pipeline-server/models/resnet-50-pytorch:/models/resnet50"
     group_add:
       # render group ID for ubuntu 20.04 host OS
       - "109"
@@ -185,18 +185,18 @@ services:
     depends_on:
       - streaming-pipeline
       - feature-matching
-      - evam
+      - dlstreamer-pipeline-server
     restart: on-failure:5
 
 volumes:
   milvus-data:
   image-data:
-  evam-pipeline-root:
+  dlstreamer-pipeline-server-pipeline-root:
     driver: local
     driver_opts:
       type: tmpfs
       device: tmpfs
-  evam-tmp:
+  dlstreamer-pipeline-server-tmp:
     driver: local
     driver_opts:
       type: tmpfs

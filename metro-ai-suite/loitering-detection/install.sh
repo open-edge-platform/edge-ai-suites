@@ -116,13 +116,13 @@ if [ -n "$YOLO_MODEL" ]; then
         exit 1
     fi
 
-    if [ -d "evam/models/public/${YOLO_MODEL}" ]; then
-        rm -rf "evam/models/public/${YOLO_MODEL}"
+    if [ -d "dlsps/models/public/${YOLO_MODEL}" ]; then
+        rm -rf "dlsps/models/public/${YOLO_MODEL}"
     fi
-    create_dir "evam/models/public"
-    mv "$EXPORTED_DIR" "evam/models/public/${YOLO_MODEL}"
+    create_dir "dlsps/models/public"
+    mv "$EXPORTED_DIR" "dlsps/models/public/${YOLO_MODEL}"
 
-    XML_FILE="evam/models/public/${YOLO_MODEL}/${YOLO_MODEL}.xml"
+    XML_FILE="dlsps/models/public/${YOLO_MODEL}/${YOLO_MODEL}.xml"
     if [ -f "$XML_FILE" ]; then
         sed -i '11172s/YOLO/yolo_v10/' "$XML_FILE" || true
         echo "XML file updated for ${YOLO_MODEL} (if line 11172 existed)."
@@ -130,15 +130,15 @@ if [ -n "$YOLO_MODEL" ]; then
         echo "Warning: XML file not found for ${YOLO_MODEL}"
     fi
 
-    create_dir "evam/models/public/${YOLO_MODEL}/FP32"
+    create_dir "dlsps/models/public/${YOLO_MODEL}/FP32"
 
     if [ -f "${YOLO_MODEL}.pt" ]; then
-        mv "${YOLO_MODEL}.pt" "evam/models/public/${YOLO_MODEL}/FP32/"
+        mv "${YOLO_MODEL}.pt" "dlsps/models/public/${YOLO_MODEL}/FP32/"
     fi
 
-    mv "evam/models/public/${YOLO_MODEL}/${YOLO_MODEL}.xml" "evam/models/public/${YOLO_MODEL}/FP32/" 2>/dev/null || true
-    mv "evam/models/public/${YOLO_MODEL}/${YOLO_MODEL}.bin" "evam/models/public/${YOLO_MODEL}/FP32/" 2>/dev/null || true
-    mv "evam/models/public/${YOLO_MODEL}/"*.yaml "evam/models/public/${YOLO_MODEL}/FP32/" 2>/dev/null || true
+    mv "dlsps/models/public/${YOLO_MODEL}/${YOLO_MODEL}.xml" "dlsps/models/public/${YOLO_MODEL}/FP32/" 2>/dev/null || true
+    mv "dlsps/models/public/${YOLO_MODEL}/${YOLO_MODEL}.bin" "dlsps/models/public/${YOLO_MODEL}/FP32/" 2>/dev/null || true
+    mv "dlsps/models/public/${YOLO_MODEL}/"*.yaml "dlsps/models/public/${YOLO_MODEL}/FP32/" 2>/dev/null || true
 fi
 
 ##############################################################################
@@ -186,11 +186,11 @@ if [ ${#OMZ_MODELS[@]} -gt 0 ]; then
         rm -rf "$HOME/intel/models/public"
     fi
 
-    create_dir "evam/models/intel"
+    create_dir "dlsps/models/intel"
     if [ -d "$HOME/intel/models/intel" ]; then
         for item in "$HOME/intel/models/intel/"*; do
             base_item=$(basename "$item")
-            target="evam/models/intel/$base_item"
+            target="dlsps/models/intel/$base_item"
             if [ -e "$target" ]; then
                 echo "Removing existing $target to overwrite."
                 rm -rf "$target"
@@ -204,7 +204,7 @@ if [ ${#OMZ_MODELS[@]} -gt 0 ]; then
 
     for model in "${OMZ_MODELS[@]}"; do
         MODEL_PROC_URL="https://github.com/dlstreamer/dlstreamer/blob/master/samples/gstreamer/model_proc/intel/${model}.json?raw=true"
-        DEST_DIR="evam/models/intel/${model}"
+        DEST_DIR="dlsps/models/intel/${model}"
         create_dir "$DEST_DIR"
         echo "Downloading model proc for ${model}..."
         curl -L -o "${DEST_DIR}/${model}.json" "${MODEL_PROC_URL}" || \
@@ -221,7 +221,7 @@ echo "Fixing ownership for current directory..."
 chown -R "$CURRENT_USER:$CURRENT_GROUP" "." 2>/dev/null || true
 
 ##############################################################################
-# 7. Remove the dlstreamer and evam folders (if they exist), deactivate the venv, and finish
+# 7. Remove the dlstreamer and dlsps folders (if they exist), deactivate the venv, and finish
 ##############################################################################
 if [ -d "dlstreamer" ]; then
     echo "Removing dlstreamer folder..."
@@ -233,7 +233,7 @@ fi
 ##############################################################################
 echo "Setting up videos for Smart Parking..."
 # Create videos directory if it doesn't exist
-VIDEO_DIR="evam/videos"
+VIDEO_DIR="dlsps/videos"
 create_dir "$VIDEO_DIR"
 
 # Download and rename videos

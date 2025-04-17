@@ -27,7 +27,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/clear/, '/clear'), // Optional path rewrite
       },
       '/pipelines': {
-        target: 'http://sibi-evam:8080',
+        target: 'http://sibi-dlstreamer-pipeline-server:8080',
         changeOrigin: true
       }
     },

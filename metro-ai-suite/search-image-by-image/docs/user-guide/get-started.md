@@ -101,9 +101,9 @@ a pre-step to prepare models may be needed
       ```bash
         curl -L -o embedEtcd.yaml "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/milvus-db/embedEtcd.yaml"
         curl -L -o user.yaml "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/milvus-db/user.yaml"
-        curl -L -o config.json "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/evam/configs/filter-pipeline/config.json"
+        curl -L -o config.json "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/dlstreamer-pipeline-server/configs/filter-pipeline/config.json"
         curl -L -o mosquitto.conf "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/broker/mosquitto.conf"
-        curl -L -o ./models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/evam/models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json"
+        curl -L -o ./models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/search-image-by-image/src/dlstreamer-pipeline-server/models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json"
       ```
 
 4. **Start the Application**:
@@ -133,10 +133,11 @@ a pre-step to prepare models may be needed
 
     - **Expected Results**:
       - Matched search results, including metadata, timestamps, distance to show the confidence rate of the prediction, and frames that include detected objects (e.g., vehicles, pedestrians, bikes).
-    <div align="center">
-        <img src="./_images/imagesearch1.png" width="45%" style="margin-right:1rem"/>
-        <img src="./_images/imagesearch2.png" width="45%" />
-    </div>
+    
+   | ![image1](./_images/imagesearch1.png) | ![image2](./_images/imagesearch2.png) |
+    |--------------------------------|--------------------------------|
+
+
 <!--
 
 **Modify Basic Parameters**: Explain configurable options and their impacts.
@@ -200,7 +201,7 @@ a pre-step to prepare models may be needed
 
     - To use your own models instead of the default models, follow these steps:
 
-      - Open the `config.json` file located at `src/evam/configs/filter-pipeline/config.json`.
+      - Open the `config.json` file.
 
       - Change the paths in the `pipeline` section to point to your own models. Replace the paths for `gvadetect` and `gvaclassify` with the paths to your models:
         ```json

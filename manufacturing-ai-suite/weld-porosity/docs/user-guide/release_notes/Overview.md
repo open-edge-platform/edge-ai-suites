@@ -6,4 +6,5 @@
 :maxdepth: 5
 :hidden:
 march-2025.md
+april-2025.md
 ```

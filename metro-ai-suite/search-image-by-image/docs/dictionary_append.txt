@@ -9,3 +9,6 @@ scalable
 modularity
 Pinecone
 frontend
+kubeconfig
+onboarding
+Orchestrator

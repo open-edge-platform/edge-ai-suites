@@ -19,12 +19,18 @@ create_dir() {
 }
 
 ##############################################################################
-# 0. Check for python3.12-venv (only place we use sudo)
+# 0. Check for python3.12-venv and ffmpeg (only place we use sudo)
 ##############################################################################
 if ! dpkg -s python3.12-venv &>/dev/null; then
     echo "Package python3.12-venv not installed. Attempting to install..."
     sudo apt update
     sudo apt install -y python3.12-venv
+fi
+
+if ! dpkg -s ffmpeg &>/dev/null; then
+    echo "Package FFMpeg is not installed. Attempting to install..."
+    sudo apt update
+    sudo apt install -y ffmpeg
 fi
 
 ##############################################################################
@@ -98,16 +104,16 @@ echo "Found OMZ models: ${OMZ_MODELS[@]}"
 # 4. Process YOLO model (if any)
 ##############################################################################
 if [ -n "$YOLO_MODEL" ]; then
-    if [ -d "evam/models/public/${YOLO_MODEL}" ]; then
-        rm -rf "evam/models/public/${YOLO_MODEL}"
+    if [ -d "dlsps/models/public/${YOLO_MODEL}" ]; then
+        rm -rf "dlsps/models/public/${YOLO_MODEL}"
     fi
-    create_dir "evam/models/public"
+    create_dir "dlsps/models/public"
     YOLO_DOWNLOAD_SCRIPT="https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/tags/v2025.0.1.2/samples/download_public_models.sh"
-    curl -L -o "evam/models/download_public_models.sh" "${YOLO_DOWNLOAD_SCRIPT}" || \
+    curl -L -o "dlsps/models/download_public_models.sh" "${YOLO_DOWNLOAD_SCRIPT}" || \
         echo "Warning: Could not download ${YOLO_DOWNLOAD_SCRIPT}"
-    chmod +x evam/models/download_public_models.sh
-    MODELS_PATH=evam/models ./evam/models/download_public_models.sh "$YOLO_MODEL"
-    rm evam/models/download_public_models.sh
+    chmod +x dlsps/models/download_public_models.sh
+    MODELS_PATH=dlsps/models ./dlsps/models/download_public_models.sh "$YOLO_MODEL"
+    rm dlsps/models/download_public_models.sh
 fi
 
 ##############################################################################
@@ -155,11 +161,11 @@ if [ ${#OMZ_MODELS[@]} -gt 0 ]; then
         rm -rf "$HOME/intel/models/public"
     fi
 
-    create_dir "evam/models/intel"
+    create_dir "dlsps/models/intel"
     if [ -d "$HOME/intel/models/intel" ]; then
         for item in "$HOME/intel/models/intel/"*; do
             base_item=$(basename "$item")
-            target="evam/models/intel/$base_item"
+            target="dlsps/models/intel/$base_item"
             if [ -e "$target" ]; then
                 echo "Removing existing $target to overwrite."
                 rm -rf "$target"
@@ -173,7 +179,7 @@ if [ ${#OMZ_MODELS[@]} -gt 0 ]; then
 
     for model in "${OMZ_MODELS[@]}"; do
         MODEL_PROC_URL="https://github.com/dlstreamer/dlstreamer/blob/master/samples/gstreamer/model_proc/intel/${model}.json?raw=true"
-        DEST_DIR="evam/models/intel/${model}"
+        DEST_DIR="dlsps/models/intel/${model}"
         create_dir "$DEST_DIR"
         echo "Downloading model proc for ${model}..."
         curl -L -o "${DEST_DIR}/${model}.json" "${MODEL_PROC_URL}" || \
@@ -190,7 +196,7 @@ echo "Fixing ownership for current directory..."
 chown -R "$CURRENT_USER:$CURRENT_GROUP" "." 2>/dev/null || true
 
 ##############################################################################
-# 7. Remove the dlstreamer and evam folders (if they exist), deactivate the venv, and finish
+# 7. Remove the dlstreamer and dlsps folders (if they exist), deactivate the venv, and finish
 ##############################################################################
 if [ -d "dlstreamer" ]; then
     echo "Removing dlstreamer folder..."
@@ -202,22 +208,23 @@ fi
 ##############################################################################
 echo "Setting up videos for Smart Parking..."
 # Create videos directory if it doesn't exist
-VIDEO_DIR="evam/videos"
+VIDEO_DIR="dlsps/videos"
 create_dir "$VIDEO_DIR"
 
 # Download and rename videos
 declare -A video_urls=(
-    ["new_video_1.mp4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_1.mp4"
-    ["new_video_2.mp4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_2.mp4"
-    ["new_video_3.mp4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_3.mp4"
-    ["new_video_4.mp4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_4.mp4"
+    ["new_video_1"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_1.mp4"
+    ["new_video_2"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_2.mp4"
+    ["new_video_3"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_3.mp4"
+    ["new_video_4"]="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_4.mp4"
 )
 
 for video_name in "${!video_urls[@]}"; do
     echo "Downloading ${video_name}..."
-    curl -L "${video_urls[$video_name]}" -o "${VIDEO_DIR}/${video_name}"
-    if [ ! -f "${VIDEO_DIR}/${video_name}" ]; then
-        echo "Error: Failed to download ${video_name}"
+    curl -L "${video_urls[$video_name]}" -o "${VIDEO_DIR}/${video_name}_4k.mp4"
+    ffmpeg -y -i ${VIDEO_DIR}/${video_name}_4k.mp4 -vf "scale=1280:720" ${VIDEO_DIR}/${video_name}.mp4
+    if [ ! -f "${VIDEO_DIR}/${video_name}.mp4" ]; then
+        echo "Error: Failed to download or convert ${video_name}"
         exit 1
     fi
 done
@@ -226,6 +233,3 @@ echo "Videos setup completed."
 
 deactivate
 echo "=== All tasks completed successfully. ==="
-
-
-

@@ -11,10 +11,10 @@ Start the MQTT broker [eclipse mosquitto](https://mosquitto.org/) using configur
 
 With the above configuration, the broker listens on port 1883.
 
-- `MQTT_HOST` and `MQTT_PORT` environment variable must be set for EVAM prior to sending this curl request.
-    You can add them to the `environments` for EVAM  section in `docker-compose.yml`.
+- `MQTT_HOST` and `MQTT_PORT` environment variable must be set for DL Streamer Pipeline Server prior to sending this curl request.
+    You can add them to the `environments` for DL Streamer Pipeline Server section in `docker-compose.yml`.
     ```yaml
-    edge-video-analytics-microservice:
+    dlstreamer-pipeline-server:
       environment:
         MQTT_HOST: <HOST_IP>
         MQTT_PORT: 1883

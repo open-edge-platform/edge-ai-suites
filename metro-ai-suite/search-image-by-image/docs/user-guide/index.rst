@@ -20,6 +20,7 @@ This guide is designed to help developers understand the architecture, setup, an
 
    how-to-build-source
    how-to-deploy-helm
+   how-to-deploy-edge-orchestrator
 
 .. toctree::
    :caption: Source Code

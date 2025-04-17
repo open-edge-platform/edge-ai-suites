@@ -8,17 +8,23 @@ $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 name: "pdd"
 displayName: "pdd"
 description: "Pallet Defect Detection Sample Application"
-version: "2.2.0"
+version: "2.3.0"
 
 applications:
   - name: pdd-app
-    version: 2.2.0
+    version: 2.3.0
 
 defaultNamespaces:
   pdd-app: pdd
 
 deploymentProfiles:
   - name: "default"
+    description: "Uses CPU for inferencing"
     applicationProfiles:
       - application: "pdd-app"
         profile: "default"
+  - name: "with-intel-gpu"
+    description: "Uses Intel GPU for inferencing, needs Intel GPU extension"
+    applicationProfiles:
+      - application: "pdd-app"
+        profile: "with-intel-gpu"

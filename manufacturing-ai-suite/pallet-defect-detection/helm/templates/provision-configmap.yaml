@@ -4,10 +4,12 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   namespace: {{ .Values.namespace }}
-  name: evam-config-input
+  name: dlstreamer-pipeline-server-config-input
 data:
   config.json: |-
-{{ .Files.Get "evam_config.json" | indent 4 }}
+    {{- $json := .Files.Get "config.json" }}
+    {{- $modifiedJson := $json | replace "<HOST_IP_where_MRaaS_is_running>" .Values.env.HOST_IP }}
+    {{- $modifiedJson | nindent 4 }}
 ---
 apiVersion: v1
 kind: ConfigMap

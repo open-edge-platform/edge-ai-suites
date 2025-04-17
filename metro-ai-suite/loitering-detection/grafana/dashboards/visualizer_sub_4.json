@@ -44,7 +44,7 @@
         ],
         "videoHeight": 1080,
         "videoWidth": 1920,
-        "webrtcUrl": "http://0.0.0.0:8082/?destination_peer_id=object_tracking_4"
+        "webrtcUrl": "http://0.0.0.0:8889/object_tracking_4"
       },
       "pluginVersion": "1.0.0",
       "targets": [

@@ -1,11 +1,11 @@
 services:
-  edge-video-analytics-microservice:
+  dlstreamer-pipeline-server:
     depends_on:
       model_registry:
         condition: service_healthy
-    image: ${DOCKER_REGISTRY}intel/edge-video-analytics-microservice:2.4.0
-    container_name: edge-video-analytics-microservice
-    hostname: edge-video-analytics-microservice
+    image: ${DOCKER_REGISTRY}intel/dlstreamer-pipeline-server:3.0.0
+    container_name: dlstreamer-pipeline-server
+    hostname: dlstreamer-pipeline-server
     networks:
     - mraas
     restart: unless-stopped
@@ -15,14 +15,11 @@ services:
     - '8080:8080'
     - '8554:8554'
     environment:
-      AppName: "EdgeVideoAnalyticsMicroservice"
+      AppName: "DLStreamerPipelineServer"
       ENABLE_WEBRTC: true
       WEBRTC_SIGNALING_SERVER: http://${HOST_IP}:${WHIP_SERVER_PORT}
       ENABLE_RTSP: false
-      no_proxy: ${ETCD_HOST},${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector
-      ETCD_HOST: ${ETCD_HOST}
-      ETCD_CLIENT_PORT: ${ETCD_CLIENT_PORT}
-      ETCD_PREFIX: ${ETCD_PREFIX}
+      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector
       READ_CONFIG_FROM_FILE_ENV: ${READ_CONFIG_FROM_FILE_ENV}
       RUN_MODE: "EVA"
       GST_DEBUG: "1"
@@ -32,16 +29,16 @@ services:
       S3_STORAGE_PORT: ${MR_MINIO_SERVER_PORT}
       S3_STORAGE_USER: ${MR_MINIO_ACCESS_KEY}
       S3_STORAGE_PASS: ${MR_MINIO_SECRET_KEY}
-      SERVICE_NAME: "evam"
+      SERVICE_NAME: "dlstreamer-pipeline-server"
       ENABLE_OPEN_TELEMETRY: true
       OTEL_COLLECTOR_HOST: ${OTEL_COLLECTOR_HOST}
       OTEL_COLLECTOR_PORT: ${OTEL_COLLECTOR_PORT}
       OTEL_EXPORT_INTERVAL_MILLIS: ${OTEL_EXPORT_INTERVAL_MILLIS}
     volumes:
-    - vol_evam_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
+    - vol_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
     - /var/tmp:/var/tmp
     - ./resources/:/home/pipeline-server/resources/
-    - ./configs/evam_config.json:/home/pipeline-server/config.json
+    - ./configs/config.json:/home/pipeline-server/config.json
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
       # USB camera devices
@@ -52,7 +49,7 @@ services:
     - "/run/udev:/run/udev:ro"
       # Volume mount the directory in host system where the images are stored onto the container directory system.
       # - <absolute or relative path to the images directory>:/app/img_dir
-      #- ../EdgeVideoAnalyticsMicroservice/udfs:/home/pipeline-server/udfs/
+      #- ../DLStreamerPipelineServer/udfs:/home/pipeline-server/udfs/
     group_add:
       # render group ID for ubuntu 20.04 host OS
     - "109"
@@ -208,7 +205,7 @@ services:
     environment:
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
-      NO_PROXY: $no_proxy,prometheus,edge-video-analytics-microservice,localhost,127.0.0.1
+      NO_PROXY: $no_proxy,prometheus,dlstreamer-pipeline-server,localhost,127.0.0.1
     ports:
       - "4317:4317"  # OTLP gRPC receiver (default for metrics)
       - "4318:4318"  # Prometheus scrape target
@@ -223,12 +220,7 @@ networks:
     driver: bridge
 
 volumes:
-  vol_evam_pipeline_root:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-  vol_etcd_keeper:
+  vol_pipeline_root:
     driver: local
     driver_opts:
       type: tmpfs

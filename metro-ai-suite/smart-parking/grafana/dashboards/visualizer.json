@@ -74,7 +74,7 @@
       "templateResponse": true,
       "title": "Zone 1",
       "type": "ryantxu-ajax-panel",
-      "url": "http://0.0.0.0:8082/?destination_peer_id=object_detection_1",
+      "url": "http://0.0.0.0:8889/object_detection_1",
       "withCredentials": false
     },
     {
@@ -125,7 +125,7 @@
       "templateResponse": true,
       "title": "Zone 2",
       "type": "ryantxu-ajax-panel",
-      "url": "http://0.0.0.0:8082/?destination_peer_id=object_detection_2",
+      "url": "http://0.0.0.0:8889/object_detection_2",
       "withCredentials": false
     },
     {
@@ -176,7 +176,7 @@
       "templateResponse": true,
       "title": "Zone 3",
       "type": "ryantxu-ajax-panel",
-      "url": "http://0.0.0.0:8082/?destination_peer_id=object_detection_3",
+      "url": "http://0.0.0.0:8889/object_detection_3",
       "withCredentials": false
     },
     {
@@ -227,7 +227,7 @@
       "templateResponse": true,
       "title": "Zone 4",
       "type": "ryantxu-ajax-panel",
-      "url": "http://0.0.0.0:8082/?destination_peer_id=object_detection_4",
+      "url": "http://0.0.0.0:8889/object_detection_4",
       "withCredentials": false
     },
     {

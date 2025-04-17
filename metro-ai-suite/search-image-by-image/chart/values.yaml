@@ -45,17 +45,17 @@ broker:
   # key: broker.serviceAccount
   serviceAccount: ""
 
-# evam configuration
-evam:
-  # key: evam.repository
+# dlstreamer pipeline server configuration
+dlstreamerpipelineserver:
+  # key: dlstreamerpipelineserver.repository
   repository:
-    # key: evam.repository.image
-    image: docker.io/intel/edge-video-analytics-microservice
-    # key: evam.repository.tag
-    tag: 2.4.0
-  # key: evam.replicas
+    # key: dlstreamerpipelineserver.repository.image
+    image: docker.io/intel/dlstreamer-pipeline-server
+    # key: dlstreamerpipelineserver.repository.tag
+    tag: 3.0.0
+  # key: dlstreamerpipelineserver.replicas
   replicas: 1
-  # key: evam.nodeSelector
+  # key: dlstreamerpipelineserver.nodeSelector
   nodeSelector: {}
   # Resources allows you to specify the resource requests and limits for a service.
   # Resources are used to specify the amount of CPU and memory that 
@@ -69,16 +69,16 @@ evam:
   #   limits:
   #     memory: "128Mi"
   #     cpu: "500m"
-  # key: evam.resources
+  # key: dlstreamerpipelineserver.resources
   resources: {}
   # imagePullPolicy allows you to specify a policy to cache or always pull an image.
   # You must provide a string value with one of the following values:
   # - Always       -> will always pull the image
   # - Never        -> will never pull the image, the image should be present on the node
   # - IfNotPresent -> will pull the image only if it is not present on the node
-  # key: evam.imagePullPolicy
+  # key: evdlstreamerpipelineserveram.imagePullPolicy
   imagePullPolicy: IfNotPresent
-  # key: evam.serviceAccount
+  # key: dlstreamerpipelineserver.serviceAccount
   serviceAccount: ""
 
 # mediamtx configuration

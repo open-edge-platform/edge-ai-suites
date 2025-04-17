@@ -46,7 +46,7 @@ Before you begin, ensure the following:
 3. **Download Models**:
    - For Linux:
      ```sh
-     MODELS_PATH="$(pwd)/src/evam/models"
+     MODELS_PATH="$(pwd)/src/dlstreamer-pipeline-server/models"
 
      docker run --rm \
          -v $MODELS_PATH:/output \
@@ -65,7 +65,7 @@ Before you begin, ensure the following:
 
    - For Windows:
      ```ps1
-     $MODELS_PATH="$PWD\src\evam\models"
+     $MODELS_PATH="$PWD\src\dlstreamer-pipeline-server\models"
 
      docker run --rm `
          -v ${MODELS_PATH}:/output `
