@@ -2,6 +2,7 @@
 FastAPI server for search
 """
 
+import asyncio
 import base64
 import io
 import json
@@ -161,12 +162,14 @@ processor = Base64ImageProcessor(size=(224, 224))
 async def search(
     images: Annotated[list[UploadFile], File(description="Upload an image")]
 ):
+    endpoint = "sibi-dlstreamer-pipeline-server"
+
     # Step 0: Check if a search_image pipeline is already running
     pipeline_id = None
     try:
         async with httpx.AsyncClient() as client:
             # Fetch pipelines status
-            response = await client.get("http://sibi-dlstreamer-pipeline-server:8080/pipelines/status")
+            response = await client.get(f"http://{endpoint}:8080/pipelines/status")
             response.raise_for_status()
             pipelines = response.json()
             
@@ -177,7 +180,7 @@ async def search(
                 if pipeline["state"] != "RUNNING":
                     continue
 
-                _pipeline_response = await client.get(f"http://sibi-dlstreamer-pipeline-server:8080/pipelines/{pipeline['id']}")
+                _pipeline_response = await client.get(f"http://{endpoint}:8080/pipelines/{pipeline['id']}")
                 _pipeline_response.raise_for_status()
                 _pipeline_response_json = _pipeline_response.json()
 
@@ -188,11 +191,11 @@ async def search(
 
     except httpx.RequestError as e:
         # Ignore the error and continue
-        logging.error(f"An error occurred while making the status request: {str(e)}")
+        logging.error(f"An error occurred while making the status request: {str(e)}", exc_info=True)
 
     # Step 1: When the search_image pipeline is not running, start the pipeline with sync mode as true
     if not pipeline_id:
-        pipeline_endpoint = "http://sibi-dlstreamer-pipeline-server:8080/pipelines/user_defined_pipelines/search_image"
+        pipeline_endpoint = f"http://{endpoint}:8080/pipelines/user_defined_pipelines/search_image"
         body = {"sync": True}
 
         try:
@@ -200,11 +203,17 @@ async def search(
                 response = await client.post(pipeline_endpoint, json=body)
                 response.raise_for_status()  # Raise HTTP error for non-2xx responses
 
+                # Use `.strip()` to remove any extra whitespace
                 pipeline_id = (
                     response.text.strip()
-                )  # Use `.strip()` to remove any extra whitespace
+                )
+
+                # Ensure pipeline_id has no extra quotes
+                # Remove surrounding quotes, if any
+                pipeline_id = pipeline_id.strip('"').strip()
 
         except httpx.RequestError as e:
+            logging.error(f"An error occurred while making the pipeline request: {str(e)}", exc_info=True)
             return {
                 "error": f"An error occurred while making the pipeline request: {str(e)}"
             }
@@ -228,10 +237,8 @@ async def search(
     base64_image = results[0]["base64_image"]  # Access the value of "base64_image"
 
     # Step 3: Send data to the second pipeline
-    # Ensure pipeline_id has no extra quotes
-    pipeline_id = pipeline_id.strip('"').strip()  # Remove surrounding quotes, if any
     second_pipeline_endpoint = (
-        f"http://sibi-dlstreamer-pipeline-server:8080/pipelines/user_defined_pipelines/search_image/{pipeline_id}"
+        f"http://{endpoint}:8080/pipelines/user_defined_pipelines/search_image/{pipeline_id}"
     )
 
     second_pipeline_body = {
@@ -242,10 +249,23 @@ async def search(
 
     try:
         async with httpx.AsyncClient() as client:
-            second_response = await client.post(
-                second_pipeline_endpoint, json=second_pipeline_body
-            )
-            second_response.raise_for_status()  # Raise HTTP error for non-2xx responses
+            retries = 3
+            wait_time = 2  # seconds
+
+            for attempt in range(retries):
+                try:
+                    second_response = await client.post(
+                        second_pipeline_endpoint, json=second_pipeline_body
+                    )
+                    second_response.raise_for_status()  # Raise HTTP error for non-2xx responses
+                    break  # Exit the loop if the request is successful
+                except httpx.RequestError as e:
+                    if attempt < retries - 1:
+                        logging.warning(f"Retrying... Attempt {attempt + 1} of {retries}")
+                        await asyncio.sleep(wait_time)  # Wait before retrying
+                    else:
+                        # Propagate the exception after the retries are exhausted
+                        raise e
 
             second_pipeline_result = second_response.json()  # Parse the response
             second_pipeline_result_parsed = json.loads(second_pipeline_result)
@@ -266,6 +286,7 @@ async def search(
             print("Extracted Tensor Data:", tensor_data_list[0])
 
     except httpx.RequestError as e:
+        logging.error(f"An error occurred while making the second pipeline request: {str(e)}", exc_info=True)
         return {
             "error": f"An error occurred while making the second pipeline request: {str(e)}"
         }

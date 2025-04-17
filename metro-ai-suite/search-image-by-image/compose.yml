@@ -57,6 +57,8 @@ services:
         condition: service_healthy
       broker:
         condition: service_started
+      dlstreamer-pipeline-server:
+        condition: service_healthy
     volumes:
       - image-data:/user/src/app/static
     restart: on-failure:5
@@ -112,7 +114,6 @@ services:
     restart: on-failure:5
   dlstreamer-pipeline-server:
     image: docker.io/intel/dlstreamer-pipeline-server:3.0.0
-    hostname: dlstreamer-pipeline-server
     container_name: sibi-dlstreamer-pipeline-server
     read_only: true
     security_opt:
@@ -174,6 +175,12 @@ services:
     depends_on:
       - broker
     restart: on-failure:5
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/pipelines/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
   app:
     image: docker.io/intel/search-image-by-image:v1.0.0
     container_name: sibi-app
