@@ -19,14 +19,12 @@ defaultNamespaces:
 
 deploymentProfiles:
   - name: "default"
+    description: "Uses CPU for inferencing"
     applicationProfiles:
       - application: "wpd-app"
         profile: "default"
-  - name: "with-intel-gpu-extension"
+  - name: "with-intel-gpu"
+    description: "Uses Intel GPU for inferencing, needs Intel GPU extension"
     applicationProfiles:
       - application: "wpd-app"
-        profile: "with-intel-gpu-extension"
-  - name: "without-intel-gpu-extension"
-    applicationProfiles:
-      - application: "wpd-app"
-        profile: "without-intel-gpu-extension"
+        profile: "with-intel-gpu"
