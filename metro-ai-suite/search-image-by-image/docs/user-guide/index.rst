@@ -1,5 +1,5 @@
-Search Image by Image Sample Application
-========================================
+Image-Based Video Search Sample Application
+===========================================
 
 Performs near real-time analysis and image-based search to detect and retrieve objects of interest in large video datasets.
 
@@ -25,8 +25,7 @@ This guide is designed to help developers understand the architecture, setup, an
 .. toctree::
    :caption: Source Code
 
-   GitHub <https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/search-image-by 
-    -image>
+   GitHub <https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/search-image-by-image>
 
 .. toctree::
    :caption: Support and Community

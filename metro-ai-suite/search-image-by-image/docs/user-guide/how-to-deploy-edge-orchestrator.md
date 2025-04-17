@@ -10,7 +10,7 @@ Edge Orchestrator, part of Intel’s Edge Software, simplifies edge application 
 * **Deep Telemetry**: Gives you policy-based life cycle management and centralized visibility into your distributed edge infrastructure and deployments.
 
 * **Flexible Configuration**: From organizing your physical infrastructure to managing the permutations of executing applications in a variety of runtime environments, Edge Orchestrator gives you flexibility to define the policies, criteria, and hierarchies that make the most sense for your specific business needs.
-To deploy the **Search Image by Image** application with Edge Orchestrator follow the steps described in the document
+To deploy the **Image-Based Video Search** application with Edge Orchestrator follow the steps described in the document
 
 ## Procedure to Deploy with Edge Orchestrator
 
@@ -21,7 +21,7 @@ To deploy the **Search Image by Image** application with Edge Orchestrator follo
 
 ### Making available Deployment Package
 
-1. Clone the **Search Image by Image**
+1. Clone the **Image-Based Video Search**
 
     ``` bash
     git clone https://github.com/open-edge-platform/edge-ai-suites -b <version>
@@ -32,7 +32,7 @@ To deploy the **Search Image by Image** application with Edge Orchestrator follo
 
 3. Once the deployment package has been imported into Edge Orchestrator, you can see it in the list of Web UI as shown here.
 
-**![SIBI Image](./_images/sibi-dp.png)**
+**![Image](./_images/deployment.png)**
 
 See [Deployment Packages](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/deploy_packages.html#view-deployment-packages>) for more information on deployment packages.
 
@@ -64,7 +64,7 @@ After a few minutes, the deployment will start and will take about 5 minutes to 
 
 In the Edge Orchestrator Web UI, you can track the application installation through the [View Deployment Details](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/deployment_details.html#view-deployment-details>) view.
 
-**Search Image by Image** Sample Application is fully deployed when the applications become green and the status is shown as _Running_.
+**Image-Based Video Search** Sample Application is fully deployed when the applications become green and the status is shown as _Running_.
 
 You can view the deployment status on the Deployments page.
 
@@ -72,10 +72,10 @@ You can view the deployment status on the Deployments page.
 
 For more information on setting up a deployment, See [Set up a Deployment](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/setup_deploy.html#set-up-a-deployment>)
 
-### Access the **Search Image by Image** Sample Application
+### Access the **Image-Based Video Search** Sample Application
 
 1. Download the kubeconfig of the cluster of the Edge Node on which the Application has been deployed. Refer [Kubeconfig Download](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/accessing_clusters.html#organize-cluster-access-with-a-kubeconfig-file>)
 
-2. Follow the steps described in the **Search Image by Image** [Documentation](<how-to-deploy-helm.md>) on usage of the application.
+2. Follow the steps described in the **Image-Based Video Search** [Documentation](<how-to-deploy-helm.md>) on usage of the application.
 
 > Note: Skip the Deploy helm chart step
