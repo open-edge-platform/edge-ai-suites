@@ -1,5 +1,5 @@
 Image-Based Video Search Sample Application
-========================================
+===========================================
 
 Performs near real-time analysis and image-based search to detect and retrieve objects of interest in large video datasets.
 
