@@ -26,8 +26,8 @@ By following this guide, you will learn how to:
 1. **Download the Compose File**:
     - Create and navigate to directory:
       ```bash
-        mkdir search-image-by-image
-        cd search-image-by-image
+        mkdir image-based-video-search
+        cd image-based-video-search
       ```
     - Download the Docker Compose file:
       ```bash
