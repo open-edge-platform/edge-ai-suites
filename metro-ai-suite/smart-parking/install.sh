@@ -108,7 +108,7 @@ if [ -n "$YOLO_MODEL" ]; then
         rm -rf "dlsps/models/public/${YOLO_MODEL}"
     fi
     create_dir "dlsps/models/public"
-    YOLO_DOWNLOAD_SCRIPT="https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/tags/v2025.0.1.2/samples/download_public_models.sh"
+    YOLO_DOWNLOAD_SCRIPT="https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/tags/v2025.0.1.3/samples/download_public_models.sh"
     curl -L -o "dlsps/models/download_public_models.sh" "${YOLO_DOWNLOAD_SCRIPT}" || \
         echo "Warning: Could not download ${YOLO_DOWNLOAD_SCRIPT}"
     chmod +x dlsps/models/download_public_models.sh
