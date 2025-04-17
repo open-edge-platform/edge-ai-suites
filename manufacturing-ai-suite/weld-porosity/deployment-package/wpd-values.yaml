@@ -9,11 +9,32 @@ env:
   MINIO_ACCESS_KEY: # example: MINIO_ACCESS_KEY: intel1234
   MINIO_SECRET_KEY: # example: MINIO_SECRET_KEY: intel1234
   POSTGRES_PASSWORD: # example: POSTGRES_PASSWORD: intel1234
+  S3_STORAGE_PORT: 31800 # 30800
 webrtcturnserver:
     username: # example: username: myuser
     password: # example: password: mypassword
 config:
+  prometheus:
+    ext:
+      prometheus_port: "31909" # 30909
+  otel_collector:
+    ext:
+      otlp_grpc_port: "31417" # 30417
+      otlp_http_port: "31418" # 30418
+      otlp_prometheus_endpoint_port: "31464" # 30464
+  mediamtx:
+    ext:
+      mediamtx_port: "32111" # 31111
+      mediamtx_sdp_port: "32112" # 31112
+      mediamtx_api_port: "32222" # 31222
   coturn:
     ext:
-      coturn_tcp_port: "31478"
-      coturn_udp_port: "31478"
+      coturn_tcp_port: "32478" # 30478
+      coturn_udp_port: "32478" # 30478
+  dlstreamer_pipeline_server:
+    ext:
+      rest_api_port: "31107" # 30107
+      rtsp_output_port: "31125" # 30125
+  model_registry:
+    ext:
+      port: "32102" # 32002
