@@ -34,8 +34,13 @@ By following this guide, you will learn how to:
       ```bash
       docker compose up -d
        ```
-      <details><summary>Check Status of Microservices</summary>
+      <details>
+      <summary>
+      Check Status of Microservices
+      </summary>
+      
       - The application starts the following microservices, see also [How it Works](user-guide/Overview.md#how-it-works)
+
       ![Architecture Diagram](_images/arch.png)
     
       - To check if all microservices are in Running state:
@@ -49,15 +54,20 @@ By following this guide, you will learn how to:
         ```bash
         ./sample_start.sh
         ```
-      <details><summary>Check Status and Stop pipelines</summary>
+      <details>
+      <summary>
+      Check Status and Stop pipelines
+      </summary>
+      
       - To check the status:
-           ```bash
-          ./sample_status.sh
-          ```
-      - [Optionally] To stop the pipelines without waiting for video streams to finish replay:
-           ```bash
-          ./sample_stop.sh
-          ```
+        ```bash
+        ./sample_status.sh
+        ```
+      
+      - To stop the pipelines without waiting for video streams to finish replay:
+        ```bash
+        ./sample_stop.sh
+        ```
       </details>
 
 3. **View the Application Output**:
