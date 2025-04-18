@@ -10,92 +10,72 @@ By following this guide, you will learn how to:
 ## Prerequisites
 - Verify that your system meets the [minimum requirements](./system-requirements.md).
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
-- Install Python pip and venv packages
-```bash
-  sudo apt update && sudo apt install -y python3-pip python3-venv
-```
 
 ## Set up and First Use
 
-1. **Download the Compose File**:
+1. **Download the Application**:
     - Download the Docker Compose file and configuration:
       ```bash
-        git clone https://github.com/open-edge-platform/edge-ai-suites.git
-      ```
-
-2. **Navigate to the Directory**:
-    - Go to the directory where you saved the Compose file:
-      ```bash
+      git clone https://github.com/open-edge-platform/edge-ai-suites.git
       cd edge-ai-suites/metro-ai-suite/loitering-detection/
       ```
 
-3. **Update the IP Address**:
-      
-      - Open the `.env` file:
-        ```bash
-        nano .env
-        ```
-      - Modify the HOST_IP variable in the .env file to your actual host IP address.
-        ```bash
-        HOST_IP=10.10.10.10
-        ```
-      - Save and close the file.
+2. **Configure the Application and Download Assets**
+   - Configure application to use the primary IP address.
+   - Download the 'pedestrian-and-vehicle-detector-adas' AI model from OpenVINO Model Zoo.
+   - Download input video files.
+     ```bash
+     ./install.sh
+     ```
+## Run the Application
 
-4. **Update Dashboard with your Host IP Address and Use Case**
-    ```bash
-        ./update_dashboard.sh
-    ```
-
-5. **Download the Model and Video files**
-    ```bash
-        ./install.sh
-    ```
-
-6. **Start the Application**:
-    - Run the application using Docker Compose:
+1. **Start the Application**:
+    - Download container images with Application microservices and run with Docker Compose:
       ```bash
       docker compose up -d
-      ```
+       ```
+      <details><summary>Check Status of Microservices</summary>
+      - The application starts the following microservices, see also [How it Works](user-guide/Overview.md#how-it-works)
+      ![Architecture Diagram](_images/arch.png)
+    
+      - To check if all microservices are in Running state:
+        ```bash
+        docker ps
+        ```
+      </details>
 
-7. **Verify the Application**:
-    - Check all containers are in Running state:
-      ```bash
-      docker ps
-      ```
+2. **Run Predefined Loitering Detection Pipelines**:
+    - Start video streams to run Loitering Detection pipelines:
+        ```bash
+        ./sample_start.sh
+        ```
+      <details><summary>Check Status and Stop pipelines</summary>
+      - To check the status:
+           ```bash
+          ./sample_status.sh
+          ```
+      - [Optionally] To stop the pipelines without waiting for video streams to finish replay:
+           ```bash
+          ./sample_stop.sh
+          ```
+      </details>
 
-8. **Access the Application**:
+3. **View the Application Output**:
     - Open a browser and go to `http://localhost:3000` to access the Grafana dashboard.
         - Change the localhost to your host IP if you are accessing it remotely.
     - Log in with the following credentials:
         - **Username:** `admin`
         - **Password:** `admin`
     - Check under the Dashboards section for the default dashboard named "Video Analytics Dashboard".
-    
-9. **Run a Predefined Pipeline**:
-    - Run the following command to start the pipelines:
-        ```bash
-        ./sample_start.sh
-        ```
-    - [Optionally] To check the status:
-         ```bash
-        ./sample_status.sh
-        ```
-    - [Optionally] To stop the pipelines without waiting for the sample application to finish:
-        ```bash
-        ./sample_stop.sh
-        ```
 
-    - **Expected Results**:
-    - The dashboard displays detected people and cars.
+    - **Expected Results**: The dashboard displays detected people and cars.
     - ![Dashboard Example](_images/grafana.png)
 
-## Stop the Containers
-
-1.  To stop the application, use the following commands:
-
-    ```bash
-    docker compose down -v
-    ```
+4. **Stop the Application**:
+    - To stop the application microservices, use the following command:
+      ```bash
+      docker compose down -v
+      ```
 
 ## Next Steps
 - [How to Customize the Application](how-to-customize-application.md)
