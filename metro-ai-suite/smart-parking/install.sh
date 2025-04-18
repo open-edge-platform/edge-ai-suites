@@ -34,18 +34,26 @@ if ! dpkg -s ffmpeg &>/dev/null; then
 fi
 
 ##############################################################################
-# 1. Source the .env file to get CASE (or other environment variables).
-#    Make sure .env contains a line like: Case="Smart_Tolling"
+# 1. Configure application to use the primary IP address
 ##############################################################################
+if [ -z "$1" ]; then
+    HOST_IP=$(hostname -I | cut -f 1 -d " ")
+    echo "No HOST_IP provided. Using detected IP: $HOST_IP"
+else
+    HOST_IP="$1"
+    echo "Using provided HOST_IP: $HOST_IP"
+fi
+
+echo "Configuring application to use $HOST_IP"
+echo "HOST_IP=$HOST_IP" > .env 
+
 if [ ! -f ".env" ]; then
     echo "Error: .env file not found in current directory!"
     exit 1
 fi
 # shellcheck disable=SC1091
 source .env
-
-# Remove Case check since we don't need it anymore
-# Remove the Case echo line
+source ./update_dashboard.sh
 
 ##############################################################################
 # 2. Create/Activate a Python virtual environment to avoid pip system issues

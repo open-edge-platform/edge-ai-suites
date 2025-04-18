@@ -30,7 +30,14 @@ fi
 ##############################################################################
 # 1. Configure application to use the primary IP address
 ##############################################################################
-HOST_IP=$(hostname -I | cut -f 1 -d " ")
+if [ -z "$1" ]; then
+    HOST_IP=$(hostname -I | cut -f 1 -d " ")
+    echo "No HOST_IP provided. Using detected IP: $HOST_IP"
+else
+    HOST_IP="$1"
+    echo "Using provided HOST_IP: $HOST_IP"
+fi
+
 echo "Configuring application to use $HOST_IP"
 echo "HOST_IP=$HOST_IP" > .env 
 

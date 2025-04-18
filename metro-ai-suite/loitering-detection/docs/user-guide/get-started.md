@@ -22,11 +22,26 @@ By following this guide, you will learn how to:
 
 2. **Configure the Application and Download Assets**
    - Configure application to use the primary IP address.
-   - Download the 'pedestrian-and-vehicle-detector-adas' AI model from OpenVINO Model Zoo.
-   - Download input video files.
+   - Download the Models and Video files
+
      ```bash
      ./install.sh
      ```
+
+    The `install.sh` script downloads the following assets:
+
+    **Models**
+    - **pedestrian-and-vehicle-detector-adas-0001**: This model is obtained from the Open Model Zoo.
+    
+    **Videos**
+
+    | **Video Name**       | **Download URL**         |
+    |-----------------------|--------------------------|
+    | VIRAT_S_000101.mp4    | [VIRAT_S_000101.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000101.mp4) |
+    | VIRAT_S_000102.mp4    | [VIRAT_S_000102.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000102.mp4) |
+    | VIRAT_S_000103.mp4    | [VIRAT_S_000103.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000103.mp4) |
+    | VIRAT_S_000104.mp4    | [VIRAT_S_000104.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000104.mp4) |
+
 ## Run the Application
 
 1. **Start the Application**:
@@ -92,18 +107,26 @@ By following this guide, you will learn how to:
 
 ## Troubleshooting
 
-1. **Containers Not Starting**:
+1. **Changing the Host IP Address**
+
+    - If you need to use a specific Host IP address instead of the one automatically detected during installation, you can explicitly provide it using the following command. Replace `<HOST_IP>` with your desired IP address:
+
+      ```bash
+      ./install.sh <HOST_IP>
+      ```
+
+2. **Containers Not Starting**:
    - Check the Docker logs for errors:
      ```bash
      docker compose logs
      ```
 
-2. **No Video Streaming on Grafana Dashboard**
+3. **No Video Streaming on Grafana Dashboard**
     - Go to the Grafana "Video Analytics Dashboard".
     - Click on the Edit option (located on the right side) under the WebRTC Stream panel. 
     - Update the URL from `http://localhost:8083` to `http://host-ip:8083`.
 
-3. **Failed Grafana Deployment** 
+4. **Failed Grafana Deployment** 
     - If unable to deploy grafana container successfully due to fail to GET "https://grafana.com/api/plugins/yesoreyeram-infinity-datasource/versions": context deadline exceeded, please ensure the proxy is configured in the ~/.docker/config.json as shown below:
 
       ```bash
