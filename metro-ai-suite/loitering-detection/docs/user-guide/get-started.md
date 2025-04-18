@@ -39,7 +39,7 @@ By following this guide, you will learn how to:
       Check Status of Microservices
       </summary>
       
-      - The application starts the following microservices, see also [How it Works](user-guide/Overview.md#how-it-works)
+      - The application starts the following microservices, see also [How it Works](./Overview.md#how-it-works).
 
       ![Architecture Diagram](_images/arch.png)
     
