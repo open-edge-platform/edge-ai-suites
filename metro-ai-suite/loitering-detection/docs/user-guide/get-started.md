@@ -10,110 +10,123 @@ By following this guide, you will learn how to:
 ## Prerequisites
 - Verify that your system meets the [minimum requirements](./system-requirements.md).
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
-- Install Python pip and venv packages
-```bash
-  sudo apt update && sudo apt install -y python3-pip python3-venv
-```
 
 ## Set up and First Use
 
-1. **Download the Compose File**:
+1. **Download the Application**:
     - Download the Docker Compose file and configuration:
       ```bash
-        git clone https://github.com/open-edge-platform/edge-ai-suites.git
-      ```
-
-2. **Navigate to the Directory**:
-    - Go to the directory where you saved the Compose file:
-      ```bash
+      git clone https://github.com/open-edge-platform/edge-ai-suites.git
       cd edge-ai-suites/metro-ai-suite/loitering-detection/
       ```
 
-3. **Update the IP Address**:
-      
-      - Open the `.env` file:
-        ```bash
-        nano .env
-        ```
-      - Modify the HOST_IP variable in the .env file to your actual host IP address.
-        ```bash
-        HOST_IP=10.10.10.10
-        ```
-      - Save and close the file.
+2. **Configure the Application and Download Assets**
+   - Configure application to use the primary IP address.
+   - Download the Models and Video files
 
-4. **Update Dashboard with your Host IP Address and Use Case**
-    ```bash
-        ./update_dashboard.sh
-    ```
+     ```bash
+     ./install.sh
+     ```
 
-5. **Download the Model and Video files**
-    ```bash
-        ./install.sh
-    ```
+    The `install.sh` script downloads the following assets:
 
-6. **Start the Application**:
-    - Run the application using Docker Compose:
+    **Models**
+    - **pedestrian-and-vehicle-detector-adas-0001**: This model is obtained from the Open Model Zoo.
+    
+    **Videos**
+
+    | **Video Name**       | **Download URL**         |
+    |-----------------------|--------------------------|
+    | VIRAT_S_000101.mp4    | [VIRAT_S_000101.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000101.mp4) |
+    | VIRAT_S_000102.mp4    | [VIRAT_S_000102.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000102.mp4) |
+    | VIRAT_S_000103.mp4    | [VIRAT_S_000103.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000103.mp4) |
+    | VIRAT_S_000104.mp4    | [VIRAT_S_000104.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000104.mp4) |
+
+## Run the Application
+
+1. **Start the Application**:
+    - Download container images with Application microservices and run with Docker Compose:
       ```bash
       docker compose up -d
-      ```
+       ```
+      <details>
+      <summary>
+      Check Status of Microservices
+      </summary>
+      
+      - The application starts the following microservices, see also [How it Works](./Overview.md#how-it-works).
 
-7. **Verify the Application**:
-    - Check all containers are in Running state:
-      ```bash
-      docker ps
-      ```
+      ![Architecture Diagram](_images/arch.png)
+    
+      - To check if all microservices are in Running state:
+        ```bash
+        docker ps
+        ```
+      </details>
 
-8. **Access the Application**:
+2. **Run Predefined Loitering Detection Pipelines**:
+    - Start video streams to run Loitering Detection pipelines:
+        ```bash
+        ./sample_start.sh
+        ```
+      <details>
+      <summary>
+      Check Status and Stop pipelines
+      </summary>
+      
+      - To check the status:
+        ```bash
+        ./sample_status.sh
+        ```
+      
+      - To stop the pipelines without waiting for video streams to finish replay:
+        ```bash
+        ./sample_stop.sh
+        ```
+      </details>
+
+3. **View the Application Output**:
     - Open a browser and go to `http://localhost:3000` to access the Grafana dashboard.
         - Change the localhost to your host IP if you are accessing it remotely.
     - Log in with the following credentials:
         - **Username:** `admin`
         - **Password:** `admin`
     - Check under the Dashboards section for the default dashboard named "Video Analytics Dashboard".
-    
-9. **Run a Predefined Pipeline**:
-    - Run the following command to start the pipelines:
-        ```bash
-        ./sample_start.sh
-        ```
-    - [Optionally] To check the status:
-         ```bash
-        ./sample_status.sh
-        ```
-    - [Optionally] To stop the pipelines without waiting for the sample application to finish:
-        ```bash
-        ./sample_stop.sh
-        ```
 
-    - **Expected Results**:
-    - The dashboard displays detected people and cars.
+    - **Expected Results**: The dashboard displays detected people and cars.
     - ![Dashboard Example](_images/grafana.png)
 
-## Stop the Containers
-
-1.  To stop the application, use the following commands:
-
-    ```bash
-    docker compose down -v
-    ```
+4. **Stop the Application**:
+    - To stop the application microservices, use the following command:
+      ```bash
+      docker compose down -v
+      ```
 
 ## Next Steps
 - [How to Customize the Application](how-to-customize-application.md)
 
 ## Troubleshooting
 
-1. **Containers Not Starting**:
+1. **Changing the Host IP Address**
+
+    - If you need to use a specific Host IP address instead of the one automatically detected during installation, you can explicitly provide it using the following command. Replace `<HOST_IP>` with your desired IP address:
+
+      ```bash
+      ./install.sh <HOST_IP>
+      ```
+
+2. **Containers Not Starting**:
    - Check the Docker logs for errors:
      ```bash
      docker compose logs
      ```
 
-2. **No Video Streaming on Grafana Dashboard**
+3. **No Video Streaming on Grafana Dashboard**
     - Go to the Grafana "Video Analytics Dashboard".
     - Click on the Edit option (located on the right side) under the WebRTC Stream panel. 
     - Update the URL from `http://localhost:8083` to `http://host-ip:8083`.
 
-3. **Failed Grafana Deployment** 
+4. **Failed Grafana Deployment** 
     - If unable to deploy grafana container successfully due to fail to GET "https://grafana.com/api/plugins/yesoreyeram-infinity-datasource/versions": context deadline exceeded, please ensure the proxy is configured in the ~/.docker/config.json as shown below:
 
       ```bash

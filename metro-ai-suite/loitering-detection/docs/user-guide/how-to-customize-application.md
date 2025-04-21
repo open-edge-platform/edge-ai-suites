@@ -1,46 +1,10 @@
 # Customize Application
 
-**Table of Contents**
-
-1.  [Introduction](#introduction)
-2.  [Overall System Architecture](#overall-system-architecture)
-3.  [DL Streamer Pipeline Server (DLSPS)](#dlsps-edge-video-analytics-microservice)
-    *   3.1. [Overview of DLSPS](#overview-of-dlsps)
-    *   3.2. [Key DLSPS Components](#key-dlsps-components)
-        *   3.2.1. [Logging and General Configuration](#logging-and-general-configuration)
-        *   3.2.2. [Video Processing Pipelines](#video-processing-pipelines)
-            *   3.2.2.1. [Object Detection Pipelines (YOLOv10 Series)](#object-detection-pipelines-yolov10-series)
-            *   3.2.2.2. [Object Tracking Pipelines](#object-tracking-pipelines)
-        *   3.2.3. [Configurable Parameters](#configurable-parameters)
-        *   3.2.4. [Messaging Interface (MQTT)](#messaging-interface-mqtt)
-    *   3.3. [DLSPS Workflow](#dlsps-workflow)
-4.  [Node-RED Flow for Data Processing](#node-red-flow-for-data-processing)
-    *   4.1. [Overview of the Node-RED Flow](#overview-of-the-node-red-flow)
-    *   4.2. [Key Node-RED Components](#key-node-red-components)
-        *   4.2.1. [MQTT Input Nodes](#mqtt-input-nodes)
-        *   4.2.2. [Data Extraction Nodes](#data-extraction-nodes)
-        *   4.2.3. [Euclidean and IoR Nodes (Loitering Detection)](#euclidean-and-ior-nodes-loitering-detection)
-        *   4.2.4. [Data Table Output Nodes](#data-table-output-nodes)
-        *   4.2.5. [MQTT Output Nodes](#mqtt-output-nodes)
-    *   4.3. [Node-RED Workflow](#node-red-workflow)
-5.  [Grafana Visualization](#grafana-visualization)
-    *   5.1. [Overview of Grafana](#overview-of-grafana)
-    *   5.2. [Key Grafana Components](#key-grafana-components)
-        *   5.2.1. [Data Sources](#data-sources)
-        *   5.2.2. [Dashboards and Panels](#dashboards-and-panels)
-    *   5.3. [Setting up Grafana](#setting-up-grafana)
-        *   5.3.1. [Install and Launch Grafana](#install-and-launch-grafana)
-        *   5.3.2. [Add Your Data Source](#add-your-data-source)
-        *   5.3.3. [Create Your Dashboard](#create-your-dashboard)
-    *   5.4. [Grafana Use Cases for Object Tracking and Loitering Detection](#grafana-use-cases-for-object-tracking-and-loitering-detection)
-6.  [End-to-End Integration](#end-to-end-integration)
-7.  [Conclusion](#conclusion)
-
-## 1. Introduction [](introduction)
+## Introduction
 
 This comprehensive guide provides a detailed walkthrough of building a complete object tracking and loitering detection system. We will utilize a combination of technologies designed for ease of use: the DL Streamer Pipeline Server, the visual programming tool Node-RED, and the data visualization platform Grafana. This approach caters to no-code/low-code users, enabling the creation of sophisticated analytics solutions with minimal programming.
 
-## 2. Overall System Architecture [](overall-system-architecture)
+## Overall System Architecture
 
 The system follows a modular architecture:
 
@@ -49,28 +13,28 @@ The system follows a modular architecture:
 *   **Node-RED:** Consumes object tracking data from the DL Streamer Pipeline Server, performs further analysis (like calculating distances and loitering times), and publishes results.
 *   **Grafana:** Visualizes the processed data from Node-RED (or a database fed by Node-RED), providing real-time dashboards.
 
-## 3. DL Streamer Pipeline Server (DLSPS) [](dlsps-edge-video-analytics-microservice)
+## DL Streamer Pipeline Server
 
 > For detailed documentation on DL Streamer Pipeline Server (DLSPS), visit the [DL Streamer Pipeline Server Documentation](https://eiidocs.intel.com/IEdgeInsights/EdgeVideoAnalyticsMicroservice/eii/README.html)
 
 ![Pipeline Architecture](_images/pipeline.png)
 
-### 3.1. Overview of DLSPS [](overview-of-dlsps)
+### Overview of DLSPS
 
 The DL Streamer Pipeline Server is a powerful tool designed to process video feeds directly on edge devices. It leverages GStreamer pipelines and OpenVINO-optimized AI models to perform real-time object detection and tracking, minimizing latency and reducing bandwidth consumption.
 
-### 3.2. Key DLSPS Components [](key-dlsps-components)
+### Key DLSPS Components
 
-#### 3.2.1. Logging and General Configuration [](logging-and-general-configuration)
+#### Logging and General Configuration
 
 *   `C_LOG_LEVEL: INFO` - Sets the logging level for C components to "INFO," which provides useful information about the system's operations without being overly verbose.
 *   `PY_LOG_LEVEL: INFO` - Similarly, sets the logging level for Python components.
 
-#### 3.2.2. Video Processing Pipelines [](video-processing-pipelines)
+#### Video Processing Pipelines
 
 The DL Streamer Pipeline Server utilizes GStreamer pipelines to define the flow of video data through various processing elements.
 
-##### 3.2.2.1. Object Detection Pipelines (YOLOv10 Series) [](object-detection-pipelines-yolov10-series)
+##### Object Detection Pipelines (YOLOv10 Series)
 
 Pipelines like `yolov10_1`, `yolov10_2`, etc., are used to identify objects in the video frames.
 
@@ -87,7 +51,7 @@ Pipelines like `yolov10_1`, `yolov10_2`, etc., are used to identify objects in t
         *   `Auto-Start`: Set to `false` so you can start the pipeline manually.
         *   `Publish Frame`: Enabled, allowing the system to output processed video frames for visualization.
 
-##### 3.2.2.2. Object Tracking Pipelines [](object-tracking-pipelines)
+##### Object Tracking Pipelines
 
 Pipelines like `object_tracking_1`, `object_tracking_2`, `object_tracking_3`, `object_tracking_4` are designed to track objects detected by the object detection pipelines.
 
@@ -100,14 +64,14 @@ Pipelines like `object_tracking_1`, `object_tracking_2`, `object_tracking_3`, `o
         *   `Inference Interval`: Controls how often the model analyzes frames.
 *   **Benefits:** These pipelines help track moving objects (like people or vehicles) across frames, essential for loitering detection and other advanced analytics.
 
-#### 3.2.3. Configurable Parameters [](configurable-parameters)
+#### Configurable Parameters
 
 Each pipeline is designed to be user-friendly and customizable:
 
 *   **Detection Properties:** Configurable parameters let you adjust the model settings without writing code. Example: The "detection-properties" element defines how the object detection module should behave.
 *   **Detection Device:** The "detection-device" parameter determines which hardware (e.g., CPU) to use. It uses an environment variable (`{env[DETECTION_DEVICE]}`) to make it flexible across different setups.
 
-#### 3.2.4. Messaging Interface (MQTT) [](messaging-interface-mqtt)
+#### Messaging Interface (MQTT)
 
 To share the results of the video analysis with other parts of your system, the DL Streamer Pipeline Server uses a messaging interface based on MQTT:
 
@@ -118,13 +82,13 @@ To share the results of the video analysis with other parts of your system, the 
     *   `Topics: Messages are published under topics like yolov5 and yolov5_effnet (you can update these as needed).`
     *   `Allowed Clients: All (*), ensuring that any subscribed system can receive the data.`
 
-### 3.3. DLSPS Workflow [](dlsps-workflow)
+### DLSPS Workflow
 
 1.  **Capture and Decode:** Live video is captured and decoded using GStreamer.
 2.  **Detection and Tracking:** The object detection pipelines analyze each frame to identify objects. The tracking pipelines then follow these objects over time, ensuring that moving objects are continuously monitored.
 3.  **Data Enrichment and Publishing:** Detected objects are enriched with metadata (such as bounding boxes, timestamps, and object types). The processed data is published via MQTT, making it available for dashboards.
 
-## 4. Node-RED Flow for Data Processing [](node-red-flow-for-data-processing)
+## Node-RED Flow for Data Processing
 
 > For comprehensive Node-RED documentation, visit the [Official Node-RED Documentation](https://nodered.org/docs/)
 
@@ -134,13 +98,13 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 
 ![Node-RED Flow 2](_images/node-red2.png)
 
-### 4.1. Overview of the Node-RED Flow [](overview-of-the-node-red-flow)
+### Overview of the Node-RED Flow
 
 Node-RED is a flow-based programming tool that lets you visually wire together devices, APIs, and online services. This guide demonstrates how Node-RED can be used to process video analytics data from the DL Streamer Pipeline Server for tasks such as object tracking and loitering detection. Using a drag-and-drop interface, you can build complex workflows with minimal coding, making it ideal for no-code/low-code environments.
 
-### 4.2. Key Node-RED Components [](key-node-red-components)
+### Key Node-RED Components
 
-#### 4.2.1. MQTT Input Nodes [](mqtt-input-nodes)
+#### MQTT Input Nodes
 
 *   **Purpose:** To receive real-time object tracking data from DLSPS via MQTT. Assume the DL Streamer Pipeline Server is configured to forward its MQTT messages to an MQTT broker.
 *   **Configuration Details:**
@@ -149,7 +113,7 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
     *   `Quality of Service (QoS): 2 (ensuring exactly-once delivery)`
 *   **Usage:** These nodes are the entry points for the data flow. They subscribe to specific MQTT topics, automatically parsing incoming messages for further processing.
 
-#### 4.2.2. Data Extraction Nodes [](data-extraction-nodes)
+#### Data Extraction Nodes
 
 *   **Purpose:** To extract and filter meaningful information from raw MQTT messages.
 
@@ -177,7 +141,7 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
     ```
 *   **Outcome:** A structured message containing only the relevant object data, ready for further analysis.
 
-#### 4.2.3. Euclidean and IoR Nodes (Loitering Detection) [](euclidean-and-ior-nodes-loitering-detection)
+#### Euclidean and IoR Nodes (Loitering Detection)
 
 *   **Purpose:** To perform advanced spatial analysis, crucial for determining object positions and detecting loitering behavior. We'll focus on a simplified Euclidean distance approach suitable for a low-code environment.
 
@@ -251,7 +215,7 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 
 *   **Outcome:** Enhanced object data that includes spatial metrics and a `msg.loitering` flag.
 
-#### 4.2.4. Data Table Output Nodes [](data-table-output-nodes)
+#### Data Table Output Nodes
 
 *   **Purpose:** To convert processed object data into a structured, tabular format that is easy to read and interpret.
 
@@ -285,7 +249,7 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 
 *   **Outcome:** A clean, structured JSON object that can be easily consumed by visualization tools or stored in a database.
 
-#### 4.2.5. MQTT Output Nodes [](mqtt-output-nodes)
+#### MQTT Output Nodes
 
 *   **Purpose:** To publish the final processed data, such as loitering status updates, back to an MQTT topic. This allows other systems (like dashboards) to subscribe and react to the data.
 *   **Configuration Details:**
@@ -295,7 +259,7 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
     *   `Retain Flag: Enabled, so that the last message is stored for new subscribers.`
 *   **Usage:** After all processing and formatting are complete, this node publishes the output data, ensuring that downstream services always receive up-to-date information on object status and loitering events.
 
-### 4.3. Node-RED Workflow [](node-red-workflow)
+### Node-RED Workflow
 
 1.  **Data Ingestion:** MQTT Input Nodes receive live data from the DL Streamer Pipeline Server (relayed via MQTT broker).
 2.  **Data Processing:**
@@ -304,35 +268,35 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 3.  **Data Structuring:** Data Table Output Nodes organize the processed data into a clear, tabular format.
 4.  **Data Publication:** MQTT Output Nodes send the final loitering status updates to an MQTT topic, making it accessible to visualization tools (e.g., Grafana).
 
-## 5. Grafana Visualization [](grafana-visualization)
+## Grafana Visualization
 
 > For detailed Grafana documentation, visit the [Official Grafana Documentation](https://grafana.com/docs/)
 
 ![Grafana Dashboard](_images/grafana.png)
 
-### 5.1. Overview of Grafana [](overview-of-grafana)
+### Overview of Grafana
 
 Grafana is a powerful, open-source visualization tool that helps you create dynamic dashboards for monitoring real-time data. With Grafana, you can easily visualize the outputs from your the DL Streamer Pipeline Server and Node-RED systems without deep coding skills. Here's how you can leverage Grafana in your analytics workflow.
 
-### 5.2. Key Grafana Components [](key-grafana-components)
+### Key Grafana Components
 
-#### 5.2.1. Data Sources [](data-sources)
+#### Data Sources
 
 *   **MQTT Integration:** Directly query data from the DL Streamer Pipeline Server or Node-RED endpoints via MQTT datasource.
 
-#### 5.2.2. Dashboards and Panels [](dashboards-and-panels)
+#### Dashboards and Panels
 
 *   **Dashboards:** A collection of panels arranged to provide an overview of your system's performance.
 *   **Panels:** Individual visualizations (graphs, tables, single-stat panels) that display specific data points.
 
-### 5.3. Setting up Grafana [](setting-up-grafana)
+### Setting up Grafana
 
-#### 5.3.1. Install and Launch Grafana [](install-and-launch-grafana)
+#### Install and Launch Grafana
 
 *   **Installation:** Install Grafana on your local machine or server by following the official Grafana installation guide.
 *   **Access:** Once installed, access Grafana via your web browser at the designated URL.
 
-#### 5.3.2. Add Your Data Source [](add-your-data-source)
+#### Add Your Data Source
 
 *   **Step-by-Step (Example with MQTT):**
     1.  Go to `Configuration > Data Sources`.
@@ -340,7 +304,7 @@ Grafana is a powerful, open-source visualization tool that helps you create dyna
     3.  Enter the connection details (host, port, topic, credentials).
     4.  Save and test the connection to ensure it's working.
 
-#### 5.3.3. Create Your Dashboard [](create-your-dashboard)
+#### Create Your Dashboard
 
 *   **Dashboard Creation:**
     1.  Click the `+` icon and select `Dashboard`.
@@ -348,13 +312,13 @@ Grafana is a powerful, open-source visualization tool that helps you create dyna
     3.  Configure each panel with queries to fetch data from your connected MQTT data source.
     4.  Use drag-and-drop controls to arrange panels for the best view of your metrics.
 
-### 5.4. Grafana Use Cases for Object Tracking and Loitering Detection [](grafana-use-cases-for-object-tracking-and-loitering-detection)
+### Grafana Use Cases for Object Tracking and Loitering Detection
 
 *   **Real-Time Object Detection Visualization:** Display a graph that shows the number of objects detected per minute to monitor activity levels.
 *   **Loitering Event Monitoring:** Create a panel that highlights loitering events.
 *   **Historical Trend Analysis:** Use Grafana's time-series graphs to analyze trends over days or weeks, helping you identify peak activity times or recurring patterns.
 
-## 6. End-to-End Integration [](end-to-end-integration)
+## End-to-End Integration
 
 ![Integration Diagram](_images/integration.png)
 
@@ -371,6 +335,6 @@ The system operates as follows:
 *   **DL Streamer Pipeline Server Output (MQTT):** JSON payload containing an array of detected objects. Each object has properties like `id`, `type`, `confidence`, `x1`, `y1`, `x2`, `y2`, and `timestamp`.
 *   **Node-RED Processed Data:** JSON payload with the same object properties as above, plus the calculated `loitering` flag and any other derived metrics.
 
-## 7. Conclusion [](conclusion)
+## Conclusion
 
 This guide has demonstrated a complete object tracking and loitering detection system using the DL Streamer Pipeline Server, Node-RED, and Grafana. The system provides a balance of edge processing, flexible data manipulation, and powerful visualization. The low-code nature of Node-RED and the user-friendly interface of Grafana make this solution accessible to users without extensive programming knowledge. This allows for quick deployment, easy customization for specific use cases, and scalability to handle multiple cameras and locations.
