@@ -34,7 +34,7 @@ Customize the pipeline according to your needs. For details, see the following D
 - [Autostart pipelines](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/how-to-autostart-pipelines.html)
 
 
-(start-pipeline)= ## Start the Pipeline
+## Start the Pipeline
 
 Follow this procedure to start the pipeline.
 
@@ -77,7 +77,7 @@ Follow this procedure to start the pipeline.
 
    Figure 1: Example of a pipeline instance ID
 
-(pipeline-statistics)= ## Get Statistics of the Running Pipelines
+## Get Statistics of the Running Pipelines
 
 Request the pipeline statistics with this cURL command.
 
@@ -94,4 +94,4 @@ Replace **HOST_IP** with the IP address of your system and **instance_id** with 
          curl --location -X DELETE http://<HOST_IP>:30107/pipelines/{instance_id}
 
 > **Note**
-> The instance ID is shown in the Terminal when the [pipeline was started](#start-pipeline) or when [pipeline statistics was requested](#pipeline-statistics).
+> The instance ID is shown in the Terminal when the [pipeline was started](#start-the-pipeline) or when [pipeline statistics was requested](#get-statistics-of-the-running-pipelines).
