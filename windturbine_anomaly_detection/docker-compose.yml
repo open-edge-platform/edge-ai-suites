@@ -6,6 +6,8 @@ services:
     hostname: ia-telegraf
     image: telegraf:1.33.1
     restart: unless-stopped
+    depends_on:
+      - ia-influxdb
     security_opt:
     - no-new-privileges
     read_only: true
@@ -81,12 +83,17 @@ services:
     hostname: ia-time-series-analytics-microservice
     image: ${DOCKER_REGISTRY}ia-time-series-analytics-microservice:1.0.0
     restart: unless-stopped
+    depends_on:
+      - ia-influxdb
+      - ia-mqtt-broker
     security_opt:
     - no-new-privileges
     read_only: true
     healthcheck:
-      test: ["CMD-SHELL", "exit", "0"]
-      interval: 5m
+      test: ["CMD-SHELL", "if [ \"$SECURE_MODE\" = \"true\" ]; then curl -f https://localhost:9092/kapacitor/v1/ping; else curl -f http://localhost:9092/kapacitor/v1/ping; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     environment:
       SECURE_MODE: ${SECURE_MODE}
       no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost"
@@ -123,6 +130,8 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     restart: unless-stopped
     read_only: false
+    depends_on:
+      - ia-influxdb
     security_opt:
     - no-new-privileges
     healthcheck:
@@ -160,6 +169,8 @@ services:
     read_only: true
     image: eclipse-mosquitto:2.0.19
     restart: unless-stopped
+    depends_on:
+      - ia-influxdb
     security_opt:
     - no-new-privileges
     environment:
@@ -189,6 +200,9 @@ services:
       SECURE_MODE: ${SECURE_MODE}
       LOG_LEVEL: ${LOG_LEVEL}
     restart: unless-stopped
+    depends_on:
+      ia-time-series-analytics-microservice:
+        condition: service_healthy
     security_opt:
     - no-new-privileges
     healthcheck:
@@ -209,6 +223,9 @@ services:
     read_only: true
     image: ${DOCKER_REGISTRY}ia-mqtt-publisher:1.0.0
     restart: unless-stopped
+    depends_on:
+      ia-time-series-analytics-microservice:
+        condition: service_healthy
     security_opt:
     - no-new-privileges
     healthcheck:
@@ -239,6 +256,8 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     restart: unless-stopped
     read_only: true
+    depends_on:
+      - ia-influxdb
     security_opt:
     - no-new-privileges
     healthcheck:
