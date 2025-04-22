@@ -94,9 +94,9 @@ spec:
           value: "http"
         {{ end }}
         - name: INFLUXDB_USERNAME
-          value: '{{ $.Values.env.INFLUXDB_ADMIN_USERNAME }}'
+          value: '{{ $.Values.env.INFLUXDB_USERNAME }}'
         - name: INFLUXDB_PASSWORD
-          value: '{{ $.Values.env.INFLUXDB_ADMIN_PASSWORD }}'
+          value: '{{ $.Values.env.INFLUXDB_PASSWORD }}'
         - name: INFLUX_SERVER
           value: "influxdb"
         - name: GRAFANA_SERVER

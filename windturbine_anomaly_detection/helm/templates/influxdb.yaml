@@ -52,9 +52,9 @@ spec:
         - name: INFLUXDB_DB
           value: 'datain'
         - name: INFLUXDB_ADMIN_PASSWORD
-          value: '{{ .Values.env.INFLUXDB_ADMIN_PASSWORD }}'
+          value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
         - name: INFLUXDB_ADMIN_USER
-          value: '{{ .Values.env.INFLUXDB_ADMIN_USERNAME }}'
+          value: 'admin'
         - name: INFLUXDB_USER_PASSWORD
           value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
         - name: INFLUXDB_USER
