@@ -42,7 +42,7 @@ these things.
 
   To protect your rights, we need to make restrictions that forbid
 distributors to deny you these rights or to ask you to surrender these
-rights.  These restrictions translate to certain Responsibilities for
+rights.  These restrictions translate to certain responsibilities for
 you if you distribute copies of the library or if you modify it.
 
   For example, if you distribute copies of the library, whether gratis
@@ -542,7 +542,7 @@ in new free programs; and that you know you can do these things.
 
   To protect your rights, we need to make restrictions that forbid
 anyone to deny you these rights or to ask you to surrender the rights.
-These restrictions translate to certain Responsibilities for you if you
+These restrictions translate to certain responsibilities for you if you
 distribute copies of the software, or if you modify it.
 
   For example, if you distribute copies of such a program, whether
