@@ -94,4 +94,4 @@ Replace **HOST_IP** with the IP address of your system and **instance_id** with 
          curl --location -X DELETE http://<HOST_IP>:30107/pipelines/{instance_id}
 
 > **Note**
-> The instance ID is shown in the Terminal when the [pipeline was started](#start-the-pipeline) or when [pipeline statistics was requested](#get-statistics-of-the-running-pipelines).
+> The instance ID is shown in the Terminal when the [pipeline was started](#start-the-pipeline) or when [pipeline statistics were requested](#get-statistics-of-the-running-pipelines).
