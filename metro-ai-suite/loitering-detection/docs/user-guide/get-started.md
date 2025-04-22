@@ -21,26 +21,32 @@ By following this guide, you will learn how to:
       ```
 
 2. **Configure the Application and Download Assets**
-   - Configure application to use the primary IP address.
-   - Download the Models and Video files
+   - Download the Models and Video files.
+   - Configure the provided application IP address. If omitted, the application uses the primary IP address.
 
      ```bash
-     ./install.sh
+     ./install.sh [<IP_address>]
      ```
+      <details>
+      <summary>
+      Check installed assets.
+      </summary>
 
-    The `install.sh` script downloads the following assets:
+      The `install.sh` script downloads the following assets:
 
-    **Models**
-    - **pedestrian-and-vehicle-detector-adas-0001**: This model is obtained from the Open Model Zoo.
+      **Models**
+      - **pedestrian-and-vehicle-detector-adas-0001**: This model is obtained from the Open Model Zoo.
     
-    **Videos**
+      **Videos**
 
-    | **Video Name**       | **Download URL**         |
-    |-----------------------|--------------------------|
-    | VIRAT_S_000101.mp4    | [VIRAT_S_000101.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000101.mp4) |
-    | VIRAT_S_000102.mp4    | [VIRAT_S_000102.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000102.mp4) |
-    | VIRAT_S_000103.mp4    | [VIRAT_S_000103.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000103.mp4) |
-    | VIRAT_S_000104.mp4    | [VIRAT_S_000104.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000104.mp4) |
+      | **Video Name**       | **Download URL**         |
+      |-----------------------|--------------------------|
+      | VIRAT_S_000101.mp4    | [VIRAT_S_000101.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000101.mp4) |
+      | VIRAT_S_000102.mp4    | [VIRAT_S_000102.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000102.mp4) |
+      | VIRAT_S_000103.mp4    | [VIRAT_S_000103.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000103.mp4) |
+      | VIRAT_S_000104.mp4    | [VIRAT_S_000104.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000104.mp4) |
+
+      </details>
 
 ## Run the Application
 

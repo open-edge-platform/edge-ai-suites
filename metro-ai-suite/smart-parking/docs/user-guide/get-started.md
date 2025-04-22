@@ -21,26 +21,32 @@ By following this guide, you will learn how to:
       ```
 
 2. **Configure the Application and Download Assets**
-   - Configure application to use the primary IP address.
-   - Download the Models and Video files
+   - Download the Models and Video files.
+   - Configure the provided application IP address. If omitted, the application uses the primary IP address.
 
      ```bash
      ./install.sh
      ```
+      <details>
+      <summary>
+      Check installed assets.
+      </summary>
 
-    The `install.sh` script downloads the following assets:
+      The `install.sh` script downloads the following assets:
 
-    **Models**
-    - **YOLO v10s**: YOLO Model for object detection.
+      **Models**
+      - **YOLO v10s**: YOLO Model for object detection.
     
-    **Videos**
+      **Videos**
 
-    | **Video Name**       | **Download URL**         |
-    |-----------------------|--------------------------|
-    | new_video_1.mp4    | [smart_parking_1.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_1.mp4) |
-    | new_video_2.mp4    | [smart_parking_2.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_2.mp4) |
-    | new_video_3.mp4    | [smart_parking_3.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_3.mp4) |
-    | new_video_4.mp4    | [smart_parking_4.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_4.mp4) |
+      | **Video Name**       | **Download URL**         |
+      |-----------------------|--------------------------|
+      | new_video_1.mp4    | [smart_parking_1.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_1.mp4) |
+      | new_video_2.mp4    | [smart_parking_2.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_2.mp4) |
+      | new_video_3.mp4    | [smart_parking_3.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_3.mp4) |
+      | new_video_4.mp4    | [smart_parking_4.mp4](https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_4.mp4) |
+
+      </details>
 
 ## Run the Application
 
