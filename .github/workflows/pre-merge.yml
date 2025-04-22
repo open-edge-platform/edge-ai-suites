@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
-      search-image-by-image_changed: ${{ steps.filter.outputs.search-image-by-image }}
+      image-based-video-search_changed: ${{ steps.filter.outputs.image-based-video-search }}
       smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
       pallet-defect-detection_changed: ${{ steps.filter.outputs.pallet-defect-detection }}
       weld-porosity_changed: ${{ steps.filter.outputs.weld-porosity }}
@@ -29,21 +29,21 @@ jobs:
           filters: |
             loitering-detection:
               - 'metro-ai-suite/loitering-detection/docs/**'
-            search-image-by-image:
-              - 'metro-ai-suite/search-image-by-image/docs/**'
+            image-based-video-search:
+              - 'metro-ai-suite/image-based-video-search/docs/**'
             smart-parking:
               - 'metro-ai-suite/smart-parking/docs/**'
             pallet-defect-detection:
               - 'manufacturing-ai-suite/pallet-defect-detection/docs/**'
             weld-porosity:
               - 'manufacturing-ai-suite/weld-porosity/docs/**'
-  build_search-image-by-image:
+  build_image-based-video-search:
     needs: filter
-    if: ${{ needs.filter.outputs.search-image-by-image_changed == 'true' }}
+    if: ${{ needs.filter.outputs.image-based-video-search_changed == 'true' }}
     uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@main
     secrets: inherit
     with:
-      docs_directory: metro-ai-suite/search-image-by-image
+      docs_directory: metro-ai-suite/image-based-video-search
   build_smart-parking:
     needs: filter
     if: ${{ needs.filter.outputs.smart-parking_changed == 'true' }}
