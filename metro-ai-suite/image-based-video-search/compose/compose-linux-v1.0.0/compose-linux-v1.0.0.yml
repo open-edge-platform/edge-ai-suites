@@ -1,0 +1,171 @@
+services:
+  milvus-db:
+    image: docker.io/milvusdb/milvus:v2.4.16
+    container_name: ibvs-milvusdb
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      - ETCD_USE_EMBED=true
+      - ETCD_DATA_DIR=/var/lib/milvus/etcd
+      - ETCD_CONFIG_PATH=/milvus/configs/embedEtcd.yaml
+      - COMMON_STORAGETYPE=local
+    volumes:
+      - milvus-data:/var/lib/milvus
+      - ./embedEtcd.yaml:/milvus/configs/embedEtcd.yaml
+      - ./user.yaml:/milvus/configs/user.yaml
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 90s
+    command: ["milvus", "run", "standalone"]
+    restart: on-failure:5
+  milvus-ui:
+    image: docker.io/zilliz/attu:v2.4
+    container_name: ibvs-milvusui
+    environment:
+      - MILVUS_URL=milvus-db:19530
+    ports:
+      - "8000:3000"
+    restart: always
+    depends_on:
+      - milvus-db
+  feature-matching:
+    image: docker.io/intel/feature-matching:v1.0.0
+    ports:
+      - "9000:8000"
+    container_name: ibvs-featurematching
+    environment:
+      MILVUS_ENDPOINT: http://milvus-db:19530
+      COLLECTION_NAME: my_image_collection
+      MODEL_DIM: 1000
+      MQTT_BROKER: ibvs-broker
+      MQTT_PORT: 1883
+      MQTT_TOPIC: edge_video_analytics_results
+      CONFIDENCE_THRESHOLD: 0.4
+    depends_on:
+      milvus-db:
+        condition: service_healthy
+      broker:
+        condition: service_started
+    volumes:
+      - image-data:/user/src/app/static
+    restart: on-failure:5
+  streaming-pipeline:
+    image: docker.io/intel/streaming-pipeline:v1.0.0
+    container_name: ibvs-streaming
+    ports:
+      - "9999:9999"
+    environment:
+      GST_DEBUG: "1"
+    devices:
+      - "/dev/dri:/dev/dri"
+    command: >
+      bash -c "
+        wget -O file.mp4 https://github.com/intel-iot-devkit/sample-videos/raw/master/person-bicycle-car-detection.mp4 && \
+        gst-launch-1.0 filesrc location=file.mp4 ! qtdemux name=mdemux ! h264parse ! video/x-h264,stream-format=byte-stream ! mpegtsmux name=mux ! filesink location=file.ts && \
+        gst-launch-1.0 multifilesrc location=file.ts loop=true ! tsdemux ! h264parse ! rtspclientsink protocols=tcp location=rtsp://rtsp-server:8554/stream
+      "
+    depends_on:
+      - rtsp-server
+    restart: on-failure:5
+  rtsp-server:
+    image: docker.io/bluenviron/mediamtx:1.10.0
+    container_name: ibvs-mediamtx
+    environment:
+      - MTX_PROTOCOLS=tcp
+      - MTX_WEBRTCADDITIONALHOSTS=127.0.0.1
+    ports:
+      - "8554:8554"
+      - "1935:1935"
+      - "8888:8888"
+      - "8889:8889"
+      - "8890:8890/udp"
+      - "8189:8189/udp"
+    restart: on-failure:5
+  broker:
+    image: docker.io/library/eclipse-mosquitto:2.0.20
+    container_name: ibvs-broker
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    ports:
+      - "1883:1883"
+    restart: on-failure:5
+  dlstreamer-pipeline-server:
+    image: docker.io/intel/dlstreamer-pipeline-server:3.0.0
+    hostname: dlstreamer-pipeline-server
+    container_name: ibvs-dlstreamer-pipeline-server
+    read_only: true
+    security_opt:
+      - no-new-privileges
+    privileged: false
+    tty: true
+    entrypoint: ["./run.sh"]
+    ports:
+      - '8080:8080'
+    environment:
+      - ENABLE_RTSP=true
+      - RTSP_PORT=8554
+      - ENABLE_WEBRTC=true
+      - WEBRTC_SIGNALING_SERVER=ws://localhost:8443
+      - RUN_MODE=EVA
+      - GENICAM=Balluff
+      - GST_DEBUG="1,gencamsrc:2"
+      - DETECTION_DEVICE=CPU
+      - CLASSIFICATION_DEVICE=CPU
+      - ADD_UTCTIME_TO_METADATA=true
+      - LSFEATURE_NAME="dlstreamer-pipeline-server"
+      - HTTPS=false
+      - MTLS_VERIFICATION=false
+      - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=false
+      - REST_SERVER_PORT=8080
+      - MQTT_HOST=ibvs-broker
+      - MQTT_PORT=1883
+    volumes:
+      - "./config.json:/home/pipeline-server/config.json"
+      - "dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999"
+      - "/run/udev:/run/udev:ro"
+      - "/dev:/dev"
+      - dlstreamer-pipeline-server-tmp:/tmp
+      - "./models/person-vehicle-bike-detection-2004:/models/person-vehicle-bike-detection-2004"
+      - "./models/resnet-50-pytorch:/models/resnet50"
+    group_add:
+      - "109"
+      - "110"
+    device_cgroup_rules:
+      - 'c 189:* rmw'
+      - 'c 209:* rmw'
+      - 'a 189:* rwm'
+    devices:
+      - "/dev:/dev"
+    depends_on:
+      - broker
+    restart: on-failure:5
+  app:
+    image: docker.io/intel/image-based-video-search:v1.0.0
+    container_name: ibvs-app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - streaming-pipeline
+      - feature-matching
+      - dlstreamer-pipeline-server
+    restart: on-failure:5
+
+volumes:
+  milvus-data:
+  image-data:
+  dlstreamer-pipeline-server-pipeline-root:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  dlstreamer-pipeline-server-tmp:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

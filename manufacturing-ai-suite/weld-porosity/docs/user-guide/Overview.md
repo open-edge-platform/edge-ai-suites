@@ -23,12 +23,12 @@ This sample application is built with the following Intel Edge AI Stack Microser
 
 It also consists of the below Third-party microservices:
 
-- [MediaMTX Server](https://hub.docker.com/r/bluenviron/mediamtx)
-- [Coturn Server](https://hub.docker.com/r/coturn/coturn)
-- [Open telemetry Collector](https://hub.docker.com/r/otel/opentelemetry-collector-contrib)
-- [Prometheus](https://hub.docker.com/r/prom/prometheus)
-- [Postgres](https://hub.docker.com/_/postgres)
-- [Minio](https://hub.docker.com/r/minio/minio)
+- [MediaMTX Server](https://hub.docker.com/r/bluenviron/mediamtx) is a real-time media server and media proxy that allows to publish webrtc stream.
+- [Coturn Server](https://hub.docker.com/r/coturn/coturn) is a media traffic NAT traversal server and gateway.
+- [Open telemetry Collector](https://hub.docker.com/r/otel/opentelemetry-collector-contrib) is a set of receivers, exporters, processors, connectors for Open Telemetry.
+- [Prometheus](https://hub.docker.com/r/prom/prometheus) is a systems and service monitoring system used for viewing Open Telemetry.
+- [Postgres](https://hub.docker.com/_/postgres) is object-relational database system that provides reliability and data integrity.
+- [Minio](https://hub.docker.com/r/minio/minio) is high performance object storage that is API compatible with Amazon S3 cloud storage service.
 
 ## Features
 

@@ -3,13 +3,9 @@
 -   **Time to Complete:** 30 minutes
 -   **Programming Language:**  Python 3
 
-## Prerequisites for Target System
+## Prerequisites
 
--  11th Generation Intel® Core™ processor or above
--  8 GB of memory minimum
--  80 GB of storage space minimum
--  Internet access
--  Ubuntu* 22.04 LTS Desktop
+- [System Requirements](system-requirements.md)
 
 ## Configure and update the environment variables
 

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    katenary.v3/compose-hash: 4dd006301f669d044c60fd579bb24fb08133f26f
+    katenary.v3/version: release-3.0.0-rc2
+  labels:
+    {{- include "image_based_video_search.labels" . | nindent 4 }}
+    katenary.v3/component: mediamtx
+  name: '{{ include "image_based_video_search.fullname" . }}-mediamtx'
+spec:
+  replicas: {{ .Values.mediamtx.replicas }}
+  selector:
+    matchLabels:
+      {{- include "image_based_video_search.selectorLabels" . | nindent 6 }}
+      katenary.v3/component: mediamtx
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
+        katenary.v3/component: mediamtx
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: '{{ include "image_based_video_search.fullname" . }}-mediamtx'
+        image: '{{ tpl .Values.mediamtx.repository.image $ }}:{{ tpl .Values.mediamtx.repository.tag $ | default "latest" }}'
+        imagePullPolicy: {{ .Values.mediamtx.imagePullPolicy }}
+        name: mediamtx
+        ports:
+        - containerPort: 8554
+          name: port-8554
+        - containerPort: 1935
+          name: port-1935
+        - containerPort: 8888
+          name: port-8888
+        - containerPort: 8889
+          name: port-8889
+        - containerPort: 8890
+          name: port-8890
+        - containerPort: 8189
+          name: port-8189
+        {{- if .Values.mediamtx.resources }}
+        resources:
+          {{ .Values.mediamtx.resources | toYaml | nindent 10 }}
+        {{- end }}
+      {{- if .Values.pullSecrets }}
+      imagePullSecrets:
+      {{- .Values.pullSecrets | toYaml | nindent 6 }}
+      {{- end }}
+      {{- if .Values.mediamtx.nodeSelector }}
+      nodeSelector:
+        {{- .Values.mediamtx.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if ne .Values.mediamtx.serviceAccount "" }}
+      serviceAccountName: {{ .Values.mediamtx.serviceAccount | quote }}
+      {{- end }}

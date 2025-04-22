@@ -1,0 +1,18 @@
+# This is the main values.yaml file for the image_based_video_search chart.
+# More information can be found in the chart's README.md file.
+#
+# generated at: 2025-02-18T20:31:08-08:00
+# compose files: docker-compose.yml
+# compose hash (sha1): 4dd006301f669d044c60fd579bb24fb08133f26f
+
+# Name of the chart (required), basically the name of the project.
+name: image-based-video-search
+apiVersion: v2
+
+# Version of the chart (required)
+version: 1.0.0
+
+# Version of the application (required).
+# This should be the main application version.
+appVersion: 1.0.0
+description: A Helm chart for ibvs

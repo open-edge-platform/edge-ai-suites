@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    katenary.v3/compose-hash: 4dd006301f669d044c60fd579bb24fb08133f26f
+    katenary.v3/version: release-3.0.0-rc2
+  labels:
+    {{- include "image_based_video_search.labels" . | nindent 4 }}
+    katenary.v3/component: broker
+  name: '{{ include "image_based_video_search.fullname" . }}-broker'
+spec:
+  replicas: {{ .Values.broker.replicas }}
+  selector:
+    matchLabels:
+      {{- include "image_based_video_search.selectorLabels" . | nindent 6 }}
+      katenary.v3/component: broker
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
+        katenary.v3/component: broker
+    spec:
+      containers:
+      - image: '{{ tpl .Values.broker.repository.image $ }}:{{ tpl .Values.broker.repository.tag $ | default "latest" }}'
+        imagePullPolicy: {{ .Values.broker.imagePullPolicy }}
+        name: broker
+        ports:
+        - containerPort: 1883
+          name: port-1883
+        volumeMounts:
+        - name: mosquitto-config-volume
+          mountPath: /mosquitto/config
+        {{- if .Values.broker.resources }}
+        resources:
+          {{ .Values.broker.resources | toYaml | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: mosquitto-config-volume
+        configMap:
+          name: '{{ include "image_based_video_search.fullname" . }}-broker'
+      {{- if .Values.pullSecrets }}
+      imagePullSecrets:
+      {{- .Values.pullSecrets | toYaml | nindent 6 }}
+      {{- end }}
+      {{- if .Values.broker.nodeSelector }}
+      nodeSelector:
+        {{- .Values.broker.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if ne .Values.broker.serviceAccount "" }}
+      serviceAccountName: {{ .Values.broker.serviceAccount | quote }}
+      {{- end }}

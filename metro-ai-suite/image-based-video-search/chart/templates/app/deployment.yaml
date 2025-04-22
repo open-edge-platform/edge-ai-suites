@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    katenary.v3/compose-hash: 4dd006301f669d044c60fd579bb24fb08133f26f
+    katenary.v3/version: release-3.0.0-rc2
+  labels:
+    {{- include "image_based_video_search.labels" . | nindent 4 }}
+    katenary.v3/component: app
+  name: '{{ include "image_based_video_search.fullname" . }}-app'
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      {{- include "image_based_video_search.selectorLabels" . | nindent 6 }}
+      katenary.v3/component: app
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
+        katenary.v3/component: app
+    spec:
+      containers:
+      - image: '{{ tpl .Values.app.repository.image $ }}:{{ tpl .Values.app.repository.tag $ | default "latest" }}'
+        imagePullPolicy: {{ .Values.app.imagePullPolicy }}
+        name: app
+        command: ["npm", "run", "dev"]
+        args: ["--", "--host", "0.0.0.0", "--port", "3000"]
+        {{- if .Values.app.resources }}
+        resources:
+          {{ .Values.app.resources | toYaml | nindent 10 }}
+        {{- end }}
+      {{- if .Values.pullSecrets }}
+      imagePullSecrets:
+      {{- .Values.pullSecrets | toYaml | nindent 6 }}
+      {{- end }}
+      {{- if .Values.app.nodeSelector }}
+      nodeSelector:
+        {{- .Values.app.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if ne .Values.app.serviceAccount "" }}
+      serviceAccountName: {{ .Values.app.serviceAccount | quote }}
+      {{- end }}

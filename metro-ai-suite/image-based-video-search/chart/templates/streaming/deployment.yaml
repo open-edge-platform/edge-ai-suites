@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    katenary.v3/compose-hash: 4dd006301f669d044c60fd579bb24fb08133f26f
+    katenary.v3/version: release-3.0.0-rc2
+  labels:
+    {{- include "image_based_video_search.labels" . | nindent 4 }}
+    katenary.v3/component: streaming
+  name: '{{ include "image_based_video_search.fullname" . }}-streaming'
+spec:
+  replicas: {{ .Values.streaming.replicas }}
+  selector:
+    matchLabels:
+      {{- include "image_based_video_search.selectorLabels" . | nindent 6 }}
+      katenary.v3/component: streaming
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
+        katenary.v3/component: streaming
+    spec:
+      containers:
+      - image: '{{ tpl .Values.streaming.repository.image $ }}:{{ tpl .Values.streaming.repository.tag $ | default "latest" }}'
+        imagePullPolicy: {{ .Values.streaming.imagePullPolicy }}
+        name: streaming
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            wget -O file.mp4 https://github.com/intel-iot-devkit/sample-videos/raw/master/person-bicycle-car-detection.mp4 && \
+            gst-launch-1.0 filesrc location=file.mp4 ! qtdemux name=mdemux ! h264parse ! video/x-h264,stream-format=byte-stream ! mpegtsmux name=mux ! filesink location=file.ts && \
+            gst-launch-1.0 multifilesrc location=file.ts loop=true ! tsdemux ! h264parse ! rtspclientsink protocols=tcp location=rtsp://{{ include "image_based_video_search.fullname" . }}-mediamtx:8554/stream
+        env:
+          {{- if .Values.httpProxy }}
+          - name: http_proxy
+            value: "{{ .Values.httpProxy }}"
+          - name: HTTP_PROXY
+            value: "{{ .Values.httpProxy }}"
+          {{- end }}
+          {{- if .Values.httpsProxy }}
+          - name: https_proxy
+            value: "{{ .Values.httpsProxy }}"
+          - name: HTTPS_PROXY
+            value: "{{ .Values.httpsProxy }}"
+          {{- end }}
+          {{- if .Values.noProxy }}
+          - name: no_proxy
+            value: "{{ .Values.noProxy }}"
+          - name: NO_PROXY
+            value: "{{ .Values.noProxy }}"
+          {{- end }}
+        {{- if .Values.streaming.resources }}
+        resources:
+          {{ .Values.streaming.resources | toYaml | nindent 10 }}
+        {{- end }}
+      {{- if .Values.pullSecrets }}
+      imagePullSecrets:
+      {{- .Values.pullSecrets | toYaml | nindent 6 }}
+      {{- end }}
+      {{- if .Values.streaming.nodeSelector }}
+      nodeSelector:
+        {{- .Values.streaming.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if ne .Values.streaming.serviceAccount "" }}
+      serviceAccountName: {{ .Values.streaming.serviceAccount | quote }}
+      {{- end }}

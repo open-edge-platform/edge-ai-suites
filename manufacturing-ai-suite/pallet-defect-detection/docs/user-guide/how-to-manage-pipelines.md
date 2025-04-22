@@ -51,7 +51,7 @@ Follow this procedure to start the pipeline.
             }
          ]
 
-2. You use a Client URL (cURL) command to start the pipeline. 
+2. You use a Client URL (cURL) command to start the pipeline.
 
       In this example, a pipeline included in this sample application is **pallet_defect_detection**. Start this pipeline with the following cURL command.
 
@@ -69,7 +69,7 @@ Follow this procedure to start the pipeline.
             }'
 
 
-2. Take note of the instance ID (without quotes). 
+2. Take note of the instance ID (without quotes).
 
    Each pipeline has its **instance ID**. You will need the instance ID to stop the pipeline later.
 
@@ -79,7 +79,7 @@ Follow this procedure to start the pipeline.
 
 ## Get Statistics of the Running Pipelines
 
-Request the pipeline statistics with this cURL command.  
+Request the pipeline statistics with this cURL command.
 
 Replace **HOST_IP** with the IP address of your system.
 
@@ -87,11 +87,11 @@ Replace **HOST_IP** with the IP address of your system.
 
 ## Stop the Pipeline
 
-Stop the pipeline with the following cURL command.  
+Stop the pipeline with the following cURL command.
 
-Replace **HOST_IP** with the IP address of your system and **instance_id** with the instance ID (without quotes) of the running pipeline. 
+Replace **HOST_IP** with the IP address of your system and **instance_id** with the instance ID (without quotes) of the running pipeline.
 
          curl --location -X DELETE http://<HOST_IP>:8080/pipelines/{instance_id}
 
 > **Note**  
-> The instance ID is shown in the Terminal when the [pipeline was started](#start-the-pipeline) or when [pipeline statistics was requested](#get-statistics-of-the-running-pipelines).
+> The instance ID is shown in the Terminal when the [pipeline was started](#start-the-pipeline) or when [pipeline statistics were requested](#get-statistics-of-the-running-pipelines).

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    katenary.v3/compose-hash: 4dd006301f669d044c60fd579bb24fb08133f26f
+    katenary.v3/version: release-3.0.0-rc2
+  labels:
+    {{- include "image_based_video_search.labels" . | nindent 4 }}
+    katenary.v3/component: milvusdb
+  name: '{{ include "image_based_video_search.fullname" . }}-milvusdb'
+spec:
+  replicas: {{ .Values.milvusdb.replicas }}
+  selector:
+    matchLabels:
+      {{- include "image_based_video_search.selectorLabels" . | nindent 6 }}
+      katenary.v3/component: milvusdb
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
+        katenary.v3/component: milvusdb
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: '{{ include "image_based_video_search.fullname" . }}-milvusdb-env'
+        image: '{{ tpl .Values.milvusdb.repository.image $ }}:{{ tpl .Values.milvusdb.repository.tag $ | default "latest" }}'
+        imagePullPolicy: {{ .Values.milvusdb.imagePullPolicy }}
+        name: milvusdb
+        securityContext:
+          seccompProfile:
+            type: Unconfined
+        command: ["/tini", "--"]
+        args: ["/milvus/bin/milvus", "run", "standalone"]
+        # command: ["/bin/bash", "-c"]
+        # args: 
+        #   - |
+        #     tail -f /dev/null
+        ports:
+        - containerPort: 19530
+          name: port-19530
+        - containerPort: 9091
+          name: port-9091
+        - containerPort: 2379
+          name: port-2379
+        volumeMounts:
+        - name: '{{ include "image_based_video_search.fullname" . }}-milvusdb-config'
+          mountPath: /milvus/configs/custom/
+        {{- if .Values.milvusdb.resources }}
+        resources:
+          {{ .Values.milvusdb.resources | toYaml | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: '{{ include "image_based_video_search.fullname" . }}-milvusdb-config'
+        configMap:
+          name: '{{ include "image_based_video_search.fullname" . }}-milvusdb-config'
+      {{- if .Values.pullSecrets }}
+      imagePullSecrets:
+      {{- .Values.pullSecrets | toYaml | nindent 6 }}
+      {{- end }}
+      {{- if .Values.milvusdb.nodeSelector }}
+      nodeSelector:
+        {{- .Values.milvusdb.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if ne .Values.milvusdb.serviceAccount "" }}
+      serviceAccountName: {{ .Values.milvusdb.serviceAccount | quote }}
+      {{- end }}
