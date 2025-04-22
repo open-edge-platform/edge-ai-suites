@@ -44,7 +44,7 @@ To set up a deployment:
 
 1. Select Deployments tab and click Setup a Deployment button. The Setup a Deployment page appears.
 
-1. In the Setup a Deployment page, select the **ibvs-app** package for the deployment from list, and click Next. The Select a Profile step appears:
+1. In the Setup a Deployment page, select the **ibvs** package for the deployment from list, and click Next. The Select a Profile step appears:
 
 1. In the Select a Profile step, select the deployment profile, and click Next. The Override Profile Values page appears.
 
