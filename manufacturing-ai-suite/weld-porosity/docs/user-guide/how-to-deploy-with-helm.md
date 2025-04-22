@@ -7,13 +7,9 @@
 
 Complete this guide to confirm that your setup is working correctly and try out workflows in the sample application.
 
-## Prerequisites for Target System
+## Prerequisites
 
--  11th Generation Intel® Core™ processor or above
--  8 GB of memory minimum
--  80 GB of storage space minimum
--  Internet access
--  Ubuntu* 22.04 LTS Desktop
+- [System Requirements](system-requirements.md)
 -  K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to tutorials such as <https://adamtheautomator.com/installing-kubernetes-on-ubuntu> and many other
   online tutorials to setup kubernetes cluster on the web with host OS as ubuntu 22.04.
