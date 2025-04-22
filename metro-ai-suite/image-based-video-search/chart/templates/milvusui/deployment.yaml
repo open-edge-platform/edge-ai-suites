@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    katenary.v3/compose-hash: 4dd006301f669d044c60fd579bb24fb08133f26f
+    katenary.v3/version: release-3.0.0-rc2
+  labels:
+    {{- include "image_based_video_search.labels" . | nindent 4 }}
+    katenary.v3/component: milvusui
+  name: '{{ include "image_based_video_search.fullname" . }}-milvusui'
+spec:
+  replicas: {{ .Values.milvusui.replicas }}
+  selector:
+    matchLabels:
+      {{- include "image_based_video_search.selectorLabels" . | nindent 6 }}
+      katenary.v3/component: milvusui
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
+        katenary.v3/component: milvusui
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: '{{ include "image_based_video_search.fullname" . }}-milvusui'
+        image: '{{ tpl .Values.milvusui.repository.image $ }}:{{ tpl .Values.milvusui.repository.tag $ | default "latest" }}'
+        imagePullPolicy: {{ .Values.milvusui.imagePullPolicy }}
+        name: milvusui
+        # command: ["/bin/bash", "-c"]
+        # args: 
+        #   - |
+        #     tail -f /dev/null
+        ports:
+        - containerPort: 8000
+          name: port-8000
+        {{- if .Values.milvusui.resources }}
+        resources:
+          {{ .Values.milvusui.resources | toYaml | nindent 10 }}
+        {{- end }}
+      {{- if .Values.pullSecrets }}
+      imagePullSecrets:
+      {{- .Values.pullSecrets | toYaml | nindent 6 }}
+      {{- end }}
+      {{- if .Values.milvusui.nodeSelector }}
+      nodeSelector:
+        {{- .Values.milvusui.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if ne .Values.milvusui.serviceAccount "" }}
+      serviceAccountName: {{ .Values.milvusui.serviceAccount | quote }}
+      {{- end }}

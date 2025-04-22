@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+      katenary.v3/compose-hash: 4dd006301f669d044c60fd579bb24fb08133f26f
+      katenary.v3/version: release-3.0.0-rc2
+  labels:
+    {{- include "image_based_video_search.labels" . | nindent 4 }}
+    katenary.v3/component: featurematching
+  name: {{ include "image_based_video_search.fullname" . }}-featurematching
+spec:
+  ports:
+  - name: featurematching-8000
+    port: 8000
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    {{- include "image_based_video_search.selectorLabels" . | nindent 4 }}
+    katenary.v3/component: featurematching

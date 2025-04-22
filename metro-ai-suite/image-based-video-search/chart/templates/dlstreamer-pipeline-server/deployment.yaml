@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    katenary.v3/compose-hash: 4dd006301f669d044c60fd579bb24fb08133f26f
+    katenary.v3/version: release-3.0.0-rc2
+  labels:
+    {{- include "image_based_video_search.labels" . | nindent 4 }}
+    katenary.v3/component: dlstreamer-pipeline-server
+  name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server'
+spec:
+  replicas: {{ .Values.dlstreamerpipelineserver.replicas }}
+  selector:
+    matchLabels:
+      {{- include "image_based_video_search.selectorLabels" . | nindent 6 }}
+      katenary.v3/component: dlstreamer-pipeline-server
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
+        katenary.v3/component: dlstreamer-pipeline-server
+    spec:
+      containers:
+      - name: openvino-container
+        image: openvino/ubuntu22_dev:2024.6.0
+        env:
+          {{- if .Values.httpProxy }}
+          - name: http_proxy
+            value: "{{ .Values.httpProxy }}"
+          - name: HTTP_PROXY
+            value: "{{ .Values.httpProxy }}"
+          {{- end }}
+          {{- if .Values.httpsProxy }}
+          - name: https_proxy
+            value: "{{ .Values.httpsProxy }}"
+          - name: HTTPS_PROXY
+            value: "{{ .Values.httpsProxy }}"
+          {{- end }}
+          {{- if .Values.noProxy }}
+          - name: no_proxy
+            value: "{{ .Values.noProxy }}"
+          - name: NO_PROXY
+            value: "{{ .Values.noProxy }}"
+          {{- end }}
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            test -d /output/resnet-50-pytorch || (
+              rm -fr /output/resnet-50-pytorch &&
+              omz_downloader --name resnet-50-pytorch --output_dir models &&
+              omz_converter --name resnet-50-pytorch --download_dir models --output_dir models &&
+              cp -r ./models/public/resnet-50-pytorch /output
+            ) &&
+            test -d /output/person-vehicle-bike-detection-2004 || (
+              rm -fr /output/person-vehicle-bike-detection-2004 &&
+              omz_downloader --name person-vehicle-bike-detection-2004 --output_dir models &&
+              omz_converter --name person-vehicle-bike-detection-2004 --download_dir models --output_dir models &&
+              cp -r ./models/intel/person-vehicle-bike-detection-2004 /output
+            ) &&
+            tail -f /dev/null
+        volumeMounts:
+        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
+          mountPath: /output
+      - envFrom:
+        - configMapRef:
+            name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-env'
+        image: '{{ tpl .Values.dlstreamerpipelineserver.repository.image $ }}:{{ tpl .Values.dlstreamerpipelineserver.repository.tag $ | default "latest" }}'
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          fsGroup: 0
+        imagePullPolicy: {{ .Values.dlstreamerpipelineserver.imagePullPolicy }}
+        name: dlstreamer-pipeline-server
+        command: ["/bin/bash", "-c"]
+        args: 
+          - |
+            cp /tmp/pipeline/config.json . &&
+            cp /tmp/pipeline/person-vehicle-bike-detection-2004.json . &&
+            chown 1999 -R /home/pipeline-server &&
+            runuser -u intelmicroserviceuser ./run.sh
+        ports:
+        - containerPort: 8080
+          name: port-8080
+        volumeMounts:
+        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline'
+          mountPath: /tmp/pipeline
+          subpath: config.json
+        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline-root'
+          mountPath: /var/cache/pipeline_root
+        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-tmp'
+          mountPath: /tmp
+        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
+          mountPath: /models
+        {{- if .Values.dlstreamerpipelineserver.resources }}
+        resources:
+          {{ .Values.dlstreamerpipelineserver.resources | toYaml | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline'
+        configMap:
+          name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline'
+      - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline-root'
+        emptyDir:
+          sizeLimit: 1Gi
+          medium: Memory
+      - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-tmp'
+        emptyDir:
+          sizeLimit: 1Gi
+          medium: Memory
+      - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
+        emptyDir:
+          sizeLimit: 10Gi
+      {{- if .Values.pullSecrets }}
+      imagePullSecrets:
+      {{- .Values.pullSecrets | toYaml | nindent 6 }}
+      {{- end }}
+      {{- if .Values.dlstreamerpipelineserver.nodeSelector }}
+      nodeSelector:
+        {{- .Values.dlstreamerpipelineserver.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if ne .Values.dlstreamerpipelineserver.serviceAccount "" }}
+      serviceAccountName: {{ .Values.dlstreamerpipelineserver.serviceAccount | quote }}
+      {{- end }}
