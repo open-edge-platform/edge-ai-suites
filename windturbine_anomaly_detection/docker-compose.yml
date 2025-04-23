@@ -4,7 +4,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.33.1
+    image: telegraf:1.34.1
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -124,7 +124,7 @@ services:
     - "${KAPACITOR_PORT}:${KAPACITOR_PORT}"
 
   ia-grafana:
-    image: grafana/grafana-oss:11.5.2-ubuntu
+    image: grafana/grafana-oss:11.6.0-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -167,7 +167,7 @@ services:
     container_name: ia-mqtt-broker
     hostname: ia-mqtt-broker
     read_only: true
-    image: eclipse-mosquitto:2.0.19
+    image: eclipse-mosquitto:2.0.21
     restart: unless-stopped
     depends_on:
       - ia-influxdb

@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
       - name: ia-mqtt-broker
-        image: eclipse-mosquitto:2.0.19
+        image: eclipse-mosquitto:2.0.21
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           runAsUser: {{ $.Values.env.TIMESERIES_UID }}

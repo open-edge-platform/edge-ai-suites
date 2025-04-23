@@ -1,2 +1,2 @@
-gradio==5.13.2
+gradio==5.25.2
 influxdb==5.3.2

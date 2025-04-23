@@ -39,7 +39,7 @@ spec:
       {{- end }}
       containers:
       - name: ia-grafana
-        image: grafana/grafana-oss:11.5.2-ubuntu
+        image: grafana/grafana-oss:11.6.0-ubuntu
         imagePullPolicy: {{ $.Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: false
