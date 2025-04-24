@@ -1,6 +1,6 @@
 # Copyright Intel Corporation
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -11,7 +11,7 @@ RUN groupadd $TIMESERIES_USER_NAME -g $TIMESERIES_UID && \
     
 # Update package list and install Python and pip
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3 python3-pip && \
+    apt-get install -y --no-install-recommends python3 python3-pip python3-venv && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -22,7 +22,9 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN /bin/bash -c "python3 -m venv venv && \
+    source venv/bin/activate && \
+    pip3 install --no-cache-dir -r requirements.txt"
 
 # Copy the rest of the application code into the container
 COPY . .
@@ -31,5 +33,4 @@ HEALTHCHECK --interval=5m CMD exit 0
 
 USER $TIMESERIES_USER_NAME
 # Set the default command to run your application
-CMD ["python3", "app.py"]
-
+CMD ["/bin/bash", "-c", "source /app/venv/bin/activate && python3 app.py"]
