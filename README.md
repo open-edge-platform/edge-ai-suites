@@ -15,7 +15,7 @@ These suites simplify the creation of custom AI solutions for specific industrie
 
 [The Manufacturing AI Suite](manufacturing-ai-suite) enhances output quality and volume with automated defect detection, asset tracking, software-defined controls, and other capabilities, empowering smart factories with Vision, Time Series and Generative AI capabilities. 
 
-[The Retail AI Suite](retail-ai-suite) accelerates hardware decisions for Retail AI workloads at the edge, developing automated and assisted customer checkout experiences with built-in inventory management and omnichannel analytics.
+[The Retail AI Suite](retail-ai-suite) accelerates hardware decisions for Retail AI workloads at the edge, featuring use cases such as self-checkout and loss prevention.
 
 [The Media & Entertainment AI Suite](media-and-entertainment-ai-suite) provides libraries and sample applications to accelerate solution development for high-performance, high-quality, live video production helping improve viewer experience.
 
