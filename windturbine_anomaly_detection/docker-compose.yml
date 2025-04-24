@@ -210,6 +210,8 @@ services:
       interval: 5m
     networks:
     - timeseries_network
+    volumes:
+    - ../../tools/mqtt/publisher/input_data/windturbine/windturbine_data.csv:/app/windturbine_data.csv
 
   ia-mqtt-publisher:
     build:
@@ -240,6 +242,8 @@ services:
     networks:
     - timeseries_network
     command: ["--csv", "/windturbine/windturbine_data.csv"]
+    volumes:
+    - ../../tools/mqtt/publisher/input_data/windturbine/windturbine_data.csv:/windturbine/windturbine_data.csv
 
   ia-gradio-ui:
     build:

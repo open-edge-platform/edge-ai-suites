@@ -47,7 +47,7 @@ spec:
         - name: LOG_LEVEL
           value: '{{ .Values.env.LOG_LEVEL }}'
         volumeMounts:
-        {{ if eq .Values.env.SECURE_MODE true}}
+        {{ if eq .Values.env.SECURE_MODE true }}
         - name: certs
           mountPath: /run/secrets/ca_certificate.pem
           subPath: ca_certificate.pem
@@ -58,17 +58,24 @@ spec:
           mountPath: /run/secrets/opcua-server_Server_server_key.pem
           subPath: opcua-server_Server_server_key.pem
         {{ end }}
+        - name: windturbine-data-csv
+          mountPath: /app/windturbine_data.csv
+          subPath: windturbine_data.csv
+
       volumes:
-      {{ if eq .Values.env.SECURE_MODE true}}
-        - name: certs
-          secret:
-            secretName: ts-certs
-            items:
-            - key: ca_certificate.pem
-              path: ca_certificate.pem
-            - key: opcua-server_Server_server_certificate.pem
-              path: opcua-server_Server_server_certificate.pem
-            - key: opcua-server_Server_server_key.pem
-              path: opcua-server_Server_server_key.pem
+      - name: windturbine-data-csv
+        configMap:
+          name: windturbine-data-csv
+      {{ if eq .Values.env.SECURE_MODE true }}
+      - name: certs
+        secret:
+          secretName: ts-certs
+          items:
+          - key: ca_certificate.pem
+            path: ca_certificate.pem
+          - key: opcua-server_Server_server_certificate.pem
+            path: opcua-server_Server_server_certificate.pem
+          - key: opcua-server_Server_server_key.pem
+            path: opcua-server_Server_server_key.pem
       {{ end }}
 {{ end }}

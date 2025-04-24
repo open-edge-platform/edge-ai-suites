@@ -19,7 +19,9 @@ export $(shell sed 's/=.*//' $(ENV_FILE))
 .PHONY: build
 build:
 	@echo "Building Docker containers..."
+	@cp -f ../../tools/mqtt/publisher/input_data/windturbine/windturbine_data.csv ../../tools/opcua_server/windturbine_data.csv
 	$(DOCKER_COMPOSE) build
+	@rm -f ../../tools/opcua_server/windturbine_data.csv
 
 # Run Docker containers
 
