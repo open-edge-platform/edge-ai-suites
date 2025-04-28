@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-mqtt-broker
+  labels:
+    app: mqtt-broker
+  namespace: {{ $.Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-broker
+  template:
+    metadata:
+      labels:
+        app: mqtt-broker
+    spec:
+      containers:
+      - name: mqtt
+        image: eclipse-mosquitto:latest
+        ports:
+        - containerPort: {{ $.Values.config.mqtt_broker.int.mqtt_port }}
+          name: mqtt
+        env:
+        - name: http_proxy
+          value: {{ $.Values.env.http_proxy }}
+        - name: https_proxy
+          value: {{ $.Values.env.https_proxy }}
+        - name: no_proxy
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        volumeMounts:
+        - name: mosquitto-config-volume
+          mountPath: /mosquitto/config
+      volumes:
+      - name: mosquitto-config-volume
+        configMap:
+          name: mqtt-broker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mqtt-broker
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app: mqtt-broker
+spec:
+  type: NodePort
+  ports:
+  - port: {{ $.Values.config.mqtt_broker.int.mqtt_port }}
+    targetPort: {{ $.Values.config.mqtt_broker.int.mqtt_port }}
+    name: mqtt
+    protocol: TCP
+    nodePort: {{ $.Values.config.mqtt_broker.ext.mqtt_port }}
+  selector:
+    app: mqtt-broker
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: mqtt-broker
+data:
+  mosquitto.conf: |
+    allow_anonymous true
+    listener 1883
