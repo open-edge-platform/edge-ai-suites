@@ -35,25 +35,13 @@ spec:
       {{- end }}
       containers:
       - name: ia-time-series-analytics-microservice
-        {{ if eq .Values.env.DEPLOYMENT_METHOD_ITEP false}}
         image: {{ .Values.DOCKER_REGISTRY }}ia-time-series-analytics-microservice:1.0.0
-        {{- else }}
-        image: {{ .Values.DOCKER_REGISTRY }}ia-time-series-analytics-microservice-windturbine:1.0.0
-        {{ end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true
         volumeMounts:
         - name: vol-temp-time-series-analytics-microservice
           mountPath: /tmp
-        {{ if eq .Values.env.DEPLOYMENT_METHOD_ITEP false}}
-        - name: {{ .Values.volumes.models.name }}
-          mountPath: {{ .Values.volumes.models.location }}
-        - name: {{ .Values.volumes.tick.name }}
-          mountPath: {{ .Values.volumes.tick.location }}
-        - name: {{ .Values.volumes.udfs.name }}
-          mountPath: {{ .Values.volumes.udfs.location }}
-        {{ end }}
         - name: time-series-analytics-microservice-config
           mountPath: /app/config.json
           subPath: config.json
@@ -116,17 +104,6 @@ spec:
       - name: time-series-analytics-microservice-config
         configMap:
           name: time-series-analytics-microservice-config
-      {{ if eq .Values.env.DEPLOYMENT_METHOD_ITEP false}}
-      - name: {{ .Values.volumes.models.name }}
-        hostPath:
-          path: {{ .Values.volumes.models.hostpath }}
-      - name: {{ .Values.volumes.tick.name }}
-        hostPath:
-          path: {{ .Values.volumes.tick.hostpath }}
-      - name: {{ .Values.volumes.udfs.name }}
-        hostPath:
-          path: {{ .Values.volumes.udfs.hostpath }}
-      {{ end}}
       {{ if eq .Values.env.SECURE_MODE true}}
       - name: certs
         secret:

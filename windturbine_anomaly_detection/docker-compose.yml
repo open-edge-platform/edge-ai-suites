@@ -70,7 +70,7 @@ services:
   
   ia-time-series-analytics-microservice:
     build:
-      context: $PWD/../../microservices/time_series_analytics_microservice
+      context: $PWD/../../
       dockerfile: $PWD/../../microservices/time_series_analytics_microservice/Dockerfile
       args:
         KAPACITOR_VERSION: 1.7.6
@@ -96,8 +96,8 @@ services:
       retries: 20
     environment:
       SECURE_MODE: ${SECURE_MODE}
-      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost"
-      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost"
+      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry"
+      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry"
       KAPACITOR_PORT: ${KAPACITOR_PORT}
       INFLUX_SERVER: "ia-influxdb"
       KAPACITOR_INFLUXDB_0_USERNAME: ${INFLUXDB_USERNAME}
@@ -112,6 +112,7 @@ services:
       INFLUXDB_DBNAME: datain
       PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
       SSL_CERT_FILE: /run/secrets/ca_certificate.pem
+      MODEL_REGISTRY_URL: http://model-registry:8111
     networks:
     - timeseries_network
     volumes:
@@ -199,10 +200,11 @@ services:
     environment:
       SECURE_MODE: ${SECURE_MODE}
       LOG_LEVEL: ${LOG_LEVEL}
+      no_proxy: "ia-time-series-analytics-microservice"
+      NO_PROXY: "ia-time-series-analytics-microservice"
+      TS_MS_SERVER: "ia-time-series-analytics-microservice"
+      TS_MS_PORT: ${KAPACITOR_PORT}
     restart: unless-stopped
-    depends_on:
-      ia-time-series-analytics-microservice:
-        condition: service_healthy
     security_opt:
     - no-new-privileges
     healthcheck:
@@ -225,9 +227,6 @@ services:
     read_only: true
     image: ${DOCKER_REGISTRY}ia-mqtt-publisher:1.0.0
     restart: unless-stopped
-    depends_on:
-      ia-time-series-analytics-microservice:
-        condition: service_healthy
     security_opt:
     - no-new-privileges
     healthcheck:
@@ -235,10 +234,12 @@ services:
       interval: 5m
     environment:
       AppName: "mqtt-publisher"
-      no_proxy: "ia-mqtt-broker"
-      NO_PROXY: "ia-mqtt-broker"
       HOST_IP: ia-mqtt-broker
       SECURE_MODE: ${SECURE_MODE}
+      no_proxy: "ia-mqtt-broker,ia-time-series-analytics-microservice"
+      NO_PROXY: "ia-mqtt-broker,ia-time-series-analytics-microservice"
+      TS_MS_SERVER: "ia-time-series-analytics-microservice"
+      TS_MS_PORT: ${KAPACITOR_PORT}
     networks:
     - timeseries_network
     command: ["--csv", "/windturbine/windturbine_data.csv"]

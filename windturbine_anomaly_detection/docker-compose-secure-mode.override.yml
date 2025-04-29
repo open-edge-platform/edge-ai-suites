@@ -15,6 +15,8 @@ services:
       - grafana_Server_server_certificate.pem
       - grafana_Server_server_key.pem
   ia-time-series-analytics-microservice:
+    environment:
+      MODEL_REGISTRY_URL: https://model-registry:8111
     secrets:
       - ca_certificate.pem
       - time_series_analytics_microservice_Server_server_certificate.pem

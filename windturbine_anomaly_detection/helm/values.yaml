@@ -22,7 +22,6 @@ env:
   HTTPS_PROXY: 
   INFLUXDB_RETENTION_DURATION: 1h0m0s
   TELEGRAF_METRIC_BATCH_SIZE: 100
-  DEPLOYMENT_METHOD_ITEP: false
   LOG_LEVEL: INFO
 config:
   influx_db_server:
@@ -58,19 +57,3 @@ config:
       port: "7860"
     ext:
       port: "30002"
-volumes:
-  models:
-    name: vol-models
-    size: 500Mi
-    hostpath: "/opt/intel/time_series_analytics_microservice/models/"
-    location: "/app/models"
-  tick:
-    name: vol-tick-scripts
-    size: 100Mi
-    hostpath: "/opt/intel/time_series_analytics_microservice/tick_scripts/"
-    location: "/app/tick_scripts"
-  udfs:
-    name: vol-udfs
-    size: 100Mi
-    hostpath: "/opt/intel/time_series_analytics_microservice/udfs/"
-    location: "/app/udfs"

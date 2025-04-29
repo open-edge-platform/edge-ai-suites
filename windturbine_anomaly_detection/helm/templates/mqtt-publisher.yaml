@@ -35,7 +35,10 @@ spec:
           value: "ia-mqtt-broker"
         - name: SECURE_MODE
           value: '{{ .Values.env.SECURE_MODE }}'
-                
+        - name: TS_MS_SERVER
+          value: "time-series-analytics-microservice"
+        - name: TS_MS_PORT
+          value: '{{ .Values.config.time_series_analytics_microservice.kapacitor_port }}'
         volumeMounts:
         - name: windturbine-data-csv
           mountPath: /windturbine/windturbine_data.csv

@@ -1,6 +1,6 @@
 # Copyright Intel Corporation
 
-TARGET ?= default_target
+INCLUDE ?= default_INCLUDE
 
 DOCKER_COMPOSE_FILE = ./docker-compose.yml
 DOCKER_COMPOSE_SECURE_MODE_FILE = ./docker-compose-secure-mode.override.yml
@@ -9,6 +9,7 @@ DOCKER_COMPOSE = docker compose
 
 # Define the path to the .env file and scripts
 ENV_FILE = ./.env
+MODEL_REGISTRY_ENV_FILE = ./model_registry/docker/.env
 CERT_SCRIPT = ./../../tools/cert_gen.sh
 HELM_PACKAGE_SCRIPT = ./package_helm.sh
 
@@ -21,13 +22,44 @@ build:
 	@echo "Building Docker containers..."
 	@cp -f ../../tools/mqtt/publisher/input_data/windturbine/windturbine_data.csv ../../tools/opcua_server/windturbine_data.csv
 	$(DOCKER_COMPOSE) build
+	@if [ "$(INCLUDE)" = "model_registry" ]; then \
+		echo "Building Model Registry Docker containers..."; \
+		cd ./model_registry/docker; \
+		if [ ! -f .env ]; then \
+			cp .env.template .env; \
+		fi; \
+		docker compose build; \
+	fi
 	@rm -f ../../tools/opcua_server/windturbine_data.csv
 
-# Run Docker containers
+
+
+# Check if multiple particular variables in .env are assigned with values
+.PHONY: check_env_variables
+check_env_variables:
+	@echo "Checking if username/password in .env are assigned..."
+	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD"; \
+	for variable_name in $$variables; do \
+		value=$$(grep -E "^$$variable_name=" $(ENV_FILE) | cut -d'=' -f2); \
+		if [ -z "$$value" ]; then \
+			echo "'$$variable_name' in $(ENV_FILE) is unassigned."; \
+			exit 1; \
+		fi; \
+	done;
+	@if [ "$(INCLUDE)" = "model_registry" ]; then \
+		vars="MR_PSQL_PASSWORD MR_MINIO_ACCESS_KEY MR_MINIO_SECRET_KEY"; \
+		for variable_name in $$vars; do \
+			value=$$(grep -E "^$$variable_name=" $(MODEL_REGISTRY_ENV_FILE) | cut -d'=' -f2); \
+			if [ -z "$$value" ]; then \
+				echo "'$$variable_name' in $(MODEL_REGISTRY_ENV_FILE) is unassigned."; \
+				exit 1; \
+			fi; \
+		done; \
+	fi
 
 .PHONY: up_mqtt_ingestion
-up_mqtt_ingestion: down
-	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(TARGET) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
+up_mqtt_ingestion: down check_env_variables
+	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
     if [ $(SECURE_MODE) = 'false' ]; then \
         echo "Starting Docker containers..."; \
         $(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d ;\
@@ -36,18 +68,21 @@ up_mqtt_ingestion: down
 		$(CERT_SCRIPT); \
 		echo "Certificates generated"; \
 		echo "Starting Docker containers..."; \
-		if [ $(TARGET) = 'validation' ]; then \
+		if [ $(INCLUDE) = 'validation' ]; then \
 			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-opcua-server=0 -d; \
 		else \
 			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) up --scale ia-opcua-server=0 -d; \
 		fi \
-    fi
+    fi; \
+	if [ $(INCLUDE) = 'model_registry' ]; then \
+		${MAKE} mraas_up; \
+	fi; \
 	${MAKE} status
 
 # Run Docker containers
 .PHONY: up_opcua_ingestion
-up_opcua_ingestion: down
-	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(TARGET) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
+up_opcua_ingestion: down check_env_variables
+	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	if [ $(SECURE_MODE) = 'false' ]; then \
 		echo "Starting Docker containers..."; \
 		$(DOCKER_COMPOSE) up --scale ia-mqtt-publisher=0 -d ;\
@@ -56,13 +91,34 @@ up_opcua_ingestion: down
 		$(CERT_SCRIPT); \
 		echo "Certificates generated"; \
 		echo "Starting Docker containers..."; \
-		if [ $(TARGET) = 'validation' ]; then \
+		if [ $(INCLUDE) = 'validation' ]; then \
 			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-mqtt-publisher=0 -d; \
 		else \
 			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) up --scale ia-mqtt-publisher=0 -d; \
 		fi \
-	fi
+	fi; \
+	if [ $(INCLUDE) = 'model_registry' ]; then \
+		${MAKE} mraas_up; \
+	fi; \
 	${MAKE} status
+
+.PHONY: mraas_up
+mraas_up:
+	@echo "Starting Model Registry Docker containers..."; \
+	cd ./model_registry/docker; \
+	sudo rm -rf Certificates; \
+	sed -i -e "s|ENABLE_HTTPS_MODE=.*|ENABLE_HTTPS_MODE=$(SECURE_MODE)|g" .env; \
+	sudo ./../scripts/init_mr_data_dirs.sh; \
+	sed -i -e "s|- mr.*|- timeseriessoftware_timeseries_network|g" docker-compose.yml; \
+	sed -i -e "s|mr:.*|timeseriessoftware_timeseries_network:|g" docker-compose.yml; \
+	sed -i -e "s|driver:.*|external: true|g" docker-compose.yml; \
+	if [ $(SECURE_MODE) = 'true' ]; then \
+		cp ./../scripts/generate_ssl_files.sh .; \
+		./generate_ssl_files.sh; \
+	fi 
+	cd ./model_registry/docker; \
+	docker compose up -d
+
 
 # Status of the deployed containers
 .PHONY: status
@@ -91,6 +147,7 @@ status:
 .PHONY: down
 down:
 	@echo "Stopping Docker containers..."
+	docker compose -f ./model_registry/docker/docker-compose.yml down -v
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE)  down -v
 
 # Remove all stopped containers and unused images
