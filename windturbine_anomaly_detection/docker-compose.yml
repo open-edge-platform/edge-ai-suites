@@ -106,7 +106,6 @@ services:
       KAPACITOR_URL: http://ia-time-series-analytics-microservice:$KAPACITOR_PORT/
       KAPACITOR_UNSAFE_SSL: "true"
       KAPACITOR_INFLUXDB_0_URLS_0: http://ia-influxdb:8086/
-      KAPACITOR_SERVER: 'ia-time-series-analytics-microservice'
       INFLUXDB_PORT: 8086
       KAPACITOR_LOGGING_LEVEL: ${LOG_LEVEL}
       INFLUXDB_DBNAME: datain

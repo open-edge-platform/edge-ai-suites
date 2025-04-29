@@ -84,8 +84,6 @@ spec:
           value: "http://influxdb:{{ .Values.config.influx_db_server.influx_http }}/"
         - name: INFLUX_SERVER
           value: "influxdb"
-        - name: KAPACITOR_SERVER
-          value: "time-series-analytics-microservice"
         - name: INFLUXDB_PORT
           value: "8086"
         - name: INFLUXDB_DBNAME
