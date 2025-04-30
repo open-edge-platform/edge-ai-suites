@@ -2,7 +2,7 @@ version: '3.6'
 services:
   ia-grafana:
     volumes:
-      - ./grafana/metrics_dashboard/system_metrics.json:/etc/grafana/provisioning/dashboards/system_metrics.json
+      - ./grafana/system_metrics_dashboard/system_metrics.json:/etc/grafana/provisioning/dashboards/system_metrics.json
   ia-telegraf:
     user: root
     environment:

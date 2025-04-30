@@ -60,9 +60,13 @@ check_env_variables:
 .PHONY: up_mqtt_ingestion
 up_mqtt_ingestion: down check_env_variables
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
-    if [ $(SECURE_MODE) = 'false' ]; then \
-        echo "Starting Docker containers..."; \
-        $(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d ;\
+	if [ $(SECURE_MODE) = 'false' ]; then \
+		echo "Starting Docker containers..."; \
+		if [ $(INCLUDE) = 'validation' ]; then \
+			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-opcua-server=0 -d ;\
+		else \
+			$(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d ;\
+		fi \
 	else \
 		echo "Generating Certificates"; \
 		$(CERT_SCRIPT); \
@@ -73,7 +77,7 @@ up_mqtt_ingestion: down check_env_variables
 		else \
 			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) up --scale ia-opcua-server=0 -d; \
 		fi \
-    fi; \
+	fi; \
 	if [ $(INCLUDE) = 'model_registry' ]; then \
 		${MAKE} mraas_up; \
 	fi; \
@@ -85,7 +89,11 @@ up_opcua_ingestion: down check_env_variables
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	if [ $(SECURE_MODE) = 'false' ]; then \
 		echo "Starting Docker containers..."; \
-		$(DOCKER_COMPOSE) up --scale ia-mqtt-publisher=0 -d ;\
+		if [ $(INCLUDE) = 'validation' ]; then \
+        	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-mqtt-publisher=0 -d ;\
+		else \
+			$(DOCKER_COMPOSE) up --scale ia-mqtt-publisher=0 -d ;\
+		fi \
 	else \
 		echo "Generating Certificates"; \
 		$(CERT_SCRIPT); \
