@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-node-red
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app: node-red
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-red
+  template:
+    metadata:
+      labels:
+        app: node-red
+    spec:
+      initContainers:
+      - name: intel-plugin-downloader
+        image: curlimages/curl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          mkdir -p /tmp/data
+          mkdir -p /tmp/videos
+          curl -L https://github.com/open-edge-platform/edge-ai-suites/archive/main.zip -o /tmp/main.zip && \
+          unzip -q /tmp/main.zip -d /tmp && \
+          cp -r /tmp/edge-ai-suites-main/metro-ai-suite/smart-parking/node-red/* /tmp/data/ && \
+          rm -rf /tmp/main.zip /tmp/edge-ai-suites-main
+          sed -i "s|http://[0-9]\{1,3\}\(\.[0-9]\{1,3\}\)\{3\}|http://$HOST_IP|g" /tmp/data/flows.json
+          sed -i "s|\"broker\": *\"[0-9]\{1,3\}\(\.[0-9]\{1,3\}\)\{3\}\",|\"broker\": \"$HOST_IP\",|" /tmp/data/flows.json
+          sed -i "s|\"port\": \"1883\",|\"port\": \"$MQTT_PORT\",|" /tmp/data/flows.json
+          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_1.mp4 -o /tmp/videos/new_video_1.mp4
+          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_2.mp4 -o /tmp/videos/new_video_2.mp4
+          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_3.mp4 -o /tmp/videos/new_video_3.mp4
+          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_4.mp4 -o /tmp/videos/new_video_4.mp4
+        env:
+        - name: http_proxy
+          value: {{ $.Values.env.http_proxy }}
+        - name: https_proxy
+          value: {{ $.Values.env.https_proxy }}
+        - name: no_proxy
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        - name: HOST_IP
+          value: {{ $.Values.env.HOST_IP }}
+        - name: MQTT_PORT
+          value: "{{ $.Values.config.mqtt_broker.ext.mqtt_port }}"
+        volumeMounts:
+        - name: node-red-data
+          mountPath: /tmp/data
+        - name: videos-data
+          mountPath: /tmp/videos
+      containers:
+      - name: node-red
+        image: nodered/node-red
+        command: ["/bin/bash", "-c"]
+        args: ["/data/install_package.sh && /usr/src/node-red/entrypoint.sh"]
+        ports:
+        - containerPort: {{ $.Values.config.node_red.int.web_ui_port }}
+          name: http
+        env:
+        - name: http_proxy
+          value: {{ $.Values.env.http_proxy }}
+        - name: https_proxy
+          value: {{ $.Values.env.https_proxy }}
+        - name: no_proxy
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        - name: MQTT_PORT
+          value: "{{ $.Values.config.mqtt_broker.ext.mqtt_port }}"
+        securityContext:
+          runAsUser: 0  # root user
+        volumeMounts:
+        - name: node-red-data
+          mountPath: /data
+        - name: videos-data
+          mountPath: /data/public/videos
+      volumes:
+      - name: node-red-data
+        emptyDir:
+          sizeLimit: 100Mi
+      - name: videos-data
+        emptyDir:
+          sizeLimit: 500Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-red
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app: node-red
+spec:
+  type: NodePort
+  ports:
+  - port: {{ $.Values.config.node_red.int.web_ui_port }}
+    targetPort: {{ $.Values.config.node_red.int.web_ui_port }}
+    protocol: TCP
+    name: http
+    nodePort: {{ $.Values.config.node_red.ext.web_ui_port }}
+  selector:
+    app: node-red

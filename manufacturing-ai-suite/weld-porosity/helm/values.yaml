@@ -10,7 +10,7 @@ num_video_instances: 1
 env:
   ENABLE_WEBRTC: "true"
   ENABLE_RTSP: "true"
-  # WEBRTC_SIGNALING_SERVER: "http://{{ $.Values.env.HOST_IP }}:31111"
+  # WEBRTC_SIGNALING_SERVER: "http://{{ $.Values.env.HOST_IP }}:32111"
   HOST_IP: localhost
   RTSP_CAMERA_IP: 
   ENABLE_HTTPS_MODE: false
@@ -29,10 +29,10 @@ env:
   POSTGRES_USER: postgres
   POSTGRES_DB: model_registry_db
   POSTGRES_PASSWORD: 
-  S3_STORAGE_PORT: 30800
+  S3_STORAGE_PORT: 31800
   ENABLE_OPEN_TELEMETRY: true
   # OTEL_COLLECTOR_HOST: {{ $.Values.env.HOST_IP }}
-  OTEL_COLLECTOR_PORT: 30418
+  OTEL_COLLECTOR_PORT: 31418
   OTEL_EXPORT_INTERVAL_MILLIS: 5000
 privileged_access_required: false
 gpu:
@@ -51,7 +51,7 @@ config:
     int:
       prometheus_port: "9090"
     ext:
-      prometheus_port: "30909"
+      prometheus_port: "31909"
   otel_collector:
     name: otel-collector
     int:
@@ -59,9 +59,9 @@ config:
       otlp_http_port: "4318"
       otlp_prometheus_endpoint_port: "9464"
     ext:
-      otlp_grpc_port: "30417"
-      otlp_http_port: "30418"
-      otlp_prometheus_endpoint_port: "30464"
+      otlp_grpc_port: "31417"
+      otlp_http_port: "31418"
+      otlp_prometheus_endpoint_port: "31464"
   mediamtx:
     name: mediamtx
     int:
@@ -69,31 +69,31 @@ config:
       mediamtx_sdp_port: "8189"
       mediamtx_api_port: "9997"
     ext:
-      mediamtx_port: "31111"
-      mediamtx_sdp_port: "31112"
-      mediamtx_api_port: "31222"
+      mediamtx_port: "32111"
+      mediamtx_sdp_port: "32112"
+      mediamtx_api_port: "32222"
   coturn:
     name: coturn
     int:
       coturn_tcp_port: "3478"
       coturn_udp_port: "3478"
     ext:
-      coturn_tcp_port: "30478"
-      coturn_udp_port: "30478"
+      coturn_tcp_port: "32478"
+      coturn_udp_port: "32478"
   dlstreamer_pipeline_server:
     name: dlstreamer-pipeline-server
     int:
       rest_api_port: "8080"
       rtsp_output_port: "8554"
     ext:
-      rest_api_port: "30107"
-      rtsp_output_port: "30125"
+      rest_api_port: "31107"
+      rtsp_output_port: "31125"
   model_registry:
     name: model-registry
     int:
       port: "8111"
     ext:
-      port: "32002"
+      port: "32102"
 volumes:
   pipelines:
     name: vol-pipelines

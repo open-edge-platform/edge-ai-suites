@@ -1,0 +1,96 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: LicenseRef-Intel
+---
+specSchema: "Application"
+schemaVersion: "0.1"
+$schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
+
+name: wpd-app
+version: 1.1.0
+description: "Weld Porosity Detection Sample Application"
+
+helmRegistry: "docker-hub"
+chartName: "intel/weld-porosity-sample-application"
+chartVersion: "1.1.0"
+
+profiles:
+  - name: "default"
+    description: "Uses CPU for inferencing"
+    valuesFileName: "wpd-values.yaml"
+    parameterTemplates:
+      - name: env.HOST_IP
+        displayName: "IP address of the target Edge Node"
+        type: string
+        mandatory: true
+      - name: webrtcturnserver.username
+        displayName: "WebRTC user"
+        type: string
+        mandatory: true
+      - name: webrtcturnserver.password
+        displayName: "WebRTC password"
+        type: string
+        secret: true
+        mandatory: true
+      - name: env.http_proxy
+        displayName: "Http proxy"
+        type: string
+        default: ""
+      - name: env.https_proxy
+        displayName: "Https proxy"
+        type: string
+        default: ""
+      - name: env.MINIO_ACCESS_KEY
+        displayName: "Minio access key"
+        type: string
+        secret: true
+        mandatory: true
+      - name: env.MINIO_SECRET_KEY
+        displayName: "Minio secret key"
+        type: string
+        secret: true
+        mandatory: true
+      - name: env.POSTGRES_PASSWORD
+        displayName: "Postgres database password"
+        type: string
+        secret: true
+        mandatory: true
+  - name: "with-intel-gpu"
+    description: "Uses Intel GPU for inferencing, needs Intel GPU extension"
+    valuesFileName: "wpd-values-with-intel-gpu.yaml"
+    parameterTemplates:
+      - name: env.HOST_IP
+        displayName: "IP address of the target Edge Node"
+        type: string
+        mandatory: true
+      - name: webrtcturnserver.username
+        displayName: "WebRTC user"
+        type: string
+        mandatory: true
+      - name: webrtcturnserver.password
+        displayName: "WebRTC password"
+        type: string
+        secret: true
+        mandatory: true
+      - name: env.http_proxy
+        displayName: "Http proxy"
+        type: string
+        default: ""
+      - name: env.https_proxy
+        displayName: "Https proxy"
+        type: string
+        default: ""
+      - name: env.MINIO_ACCESS_KEY
+        displayName: "Minio access key"
+        type: string
+        secret: true
+        mandatory: true
+      - name: env.MINIO_SECRET_KEY
+        displayName: "Minio secret key"
+        type: string
+        secret: true
+        mandatory: true
+      - name: env.POSTGRES_PASSWORD
+        displayName: "Postgres database password"
+        type: string
+        secret: true
+        mandatory: true

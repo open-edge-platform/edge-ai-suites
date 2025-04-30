@@ -18,7 +18,7 @@ You can bring your own model and run this sample application the same way as how
   - videos/
     - warehouse.avi
 
-   > **Note**  
+   > **Note**
    > You can organize the directory structure for models for different use cases.
 
 
@@ -78,7 +78,7 @@ You can bring your own model and run this sample application the same way as how
   - videos/
     - warehouse.avi
 
-   > **Note**  
+   > **Note**
    > You can organize the directory structure for models for different use cases.
 
 

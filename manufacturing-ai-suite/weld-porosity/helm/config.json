@@ -8,7 +8,7 @@
             "grpc"
         ],
         "model_registry": {
-            "url": "http://<HOST_IP_where_MRaaS_is_running>:32002",
+            "url": "http://<HOST_IP_where_MRaaS_is_running>:32102",
             "request_timeout": 300,
             "saved_models_dir": "./mr_models"
         },

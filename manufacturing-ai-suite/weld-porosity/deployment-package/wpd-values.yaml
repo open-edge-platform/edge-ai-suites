@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: LicenseRef-Intel
+---
+namespace: wpd
+env:
+  HOST_IP: # IP address of the target Edge Node, example: HOST_IP: 10.100.100.100
+  http_proxy: # example: http_proxy: http://proxy.example.com:891
+  https_proxy: # example: http_proxy: http://proxy.example.com:891
+  MINIO_ACCESS_KEY: # example: MINIO_ACCESS_KEY: intel1234
+  MINIO_SECRET_KEY: # example: MINIO_SECRET_KEY: intel1234
+  POSTGRES_PASSWORD: # example: POSTGRES_PASSWORD: intel1234
+webrtcturnserver:
+    username: # example: username: myuser
+    password: # example: password: mypassword

@@ -18,7 +18,7 @@
    how-to-manage-pipelines
    how-to-use-an-ai-model-and-video-file-of-your-own
    how-to-use-opcua-publisher
-   how-to-deploy-with-edge-manageability-framework
+   how-to-deploy-with-edge-orchestrator
 
 
 .. toctree::

@@ -182,7 +182,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 
 4. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` and `http://<HOST_IP>:<mediamtx-port>/<different-peer-str-id>` by updating `<HOST_IP>` with the system IP. `mediamtx-port` in this case would be 8889 as configured in .env file
 
-   ![Example of a WebRTC streaming using default mediatx-port 31111](./docs/user-guide/images/webrtc-streaming.png)
+   ![Example of a WebRTC streaming using default mediatx-port 8889](./docs/user-guide/images/webrtc-streaming.png)
 
    Figure 1: WebRTC streaming
 
@@ -251,7 +251,7 @@ Note: We have removed "model-instance-id=inst0" from the weld_porosity_classific
 
 6. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the cURL command to start the pipeline.
 
-   ![Example of a WebRTC streaming using default mediatx-port 31111](./docs/user-guide/images/webrtc-streaming.png)
+   ![Example of a WebRTC streaming using default mediatx-port 8889](./docs/user-guide/images/webrtc-streaming.png)
 
    Figure 2: WebRTC streaming
 

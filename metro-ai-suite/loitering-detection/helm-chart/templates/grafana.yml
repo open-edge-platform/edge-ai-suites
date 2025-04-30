@@ -1,0 +1,142 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-grafana
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      initContainers:
+      - name: intel-plugin-downloader
+        image: curlimages/curl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          mkdir -p /tmp/test_plugin
+          mkdir -p /tmp/dashboards
+          curl -L https://github.com/open-edge-platform/edge-ai-suites/archive/main.zip -o /tmp/main.zip && \
+          unzip -q /tmp/main.zip -d /tmp && \
+          cp -r /tmp/edge-ai-suites-main/metro-ai-suite/loitering-detection/grafana/test_plugin/* /tmp/test_plugin/ && \
+          cp -r /tmp/edge-ai-suites-main/metro-ai-suite/loitering-detection/grafana/dashboards/* /tmp/dashboards/ && \
+          for file in $(find /tmp/dashboards -name "*.json"); do
+            sed -i "s|0.0.0.0:8889|$HOST_IP:$WEBRTC_PORT|g" $file
+          done && \
+          rm -rf /tmp/main.zip /tmp/edge-ai-suites-main
+        env:
+        - name: http_proxy
+          value: {{ $.Values.env.http_proxy }}
+        - name: https_proxy
+          value: {{ $.Values.env.https_proxy }}
+        - name: no_proxy
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        - name: HOST_IP
+          value: {{ $.Values.env.HOST_IP }}
+        - name: WEBRTC_PORT
+          value: "{{ $.Values.config.mediamtx.ext.mediamtx_port }}"
+        volumeMounts:
+        - name: intel-plugin-volume
+          mountPath: /tmp/test_plugin
+        - name: dashboards-volume
+          mountPath: /tmp/dashboards
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - containerPort: {{ $.Values.config.grafana.int.web_ui_port }}
+          name: http
+        env:
+        - name: GF_INSTALL_PLUGINS
+          value: "yesoreyeram-infinity-datasource,ryantxu-ajax-panel,grafana-mqtt-datasource"
+        - name: GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS
+          value: "intel-custom-panel"
+        - name: http_proxy
+          value: {{ $.Values.env.http_proxy }}
+        - name: https_proxy
+          value: {{ $.Values.env.https_proxy }}
+        - name: no_proxy
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        volumeMounts:
+        - name: dashboards-config
+          mountPath: /etc/grafana/provisioning/dashboards/main.yml
+          subPath: dashboards.yml
+        - name: datasources-config
+          mountPath: /etc/grafana/provisioning/datasources/datasources.yml
+          subPath: datasources.yml
+        - name: grafana-config
+          mountPath: /etc/grafana/grafana.ini
+          subPath: grafana.ini
+        - name: intel-plugin-volume
+          mountPath: /var/lib/grafana/plugins/intel-custom-panel
+        - name: dashboards-volume
+          mountPath: /var/lib/grafana/dashboards
+      volumes:
+      - name: dashboards-config
+        configMap:
+          name: grafana-dashboards-config
+      - name: datasources-config
+        configMap:
+          name: grafana-datasources
+      - name: grafana-config
+        configMap:
+          name: grafana-config
+      - name: intel-plugin-volume
+        emptyDir:
+          sizeLimit: 100Mi
+      - name: dashboards-volume
+        emptyDir:
+          sizeLimit: 100Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app: grafana
+spec:
+  type: NodePort
+  ports:
+  - port: {{ $.Values.config.grafana.int.web_ui_port }}
+    targetPort: {{ $.Values.config.grafana.int.web_ui_port }}
+    protocol: TCP
+    name: http
+    nodePort: {{ $.Values.config.grafana.ext.web_ui_port }}
+  selector:
+    app: grafana
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-config
+  namespace: {{ $.Values.namespace }}
+data:
+  dashboards.yml: |
+    {{ .Files.Get "config/grafana-dashboards.yml" | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: {{ $.Values.namespace }}
+data:
+  datasources.yml: |
+    {{ (.Files.Get "config/grafana-datasources.yml" | replace "0.0.0.0" .Values.env.HOST_IP) | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-config
+  namespace: {{ $.Values.namespace }}
+data:
+  grafana.ini: |
+    {{ .Files.Get "config/grafana.ini" | nindent 4 }}

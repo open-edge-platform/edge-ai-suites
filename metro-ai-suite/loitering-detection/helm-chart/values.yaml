@@ -1,0 +1,78 @@
+# Copyright Intel Corporation
+
+namespace:
+DOCKER_REGISTRY: ''
+DOCKER_USERNAME: ''
+DOCKER_PASSWORD: ''
+imagePullPolicy: Always
+storageClassName: manual
+env:
+  ENABLE_WEBRTC: "true"
+  ENABLE_RTSP: "true"
+  HOST_IP: <HOST_IP>
+  ENABLE_HTTPS_MODE: false
+  MIN_LOG_LEVEL: DEBUG
+  SERVER_PORT: "8111"
+  https_proxy:
+  http_proxy:
+  no_proxy:
+  NO_PROXY:
+privileged_access_required: false
+gpu:
+  enabled: false
+  type: "gpu.intel.com/i915"
+  count: 1
+webrtcturnserver:
+  username: <WEBRTC_TURN_SERVER_USERNAME>
+  password: <WEBRTC_TURN_SERVER_PASSWORD>
+config:
+  mediamtx:
+    name: mediamtx
+    int:
+      mediamtx_port: "8889"
+      mediamtx_sdp_port: "8189"
+      mediamtx_api_port: "9997"
+    ext:
+      mediamtx_port: "31111"
+      mediamtx_sdp_port: "31112"
+      mediamtx_api_port: "31222"
+  coturn:
+    name: coturn
+    int:
+      coturn_tcp_port: "3478"
+      coturn_udp_port: "3478"
+    ext:
+      coturn_tcp_port: "30478"
+      coturn_udp_port: "30478"
+  dlstreamer_pipeline_server:
+    name: dlstreamer-pipeline-server
+    int:
+      rest_api_port: "8080"
+      rtsp_output_port: "8554"
+    ext:
+      rest_api_port: "30107"
+      rtsp_output_port: "30125"
+  mqtt_broker:
+    name: mqtt-broker
+    int:
+      mqtt_port: "1883"
+    ext:
+      mqtt_port: "31883"
+  grafana:
+    name: grafana
+    int:
+      web_ui_port: "3000"
+    ext:
+      web_ui_port: "30300"
+  node_red:
+    name: node-red
+    int:
+      web_ui_port: "1880"
+    ext:
+      web_ui_port: "31880"
+volumes:
+  pipelines:
+    name: vol-pipelines
+    size: 100Mi
+    location: "/home/pipeline-server/pipelines"
+    hostpath: "/opt/intel/eii/pipelines"

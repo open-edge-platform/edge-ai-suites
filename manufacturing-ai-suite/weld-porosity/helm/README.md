@@ -114,7 +114,7 @@ You need to copy your own or existing model into DL Streamer Pipeline Server ino
 
 5. Provide the model path and video file path in the REST/curl command for starting an inferencing workload. Example:
     ```sh
-    curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/weld_porosity_classification -X POST -H 'Content-Type: application/json' -d '{
+    curl http://<HOST_IP>:31107/pipelines/user_defined_pipelines/weld_porosity_classification -X POST -H 'Content-Type: application/json' -d '{
         "source": {
             "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
             "type": "uri"
@@ -170,7 +170,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 3. Start the weld porosity classification pipeline with the following Client URL (cURL) command by replacing the `<peer-str-id>` with a string id eg: `weld` and `<HOST_IP>` with the system IP. This pipeline is configured to run in a loop forever. This REST/cURL request will return a pipeline instance ID, which can be used as an identifier to query later the pipeline status or stop the pipeline instance. For example, a6d67224eacc11ec9f360242c0a86003.
 
     ``` sh
-    curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/weld_porosity_classification_mlops -X POST -H 'Content-Type: application/json' -d '{
+    curl http://<HOST_IP>:31107/pipelines/user_defined_pipelines/weld_porosity_classification_mlops -X POST -H 'Content-Type: application/json' -d '{
         "destination": {
             "frame": {
                 "type": "webrtc",
@@ -190,7 +190,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 4. Start another weld porosity classification pipeline with the following Client URL (cURL) command by replacing the `<different-peer-str-id>` with a different string id than the one in above step. eg: `weldstream` and `<HOST_IP>` with the system IP. This pipeline is not configured to run in a loop forever. This REST/cURL request will return a pipeline instance ID, which can be used as an identifier to query later the pipeline status or stop the pipeline instance. For example, a6d67224eacc11ec9f360242c0a86003.
 
     ``` sh
-    curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/weld_porosity_classification -X POST -H 'Content-Type: application/json' -d '{
+    curl http://<HOST_IP>:31107/pipelines/user_defined_pipelines/weld_porosity_classification -X POST -H 'Content-Type: application/json' -d '{
         "source": {
             "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
             "type": "uri"
@@ -211,9 +211,9 @@ Follow this procedure to run the sample application. In a typical deployment, mu
     ```
     **Note: Note the instance ID of this pipeline**
 
-5. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` and `http://<HOST_IP>:<mediamtx-port>/<different-peer-str-id>`. `mediamtx-port` in this case would be 31111 as configured in .env file
+5. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` and `http://<HOST_IP>:<mediamtx-port>/<different-peer-str-id>`. `mediamtx-port` in this case would be 32111 as configured in .env file
 
-   ![Example of a WebRTC streaming using default mediamtx-port 31111](../docs/user-guide/images/webrtc-streaming.png)
+   ![Example of a WebRTC streaming using default mediamtx-port 32111](../docs/user-guide/images/webrtc-streaming.png)
 
    Figure 1: WebRTC streaming
 
@@ -221,7 +221,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 
 6. Stop the 2nd pipeline using the instance ID noted in point #4 above, before proceeding with this documentation.
    ```shell
-   curl --location -X DELETE http://<HOST_IP>:30107/pipelines/{instance_id}
+   curl --location -X DELETE http://<HOST_IP>:31107/pipelines/{instance_id}
    ```
 
 ### Step 3: MLOps Flow: At runtime, download a new model from model registry and restart the pipeline with the new model.
@@ -231,7 +231,7 @@ Note: We have removed "model-instance-id=inst0" from the weld_porosity_classific
 
 1. Get all the registered models in the model registry
     ```shell
-    curl -X GET 'http://<HOST_IP>:32002/models'
+    curl -X GET 'http://<HOST_IP>:32102/models'
     ```
 
 2. The following step demonstrates how to create a sample model file from an existing model folder for uploading to the Model Registry. If you already have a model zip file, you can skip this step.
@@ -243,7 +243,7 @@ Note: We have removed "model-instance-id=inst0" from the weld_porosity_classific
 
 3. Upload a model file to Model Registry
    ```shell
-   curl -L -X POST "http://<HOST_IP>:32002/models" \
+   curl -L -X POST "http://<HOST_IP>:32102/models" \
    -H 'Content-Type: multipart/form-data' \
    -F 'name="YOLO_Test_Model"' \
    -F 'precision="fp32"' \
@@ -257,12 +257,12 @@ Note: We have removed "model-instance-id=inst0" from the weld_porosity_classific
 
 4. Check instance ID of currently running pipeline and use it in the next command
    ```shell
-   curl --location -X GET http://<HOST_IP>:30107/pipelines/status
+   curl --location -X GET http://<HOST_IP>:31107/pipelines/status
    ```
 
 5. Download the files for a specific model from the model registry microservice and restart the running pipeline with the new model. Essentially, the running instance gets aborted and a new instance gets started.
    ```shell
-   curl 'http://<HOST_IP>:30107/pipelines/user_defined_pipelines/weld_porosity_classification_mlops/<instance_id_of_currently_running_pipeline>/models' \
+   curl 'http://<HOST_IP>:31107/pipelines/user_defined_pipelines/weld_porosity_classification_mlops/<instance_id_of_currently_running_pipeline>/models' \
    --header 'Content-Type: application/json' \
    --data '{
         "project_name": "weld-porosity-classification",
@@ -282,13 +282,13 @@ Note: We have removed "model-instance-id=inst0" from the weld_porosity_classific
 
 6. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the cURL command to start the pipeline.
 
-   ![Example of a WebRTC streaming using default mediamtx-port 31111](../docs/user-guide/images/webrtc-streaming.png)
+   ![Example of a WebRTC streaming using default mediamtx-port 32111](../docs/user-guide/images/webrtc-streaming.png)
 
    Figure 2: WebRTC streaming
 
 7. You can also stop any running pipeline by using the pipeline instance "id"
    ```shell
-   curl --location -X DELETE http://<HOST_IP>:30107/pipelines/{instance_id}
+   curl --location -X DELETE http://<HOST_IP>:31107/pipelines/{instance_id}
    ```
 
 ### Step 4: DL Streamer Pipeline Server S3 frame storage
@@ -301,7 +301,7 @@ Follow this procedure to test the DL Streamer Pipeline Server S3 storage using t
 
    ```python
    import boto3
-   url = "http://<HOST_IP>:30800"
+   url = "http://<HOST_IP>:31800"
    user = "<value of MINIO_ACCESS_KEY used in .env>"
    password = "<value of MINIO_SECRET_KEY used in .env>"
    bucket_name = "ecgdemo"
@@ -320,7 +320,7 @@ Follow this procedure to test the DL Streamer Pipeline Server S3 storage using t
 3. Start the pipeline with the following cURL command with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
 
    ```sh
-    curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/weld_porosity_classification_s3write -X POST -H 'Content-Type: application/json' -d '{
+    curl http://<HOST_IP>:31107/pipelines/user_defined_pipelines/weld_porosity_classification_s3write -X POST -H 'Content-Type: application/json' -d '{
         "source": {
             "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
             "type": "uri"
@@ -340,7 +340,7 @@ Follow this procedure to test the DL Streamer Pipeline Server S3 storage using t
     }'
    ```
 
-4. Go to MinIO console on `http://<HOST_IP>:30800/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `values.yml` file. After logging into console, you can go to  `ecgdemo` bucket and check the frames stored.
+4. Go to MinIO console on `http://<HOST_IP>:31800/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `values.yml` file. After logging into console, you can go to  `ecgdemo` bucket and check the frames stored.
 
    ![S3 minio image storage](../docs/user-guide/images/s3-minio-storage.png)
 
@@ -351,7 +351,7 @@ DL Streamer Pipeline Server supports gathering metrics over Open Telemetry. The 
 - `memory_usage_bytes`: Tracks memory usage in bytes of DL Streamer Pipeline Server python process
 - `fps_per_pipeline`: Tracks FPS for each active pipeline instance in DL Streamer Pipeline Server
 
-- Open `http://<HOST_IP>:30909` in your browser to view the prometheus console and try out the below queries:
+- Open `http://<HOST_IP>:31909` in your browser to view the prometheus console and try out the below queries:
     - `cpu_usage_percentage`
     - `memory_usage_bytes`
     - `fps_per_pipeline{}`

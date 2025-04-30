@@ -11,6 +11,9 @@ on:  # yamllint disable-line rule:truthy
       - release-*
   workflow_dispatch:
 
+permissions:
+  contents: read          # needed for actions/checkout
+
 jobs:
   filter:
     runs-on: ubuntu-latest
@@ -37,38 +40,58 @@ jobs:
               - 'manufacturing-ai-suite/pallet-defect-detection/docs/**'
             weld-porosity:
               - 'manufacturing-ai-suite/weld-porosity/docs/**'
+
   build_image-based-video-search:
     needs: filter
     if: ${{ needs.filter.outputs.image-based-video-search_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@main
-    secrets: inherit
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: metro-ai-suite/image-based-video-search
+
   build_smart-parking:
     needs: filter
     if: ${{ needs.filter.outputs.smart-parking_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@main
-    secrets: inherit
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: metro-ai-suite/smart-parking
+
   build_loitering-detection:
     needs: filter
     if: ${{ needs.filter.outputs.loitering-detection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@main
-    secrets: inherit
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: metro-ai-suite/loitering-detection
+
   build_pallet-defect-detection:
     needs: filter
     if: ${{ needs.filter.outputs.pallet-defect-detection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@main
-    secrets: inherit
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/pallet-defect-detection
+
   build_weld-porosity:
     needs: filter
     if: ${{ needs.filter.outputs.weld-porosity_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@main
-    secrets: inherit
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/weld-porosity

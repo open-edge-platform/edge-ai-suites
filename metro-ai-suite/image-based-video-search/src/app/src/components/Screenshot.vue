@@ -87,7 +87,7 @@ export default defineComponent({
     filteredImageData() {
       return this.imageData
           .filter(data => {
-            const date = new Date(data.datetime);
+            const date = new Date(data.timestamp / 1000000); // Use timestamp instead of datetime
             const from = this.fromDatetime ? new Date(this.fromDatetime) : null;
             const to = this.toDatetime ? new Date(this.toDatetime) : null;
             return (!from || date >= from) && (!to || date <= to);

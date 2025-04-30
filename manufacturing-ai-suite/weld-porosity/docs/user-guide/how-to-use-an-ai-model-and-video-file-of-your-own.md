@@ -114,7 +114,7 @@ You can bring your own model and run this sample application the same way as how
 
 5. Provide the model path and video file path in the REST/curl command for starting an inferencing workload. Example:
     ```sh
-    curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/weld_porosity_classification -X POST -H 'Content-Type: application/json' -d '{
+    curl http://<HOST_IP>:31107/pipelines/user_defined_pipelines/weld_porosity_classification -X POST -H 'Content-Type: application/json' -d '{
         "source": {
             "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
             "type": "uri"

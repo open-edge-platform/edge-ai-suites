@@ -1,0 +1,93 @@
+# Copyright (c) 2025 Intel Corporation.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mediamtx
+  namespace: {{ $.Values.namespace }}
+spec:
+  type: NodePort
+  selector:
+    app: mediamtx
+  ports:
+    - name: "mediamtx-port"
+      port: {{ $.Values.config.mediamtx.int.mediamtx_port }}
+      targetPort: {{ $.Values.config.mediamtx.int.mediamtx_port }}
+      nodePort: {{ $.Values.config.mediamtx.ext.mediamtx_port }}
+    - name: "mediamtx-sdp-port"
+      port: {{ $.Values.config.mediamtx.int.mediamtx_sdp_port }}
+      targetPort: {{ $.Values.config.mediamtx.int.mediamtx_sdp_port }}
+      nodePort: {{ $.Values.config.mediamtx.ext.mediamtx_sdp_port }}
+    - name: "mediamtx-api-port"
+      port: {{ $.Values.config.mediamtx.int.mediamtx_api_port }}
+      targetPort: {{ $.Values.config.mediamtx.int.mediamtx_api_port }}
+      nodePort: {{ $.Values.config.mediamtx.ext.mediamtx_api_port }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mediamtx-secret
+  namespace: {{ .Values.namespace }}
+type: Opaque
+data:
+  MTX_WEBRTCICESERVERS2_0_USERNAME: {{ .Values.webrtcturnserver.username | b64enc }}
+  MTX_WEBRTCICESERVERS2_0_PASSWORD: {{ .Values.webrtcturnserver.password | b64enc }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mediamtx
+  name: deployment-mediamtx
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mediamtx
+  template:
+    metadata:
+      labels:
+        app: mediamtx
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: mediamtx
+        env:
+        - name: http_proxy
+          value: {{ $.Values.env.http_proxy }}
+        - name: https_proxy
+          value: {{ $.Values.env.https_proxy }}
+        - name: no_proxy
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        - name: MTX_WEBRTCICESERVERS2_0_URL
+          value: "turn:{{ $.Values.env.HOST_IP }}:{{ $.Values.config.coturn.ext.coturn_udp_port }}"
+        - name: MTX_WEBRTCICESERVERS2_0_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mediamtx-secret
+              key: MTX_WEBRTCICESERVERS2_0_USERNAME
+        - name: MTX_WEBRTCICESERVERS2_0_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mediamtx-secret
+              key: MTX_WEBRTCICESERVERS2_0_PASSWORD
+        - name: MTX_LOGLEVEL
+          value: "debug"
+        - name: MTX_API
+          value: "yes"
+        - name: MTX_RTSP
+          value: "no"
+        - name: MTX_RTMP
+          value: "no"
+        - name: MTX_SRT
+          value: "no"
+        - name: MTX_HLS
+          value: "no"
+        - name: MTX_WEBRTCTRACKGATHERTIMEOUT
+          value: "10s"
+        image: bluenviron/mediamtx:1.11.3
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+      restartPolicy: Always

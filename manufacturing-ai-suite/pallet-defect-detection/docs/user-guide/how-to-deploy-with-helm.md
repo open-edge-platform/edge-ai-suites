@@ -15,7 +15,7 @@ Complete this guide to confirm that your setup is working correctly and try out 
   online tutorials to setup kubernetes cluster on the web with host OS as ubuntu 22.04.
 - For helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
 
-> **Note**  
+> **Note**
 > If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
 
 ## Download the helm chart
@@ -29,7 +29,7 @@ Follow this procedure on the target system to install the package.
 2. unzip the package using the following command
 
     `tar xvf pallet-defect-detection-reference-implementation-2.3.0.tgz`
-    
+
 - Get into the helm directory
 
     `cd pallet-defect-detection-reference-implementation`
@@ -47,7 +47,7 @@ Follow this procedure on the target system to install the package.
     http_proxy: # example: http_proxy: http://proxy.example.com:891
     https_proxy: # example: http_proxy: http://proxy.example.com:891
     webrtcturnserver:
-        username: # example: username: myuser 
+        username: # example: username: myuser
         password: # example: password: mypassword
     ```
 
@@ -270,7 +270,7 @@ Follow this procedure to stop the sample application and end this demonstration.
     ```sh
     helm uninstall pdd-deploy -n apps
     ```
-    
+
 
 2. Confirm the pods are no longer running.
 
@@ -288,9 +288,9 @@ In this guide, you installed and validated Pallet Defect Detection. You also com
 
 The following are options to help you resolve issues with the sample application.
 
-### Deploying with Intel GPU K8S Extension on ITEP
+### Deploying with Intel GPU K8S Extension
 
-If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) with Intel GPU k8s Extension on ITEP, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
+If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) with Intel GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
 ```sh
 gpu:
   enabled: true

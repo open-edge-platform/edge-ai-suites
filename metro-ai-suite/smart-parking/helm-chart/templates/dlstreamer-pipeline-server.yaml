@@ -1,0 +1,186 @@
+# Copyright (c) 2024 Intel Corporation.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  type: NodePort
+  selector:
+    app: dlstreamer-pipeline-server
+  ports:
+  - name: "rest-api"
+    port: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
+    targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
+    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rest_api_port }}
+  - name: "rtsp-output-streaming"
+    port: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
+    targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
+    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rtsp_output_port }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dlstreamer-pipeline-server
+  name: deployment-{{ $.Values.config.dlstreamer_pipeline_server.name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dlstreamer-pipeline-server
+  template:
+    metadata:
+      labels:
+        app: dlstreamer-pipeline-server
+    spec:
+      securityContext:
+        supplementalGroups: [109,110,992]
+      {{- if and $.Values.DOCKER_USERNAME $.Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      # hostNetwork: true
+      initContainers:
+      - name: video-downloader
+        image: curlimages/curl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          mkdir -p /tmp/videos
+          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_1.mp4 -o /tmp/videos/new_video_1.mp4
+          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_2.mp4 -o /tmp/videos/new_video_2.mp4
+          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_3.mp4 -o /tmp/videos/new_video_3.mp4
+          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_4.mp4 -o /tmp/videos/new_video_4.mp4
+        env:
+        - name: http_proxy
+          value: {{ $.Values.env.http_proxy }}
+        - name: https_proxy
+          value: {{ $.Values.env.https_proxy }}
+        - name: no_proxy
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        volumeMounts:
+        - name: videos-volume
+          mountPath: /tmp/videos
+      - name: model-downloader
+        image: intel/dlstreamer:2025.0.1.3-ubuntu24
+        command:
+        - /bin/sh
+        - -c
+        - |
+          mkdir -p /tmp/models
+          cd dlstreamer/samples
+          chmod +x download_public_models.sh
+          export MODELS_PATH=/tmp/models/ 
+          ./download_public_models.sh yolov10s
+          cd /tmp/
+          git clone --depth=1 https://github.com/open-edge-platform/edge-ai-suites
+          cp -r /tmp/edge-ai-suites/metro-ai-suite/smart-parking/dlsps/models/* /tmp/models/
+          rm -rf /tmp/edge-ai-suites
+        env:
+        - name: http_proxy
+          value: {{ $.Values.env.http_proxy }}
+        - name: https_proxy
+          value: {{ $.Values.env.https_proxy }}
+        - name: no_proxy
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        volumeMounts:
+        - name: models-volume
+          mountPath: /tmp/models
+      containers:
+      - name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
+        image: {{ $.Values.DOCKER_REGISTRY }}intel/dlstreamer-pipeline-server:3.0.0
+        imagePullPolicy: {{ $.Values.imagePullPolicy }}
+        {{- if $.Values.privileged_access_required }}
+        securityContext:
+          privileged: true  # Required for direct access to /dev
+        {{- end }}
+      {{- if $.Values.gpu.enabled }}
+          resources:
+          limits:
+            {{ $.Values.gpu.type }}: {{ $.Values.gpu.count }}
+        {{- end }}
+        volumeMounts:
+        - mountPath: /var/cache/pipeline_root
+          name: vol-pipeline-root-tmpfs0
+        - name: dev
+          mountPath: /dev
+        - name: dev-shm
+          mountPath: /dev/shm
+        - name: tmp
+          mountPath: /tmp
+        - name: var-tmp
+          mountPath: /var/tmp
+        - name: run-udev
+          mountPath: /run/udev
+        - name: {{ $.Values.volumes.pipelines.name }}
+          mountPath: {{ $.Values.volumes.pipelines.location }}
+        - name: dlstreamer-pipeline-server-input
+          mountPath: /home/pipeline-server/config.json
+          subPath: config.json
+        - name: videos-volume
+          mountPath: /home/pipeline-server/videos
+        - name: models-volume
+          mountPath: /home/pipeline-server/models
+        env:
+        - name: AppName
+          value: 'DLStreamerPipelineServer'
+        - name: ENABLE_WEBRTC
+          value: "{{ $.Values.env.ENABLE_WEBRTC }}"
+        - name: ENABLE_RTSP
+          value: "{{ $.Values.env.ENABLE_RTSP }}"
+        - name: WEBRTC_SIGNALING_SERVER
+          value: "http://{{ $.Values.env.HOST_IP }}:{{ $.Values.config.mediamtx.ext.mediamtx_port }}"
+        - name: RUN_MODE
+          value: "EVA"
+        - name: SERVICE_NAME
+          value: "dlstreamer-pipeline-server"
+        - name: REST_SERVER_PORT
+          value: "8080"
+        - name: http_proxy
+          value: {{ $.Values.env.http_proxy }}
+        - name: https_proxy
+          value: {{ $.Values.env.https_proxy }}
+        - name: no_proxy
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+      volumes:
+      - name: vol-pipeline-root-tmpfs0
+        emptyDir: {}
+      - name: dev
+        hostPath:
+          path: /dev
+      - name: dev-shm
+        hostPath:
+          path: /dev/shm
+      - name: tmp
+        hostPath:
+          path: /tmp
+      - name: var-tmp
+        hostPath:
+          path: /var/tmp
+      - name: run-udev
+        hostPath:
+          path: /run/udev
+      - name: {{ $.Values.volumes.pipelines.name }}
+        hostPath:
+          path: {{ $.Values.volumes.pipelines.hostpath }}
+      - name: dlstreamer-pipeline-server-input
+        configMap:
+          name: dlstreamer-pipeline-server-config-input
+      - name: videos-volume
+        emptyDir:
+          sizeLimit: 100Mi
+      - name: models-volume
+        emptyDir:
+          sizeLimit: 100Mi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: dlstreamer-pipeline-server-config-input
+data:
+  config.json: |-
+{{ .Files.Get "config/dlsps-config.json" | indent 4 }}
