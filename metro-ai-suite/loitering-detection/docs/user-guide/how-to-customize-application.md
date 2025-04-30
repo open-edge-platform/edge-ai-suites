@@ -15,7 +15,7 @@ The system follows a modular architecture:
 
 ## DL Streamer Pipeline Server
 
-> For detailed documentation on DL Streamer Pipeline Server (DLSPS), visit the [DL Streamer Pipeline Server Documentation](https://eiidocs.intel.com/IEdgeInsights/EdgeVideoAnalyticsMicroservice/eii/README.html)
+> For detailed documentation on DL Streamer Pipeline Server (DLSPS), visit the [DL Streamer Pipeline Server Documentation](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/Overview.html)
 
 ![Pipeline Architecture](_images/pipeline.png)
 
