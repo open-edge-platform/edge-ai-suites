@@ -19,4 +19,4 @@ data0
                 .noRecoveries()
                 .mqtt('my_mqtt_broker')
                 .topic('alerts/wind_turbine')
-                .qos(0)
+                .qos(1)
