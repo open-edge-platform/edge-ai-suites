@@ -1,0 +1,96 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: Build Documentation
+
+on:  # yamllint disable-line rule:truthy
+  workflow_run:
+    workflows: ["Pre-Merge CI Pipeline"]
+    types:
+      - completed
+
+permissions:
+  contents: read          # needed for actions/checkout
+
+jobs:
+  filter:
+    runs-on: ubuntu-latest
+    outputs:
+      loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
+      image-based-video-search_changed: ${{ steps.filter.outputs.image-based-video-search }}
+      smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
+      pallet-defect-detection_changed: ${{ steps.filter.outputs.pallet-defect-detection }}
+      weld-porosity_changed: ${{ steps.filter.outputs.weld-porosity }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set paths filter
+        id: filter
+        uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
+        with:
+          filters: |
+            loitering-detection:
+              - 'metro-ai-suite/loitering-detection/docs/**'
+            image-based-video-search:
+              - 'metro-ai-suite/image-based-video-search/docs/**'
+            smart-parking:
+              - 'metro-ai-suite/smart-parking/docs/**'
+            pallet-defect-detection:
+              - 'manufacturing-ai-suite/pallet-defect-detection/docs/**'
+            weld-porosity:
+              - 'manufacturing-ai-suite/weld-porosity/docs/**'
+
+  build_image-based-video-search:
+    needs: filter
+    if: ${{ needs.filter.outputs.image-based-video-search_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: metro-ai-suite/image-based-video-search
+
+  build_smart-parking:
+    needs: filter
+    if: ${{ needs.filter.outputs.smart-parking_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: metro-ai-suite/smart-parking
+
+  build_loitering-detection:
+    needs: filter
+    if: ${{ needs.filter.outputs.loitering-detection_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: metro-ai-suite/loitering-detection
+
+  build_pallet-defect-detection:
+    needs: filter
+    if: ${{ needs.filter.outputs.pallet-defect-detection_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/pallet-defect-detection
+
+  build_weld-porosity:
+    needs: filter
+    if: ${{ needs.filter.outputs.weld-porosity_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/weld-porosity
