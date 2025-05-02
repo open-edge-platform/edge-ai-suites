@@ -24,6 +24,7 @@ services:
   ia-telegraf:
     environment:
       TELEGRAF_CONFIG_PATH: /etc/telegraf/Telegraf.conf
+      TS_MS_SERVER_URL: https://ia-time-series-analytics-microservice:${KAPACITOR_PORT}
     secrets:
       - ca_certificate.pem
       - Telegraf_Server_server_certificate.pem

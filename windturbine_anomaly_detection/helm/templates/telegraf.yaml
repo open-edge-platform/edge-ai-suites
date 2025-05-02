@@ -77,11 +77,15 @@ spec:
           value: '{{ .Values.env.TELEGRAF_METRIC_BATCH_SIZE }}'
         
         {{ if eq .Values.env.SECURE_MODE false}}
+        - name: TS_MS_SERVER_URL
+          value: "http://{{ .Values.config.time_series_analytics_microservice.name }}:{{ .Values.config.time_series_analytics_microservice.kapacitor_port }}"
         - name: TELEGRAF_CONFIG_PATH
           value: /etc/telegraf/Telegraf_devmode.conf
         {{- else }}
         - name: TELEGRAF_CONFIG_PATH
           value: /etc/telegraf/Telegraf.conf
+        - name: TS_MS_SERVER_URL
+          value: "https://{{ .Values.config.time_series_analytics_microservice.name }}:{{ .Values.config.time_series_analytics_microservice.kapacitor_port }}"
         {{ end }}
         - name: OPCUA_SERVER
           value: "opc.tcp://ia-opcua-server:4840/freeopcua/server/"

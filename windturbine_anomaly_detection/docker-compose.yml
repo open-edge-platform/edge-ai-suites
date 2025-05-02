@@ -15,8 +15,8 @@ services:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
     environment:
-      no_proxy: "ia-influxdb,ia-mqtt-broker,ia-opcua-server"
-      NO_PROXY: "ia-influxdb,ia-mqtt-broker,ia-opcua-server"
+      no_proxy: "ia-influxdb,ia-mqtt-broker,ia-opcua-server, ia-time-series-analytics-microservice"
+      NO_PROXY: "ia-influxdb,ia-mqtt-broker,ia-opcua-server, ia-time-series-analytics-microservice"
       MQTT_BROKER_HOST: "ia-mqtt-broker"
       INFLUX_SERVER: "ia-influxdb"
       INFLUXDB_PORT: 8086
@@ -28,6 +28,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL}
       TELEGRAF_INPUT_PLUGIN: ${TELEGRAF_INPUT_PLUGIN}
       TELEGRAF_METRIC_BATCH_SIZE: ${TELEGRAF_METRIC_BATCH_SIZE}
+      TS_MS_SERVER_URL: http://ia-time-series-analytics-microservice:${KAPACITOR_PORT}
     entrypoint: ["/bin/sh", "-c", "/entrypoint.sh"]
     networks:
     - timeseries_network
