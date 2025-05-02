@@ -12,7 +12,6 @@ The Manufacturing AI Suite helps you develop solutions for:
 The important components from Edge AI Libraries that help you develop such pipelines for industrial and manufacturing AI use cases are:
 - [Deep Learning Streamer Pipeline Server](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/dlstreamer-pipeline-server): Built on top of GStreamer, a containerized microservice for development and deployment of video analytics pipeline.
 - [Model Registry](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-registry): Providing capabilities to manage lifecycle of an AI model.
-- [Time Series Analytics](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=time-series-analytics): Ability to build time-series based AI pipeline utilizing Kapacitor and Telegraf containers, with InfluxDB for data storage.
 - [Object Store Microservice](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/object-store/minio-store): MinIO based object store microservice to build generative AI pipelines. 
 - [Intel&reg; Geti&trade; SDK](https://github.com/open-edge-platform/geti-sdk): A python package containing tools to interact with an Intel&reg; Geti&trade; server via the REST API, helping you build a full MLOps for vision based use cases.
 
