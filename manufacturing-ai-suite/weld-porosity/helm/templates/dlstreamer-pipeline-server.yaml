@@ -56,6 +56,10 @@ spec:
             {{ $.Values.gpu.type }}: {{ $.Values.gpu.count }}
         {{- end }}
         volumeMounts:
+        - mountPath: /home/pipeline-server/resources/videos
+          name: vol-videos-tmpfs
+        - mountPath: /home/pipeline-server/resources/models
+          name: vol-models-tmpfs
         - mountPath: /var/cache/pipeline_root
           name: vol-pipeline-root-tmpfs0
         - name: dev
@@ -121,6 +125,10 @@ spec:
         image: busybox
         command: ['sh', '-c', 'wget --spider --quiet --tries=5 --timeout=3 http://model-registry:8111/docs']
       volumes:
+      - name: vol-videos-tmpfs
+        emptyDir: {}
+      - name: vol-models-tmpfs
+        emptyDir: {}
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}
       - name: dev
