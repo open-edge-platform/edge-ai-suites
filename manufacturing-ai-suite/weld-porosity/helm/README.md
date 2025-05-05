@@ -77,26 +77,21 @@ You need to copy your own or existing model into DL Streamer Pipeline Server ino
   - videos/
     - welding.avi
 
-   > **Note**  
+   > **Note**
    > You can organize the directory structure for models for different use cases.
 
 
-2. Build DL Streamer Pipeline Server by including your new AI model (weld porosity classification model used here as an example) and video file. Example steps below:
-    - Create the below `Dockerfile` at the root of the repository
-      ```sh
-      FROM intel/dlstreamer-pipeline-server:3.0.0
-      # Copy the application files
-      COPY ./resources/models/weld_porosity /home/pipeline-server/resources/models/weld_porosity
-      COPY ./resources/videos/welding.avi /home/pipeline-server/resources/videos/welding.avi
-      # Define the command to run the application
-      ENTRYPOINT ["./run.sh"]
-      ```
-    - Build a new DL Streamer Pipeline Server image with the below command from the root of the repository
-      ```sh
-      docker build -t intel/dlstreamer-pipeline-server:3.0.0 .
-      ```
-    - Please update `imagePullPolicy` as `imagePullPolicy: IfNotPresent` in `values.yaml` in order to use the above built image.
+2. Copy your new AI model (weld porosity classification model used here as an example) and video file to `dlstreamer-pipeline-server` pod.
 
+       POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+
+       kubectl cp <repo_workdir>/resources/videos/welding.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
+
+       kubectl cp <repo_workdir>/resources/models/weld_porosity/ $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n apps
+
+   > **Note**
+   > You need to run the above commands only after performing the Helm install, and before executing any pipeline.
+   > Make sure to replace the 'apps' namespace in the above command with the namespace you are using.
 
 3. Since this is a classification model, ensure to use gvaclassify in the pipeline. For example: See the `weld_porosity_classification` pipeline in `config.json` (present in the repository) where gvaclassify is used.
 

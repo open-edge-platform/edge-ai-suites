@@ -18,7 +18,8 @@
    how-to-manage-pipelines
    how-to-use-an-ai-model-and-video-file-of-your-own
    how-to-start-mqtt-publisher
-   
+   how-to-deploy-with-edge-orchestrator
+
 .. toctree::
    :caption: References
 
