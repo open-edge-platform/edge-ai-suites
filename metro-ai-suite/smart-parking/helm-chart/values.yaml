@@ -12,7 +12,6 @@ env:
   HOST_IP: <HOST_IP>
   ENABLE_HTTPS_MODE: false
   MIN_LOG_LEVEL: DEBUG
-  SERVER_PORT: "8111"
   https_proxy:
   http_proxy:
   no_proxy:
@@ -33,43 +32,43 @@ config:
       mediamtx_sdp_port: "8189"
       mediamtx_api_port: "9997"
     ext:
-      mediamtx_port: "31111"
-      mediamtx_sdp_port: "31112"
-      mediamtx_api_port: "31222"
+      mediamtx_port: "30489"
+      mediamtx_sdp_port: "30488"
+      mediamtx_api_port: "30487"
   coturn:
     name: coturn
     int:
       coturn_tcp_port: "3478"
       coturn_udp_port: "3478"
     ext:
-      coturn_tcp_port: "30478"
-      coturn_udp_port: "30478"
+      coturn_tcp_port: "30486"
+      coturn_udp_port: "30486"
   dlstreamer_pipeline_server:
     name: dlstreamer-pipeline-server
     int:
       rest_api_port: "8080"
       rtsp_output_port: "8554"
     ext:
-      rest_api_port: "30107"
-      rtsp_output_port: "30125"
+      rest_api_port: "30485"
+      rtsp_output_port: "30484"
   mqtt_broker:
     name: mqtt-broker
     int:
       mqtt_port: "1883"
     ext:
-      mqtt_port: "31883"
+      mqtt_port: "30483"
   grafana:
     name: grafana
     int:
       web_ui_port: "3000"
     ext:
-      web_ui_port: "30300"
+      web_ui_port: "30480"
   node_red:
     name: node-red
     int:
       web_ui_port: "1880"
     ext:
-      web_ui_port: "31880"
+      web_ui_port: "30482"
 volumes:
   pipelines:
     name: vol-pipelines

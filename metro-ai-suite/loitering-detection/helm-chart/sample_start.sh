@@ -1,5 +1,5 @@
 #!/bin/bash
-curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/object_tracking_1 -X POST -H 'Content-Type: application/json' -d '
+curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_1 -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/VIRAT_S_000101.mp4",
@@ -8,7 +8,7 @@ curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/object_tracking_1 -
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:31883",
+            "host": "<HOST_IP>:30383",
             "topic": "object_tracking_1",
             "timeout": 1000
         },
@@ -22,7 +22,7 @@ curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/object_tracking_1 -
     }
 }'
 
-curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/object_tracking_2 -X POST -H 'Content-Type: application/json' -d '
+curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_2 -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/VIRAT_S_000102.mp4",
@@ -31,7 +31,7 @@ curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/object_tracking_2 -
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:31883",
+            "host": "<HOST_IP>:30383",
             "topic": "object_tracking_2",
             "timeout": 1000
         },
@@ -45,7 +45,7 @@ curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/object_tracking_2 -
     }
 }'
 
-curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/object_tracking_3 -X POST -H 'Content-Type: application/json' -d '
+curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_3 -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/VIRAT_S_000103.mp4",
@@ -54,7 +54,7 @@ curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/object_tracking_3 -
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:31883",
+            "host": "<HOST_IP>:30383",
             "topic": "object_tracking_3",
             "timeout": 1000
         },
@@ -68,7 +68,7 @@ curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/object_tracking_3 -
     }
 }'
 
-curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/object_tracking_4 -X POST -H 'Content-Type: application/json' -d '
+curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_4 -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/VIRAT_S_000104.mp4",
@@ -77,7 +77,7 @@ curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/object_tracking_4 -
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:31883",
+            "host": "<HOST_IP>:30383",
             "topic": "object_tracking_4",
             "timeout": 1000
         },
