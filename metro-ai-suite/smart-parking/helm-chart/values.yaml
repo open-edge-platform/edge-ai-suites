@@ -12,8 +12,8 @@ env:
   HOST_IP: <HOST_IP>
   ENABLE_HTTPS_MODE: false
   MIN_LOG_LEVEL: DEBUG
-  https_proxy:
   http_proxy:
+  https_proxy:
   no_proxy:
   NO_PROXY:
 privileged_access_required: false

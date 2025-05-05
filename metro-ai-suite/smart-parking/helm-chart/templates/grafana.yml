@@ -130,7 +130,7 @@ metadata:
   namespace: {{ $.Values.namespace }}
 data:
   datasources.yml: |
-    {{ (.Files.Get "config/grafana-datasources.yml" | replace "0.0.0.0" .Values.env.HOST_IP) | nindent 4 }}
+    {{ (.Files.Get "config/grafana-datasources.yml" | replace "0.0.0.0" .Values.env.HOST_IP | replace "1883" .Values.config.mqtt_broker.ext.mqtt_port) | nindent 4 }}
 ---
 apiVersion: v1
 kind: ConfigMap
