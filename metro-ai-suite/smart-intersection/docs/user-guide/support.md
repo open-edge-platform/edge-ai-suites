@@ -49,7 +49,7 @@ This page provides comprehensive support and troubleshooting information for the
      ```bash
      rm ./src/secrets/browser.auth
      ```
-   - Then report Step 2 **Setup Credentials**
+   - Then report Step 2 **Setup Credentials and Download Assets** in [Get Started](./get-started.md)
 ### 5. Can't access application in remote host
    - Update the firewall to receive request to port 443
      ```bash

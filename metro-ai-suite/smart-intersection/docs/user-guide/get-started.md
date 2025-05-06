@@ -17,6 +17,7 @@ By following this guide, you will learn how to:
 ## Prerequisites
 - Verify that your system meets the [Minimum Requirements](./system-requirements.md).
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/). Enable running docker without "sudo": [Post Install](https://docs.docker.com/engine/install/linux-postinstall/)
+- Install Git: [Installing Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 
 <!--
 **Setup and First Use**: Include installation instructions, basic operation, and initial validation.
@@ -33,26 +34,15 @@ By following this guide, you will learn how to:
 3. Troubleshooting tips for common installation issues.
 -->
 
-1. **Download the Smart Intersection Application**
+1. **Clone the Repository**:
+   - Run:
+     ```bash
+     git clone https://github.com/open-edge-platform/edge-ai-suites.git
+     cd ./edge-ai-suites/metro-ai-suite/smart-intersection
+     ```
 
-    To begin, download the full application package, which includes all source code, container images and configuration files.
-        
-    - Visit the **Smart Intersection Sample Application** page in the [Edge Software Catalog](https://edgesoftwarecatalog.intel.com/).
-    - Click on the **"Request Access"** button in the **Get Started** section.
- 
-    - After approval, you will receive a confirmation email containing a product key and download instructions.
- 
-    - Once downloaded, Extract the folder to access the source code and the artifacts required for the sample application:
-      ```bash
-      unzip intel-scenescape-itep.zip
-      cd intel-scenescape-itep
-      chmod +x edgesoftware
-      ./edgesoftware download
-      cd Smart_Intersection_Sample_Application_1.0.0/SMART_INTERSECTION/smart_intersection/
-      ```
-
-2. **Setup Credentials**:
-    - Use docker to setup the credentials:
+2. **Setup Credentials and Download Assets**:
+    - Use docker to setup the credentials and download assets:
       ```bash
       docker run --rm -ti \
           -v $(pwd)/init.sh:/init.sh \
@@ -61,12 +51,6 @@ By following this guide, you will learn how to:
           docker.io/library/python:3.12 bash init.sh
       ```
 
-3. **Import Scenescape Container Images**:
-    - Use docker load to import the container images:
-      ```bash
-      docker load -i ./images/scenescape.tar
-      docker load -i ./images/scenescape-controller.tar
-      ```
 ## Select Deployment Option
 
 Choose one of the following methods to deploy the Smart Intersection application:
