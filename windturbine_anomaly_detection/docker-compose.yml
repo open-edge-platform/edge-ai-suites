@@ -121,8 +121,6 @@ services:
     - ./time_series_analytics_microservice/tick_scripts/:/app/tick_scripts/
     - ./time_series_analytics_microservice/config.json:/app/config.json
     - ./time_series_analytics_microservice/models/:/app/models/
-    ports:
-    - "${KAPACITOR_PORT}:${KAPACITOR_PORT}"
 
   ia-grafana:
     image: grafana/grafana-oss:11.6.0-ubuntu
