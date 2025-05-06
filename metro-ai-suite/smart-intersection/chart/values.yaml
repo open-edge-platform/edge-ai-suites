@@ -87,7 +87,7 @@ grafana:
     size: 1Gi
 
 scene:
-  repository: amr-registry.caas.intel.com/intel-scenescape/scenescape-controller
+  repository: docker.io/intel/scenescape-controller
   tag: "2025.1"
   pullPolicy: IfNotPresent
 
@@ -96,7 +96,7 @@ scene:
     port: 80
 
 pgserver:
-  repository: amr-registry.caas.intel.com/intel-scenescape/scenescape
+  repository: docker.io/intel/scenescape
   tag: "2025.1"
   pullPolicy: IfNotPresent
 
@@ -109,7 +109,7 @@ pgserver:
 web:
   replicas: 1
   image:
-    repository: amr-registry.caas.intel.com/intel-scenescape/scenescape
+    repository: docker.io/intel/scenescape
     tag: "2025.1"
     pullPolicy: IfNotPresent
   dbhost: pgserver
