@@ -23,6 +23,7 @@ jobs:
       loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
       image-based-video-search_changed: ${{ steps.filter.outputs.image-based-video-search }}
       smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
+      smart-intersection_changed: ${{ steps.filter.outputs.smart-intersection }}
       pallet-defect-detection_changed: ${{ steps.filter.outputs.pallet-defect-detection }}
       weld-porosity_changed: ${{ steps.filter.outputs.weld-porosity }}
     steps:
@@ -38,6 +39,8 @@ jobs:
               - 'metro-ai-suite/image-based-video-search/docs/**'
             smart-parking:
               - 'metro-ai-suite/smart-parking/docs/**'
+            smart-intersection:
+              - 'metro-ai-suite/smart-intersection/docs/**'
             pallet-defect-detection:
               - 'manufacturing-ai-suite/pallet-defect-detection/docs/**'
             weld-porosity:
@@ -64,6 +67,17 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: metro-ai-suite/smart-parking
+
+  build_smart-intersection:
+    needs: filter
+    if: ${{ needs.filter.outputs.smart-intersection_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: metro-ai-suite/smart-intersection
 
   build_loitering-detection:
     needs: filter
