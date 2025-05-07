@@ -50,7 +50,7 @@ spec:
           mountPath: /tmp/dashboards
       containers:
       - name: grafana
-        image: grafana/grafana:latest
+        image: grafana/grafana:11.5.4
         ports:
         - containerPort: {{ $.Values.config.grafana.int.web_ui_port }}
           name: http
