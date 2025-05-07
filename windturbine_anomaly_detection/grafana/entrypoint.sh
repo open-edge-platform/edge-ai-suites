@@ -1,3 +1,8 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
 #!/bin/sh
 
 # Read the certificate files and export their contents as environment variables

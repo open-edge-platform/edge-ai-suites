@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
 
 # Wait for InfluxDB to start
 INFLUX_URL="http://localhost:8086"

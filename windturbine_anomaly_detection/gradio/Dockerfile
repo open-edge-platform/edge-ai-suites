@@ -1,4 +1,8 @@
-# Copyright Intel Corporation
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
 
 FROM python:3.13.2-slim
 # Set environment variables
