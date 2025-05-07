@@ -88,7 +88,7 @@ grafana:
 
 scene:
   repository: docker.io/intel/scenescape-controller
-  tag: "2025.1"
+  tag: "v1.3.0"
   pullPolicy: IfNotPresent
 
   service:
@@ -97,7 +97,7 @@ scene:
 
 pgserver:
   repository: docker.io/intel/scenescape
-  tag: "2025.1"
+  tag: "v1.3.0"
   pullPolicy: IfNotPresent
 
   storageClassName: "hostpath"
@@ -110,7 +110,7 @@ web:
   replicas: 1
   image:
     repository: docker.io/intel/scenescape
-    tag: "2025.1"
+    tag: "v1.3.0"
     pullPolicy: IfNotPresent
   dbhost: pgserver
   broker: broker.scenescape.intel.com

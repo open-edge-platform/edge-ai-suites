@@ -214,7 +214,7 @@ services:
     restart: on-failure:5
 
   pgserver:
-    image: docker.io/intel/scenescape:2025.1
+    image: docker.io/intel/scenescape:v1.3.0
     init: true
     networks:
       - scenescape
@@ -250,7 +250,7 @@ services:
     restart: on-failure:5
 
   web:
-    image: docker.io/intel/scenescape:2025.1
+    image: docker.io/intel/scenescape:v1.3.0
     init: true
     networks:
       scenescape:
@@ -295,7 +295,7 @@ services:
     restart: on-failure:5
 
   scene:
-    image: docker.io/intel/scenescape-controller:2025.1
+    image: docker.io/intel/scenescape-controller:v1.3.0
     init: true
     networks:
       scenescape:
