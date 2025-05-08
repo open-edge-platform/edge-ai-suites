@@ -16,7 +16,8 @@ By following this guide, you will learn how to:
 
 ## Prerequisites
 - Verify that your system meets the [Minimum Requirements](./system-requirements.md).
-- Install Docker: [Installation Guide](https://docs.docker.com/get-docker/). Enable running docker without "sudo": [Post Install](https://docs.docker.com/engine/install/linux-postinstall/)
+- Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
+- Enable running docker without "sudo": [Post Install](https://docs.docker.com/engine/install/linux-postinstall/)
 - Install Git: [Installing Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 
 <!--
