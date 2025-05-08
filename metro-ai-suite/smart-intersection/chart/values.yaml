@@ -96,7 +96,7 @@ scene:
     port: 80
 
 pgserver:
-  repository: docker.io/intel/scenescape
+  repository: docker.io/intel/scenescape-manager
   tag: "v1.3.0"
   pullPolicy: IfNotPresent
 
@@ -109,7 +109,7 @@ pgserver:
 web:
   replicas: 1
   image:
-    repository: docker.io/intel/scenescape
+    repository: docker.io/intel/scenescape-manager
     tag: "v1.3.0"
     pullPolicy: IfNotPresent
   dbhost: pgserver
