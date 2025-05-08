@@ -85,7 +85,7 @@ services:
       - app_network
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.5.4
     container_name: grafana
     ports:
       - "3000:3000"
