@@ -25,6 +25,8 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code into the container
 COPY . .
 
+RUN apt-get remove --purge -y --allow-remove-essential perl-base
+
 HEALTHCHECK --interval=5m CMD exit 0
 
 USER $TIMESERIES_USER_NAME
