@@ -36,13 +36,14 @@ The application includes a demonstration video for testing. The video loops cont
 
 ### Deployment with Edge Orchestrator
 
-- [This sample application is ready for deployment with Edge Orchestrator. Download the deployment package and follow the instructions](how-to-deploy-edge-orchestrator.md).
+- [This sample application is ready for deployment with Edge Orchestrator. Download the deployment package and follow the instructions](https://docs.openedgeplatform.intel.com/edge-ai-suites/image-based-video-search/main/user-guide/how-to-deploy-edge-orchestrator.html).
+
 
 ### Learn More
-- [System Requirements](system-requirements.md)
-- [Get Started](get-started.md)
-- [Architecture Overview](overview-architecture.md)
-- [How to Build from Source](how-to-build-source.md)
-- [How to Deploy with Helm](how-to-deploy-helm.md)
-- [How to Deploy with the Edge Orchestrator](how-to-deploy-edge-orchestrator.md)
-- [Release Notes](release-notes.md)
+- [System Requirements](https://docs.openedgeplatform.intel.com/edge-ai-suites/image-based-video-search/main/user-guide/system-requirements.html)
+- [Get Started](https://docs.openedgeplatform.intel.com/edge-ai-suites/image-based-video-search/main/user-guide/get-started.html)
+- [Architecture Overview](https://docs.openedgeplatform.intel.com/edge-ai-suites/image-based-video-search/main/user-guide/overview-architecture.html)
+- [How to Build from Source](https://docs.openedgeplatform.intel.com/edge-ai-suites/image-based-video-search/main/user-guide/how-to-build-source.html)
+- [How to Deploy with Helm](https://docs.openedgeplatform.intel.com/edge-ai-suites/image-based-video-search/main/user-guide/how-to-deploy-helm.html)
+- [How to Deploy with the Edge Orchestrator](https://docs.openedgeplatform.intel.com/edge-ai-suites/image-based-video-search/main/user-guide/how-to-deploy-edge-orchestrator.html)
+- [Release Notes](https://docs.openedgeplatform.intel.com/edge-ai-suites/image-based-video-search/main/user-guide/release-notes.html)
