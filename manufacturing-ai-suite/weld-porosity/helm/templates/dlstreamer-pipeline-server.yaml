@@ -84,6 +84,8 @@ spec:
         env:
         - name: AppName
           value: 'DLStreamerPipelineServer'
+        - name: LOG_LEVEL
+          value: "{{ $.Values.env.DLPS_LOG_LEVEL }}"
         - name: ENABLE_WEBRTC
           value: "{{ $.Values.env.ENABLE_WEBRTC }}"
         - name: ENABLE_RTSP

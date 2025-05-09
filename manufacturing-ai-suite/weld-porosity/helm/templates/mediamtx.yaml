@@ -80,6 +80,8 @@ spec:
             value: "no"
           - name: MTX_HLS
             value: "no"
+          - name: MTX_WEBRTCTRACKGATHERTIMEOUT
+            value: {{ $.Values.env.WHIP_SERVER_TIMEOUT }}
         image: bluenviron/mediamtx:1.11.3
         imagePullPolicy: {{ .Values.imagePullPolicy }}
       restartPolicy: Always

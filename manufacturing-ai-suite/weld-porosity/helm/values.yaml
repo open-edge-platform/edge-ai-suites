@@ -8,9 +8,11 @@ imagePullPolicy: Always
 storageClassName: manual
 num_video_instances: 1
 env:
+  DLPS_LOG_LEVEL: INFO
   ENABLE_WEBRTC: "true"
   ENABLE_RTSP: "true"
   # WEBRTC_SIGNALING_SERVER: "http://{{ $.Values.env.HOST_IP }}:32111"
+  WHIP_SERVER_TIMEOUT: 10s
   HOST_IP: localhost
   RTSP_CAMERA_IP: 
   ENABLE_HTTPS_MODE: false
