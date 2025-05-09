@@ -78,6 +78,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: metro-ai-suite/smart-intersection
+      branch_pattern: '^main$'  # Smart Intersection only exists on 'main' branch
 
   build_loitering-detection:
     needs: filter
