@@ -49,3 +49,7 @@ This section provides a high-level view of how the application integrates with a
 - [How to Deploy with Docker Compose](./docs/user-guide/how-to-deploy-docker.md): How to deploy the application using Docker Compose.
 - [How to Use the Application](./docs/user-guide/how-to-use-application.md): Explore the application's features and verify its functionality.
 - [Support and Troubleshooting](./docs/user-guide/support.md): Find solutions to common issues and troubleshooting steps.
+
+## License
+
+The application is licensed under the [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](LICENSE.pdf).

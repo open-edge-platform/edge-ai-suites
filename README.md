@@ -25,7 +25,7 @@ The Edge AI Suites project hosts a collection of sample applications organized a
 |:------|:-------------------|:------------|:----------------|
 | Metro AI Suite | [Loitering Detection](metro-ai-suite/loitering-detection) | [Link](metro-ai-suite/loitering-detection/docs/user-guide/get-started.md) | [Customize the Application](metro-ai-suite/loitering-detection/docs/user-guide/how-to-customize-application.md) |
 | Metro AI Suite | [Image-Based Video Search](metro-ai-suite/image-based-video-search) | [Link](metro-ai-suite/image-based-video-search/docs/user-guide/get-started.md) | [Build](metro-ai-suite/image-based-video-search/docs/user-guide/how-to-build-source.md) and [Deployment](metro-ai-suite/image-based-video-search/docs/user-guide/how-to-deploy-helm.md) instructions |
-| Metro AI Suite | [Smart Intersection](metro-ai-suite/smart-intersection) | [Link](metro-ai-suite/smart-intersection/docs/user-guide/get-started.md) | [Deployment](metro-ai-suite/smart-intersection/docs/user-guide/how-to-deploy-docker.md) |
+| Metro AI Suite | [Smart Intersection](metro-ai-suite/smart-intersection) [*](#license) | [Link](metro-ai-suite/smart-intersection/docs/user-guide/get-started.md) | [Deployment](metro-ai-suite/smart-intersection/docs/user-guide/how-to-deploy-docker.md) |
 | Metro AI Suite | [Smart Parking](metro-ai-suite/smart-parking) | [Link](metro-ai-suite/smart-parking/docs/user-guide/get-started.md) | [Customize the Application](metro-ai-suite/smart-parking/docs/user-guide/how-to-customize-application.md) |
 | Manufacturing AI Suite | [Pallet Defect Detection](manufacturing-ai-suite/pallet-defect-detection) | [Link](manufacturing-ai-suite/pallet-defect-detection#get-started) | [Customize the Application](manufacturing-ai-suite/pallet-defect-detection/docs/user-guide/how-to-use-an-ai-model-and-video-file-of-your-own.md) |
 | Manufacturing AI Suite | [Weld Porosity](manufacturing-ai-suite/weld-porosity) | [Link](manufacturing-ai-suite/weld-porosity#get-started) | [Customize the Application](manufacturing-ai-suite/weld-porosity/docs/user-guide/how-to-use-an-ai-model-and-video-file-of-your-own.md) |
@@ -44,6 +44,11 @@ For support, please submit your bug report and feature request to [Github Issues
 
 ## License
 
-The **Edge AI Suites** project is licensed under the [APACHE 2.0](LICENSE).   
+The **Edge AI Suites** project is licensed under the [APACHE 2.0](LICENSE), expect for the following sample applications:
+
+| Sample Application | License |
+|:-------------------|:--------|
+|[Smart Intersection](metro-ai-suite/smart-intersection) | [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](metro-ai-suite/smart-intersection/LICENSE.pdf) |
+
 Last Updated Date: March 17, 2025.  
  
