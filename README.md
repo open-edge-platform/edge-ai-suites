@@ -44,7 +44,7 @@ For support, please submit your bug report and feature request to [Github Issues
 
 ## License
 
-The **Edge AI Suites** project is licensed under the [APACHE 2.0](LICENSE), expect for the following sample applications:
+The **Edge AI Suites** project is licensed under the [APACHE 2.0](LICENSE), except for the following sample applications:
 
 | Sample Application | License |
 |:-------------------|:--------|
