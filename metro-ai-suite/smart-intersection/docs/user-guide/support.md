@@ -1,6 +1,6 @@
 # Get Help
 
-This page provides comprehensive support and troubleshooting information for the Smart Intersection application. It is divided into the following sections:
+This page provides comprehensive support and troubleshooting information for the Smart Intersection Sample Application. It is divided into the following sections:
 
   - **Common Issues**: General troubleshooting steps for resolving issues like container failures, port conflicts, and missing dependencies.
   - **Troubleshooting Docker Deployments**: Steps to address problems specific to Docker deployments.

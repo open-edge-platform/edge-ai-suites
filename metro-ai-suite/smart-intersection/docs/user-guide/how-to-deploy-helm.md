@@ -19,7 +19,7 @@ Before You Begin, ensure the following:
 
 ## Steps to Deploy
 
-To deploy the Smart Intersection application, copy and paste the entire block of commands below into your terminal and run them:
+To deploy the Smart Intersection Sample Application, copy and paste the entire block of commands below into your terminal and run them:
 
   ```bash
 # change the permissions of the secrets folder

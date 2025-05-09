@@ -1,6 +1,6 @@
 # Deploy Using Docker Compose
 
-This guide provides step-by-step instructions to deploy the Smart Intersection application using Docker Compose. You'll learn how to:
+This guide provides step-by-step instructions to deploy the Smart Intersection Sample Application using Docker Compose. You'll learn how to:
 - Start the application and ensure all services are running.
 - Verify the deployment to confirm the application is functioning correctly.
 

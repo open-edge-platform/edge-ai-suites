@@ -3,7 +3,7 @@
 Once deployed (via Docker Compose or Helm) this guide will help you:
 - Verify that the application is running correctly.
 - Access the application's features and user interfaces.
-- Understand how to interact with the various components of the Smart Intersection application.
+- Understand how to interact with the various components of the Smart Intersection Sample Application.
 
 By following this guide, you will be able to explore the application's capabilities, such as real-time traffic monitoring, data visualization, and system management.
 

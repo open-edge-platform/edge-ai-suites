@@ -3,7 +3,7 @@
 <!--
 **Sample Description**: Provide a brief overview of the application and its purpose.
 -->
-The Smart Intersection Application is a modular sample application designed to help developers create intelligent intersection monitoring solutions. By leveraging AI and sensor fusion, this sample application demonstrates how to achieve accurate traffic detection, congestion management, and real-time alerting.
+The Smart Intersection Sample Application is a modular sample application designed to help developers create intelligent intersection monitoring solutions. By leveraging AI and sensor fusion, this sample application demonstrates how to achieve accurate traffic detection, congestion management, and real-time alerting.
 
 <!--
 **What You Can Do**: Highlight the developer workflows supported by the guide.
@@ -54,7 +54,7 @@ By following this guide, you will learn how to:
 
 ## Select Deployment Option
 
-Choose one of the following methods to deploy the Smart Intersection application:
+Choose one of the following methods to deploy the Smart Intersection Sample Application:
 
 - **[Deploy Using Docker Compose](./how-to-deploy-docker.md)**: Use Docker Compose to quickly set up and run the application in a containerized environment.
 - **[Deploy Using Helm](./how-to-deploy-helm.md)**: Use Helm to deploy the application to a Kubernetes cluster for scalable and production-ready deployments.
