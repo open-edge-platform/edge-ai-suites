@@ -42,7 +42,7 @@ This page provides comprehensive support and troubleshooting information for the
    - Follow these steps to reset the application to the initial state
      ```bash
      docker compose down
-     docker volume ls | grep smart_intersection | awk '{ print $2 }' | xargs docker volume rm
+     docker volume ls | grep smart-intersection | awk '{ print $2 }' | xargs docker volume rm
      ```
 ### 4. Cleanup secrets:
    - Follow these steps to re-generate the secrets:
