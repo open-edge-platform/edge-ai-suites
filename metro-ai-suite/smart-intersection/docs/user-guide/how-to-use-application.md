@@ -47,7 +47,7 @@ Open a browser and go to the following endpoints to access the application. Use 
 
 ## Verify the Application
 
-- **Fused object tracks**: In Scene Management UI, click on the Intersection-Demo card to navigate to the Scene. On the Scene page, you will fused tracks moving on the map. You will also see greyed out frame from each camera. Toggle the "Live View" button to see the incoming camera frames. The object detections in the camera feeds will correlate to the tracks on the map.
+- **Fused object tracks**: In Scene Management UI, click on the Intersection-Demo card to navigate to the Scene. On the Scene page, you will see fused tracks moving on the map. You will also see greyed out frame from each camera. Toggle the "Live View" button to see the incoming camera frames. The object detections in the camera feeds will correlate to the tracks on the map.
       ![Intersection Scene Homepage](_images/scenescape.png)
 - **Grafana Dashboard**: In Grafana UI, observe aggregated analytics of different regions of interests in the grafana dashboard. After navigating to Grafana home page, click on "Dashboards" and click on item "Anthem-ITS-Data".
       ![Intersection Grafana Dashboard](_images/grafana.png)
