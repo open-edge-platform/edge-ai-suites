@@ -27,6 +27,29 @@ env:
   INFLUXDB_RETENTION_DURATION: 1h0m0s
   TELEGRAF_METRIC_BATCH_SIZE: 100
   LOG_LEVEL: INFO
+  ENABLE_MODEL_REGISTRY: false
+  AppName: ModelRegistry
+  CA_CERT: /run/secrets/modelregistry-server/server-ca.crt
+  ENABLE_HTTPS_MODE: false
+  MIN_LOG_LEVEL: DEBUG
+  MINIO_ACCESS_KEY: intel
+  MINIO_BUCKET_NAME: model-registry
+  MINIO_HOSTNAME: mraas-minio
+  MINIO_SECRET_KEY: 
+  MINIO_SERVER_PORT: "8000"
+  MLFLOW_S3_ENDPOINT_URL: http://127.0.0.1:8000
+  SERVER_CERT: /run/secrets/modelregistry-server/public.crt
+  SERVER_PORT: "8111"
+  SERVER_PRIVATE_KEY: /run/secrets/modelregistry-server/private.key 
+  no_proxy: mraas-minio
+  NO_PROXY: mraas-minio
+  MR_USER_NAME: mruser
+  MR_UID: 2025
+  POSTGRES_DB: model_registry_db
+  POSTGRES_PASSWORD: 
+  POSTGRES_USER: postgres
+images:
+  model_registry: intel/model-registry:1.0.3
 config:
   influx_db_server:
     name: influxdb
@@ -61,3 +84,9 @@ config:
       port: "7860"
     ext:
       port: "30002"
+  model_registry:
+    name: model-registry
+    int:
+      port: "8111"
+    ext:
+      port: "32002"

@@ -10,6 +10,7 @@ cp -f grafana/dashboards/*.yml helm/
 cp -f influxdb/config/*.conf helm/
 cp -f influxdb/init-influxdb.sh helm/
 cp -f ../../tools/mqtt/broker/config/*.conf helm/
+cp -f ../../tools/mqtt/publisher/input_data/windturbine/windturbine_data.csv helm/
 cp -f telegraf/config/*.conf helm
 cp -f grafana/entrypoint.sh helm/grafana_entrypoint.sh
 cp -f time_series_analytics_microservice/config.json helm/
