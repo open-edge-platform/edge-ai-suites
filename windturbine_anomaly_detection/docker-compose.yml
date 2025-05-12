@@ -133,7 +133,7 @@ services:
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     restart: unless-stopped
-    read_only: false
+    read_only: true
     depends_on:
       - ia-influxdb
     security_opt:
@@ -160,6 +160,7 @@ services:
     - timeseries_network
     volumes:
     - "vol_temp_grafana:/tmp"
+    - vol_grafana_data:/var/lib/grafana
     - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
     - ./grafana/dashboards/datasources_dev.yml:/etc/grafana/provisioning/datasources/datasources.yml
     - ./grafana/entrypoint.sh:/entrypoint.sh
@@ -305,6 +306,12 @@ volumes:
       device: tmpfs
   vol_temp_grafana:
     name: "visualization_grafana_vol"
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_grafana_data:
+    name: "visualization_var_grafana_vol"
     driver: local
     driver_opts:
       type: tmpfs

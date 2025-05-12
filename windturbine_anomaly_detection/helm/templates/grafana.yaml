@@ -46,7 +46,7 @@ spec:
         image: grafana/grafana-oss:11.6.0-ubuntu
         imagePullPolicy: {{ $.Values.imagePullPolicy }}
         securityContext:
-          readOnlyRootFilesystem: false
+          readOnlyRootFilesystem: true
         {{ if eq .Values.env.SECURE_MODE true}}
         command: ["/bin/bash"]
         args: ["/entrypoint.sh"]
@@ -54,6 +54,8 @@ spec:
         volumeMounts:
         - name: vol-temp-grafana
           mountPath: /tmp
+        - name: vol-grafana-data
+          mountPath: /var/lib/grafana
         
         - name: grafana-dashboard-json
           mountPath: /etc/grafana/provisioning/dashboards/windturbine_dashboard.json
@@ -122,6 +124,8 @@ spec:
           value: '{{ $.Values.env.LOG_LEVEL }}'
       volumes:
       - name: vol-temp-grafana
+        emptyDir: {}
+      - name: vol-grafana-data
         emptyDir: {}
       - name: grafana-dashboard-json
         configMap:
