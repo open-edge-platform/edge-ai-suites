@@ -65,6 +65,9 @@ check_env_variables:
 up_mqtt_ingestion: down check_env_variables
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
 	if [ $(SECURE_MODE) = 'false' ]; then \
+		if [ $(INCLUDE) = 'model_registry' ]; then \
+			${MAKE} init_mraas; \
+		fi; \
 		echo "Starting Docker containers..."; \
 		if [ $(INCLUDE) = 'validation' ]; then \
 			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-opcua-server=0 -d ;\
@@ -75,6 +78,9 @@ up_mqtt_ingestion: down check_env_variables
 		echo "Generating Certificates"; \
 		$(CERT_SCRIPT); \
 		echo "Certificates generated"; \
+		if [ $(INCLUDE) = 'model_registry' ]; then \
+			${MAKE} init_mraas; \
+		fi; \
 		echo "Starting Docker containers..."; \
 		if [ $(INCLUDE) = 'validation' ]; then \
 			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-opcua-server=0 -d; \
@@ -92,6 +98,9 @@ up_mqtt_ingestion: down check_env_variables
 up_opcua_ingestion: down check_env_variables
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	if [ $(SECURE_MODE) = 'false' ]; then \
+		if [ $(INCLUDE) = 'model_registry' ]; then \
+			${MAKE} init_mraas; \
+		fi; \
 		echo "Starting Docker containers..."; \
 		if [ $(INCLUDE) = 'validation' ]; then \
         	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-mqtt-publisher=0 -d ;\
@@ -102,6 +111,9 @@ up_opcua_ingestion: down check_env_variables
 		echo "Generating Certificates"; \
 		$(CERT_SCRIPT); \
 		echo "Certificates generated"; \
+		if [ $(INCLUDE) = 'model_registry' ]; then \
+			${MAKE} init_mraas; \
+		fi; \
 		echo "Starting Docker containers..."; \
 		if [ $(INCLUDE) = 'validation' ]; then \
 			$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_SECURE_MODE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-mqtt-publisher=0 -d; \
@@ -114,9 +126,9 @@ up_opcua_ingestion: down check_env_variables
 	fi; \
 	${MAKE} status
 
-.PHONY: mraas_up
-mraas_up:
-	@echo "Starting Model Registry Docker containers..."; \
+.PHONY: init_mraas
+init_mraas:
+	@echo "Initializing Model Registry Docker containers..."; \
 	cd ./model_registry/docker; \
 	sudo rm -rf Certificates; \
 	sed -i -e "s|ENABLE_HTTPS_MODE=.*|ENABLE_HTTPS_MODE=$(SECURE_MODE)|g" .env; \
@@ -127,7 +139,14 @@ mraas_up:
 	if [ $(SECURE_MODE) = 'true' ]; then \
 		cp ./../scripts/generate_ssl_files.sh .; \
 		./generate_ssl_files.sh; \
-	fi 
+		sudo mkdir -p ./../../Certificates/model_registry; \
+		sudo cp ./Certificates/ssl/server-ca.crt ./../../Certificates/model_registry/server-ca.crt; \
+		sudo chown $(TIMESERIES_UID):$(TIMESERIES_UID) ./../../Certificates/model_registry/server-ca.crt; \
+	fi
+
+.PHONY: mraas_up
+mraas_up:
+	@echo "Starting Model Registry Docker containers..."; \
 	cd ./model_registry/docker; \
 	docker compose up -d
 

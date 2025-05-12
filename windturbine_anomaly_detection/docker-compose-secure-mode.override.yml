@@ -27,6 +27,8 @@ services:
       - ca_certificate.pem
       - time_series_analytics_microservice_Server_server_certificate.pem
       - time_series_analytics_microservice_Server_server_key.pem
+    volumes:  
+      - ./Certificates/model_registry/server-ca.crt:/run/secrets/server-ca.crt
   ia-telegraf:
     environment:
       TELEGRAF_CONFIG_PATH: /etc/telegraf/Telegraf.conf
