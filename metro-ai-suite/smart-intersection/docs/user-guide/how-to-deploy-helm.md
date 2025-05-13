@@ -64,39 +64,45 @@ helm upgrade --install smart-intersection ./chart \
 #     --set noProxy="localhost\,127.0.0.1" \
 #     --set grafana.service.type=NodePort \
 #     -n smart-intersection
+```
 
-# Provision data to DL Streamer Pipeline Server
-# ======================
+Next, transfer the videos to DL Streamer Pipeline Server with the following commands:
 
-sleep 5 # Wait for the pods to be up
-
-# Get the pod
+```bash
+# Get pod name
 DLS_PS_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-dlstreamer-pipeline-server -o jsonpath="{.items[0].metadata.name}")
 
-# Copy data to the pod init containers
-# > **⚠️ Note:** Sometimes init-dlstreamer-pipeline-server-models container gets created first and then init-dlstreamer-pipeline-server-videos. In that case, the order of copying data to the pod should be reversed.
-
+# Copy videos to the init container
 kubectl cp ./src/dlstreamer-pipeline-server/videos smart-intersection/${DLS_PS_POD}:/data/ -c init-dlstreamer-pipeline-server-videos
+
+# Create .done flag
 kubectl -n smart-intersection exec $DLS_PS_POD -c init-dlstreamer-pipeline-server-videos -- touch /data/videos/.done
-sleep 5 # Wait for the init container to finish
+```
+
+Next, transfer the model to DL Streamer Pipeline Server with the following commands:
+
+```bash
+# Get pod name
+DLS_PS_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-dlstreamer-pipeline-server -o jsonpath="{.items[0].metadata.name}")
+
+# Copy model to the init container
 kubectl cp ./src/dlstreamer-pipeline-server/models/intersection smart-intersection/${DLS_PS_POD}:/data/models -c init-dlstreamer-pipeline-server-models
+
+# Create .done flag
 kubectl -n smart-intersection exec $DLS_PS_POD -c init-dlstreamer-pipeline-server-models -- touch /data/models/.done
+```
 
-sleep 5 # Wait for the init containers to finish
+Finally, transfer the data base archive to Scene DB with the following commands:
 
-# Provision data to pgserver
-# ==========================
-
-# Get the pod
+```bash
+# Get pod name
 PGSERVER_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-pgserver -o jsonpath="{.items[0].metadata.name}")
 
-# Copy data to the pod init container
+# Copy archive to the init container
 kubectl cp ./src/webserver/smart-intersection-ri.tar.bz2 smart-intersection/${PGSERVER_POD}:/data/ -c init-smart-intersection-ri
 
-# Signal the init container to start
+# Create .done flag
 kubectl -n smart-intersection exec $PGSERVER_POD -c init-smart-intersection-ri -- touch /data/.done
-
-sleep 5 # Wait for the init container to finish
 ```
 
 ## Access Application Services
