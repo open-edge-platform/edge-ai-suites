@@ -52,4 +52,4 @@ This section provides a high-level view of how the application integrates with a
 
 ## License
 
-The application is licensed under the [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](LICENSE.pdf).
+The application is licensed under the [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](LICENSE.txt).

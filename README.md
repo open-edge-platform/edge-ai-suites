@@ -48,7 +48,7 @@ The **Edge AI Suites** project is licensed under the [APACHE 2.0](LICENSE), exce
 
 | Sample Application | License |
 |:-------------------|:--------|
-|[Smart Intersection](metro-ai-suite/smart-intersection) | [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](metro-ai-suite/smart-intersection/LICENSE.pdf) |
+|[Smart Intersection](metro-ai-suite/smart-intersection) | [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](metro-ai-suite/smart-intersection/LICENSE.txt) |
 
 Last Updated Date: March 17, 2025.  
  
