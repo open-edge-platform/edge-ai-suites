@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: LicenseRef-Intel
+---
+specSchema: "DeploymentPackage"
+schemaVersion: "0.1"
+$schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
+
+name: "ld"
+displayName: "ld"
+description: "Loitering Detection Sample Application"
+version: "1.1.0"
+
+applications:
+  - name: ld-app
+    version: 1.1.0
+
+defaultNamespaces:
+  ld-app: ld
+
+deploymentProfiles:
+  - name: "default"
+    description: "Uses CPU for inferencing"
+    applicationProfiles:
+      - application: "ld-app"
+        profile: "default"
+  - name: "with-intel-gpu"
+    description: "Uses Intel GPU for inferencing, needs Intel GPU extension"
+    applicationProfiles:
+      - application: "ld-app"
+        profile: "with-intel-gpu"
