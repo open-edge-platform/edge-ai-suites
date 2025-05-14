@@ -5,7 +5,7 @@
 #
 
 apiVersion: v2
-name: timeseries-deploy
+name: wind-turbine-anomaly-detection-sample-app
 description: A Helm chart for Intel(R) Time Series AI Stack
 
 # A chart can be either an 'application' or a 'library' chart.

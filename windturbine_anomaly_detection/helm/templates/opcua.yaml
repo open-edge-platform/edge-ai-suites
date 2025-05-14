@@ -72,14 +72,7 @@ spec:
           mountPath: /run/secrets/opcua-server_Server_server_key.pem
           subPath: opcua-server_Server_server_key.pem
         {{ end }}
-        - name: windturbine-data-csv
-          mountPath: /app/windturbine_data.csv
-          subPath: windturbine_data.csv
-
       volumes:
-      - name: windturbine-data-csv
-        configMap:
-          name: windturbine-data-csv
       {{ if eq .Values.env.SECURE_MODE true }}
       - name: certs
         secret:
