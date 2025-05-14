@@ -92,7 +92,6 @@ up_mqtt_ingestion: down check_env_variables
 	if [ $(INCLUDE) = 'model_registry' ]; then \
 		${MAKE} mraas_up; \
 	fi; \
-	${MAKE} status
 
 # Run Docker containers
 .PHONY: up_opcua_ingestion
@@ -125,7 +124,6 @@ up_opcua_ingestion: down check_env_variables
 	if [ $(INCLUDE) = 'model_registry' ]; then \
 		${MAKE} mraas_up; \
 	fi; \
-	${MAKE} status
 
 .PHONY: init_mraas
 init_mraas:
@@ -157,11 +155,12 @@ mraas_up:
 status:
 	@echo "Status of the deployed containers..."; \
 	docker ps -a --filter "name=^ia-" --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"; \
-	echo "Wait for few seconds for deployed containers to come up fully..."; \
+	echo "Parsing the logs of all containers to catch any error messages..."; \
 	sleep 10; \
 	containers=$$(docker ps -a --filter "name=^ia-" --format "{{.Names}}"); \
+	failure_cont_flag=0; \
 	for container in $$containers; do \
-		errors=$$(docker logs --tail 10 $$container 2>&1 | grep -i "error"); \
+		errors=$$(docker logs --tail 5 $$container 2>&1 | grep -i "error"); \
 		error_count=0; \
 		if [ -n "$$errors" ]; then \
 			error_count=$$(echo "$$errors" | wc -l); \
@@ -172,8 +171,18 @@ status:
 			echo "$$errors"; \
 			echo "******************************************************"; \
 			echo ""; \
+			failure_cont_flag=1; \
 		fi; \
-	done \
+	done; \
+	if [ $$failure_cont_flag -eq 0 ]; then \
+		echo ""; \
+		echo "All containers are up and running without errors."; \
+		echo ""; \
+	else \
+		echo ""; \
+		echo "Some containers have errors. Please check the logs above."; \
+		echo ""; \
+	fi;
 	
 # Stop Docker containers
 .PHONY: down
