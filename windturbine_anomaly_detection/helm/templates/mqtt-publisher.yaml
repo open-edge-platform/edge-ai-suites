@@ -33,6 +33,12 @@ spec:
           runAsUser: {{ $.Values.env.TIMESERIES_UID }}
           runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
           readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
         command: ["python3", "-u", "publisher.py", "--csv", "/windturbine/windturbine_data.csv"]
         env:
         - name: HOST_IP

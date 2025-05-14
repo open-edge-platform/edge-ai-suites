@@ -45,6 +45,12 @@ spec:
           runAsUser: {{ $.Values.env.TIMESERIES_UID }}
           runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
           readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
         env:
         {{ if eq .Values.env.SECURE_MODE false}}
         - name: INFLUXDB_CONFIG_PATH

@@ -43,6 +43,12 @@ spec:
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
         volumeMounts:
         - name: vol-temp-time-series-analytics-microservice
           mountPath: /tmp

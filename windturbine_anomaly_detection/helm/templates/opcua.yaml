@@ -45,6 +45,12 @@ spec:
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
         env:
         - name: SECURE_MODE
           value: '{{ .Values.env.SECURE_MODE }}'

@@ -12,6 +12,10 @@ metadata:
 spec:
   egress:
   - {}
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: {{ .Values.namespace }}
   policyTypes:
   - Egress
 ---
@@ -23,6 +27,10 @@ metadata:
 spec:
   ingress:
   - {}
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: {{ .Values.namespace }}
   podSelector: {}
   policyTypes:
   - Ingress

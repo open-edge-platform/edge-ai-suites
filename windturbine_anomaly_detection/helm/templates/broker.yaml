@@ -43,7 +43,13 @@ spec:
         securityContext:
           runAsUser: {{ $.Values.env.TIMESERIES_UID }}
           runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
-          readOnlyRootFilesystem: true        
+          readOnlyRootFilesystem: true 
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
         volumeMounts:
         {{ if eq .Values.env.SECURE_MODE true}}
         - name: mosquitto-conf

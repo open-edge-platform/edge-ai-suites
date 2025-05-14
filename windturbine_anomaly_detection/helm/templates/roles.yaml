@@ -11,7 +11,7 @@ metadata:
   name: pod-read-role
 rules:
 - apiGroups: [""] # "" indicates the core API group
-  resources: ["pods", "pods/log", "secrets"]
+  resources: ["secrets"]
   verbs: ["get", "watch", "list", "create", "delete"]
 
 ---

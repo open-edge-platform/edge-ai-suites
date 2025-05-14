@@ -47,6 +47,12 @@ spec:
         imagePullPolicy: {{ $.Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
         {{ if eq .Values.env.SECURE_MODE true}}
         command: ["/bin/bash"]
         args: ["/entrypoint.sh"]
