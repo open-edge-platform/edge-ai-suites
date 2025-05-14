@@ -92,6 +92,17 @@ This page provides comprehensive support and troubleshooting information for the
     ```
   - Now the Application UI should show objects detected on scene.
 
+  **Note**: For Helm deployments, use the equivalent commands to inspect logs and restart the scene controller. For example:
+  
+  - Inspect the logs:
+    ```bash
+    kubectl logs pod/<scene-pod-name> -n smart-intersection
+    ```
+  - Restart the scene controller:
+    ```bash
+    kubectl delete pod/<scene-pod-name> -n smart-intersection
+    ```
+
 ## Troubleshooting Helm Deployments
 
 ### 1. Helm Chart Not Found:
