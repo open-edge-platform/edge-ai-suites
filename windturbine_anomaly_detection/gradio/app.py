@@ -40,7 +40,6 @@ html = """
 import datetime
 def update_text():
     now = datetime.datetime.now(datetime.timezone.utc).astimezone().strftime("%H:%M:%S %Z")
-    value = random.randint(0, 100)
     return f"⏱ Last updated: {now}<br>Total Anomalies Found: {get_total_anomaly_pts()}<br>Total Data Points Ingested: {get_total_ingested_pts()}<br>Total Data Points Processed: {get_total_processed_pts()}"
 
 def validate_zip(file):
