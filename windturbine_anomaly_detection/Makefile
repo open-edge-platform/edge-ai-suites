@@ -10,6 +10,7 @@ DOCKER_COMPOSE_FILE = ./docker-compose.yml
 DOCKER_COMPOSE_SECURE_MODE_FILE = ./docker-compose-secure-mode.override.yml
 DOCKER_COMPOSE_VALIDATION_FILE=./docker-compose-validation.override.yml
 DOCKER_COMPOSE = docker compose
+SECURE_MODE='false'
 
 # Define the path to the .env file and scripts
 ENV_FILE = ./.env
@@ -178,7 +179,15 @@ status:
 .PHONY: down
 down:
 	@echo "Stopping Docker containers..."
-	docker compose -f ./model_registry/docker/docker-compose.yml down -v
+	echo "Checking if Model Registry container is running..."; 
+	@if [ -n $$(docker ps --filter "name=model-registry" --filter "status=running" --format "{{.Names}}") ]; then \
+		echo "Stopping Model Registry container..."; \
+		cd ./model_registry/docker; \
+		if [ ! -f .env ]; then \
+			cp .env.template .env; \
+		fi; \
+		docker compose down -v; \
+	fi; 
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE)  down -v
 
 # Remove all stopped containers and unused images

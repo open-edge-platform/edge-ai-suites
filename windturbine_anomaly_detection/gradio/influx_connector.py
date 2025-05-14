@@ -12,7 +12,7 @@ import urllib3
 urllib3.disable_warnings()
 
 
-mode = os.getenv('SECURE_MODE')
+mode = os.getenv('SECURE_MODE', "false")
 secure_mode = mode.lower() == "true"
 host = os.getenv('INFLUX_SERVER')
 username = os.getenv('INFLUXDB_USERNAME')

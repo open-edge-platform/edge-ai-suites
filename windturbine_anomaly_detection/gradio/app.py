@@ -17,10 +17,10 @@ theme = SparkTheme()
 
 themecss = theme.load_css()
 
-mode = os.getenv('SECURE_MODE')
+mode = os.getenv('SECURE_MODE', "false")
 secure_mode = mode.lower() == "true"
 
-print(f"Environment variables loaded: {secure_mode}, {os.getenv('SECURE_MODE')}")
+print(f"Environment variables loaded: {secure_mode}, {os.getenv('SECURE_MODE', "false")}")
 
 
 

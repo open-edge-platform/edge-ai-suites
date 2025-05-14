@@ -101,7 +101,6 @@ services:
       timeout: 5s
       retries: 20
     environment:
-      SECURE_MODE: ${SECURE_MODE}
       no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry"
       NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry"
       KAPACITOR_PORT: ${KAPACITOR_PORT}
@@ -142,7 +141,6 @@ services:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
     environment:
-      SECURE_MODE: ${SECURE_MODE}
       no_proxy: ia-influxdb
       NO_PROXY: ia-influxdb
       INFLUX_SERVER: "ia-influxdb"
@@ -178,8 +176,6 @@ services:
       - ia-influxdb
     security_opt:
     - no-new-privileges
-    environment:
-      SECURE_MODE: ${SECURE_MODE}
     healthcheck:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
@@ -202,7 +198,6 @@ services:
     read_only: true
     image: ${DOCKER_REGISTRY}ia-opcua-server:1.0.0
     environment:
-      SECURE_MODE: ${SECURE_MODE}
       LOG_LEVEL: ${LOG_LEVEL}
       no_proxy: "ia-time-series-analytics-microservice"
       NO_PROXY: "ia-time-series-analytics-microservice"
@@ -239,7 +234,6 @@ services:
     environment:
       AppName: "mqtt-publisher"
       HOST_IP: ia-mqtt-broker
-      SECURE_MODE: ${SECURE_MODE}
       no_proxy: "ia-mqtt-broker,ia-time-series-analytics-microservice"
       NO_PROXY: "ia-mqtt-broker,ia-time-series-analytics-microservice"
       TS_MS_SERVER: "ia-time-series-analytics-microservice"
@@ -273,7 +267,6 @@ services:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
     environment:
-      SECURE_MODE: ${SECURE_MODE}
       no_proxy: localhost,ia-influxdb
       NO_PROXY: locahost,ia-influxdb
       INFLUX_SERVER: "ia-influxdb"

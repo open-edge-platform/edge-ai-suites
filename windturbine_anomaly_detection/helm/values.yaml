@@ -11,7 +11,8 @@ DOCKER_PASSWORD: ''
 imagePullPolicy: IfNotPresent
 storageClassName: manual
 env:
-  SECURE_MODE: true 
+  # SECURE_MODE environment variable should not be changed as it may cause unexpected behavior or system failure.
+  SECURE_MODE: false 
   PROFILING_MODE: false
   TELEGRAF_INPUT_PLUGIN: opcua
   TIMESERIES_USER_NAME: timeseries_user
