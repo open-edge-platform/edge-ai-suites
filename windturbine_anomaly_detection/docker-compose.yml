@@ -9,7 +9,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.34.1
+    image: telegraf:1.34.3
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -128,7 +128,7 @@ services:
     - ./time_series_analytics_microservice/models/:/app/models/
 
   ia-grafana:
-    image: grafana/grafana-oss:11.6.0-ubuntu
+    image: grafana/grafana-oss:12.0.0-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
