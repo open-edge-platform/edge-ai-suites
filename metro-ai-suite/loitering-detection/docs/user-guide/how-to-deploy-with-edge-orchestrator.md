@@ -76,6 +76,108 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
 
 ### Running the AI Pipeline for **Loitering Detection** sample application
 
-Follow the steps described in the **Loitering Detection** [Documentation](<how-to-deploy-with-helm.md#deploy-the-application-and-run-multiple-ai-pipelines>) on usage of the application.
+1. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)
 
-   > Note: Skip the Deploy helm chart step section
+``` sh
+curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_1 -X POST -H 'Content-Type: application/json' -d '
+{
+    "source": {
+        "uri": "file:///home/pipeline-server/videos/VIRAT_S_000101.mp4",
+        "type": "uri"
+    },
+    "destination": {
+        "metadata": {
+            "type": "mqtt",
+            "host": "<HOST_IP>:30383",
+            "topic": "object_tracking_1",
+            "timeout": 1000
+        },
+        "frame": {
+            "type": "webrtc",
+            "peer-id": "object_tracking_1"
+        }
+    },
+    "parameters": {
+        "detection-device": "CPU"
+    }
+}'
+
+curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_2 -X POST -H 'Content-Type: application/json' -d '
+{
+    "source": {
+        "uri": "file:///home/pipeline-server/videos/VIRAT_S_000102.mp4",
+        "type": "uri"
+    },
+    "destination": {
+        "metadata": {
+            "type": "mqtt",
+            "host": "<HOST_IP>:30383",
+            "topic": "object_tracking_2",
+            "timeout": 1000
+        },
+        "frame": {
+            "type": "webrtc",
+            "peer-id": "object_tracking_2"
+        }
+    },
+    "parameters": {
+        "detection-device": "CPU"
+    }
+}'
+
+curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_3 -X POST -H 'Content-Type: application/json' -d '
+{
+    "source": {
+        "uri": "file:///home/pipeline-server/videos/VIRAT_S_000103.mp4",
+        "type": "uri"
+    },
+    "destination": {
+        "metadata": {
+            "type": "mqtt",
+            "host": "<HOST_IP>:30383",
+            "topic": "object_tracking_3",
+            "timeout": 1000
+        },
+        "frame": {
+            "type": "webrtc",
+            "peer-id": "object_tracking_3"
+        }
+    },
+    "parameters": {
+        "detection-device": "CPU"
+    }
+}'
+
+curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_4 -X POST -H 'Content-Type: application/json' -d '
+{
+    "source": {
+        "uri": "file:///home/pipeline-server/videos/VIRAT_S_000104.mp4",
+        "type": "uri"
+    },
+    "destination": {
+        "metadata": {
+            "type": "mqtt",
+            "host": "<HOST_IP>:30383",
+            "topic": "object_tracking_4",
+            "timeout": 1000
+        },
+        "frame": {
+            "type": "webrtc",
+            "peer-id": "object_tracking_4"
+        }
+    },
+    "parameters": {
+        "detection-device": "CPU"
+    }
+}'
+```
+
+2. View the Grafana and WebRTC streaming on `http://<HOST_IP>:30380`.
+    - Log in with the following credentials:
+        - **Username:** `admin`
+        - **Password:** `admin`
+    - Check under the Dashboards section for the default dashboard named "Video Analytics Dashboard".
+
+   ![Example of Grafana and WebRTC streaming](_images/grafana.png)
+
+   Figure 1: Grafana and WebRTC streaming

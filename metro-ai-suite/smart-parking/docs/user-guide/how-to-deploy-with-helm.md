@@ -67,7 +67,6 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)
 
 ``` sh
-#!/bin/bash
 curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
@@ -162,6 +161,10 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
 ```
 
 4. View the Grafana and WebRTC streaming on `http://<HOST_IP>:30480`.
+    - Log in with the following credentials:
+        - **Username:** `admin`
+        - **Password:** `admin`
+    - Check under the Dashboards section for the default dashboard named "Video Analytics Dashboard".
 
    ![Example of Grafana and WebRTC streaming](_images/grafana.png)
 

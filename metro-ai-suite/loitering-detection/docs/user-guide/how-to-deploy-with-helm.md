@@ -161,6 +161,10 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_4 -
 ```
 
 4. View the Grafana and WebRTC streaming on `http://<HOST_IP>:30380`.
+    - Log in with the following credentials:
+        - **Username:** `admin`
+        - **Password:** `admin`
+    - Check under the Dashboards section for the default dashboard named "Video Analytics Dashboard".
 
    ![Example of Grafana and WebRTC streaming](_images/grafana.png)
 
