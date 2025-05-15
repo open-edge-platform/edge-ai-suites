@@ -5,7 +5,7 @@
 #
 ---
 namespace: apps
-DOCKER_REGISTRY: ''
+DOCKER_REGISTRY: 'amr-registry.caas.intel.com/edge-insights/timeseries/'
 DOCKER_USERNAME: ''
 DOCKER_PASSWORD: ''
 env:
