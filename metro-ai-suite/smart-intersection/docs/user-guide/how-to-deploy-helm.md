@@ -139,6 +139,14 @@ kubectl -n smart-intersection port-forward $DLS_PS_POD 8080:8080
 kubectl -n smart-intersection port-forward $DLS_PS_POD 8555:8555
 ```
 
+## How to Uninstall the Application
+
+To uninstall the application, run the following command:
+
+```bash
+helm uninstall smart-intersection -n smart-intersection
+```
+
 ## How to Delete the Namespace
 
 To delete the namespace and all resources within it, run the following command:
