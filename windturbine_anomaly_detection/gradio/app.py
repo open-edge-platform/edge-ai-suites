@@ -31,7 +31,7 @@ html = """
     const protocol = window.location.protocol;
     const host = window.location.hostname;
     let port = window.location.port === '7860' ? 3000 : 30001;
-    const url = `${protocol}//${host}:${port}/d/ff7b8081-d0f0-4469-9210-9daf1bd148fe/wind-turbine-dashboard`;
+    const url = `${protocol}//${host}:${port}/d/ff7b8081-d0f0-4469-9210-9daf1bd148fd/wind-turbine-dashboard`;
     const link = `If looking for more control in terms of customization, please visit <a href='${url}' target='_blank' style='color:blue;'>Grafana Dashboard</a> `;
     document.getElementById('link-container').innerHTML = link;
   })();
