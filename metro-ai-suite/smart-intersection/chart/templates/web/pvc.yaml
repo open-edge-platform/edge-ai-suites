@@ -4,6 +4,8 @@ kind: PersistentVolumeClaim
 metadata:
   name: smart-intersection-pgserver-media
   namespace: smart-intersection
+  annotations:
+    "helm.sh/hook": pre-install
 spec:
   accessModes:
     - ReadWriteOnce

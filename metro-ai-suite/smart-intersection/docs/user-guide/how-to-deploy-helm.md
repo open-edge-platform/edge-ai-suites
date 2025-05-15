@@ -46,14 +46,6 @@ helm upgrade --install smart-intersection ./chart \
   --set grafana.service.type=NodePort \
   -n smart-intersection
 
-# We need to run same command again (Known issue, fix will be available soon)
-
-# Install the chart with secrets injected via --set
-helm upgrade --install smart-intersection ./chart \
-  --create-namespace \
-  --set grafana.service.type=NodePort \
-  -n smart-intersection
-
 # Some containers in the deployment requires network access.
 # If you are in a proxy environment, pass the proxy environment variables as follows:
 # helm upgrade \
@@ -145,6 +137,14 @@ kubectl -n smart-intersection port-forward $NODE_RED_POD 1880:1880
 DLS_PS_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-dlstreamer-pipeline-server -o jsonpath="{.items[0].metadata.name}")
 kubectl -n smart-intersection port-forward $DLS_PS_POD 8080:8080
 kubectl -n smart-intersection port-forward $DLS_PS_POD 8555:8555
+```
+
+## How to Uninstall the Application
+
+To uninstall the application, run the following command:
+
+```bash
+helm uninstall smart-intersection -n smart-intersection
 ```
 
 ## How to Delete the Namespace
