@@ -46,14 +46,6 @@ helm upgrade --install smart-intersection ./chart \
   --set grafana.service.type=NodePort \
   -n smart-intersection
 
-# We need to run same command again (Known issue, fix will be available soon)
-
-# Install the chart with secrets injected via --set
-helm upgrade --install smart-intersection ./chart \
-  --create-namespace \
-  --set grafana.service.type=NodePort \
-  -n smart-intersection
-
 # Some containers in the deployment requires network access.
 # If you are in a proxy environment, pass the proxy environment variables as follows:
 # helm upgrade \
