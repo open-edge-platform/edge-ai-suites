@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e  # Exit on error
+cd "$(dirname "$(readlink -f "$0")")"
 
 ##############################################################################
 # Helper function: create_dir
@@ -15,7 +16,7 @@ create_dir() {
         mkdir -p "$dir"
     fi
     # Ensure the created directory is owned by the current user
-    chown -R "$(id -un):$(id -gn)" "$dir" || true
+    sudo chown -R "$(id -un):$(id -gn)" "$dir" || true
 }
 
 ##############################################################################
@@ -52,7 +53,7 @@ source ./update_dashboard.sh
 ##############################################################################
 # 2. Create/Activate a Python virtual environment to avoid pip system issues
 ##############################################################################
-VENV_DIR="$HOME/ri2-venv"  # or pick another name/path if you wish
+VENV_DIR=".venv"  # or pick another name/path if you wish
 
 if [ ! -d "$VENV_DIR" ]; then
     echo "Virtual environment not found. Creating Python virtual environment at $VENV_DIR ..."
@@ -224,7 +225,7 @@ fi
 CURRENT_USER=$(id -un)
 CURRENT_GROUP=$(id -gn)
 echo "Fixing ownership for current directory..."
-chown -R "$CURRENT_USER:$CURRENT_GROUP" "." 2>/dev/null || true
+sudo chown -R "$CURRENT_USER:$CURRENT_GROUP" "." 2>/dev/null || true
 
 ##############################################################################
 # 7. Remove the dlstreamer and dlsps folders (if they exist), deactivate the venv, and finish

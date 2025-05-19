@@ -19,3 +19,6 @@ node_modules
 **/node-red/.flows.json.backup
 **/node-red/settings.js
 **/node-red/package.json
+dlsps/models/
+dlsps/videos/
+.venv
