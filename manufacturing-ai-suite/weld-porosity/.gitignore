@@ -144,3 +144,6 @@ dmypy.json
 
 # model files
 **models
+
+# Certificates
+Certificates/
