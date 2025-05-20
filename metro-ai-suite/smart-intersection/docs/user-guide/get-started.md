@@ -46,6 +46,7 @@ By following this guide, you will learn how to:
     - Use docker to setup the credentials and download assets:
       ```bash
       docker run --rm -ti \
+          -e http_proxy -e https_proxy -e no_proxy \
           -v $(pwd)/init.sh:/init.sh \
           -v $(pwd)/chart:/chart \
           -v $(pwd)/src:/src \
