@@ -6,3 +6,4 @@ src/feature-matching/static/*
 *.onnx
 *.pth
 k8s/*
+models/
