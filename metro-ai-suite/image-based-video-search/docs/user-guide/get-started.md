@@ -53,21 +53,25 @@ a pre-step to prepare models may be needed
 
       # Download and convert the ResNet-50 model
       docker run --rm \
+          --user=root \
           -e http_proxy -e https_proxy -e no_proxy \
           -v "$MODELS_PATH:/output" \
           openvino/ubuntu22_dev:2024.6.0 bash -c \
           "omz_downloader --name resnet-50-pytorch --output_dir models && \
           omz_converter --name resnet-50-pytorch --download_dir models --output_dir models && \
-          cp -r ./models/public/resnet-50-pytorch /output"
+          cp -r ./models/public/resnet-50-pytorch /output && \
+          chown -R $(id -u):$(id -g) /output"
 
       # Download and convert the Person-Vehicle-Bike Detection model
       docker run --rm \
+          --user=root \
           -e http_proxy -e https_proxy -e no_proxy \
           -v "$MODELS_PATH:/output" \
           openvino/ubuntu22_dev:2024.6.0 bash -c \
           "omz_downloader --name person-vehicle-bike-detection-2004 --output_dir models && \
           omz_converter --name person-vehicle-bike-detection-2004 --download_dir models --output_dir models && \
-          cp -r ./models/intel/person-vehicle-bike-detection-2004 /output"
+          cp -r ./models/intel/person-vehicle-bike-detection-2004 /output && \
+          chown -R $(id -u):$(id -g) /output"
       ```
 
       </details>
