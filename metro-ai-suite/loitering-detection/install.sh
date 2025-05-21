@@ -20,10 +20,10 @@ mkdir -p dlsps/models/intel
 OMZ_MODELS=(pedestrian-and-vehicle-detector-adas-0001)
 for model in "\${OMZ_MODELS[@]}"; do
   if [ ! -e "dlsps/models/intel/\$model/\$model.json" ]; then
-    echo "Download \$model..."
+    echo "Download \$model..." && \
     omz_downloader --name "\$model" --output_dir dlsps/models && \
 
-    echo "Download \$model proc file..."
+    echo "Download \$model proc file..." && \
     curl -L -o "dlsps/models/intel/\${model}/\${model}.json" "https://github.com/dlstreamer/dlstreamer/blob/master/samples/gstreamer/model_proc/intel/\${model}.json?raw=true"
   fi
 done
