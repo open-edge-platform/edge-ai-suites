@@ -9,12 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vue-leaflet/vue-leaflet": "^0.10.1",
     "axios": "^1.7.9",
     "html2canvas": "^1.4.1",
     "leaflet": "^1.9.4",
     "vue": "^3.5.13",
-    "vue-advanced-cropper": "^2.8.9",
-    "vue-leaflet-map": "^1.0.0"
+    "vue-advanced-cropper": "^2.8.9"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.15",
