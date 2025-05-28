@@ -57,6 +57,8 @@ dlstreamerpipelineserver:
   replicas: 1
   # key: dlstreamerpipelineserver.nodeSelector
   nodeSelector: {}
+  # key: dlstreamerpipelineserver.pipeline
+  pipeline: config.cpu.json
   # Resources allows you to specify the resource requests and limits for a service.
   # Resources are used to specify the amount of CPU and memory that 
   # a container needs.

@@ -21,7 +21,7 @@ spec:
         {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
         katenary.v3/component: dlstreamer-pipeline-server
     spec:
-      containers:
+      initContainers:
       - name: openvino-container
         image: openvino/ubuntu22_dev:2024.6.0
         env:
@@ -57,11 +57,11 @@ spec:
               omz_downloader --name person-vehicle-bike-detection-2004 --output_dir models &&
               omz_converter --name person-vehicle-bike-detection-2004 --download_dir models --output_dir models &&
               cp -r ./models/intel/person-vehicle-bike-detection-2004 /output
-            ) &&
-            tail -f /dev/null
+            )
         volumeMounts:
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
           mountPath: /output
+      containers:
       - envFrom:
         - configMapRef:
             name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-env'
@@ -75,7 +75,7 @@ spec:
         command: ["/bin/bash", "-c"]
         args: 
           - |
-            cp /tmp/pipeline/config.json . &&
+            cp /tmp/pipeline/{{ .Values.dlstreamerpipelineserver.pipeline }} config.json &&
             cp /tmp/pipeline/person-vehicle-bike-detection-2004.json . &&
             chown 1999 -R /home/pipeline-server &&
             runuser -u intelmicroserviceuser ./run.sh
@@ -85,13 +85,14 @@ spec:
         volumeMounts:
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline'
           mountPath: /tmp/pipeline
-          subpath: config.json
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline-root'
           mountPath: /var/cache/pipeline_root
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-tmp'
           mountPath: /tmp
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
           mountPath: /models
+        - name: dev
+          mountPath: /dev
         {{- if .Values.dlstreamerpipelineserver.resources }}
         resources:
           {{ .Values.dlstreamerpipelineserver.resources | toYaml | nindent 10 }}
@@ -111,6 +112,9 @@ spec:
       - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
         emptyDir:
           sizeLimit: 10Gi
+      - name: dev
+        hostPath:
+          path: /dev
       {{- if .Values.pullSecrets }}
       imagePullSecrets:
       {{- .Values.pullSecrets | toYaml | nindent 6 }}
