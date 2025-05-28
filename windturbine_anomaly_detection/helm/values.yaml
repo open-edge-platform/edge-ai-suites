@@ -5,6 +5,9 @@
 #
 
 namespace: apps
+# Please provide docker registry details below for docker images pull/push operations.
+# Please provide full registry url with port trail by /
+# e.q. localhost:5000/
 DOCKER_REGISTRY: ''
 DOCKER_USERNAME: ''
 DOCKER_PASSWORD: ''
@@ -13,19 +16,28 @@ storageClassName: manual
 env:
   # SECURE_MODE environment variable should not be changed as it may cause unexpected behavior or system failure.
   SECURE_MODE: false 
-  PROFILING_MODE: false
   TELEGRAF_INPUT_PLUGIN: opcua
   TIMESERIES_USER_NAME: timeseries_user
   TIMESERIES_UID: 1999
   TIMESERIES_NO_PROXY: influxdb,time-series-analytics-microservice,mqttbroker,ia-mqtt-broker,ia-opcua-server
+  # The INFLUXDB_USERNAME and INFLUXDB_PASSWORD length must be a minimum of 5 and 10 characters respectively and 
+  # should contain alphanumeric characters with atleast one digit. 
+  # Do not set INFLUXDB_USERNAME to 'admin'.
+  # Do not use the following special characters in the influxdb_username and influxdb_password "~:'+[/@^{%(-"*|,&<`}._=}!>;?#$)\"
   INFLUXDB_USERNAME: 
   INFLUXDB_PASSWORD: 
+  # The VISUALIZER_GRAFANA_USER and VISUALIZER_GRAFANA_PASSWORD length must be a minimum of 5 and 10 characters respectively 
+  # and should contain alphanumeric characters with atleast one digit
   VISUALIZER_GRAFANA_USER: 
   VISUALIZER_GRAFANA_PASSWORD: 
+  # For proxy environment, please append IP addresses or Range IP addresses of each node of the cluster to no_proxy
+  # e.q. timeseries_no_proxy=localhost,127.0.0.1,10.223.109.130,10.223.109.170
   timeseries_no_proxy: localhost,127.0.0.1,.intel.com
   HTTP_PROXY: 
   HTTPS_PROXY: 
+  # The InfluxDB retention policy durations can be configured using a combination of time units such as hours(h), minutes(m), and seconds(s), eg., 1h0m0s for 1 hour.
   INFLUXDB_RETENTION_DURATION: 1h0m0s
+  # The Telegraf metric_batch_size specifies the number of metrics or data points that are grouped together and sent in a single batch to the InfluxDB.
   TELEGRAF_METRIC_BATCH_SIZE: 100
   LOG_LEVEL: INFO
   ENABLE_MODEL_REGISTRY: false
