@@ -193,7 +193,6 @@ services:
       args:
         TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
         TIMESERIES_UID: ${TIMESERIES_UID}
-    container_name: ia-opcua-server
     hostname: ia-opcua-server
     read_only: true
     image: ${DOCKER_REGISTRY}ia-opcua-server:1.0.0

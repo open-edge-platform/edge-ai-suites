@@ -32,7 +32,8 @@ import requests
 # from gcp_mqtt_client import get_client
 
 log_level = os.getenv('KAPACITOR_LOGGING_LEVEL', 'INFO').upper()
-
+enable_benchmarking = os.getenv('ENABLE_BENCHMARKING', 'false').upper() == 'TRUE'
+total_no_pts = os.getenv('BENCHMARK_TOTAL_PTS')
 logging_level = getattr(logging, log_level, logging.INFO)
 
 # Configure logging
@@ -69,12 +70,9 @@ class AnomalyDetectorHandler(Handler):
         self.cut_out_speed = 14
         self.min_power_th = 50
 
-        # # variables for publishing the anomaly data to mqtt broker
-        # self.client = mqtt.Client()
-        # mqtt_host = os.getenv("MQTT_BROKER_HOST")
-        # mqtt_port = int(os.getenv("MQTT_BROKER_PORT"))
-        # self.client.connect(mqtt_host, mqtt_port, 60)
-        # self.client.loop_start()
+        self.points_received = {}
+        global total_no_pts
+        self.max_points = int(total_no_pts)
 
     def info(self):
         """ Return the InfoResponse. Describing the properties of this Handler
@@ -119,8 +117,17 @@ class AnomalyDetectorHandler(Handler):
         is_alarm = 0
         anomaly_type = None
         check_for_anomalies = 1
+        tag_dict = point.tags  # tag values can be accessed like a dictionary, e.g., tag_dict['your_tag_key']
+        server = tag_dict['source']
+        global enable_benchmarking
+        if enable_benchmarking:
+            if server not in self.points_received:
+                self.points_received[server] = 0
+            if self.points_received[server] >= self.max_points:
+                return
+            self.points_received[server] += 1
 
-        logger.info(f"Processing point {point.time} {time.time()}")
+        logger.info(f"Processing point {point.time} {time.time()} for source {server}")
 
         def process_the_point(x,y):
             if (math.isnan(x) or math.isnan(y)):
@@ -135,6 +142,7 @@ class AnomalyDetectorHandler(Handler):
 
         # extract the wind speed and power from the point 
         point_dict = point.fieldsDouble
+        
         x,y = point_dict[self.x_name], point_dict[self.y_name]
         # logger.info(f"Asset: {point.name}, x: {x}, y:{y}, cc:{self.enable_gcp_client}")
 
@@ -191,7 +199,6 @@ class AnomalyDetectorHandler(Handler):
         # logger.info(f"*********************************{point.fieldsDouble['processing_time'] } { point.fieldsDouble['end_end_time']}") 
         response.point.CopyFrom(point)
 
-        # if(is_anomaly):
         self._agent.write_response(response, True)
 
         end_time = time.time_ns()
