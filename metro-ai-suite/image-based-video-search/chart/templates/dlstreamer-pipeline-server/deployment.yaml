@@ -70,6 +70,10 @@ spec:
           runAsUser: 0
           runAsGroup: 0
           fsGroup: 0
+          {{- if eq .Values.dlstreamerpipelineserver.pipeline "config.gpu.json" }}
+          privileged: true
+          supplementalGroups: [109, 110]
+          {{- end }}
         imagePullPolicy: {{ .Values.dlstreamerpipelineserver.imagePullPolicy }}
         name: dlstreamer-pipeline-server
         command: ["/bin/bash", "-c"]
@@ -78,7 +82,11 @@ spec:
             cp /tmp/pipeline/{{ .Values.dlstreamerpipelineserver.pipeline }} config.json &&
             cp /tmp/pipeline/person-vehicle-bike-detection-2004.json . &&
             chown 1999 -R /home/pipeline-server &&
+            {{- if eq .Values.dlstreamerpipelineserver.pipeline "config.gpu.json" }}
+            ./run.sh
+            {{- else }}
             runuser -u intelmicroserviceuser ./run.sh
+            {{- end }}
         ports:
         - containerPort: 8080
           name: port-8080
