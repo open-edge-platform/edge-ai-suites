@@ -1,0 +1,279 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""
+Sample MQTT publisher to publish the input data.
+"""
+
+import json
+import time
+import random
+import argparse
+import re
+import sys
+import os
+import glob
+import paho.mqtt.client as mqtt
+from multiprocessing import Process
+import ssl
+import socket
+
+SERVICE = 'mqtt'
+SAMPLING_RATE = 10  # 500.0 # 2msecdd
+SUBSAMPLE = 1  # 1:every row, 500: every 500 rows (ie. every 1 sec)
+POINTSPERPROCESS = 350
+HOST = 'localhost'
+PROCS = []
+DATA_PUBLISH_WAIT_PERIOD = 10
+
+
+def g_tick(period=1):
+    """generate the tick
+    """
+    start_time = time.time()
+    period_count = 0
+    while True:
+        period_count += 1
+        yield max(start_time + period_count * period - time.time(), 0)
+
+
+def parse_args():
+    """Parse command line arguments.
+    """
+    a_p = argparse.ArgumentParser()
+    a_p.add_argument('--host', default='localhost', help='MQTT broker host')
+    a_p.add_argument('--port', default=1883, type=int,
+                     help='MQTT broker port')
+    a_p.add_argument('--qos', default=1, type=int, help='MQTT publish qos')
+    a_p.add_argument('--interval', default=1, type=float,
+                     help='MQTT publication interval')
+    a_p.add_argument('--csv', default=None, type=str,
+                     help='CSV file to publish to MQTT broker')
+    a_p.add_argument('--json', default=None, type=str,
+                     help='folder containing json file(s) to publish'
+                     'to MQTT broker')
+    a_p.add_argument('--subsample', default=SUBSAMPLE, type=float)
+    a_p.add_argument('--sampling_rate', default=SAMPLING_RATE, type=float,
+                     help='Data Sampling Rate')
+    a_p.add_argument('--streams', default=1, type=int,
+                     help='Number of MQTT streams to send.'
+                     'This should correspond to the number of brokers running')
+    a_p.add_argument('--output', default=None, type=str,
+                     help='Output file path')
+    a_p.add_argument('--service', default=SERVICE, type=str,
+                     help='service tool for publish data')
+    return a_p.parse_args()
+
+
+def stream_csv(mqttc, topic, subsample, sampling_rate, filename):
+    """
+    Stream the csv file
+    """
+    target_start_time = time.time()
+    row_count = 0
+    row_served = 0
+    jencoder = json.JSONEncoder()
+
+    print("\nMQTT Topic - {}\nSubsample - {}\n \
+          Sampling Rate - {}\nFilename - {}\n".format(topic,
+                                                      subsample,
+                                                      sampling_rate,
+                                                      filename))
+
+    with open(filename, 'r') as fileobject:
+        tick = g_tick(float(subsample) / float(sampling_rate))
+
+        for row in fileobject:
+
+            row = [x for x in row.split(',') if x not in (' \n', ' \r\n')]
+            if re.match(r'^-?\d+', row[0]) is None:
+                continue
+
+            row_count += 1
+            if (subsample > 1) and (row_count % subsample) != 1:
+                continue
+            row_served += 1
+
+            values = [float(x) for x in row]
+            msg = jencoder.encode({'grid_active_power': values[0], 'wind_speed': values[1]})
+            print("Publishing message ", msg)
+            mqttc.publish(topic, msg)
+
+            time.sleep(next(tick))
+            if (row_served % (int(sampling_rate) / subsample)) == 0:
+                print('{} rows served in {}'.format(
+                    row_served, time.time() - target_start_time))
+
+    print('{} Done! {} rows served in {}'.format(
+        filename, row_served, time.time() - target_start_time))
+
+
+def send_json_cb(instance_id, host, port, topic, data, qos, service):
+    """ Send JSON
+    """
+    if service == "benchmarking":
+        client = mqtt.Client(str(port))
+    else:
+        client = mqtt.Client(str(instance_id))
+    client.on_disconnect = on_disconnect
+    client.on_connect = on_connect
+    client.connect(host, port, 60)
+    client.loop_start()
+    if service == "benchmarking":
+        for i in range(0, POINTSPERPROCESS):
+            t_s = time.time()
+            for value in data:
+                msg = {'ts': t_s, 'value': value}
+                client.publish(topic, json.dumps(msg), qos=qos)
+                time.sleep(instance_id)
+    else:
+        try:
+            while True:
+                t_s = time.time()
+                for value in data:
+                    msg = {'ts': t_s, 'value': value}
+                    client.publish(topic, json.dumps(msg), qos=qos)
+                    time.sleep(1)
+        except KeyboardInterrupt:
+            client.loop_stop()
+
+
+def publish_json(mqttc, topic, path, qos, argsinterval, streams, host, port, service):
+    """ Publish the JSON file
+    """
+    data = []
+    path = path.replace("\\*", "*")
+    files = glob.glob(path)
+    for file in files:
+        with open(file) as fpd:
+            data.append(fpd.read())
+    print("Publishing json files to mqtt in loop")
+    if service == "benchmarking":
+        print("Path :", path, " files: ", files)
+        totalpoints = streams * POINTSPERPROCESS * len(data)
+        processes = []
+        print("streams: ", streams, "topic: ", topic, " pointsperprocess: ", POINTSPERPROCESS, " length of data: ",
+              len(data))
+        try:
+            for i in range(0, streams):
+                port = port + i
+                processes.append(Process(target=send_json_cb, args=(argsinterval, host, port, topic, data, qos, service)))
+                processes[i].start()
+            for process in processes:
+                process.join()
+            print("Success: ", totalpoints, " points sent!")
+            time.sleep(DATA_PUBLISH_WAIT_PERIOD)
+        except Exception as e:
+            print("Exception occured while publishing the points", e)
+    else:
+        if streams == 1:
+            while True:
+                t_s = time.time()
+                for value in data:
+                    msg = {'ts': t_s, 'value': value}
+                    mqttc.publish(topic, json.dumps(msg), qos=qos)
+                    msg.clear()
+                    time.sleep(1)
+        else:
+            for i in range(0, streams):
+                PROCS.append(Process(target=send_json_cb, args=(i, host, port,
+                                                            topic, data, qos, service)))
+                PROCS[i].start()
+
+
+def on_disconnect(client, userdata, rc):
+    print("MQTT disconnected:\nclient: ", client, "\n userdata: ", userdata,
+          "\n rc: ", rc)
+
+
+def on_connect(client, userdata, flags, rc):
+    print("MQTT Connected:\nclient: ", client, "\n userdata: ", userdata,
+          "\n rc: ", rc)
+MQTTversion = mqtt.MQTTv31
+TLS_protocol_version = ssl.PROTOCOL_TLSv1_2
+def main():
+    """Main method
+    """
+    args = parse_args()
+    if not args.service == "benchmarking":
+        args.host = os.getenv('HOST_IP', 'localhost')
+    args.port = os.getenv('PORT', '1883')
+    args.port = int(args.port)
+    updated_topics = {}
+    topic = "wind_turbine_data"
+    client = None
+    if int(args.streams) == 1:
+        client = mqtt.Client(client_id = '', clean_session = True, userdata = None, protocol = MQTTversion, transport="tcp" )
+        secure_mode = os.getenv('SECURE_MODE', 'false')
+        if secure_mode.lower() == "true":
+            context = ssl.SSLContext(protocol = TLS_protocol_version)
+            context.load_verify_locations(cafile="/run/secrets/ca_certificate.pem")
+            client.tls_set_context(context)
+            client.tls_insecure_set(True)
+        client.connect(args.host, args.port, 60)
+        client.loop_start()
+
+    try:
+        if args.csv is not None:
+            stream_csv(client,
+                       topic,
+                       args.subsample,
+                       args.sampling_rate,
+                       args.csv)
+        elif args.json is not None:
+            publish_json(client,
+                         args.topic,
+                         args.json,
+                         args.qos,
+                         args.interval,
+                         args.streams,
+                         args.host,
+                         args.port,
+                         args.service)
+
+        else:
+            if not updated_topics:
+                sys.exit("Arguments are missing")
+
+    except KeyboardInterrupt:
+        print('-- Quitting')
+        if args.streams == 1:
+            client.loop_stop()
+        else:
+            for i in range(0, args.streams):
+                PROCS[i].close()
+                client[i].loop_stop()
+
+def is_port_accessible():
+    """
+    Check if a port is accessible on a given host.
+
+    :param host: The hostname or IP address to check.
+    :param port: The port number to check.
+    :param timeout: The timeout in seconds for the connection attempt.
+    :return: True if the port is accessible, False otherwise.
+    """
+    host = os.getenv("TS_MS_SERVER", "ia-time-series-analytics-microservice")
+    port = int(os.getenv("TS_MS_PORT", 9092))
+    print(f"Waiting for {host} accessible...")
+    while(True):
+        try:
+            # Create a socket object
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                # Set the timeout for the connection attempt
+                sock.settimeout(5)
+                # Attempt to connect to the host and port
+                sock.connect((host, port))
+            print(f"{host} is accessible...")
+            return True
+        except (socket.timeout, socket.error) as e:
+            pass
+        time.sleep(1)
+
+if __name__ == '__main__':
+    is_port_accessible()
+    time.sleep(5)  # Wait for 5 seconds before starting the server to avoid the sync issue
+    main()

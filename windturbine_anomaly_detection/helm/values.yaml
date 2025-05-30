@@ -14,12 +14,6 @@ DOCKER_PASSWORD: ''
 imagePullPolicy: IfNotPresent
 storageClassName: manual
 env:
-  # SECURE_MODE environment variable should not be changed as it may cause unexpected behavior or system failure.
-  SECURE_MODE: false 
-  TELEGRAF_INPUT_PLUGIN: opcua
-  TIMESERIES_USER_NAME: timeseries_user
-  TIMESERIES_UID: 1999
-  TIMESERIES_NO_PROXY: influxdb,time-series-analytics-microservice,mqttbroker,ia-mqtt-broker,ia-opcua-server
   # The INFLUXDB_USERNAME and INFLUXDB_PASSWORD length must be a minimum of 5 and 10 characters respectively and 
   # should contain alphanumeric characters with atleast one digit. 
   # Do not set INFLUXDB_USERNAME to 'admin'.
@@ -29,26 +23,35 @@ env:
   # The VISUALIZER_GRAFANA_USER and VISUALIZER_GRAFANA_PASSWORD length must be a minimum of 5 and 10 characters respectively 
   # and should contain alphanumeric characters with atleast one digit
   VISUALIZER_GRAFANA_USER: 
-  VISUALIZER_GRAFANA_PASSWORD: 
+  VISUALIZER_GRAFANA_PASSWORD:
+  # The POSTGRES_USER length must be a minimum of 5 and 10 characters respectively
+  POSTGRES_PASSWORD:
+  # MinIO Secret Key length must be a minimum of 8 and 16 characters respectively and should contain alphanumeric characters with at least one digit 
+  MINIO_SECRET_KEY:
+  HTTP_PROXY: 
+  HTTPS_PROXY:
+  # SECURE_MODE environment variable should not be changed as it may cause unexpected behavior or system failure.
+  SECURE_MODE: false 
+  TELEGRAF_INPUT_PLUGIN: opcua
+  TIMESERIES_USER_NAME: timeseries_user
+  TIMESERIES_UID: 1999
+  TIMESERIES_NO_PROXY: influxdb,time-series-analytics-microservice,mqttbroker,ia-mqtt-broker,ia-opcua-server 
   # For proxy environment, please append IP addresses or Range IP addresses of each node of the cluster to no_proxy
   # e.q. timeseries_no_proxy=localhost,127.0.0.1,10.223.109.130,10.223.109.170
   timeseries_no_proxy: localhost,127.0.0.1,.intel.com
-  HTTP_PROXY: 
-  HTTPS_PROXY: 
   # The InfluxDB retention policy durations can be configured using a combination of time units such as hours(h), minutes(m), and seconds(s), eg., 1h0m0s for 1 hour.
   INFLUXDB_RETENTION_DURATION: 1h0m0s
   # The Telegraf metric_batch_size specifies the number of metrics or data points that are grouped together and sent in a single batch to the InfluxDB.
   TELEGRAF_METRIC_BATCH_SIZE: 100
   LOG_LEVEL: INFO
-  ENABLE_MODEL_REGISTRY: false
+  # Model Registry Environment Variables
   AppName: ModelRegistry
   CA_CERT: /run/secrets/modelregistry-server/server-ca.crt
   ENABLE_HTTPS_MODE: false
   MIN_LOG_LEVEL: DEBUG
   MINIO_ACCESS_KEY: intel
   MINIO_BUCKET_NAME: model-registry
-  MINIO_HOSTNAME: mraas-minio
-  MINIO_SECRET_KEY: 
+  MINIO_HOSTNAME: mraas-minio 
   MINIO_SERVER_PORT: "8000"
   MLFLOW_S3_ENDPOINT_URL: http://127.0.0.1:8000
   SERVER_CERT: /run/secrets/modelregistry-server/public.crt
@@ -59,7 +62,7 @@ env:
   MR_USER_NAME: mruser
   MR_UID: 2025
   POSTGRES_DB: model_registry_db
-  POSTGRES_PASSWORD: 
+  
   POSTGRES_USER: postgres
 images:
   model_registry: intel/model-registry:1.0.3
@@ -91,12 +94,6 @@ config:
       pub_port: 4840
   mqttpublisher:
       name: mqttpublisher
-  gradio_ui:
-    name: gradio-ui
-    int:
-      port: "7860"
-    ext:
-      port: "30002"
   model_registry:
     name: model-registry
     int:

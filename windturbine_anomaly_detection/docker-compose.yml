@@ -32,7 +32,9 @@ services:
       OPCUA_SERVER: opc.tcp://ia-opcua-server:4840/freeopcua/server/
       LOG_LEVEL: ${LOG_LEVEL}
       TELEGRAF_INPUT_PLUGIN: ${TELEGRAF_INPUT_PLUGIN}
-      TELEGRAF_METRIC_BATCH_SIZE: ${TELEGRAF_METRIC_BATCH_SIZE}
+      # The Telegraf metric_batch_size specifies the number of metrics or data points 
+      # that are grouped together and sent in a single batch to the InfluxDB.
+      TELEGRAF_METRIC_BATCH_SIZE: 100
       TS_MS_SERVER_URL: http://ia-time-series-analytics-microservice:${KAPACITOR_PORT}
     entrypoint: ["/bin/sh", "-c", "/entrypoint.sh"]
     networks:
@@ -62,7 +64,9 @@ services:
       INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_PASSWORD}
       INFLUXDB_USER : ${INFLUXDB_USERNAME}
       INFLUXDB_USER_PASSWORD: ${INFLUXDB_PASSWORD}
-      RETENTION_DURATION: ${INFLUXDB_RETENTION_DURATION}
+      # The InfluxDB retention policy durations can be configured using a combination 
+      # of time units such as hours(h), minutes(m), and seconds(s), eg., 1h0m0s for 1 hour.
+      RETENTION_DURATION: 1h0m0s
       no_proxy: ${timeseries_no_proxy}, ia-time-series-analytics-microservice
       NO_PROXY: ${timeseries_no_proxy}, ia-time-series-analytics-microservice
       INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb_devmode.conf"
@@ -75,16 +79,6 @@ services:
     - ./influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
   
   ia-time-series-analytics-microservice:
-    build:
-      context: $PWD/../../
-      dockerfile: $PWD/../../microservices/time_series_analytics_microservice/Dockerfile
-      args:
-        KAPACITOR_VERSION: 1.7.6
-        TIMESERIES_UID: ${TIMESERIES_UID}
-        TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
-        PYTHON_VERSION: "3.10"
-        no_proxy: ${timeseries_no_proxy}
-        INSTALL_SOURCES: "no"
     container_name: ia-time-series-analytics-microservice
     hostname: ia-time-series-analytics-microservice
     image: ${DOCKER_REGISTRY}ia-time-series-analytics-microservice:1.0.0
@@ -184,12 +178,12 @@ services:
     ports:
     - "1883:1883"
     volumes:
-    - ../../tools/mqtt/broker/config/mosquitto_devmode.conf:/mosquitto/config/mosquitto.conf:ro
+    - ./mqtt-broker/mosquitto_devmode.conf:/mosquitto/config/mosquitto.conf:ro
 
   ia-opcua-server:
     build:
-      context: $PWD/../../tools/opcua_server/
-      dockerfile: $PWD/../../tools/opcua_server/Dockerfile
+      context: $PWD/simulator
+      dockerfile: $PWD/simulator/opcua-server/Dockerfile
       args:
         TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
         TIMESERIES_UID: ${TIMESERIES_UID}
@@ -211,12 +205,12 @@ services:
     networks:
     - timeseries_network
     volumes:
-    - ../../tools/mqtt/publisher/input_data/windturbine/windturbine_data.csv:/app/windturbine_data.csv
+    - ./simulator/simulation_data/windturbine_data.csv:/app/windturbine_data.csv
 
   ia-mqtt-publisher:
     build:
-      context: $PWD/../../tools/mqtt/publisher
-      dockerfile: $PWD/../../tools/mqtt/publisher/Dockerfile
+      context: $PWD/simulator
+      dockerfile: $PWD/simulator/mqtt-publisher/Dockerfile
       args:
         TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
         TIMESERIES_UID: ${TIMESERIES_UID}
@@ -239,51 +233,92 @@ services:
       TS_MS_PORT: ${KAPACITOR_PORT}
     networks:
     - timeseries_network
-    command: ["--csv", "/windturbine/windturbine_data.csv"]
+    command: ["--csv", "/windturbine_data.csv"]
     volumes:
-    - ../../tools/mqtt/publisher/input_data/windturbine/windturbine_data.csv:/windturbine/windturbine_data.csv
+    - ./simulator/simulation_data/windturbine_data.csv:/windturbine_data.csv
 
-  ia-gradio-ui:
-    build:
-      context: $PWD/gradio
-      dockerfile: $PWD/gradio/Dockerfile
-      args:
-        TIMESERIES_UID: ${TIMESERIES_UID}
-        TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
-        no_proxy: ${timeseries_no_proxy}
-        INSTALL_SOURCES: "no"
-    image: ${DOCKER_REGISTRY}ia-gradio-ui:1.0.0
-    container_name: ia-gradio-ui
-    hostname: ia-gradio-ui
-    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+# Model Registry Service
+  model-registry:
+    image: intel/model-registry:1.0.3
+    container_name: model-registry
+    hostname: model-registry
+    ipc: "none"
+    ports:
+    - "${MR_SERVER_PORT}:8111"
     restart: unless-stopped
-    read_only: true
-    depends_on:
-      - ia-influxdb
+    tmpfs:
+      - /tmp
     security_opt:
-    - no-new-privileges
+      - no-new-privileges
     healthcheck:
       test: ["CMD-SHELL", "exit", "0"]
-      interval: 5m
     environment:
-      no_proxy: localhost,ia-influxdb
-      NO_PROXY: locahost,ia-influxdb
-      INFLUX_SERVER: "ia-influxdb"
-      INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
-      INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
-      INFLUXDB_DB: datain
-      LOG_LEVEL: ${LOG_LEVEL}
+      AppName: "ModelRegistry"
+      MIN_LOG_LEVEL: ${LOG_LEVEL}
+      ENABLE_DEV_MODE: ${ENABLE_DEV_MODE}
+      ENABLE_HTTPS_MODE: false
+      GETI_HOST: ${GETI_HOST}
+      GETI_TOKEN: ${GETI_TOKEN}
+      GETI_SERVER_API_VERSION: ${GETI_SERVER_API_VERSION}
+      GETI_ORGANIZATION_ID: ${GETI_ORGANIZATION_ID}
+      GETI_WORKSPACE_ID: ${GETI_WORKSPACE_ID}
+      GETI_SERVER_SSL_VERIFY: ${GETI_SERVER_SSL_VERIFY}
+      MLFLOW_TRACKING_URI: postgresql+psycopg2://${MR_USER_NAME}:${MR_PSQL_PASSWORD}@mr_postgres:5432/model_registry_db
+      MLFLOW_S3_ENDPOINT_URL: ${MR_MLFLOW_S3_ENDPOINT_URL}
+      MINIO_HOSTNAME: mr_minio
+      MINIO_SERVER_PORT: 8000
+      MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
+      MINIO_BUCKET_NAME: model-registry
+      SERVER_PORT: 8111
+      LSHOST: host.docker.internal
+      SERVER_CERT: /run/secrets/ModelRegistry_Server/public.crt
+      CA_CERT: /run/secrets/ModelRegistry_Server/server-ca.crt
+      SERVER_PRIVATE_KEY: /run/secrets/ModelRegistry_Server/private.key
+      no_proxy: mr_postgres,mr_minio
+      NO_PROXY: mr_postgres,mr_minio
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
-    - timeseries_network
-    ports:
-    - ${GRADIO_PORT}:7860
+      - timeseries_network
+  mr_postgres:
+    image: postgres:13
+    container_name: mr_postgres
+    hostname: mr_postgres
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    environment:
+      AppName: "ModelRegistry"
+      POSTGRES_USER: ${MR_USER_NAME}
+      POSTGRES_PASSWORD: ${MR_PSQL_PASSWORD}
+      POSTGRES_DB: model_registry_db
     volumes:
-    - vol_temp_gradio:/tmp
+      - mr_postgres_data:/var/lib/postgresql/data:rw
+    networks:
+      - timeseries_network
+  mr_minio:
+    image: minio/minio:RELEASE.2020-12-12T08-39-07Z
+    container_name: mr_minio
+    hostname: mr_minio
+    ipc: "none"
+    volumes:
+      - mr_minio_data:/data
+    networks:
+      - timeseries_network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    environment:
+      MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
+    command: server --address ":8000" --certs-dir /certs /data
 
 networks:
   timeseries_network:
     driver: bridge
-
 
 volumes:
   vol_influxdb_conf:
@@ -308,7 +343,12 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
-  vol_temp_gradio:
+  mr_minio_data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  mr_postgres_data:
     driver: local
     driver_opts:
       type: tmpfs

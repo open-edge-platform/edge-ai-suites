@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-{{ if eq .Values.env.ENABLE_MODEL_REGISTRY true}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -62,4 +61,3 @@ spec:
       volumes:
         - name: minio-temp-data
           emptyDir: {}
-{{ end }}
