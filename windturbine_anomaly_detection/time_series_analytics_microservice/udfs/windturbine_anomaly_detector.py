@@ -33,7 +33,7 @@ import requests
 
 log_level = os.getenv('KAPACITOR_LOGGING_LEVEL', 'INFO').upper()
 enable_benchmarking = os.getenv('ENABLE_BENCHMARKING', 'false').upper() == 'TRUE'
-total_no_pts = os.getenv('BENCHMARK_TOTAL_PTS')
+total_no_pts = os.getenv('BENCHMARK_TOTAL_PTS', 0)
 logging_level = getattr(logging, log_level, logging.INFO)
 
 # Configure logging
