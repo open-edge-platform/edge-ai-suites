@@ -20,7 +20,7 @@
                 "name": "search_image",
                 "source": "image_ingestor",
                 "queue_maxsize": 50,
-                "pipeline": "appsrc name=source  ! decodebin ! videoconvert ! gvainference model=/models/resnet50/FP32/resnet-50-pytorch.xml model-instance-id=infer1 device=CPU pre-process-backend=opencv ! gvametaconvert add-tensor-data=true ! appsink name=destination"
+                "pipeline": "appsrc name=source  ! decodebin ! videoconvert ! gvainference model=/models/resnet50/FP32/resnet-50-pytorch.xml model-instance-id=infer2 device=CPU pre-process-backend=opencv ! gvametaconvert add-tensor-data=true ! appsink name=destination"
             }
         ]
     }
