@@ -1,3 +1,0 @@
-pandas==2.2.3
-asyncua==1.1.5
-cryptography==44.0.1
