@@ -1,0 +1,5 @@
+git clone https://github.com/intel-innersource/frameworks.ai.ai-suite-for-timeseries timeseries-ai-stack
+https://github.com/intel-innersource/frameworks.ai.ai-suite-for-timeseries timeseries-ai-stack
+https://github.com/intel-innersource/frameworks.ai.ai-suite-for-timeseries
+https://github.*
+https://adamtheautomator.com/installing-kubernetes-on-ubuntu/#Installing_Kubernetes_on_the_Master_and_Worker_Nodes
