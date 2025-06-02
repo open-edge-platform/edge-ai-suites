@@ -1,0 +1,24 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+version: '3.6'
+services:
+  ia-grafana:
+    volumes:
+      - ./grafana/system_metrics_dashboard/system_metrics.json:/etc/grafana/provisioning/dashboards/system_metrics.json
+  ia-telegraf:
+    user: root
+    environment:
+      HOST_ETC: /hostfs/etc
+      HOST_PROC: /hostfs/proc
+      HOST_SYS: /hostfs/sys
+      HOST_MOUNT_PREFIX: /hostfs
+    volumes:
+    - /:/hostfs:ro
+    - /etc:/hostfs/etc:ro
+    - /proc:/hostfs/proc:ro
+    - /sys:/hostfs/sys:ro
+    - /var/run/utmp:/var/run/utmp:ro
+    - /var/run/docker.sock:/var/run/docker.sock:ro
