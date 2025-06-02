@@ -40,7 +40,64 @@ class ImageBasedVideoSearchTest(unittest.TestCase):
             By.XPATH, f"//button[contains(text(), '{button_text}')]"
         )
 
+    def start_video_analysis(self):
+        """
+        Helper method to start video analysis.
+        """
+        self.logger.info("Starting Video Stream Analysis...")
+        analyze_button = self.find_button("Analyze Stream")
+        analyze_button.click()
+        time.sleep(2)
+
+    def stop_video_analysis(self):
+        """
+        Helper method to stop video analysis.
+        """
+        self.logger.info("Stopping Video Stream Analysis...")
+        stop_button = self.find_button("Stop Analysis")
+        stop_button.click()
+        time.sleep(2)
+
+    def capture_frame(self):
+        """
+        Helper method to capture a frame from the video.
+        """
+        self.logger.info("Capturing Frame...")
+        capture_button = self.find_button("Capture Frame")
+        capture_button.click()
+        time.sleep(2)
+
+    def search_object(self):
+        """
+        Helper method to search for an object in the video.
+        """
+        self.logger.info("Searching for Object...")
+        search_button = self.find_button("Search Object")
+        search_button.click()
+        time.sleep(5)
+
+    def get_search_results(self):
+        """
+        Helper method to check the search results.
+        """
+        self.logger.info("Checking Search Results...")
+        image_list = self.driver.find_element(By.CLASS_NAME, "image-list")
+        image_items = image_list.find_elements(By.TAG_NAME, "li")
+        self.logger.info(f"Found {len(image_items)} image results.")
+        return image_items
+
+    def clear_database(self):
+        """
+        Helper method to clear the database.
+        """
+        self.logger.info("Clearing the database...")
+        clear_button = self.find_button("Clear Database")
+        clear_button.click()
+        time.sleep(2)
+        self.logger.info("Database cleared successfully.")
+
     def test_startup(self):
+
         # Assert page title is correct
         self.assertIn("Image Search", self.driver.title)
 
@@ -68,48 +125,68 @@ class ImageBasedVideoSearchTest(unittest.TestCase):
             button = self.find_button(text)
             self.assertIsNotNone(button)
 
-    def test_live_search(self):
+
+    def test_recorded_stream_search(self):
+
+        # Set the logs in a new line
+        print()
 
         # Start Video Analysis
-        self.logger.info("Starting Video Stream Analysis...")
-        analyze_button = self.find_button("Analyze Stream")
-        analyze_button.click()
+        self.start_video_analysis()
 
-        # Wait until analysis is done
+        # Wait until analysis start
         time.sleep(45)
 
         # Stop Video Analysis
-        self.logger.info("Stopping Video Stream Analysis...")
-        stop_button = self.find_button("Stop Analysis")
-        stop_button.click()
+        self.stop_video_analysis()
 
         # Do Image Search
         self.logger.info("Starting Image Search...")
-        capture_button = self.find_button("Capture Frame")
-        capture_button.click()
-        time.sleep(2)
-        search_button = self.find_button("Search Object")
-        search_button.click()
-        time.sleep(5)
+        self.capture_frame()
+        self.search_object()
 
         # Check Search Results
-        self.logger.info("Checking Search Results...")
-        image_list = self.driver.find_element(By.CLASS_NAME, "image-list")
-        image_items = image_list.find_elements(By.TAG_NAME, "li")
-        self.logger.info(f"Found {len(image_items)} image results.")
+        image_items = self.get_search_results()
+
+        # Assert that we have 10 results
         self.assertEqual(len(image_items), 10)
 
         # Clear the Database
-        self.logger.info("Clearing the database...")
-        clear_button = self.find_button("Clear Database")
-        clear_button.click()
-        time.sleep(2)
-        self.logger.info("Database cleared successfully.")
+        self.clear_database()
+
+    def test_live_stream_search(self):
+
+        # Set the logs in a new line
+        print()
+
+        # Start Video Analysis
+        self.start_video_analysis()
+
+        # Wait until analysis start
+        time.sleep(15)
+
+        # Do Image Search
+        self.logger.info("Starting Image Search...")
+        self.capture_frame()
+        self.search_object()
+
+        # Check Search Results
+        image_items = self.get_search_results()
+
+        # Assert that we have 10 results
+        self.assertEqual(len(image_items), 10)
+
+        # Stop Video Analysis
+        self.stop_video_analysis()
+
+        # Clear the Database
+        self.clear_database()
 
 
 if __name__ == "__main__":
     suite = unittest.TestSuite()
     suite.addTest(ImageBasedVideoSearchTest("test_startup"))
-    suite.addTest(ImageBasedVideoSearchTest("test_live_search"))
+    suite.addTest(ImageBasedVideoSearchTest("test_live_stream_search"))
+    suite.addTest(ImageBasedVideoSearchTest("test_recorded_stream_search"))
     runner = unittest.TextTestRunner()
     runner.run(suite)
