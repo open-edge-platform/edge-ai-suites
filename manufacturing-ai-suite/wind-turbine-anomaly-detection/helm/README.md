@@ -1,0 +1,1 @@
+Please refer [helm charts installation](../../../docs/user-guide/Wind-Turbine-Anomaly-Detection.md#deploying-time-series-analytics-stack-helm-charts-on-kubernetus-cluster)

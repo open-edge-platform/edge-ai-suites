@@ -1,0 +1,21 @@
+pipeline {
+
+    agent {
+         node {
+            label 'aws-ec2'
+         }
+    }
+
+    environment {
+        HTTP_PROXY = 'http://proxy-chain.intel.com:912'
+        HTTPS_PROXY = 'http://proxy-chain.intel.com:912'
+    }
+
+    stages {
+        stage('Build Helm Chart') {
+            steps {
+                helmChartBuild()
+            }
+        }
+    }
+}
