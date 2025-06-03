@@ -6,6 +6,7 @@ import unittest
 from dotenv import dotenv_values, load_dotenv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+import tempfile
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,6 +32,27 @@ class ImageBasedVideoSearchTest(unittest.TestCase):
     def tearDownClass(cls):
         cls.driver.quit()
         pass
+
+    def capture_screenshot(self, name):
+        """
+        Helper method to capture a screenshot.
+        """
+        screenshot_path = os.path.join(tempfile.gettempdir(), f"{name}.png")
+        self.driver.save_screenshot(screenshot_path)
+        self.logger.info(f"Screenshot saved: {screenshot_path}")
+        return screenshot_path
+
+    def upload_image(self, file_path):
+        """
+        Helper method to upload a file.
+        """
+        self.logger.info(f"Uploading file: {file_path}")
+        upload_input = self.driver.find_element(
+            By.XPATH, f"//input[@type='file' and @accept='image/*']"
+        )
+        upload_input.send_keys(file_path)
+        time.sleep(2)
+        self.logger.info("File uploaded successfully.")
 
     def find_button(self, button_text):
         """
@@ -125,8 +147,7 @@ class ImageBasedVideoSearchTest(unittest.TestCase):
             button = self.find_button(text)
             self.assertIsNotNone(button)
 
-
-    def test_recorded_stream_search(self):
+    def test_recorded_stream_search_from_frame_capture(self):
 
         # Set the logs in a new line
         print()
@@ -134,13 +155,13 @@ class ImageBasedVideoSearchTest(unittest.TestCase):
         # Start Video Analysis
         self.start_video_analysis()
 
-        # Wait until analysis start
+        # Wait until analysis completes
         time.sleep(45)
 
         # Stop Video Analysis
         self.stop_video_analysis()
 
-        # Do Image Search
+        # Do Image Search from the captured frame
         self.logger.info("Starting Image Search...")
         self.capture_frame()
         self.search_object()
@@ -154,7 +175,7 @@ class ImageBasedVideoSearchTest(unittest.TestCase):
         # Clear the Database
         self.clear_database()
 
-    def test_live_stream_search(self):
+    def test_live_stream_search_from_frame_capture(self):
 
         # Set the logs in a new line
         print()
@@ -165,9 +186,69 @@ class ImageBasedVideoSearchTest(unittest.TestCase):
         # Wait until analysis start
         time.sleep(15)
 
-        # Do Image Search
+        # Do Image Search from the captured frame
         self.logger.info("Starting Image Search...")
         self.capture_frame()
+        self.search_object()
+
+        # Check Search Results
+        image_items = self.get_search_results()
+
+        # Assert that we have 10 results
+        self.assertEqual(len(image_items), 10)
+
+        # Stop Video Analysis
+        self.stop_video_analysis()
+
+        # Clear the Database
+        self.clear_database()
+
+    def test_recorded_stream_search_from_image_upload(self):
+
+        # Set the logs in a new line
+        print()
+
+        # Start Video Analysis
+        self.start_video_analysis()
+
+        # Wait until analysis completes
+        time.sleep(45)
+
+        # Stop Video Analysis
+        self.stop_video_analysis()
+
+        # Do Image Search from an uploaded image
+        self.logger.info("Starting Image Search...")
+        self.capture_screenshot("test_image")
+        image_path = os.path.join(tempfile.gettempdir(), "test_image.png")
+        self.upload_image(image_path)
+        self.search_object()
+
+        # Check Search Results
+        image_items = self.get_search_results()
+
+        # Assert that we have 10 results
+        self.assertEqual(len(image_items), 10)
+
+        # Clear the Database
+        self.clear_database()
+
+    def test_live_stream_search_from_image_upload(self):
+
+        # Set the logs in a new line
+        print()
+
+        # Start Video Analysis
+        self.start_video_analysis()
+
+        # Wait until analysis start
+        time.sleep(15)
+
+        # Do Image Search from an uploaded image
+        self.logger.info("Starting Image Search...")
+        self.capture_screenshot("test_image")
+        image_path = os.path.join(tempfile.gettempdir(), "test_image.png")
+        self.upload_image(image_path)
         self.search_object()
 
         # Check Search Results
@@ -185,8 +266,15 @@ class ImageBasedVideoSearchTest(unittest.TestCase):
 
 if __name__ == "__main__":
     suite = unittest.TestSuite()
-    suite.addTest(ImageBasedVideoSearchTest("test_startup"))
-    suite.addTest(ImageBasedVideoSearchTest("test_live_stream_search"))
-    suite.addTest(ImageBasedVideoSearchTest("test_recorded_stream_search"))
-    runner = unittest.TextTestRunner()
+    tests = [
+        "test_startup",
+        "test_recorded_stream_search_from_frame_capture",
+        "test_live_stream_search_from_frame_capture",
+        "test_recorded_stream_search_from_image_upload",
+        "test_live_stream_search_from_image_upload",
+    ]
+    for test in tests:
+        suite.addTest(ImageBasedVideoSearchTest(test))
+
+    runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
