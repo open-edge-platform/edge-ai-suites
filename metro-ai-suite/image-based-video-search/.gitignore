@@ -6,5 +6,5 @@ src/feature-matching/static/*
 *.onnx
 *.pth
 k8s/*
-models/
+src/dlstreamer-pipeline-server/models/
 .venv/
