@@ -74,7 +74,7 @@ time_series_analytics_microservice
    - Key sections:
      - **Input**: Fetch data from Telegraf (stream).
      - **Processing**: Apply UDFs for analytics.
-     - **Alerts**: Configuration for publishing alerts (e.g., MQTT). Refer [link](#Publishing-mqtt-alerts)
+     - **Alerts**: Configuration for publishing alerts (e.g., MQTT). Refer [link](how-to-configure-alerts.md#publishing-mqtt-alerts)
      - **Logging**: Set log levels (`INFO`, `DEBUG`, `WARN`, `ERROR`).
      - **Output**: Publish processed data.
 
