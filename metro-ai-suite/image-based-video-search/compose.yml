@@ -66,6 +66,10 @@ services:
       context: src/streaming-pipeline
       dockerfile: Dockerfile
     container_name: ibvs-streaming
+    environment:
+      https_proxy: "${https_proxy}"
+      http_proxy: "${http_proxy}"
+      no_proxy: "${no_proxy}"
     command: >
       bash -c "
         wget -O file.mp4 https://github.com/intel-iot-devkit/sample-videos/raw/master/person-bicycle-car-detection.mp4 && \

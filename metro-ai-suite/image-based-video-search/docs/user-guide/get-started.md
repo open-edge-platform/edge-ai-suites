@@ -29,10 +29,6 @@ By following this guide, you will learn how to:
         mkdir image-based-video-search
         cd image-based-video-search
       ```
-    - Download the Docker Compose file:
-      ```bash
-        curl -L -o compose.yml "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/image-based-video-search/compose/compose-linux-v1.0.0/compose-linux-v1.0.0.yml"
-      ```
 <!--
 a pre-step to prepare models may be needed
 -->
@@ -45,6 +41,8 @@ a pre-step to prepare models may be needed
       </summary>
 
       ```sh
+      cd src/dlstreamer-pipeline-server
+
       # Define a generic directory for storing models
       MODELS_PATH="$(pwd)/models"
 
@@ -82,6 +80,8 @@ a pre-step to prepare models may be needed
       </summary>
 
       ```ps1
+      cd src/dlstreamer-pipeline-server
+
       docker pull openvino/ubuntu22_dev:2024.6.0
       $MODELS_PATH="$PWD\models"
  
@@ -104,29 +104,19 @@ a pre-step to prepare models may be needed
 
       </details>
 
-3. **Download the Artifacts**:
-    - Download the artifacts:
-      ```bash
-        curl -L -o embedEtcd.yaml "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/image-based-video-search/src/milvus-db/embedEtcd.yaml"
-        curl -L -o user.yaml "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/image-based-video-search/src/milvus-db/user.yaml"
-        curl -L -o config.json "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/image-based-video-search/src/dlstreamer-pipeline-server/configs/filter-pipeline/config.json"
-        curl -L -o mosquitto.conf "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/image-based-video-search/src/broker/mosquitto.conf"
-        curl -L -o ./models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json "https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/image-based-video-search/src/dlstreamer-pipeline-server/models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json"
-      ```
-
-4. **Start the Application**:
+3. **Start the Application**:
     - Run the application using Docker Compose:
       ```bash
       docker compose up -d
       ```
 
-5. **Verify the Application**:
+4. **Verify the Application**:
     - Check that the application is running:
       ```bash
       docker compose ps
       ```
 
-6. **Access the Application**:
+5. **Access the Application**:
     - Open a browser and go to the following endpoints to access the application:
       - Stream UI: `http://localhost:8889/stream`
       - App UI: `http://localhost:3000`
@@ -134,7 +124,7 @@ a pre-step to prepare models may be needed
       - MilvusDB UI: `http://localhost:8000/`
 
 
-7. **Run the Application**:
+6. **Run the Application**:
 
     - **Analyze Stream**: Use the predefined video and click **Analyze Stream** to start processing the video stream.
     - **Video Search**: Click the **Upload Image** button to upload your own images for search or click the **Capture Frame** button to capture and adjust frames from the video stream. Click the **Search Object** button.
