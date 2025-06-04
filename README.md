@@ -1,6 +1,6 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)]()
 [![Metro-AI-Suite](https://img.shields.io/badge/Metro%20AI%20Suite-3%20Samples-green)]()
-[![Manufacturing-AI-Suite](https://img.shields.io/badge/Manufacturing%20AI%20Suite-2%20Samples-green)]()
+[![Manufacturing-AI-Suite](https://img.shields.io/badge/Manufacturing%20AI%20Suite-3%20Samples-green)]()
 [![Retail-AI-Suite](https://img.shields.io/badge/Retail%20AI%20Suite-2%20Samples-green)]()
 
 # Edge-AI-Suites
@@ -29,6 +29,7 @@ The Edge AI Suites project hosts a collection of sample applications organized a
 | Metro AI Suite | [Smart Parking](metro-ai-suite/smart-parking) | [Link](metro-ai-suite/smart-parking/docs/user-guide/get-started.md) | [Customize the Application](metro-ai-suite/smart-parking/docs/user-guide/how-to-customize-application.md) |
 | Manufacturing AI Suite | [Pallet Defect Detection](manufacturing-ai-suite/pallet-defect-detection) | [Link](manufacturing-ai-suite/pallet-defect-detection#get-started) | [Customize the Application](manufacturing-ai-suite/pallet-defect-detection/docs/user-guide/how-to-use-an-ai-model-and-video-file-of-your-own.md) |
 | Manufacturing AI Suite | [Weld Porosity](manufacturing-ai-suite/weld-porosity) | [Link](manufacturing-ai-suite/weld-porosity#get-started) | [Customize the Application](manufacturing-ai-suite/weld-porosity/docs/user-guide/how-to-use-an-ai-model-and-video-file-of-your-own.md) |
+| Manufacturing AI Suite | [Wind Turbine Anomaly Detection](manufacturing-ai-suite/wind-turbine-anomaly-detection/) | [Link](manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/user-guide/get-started.md) | [Docker deployment](manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/user-guide/get-started.md#deploy-with-docker-compose-single-node) and [Helm deployment](manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/user-guide/how-to-deploy-with-helm.md) |
 | Retail AI Suite | [Automated Self Checkout](https://github.com/intel-retail/automated-self-checkout) | [Link](https://github.com/intel-retail/automated-self-checkout?tab=readme-ov-file#-quickstart) | [Advanced Guide](https://intel-retail.github.io/documentation/use-cases/automated-self-checkout/automated-self-checkout.html) |
 | Retail AI Suite | [Loss Prevention](https://github.com/intel-retail/loss-prevention) | [Link](https://github.com/intel-retail/loss-prevention?tab=readme-ov-file#quickstart) | [Advanced Guide](https://intel-retail.github.io/documentation/use-cases/loss-prevention/loss-prevention.html) |
 
