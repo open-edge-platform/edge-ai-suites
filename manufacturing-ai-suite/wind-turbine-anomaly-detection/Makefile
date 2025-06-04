@@ -7,7 +7,6 @@
 INCLUDE ?= default_INCLUDE
 
 DOCKER_COMPOSE_FILE = ./docker-compose.yml
-DOCKER_COMPOSE_SECURE_MODE_FILE = ./docker-compose-secure-mode.override.yml
 DOCKER_COMPOSE_VALIDATION_FILE=./docker-compose-validation.override.yml
 DOCKER_COMPOSE = docker compose
 SECURE_MODE='false'
