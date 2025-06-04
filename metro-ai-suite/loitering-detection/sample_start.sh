@@ -8,7 +8,7 @@ curl http://localhost:8080/pipelines/user_defined_pipelines/object_tracking_1 -X
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "0.0.0.0:1883",
+            "host": "mqtt:1883",
             "topic": "object_tracking_1",
             "timeout": 1000
         },
@@ -31,7 +31,7 @@ curl http://localhost:8080/pipelines/user_defined_pipelines/object_tracking_2 -X
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "0.0.0.0:1883",
+            "host": "mqtt:1883",
             "topic": "object_tracking_2",
             "timeout": 1000
         },
@@ -54,7 +54,7 @@ curl http://localhost:8080/pipelines/user_defined_pipelines/object_tracking_3 -X
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "0.0.0.0:1883",
+            "host": "mqtt:1883",
             "topic": "object_tracking_3",
             "timeout": 1000
         },
@@ -77,7 +77,7 @@ curl http://localhost:8080/pipelines/user_defined_pipelines/object_tracking_4 -X
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "0.0.0.0:1883",
+            "host": "mqtt:1883",
             "topic": "object_tracking_4",
             "timeout": 1000
         },
