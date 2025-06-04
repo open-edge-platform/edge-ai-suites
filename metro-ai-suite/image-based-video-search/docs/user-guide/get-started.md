@@ -26,8 +26,7 @@ By following this guide, you will learn how to:
 1. **Download the Compose File**:
     - Create and navigate to directory:
       ```bash
-        mkdir image-based-video-search
-        cd image-based-video-search
+        cd metro-ai-suite/image-based-video-search
       ```
 <!--
 a pre-step to prepare models may be needed
