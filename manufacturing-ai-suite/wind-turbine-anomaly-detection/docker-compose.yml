@@ -20,8 +20,8 @@ services:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
     environment:
-      no_proxy: "ia-influxdb,ia-mqtt-broker,ia-opcua-server, ia-time-series-analytics-microservice"
-      NO_PROXY: "ia-influxdb,ia-mqtt-broker,ia-opcua-server, ia-time-series-analytics-microservice"
+      no_proxy: "ia-influxdb,ia-mqtt-broker,ia-opcua-server,ia-time-series-analytics-microservice"
+      NO_PROXY: "ia-influxdb,ia-mqtt-broker,ia-opcua-server,ia-time-series-analytics-microservice"
       MQTT_BROKER_HOST: "ia-mqtt-broker"
       INFLUX_SERVER: "ia-influxdb"
       INFLUXDB_PORT: 8086
