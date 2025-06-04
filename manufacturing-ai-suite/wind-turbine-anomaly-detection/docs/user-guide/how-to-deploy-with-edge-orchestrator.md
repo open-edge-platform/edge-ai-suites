@@ -24,14 +24,7 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 ### Making the Deployment Package Available
 
-1. Clone the **Wind Turbine Anomaly Detection** repository:
-
-    ```bash
-    git clone --recurse-submodules  https://github.com/intel-innersource/frameworks.ai.ai-suite-for-timeseries timeseries-ai-stack
-    cd timeseries-ai-stack/sample_apps/windturbine_anomaly_detection
-    ```
-
-1. From the web browser, open the URL of the Edge Orchestrator and import the Deployment Package present in the folder **deployment-package** following the steps described in [Import Deployment Package](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/import_deployment.html#import-deployment-package>).
+1. From the web browser, open the URL of the Edge Orchestrator and import the Deployment Package present in the folder **`<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/deployment-package`** following the steps described in [Import Deployment Package](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/import_deployment.html#import-deployment-package>).
 
 1. Once the deployment package has been imported into the Edge Orchestrator, you can see it in the list of Web UI as shown here.
 
@@ -91,11 +84,5 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
         ```bash
             kubectl get node -o wide
         ``` 
-    1. Viewing the Dashboard, 
-
-        1. You can access the Grafana through your browser at port 30001:
-            * Go to `http://<system_ip>:30001` to access Grafana.
-            * Login to the Grafana with values set for `Grafana UserName` and `Grafana Password` given in override values
-            * On the **Home Dashboard** page, on the left corner, click the Dashboards icon.
-            * Click the **Manage Dashboards** tab, to view the list of all the preconfigured dashboards.
-            * Select **Wind Turbine Dashboard**, to view the data from the InfluxDB.
+    1. To check the results in the Grafana dashboard at port 30001, please follow instructions for helm     
+       deployment at [link](get-started.md#verify-the-wind-turbine-anomaly-detection-results)

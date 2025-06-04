@@ -1,84 +1,67 @@
-# How to Configure Time Series Analytics Microservice with Custom UDF
+# How to Configure Time Series Analytics Microservice with Custom UDF deployment package
 
-This guide provides instructions for setting up custom User-Defined Functions (UDFs) in **Time Series Analytics Microservice**.
+This guide provides instructions for setting up custom UDF deployment package (UDFs, TICKscripts, models) an config.json in **Time Series Analytics Microservice**.
 
-## Using Custom UDFs with Volume Mounts
+- **`config.json`**:
+   - Understand the configuration documented at [link](get-started.md#configjson) and update 
+     as per the need to configure the custom UDF deployment package
 
-To use custom UDFs with the Time Series Analytics Microservice, ensure the following directory structure is in place:
+- **`UDF Deployment package`**:
 
-```
-time_series_analytics_microservice
-├── docker-compose.yml
-├── config
-│   ├── kapacitor_devmode.conf
-│   ├── kapacitor.conf
-├── udfs
-│   ├── requirements.txt
-│   ├── <udf_script.py>
-├── tick_scripts
-│   ├── <tick_script.tick>
-├── models
-    ├── <model_file.pkl>
-```
+  1. **`udfs/`**:
+    - Contains python scripts for UDFs.
+    - If additional python packages are required, list them in `requirements.txt` using pinned versions.
 
-## Directory Details
+  2. **`tick_scripts/`**:
+    - Contains TICKscripts for data processing, analytics, and alerts.
+    - Mode detail on writing TICKscript is available at <https://docs.influxdata.com/kapacitor/v1/reference/tick/introduction/>
 
-1. **`config/`**:
-   - Contains Kapacitor configuration files:
-     - `kapacitor_devmode.conf`
-   - Update the `udf` section in above file to include the task name and UDF script name:
+    - Example TICKscript:
+      
+      ```bash
+      dbrp "datain"."autogen"
 
-     ```bash
-     [udf]
-     # Configuration for UDFs (User Defined Functions)
-     [udf.functions]
-         [udf.functions.<task_name>]
-         prog = "python3"
-         args = ["-u", "/app/udfs/<udf_script.py>"]
-         timeout = "60s"
-         [udf.functions.<task_name>.env]
-             PYTHONPATH = "/app/kapacitor_python/:/tmp/py_package"
-     ```
+      var data0 = stream
+          |from()
+              .database('datain')
+              .retentionPolicy('autogen')
+              .measurement('opcua')
+          @windturbine_anomaly_detector()
+          |alert()
+              .crit(lambda: "anomaly_status" > 0)
+              .message('Anomaly detected: Wind Speed: {{ index .Fields "wind_speed" }}, Grid Active Power: {{ index .Fields "grid_active_power" }}, Anomaly Status: {{ index .Fields "anomaly_status" }}')
+              .mqtt('my_mqtt_broker')
+              .topic('alerts/wind_turbine')
+              .qos(1)
+          |log()
+              .level('INFO')
+          |influxDBOut()
+              .buffer(0)
+              .database('datain')
+              .measurement('opcua')
+              .retentionPolicy('autogen')
+      ```
+    - Key sections:
+      - **Input**: Fetch data from Telegraf (stream).
+      - **Processing**: Apply UDFs for analytics.
+      - **Alerts**: Configuration for publishing alerts (e.g., MQTT). Refer [link](#Publishing-mqtt-alerts)
+      - **Logging**: Set log levels (`INFO`, `DEBUG`, `WARN`, `ERROR`).
+      - **Output**: Publish processed data.
 
-2. **`udfs/`**:
-   - Contains Python scripts for UDFs.
-   - If additional Python packages are required, list them in `requirements.txt` using pinned versions.
+    For more details, refer to the [Kapacitor TICK Script Documentation](https://docs.influxdata.com/kapacitor/v1/reference/tick/introduction/).
 
-3. **`tick_scripts/`**:
-   - Contains TICK scripts for data processing, analytics, and alerts.
-   - Example TICK script:
-     
-     ```bash
-     dbrp "datain"."autogen"
+  3. **`models/`**:
+    - Contains model files (e.g., `.pkl`) used by UDF python scripts.
 
-     var data0 = stream
-         |from()
-             .database('datain')
-             .retentionPolicy('autogen')
-             .measurement('opcua')
-         @windturbine_anomaly_detector()
-         |alert()
-             .crit(lambda: "anomaly_status" > 0)
-             .message('Anomaly detected: Wind Speed: {{ index .Fields "wind_speed" }}, Grid Active Power: {{ index .Fields "grid_active_power" }}, Anomaly Status: {{ index .Fields "anomaly_status" }}')
-             .mqtt('my_mqtt_broker')
-             .topic('alerts/wind_turbine')
-             .qos(1)
-         |log()
-             .level('INFO')
-         |influxDBOut()
-             .buffer(0)
-             .database('datain')
-             .measurement('opcua')
-             .retentionPolicy('autogen')
-     ```
-   - Key sections:
-     - **Input**: Fetch data from Telegraf (stream).
-     - **Processing**: Apply UDFs for analytics.
-     - **Alerts**: Configuration for publishing alerts (e.g., MQTT). Refer [link](how-to-configure-alerts.md#publishing-mqtt-alerts)
-     - **Logging**: Set log levels (`INFO`, `DEBUG`, `WARN`, `ERROR`).
-     - **Output**: Publish processed data.
 
-   For more details, refer to the [Kapacitor TICK Script Documentation](https://docs.influxdata.com/kapacitor/v1/reference/tick/introduction/).
+## With Volume Mounts
 
-4. **`models/`**:
-   - Contains model files (e.g., `.pkl`) used by UDF scripts.
+### Docker compose deployment
+
+The files at `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time-series-analytics-microservice` representing the UDF deployment package (UDFs, TICKscripts, models)
+and config.json has been volume mounted at `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and config.json, it has to be done at this location and the time series analytics microservice container
+needs to be restarted.
+
+### Helm deployment
+
+

@@ -1,4 +1,4 @@
-# Predictive Maintenance - Wind Turbine Anomaly Detection Sample App
+# Overview
 
 In the Energy Sector, such as wind turbines for power generation, unexpected equipment failures result in costly downtime and operational inefficiencies. Using AI-driven predictive analytics, edge devices can monitor equipment health through sensor data (e.g. power generation and wind speed), detect anomalous trends indicative of wear or failure, and alert operators to schedule maintenance proactively. This enhances productivity, reduces costs, and extends equipment lifespan.
 
@@ -6,71 +6,78 @@ This sample application demonstrates a time series use case by detecting the ano
 
 ## How it works
 
-- **Data Sources**: Using the `simulator/simulation_data/windturbine_data.csv` which is a normalized version of open source data wind turbine dataset from <https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset>.
-  This data is being ingested into **Telegraf** using either the **OPC-UA** OR **MQTT** protocol using our **OPC-UA** server OR **MQTT** publisher respectively.
-  
-- **Data Ingestion**: **Telegraf** through its input plugins (**OPC-UA** OR **MQTT**) gathers the data and sends this input data to both **InfluxDB** and **Time Series Analytics Microservice**.
+## High-Level Architecture
 
-- **Data Storage**: **InfluxDB** stores the incoming data coming from **Telegraf**.
+![Time Series AI Stack Architecture Diagram](./_images/time-series-ai-stack-architecture.png)
 
-- **Data Processing**: **Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) which is already built-in to the container image. The UDF deployment package is available
-at `time_series_analytics_microservice`. Directory details is as below:
-  
-   1. **`config.json`**:
-      The `task` section defines the settings for the Kapacitor task and User-Defined Functions (UDFs).
+As seen in the architecture diagram, the sample app at a high level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana. The Model Registry microservice helps to achieve the MLOps flow by uploading the **UDF deployment package**(comprises of UDF, TICKScripts, models).
 
-      | Key                     | Description                                                                                     | Example Value                          |
-      |-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
-      | `fetch_from_model_registry` | Boolean flag to enable fetching UDFs and models from the Model Registry.                     | `true` or `false`                      |
-      | `version`               | Specifies the version of the task or model to use.                                             | `"1.0"`                                |
-      | `tick_script`           | The name of the TICK script file used for data processing and analytics.                        | `"windturbine_anomaly_detector.tick"`  |
-      | `task_name`             | The name of the Kapacitor task.                                                                | `"windturbine_anomaly_detector"`       |
-      | `udfs`                  | Configuration for the User-Defined Functions (UDFs).                                           | See below for details.                 |
+### 1. **Data Simulators/Destinations**:
+  We have two data simulators - OPC-UA server and MQTT Publisher which read the data from
+  the CSV file and writes the data to the OPC-UA and MQTT input plugins in Telegraf.
+  The OPC-UA server and the MQTT broker can act as data destinations for receiving the alerts respectively
 
-      **UDFs Configuration**:
+---
 
-      The `udfs` section specifies the details of the UDFs used in the task.
+### 2. **Generic Time Series AI stack**
 
-      | Key     | Description                                                                 | Example Value                          |
-      |---------|-----------------------------------------------------------------------------|----------------------------------------|
-      | `type`  | The type of UDF. Currently, only `python` is supported.                     | `"python"`                             |
-      | `name`  | The name of the UDF script.                                                 | `"windturbine_anomaly_detector"`       |
-      | `models`| The name of the model file used by the UDF.                                 | `"windturbine_anomaly_detector.pkl"`   |
+**Key Features**:
 
-      ---
+- Offers a complete pipeline for data ingestion, storage, processing, and visualization.
+- Fully customizable to enable or disable specific services/containers (e.g., **InfluxDB** can be excluded if data storage is not required).
+- Supports integration with alternative time series databases, allowing flexibility beyond **InfluxDB**.
+- Extensible **Time Series Analytics Microservice** capable of running Deep Learning models by updating its container image, in addition to Machine Learning models accelerated by Intel® Extension for Scikit-learn*.
+- Enables users to ingest their own data via **Telegraf** and implement custom User-Defined Functions (UDFs) in the **Time Series Analytics Microservice** to address specific time series use cases.
 
-      **Alerts Configuration**:
+#### 2.1 **Data Ingestion**
 
-      The `alerts` section defines the settings for alerting mechanisms, such as MQTT.
-      For OPC-UA configuration, please refer [Publishing OPC-UA alerts](./Custom-User-Configuration.md#publishing-opc-ua-alerts)
+**Telegraf** is a plugin-driven server agent that collects and reports metrics from various sources. It uses input plugins to ingest data and sends it to **InfluxDB** for storage.
 
-      **MQTT Configuration**:
+- **Supported Input Plugins**: The stack supports multiple input plugins. We have primarily tested the **OPC-UA** and **MQTT** plugins with our **OPC-UA** server and **MQTT** Publisher containers respectively.
+- **Documentation**: Refer to the [Telegraf Documentation](https://docs.influxdata.com/telegraf/v1/) for more details.
 
-      The `mqtt` section specifies the MQTT broker details for sending alerts.
+---
 
-      | Key                 | Description                                                                 | Example Value          |
-      |---------------------|-----------------------------------------------------------------------------|------------------------|
-      | `mqtt_broker_host`  | The hostname or IP address of the MQTT broker.                              | `"ia-mqtt-broker"`     |
-      | `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
-      | `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
+#### 2.2. **Data Storage**
 
+**InfluxDB** is a high-performance time series database designed to handle large volumes of write and query operations. It stores both raw ingested data and processed data, which can be organized into different measurements (tables).
 
-   2. **`config/`**:
-      - `kapacitor_devmode.conf` would be updated as per the above `config.json` at runtime for usage.
+- **Key Features**:
+  - Optimized for time series data.
+  - Supports high write throughput and efficient querying.
+- **Documentation**: Refer to the [InfluxDB Documentation](https://docs.influxdata.com/influxdb/v1/) for more details.
 
-   3. **`udfs/`**:
-      - Contains the python script to process the incoming data.
-        Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with Intel® Extension for Scikit-learn*
-        to run on CPU to detect the anomalous power generation data points relative to wind speed.
+---
 
-   4. **`tick_scripts/`**:
-      - The TICKScript `windturbine_anomaly_detector.tick` determines processing of the input data coming in.
-        Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts. 
-        By default, it is configured to publish the alerts to **MQTT**.
-   
-   5. **`models/`**:
-      - The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo.
+#### 2.3. **Data Processing**
+
+**Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It supports both streaming and batch processing and integrates seamlessly with **InfluxDB**.
+Time Series Analytics Microservice has the Intel® Extension for Scikit-learn* python package which when used in the User Defined Functions (UDFs) of Kapacitor would improve the performance of the Machine Learning algorithms.
+
+- **Custom Logic with UDFs**:
+  - Users can write custom processing logic, known as **User-Defined Functions (UDFs)**, in Python.
+  - UDFs follow specific API standards, allowing **Kapacitor** to call them at runtime.
+  - Processed data is stored back in **InfluxDB** by default.
+- **Use Case**: Detect anomalies, trigger alerts, and perform advanced analytics.
+- **Documentation**: Refer to the [Kapacitor Anomaly Detection Guide](https://docs.influxdata.com/kapacitor/v1/guides/anomaly_detection/) for details on writing UDFs.
+
+The Time Series Analytics microservice allows customization by reading the UDF deployment package consisting of the UDF scripts, models and TICKScripts from the Model Registry microservice.
+
+---
+
+#### 2.4. **Data Visualization**
+
+**Grafana** provides an intuitive user interface for visualizing time series data stored in **InfluxDB**. It allows users to create custom dashboards and monitor key metrics in real time.
+
+- **Key Features**:
+  - Connects seamlessly with **InfluxDB**.
+  - Supports advanced visualization options.
+- **Documentation**:
+  - [Getting Started with Grafana and InfluxDB](https://grafana.com/docs/grafana/latest/getting-started/get-started-grafana-influxdb/)
+  - [Grafana Documentation](https://grafana.com/docs/grafana/latest/)
+
+---
 
 ## Summary
 
-This guide demonstrated how to deploy and use the Wind Turbine Anomaly Detection pipeline to identify anomalies in wind turbines. For more details, refer to the [Overview](./Overview.md).
+This guide demonstrated how the overview and architecture of the Wind Turbine Anomaly Detection sample app. For more details to get started, refer to [Getting Started](./get-started.md).

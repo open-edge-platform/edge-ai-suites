@@ -1,12 +1,5 @@
 # How to Deploy with Helm
 
--   **Time to Complete:** 30 minutes
--   **Programming Language:**  Python 3
-
-## Get Started
-
-Complete this guide to confirm that your setup is working correctly and try out workflows in the sample application.
-
 ## Prerequisites
 
 - [System Requirements](system-requirements.md)
@@ -18,7 +11,7 @@ Complete this guide to confirm that your setup is working correctly and try out 
 > **Note**
 > If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
 
-## Generate or Download the helm chart
+## Generate or Download the helm charts
 
 - Using pre-built helm charts:
 
@@ -26,7 +19,7 @@ Complete this guide to confirm that your setup is working correctly and try out 
 
     1. Download helm chart with the following command
 
-        `helm pull oci://amr-registry.caas.intel.com/edge-insights/timeseries/wind-turbine-anomaly-detection-sample-app --version 1.0.0`
+        `helm pull oci://<path-to-internal-harbor-registry-OR-intel-docker-hub-registry-path>/wind-turbine-anomaly-detection-sample-app --version 1.0.0`
 
     2. unzip the package using the following command
 
@@ -51,14 +44,14 @@ Complete this guide to confirm that your setup is working correctly and try out 
     INFLUXDB_PASSWORD:
     VISUALIZER_GRAFANA_USER:
     VISUALIZER_GRAFANA_PASSWORD:
-    POSTGRES_PASSWORD: # example: POSTGRES_PASSWORD: intel1234
-    MINIO_ACCESS_KEY: # example: MINIO_ACCESS_KEY: intel1234
-    MINIO_SECRET_KEY: # example: MINIO_SECRET_KEY: intel1234
+    POSTGRES_PASSWORD:
+    MINIO_ACCESS_KEY:  
+    MINIO_SECRET_KEY: 
     http_proxy: # example: http_proxy: http://proxy.example.com:891
     https_proxy: # example: http_proxy: http://proxy.example.com:891
     ```
 
-## Install Helm charts - use only one of the options below:
+## Install helm charts - use only one of the options below:
 
 > **Note:**
 > 1. Please uninstall the helm charts if already installed.
@@ -75,48 +68,29 @@ Complete this guide to confirm that your setup is working correctly and try out 
     ```bash
     helm install ts-wind-turbine-anomaly --set env.TELEGRAF_INPUT_PLUGIN=mqtt_consumer . -n apps --create-namespace
     ```
-
-## Verifying pods and services:
+Use the following command to verify if all the application resources got installed w/ their status:
 
 ```bash
-kubectl get pods -n apps
-kubectl get svc -n apps
+   kubectl get all -n apps
 ```
 
-## Access Grafana
+## Verify the wind turbine anomaly detection results
 
-   - URL: `http://<system_ip>:30001`
-   - Login with credentials from `values.yaml`.
-   - After login, click on Dashboard 
-     ![Menu view](./_images/dashboard.png)
+Please follow the steps per helm deployment at [link](get-started.md#verify-the-wind-turbine-anomaly-detection-results)
 
-   - Select the `Wind Turbine Dashboard`.
-     ![Windturbine dashboard](./_images/wind_turbine_dashboard.png)
+## Uninstall helm charts
 
-   - One will see the below output.
-  
-     ![Anomaly prediction in grid active power](./_images/anomaly_power_prediction.png)
+```bash
+helm uninstall ts-wind-turbine-anomaly -n apps
+kubectl get all -n apps # it takes few mins to have all application resources cleaned up
+```
 
+## Troubleshooting
 
-## End the demonstration
-
-Follow this procedure to stop the sample application and end this demonstration.
-
-1. Stop the sample application with the following command that uninstalls the release.
-
-    ```sh
-    helm uninstall ts-wind-turbine-anomaly -n apps
-    ```
-
-
-2. Confirm the pods are no longer running.
-
-    ```sh
-    kubectl get pods -n apps
-    ```
-
-### Error Logs
-
-View the container logs using this command.
-
-    kubectl logs -f <pod_name> -n apps
+- Check pod details or container logs to catch any failures:
+ 
+  ```bash
+  kubectl get pods -n apps
+  kubectl describe pod <pod_name> -n apps # shows details of the pod
+  kubectl logs -f <pod_name> -n apps # shows logs of the container in the pod
+  ```
