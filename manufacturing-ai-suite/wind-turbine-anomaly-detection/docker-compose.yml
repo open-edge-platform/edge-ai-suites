@@ -115,10 +115,10 @@ services:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
-    - ./time_series_analytics_microservice/udfs/:/app/udfs/
-    - ./time_series_analytics_microservice/tick_scripts/:/app/tick_scripts/
+    - ./time_series_analytics_microservice/udfs/:/tmp/windturbine_anomaly_detector/udfs/
+    - ./time_series_analytics_microservice/tick_scripts/:/tmp/windturbine_anomaly_detector/tick_scripts/
     - ./time_series_analytics_microservice/config.json:/app/config.json
-    - ./time_series_analytics_microservice/models/:/app/models/
+    - ./time_series_analytics_microservice/models/:/tmp/windturbine_anomaly_detector/models/
 
   ia-grafana:
     image: grafana/grafana-oss:12.0.0-ubuntu

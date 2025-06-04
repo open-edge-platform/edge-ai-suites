@@ -54,7 +54,7 @@ class AnomalyDetectorHandler(Handler):
           with open(filename, 'rb') as f:
               model = pickle.load(f)
           return model        
-        self.rf = load_model("/app/models/windturbine_anomaly_detector.pkl")
+        self.rf = load_model("/tmp/windturbine_anomaly_detector/models/windturbine_anomaly_detector.pkl")
 
         # wind speed and active power field name in the influxdb measurements
         self.x_name = "wind_speed"
