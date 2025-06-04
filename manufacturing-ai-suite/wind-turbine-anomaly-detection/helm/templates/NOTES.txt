@@ -21,7 +21,5 @@ Verify the pod logs by executing
 
 `kubectl logs -f <NAME OF THE POD>`
 
-- Grafana
-  - Secure Mode --  `https://nodeip:{{ $.Values.config.grafana.ext.port }}`
-  - Insecure Mode -- `http://nodeip:{{ $.Values.config.grafana.ext.port }}`
+Access Grafana at `http://nodeip:{{ $.Values.config.grafana.ext.port }}`
 
