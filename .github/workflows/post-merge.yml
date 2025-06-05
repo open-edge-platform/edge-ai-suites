@@ -25,6 +25,7 @@ jobs:
       smart-intersection_changed: ${{ steps.filter.outputs.smart-intersection }}
       pallet-defect-detection_changed: ${{ steps.filter.outputs.pallet-defect-detection }}
       weld-porosity_changed: ${{ steps.filter.outputs.weld-porosity }}
+      wind-turbine-anomaly-detection-docs: ${{ steps.filter.outputs.wind-turbine-anomaly-detection-docs }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,6 +47,8 @@ jobs:
               - 'manufacturing-ai-suite/pallet-defect-detection/docs/**'
             weld-porosity:
               - 'manufacturing-ai-suite/weld-porosity/docs/**'
+            wind-turbine-anomaly-detection-docs:
+              - 'manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/**'
 
   build_image-based-video-search:
     permissions:
@@ -137,4 +140,20 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/weld-porosity
+  
+  build_docs_wind_turbine_anomaly_detection:
+    permissions:
+      contents: read          # needed for actions/checkout
+      pull-requests: read     # needed for gh pr list
+      issues: write           # needed to post PR comment
+    needs: filter
+    if: ${{ needs.filter.outputs.wind-turbine-anomaly-detection-docs == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/wind-turbine-anomaly-detection
+
 
