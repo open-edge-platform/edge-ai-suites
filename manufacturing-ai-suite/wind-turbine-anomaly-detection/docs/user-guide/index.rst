@@ -12,6 +12,7 @@
    :caption: How to
    
    how-to-configure-custom-udf
+   how-to-configure-alerts
    how-to-fetch-from-model-registry
    how-to-deploy-with-helm
    how-to-deploy-with-edge-orchestrator
