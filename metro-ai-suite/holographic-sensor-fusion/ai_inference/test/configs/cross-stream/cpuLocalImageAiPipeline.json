@@ -1,0 +1,61 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "LocalMediaInputNode",
+            "Node Name": "Input",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "true",
+            "Batching Policy": "3",
+            "Stream Number": "stream_placeholder",
+            "Configure String": "MediaType=(STRING)image;DataSource=(STRING)vehicle"
+        },
+        {
+            "Node Class Name": "CPUJpegDecoderNode",
+            "Node Name": "Decoder",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "false",
+            "Batching Policy": "2",
+            "Stream Number": "stream_placeholder"
+        },
+        {
+            "Node Class Name": "DetectionNode",
+            "Node Name": "Detection",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Batch Size": "8",
+            "Configure String": "InferReqNumber=(INT)6;PreProcessType=(STRING)ie;reshapeWidth=(INT)640;reshapeHeight=(INT)640;imageWidth=(INT)1920;imageHeight=(INT)1080;Device=(STRING)CPU;InferConfig=(STRING_ARRAY)[PERFORMANCE_HINT=LATENCY];ModelPath=(STRING)vehicle-bike-detection-yoloxs-001/FP16-INT8/yolox_s.xml;ModelProcConfPath=(STRING)vehicle-bike-detection-yoloxs-001/yolox_s.model_proc.json;Threshold=(FLOAT)0.3;MaxROI=(INT)0;FilterLabels=(STRING_ARRAY)[car,bus,truck]"
+        },
+        {
+            "Node Class Name": "LLResultSinkFileNode",
+            "Node Name": "Output",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "false",
+            "Batching Policy": "2",
+            "Stream Number": "stream_placeholder",
+            "Configure String": "BufferType=(STRING)String;MediaType=(STRING)image"
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "Decoder",
+            "Next Node Port": "0",
+            "Queue Size": "4096"
+        },
+        {
+            "Previous Node": "Decoder",
+            "Previous Node Port": "0",
+            "Next Node": "Detection",
+            "Next Node Port": "0",
+            "Queue Size": "4096"
+        },
+        {
+            "Previous Node": "Detection",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0",
+            "Queue Size": "4096"
+        }
+    ]
+}

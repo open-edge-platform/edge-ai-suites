@@ -1,0 +1,120 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "LocalMediaSensorInputNode",
+            "Node Name": "Input",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "true",
+            "Batching Policy": "3",
+            "Stream Number": "stream_placeholder",
+            "Configure String": "MediaType=(STRING)image;MediaIndex=(INT)0;InputCapacity=(INT)1"
+        },
+        {
+            "Node Class Name": "VPLDecoderNode",
+            "Node Name": "Decoder",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "false",
+            "Batching Policy": "2",
+            "Stream Number": "stream_placeholder",
+            "Configure String": "Device=(STRING)GPU.0;CodecType=(STRING)JPEG;BufferType=(STRING)mfxFrame"
+        },
+        {
+            "Node Class Name": "DetectionNode",
+            "Node Name": "Detection",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Batch Size": "3",
+            "Configure String": "InferReqNumber=(INT)6;PreProcessType=(STRING)vaapi-surface-sharing;reshapeWidth=(INT)640;reshapeHeight=(INT)640;Device=(STRING)GPU.0;InferConfig=(STRING_ARRAY)[PERFORMANCE_HINT=LATENCY];PreProcessConfig=(STRING_ARRAY)[VAAPI_THREAD_POOL_SIZE=6,VAAPI_FAST_SCALE_LOAD_FACTOR=0];ModelPath=(STRING)vehicle-bike-detection-yoloxs-001/FP16-INT8/yolox_s.xml;ModelProcConfPath=(STRING)vehicle-bike-detection-yoloxs-001/yolox_s.model_proc.json;Threshold=(FLOAT)0.3;MaxROI=(INT)0"
+        },
+        {
+            "Node Class Name": "TrackerNode_CPU",
+            "Node Name": "Tracker",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "false",
+            "Batching Policy": "2",
+            "Stream Number": "stream_placeholder",
+            "Configure String": "TrackerType=(STRING)zero_term_imageless"
+        },
+        {
+            "Node Class Name": "RadarResultReadFileNode",
+            "Node Name": "RadarDataReader",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "true",
+            "Batching Policy": "3",
+            "Stream Number": "stream_placeholder",
+            "Configure String": "RadarConfigPath=(STRING)/opt/datasets/RadarConfig_raddet.json;RadarDataFilePath=(STRING)/opt/radarResults.csv;DataRepeatsNum=(INT)data_repeats_placeholder"
+        },
+        {
+            "Node Class Name": "CoordinateTransformationNode",
+            "Node Name": "CoordTrans",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "false",
+            "Batching Policy": "2",
+            "Stream Number": "stream_placeholder",
+            "Configure String": "registrationMatrixFilePath=(STRING)/opt/datasets/sensors_para/registration_matrix/registration_matrix.bin;qMatrixFilePath=(STRING)/opt/datasets/sensors_para/stereo_para/Q.bin;homographyMatrixFilePath=(STRING)/opt/datasets/sensors_para/homography_matrix/homography_matrix.bin;pclConstraints=(INT_ARRAY)[-10,10,-10,10,0,50];MediaPort=(INT)0;RadarPort=(INT)1"
+        },
+        {
+            "Node Class Name": "Track2TrackAssociationNode",
+            "Node Name": "Association",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "false",
+            "Batching Policy": "2",
+            "Stream Number": "stream_placeholder"
+        },
+        {
+            "Node Class Name": "PostFusionOutputNode",
+            "Node Name": "Output",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "false",
+            "Batching Policy": "2",
+            "Stream Number": "stream_placeholder"
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "Decoder",
+            "Next Node Port": "0",
+            "Queue Size": "1"
+        },
+        {
+            "Previous Node": "Decoder",
+            "Previous Node Port": "0",
+            "Next Node": "Detection",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Detection",
+            "Previous Node Port": "0",
+            "Next Node": "Tracker",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Tracker",
+            "Previous Node Port": "0",
+            "Next Node": "CoordTrans",
+            "Next Node Port": "0",
+            "Queue Size": "64"
+        },
+        {
+            "Previous Node": "RadarDataReader",
+            "Previous Node Port": "0",
+            "Next Node": "CoordTrans",
+            "Next Node Port": "1",
+            "Queue Size": "64"
+        },
+        {
+            "Previous Node": "CoordTrans",
+            "Previous Node Port": "0",
+            "Next Node": "Association",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Association",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0"
+        }
+    ]
+}

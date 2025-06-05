@@ -1,0 +1,99 @@
+{
+    "json_schema_version": "1.2.0",
+    "model_type": "detection",
+    "model_input": {
+        "format": {
+            "format": "image",
+            "layout": "NCHW",
+            "precision": "U8"
+        }
+    },
+    "model_output": {
+        "format": {
+            "layout": "B",
+            "detection_output": {
+                "size": 10,
+                "bbox_format": "CORNER",
+                "location_index": [0, 1, 2, 3],
+                "confidence_index": 4,
+                "first_class_prob_index": 5
+            }
+        },
+        "class_label_table": "coco"
+    },
+    "post_proc_output": {
+        "function_name": "HVA_det_postproc",
+        "format": {
+            "bbox": "FLOAT_ARRAY",
+            "label_id": "INT",
+            "confidence": "FLOAT"
+        },
+        "process": [
+            {
+                "name": "bbox_transform",
+                "params": {
+                    "apply_to_layer": "ANY",
+                    "target_type": "CORNER_SIZE",
+                    "scale_h": 640,
+                    "scale_w": 640,
+                    "clip_normalized_rect": true
+                }
+            },
+            {
+                "name": "NMS",
+                "params": {
+                    "apply_to_layer": "ALL",
+                    "iou_threshold": 0.5,
+                    "class_agnostic": true
+                }
+            }
+        ],
+        "mapping": {
+            "bbox": {
+                "input": {
+                    "index": [0, 1, 2, 3]
+                },
+                "op": [
+                    {
+                        "name": "identity",
+                        "params": {}
+                    }
+                ]
+            },
+            "label_id": {
+                "input": {
+                    "index": [5,  6,  7,  8,  9]
+                },
+                "op": [
+                    {
+                        "name": "argmax",
+                        "params": {}
+                    }
+                ]
+            },
+            "confidence": {
+                "input": {
+                    "index": [4, 5,  6,  7,  8,  9]
+                },
+                "op": [
+                    {
+                        "name": "yolo_multiply",
+                        "params": {}
+                    }
+                ]
+            }
+        }
+    },
+    "labels_table": [
+        {
+            "name": "coco",
+            "labels": [
+                "bicycle",
+                "car",
+                "motorcycle",
+                "bus",
+                "truck"
+            ]
+        }
+    ]
+}

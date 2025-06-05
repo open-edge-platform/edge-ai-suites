@@ -1,0 +1,51 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "LocalMediaInputNode",
+            "Node Name": "Input",
+            "Thread Number": "1",
+            "Is Source Node": "true",
+            "Configure String": "MediaType=(STRING)image;DataSource=(STRING)vehicle"
+        },
+        {
+            "Node Class Name": "CPUJpegDecoderNode",
+            "Node Name": "Decoder",
+            "Thread Number": "1",
+            "Is Source Node": "false"
+        },
+        {
+            "Node Class Name": "ClassificationNode",
+            "Node Name": "Test",
+            "Thread Number": "1",
+            "Is Source Node": "true",
+            "Configure String": "InferReqNumber=(INT)6;InferConfig=(STRING_ARRAY)[CPU_THROUGHPUT_STREAMS=6,CPU_THREADS_NUM=6,CPU_BIND_THREAD=NUMA];ModelPath=(STRING)resnet-18-pytorch/FP16-INT8/resnet-18-pytorch.xml;ModelProcConfPath=(STRING)resnet-18-pytorch/resnet-18-pytorch.model_proc.json"
+        },
+        {
+            "Node Class Name": "LLOutputNode",
+            "Node Name": "Output",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "BufferType=(STRING)String"
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "Decoder",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Decoder",
+            "Previous Node Port": "0",
+            "Next Node": "Test",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Test",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0"
+        }
+    ]
+}

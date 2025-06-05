@@ -1,0 +1,39 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "LocalMediaInputNode",
+            "Node Name": "Input",
+            "Thread Number": "1",
+            "Is Source Node": "true",
+            "Configure String": "MediaType=(STRING)video;DataSource=(STRING)vehicle;ReadBufferSize=(INT)1048576"
+        },
+        {
+            "Node Class Name": "VPLDecoderNode",
+            "Node Name": "Decoder",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "Device=(STRING)GPU.0;CodecType=(STRING)H264;BufferType=(STRING)mfxFrame"
+        },
+        {
+            "Node Class Name": "LLResultSinkFileNode",
+            "Node Name": "Output",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "MediaType=(STRING)video"
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "Decoder",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Decoder",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0"
+        }
+    ]
+}

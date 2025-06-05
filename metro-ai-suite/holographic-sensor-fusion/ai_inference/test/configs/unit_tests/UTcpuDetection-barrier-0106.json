@@ -1,0 +1,51 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "LocalMediaInputNode",
+            "Node Name": "Input",
+            "Thread Number": "1",
+            "Is Source Node": "true",
+            "Configure String": "MediaType=(STRING)image;DataSource=(STRING)vehicle"
+        },
+        {
+            "Node Class Name": "CPUJpegDecoderNode",
+            "Node Name": "Decoder",
+            "Thread Number": "1",
+            "Is Source Node": "false"
+        },
+        {
+            "Node Class Name": "DetectionNode",
+            "Node Name": "Test",
+            "Thread Number": "1",
+            "Is Source Node": "true",
+            "Configure String": "FrameInterval=(INT)1;InferReqNumber=(INT)6;InferConfig=(STRING_ARRAY)[CPU_THROUGHPUT_STREAMS=6,CPU_THREADS_NUM=6,CPU_BIND_THREAD=NUMA];ModelPath=(STRING)vehicle-license-plate-detection-barrier-0106/FP16-INT8/vehicle-license-plate-detection-barrier-0106.xml;ModelProcConfPath=(STRING)vehicle-license-plate-detection-barrier-0106/vehicle-license-plate-detection-barrier-0106.model_proc.json;Threshold=(FLOAT)0.61;MaxROI=(INT)0"
+        },
+        {
+            "Node Class Name": "LLOutputNode",
+            "Node Name": "Output",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "BufferType=(STRING)String"
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "Decoder",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Decoder",
+            "Previous Node Port": "0",
+            "Next Node": "Test",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Test",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0"
+        }
+    ]
+}

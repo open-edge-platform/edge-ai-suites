@@ -1,0 +1,175 @@
+syntax = "proto3";
+
+package hce_ai;
+
+// Interface exported by the server.
+service ai_inference {
+
+  // Run a single pipeline that may come with one or multiple streams
+  //
+  rpc Run(stream AI_Request) returns (stream AI_Response) {}
+
+}
+
+
+// AI_Request contains all infomation required to start a single pipeline.
+//
+// @param pipelineConfig the serialized pipeline topology as well as the config to 
+// each node. Something like:
+// {
+//   "Nodes": [
+//       {
+//           "Node Class Name": "LocalMediaInputNode",
+//           "Node Name": "Input",
+//           "Thread Number": "1",
+//           "Is Source Node": "true",
+//           "Configure String": "some string"
+//       },
+//       {
+//           "Node Class Name": "OutputNode",
+//           "Node Name": "Output",
+//           "Thread Number": "1",
+//           "Is Source Node": "false"
+//       }
+//   ],
+//   "Links": [
+//       {
+//           "Previous Node": "Input",
+//           "Previous Node Port": "0",
+//           "Next Node": "Output",
+//           "Next Node Port": "0"
+//       }
+//   ]
+// }
+//
+// @param mediaUri the array for media inputs, can be different contents 
+// depends on the InputNode type defined in pipelineConfig. e.g.
+// > for LocalMediaInputNode:
+// [
+//      "/path/to/media1",
+//      "/path/to/media2",
+//      "/path/to/media3",
+// ]
+// > for RawImageInputNode:
+// [
+//      {
+//          "image": someBase64Content,
+//          "roi": [int, int, int, int]
+//      },
+//      {
+//          "image": someBase64Content,
+//          "roi": [int, int, int, int]
+//      }
+// ]
+// > for StorageImageInputNode/StorageVideoInputNode:
+// [
+//      "173010393f5bb5286b9548e4ba46dff2d02170cb",
+//      "173010396a16f7ca3df4412daf87397597c7bdf3",
+//      "17301039a3546d2901514fa488cfb96452fdf3e5"
+// ]
+//
+// @param suggestedWeight a value suggesting how much workload this request is. e.g.
+// one single stream of 1080p h264 va pipeline = weight 1
+//
+// @param target a value describes for task type, options: load_pipeline, unload_pipeline, run
+// default as run, means `AUTO_RUN` task type
+//
+// @param streamNum an unsigned integer value to enable cross-stream inference on the workload of the pipeline submitted. 
+
+message AI_Request {
+  optional string pipelineConfig = 1;
+  repeated string mediaUri = 2;
+  optional int32 suggestedWeight = 3;
+  optional int32 jobHandle = 4;
+  optional string target = 5;
+  optional int32 streamNum = 6;
+}
+
+// AI_Response should contain all information returned from service, server would like to pass to client
+//
+// @param status request status
+//        0x00: success
+//        0x80: unknown failure
+//        0x81 ~ 0xFF: other failure
+// @param responses optional, a placeholder for videos or jpegs in serialized binary data
+// @param message results will be formatted as json message according to ouput node type
+// The actual format depends on the **OutputNode** within pipeline parsing this value.
+//
+// > for LLOutputNode
+// Low Latency Output Node
+//
+// Response Json Syntax
+// {
+//   "result": [
+//     {
+//       "status_code": int,
+//       "description": string,
+//       "roi_info": [
+//         "roi": [int, int, int, int],
+//         "feature_vector": string,
+//         "roi_class": string,
+//         "roi_score": float,
+//         "track_id": int,
+//         "track_status": string,
+//         "attribute": {
+//             "color": string
+//             "color_score": float,
+//             "type": string,
+//             "type_score": float
+//         }
+//       ]
+//     },
+//     …
+//   ]
+// }
+//
+// > for LLResultSinkFileNode
+// Local Output Node: save results to local output file: pipeline_results_yyyy-mm-dd-hh-mm-ss_\<timestamp\>/results.csv
+//
+// Response Json Syntax
+// {
+//   "result": [
+//     {
+//       "status_code": int,
+//       "description": string,
+//     },
+//     …
+//   ]
+// }
+//
+// > for LLResultSinkNode
+// Storage Output Node: save results to database.
+// The database connection parameters should be configured via `environment-variable`, for example:
+// 
+// 	export FeatureStorage_HBaseVehicleFeatureServerAddress="evi-hbase-hbase-master.smartedge-apps"
+// 	export FeatureStorage_HBaseVehicleFeatureServerPort="9090"
+// 	export FeatureStorage_RestControllerBaseUrl="evi-storage-rest.smartedge-apps"
+// 
+//
+// Response Json Syntax
+// {
+//   "result": [
+//     {
+//       "status_code": int,
+//       "description": string,
+//     },
+//     …
+//   ]
+// }
+message AI_Response {
+  enum Status {
+    SUCCESS = 0;
+    UNKOWNFAILURE = 0x80;
+  }
+  Status status = 1;
+  map<string, Stream_Response> responses = 2;
+  optional string message = 3;
+}
+
+// @param binary any binary results aggregated from frames as for videos or jpegs in serialized
+// user-defined structure bytes. Clients are expected to cast it back to that user-defined structure
+// by the client side with prior knowledge of what server would transmit
+message Stream_Response {
+  string jsonMessages = 1;
+  optional bytes binary = 2;
+}
