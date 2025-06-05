@@ -74,6 +74,36 @@ Use the following command to verify if all the application resources got install
    kubectl get all -n apps
 ```
 
+## Copy the windturbine_anomaly_detection udf package for helm deployment to Time Series Analytics Microservice
+
+You need to copy your own or existing model into Time Series Analytics Microservice inorder to run this sample application in kubernates enviornment:
+
+1. The udf package is placed as below in the repository under `time_series_analytics_microservice`. 
+
+    ```
+    - time_series_analytics_microservice/
+        - models/
+            - windturbine_anomaly_detector.pkl
+        - tick_scripts/
+            - windturbine_anomaly_detector.tick
+        - udfs/
+            - requirements.txt
+            - windturbine_anomaly_detector.py
+    ```
+
+2. Copy your new AI model (windturbine anomaly detection udf package used here as an example) to `time-series-analytics-microservice` pod.
+    ```bash
+    cd time_series_analytics_microservice
+    mkdir windturbine_anomaly_detector
+    cp -r models tick_scripts udfs windturbine_anomaly_detector/.
+
+    POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
+
+    kubectl cp windturbine_anomaly_detector $POD_NAME:/tmp/ -n apps
+    ```
+   > **Note**
+   > You need to run the above commands only after performing the Helm install.
+
 ## Verify the wind turbine anomaly detection results
 
 Please follow the steps per helm deployment at [link](get-started.md#verify-the-wind-turbine-anomaly-detection-results)
