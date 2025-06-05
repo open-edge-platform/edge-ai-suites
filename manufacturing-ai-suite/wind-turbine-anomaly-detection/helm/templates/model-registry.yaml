@@ -72,7 +72,7 @@ spec:
               value: "{{ .Values.env.no_proxy }}"
             - name: NO_PROXY
               value: "{{ .Values.env.NO_PROXY }}"
-          image: {{ $.Values.DOCKER_REGISTRY }}{{ .Values.images.model_registry }}
+          image: {{ .Values.images.model_registry }}
           imagePullPolicy: {{ $.Values.imagePullPolicy }}
           name: model-registry
           ports:

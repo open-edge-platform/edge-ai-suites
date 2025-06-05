@@ -91,7 +91,7 @@ You need to copy your own or existing model into Time Series Analytics Microserv
             - windturbine_anomaly_detector.py
     ```
 
-2. Copy your new AI model (windturbine anomaly detection udf package used here as an example) to `time-series-analytics-microservice` pod.
+2. Copy your new udf package (windturbine anomaly detection udf package used here as an example) to `time-series-analytics-microservice` pod.
     ```bash
     cd time_series_analytics_microservice
     mkdir windturbine_anomaly_detector

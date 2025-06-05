@@ -24,7 +24,23 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 ### Making the Deployment Package Available
 
-1. From the web browser, open the URL of the Edge Orchestrator and import the Deployment Package present in the folder **`<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/deployment-package`** following the steps described in [Import Deployment Package](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/import_deployment.html#import-deployment-package>).
+1. Download Deployment Package present in the folder **`<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/deployment-package`**
+
+1. Update the below fields in `timeseries-wind-turbine-values.yaml` file in the helm chart
+
+    ``` sh
+    INFLUXDB_USERNAME:
+    INFLUXDB_PASSWORD:
+    VISUALIZER_GRAFANA_USER:
+    VISUALIZER_GRAFANA_PASSWORD:
+    POSTGRES_PASSWORD:
+    MINIO_ACCESS_KEY:  
+    MINIO_SECRET_KEY: 
+    http_proxy: # example: http_proxy: http://proxy.example.com:891
+    https_proxy: # example: http_proxy: http://proxy.example.com:891
+    ```
+
+1. From the web browser, open the URL of the Edge Orchestrator and import the updated Deployment Package following the steps described in [Import Deployment Package](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/import_deployment.html#import-deployment-package>).
 
 1. Once the deployment package has been imported into the Edge Orchestrator, you can see it in the list of Web UI as shown here.
 
@@ -68,17 +84,21 @@ You can view the deployment status on the Deployments page.
 
 For more information on setting up a deployment, see [Set up a Deployment](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/setup_deploy.html#set-up-a-deployment>).
 
+
 ### Access the **Wind Turbine Anomaly Detection** Sample Application
 
-1. Download the kubeconfig of the cluster of the Edge Node on which the Application has been deployed. Refer [Kubeconfig Download](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/accessing_clusters.html#organize-cluster-access-with-a-kubeconfig-file>).
-
-1. Follow the below steps for accessing `Grafana Dashboard` in the **Wind Turbine Anomaly Detection** sample application.
-    
-    1. Copy `Kubeconfig` to `$HOME` path and export it on your device
+1. Copy `Kubeconfig` to `$HOME` path and export it on your device
 
         ```bash
         export KUBECONFIG=~/kubeconfig.yaml
         ```
+
+1. Copy the udf deployment, please refer [here](how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice)
+
+1. Download the kubeconfig of the cluster of the Edge Node on which the Application has been deployed. Refer [Kubeconfig Download](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/accessing_clusters.html#organize-cluster-access-with-a-kubeconfig-file>).
+
+1. Follow the below steps for accessing `Grafana Dashboard` in the **Wind Turbine Anomaly Detection** sample application.
+
     1. Get the `internal-ip` of edge node to access the node using the below command 
 
         ```bash

@@ -17,12 +17,3 @@ chartVersion: 1.0.0
 profiles:
 - name: default
   valuesFileName: timeseries-wind-turbine-values.yaml
-  parameterTemplates:
-      - name: env.VISUALIZER_GRAFANA_USER
-        displayName: "Grafana Username"
-        type: string
-        mandatory: true
-      - name: env.VISUALIZER_GRAFANA_PASSWORD
-        displayName: "Grafana password"
-        type: string
-        mandatory: true

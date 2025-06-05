@@ -67,59 +67,59 @@ This data is being ingested into **Telegraf** using the **OPC-UA** protocol usin
 at `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time-series-analytics-microservice`. Directory details is as below:
   
 #### **`config.json`**:
-      The `task` section defines the settings for the Kapacitor task and User-Defined Functions (UDFs).
+The `task` section defines the settings for the Kapacitor task and User-Defined Functions (UDFs).
 
-      | Key                     | Description                                                                                     | Example Value                          |
-      |-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
-      | `fetch_from_model_registry` | Boolean flag to enable fetching UDFs and models from the Model Registry.                     | `true` or `false`                      |
-      | `version`               | Specifies the version of the task or model to use.                                             | `"1.0"`                                |
-      | `tick_script`           | The name of the TICK script file used for data processing and analytics.                        | `"windturbine_anomaly_detector.tick"`  |
-      | `task_name`             | The name of the Kapacitor task.                                                                | `"windturbine_anomaly_detector"`       |
-      | `udfs`                  | Configuration for the User-Defined Functions (UDFs).                                           | See below for details.                 |
+| Key                     | Description                                                                                     | Example Value                          |
+|-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
+| `fetch_from_model_registry` | Boolean flag to enable fetching UDFs and models from the Model Registry.                     | `true` or `false`                      |
+| `version`               | Specifies the version of the task or model to use.                                             | `"1.0"`                                |
+| `tick_script`           | The name of the TICK script file used for data processing and analytics.                        | `"windturbine_anomaly_detector.tick"`  |
+| `task_name`             | The name of the Kapacitor task.                                                                | `"windturbine_anomaly_detector"`       |
+| `udfs`                  | Configuration for the User-Defined Functions (UDFs).                                           | See below for details.                 |
 
-      **UDFs Configuration**:
+**UDFs Configuration**:
 
-      The `udfs` section specifies the details of the UDFs used in the task.
+The `udfs` section specifies the details of the UDFs used in the task.
 
-      | Key     | Description                                                                 | Example Value                          |
-      |---------|-----------------------------------------------------------------------------|----------------------------------------|
-      | `type`  | The type of UDF. Currently, only `python` is supported.                     | `"python"`                             |
-      | `name`  | The name of the UDF script.                                                 | `"windturbine_anomaly_detector"`       |
-      | `models`| The name of the model file used by the UDF.                                 | `"windturbine_anomaly_detector.pkl"`   |
+| Key     | Description                                                                 | Example Value                          |
+|---------|-----------------------------------------------------------------------------|----------------------------------------|
+| `type`  | The type of UDF. Currently, only `python` is supported.                     | `"python"`                             |
+| `name`  | The name of the UDF script.                                                 | `"windturbine_anomaly_detector"`       |
+| `models`| The name of the model file used by the UDF.                                 | `"windturbine_anomaly_detector.pkl"`   |
 
-      ---
+---
 
-      **Alerts Configuration**:
+**Alerts Configuration**:
 
-      The `alerts` section defines the settings for alerting mechanisms, such as MQTT.
+The `alerts` section defines the settings for alerting mechanisms, such as MQTT.
 
-      **MQTT Configuration**:
+**MQTT Configuration**:
 
-      The `mqtt` section specifies the MQTT broker details for sending alerts.
+The `mqtt` section specifies the MQTT broker details for sending alerts.
 
-      | Key                 | Description                                                                 | Example Value          |
-      |---------------------|-----------------------------------------------------------------------------|------------------------|
-      | `mqtt_broker_host`  | The hostname or IP address of the MQTT broker.                              | `"ia-mqtt-broker"`     |
-      | `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
-      | `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
+| Key                 | Description                                                                 | Example Value          |
+|---------------------|-----------------------------------------------------------------------------|------------------------|
+| `mqtt_broker_host`  | The hostname or IP address of the MQTT broker.                              | `"ia-mqtt-broker"`     |
+| `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
+| `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
 
 
 #### **`config/`**:
-      - `kapacitor_devmode.conf` would be updated as per the above `config.json` at runtime for usage.
+  - `kapacitor_devmode.conf` would be updated as per the above `config.json` at runtime for usage.
 
 #### **`udfs/`**:
-      - Contains the python script to process the incoming data.
-        Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with Intel® Extension for Scikit-learn*
-        to run on CPU to detect the anomalous power generation data points relative to wind speed.
+  - Contains the python script to process the incoming data.
+    Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with Intel® Extension for Scikit-learn*
+    to run on CPU to detect the anomalous power generation data points relative to wind speed.
 
 #### **`tick_scripts/`**:
-      - The TICKScript `windturbine_anomaly_detector.tick` determines processing of the input data coming in.
-        Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts. 
-        By default, it is configured to publish the alerts to **MQTT**.
+  - The TICKScript `windturbine_anomaly_detector.tick` determines processing of the input data coming in.
+    Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts. 
+    By default, it is configured to publish the alerts to **MQTT**.
    
 #### **`models/`**:
-      - The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo.
-        More details on how it is built is accessible at `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/training/windturbine/README.md`
+  - The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo.
+    More details on how it is built is accessible at `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/training/windturbine/README.md`
 
 ## Clone source code
 
@@ -131,6 +131,10 @@ git clone https://github.com/open-edge-platform/edge-ai-suites
 ## Build Docker Images
 
 Navigate to the application directory and build the Docker images:
+
+> **NOTE**:
+> As a pre-requisite, please build the following microservices independently:
+> - Time Series Analytics microservice by referring the docs at <https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/time-series-analytics/docs/user-guide/get-started.md#build-docker-image> 
 
 ```bash
 make build # builds only data simulator (OPC-UA serer and MQTT publisher) docker images

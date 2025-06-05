@@ -10,10 +10,20 @@ DOCKER_USERNAME: ''
 DOCKER_PASSWORD: ''
 imagePullPolicy: Always
 env:
+  # The INFLUXDB_USERNAME and INFLUXDB_PASSWORD length must be a minimum of 5 and 10 characters respectively and 
+  # should contain alphanumeric characters with atleast one digit. 
+  # Do not set INFLUXDB_USERNAME to 'admin'.
+  # Do not use the following special characters in the influxdb_username and influxdb_password "~:'+[/@^{%(-"*|,&<`}._=}!>;?#$)\"
   INFLUXDB_USERNAME: 
   INFLUXDB_PASSWORD: 
+  # The VISUALIZER_GRAFANA_USER and VISUALIZER_GRAFANA_PASSWORD length must be a minimum of 5 and 10 characters respectively 
+  # and should contain alphanumeric characters with atleast one digit
   VISUALIZER_GRAFANA_USER: 
   VISUALIZER_GRAFANA_PASSWORD: 
+  # The POSTGRES_USER length must be a minimum of 5 and 10 characters respectively
+  POSTGRES_PASSWORD:
+  # MinIO Secret Key length must be a minimum of 8 and 16 characters respectively and should contain alphanumeric characters with at least one digit 
+  MINIO_SECRET_KEY:
   HTTP_PROXY: 
   HTTPS_PROXY: 
   INFLUXDB_RETENTION_DURATION: 1h0m0s
