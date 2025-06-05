@@ -1,0 +1,91 @@
+{
+    "json_schema_version": "1.2.0",
+    "model_type": "detection",
+    "model_input": [
+        {
+            "format": "image",
+            "layout": "NCHW",
+            "precision": "U8"
+        }
+    ],
+    "model_output": {
+        "format": {
+            "layout": "B",
+            "detection_output": {
+                "size": 7,
+                "bbox_format": "CORNER",
+                "location_index": [3, 4, 5, 6],
+                "confidence_index": 2,
+                "predict_label_index": 1,
+                "batchid_index": 0
+            }
+        },
+        "class_label_table": "traffic"
+    },
+    "post_proc_output": {
+        "function_name": "HVA_det_postproc",
+        "format": {
+            "bbox": "FLOAT_ARRAY",
+            "label_id": "INT",
+            "confidence": "FLOAT"
+        },
+        "process": [
+            {
+                "name": "bbox_transform",
+                "params": {
+                    "apply_to_layer": "ANY",
+                    "target_type": "CORNER_SIZE",
+                    "scale_h": 1,
+                    "scale_w": 1,
+                    "clip_normalized_rect": true
+                }
+            }
+        ],
+        "mapping": {
+            "bbox": {
+                "input": {
+                    "index": [3, 4, 5, 6]
+                },
+                "op": [
+                    {
+                        "name": "identity",
+                        "params": {}
+                    }
+                ]
+            },
+            "label_id": {
+                "input": {
+                    "index": [1]
+                },
+                "op": [
+                    {
+                        "name": "identity",
+                        "params": {}
+                    }
+                ]
+            },
+            "confidence": {
+                "input": {
+                    "index": [2]
+                },
+                "op": [
+                    {
+                        "name": "identity",
+                        "params": {}
+                    }
+                ]
+            }
+        }
+    },
+    "labels_table": [
+        {
+            "name": "traffic",
+            "labels": [
+                "__background__",
+                "vehicle",
+                "person",
+                "bike"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,31 @@
+{
+    "json_schema_version": "1.2.0",
+    "model_type": "detection",
+    "model_input": [
+        {
+            "format": "image",
+            "layout": "NCHW",
+            "precision": "U8"
+        }
+    ],
+    "model_output": {
+        "class_label_table": "traffic"
+    },
+    "post_proc_output": {
+        "function_name": "SSDPostProc",
+        "format": {
+            "bbox": "FLOAT_ARRAY",
+            "label_id": "INT",
+            "confidence": "FLOAT"
+        }
+    },
+    "labels_table": [
+        {
+            "name": "traffic",
+            "labels": [
+                "__background__",
+                "vehicle"
+            ]
+        }
+    ]
+}

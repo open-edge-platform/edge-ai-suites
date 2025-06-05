@@ -1,0 +1,51 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "LocalMediaInputNode",
+            "Node Name": "Input",
+            "Thread Number": "1",
+            "Is Source Node": "true",
+            "Configure String": "MediaType=(STRING)image;DataSource=(STRING)vehicle"
+        },
+        {
+            "Node Class Name": "CPUJpegDecoderNode",
+            "Node Name": "Decoder",
+            "Thread Number": "1",
+            "Is Source Node": "false"
+        },
+        {
+            "Node Class Name": "DetectionNode",
+            "Node Name": "Test",
+            "Thread Number": "1",
+            "Is Source Node": "true",
+            "Configure String": "InferReqNumber=(INT)6;InferConfig=(STRING_ARRAY)[CPU_THROUGHPUT_STREAMS=6,CPU_THREADS_NUM=6,CPU_BIND_THREAD=NUMA];ModelPath=(STRING)person-vehicle-bike-detection-crossroad-yolov3-1020/FP16-INT8/person-vehicle-bike-detection-crossroad-yolov3-1020.xml;ModelProcConfPath=(STRING)person-vehicle-bike-detection-crossroad-yolov3-1020/person-vehicle-bike-detection-crossroad-yolov3-1020.model_proc.json;Threshold=(FLOAT)0.5;MaxROI=(INT)0"
+        },
+        {
+            "Node Class Name": "LLOutputNode",
+            "Node Name": "Output",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "BufferType=(STRING)String"
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "Decoder",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Decoder",
+            "Previous Node Port": "0",
+            "Next Node": "Test",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Test",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0"
+        }
+    ]
+}

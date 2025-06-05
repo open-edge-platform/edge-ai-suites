@@ -1,0 +1,76 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "RawImageInputNode",
+            "Node Name": "Input",
+            "Thread Number": "1",
+            "Is Source Node": "true"
+        },
+        {
+            "Node Class Name": "CPUJpegDecoderNode",
+            "Node Name": "Decoder",
+            "Thread Number": "1",
+            "Is Source Node": "false"
+        },
+        {
+            "Node Class Name": "DetectionNode",
+            "Node Name": "Detection",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "InferReqNumber=(INT)6;InferConfig=(STRING_ARRAY)[CPU_THROUGHPUT_STREAMS=6,CPU_THREADS_NUM=6,CPU_BIND_THREAD=NUMA];InferBatchSize=(INT)1;ModelPath=(STRING)vehicle-detection-evi-0.0.1/FP16-INT8/vehicle-detection-evi-001.xml;ModelProcConfPath=(STRING)vehicle-detection-evi-0.0.1/vehicle-detection-evi-001.model_proc.json;Threshold=(FLOAT)0.6;MaxROI=(INT)0"
+        },
+        {
+            "Node Class Name": "ClassificationNode",
+            "Node Name": "Attribute",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "InferReqNumber=(INT)6;InferConfig=(STRING_ARRAY)[CPU_THROUGHPUT_STREAMS=6,CPU_THREADS_NUM=6,CPU_BIND_THREAD=NUMA];ModelPath=(STRING)vehicle-attributes-recognition-barrier-0039/FP16-INT8/vehicle-attributes-recognition-barrier-0039.xml;ModelProcConfPath=(STRING)vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.model_proc.json"
+        },
+        {
+            "Node Class Name": "FeatureExtractionNode",
+            "Node Name": "FeatureExtraction",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "InferReqNumber=(INT)6;InferConfig=(STRING_ARRAY)[CPU_THROUGHPUT_STREAMS=6,CPU_THREADS_NUM=6,CPU_BIND_THREAD=NUMA];PreProcessType=(STRING)opencv;ModelPath=(STRING)fe-pytorch-0.0.1/INT8/fe-pytorch-0.0.1.xml;ModelProcConfPath=(STRING)fe-pytorch-0.0.1/fe-pytorch-0.0.1.model_proc.json"
+        },
+        {
+            "Node Class Name": "LLOutputNode",
+            "Node Name": "Output",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": ""
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "Decoder",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Decoder",
+            "Previous Node Port": "0",
+            "Next Node": "Detection",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Detection",
+            "Previous Node Port": "0",
+            "Next Node": "Attribute",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Attribute",
+            "Previous Node Port": "0",
+            "Next Node": "FeatureExtraction",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "FeatureExtraction",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0"
+        }
+    ]
+}

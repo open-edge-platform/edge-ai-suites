@@ -1,0 +1,24 @@
+{
+    "version": 1,
+    "name": "row data source",
+    "video_image": {
+        "address": "minio-service.minio",
+        "port": "9000",
+        "rootUser": "../../credentials/minio/rootUser",
+        "rootPassword": "../../credentials/minio/rootPassword"
+    },
+    "video_image_attributes": {
+        "flask_server_address": "storage-rest.storage-rest",
+        "flask_server_port": "9900",
+        "prefix": "v1",
+        "media": "/media"
+    },
+    "mediatype": [
+        "image",
+        "video"
+    ],
+    "datasource": [
+        "person",
+        "vehicle"
+    ]
+}

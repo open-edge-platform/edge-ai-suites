@@ -1,0 +1,124 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "LocalMediaInputNode",
+            "Node Name": "Input",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "true",
+            "Batching Policy": "3",
+            "Stream Number": "stream_placeholder",
+            "Configure String": "MediaType=(STRING)video;DataSource=(STRING)vehicle"
+        },
+        {
+            "Node Class Name": "VPLDecoderNode",
+            "Node Name": "Decoder",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "false",
+            "Batching Policy": "2",
+            "Stream Number": "stream_placeholder",
+            "Configure String": "Device=(STRING)GPU.0;CodecType=(STRING)H264;BufferType=(STRING)mfxFrame"
+        },
+        {
+            "Node Class Name": "DetectionNode",
+            "Node Name": "Detection",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Batch Size": "8",
+            "Configure String": "Device=(STRING)GPU.0;PreProcessType=(STRING)vaapi-surface-sharing;InferReqNumber=(INT)6;InferConfig=(STRING_ARRAY)[GPU_THROUGHPUT_STREAMS=6];PreProcessConfig=(STRING_ARRAY)[VAAPI_THREAD_POOL_SIZE=6,VAAPI_FAST_SCALE_LOAD_FACTOR=0];InferBatchSize=(INT)1;ModelPath=(STRING)vehicle-detection-evi-0.0.1/FP16-INT8/vehicle-detection-evi-001.xml;ModelProcConfPath=(STRING)vehicle-detection-evi-0.0.1/vehicle-detection-evi-001.model_proc.json;Threshold=(FLOAT)0.6;MaxROI=(INT)0"
+        },
+        {
+            "Node Class Name": "TrackerNode_CPU",
+            "Node Name": "Tracker",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "false",
+            "Batching Policy": "2",
+            "Stream Number": "stream_placeholder",
+            "Configure String": "TrackerType=(STRING)zero_term_imageless"
+        },
+        {
+            "Node Class Name": "ObjectQualityNode",
+            "Node Name": "QualityAssess",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Batch Size": "8",
+            "Configure String": "Device=(STRING)GPU.0;QualityMode=(INT)2;ImageSize=(INT)320;InferReqNumber=(INT)6;InferConfig=(STRING_ARRAY)[GPU_THROUGHPUT_STREAMS=6];PreProcessType=(STRING)vaapi-surface-sharing;PreProcessConfig=(STRING_ARRAY)[VAAPI_THREAD_POOL_SIZE=6,VAAPI_FAST_SCALE_LOAD_FACTOR=0];ModelPath=(STRING)vehicle-qnet-0.0.1/FP16/quality-assess-001.xml;ModelProcConfPath=(STRING)vehicle-qnet-0.0.1/vehicle-qnet-0.0.1.model_proc.json"
+        },
+        {
+            "Node Class Name": "ObjectSelectNode",
+            "Node Name": "Select",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "false",
+            "Batching Policy": "2",
+            "Stream Number": "stream_placeholder",
+            "Configure String": "FrameInterval=(INT)30;TopK=(INT)1"
+        },
+        {
+            "Node Class Name": "ClassificationNode",
+            "Node Name": "Attribute",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Batch Size": "8",
+            "Configure String": "Device=(STRING)GPU.0;InferReqNumber=(INT)6;InferConfig=(STRING_ARRAY)[GPU_THROUGHPUT_STREAMS=6];PreProcessType=(STRING)vaapi-surface-sharing;PreProcessConfig=(STRING_ARRAY)[VAAPI_THREAD_POOL_SIZE=6,VAAPI_FAST_SCALE_LOAD_FACTOR=0];ModelPath=(STRING)vehicle-attributes-recognition-barrier-0039/FP16-INT8/vehicle-attributes-recognition-barrier-0039.xml;ModelProcConfPath=(STRING)vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.model_proc.json"
+        },
+        {
+            "Node Class Name": "LLResultSinkFileNode",
+            "Node Name": "Output",
+            "Thread Number": "stream_placeholder",
+            "Is Source Node": "false",
+            "Batching Policy": "2",
+            "Stream Number": "stream_placeholder",
+            "Configure String": "MediaType=(STRING)video"
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "Decoder",
+            "Next Node Port": "0",
+            "Queue Size": "4096"
+        },
+        {
+            "Previous Node": "Decoder",
+            "Previous Node Port": "0",
+            "Next Node": "Detection",
+            "Next Node Port": "0",
+            "Queue Size": "4096"
+        },
+        {
+            "Previous Node": "Detection",
+            "Previous Node Port": "0",
+            "Next Node": "Tracker",
+            "Next Node Port": "0",
+            "Queue Size": "4096"
+        },
+        {
+            "Previous Node": "Tracker",
+            "Previous Node Port": "0",
+            "Next Node": "QualityAssess",
+            "Next Node Port": "0",
+            "Queue Size": "4096"
+        },
+        {
+            "Previous Node": "QualityAssess",
+            "Previous Node Port": "0",
+            "Next Node": "Select",
+            "Next Node Port": "0",
+            "Queue Size": "4096"
+        },
+        {
+            "Previous Node": "Select",
+            "Previous Node Port": "0",
+            "Next Node": "Attribute",
+            "Next Node Port": "0",
+            "Queue Size": "4096"
+        },
+        {
+            "Previous Node": "Attribute",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0",
+            "Queue Size": "4096"
+        }
+    ]
+}

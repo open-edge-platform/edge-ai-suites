@@ -1,0 +1,52 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "LocalMediaInputNode",
+            "Node Name": "Input",
+            "Thread Number": "1",
+            "Is Source Node": "true",
+            "Configure String": "MediaType=(STRING)image;DataSource=(STRING)vehicle;ReadBufferSize=(INT)1048576"
+        },
+        {
+            "Node Class Name": "VPLDecoderNode",
+            "Node Name": "Decoder",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "Device=(STRING)GPU.0;CodecType=(STRING)JPEG;BufferType=(STRING)mfxFrame"
+        },
+        {
+            "Node Class Name": "ClassificationNode",
+            "Node Name": "Test",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "Device=(STRING)GPU.0;PreProcessType=(STRING)vaapi-surface-sharing;PreProcessConfig=(STRING_ARRAY)[VAAPI_THREAD_POOL_SIZE=6,VAAPI_FAST_SCALE_LOAD_FACTOR=0];InferConfig=(STRING_ARRAY)[GPU_THROUGHPUT_STREAMS=6];ModelPath=(STRING)vehicle-attributes-recognition-barrier-0042/FP16-INT8/vehicle-attributes-recognition-barrier-0042.xml;ModelProcConfPath=(STRING)vehicle-attributes-recognition-barrier-0042/vehicle-attributes-recognition-barrier-0042.model_proc.json"
+        },
+        {
+            "Node Class Name": "LLOutputNode",
+            "Node Name": "Output",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "BufferType=(STRING)String"
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "Decoder",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Decoder",
+            "Previous Node Port": "0",
+            "Next Node": "Test",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Test",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0"
+        }
+    ]
+}

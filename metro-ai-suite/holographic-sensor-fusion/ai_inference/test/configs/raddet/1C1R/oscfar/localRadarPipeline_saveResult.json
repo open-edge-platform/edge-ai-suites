@@ -1,0 +1,77 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "LocalMultiSensorInputNode",
+            "Node Name": "Input",
+            "Thread Number": "1",
+            "Is Source Node": "true",
+            "Configure String": "MediaType=(STRING)image;MediaIndex=(INT)0;RadarIndex=(INT)1;DepthIndex=(INT)2"
+        },
+        {
+            "Node Class Name": "RadarPreProcessingNode",
+            "Node Name": "RadarPreProcessing",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "RadarConfigPath=(STRING)/opt/datasets/RadarConfig_raddet_oscfar.json"
+        },
+        {
+            "Node Class Name": "RadarDetectionNode",
+            "Node Name": "RadarDetection",
+            "Thread Number": "1",
+            "Is Source Node": "false"
+        },
+        {
+            "Node Class Name": "RadarClusteringNode",
+            "Node Name": "RadarClustering",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": ""
+        },
+        {
+            "Node Class Name": "RadarTrackingNode",
+            "Node Name": "RadarTracking",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": ""
+        },
+        {
+            "Node Class Name": "RadarResultSinkFileNode",
+            "Node Name": "Output",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "BufferType=(STRING)String"
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "RadarPreProcessing",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "RadarPreProcessing",
+            "Previous Node Port": "0",
+            "Next Node": "RadarDetection",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "RadarDetection",
+            "Previous Node Port": "0",
+            "Next Node": "RadarClustering",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "RadarClustering",
+            "Previous Node Port": "0",
+            "Next Node": "RadarTracking",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "RadarTracking",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0"
+        }
+    ]
+}

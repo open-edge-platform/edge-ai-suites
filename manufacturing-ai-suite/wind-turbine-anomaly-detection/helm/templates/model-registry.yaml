@@ -1,0 +1,89 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ $.Values.config.model_registry.name }}
+spec:
+  type: NodePort
+  ports:
+    - name: mraas-port
+      port: {{ $.Values.config.model_registry.int.port }}
+      targetPort: {{ $.Values.config.model_registry.int.port }}
+      nodePort: {{ $.Values.config.model_registry.ext.port }}
+  selector:
+    app: ModelRegistry
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ModelRegistry
+  name: deployment-{{ $.Values.config.model_registry.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ModelRegistry
+  template:
+    metadata:
+      labels:
+        app: ModelRegistry
+    spec:
+      {{- if and $.Values.DOCKER_USERNAME $.Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+        - env:
+            - name: AppName
+              value: ModelRegistry
+            - name: ENABLE_HTTPS_MODE
+              value: "{{ .Values.env.ENABLE_HTTPS_MODE }}"
+            - name: MINIO_ACCESS_KEY
+              value: "{{ .Values.env.MINIO_ACCESS_KEY }}"
+            - name: MINIO_BUCKET_NAME
+              value: "{{ .Values.env.MINIO_BUCKET_NAME }}"
+            - name: MINIO_HOSTNAME
+              value: "{{ .Values.env.MINIO_HOSTNAME }}"
+            - name: MINIO_SECRET_KEY
+              value: "{{ .Values.env.MINIO_SECRET_KEY }}"
+            - name: MINIO_SERVER_PORT
+              value: "{{ .Values.env.MINIO_SERVER_PORT }}"
+            - name: MIN_LOG_LEVEL
+              value: "{{ .Values.env.MIN_LOG_LEVEL }}"
+            - name: MLFLOW_S3_ENDPOINT_URL
+              value: "{{ .Values.env.MLFLOW_S3_ENDPOINT_URL }}"
+            - name: MLFLOW_TRACKING_URI
+              value: postgresql+psycopg2://{{ .Values.env.POSTGRES_USER }}:{{ .Values.env.POSTGRES_PASSWORD }}@mraas-postgres:5432/{{ .Values.env.POSTGRES_DB }}
+            - name: SERVER_PORT
+              value: "{{ .Values.env.SERVER_PORT }}"
+            - name: https_proxy
+              value: "{{ .Values.env.HTTPS_PROXY }}"
+            - name: http_proxy
+              value: "{{ .Values.env.HTTP_PROXY }}"
+            - name: no_proxy
+              value: "{{ .Values.env.no_proxy }}"
+            - name: NO_PROXY
+              value: "{{ .Values.env.NO_PROXY }}"
+          image: {{ .Values.images.model_registry }}
+          imagePullPolicy: {{ $.Values.imagePullPolicy }}
+          name: model-registry
+          ports:
+            - containerPort: 8111
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 300m
+              memory: "4294967296"
+            requests:
+              cpu: 150m
+              memory: "2147483648"
+      hostname: model-registry
+      restartPolicy: Always

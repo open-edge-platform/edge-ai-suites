@@ -1,0 +1,39 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "LocalMultiSensorInputNode",
+            "Node Name": "Input",
+            "Thread Number": "1",
+            "Is Source Node": "true",
+            "Configure String": "MediaType=(STRING)image;MediaIndex=(INT)0;RadarIndex=(INT)1"
+        },
+        {
+            "Node Class Name": "RadarSignalProcessingNode",
+            "Node Name": "RadarProcessing",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "RadarConfigPath=(STRING)/opt/datasets/RadarConfig_raddet.json"
+        },
+        {
+            "Node Class Name": "RadarClusteringSinkFileNode",
+            "Node Name": "Output",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "BufferType=(STRING)String"
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "RadarProcessing",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "RadarProcessing",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0"
+        }
+    ]
+}
