@@ -18,7 +18,7 @@ have any third-party OPC-UA client to connect to OPC-UA server to verify this.
        }
    }
    ```
-### Configuring MQTT Alert in TICK Script
+### Configuring OPC-UA Alert in TICK Script
 
 ```bash
 data0
