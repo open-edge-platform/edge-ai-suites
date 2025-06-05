@@ -76,7 +76,7 @@ Use the following command to verify if all the application resources got install
 
 ## Copy the windturbine_anomaly_detection udf package for helm deployment to Time Series Analytics Microservice
 
-You need to copy your own or existing model into Time Series Analytics Microservice inorder to run this sample application in kubernates enviornment:
+You need to copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
 1. The udf package is placed as below in the repository under `time_series_analytics_microservice`. 
 
