@@ -61,9 +61,9 @@ This guide provides instructions for setting up custom UDF deployment package (U
 The files at `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice` representing the UDF deployment package (UDFs, TICKscripts, models)
 and config.json has been volume mounted at `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and config.json, it has to be done at this location and the time series analytics microservice container needs to be restarted.
 
-### With Model Registry
+## With Model Registry
 
-#### Uploading Models to the Model Registry
+### Uploading Models to the Model Registry
 
 1. Create a ZIP file with the following structure:
 
@@ -82,9 +82,9 @@ and config.json has been volume mounted at `<path-to-edge-ai-suites-repo>/manufa
 3. Expand the `models` POST method and click **Try it out**.
 4. Upload the ZIP file, specify the `name` and `version`, and click **Execute**.
 
-#### Updating Time Series Analytics Microservice `config.json` for Model Registry usage
+### Updating Time Series Analytics Microservice `config.json` for Model Registry usage
 
-##### Docker compose deployment
+#### Docker compose deployment
 
 To fetch UDFs and models from the Model Registry, update the configuration file at:
 `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json`.
@@ -97,7 +97,7 @@ To fetch UDFs and models from the Model Registry, update the configuration file 
 
 As we are watching on `config.json` changes, the `ia-time-series-analytics-microservice` would auto-restart.
 
-##### Helm deployment
+#### Helm deployment
 
 Follow the below steps:
 1. Configure `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` as per [above steps](#docker-compose-deployment)
