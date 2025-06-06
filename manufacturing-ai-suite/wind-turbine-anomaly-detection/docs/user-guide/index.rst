@@ -9,12 +9,16 @@
    get-started
 
 .. toctree::
-   :caption: Advanced Guide: How to
+   :caption: How to
+   
+   how-to-deploy-with-helm
+   how-to-deploy-with-edge-orchestrator
+
+.. toctree::
+   :caption: Advanced Guide
    
    how-to-configure-custom-udf
    how-to-configure-alerts
-   how-to-deploy-with-helm
-   how-to-deploy-with-edge-orchestrator
    how-to-enable-system-metrics
 
 .. toctree::
