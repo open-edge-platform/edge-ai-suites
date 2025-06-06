@@ -100,7 +100,7 @@ As we are watching on `config.json` changes, the `ia-time-series-analytics-micro
 ##### Helm deployment
 
 Follow the below steps:
-1. Configure `config.json` as per [above steps](#docker-compose-deployment)
+1. Configure `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` as per [above steps](#docker-compose-deployment)
 2. Run below command to generate the helm charts
    ```bash
    cd <path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection>

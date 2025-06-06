@@ -238,26 +238,6 @@ make status
   docker logs -f <container_name> | grep -i error
   ```
 
-## Advanced guide
-
-### Alerts configuration in Time Series Analytics microservice
-
-Please refer [link](how-to-configure-alerts.md), the config.json changes would be auto-picked in the docker compose deployment but for helm deployment, please
-regenerate the helm charts and install by following steps mentioned at [link](how-to-deploy-with-helm.md)
-
-### Using Custom UDF deployment package in Time Series Analytics microservice
-  
-Please refer [link](how-to-configure-custom-udf.md), the config.json changes would be auto-picked in the docker compose deployment but for helm deployment, please
-regenerate the helm charts and install by following steps mentioned at [link](how-to-deploy-with-helm.md)
-
-### Enabling system metrics for docker compose deployment
-
-Please refer [link](how-to-enable-system-metrics.md).
-
-### Deploying the helm charts on Edge orchestrator
-
-Please refer [link](how-to-deploy-with-edge-orchestrator.md). Please note if any of the default configuration is changed in `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json`, please ensure to re-upload the different set of helm charts to the container registry, point to that in the deployment package and re-deploy.
-
 ## Supporting Resources
 
 * [Overview](Overview.md)

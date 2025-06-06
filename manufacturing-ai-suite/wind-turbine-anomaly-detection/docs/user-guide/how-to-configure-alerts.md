@@ -1,6 +1,7 @@
 # How to Configure Alerts in Time Series Analytics Microservice
 
 This guide provides instructions for setting up alerts in **Time Series Analytics Microservice**.
+Please note the `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` changes would be auto-picked in the docker compose deployment but for helm deployment once the alerts configuration changes are done as below, please regenerate the helm charts and install by following steps mentioned at [link](how-to-deploy-with-helm.md)
 
 ## Publishing MQTT Alerts
 
