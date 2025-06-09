@@ -117,3 +117,4 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/wind-turbine-anomaly-detection
+      branch_pattern: '^main$'  # Wind Turbine Anomaly Detection only exists on 'main' branch
