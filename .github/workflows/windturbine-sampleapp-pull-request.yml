@@ -3,14 +3,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-name: "[Time Series] PR workflow"
-run-name: "[Time Series] PR  workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+name: "[Wind Turbine Sample App] PR workflow"
+run-name: "[Wind Turbine Sample App] PR  workflow (by @${{ github.actor }} via ${{ github.event_name }})"
 on:
-  push:
-    branches:
-      - 'main'
-    paths:
-      - 'manufacturing-ai-suite/wind-turbine-anomaly-detection/*'
   pull_request:
     paths:
       - 'manufacturing-ai-suite/wind-turbine-anomaly-detection/*'
@@ -19,7 +14,7 @@ on:
 permissions: {}
 
 jobs:
-  timeseries-pre-merge-build:
+  windturbine-sample-app-pre-merge-build:
     permissions:
       contents: read
       packages: read          # needed for actions/checkout

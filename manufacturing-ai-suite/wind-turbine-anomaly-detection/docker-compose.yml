@@ -189,7 +189,7 @@ services:
         TIMESERIES_UID: ${TIMESERIES_UID}
     hostname: ia-opcua-server
     read_only: true
-    image: ${DOCKER_REGISTRY}ia-opcua-server:1.0.0
+    image: ${DOCKER_REGISTRY}intel/ia-opcua-server:1.0.0
     environment:
       LOG_LEVEL: ${LOG_LEVEL}
       no_proxy: "ia-time-series-analytics-microservice"
@@ -217,7 +217,7 @@ services:
     container_name: ia-mqtt-publisher
     hostname: ia-mqtt-publisher
     read_only: true
-    image: ${DOCKER_REGISTRY}ia-mqtt-publisher:1.0.0
+    image: ${DOCKER_REGISTRY}intel/ia-mqtt-publisher:1.0.0
     restart: unless-stopped
     security_opt:
     - no-new-privileges
