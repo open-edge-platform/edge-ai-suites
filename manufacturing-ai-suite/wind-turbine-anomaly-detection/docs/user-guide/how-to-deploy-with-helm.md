@@ -32,12 +32,14 @@
 - Generate the helm charts
    
     ```bash
+    cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection # path relative to git clone folder
     make gen_helm_charts
+    cd helm/
     ```
 
 ## Configure and update the environment variables
 
-1. Update the below fields in `values.yaml` file in the helm chart
+1. Update the below fields in `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/helm/values.yaml` file in the helm chart
 
     ``` sh
     INFLUXDB_USERNAME:
@@ -92,7 +94,9 @@ You need to copy your own or existing model into Time Series Analytics Microserv
     ```
 
 2. Copy your new udf package (windturbine anomaly detection udf package used here as an example) to `time-series-analytics-microservice` pod.
+
     ```bash
+    cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection # path relative to git clone folder
     cd time_series_analytics_microservice
     mkdir windturbine_anomaly_detector
     cp -r models tick_scripts udfs windturbine_anomaly_detector/.

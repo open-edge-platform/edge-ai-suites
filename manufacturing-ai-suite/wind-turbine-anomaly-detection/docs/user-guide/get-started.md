@@ -50,7 +50,7 @@ OPC-UA simulator and publishing the anomaly alerts to MQTT broker.
 
 ### **Data Sources**
 
-Using the `<path-to-edge-ai-suites-repo>/edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator/simulation_data/windturbine_data.csv` which is a normalized version of open source data wind turbine dataset (`<path-to-edge-ai-suites-repo>/edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/training/T1.csv`) from <https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset>.
+Using the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator/simulation_data/windturbine_data.csv` which is a normalized version of open source data wind turbine dataset (`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/training/T1.csv`) from <https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset>.
 This data is being ingested into **Telegraf** using the **OPC-UA** protocol using the **OPC-UA** data simulator.
   
 ### **Data Ingestion**
@@ -64,7 +64,7 @@ This data is being ingested into **Telegraf** using the **OPC-UA** protocol usin
 ### **Data Processing**
 
 **Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) which is already built-in to the container image. The UDF deployment package is available
-at `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice`. Directory details is as below:
+at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice`. Directory details is as below:
   
 #### **`config.json`**:
 
@@ -121,13 +121,13 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
    
 #### **`models/`**:
    - The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo.
-     More details on how it is built is accessible at `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/training/windturbine/README.md`
+     More details on how it is built is accessible at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/training/windturbine/README.md`
 
 ## Clone source code
 
 ```bash
-cd <path-to-edge-ai-suites-repo>
-git clone https://github.com/open-edge-platform/edge-ai-suites
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
 ```
 
 ## Build Docker Images

@@ -58,8 +58,8 @@ This guide provides instructions for setting up custom UDF deployment package (U
 
 ### Docker compose deployment
 
-The files at `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice` representing the UDF deployment package (UDFs, TICKscripts, models)
-and config.json has been volume mounted at `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and config.json, it has to be done at this location and the time series analytics microservice container needs to be restarted.
+The files at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice` representing the UDF deployment package (UDFs, TICKscripts, models)
+and config.json has been volume mounted at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and config.json, it has to be done at this location and the time series analytics microservice container needs to be restarted.
 
 ## With Model Registry
 
@@ -87,7 +87,7 @@ and config.json has been volume mounted at `<path-to-edge-ai-suites-repo>/manufa
 #### Docker compose deployment
 
 To fetch UDFs and models from the Model Registry, update the configuration file at:
-`<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json`.
+`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json`.
 
 1. Set `fetch_from_model_registry` to `true`.
 2. Specify the `task_name` and `version` as defined in the Model Registry.
@@ -100,10 +100,10 @@ As we are watching on `config.json` changes, the `ia-time-series-analytics-micro
 #### Helm deployment
 
 Follow the below steps:
-1. Configure `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` as per [above steps](#docker-compose-deployment)
+1. Configure `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` as per [above steps](#docker-compose-deployment)
 2. Run below command to generate the helm charts
    ```bash
-   cd <path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection>
+   cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection> # path relative to git clone folder
    make gen_helm_charts
    ```
 3. Follow helm configuration and deployment steps at [link](./how-to-deploy-with-helm.md)

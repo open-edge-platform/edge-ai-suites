@@ -5,7 +5,11 @@
 To enable the system metrics dashboard showcasing the host and docker containers CPU, memory, network, disk IO usage, run the following command:
 
 ```bash
+cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/ # path relative to git clone folder
+# Try one of the below options:
 make up_opcua_ingestion INCLUDE=validation
+# OR
+make up_mqtt_ingestion INCLUDE=validation
 ```
 
 ##  Viewing System Metrics Dashboard

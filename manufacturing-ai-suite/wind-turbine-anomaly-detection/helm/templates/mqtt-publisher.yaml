@@ -39,7 +39,7 @@ spec:
               - ALL
           seccompProfile:
             type: RuntimeDefault
-        command: ["python3", "-u", "publisher.py", "--csv", "/windturbine/windturbine_data.csv"]
+        command: ["python3", "-u", "publisher.py", "--csv", "/windturbine_data.csv"]
         env:
         - name: HOST_IP
           value: "ia-mqtt-broker"

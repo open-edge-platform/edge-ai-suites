@@ -24,7 +24,7 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 ### Making the Deployment Package Available
 
-1. Download Deployment Package present in the folder **`<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/deployment-package`**
+1. Download Deployment Package present in the folder **`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/deployment-package`**
 
 1. Update the below fields in `timeseries-wind-turbine-values.yaml` file in the helm chart
 
@@ -89,9 +89,9 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
 
 1. Copy `Kubeconfig` to `$HOME` path and export it on your device
 
-        ```bash
-        export KUBECONFIG=~/kubeconfig.yaml
-        ```
+    ```bash
+    export KUBECONFIG=~/kubeconfig.yaml
+    ```
 
 1. Copy the udf deployment, please refer [here](how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice)
 

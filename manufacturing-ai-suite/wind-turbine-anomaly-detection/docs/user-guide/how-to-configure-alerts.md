@@ -1,13 +1,13 @@
 # How to Configure Alerts in Time Series Analytics Microservice
 
 This guide provides instructions for setting up alerts in **Time Series Analytics Microservice**.
-Please note the `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` changes would be auto-picked in the docker compose deployment but for helm deployment once the alerts configuration changes are done as below, please regenerate the helm charts and install by following steps mentioned at [link](how-to-deploy-with-helm.md)
+Please note the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` changes would be auto-picked in the docker compose deployment but for helm deployment once the alerts configuration changes are done as below, please regenerate the helm charts and install by following steps mentioned at [link](how-to-deploy-with-helm.md)
 
 ## Publishing MQTT Alerts
 
 ### Configurating MQTT Alerts
 
-By default, the below MQTT alerts is configured in `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` file.
+By default, the below MQTT alerts is configured in `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` file.
 
   ```json
     "alerts": {
@@ -22,7 +22,7 @@ By default, the below MQTT alerts is configured in `<path-to-edge-ai-suites-repo
 ### Configuring MQTT Alert in TICK Script
 
 The details below shows the snippet on how to add the MQTT if not 
-already added. By default, the `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/tick_scripts/windturbine_anomaly_detector.tick` TICK Script has the below configuration done by default.
+already added. By default, the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/tick_scripts/windturbine_anomaly_detector.tick` TICK Script has the below configuration done by default.
 
 ```bash
 @windturbine_anomaly_detector()
@@ -82,7 +82,7 @@ have any third-party OPC-UA client to connect to OPC-UA server to verify this.
 
 ### Configuration
 
-Update the `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` file:
+Update the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` file:
    ```json
    "alerts": {
        "opcua": {
@@ -96,7 +96,7 @@ Update the `<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-an
 
 The details below shows the snippet on how to add the OPC-UA alert if not 
 already added, please replace this in place of MQTT alert section at
-`<path-to-edge-ai-suites-repo>/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/tick_scripts/windturbine_anomaly_detector.tick`.
+`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/tick_scripts/windturbine_anomaly_detector.tick`.
 
 ```bash
 data0
