@@ -1,6 +1,6 @@
 ## Building the models for inference usage in the User Defined Functions of Time Series Analytics Microservice
 
-The wind turbine anomaly model is been built with the
+The wind turbine anomaly model is built with the
 jupyter notebook at [windturbine_anomaly_detection.ipynb](windturbine_anomaly_detection.ipynb) and the dataset [T1.csv](T1.csv) used is coming from https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset.
 
 Launch the jupyter notebook from browser and run the notebook by following below steps in the terminal, tweak the port config if there is any conflict:
