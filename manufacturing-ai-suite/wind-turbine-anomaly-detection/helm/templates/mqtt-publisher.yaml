@@ -27,7 +27,7 @@ spec:
       {{- end }}
       containers:
       - name: mqtt-publisher
-        image: {{ .Values.DOCKER_REGISTRY }}ia-mqtt-publisher:1.0.0
+        image: {{ .Values.DOCKER_REGISTRY }}intel/ia-mqtt-publisher:1.0.0
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           runAsUser: {{ $.Values.env.TIMESERIES_UID }}

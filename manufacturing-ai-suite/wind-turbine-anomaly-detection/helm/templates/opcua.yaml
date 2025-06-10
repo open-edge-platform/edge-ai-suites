@@ -41,7 +41,7 @@ spec:
       {{- end }}
       containers:
       - name: ia-opcua-server
-        image: {{ .Values.DOCKER_REGISTRY }}ia-opcua-server:1.0.0
+        image: {{ .Values.DOCKER_REGISTRY }}intel/ia-opcua-server:1.0.0
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true
