@@ -77,8 +77,9 @@ kubectl exec -it -n apps <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v
 ## Publishing OPC-UA Alerts
 
 To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow below steps.
-The way to verify if the OPC-UA alerts are getting published would be to check the `Time Series Analytics Microservice` logs OR
-have any third-party OPC-UA client to connect to OPC-UA server to verify this.
+The way to verify if the OPC-UA alerts are getting published would be to checking using the third-party OPC-UA client. If you are using `ia-opcua-server` simulator, each `alerts` getting published will be shown as `write` message. 
+
+> Note: If simulator is used as `opcua` server, then only `make up_opcua_ingestion` is supported with opcua alerts. 
 
 ### Configuration
 
@@ -110,6 +111,32 @@ data0
 
 > **Note**:
 > - The `noRecoveries()` method suppresses recovery alerts, ensuring only critical alerts are sent.
+> - `ALERTS` message will not be displayed on `Time Series Analytics Microservice` logs as displayed in `MQTT Alerts`
+
+### Viewing the alerts with Third-party OPC-UA client
+
+1. If using simulator, Expose the port of `ia-opcua-server` as below 
+
+    ```yaml
+    diff --git a/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml b/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml
+    index e9a4e25..0575244 100644
+    --- a/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml
+    +++ b/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml
+    @@ -206,6 +206,8 @@ services:
+        - timeseries_network
+        volumes:
+        - ./simulator/simulation_data/windturbine_data.csv:/app/windturbine_data.csv
+    +    ports:
+    +    - "4840:4840"   
+    ia-mqtt-publisher:
+        build:
+    ```
+2. Redeploy the sample app using  `make up_opcua_ingestion`
+3. Open the `opcua` client on your Desktop 
+4. Enter the opc ua url as `opc.tcp://<ip>:4840/freeopcua/server/`
+5. Connect to opcua server 
+6. Browse through server `Objects` and expand `MyObject`.
+7. Read or subscribe to `alert_message` tag. `Value` of the tag contains last anomaly alerts message. 
 
 
 ## Supporting Resources
