@@ -36,6 +36,7 @@ jobs:
         repository: open-edge-platform/edge-ai-libraries
         ref: main
         path: edge-ai-libraries
+        persist-credentials: false
     - name: Building Time Series Analytics microservices
       run: |
         cd ./edge-ai-libraries/microservices/time-series-analytics/docker
@@ -44,6 +45,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
           path: timeseries
+          persist-credentials: false
     - name: Building Wind Turbine Anomaly Detection Sample App
       run: |
         cd ./timeseries/manufacturing-ai-suite/wind-turbine-anomaly-detection
