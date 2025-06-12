@@ -77,7 +77,7 @@ kubectl exec -it -n apps <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v
 ## Publishing OPC-UA Alerts
 
 To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow below steps.
-The way to verify if the OPC-UA alerts are getting published would be to checking using the third-party OPC-UA client. If you are using `ia-opcua-server` simulator, each `alerts` getting published will be shown as `write` message. 
+The way to verify if the OPC-UA alerts are getting published would be to check using the third-party OPC-UA client. If you are using `ia-opcua-server` simulator, each `alerts` getting published will be shown as `write` message. 
 
 > Note: If simulator is used as `opcua` server, then only `make up_opcua_ingestion` is supported with opcua alerts. 
 
