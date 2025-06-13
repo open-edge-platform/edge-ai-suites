@@ -117,7 +117,7 @@ data0
 
 ### Subscribing to OPC UA Alerts using Sample OPCUA Subscriber
 
-1. Expose the port `4840` of `ia-opcua-server` service in [docker-compose.yml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml#L183) as below
+1. Expose the port `4840` of `ia-opcua-server` service in `docker-compose.yml` under `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml#L183` as below
 
     ```yaml
     ia-opcua-server:
@@ -126,14 +126,18 @@ data0
     - "4840:4840"
     ```
 
-2. Deploy the Sample App using `make up_opcua_ingestion`
+2. Deploy the Sample App using below commands
+    ```bash
+    cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
+    make up_opcua_ingestion
+    ```
 
 3. Install python packages `asyncio` and `asyncua` to run the sample opc ua subscriber 
     ```bash
     pip install asyncio asyncua
     ```
 
-4. Run the following sample OPC UA subscriber on the different machine by updating the `<IP-Address of OPCUA Server>` to read the alerts published to server on tag `ns=1;i=2004` from Time Series Analytics Microservice.
+4. Run the following sample OPC UA subscriber by updating the `<IP-Address of OPCUA Server>` to read the alerts published to server on tag `ns=1;i=2004` from Time Series Analytics Microservice.
     ```python
     import asyncio
     from asyncua import Client, Node
@@ -141,7 +145,7 @@ data0
         def datachange_notification(self, node: Node, val, data):
             print(val)
     async def main():
-        client = Client(url="opc.tcp://localhost:4840/freeopcua/server/")
+        client = Client(url="opc.tcp://<IP-Address of OPCUA Server>:4840/freeopcua/server/")
         async with client:
             handler = SubscriptionHandler()
             subscription = await client.create_subscription(50, handler)
