@@ -79,7 +79,7 @@ kubectl exec -it -n apps <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v
 ### Prerequisite
 
 Please ensure that `make up_opcua_ingestion` has been executed by following the steps
-in the [getting started guide](./get-started.md#deploy-with-docker-compose-single-node)
+in the [getting started guide](./get-started.md#deploy-with-docker-compose)
 
 To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow below steps.
 You can verify the publishing of OPC-UA alerts by checking the logs of the `Time Series Analytics Microservice`.
