@@ -115,6 +115,45 @@ data0
 > **Note**:
 > - The `noRecoveries()` method suppresses recovery alerts, ensuring only critical alerts are sent.
 
+### Subscribing to OPC UA Alerts using Sample OPCUA Subscriber
+
+1. Expose the port `4840` of `ia-opcua-server` service in [docker-compose.yml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml#L183) as below
+
+    ```yaml
+    ia-opcua-server:
+    ...
+    ports:
+    - "4840:4840"
+    ```
+
+2. Deploy the Sample App using `make up_opcua_ingestion`
+
+3. Install python packages `asyncio` and `asyncua` to run the sample opc ua subscriber 
+    ```bash
+    pip install asyncio asyncua
+    ```
+
+4. Run the following sample OPC UA subscriber on the different machine by updating the `<IP-Address of OPCUA Server>` to read the alerts published to server on tag `ns=1;i=2004` from Time Series Analytics Microservice.
+    ```python
+    import asyncio
+    from asyncua import Client, Node
+    class SubscriptionHandler:
+        def datachange_notification(self, node: Node, val, data):
+            print(val)
+    async def main():
+        client = Client(url="opc.tcp://localhost:4840/freeopcua/server/")
+        async with client:
+            handler = SubscriptionHandler()
+            subscription = await client.create_subscription(50, handler)
+            myvarnode = client.get_node("ns=1;i=2004")
+            await subscription.subscribe_data_change(myvarnode)
+            await asyncio.sleep(100)
+            await subscription.delete()
+            await asyncio.sleep(1)
+    if __name__ == "__main__":
+        asyncio.run(main())
+    ```
+
 ## Supporting Resources
 
 - [Kapacitor MQTT Alert Documentation](https://docs.influxdata.com/kapacitor/v1/reference/event_handlers/mqtt/).
