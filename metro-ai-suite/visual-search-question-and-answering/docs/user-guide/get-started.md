@@ -92,6 +92,8 @@ When prompting `Please enter the VLM_MODEL_NAME`, choose one model name from tab
 | Qwen/Qwen2.5-VL-7B-Instruct         | Yes                  | Yes                 | Yes           | GPU                       |
 
 
+You might want to pay some attention to `DEVICE` and `VLM_DEVICE` in `env.sh`. By default, they are both `GPU.1`, which applies to a standard hardware platform with an integrated GPU as `GPU.0` and the discrete GPU would be `GPU.1`. You can refer to [OpenVINO's query device sample](https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html) to learn more about how to identify which GPU index should be set.
+
 3.  Deploy with docker compose
 
     ``` bash
