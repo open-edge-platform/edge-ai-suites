@@ -64,6 +64,7 @@ Note: supported media types: jpg, png, mp4
 1. Go to the deployment files
 
     ``` bash
+    cd visual-search-question-and-answering/
     cd deployment/docker-compose/
     ```
 
@@ -97,7 +98,7 @@ When prompting `Please enter the VLM_MODEL_NAME`, choose one model name from tab
     docker compose -f compose_milvus.yaml up -d
     ```
 
-It might take a while to start the services for the first time, as there are some models to be prepare.
+It might take a while to start the services for the first time, as there are some models to be prepared.
 
 Check if all microservices are up and runnning
     ```bash
@@ -106,20 +107,21 @@ Check if all microservices are up and runnning
 
 Output 
 ```
-NAME                         COMMAND                  SERVICE                                 STATUS              PORTS
-dataprep-visualdata-milvus   "uvicorn dataprep_vi…"   dataprep-visualdata-milvus              running (healthy)   0.0.0.0:9990->9990/tcp, :::9990->9990/tcp
-milvus-etcd                  "etcd -advertise-cli…"   milvus-etcd                             running (healthy)   2379-2380/tcp
-milvus-minio                 "/usr/bin/docker-ent…"   milvus-minio                            running (healthy)   0.0.0.0:9000-9001->9000-9001/tcp, :::9000-9001->9000-9001/tcp
-milvus-standalone            "/tini -- milvus run…"   milvus-standalone                       running (healthy)   0.0.0.0:9091->9091/tcp, 0.0.0.0:19530->19530/tcp, :::9091->9091/tcp, :::19530->19530/tcp
-retriever-milvus             "uvicorn retriever_s…"   retriever-milvus                        running (healthy)   0.0.0.0:7770->7770/tcp, :::7770->7770/tcp
-visual-search-qa-app         "streamlit run app.p…"   visual-search-qa-app                    running (healthy)   0.0.0.0:17580->17580/tcp, :::17580->17580/tcp
-vlm-inference-microservice   "/bin/bash -c '/app/…"   intel-egai-vlm-inference-microservice   running (healthy)   0.0.0.0:9764->8000/tcp, :::9764->8000/tcp
+NAME                         COMMAND                  SERVICE                      STATUS              PORTS
+dataprep-visualdata-milvus   "uvicorn dataprep_vi…"   dataprep-visualdata-milvus   running (healthy)   0.0.0.0:9990->9990/tcp, :::9990->9990/tcp
+milvus-etcd                  "etcd -advertise-cli…"   milvus-etcd                  running (healthy)   2379-2380/tcp
+milvus-minio                 "/usr/bin/docker-ent…"   milvus-minio                 running (healthy)   0.0.0.0:9000-9001->9000-9001/tcp, :::9000-9001->9000-9001/tcp
+milvus-standalone            "/tini -- milvus run…"   milvus-standalone            running (healthy)   0.0.0.0:9091->9091/tcp, 0.0.0.0:19530->19530/tcp, :::9091->9091/tcp, :::19530->19530/tcp
+retriever-milvus             "uvicorn retriever_s…"   retriever-milvus             running (healthy)   0.0.0.0:7770->7770/tcp, :::7770->7770/tcp
+visual-search-qa-app         "streamlit run app.p…"   visual-search-qa-app         running (healthy)   0.0.0.0:17580->17580/tcp, :::17580->17580/tcp
+vlm-openvino-serving         "/bin/bash -c '/app/…"   vlm-openvino-serving         running (healthy)   0.0.0.0:9764->8000/tcp, :::9764->8000/tcp
 ```
 
 #### Option2: Deploy the application with the Milvus Server deployed separately
 If you have customized requirements for the Milvus Server, you may start the Milvus Server separately and run the commands for visual search and QA services only
 
 ``` bash
+cd visual-search-question-and-answering/
 cd deployment/docker-compose/
 
 source env.sh # refer to Option 1 for model selection
@@ -157,13 +159,13 @@ In order to save time, only a subset of the dataset would be processed. They are
 Make sure the dataset is prepared BEFORE deploying the application.
 
 ### Use it on Web UI
-Go to `http://{host_ip}:17580` with a browser. Put the exact path to the subset of demo dataset (usually`/home/user/data/DAVIS/subset`) into `file directory on host`. Click `UpdataDB`. Wait for a while and click `showInfo`. You should see that the number of processed files is 25.
+Go to `http://{host_ip}:17580` with a browser. Put the exact path to the subset of demo dataset (usually`/home/user/data/DAVIS/subset`, may vary according to your local username) into `file directory on host`. Click `UpdataDB`. Wait for a while and click `showInfo`. You should see that the number of processed files is 25.
 
 Try searching with prompt `tractor`, see if the results are correct.
 
 Expected valid inputs are "car-race", "deer", "guitar-violin", "gym", "helicopter", "carousel", "monkeys-trees", "golf", "rollercoaster", "horsejump-stick", "planes-crossing", "tractor"
 
-Try ticking a search results, and ask in the leftside chatbox a question about the selected media.
+Try ticking a search result, and ask a question in the leftside chatbox about the selected media.
 
 Note: for each chat request, you may select either a single image, or multiple images, or a single video. Multiple videos or a collection of images+videos are not supported yet.
 
@@ -173,8 +175,10 @@ You can check the end-to-end response time for each round of question-and-answer
 
 ## Summary
 
-In this get started guide, you learned how to: - Build the
-microservice - Run the microservice - Try the application with a demo dataset
+In this get started guide, you learned how to: 
+-    Build the microservice images 
+-    Deploy the application with the microservices
+-    Try the application with a demo dataset
 
 ## Learn More
 

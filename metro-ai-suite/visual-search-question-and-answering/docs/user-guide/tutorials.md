@@ -56,7 +56,7 @@ In this tutorial, you will learn how to ingest data along with metadata to suppo
     ``` 
     {
         "camera": "camera_1",
-        "timestamp": 1748399683
+        "timestamp": 20250101
     }
     ```
 
@@ -66,9 +66,11 @@ In this tutorial, you will learn how to ingest data along with metadata to suppo
         if not os.path.isdir(file_dir):
             raise ValueError(f"The provided path '{file_dir}' is not a valid directory.")
         
-        timestamp = int(datetime.now().timestamp())
+        timestamp = datetime.date(2025, 1, 1)
+        timestamp = int(timestamp.strftime("%Y%m%d"))  # 20250101
 
-        cnt = 0
+        cnt = 1
+        month = 1
 
         meta_dir = os.path.join(file_dir, "meta")
         os.makedirs(meta_dir, exist_ok=True)
@@ -84,13 +86,16 @@ In this tutorial, you will learn how to ingest data along with metadata to suppo
                     base_name, _ = os.path.splitext(file_name)
                     json_file_path = os.path.join(meta_dir, f"{base_name}.json")
                     fake_label = f"camera_{cnt}"
-                    fake_timestamp = timestamp - cnt * 100
+                    timestamp = datetime.date(2025, month, cnt % 30 + 1)  # Increment day, reset to 1 if exceeds 30
+                    fake_timestamp = int(timestamp.strftime("%Y%m%d"))
                     fake_meta = {
                         "camera": fake_label,  
                         "timestamp": fake_timestamp  
                     }
 
                     cnt += 1
+                    if cnt > month*30:
+                        month += 1
 
                     # Write the JSON content to the file
                     with open(json_file_path, "w") as json_file:
