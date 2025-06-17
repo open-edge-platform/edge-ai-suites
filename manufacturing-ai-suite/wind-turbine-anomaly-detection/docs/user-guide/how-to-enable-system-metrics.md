@@ -2,6 +2,9 @@
 
 > **Note**: The system metrics dashboard is only supported with docker compose deployments and requires `Telegraf` to run as the `root` user.
 
+Please follow [prerequisites](./get-started.md#prerequisites) and understand [data flow explanation](./get-started.md#data-flow-explanation) as
+a prerequisite.
+
 To enable the system metrics dashboard showcasing the host and docker containers CPU, memory, network, disk IO usage, run the following command:
 
 ```bash

@@ -93,7 +93,8 @@ The `udfs` section specifies the details of the UDFs used in the task.
 **Alerts Configuration**:
 
 The `alerts` section defines the settings for alerting mechanisms, such as MQTT protocol.
-For OPC-UA configuration, please refer [Publishing OPC-UA alerts](./how-to-configure-alerts.md#publishing-opc-ua-alerts)
+For OPC-UA configuration, please refer [Publishing OPC-UA alerts](./how-to-configure-alerts.md#publishing-opc-ua-alerts).
+Please note to enable only one of the MQTT or OPC-UA alerts.
 
 **MQTT Configuration**:
 
@@ -130,19 +131,7 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
 ```
 
-## Build Docker Images
-
-Navigate to the application directory and build the Docker images:
-
-> **NOTE**:
-> As a pre-requisite, please build `Time Series Analytics` microservice by referring the docs at <https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/time-series-analytics/docs/user-guide/get-started.md#build-docker-image> or use the pre-built
-docker image from the docker hub or internal container registry
-
-```bash
-make build # builds only data simulator (OPC-UA server and MQTT publisher) docker images
-```
-
-## Deploy with Docker Compose (Single Node)
+## Deploy with Docker Compose
 
 1. Update the following fields in `.env`:
    - `INFLUXDB_USERNAME`
@@ -154,6 +143,11 @@ make build # builds only data simulator (OPC-UA server and MQTT publisher) docke
    - `MR_MINIO_SECRET_KEY`
 
 2. Deploy the sample app, use only one of the options below:
+
+> **NOTE**: The sample app is deployed by pulling the pre-built container images of the sample app 
+> from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY` env
+> variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection`)
+
    - **Using OPC-UA ingestion**:
      ```bash
      make up_opcua_ingestion
@@ -178,7 +172,9 @@ make status
 
 1. Get into the InfluxDB* container:
 
-   > **Note**: Use `kubectl exec -it <influxdb-pod-name> -- /bin/bash` for the helm deployment
+   > **Note**: Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
+   > where for <namespace> replace with namespace name where the application was deployed and
+   > for <influxdb-pod-name> replace with InfluxDB pod name.
 
    ``` bash
     docker exec -it ia-influxdb bash
@@ -238,7 +234,13 @@ make status
   docker logs -f <container_name> | grep -i error
   ```
 
-## Supporting Resources
+## Other Deployment options
 
-* [Overview](Overview.md)
-* [System Requirements](system-requirements.md)
+- [How to Deploy with Helm](./how-to-deploy-with-helm.md): Guide for deploying the sample application on a k8s cluster using Helm.
+- [How to Deploy with Edge Orchestrator](./how-to-deploy-with-edge-orchestrator.md): Guide for deploying the sample application using Edge Manageability Framework
+
+## Advanced setup
+
+- [How to build from source and deploy](./how-to-build-from-source.md): Guide to build from source and docker compose deployment
+- [How to configure OPC-UA/MQTT alerts](./how-to-configure-alerts.md): Guide for configuring the OPC-UA/MQTT alerts in the Time Series Analytics microservice
+- [How to configure custom UDF deployment package](./how-to-configure-custom-udf.md): Guide for deploying a customized UDF deployment package (udfs/models/tick scripts)

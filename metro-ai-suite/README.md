@@ -15,6 +15,8 @@ The Suite also provides a collection of visual analytics sample applications, us
 - [Image Based Video Search](image-based-video-search): Performs near real-time analysis and image-based search to detect and retrieve objects of interest in large video datasets.
 - [Smart Intersection](smart-intersection): Unified analytics of a traffic intersection.
 - [Smart Parking](smart-parking): Effortlessly manage parking spaces with AI-driven video analytics for real-time insights and enhanced efficiency.
+- [Visual Search Question and Answering](visual-search-question-and-answering): A unified application that integrates a multi-modal search engine with a visual Q&A assistant.
+
 
 See respective sample applications to learn more about using them in your application development as well as customizing them to meet your use case needs.
 

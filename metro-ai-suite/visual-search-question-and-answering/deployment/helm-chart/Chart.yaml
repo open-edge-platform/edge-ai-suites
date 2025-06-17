@@ -1,0 +1,8 @@
+name: compose
+description: A generated Helm Chart for compose from Skippbox Kompose
+version: 0.0.1
+apiVersion: v2
+keywords:
+  - compose
+sources:
+home:
