@@ -76,9 +76,13 @@ kubectl exec -it -n apps <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v
 
 ## Publishing OPC-UA Alerts
 
+### Prerequisite
+
+Please ensure that `make up_opcua_ingestion` has been executed by following the steps
+in the [getting started guide](./get-started.md#deploy-with-docker-compose)
+
 To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow below steps.
-The way to verify if the OPC-UA alerts are getting published would be to check the `Time Series Analytics Microservice` logs OR
-have any third-party OPC-UA client to connect to OPC-UA server to verify this.
+You can verify the publishing of OPC-UA alerts by checking the logs of the `Time Series Analytics Microservice`.
 
 ### Configuration
 
@@ -111,6 +115,48 @@ data0
 > **Note**:
 > - The `noRecoveries()` method suppresses recovery alerts, ensuring only critical alerts are sent.
 
+### Subscribing to OPC UA Alerts using Sample OPCUA Subscriber
+
+1. Expose the port `4840` of `ia-opcua-server` service in `docker-compose.yml` under `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml#L183` as below
+
+    ```yaml
+    ia-opcua-server:
+    ...
+    ports:
+    - "4840:4840"
+    ```
+
+2. Deploy the Sample App using below commands
+    ```bash
+    cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
+    make up_opcua_ingestion
+    ```
+
+3. Install python packages `asyncio` and `asyncua` to run the sample opc ua subscriber 
+    ```bash
+    pip install asyncio asyncua
+    ```
+
+4. Run the following sample OPC UA subscriber by updating the `<IP-Address of OPCUA Server>` to read the alerts published to server on tag `ns=1;i=2004` from Time Series Analytics Microservice.
+    ```python
+    import asyncio
+    from asyncua import Client, Node
+    class SubscriptionHandler:
+        def datachange_notification(self, node: Node, val, data):
+            print(val)
+    async def main():
+        client = Client(url="opc.tcp://<IP-Address of OPCUA Server>:4840/freeopcua/server/")
+        async with client:
+            handler = SubscriptionHandler()
+            subscription = await client.create_subscription(50, handler)
+            myvarnode = client.get_node("ns=1;i=2004")
+            await subscription.subscribe_data_change(myvarnode)
+            await asyncio.sleep(100)
+            await subscription.delete()
+            await asyncio.sleep(1)
+    if __name__ == "__main__":
+        asyncio.run(main())
+    ```
 
 ## Supporting Resources
 
