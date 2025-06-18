@@ -158,7 +158,7 @@ bash prepare_demo_dataset.sh
 
 In order to save time, only a subset of the dataset would be processed. They are stored in `$HOME/data/DAVIS/subset`, use this path to do the next step.
 
-Make sure the dataset is prepared BEFORE deploying the application.
+This script only works when the `dataprep-visualdata-milvus` service is available.
 
 ### Use it on Web UI
 Go to `http://{host_ip}:17580` with a browser. Put the exact path to the subset of demo dataset (usually`/home/user/data/DAVIS/subset`, may vary according to your local username) into `file directory on host`. Click `UpdataDB`. Wait for a while and click `showInfo`. You should see that the number of processed files is 25.
