@@ -42,7 +42,7 @@ services:
     networks:
       - default
     volumes:
-      - "/home/$USER/.cache/huggingface:/root/.cache/huggingface"
+      - "/home/$USER/.cache/huggingface:/home/appuser/.cache/huggingface"
       - ov-models:/app/ov-model
 
   milvus-etcd:
