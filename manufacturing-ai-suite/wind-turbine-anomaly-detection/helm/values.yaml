@@ -65,6 +65,11 @@ env:
   
   POSTGRES_USER: postgres
 images:
+  # Please provide the suffix for the image version you want to use like rc1, rc2, git hash id etc.
+  image_suffix: ""
+  time_series_analytics_image: intel/ia-time-series-analytics-microservice:1.0.0
+  opcua_server_image: intel/ia-opcua-server:1.0.0
+  mqtt_publisher_image: intel/ia-mqtt-publisher:1.0.0
   model_registry: intel/model-registry:1.0.3
 config:
   influx_db_server:

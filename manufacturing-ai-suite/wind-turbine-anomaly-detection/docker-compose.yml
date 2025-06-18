@@ -81,7 +81,7 @@ services:
   ia-time-series-analytics-microservice:
     container_name: ia-time-series-analytics-microservice
     hostname: ia-time-series-analytics-microservice
-    image: ${DOCKER_REGISTRY}intel/ia-time-series-analytics-microservice:1.0.0
+    image: ${DOCKER_REGISTRY}${TIME_SERIES_ANALYTICS_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -189,7 +189,7 @@ services:
         TIMESERIES_UID: ${TIMESERIES_UID}
     hostname: ia-opcua-server
     read_only: true
-    image: ${DOCKER_REGISTRY}intel/ia-opcua-server:1.0.0
+    image: ${DOCKER_REGISTRY}${OPC_UA_SERVER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
     environment:
       LOG_LEVEL: ${LOG_LEVEL}
       no_proxy: "ia-time-series-analytics-microservice"
@@ -217,7 +217,7 @@ services:
     container_name: ia-mqtt-publisher
     hostname: ia-mqtt-publisher
     read_only: true
-    image: ${DOCKER_REGISTRY}intel/ia-mqtt-publisher:1.0.0
+    image: ${DOCKER_REGISTRY}${MQTT_PUBLISHER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
     restart: unless-stopped
     security_opt:
     - no-new-privileges
@@ -239,7 +239,7 @@ services:
 
 # Model Registry Service
   model-registry:
-    image: intel/model-registry:1.0.3
+    image: ${MODEL_REGISTRY_IMAGE}
     container_name: model-registry
     hostname: model-registry
     ipc: "none"

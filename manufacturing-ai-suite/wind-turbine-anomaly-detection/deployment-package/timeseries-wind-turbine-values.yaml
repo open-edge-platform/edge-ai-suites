@@ -6,9 +6,6 @@
 ---
 namespace: apps
 DOCKER_REGISTRY: ''
-DOCKER_USERNAME: ''
-DOCKER_PASSWORD: ''
-imagePullPolicy: Always
 env:
   # The INFLUXDB_USERNAME and INFLUXDB_PASSWORD length must be a minimum of 5 and 10 characters respectively and 
   # should contain alphanumeric characters with atleast one digit. 
@@ -26,6 +23,3 @@ env:
   MINIO_SECRET_KEY:
   HTTP_PROXY: 
   HTTPS_PROXY: 
-  INFLUXDB_RETENTION_DURATION: 1h0m0s
-  TELEGRAF_METRIC_BATCH_SIZE: 100
-  LOG_LEVEL: INFO
