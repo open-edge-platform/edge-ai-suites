@@ -7,6 +7,7 @@
 
    system-requirements
    get-started
+   how-to-build-from-source
 
 .. toctree::
    :caption: How to

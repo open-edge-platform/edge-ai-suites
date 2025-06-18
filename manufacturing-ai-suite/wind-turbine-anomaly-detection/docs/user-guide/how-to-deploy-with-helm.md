@@ -27,7 +27,7 @@
 
     - Get into the helm directory
 
-        `cd wind-turbine-anomaly-detection-sample-app-1.0.0`
+        `cd wind-turbine-anomaly-detection-sample-app`
 
 - Generate the helm charts
    

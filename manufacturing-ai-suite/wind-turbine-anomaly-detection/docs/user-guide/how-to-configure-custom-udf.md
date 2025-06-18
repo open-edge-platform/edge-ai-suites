@@ -65,22 +65,42 @@ and config.json has been volume mounted at `edge-ai-suites/manufacturing-ai-suit
 
 ### Uploading Models to the Model Registry
 
-1. Create a ZIP file with the following structure:
+Below steps show how to create and upload the wind turbine anomaly detection UDF deployment package
+to the Model Registry microservice.
 
-   > **NOTE**: Please ensure to have the same name for udf python script, TICK script and model name.
+1. The following step demonstrates how to create a sample model file from an existing model folder for uploading to the Model Registry. If you already have a model zip file, you can skip this step.
+   ```bash
+   cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/
+   zip -r windturbine_anomaly_detector.zip udfs models tick_scripts
+   ```
+   You can utilize the generated `windturbine_anomaly_detector.zip` absolute path as `<udf_deployment_package_path.zip>` in the next step
 
-   ```
-   udfs/
-       ├── requirements.txt
-       ├── <name.py>
-   tick_scripts/
-       ├── <name.tick>
-   models/
-       ├── <name.pkl>
-   ```
-2. Open the Model Registry Swagger UI at `http://<ip>:32002`.
-3. Expand the `models` POST method and click **Try it out**.
-4. Upload the ZIP file, specify the `name` and `version`, and click **Execute**.
+2. Upload a model file to Model Registry
+    ```bash
+   curl -L -X POST "http://<HOST_IP>:32002/models" \
+   -H 'Content-Type: multipart/form-data' \
+   -F 'name="windturbine_anomaly_detector"' \
+   -F 'version="1.0"' \
+   -F 'file=@<udf_deployment_package_path.zip>;type=application/zip'
+    ```
+
+### UDF Deployment Package structure
+
+If one wants to create a separate deployment package, just ensure to have the following structure
+before zipping and uploading it to Model Registry.
+
+> **NOTE**: Please ensure to have the same name for udf python script, TICK script and model name.
+
+```
+udfs/
+    ├── requirements.txt
+    ├── <name.py>
+tick_scripts/
+    ├── <name.tick>
+models/
+    ├── <name.pkl>
+```
+
 
 ### Updating Time Series Analytics Microservice `config.json` for Model Registry usage
 
@@ -103,9 +123,7 @@ Follow the below steps:
 1. Configure `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` as per [above steps](#docker-compose-deployment)
 2. Run below command to generate the helm charts
    ```bash
-   cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection> # path relative to git clone folder
+   cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection # path relative to git clone folder
    make gen_helm_charts
    ```
 3. Follow helm configuration and deployment steps at [link](./how-to-deploy-with-helm.md)
-
-

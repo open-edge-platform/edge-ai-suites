@@ -26,9 +26,9 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 1. Download Deployment Package present in the folder **`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/deployment-package`**
 
-1. Update the below fields in `timeseries-wind-turbine-values.yaml` file in the helm chart
+1. Update the below fields in `timeseries-wind-turbine-values.yaml` in the above deployment package folder
 
-    ``` sh
+    ```sh
     INFLUXDB_USERNAME:
     INFLUXDB_PASSWORD:
     VISUALIZER_GRAFANA_USER:
