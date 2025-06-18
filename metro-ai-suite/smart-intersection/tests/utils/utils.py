@@ -7,7 +7,7 @@
 # this software or the related documents without Intel's prior written permission.
 #
 # This software and the related documents are provided as is, with no express
-# or implied warranties, other than those that are expressly stated in the License.
+# or implied warranties, other than those that are expressly stated in the License.git 
 
 import subprocess
 
