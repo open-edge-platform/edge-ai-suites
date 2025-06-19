@@ -3,9 +3,9 @@
 # Download artifacts for a specific sample application
 #   by calling respective app's install.sh script
 SCRIPT_DIR=$(dirname $(readlink -f "$0"))
-MODEL_XML_URL="https://raw.githubusercontent.com/open-edge-platform/edge-ai-libraries/ec665e4c65cd13531da58168858ce31b583bee1f/microservices/dlstreamer-pipeline-server/resources/models/geti/pallet_defect_detection/deployment/Detection/model/model.xml"
-MODEL_BIN_URL="https://github.com/open-edge-platform/edge-ai-libraries/raw/ec665e4c65cd13531da58168858ce31b583bee1f/microservices/dlstreamer-pipeline-server/resources/models/geti/pallet_defect_detection/deployment/Detection/model/model.bin"
-VIDEO_URL="https://github.com/open-edge-platform/edge-ai-libraries/raw/ec665e4c65cd13531da58168858ce31b583bee1f/microservices/dlstreamer-pipeline-server/resources/videos/warehouse.avi"
+MODEL_XML_URL="https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/9da6eb59431eb7edbc5491e8d6ee37d347bebcbb/manufacturing-ai-suite/pallet-defect-detection/resources/models/geti/pallet_defect_detection/deployment/Detection/model/model.xml"
+MODEL_BIN_URL="https://github.com/open-edge-platform/edge-ai-suites/raw/9da6eb59431eb7edbc5491e8d6ee37d347bebcbb/manufacturing-ai-suite/pallet-defect-detection/resources/models/geti/pallet_defect_detection/deployment/Detection/model/model.bin"
+VIDEO_URL="https://github.com/open-edge-platform/edge-ai-suites/raw/9da6eb59431eb7edbc5491e8d6ee37d347bebcbb/manufacturing-ai-suite/pallet-defect-detection/resources/videos/warehouse.avi"
 
 err() {
     echo "ERROR: $1" >&2
