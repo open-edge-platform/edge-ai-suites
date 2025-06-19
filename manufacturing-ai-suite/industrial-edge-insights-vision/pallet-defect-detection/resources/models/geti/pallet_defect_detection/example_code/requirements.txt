@@ -1,3 +1,0 @@
-# Base requirements for the deployment
-geti-sdk==2.6.*
-opencv-python>=4.10
