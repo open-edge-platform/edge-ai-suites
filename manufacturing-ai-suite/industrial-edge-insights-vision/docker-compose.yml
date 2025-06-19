@@ -42,7 +42,7 @@ services:
     - vol_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
     - /var/tmp:/var/tmp
     - ./${SAMPLE_APP}/resources/:/home/pipeline-server/resources/
-    - ./${SAMPLE_APP}/configs/config.json:/home/pipeline-server/config.json
+    - ./${SAMPLE_APP}/configs/pipeline-server-config.json:/home/pipeline-server/config.json
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
       # USB camera devices
