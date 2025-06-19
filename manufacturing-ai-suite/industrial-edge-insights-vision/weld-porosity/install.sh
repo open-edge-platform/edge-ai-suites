@@ -6,6 +6,7 @@ SCRIPT_DIR=$(dirname $(readlink -f "$0"))
 MODEL_XML_URL="https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/9da6eb59431eb7edbc5491e8d6ee37d347bebcbb/manufacturing-ai-suite/weld-porosity/resources/models/weld_porosity/weld_porosity_classification/deployment/Classification/model/model.xml"
 MODEL_BIN_URL="https://github.com/open-edge-platform/edge-ai-suites/raw/9da6eb59431eb7edbc5491e8d6ee37d347bebcbb/manufacturing-ai-suite/weld-porosity/resources/models/weld_porosity/weld_porosity_classification/deployment/Classification/model/model.bin"
 VIDEO_URL="https://github.com/open-edge-platform/edge-ai-suites/raw/9da6eb59431eb7edbc5491e8d6ee37d347bebcbb/manufacturing-ai-suite/weld-porosity/resources/videos/welding.avi"
+VIDEO_FILENAME="welding.avi"
 
 err() {
     echo "ERROR: $1" >&2
@@ -56,7 +57,7 @@ download_artifacts() {
             return 1
         fi
         echo "Downloading video artifacts for $app_name..."
-        if ! wget -q -O "$LOCAL_VIDEO_DIR/warehouse.avi" "$VIDEO_URL"; then
+        if ! wget -q -O "$LOCAL_VIDEO_DIR/$VIDEO_FILENAME" "$VIDEO_URL"; then
             err "Failed to download video for $app_name."
             return 1
         fi
