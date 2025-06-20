@@ -20,8 +20,8 @@ services:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
     environment:
-      no_proxy: "ia-influxdb,ia-mqtt-broker,ia-opcua-server,ia-time-series-analytics-microservice"
-      NO_PROXY: "ia-influxdb,ia-mqtt-broker,ia-opcua-server,ia-time-series-analytics-microservice"
+      no_proxy: "ia-influxdb,ia-mqtt-broker,ia-opcua-server,ia-time-series-analytics-microservice,${no_proxy}"
+      NO_PROXY: "ia-influxdb,ia-mqtt-broker,ia-opcua-server,ia-time-series-analytics-microservice,${no_proxy}"
       MQTT_BROKER_HOST: "ia-mqtt-broker"
       INFLUX_SERVER: "ia-influxdb"
       INFLUXDB_PORT: 8086
@@ -187,6 +187,9 @@ services:
       args:
         TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
         TIMESERIES_UID: ${TIMESERIES_UID}
+        http_proxy:
+        https_proxy:
+        no_proxy:
     hostname: ia-opcua-server
     read_only: true
     image: ${DOCKER_REGISTRY}${OPC_UA_SERVER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
@@ -214,6 +217,9 @@ services:
       args:
         TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
         TIMESERIES_UID: ${TIMESERIES_UID}
+        http_proxy:
+        https_proxy:
+        no_proxy:
     container_name: ia-mqtt-publisher
     hostname: ia-mqtt-publisher
     read_only: true
