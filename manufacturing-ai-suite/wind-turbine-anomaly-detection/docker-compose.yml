@@ -67,8 +67,8 @@ services:
       # The InfluxDB retention policy durations can be configured using a combination 
       # of time units such as hours(h), minutes(m), and seconds(s), eg., 1h0m0s for 1 hour.
       RETENTION_DURATION: 1h0m0s
-      no_proxy: ${timeseries_no_proxy}, ia-time-series-analytics-microservice
-      NO_PROXY: ${timeseries_no_proxy}, ia-time-series-analytics-microservice
+      no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
+      NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
       INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb_devmode.conf"
       INFLUXDB_LOGGING_LEVEL: ${LOG_LEVEL}
       INFLUXDB_TLS_CIPHERS: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
@@ -95,8 +95,8 @@ services:
       timeout: 5s
       retries: 20
     environment:
-      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry"
-      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry"
+      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry,${no_proxy}"
+      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry,${no_proxy}"
       KAPACITOR_PORT: ${KAPACITOR_PORT}
       INFLUX_SERVER: "ia-influxdb"
       KAPACITOR_INFLUXDB_0_USERNAME: ${INFLUXDB_USERNAME}
@@ -135,8 +135,8 @@ services:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
     environment:
-      no_proxy: ia-influxdb
-      NO_PROXY: ia-influxdb
+      no_proxy: "ia-influxdb,${no_proxy}"
+      NO_PROXY: "ia-influxdb,${no_proxy}"
       INFLUX_SERVER: "ia-influxdb"
       GRAFANA_SERVER: '0.0.0.0'
       INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
@@ -195,8 +195,8 @@ services:
     image: ${DOCKER_REGISTRY}${OPC_UA_SERVER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
     environment:
       LOG_LEVEL: ${LOG_LEVEL}
-      no_proxy: "ia-time-series-analytics-microservice"
-      NO_PROXY: "ia-time-series-analytics-microservice"
+      no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
+      NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
       TS_MS_SERVER: "ia-time-series-analytics-microservice"
       TS_MS_PORT: ${KAPACITOR_PORT}
     restart: unless-stopped
@@ -233,8 +233,8 @@ services:
     environment:
       AppName: "mqtt-publisher"
       HOST_IP: ia-mqtt-broker
-      no_proxy: "ia-mqtt-broker,ia-time-series-analytics-microservice"
-      NO_PROXY: "ia-mqtt-broker,ia-time-series-analytics-microservice"
+      no_proxy: "ia-mqtt-broker,ia-time-series-analytics-microservice,${no_proxy}"
+      NO_PROXY: "ia-mqtt-broker,ia-time-series-analytics-microservice,${no_proxy}"
       TS_MS_SERVER: "ia-time-series-analytics-microservice"
       TS_MS_PORT: ${KAPACITOR_PORT}
     networks:
@@ -281,8 +281,8 @@ services:
       SERVER_CERT: /run/secrets/ModelRegistry_Server/public.crt
       CA_CERT: /run/secrets/ModelRegistry_Server/server-ca.crt
       SERVER_PRIVATE_KEY: /run/secrets/ModelRegistry_Server/private.key
-      no_proxy: mr_postgres,mr_minio
-      NO_PROXY: mr_postgres,mr_minio
+      no_proxy: "mr_postgres,mr_minio,${no_proxy}"
+      NO_PROXY: "mr_postgres,mr_minio,${no_proxy}"
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
     extra_hosts:
