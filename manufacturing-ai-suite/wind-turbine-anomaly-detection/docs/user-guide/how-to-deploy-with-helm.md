@@ -110,8 +110,7 @@ You need to copy your own or existing model into Time Series Analytics Microserv
 
 ## Activate the new UDF deployment package
 
-Run the below command to start the UDF deployment with the copied UDF deployment package.
-Check the [custom UDF configuration](./how-to-configure-custom-udf.md). Similarly, you can issue the `curl` command here for the `GET` `config` API to activate the package.
+Run the below command to activate the UDF deployment package.
 
 ```bash
 curl -X 'GET' \
