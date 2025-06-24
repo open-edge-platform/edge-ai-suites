@@ -99,12 +99,21 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
 
 1. Activate the new package with below command
 
+    To activate the default configuration, execute the below command
     ```bash
     curl -X 'GET' \
     'http://<HOST_IP>:30002/config?restart=true' \
     -H 'accept: application/json'
     ```
 
+    To activate the custom configuration, update the configuration as required and execute the below command
+    ```bash
+    curl -X 'POST' \
+    'http://<HOST_IP>:5000/config' \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -d '<Updated_config>'
+    ```
 1. Follow the below steps for accessing `Grafana Dashboard` in the **Wind Turbine Anomaly Detection** sample application.
 
     i. Get the `internal-ip` of edge node to access the node using the below command 
