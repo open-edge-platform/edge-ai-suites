@@ -65,7 +65,24 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
 
 ## With Model Registry
 
-### 1. Uploading Models to the Model Registry
+### 1. UDF Deployment Package structure
+
+If one wants to create a separate UDF deployment package, just ensure to have the following structure
+before zipping and uploading it to Model Registry.
+
+> **NOTE**: Please ensure to have the same name for udf python script, TICK script and model name.
+
+```
+udfs/
+    ├── requirements.txt
+    ├── <name.py>
+tick_scripts/
+    ├── <name.tick>
+models/
+    ├── <name.pkl>
+```
+
+### 2. Uploading Models to the Model Registry
 
 Below steps show how to create and upload the wind turbine anomaly detection UDF deployment package
 to the Model Registry microservice.
@@ -86,24 +103,6 @@ to the Model Registry microservice.
    -F 'file=@<udf_deployment_package_path.zip>;type=application/zip'
     ```
 
-### 2. UDF Deployment Package structure
-
-If one wants to create a separate UDF deployment package, just ensure to have the following structure
-before zipping and uploading it to Model Registry.
-
-> **NOTE**: Please ensure to have the same name for udf python script, TICK script and model name.
-
-```
-udfs/
-    ├── requirements.txt
-    ├── <name.py>
-tick_scripts/
-    ├── <name.tick>
-models/
-    ├── <name.pkl>
-```
-
-
 ### 3. Updating Time Series Analytics Microservice config for Model Registry usage
 
 > **Note**:
@@ -112,8 +111,34 @@ models/
 
 To fetch UDFs and models from the Model Registry, one can dynamically update the configuration of Time Series Analytics microservice using [steps](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice) and set the below parameters.
 
-1. Set ``model_registry` key `enable` to `true`.
-2. Specify the `udf_name` and `version` as defined in the Model Registry.
+1. Copy the content of `config.json` from `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/`
+2. Set ``model_registry` key `enable` to `true`.
+3. Specify the `udf_name` and `version` as defined in the Model Registry.
    
    > **Note**: Mismatched task names or versions will cause the microservice to restart.
-3. Update `udfs` sections with the appropriate `name` and `models` details.
+4. Update `udfs` sections with the appropriate `name` and `models` details.
+5. Run the below command, to update the configuration in `Time Series Analytics` microservice
+    ```bash
+    curl -X 'POST' \
+    'http://<HOST_IP>:5000/config' \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -d '{
+        "model_registry": {
+            "enable": true,
+            "version": "1.0"
+        },
+        "udfs": {
+            "name": "windturbine_anomaly_detector",
+            "models": "windturbine_anomaly_detector.pkl"
+        },
+        "alerts": {
+            "mqtt": {
+                "mqtt_broker_host": "ia-mqtt-broker",
+                "mqtt_broker_port": 1883,
+                "name": "my_mqtt_broker"
+            }
+        }
+    }
+    '
+    ```
