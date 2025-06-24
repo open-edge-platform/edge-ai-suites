@@ -29,7 +29,7 @@ env:
   # MinIO Secret Key length must be a minimum of 8 and 16 characters respectively and should contain alphanumeric characters with at least one digit 
   MINIO_SECRET_KEY: 
   # MinIO Access Key length must be a minimum of 8 and 16 characters respectively and should contain alphanumeric characters with at least one digit 
-  MINIO_Access_KEY:
+  MINIO_ACCESS_KEY:
   HTTP_PROXY: 
   HTTPS_PROXY: 
   # SECURE_MODE environment variable should not be changed as it may cause unexpected behavior or system failure.
