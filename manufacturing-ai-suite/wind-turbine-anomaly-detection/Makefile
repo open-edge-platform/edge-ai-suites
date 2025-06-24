@@ -115,8 +115,8 @@ status:
 	@echo "Status of the deployed containers..."; \
 	docker ps -a --filter "name=^ia-" --filter "name=mr_" --filter "name=model_" --filter "name=wind-turbine" --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"; \
 	echo "Parsing the logs of all containers to catch any error messages..."; \
-	sleep 10; \
-	containers=$$(docker ps -a --filter "name=^intel/ia-" --format "{{.Names}}"); \
+	sleep 20; \
+	containers=$$(docker ps -a --filter "name=^ia-" --filter "name=mr_" --filter "name=model_" --filter "name=wind-turbine" --format "{{.Names}}"); \
 	failure_cont_flag=0; \
 	for container in $$containers; do \
 		errors=$$(docker logs --tail 5 $$container 2>&1 | grep -i "error"); \
@@ -164,11 +164,6 @@ gen_helm_charts:
 	@echo "Generating Helm packages"
 	$(HELM_PACKAGE_SCRIPT)
 	@echo "Helm packages generated"
-
-# Help
-# Restart Docker containers
-.PHONY: restart
-restart: down build up_mqtt_ingestion
 
 # Help
 .PHONY: help
