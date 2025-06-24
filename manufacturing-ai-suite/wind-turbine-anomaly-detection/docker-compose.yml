@@ -31,7 +31,7 @@ services:
       TELEGRAF_CONFIG_PATH: /etc/telegraf/Telegraf_devmode.conf
       OPCUA_SERVER: opc.tcp://ia-opcua-server:4840/freeopcua/server/
       LOG_LEVEL: ${LOG_LEVEL}
-      TELEGRAF_INPUT_PLUGIN: ${TELEGRAF_INPUT_PLUGIN}
+      TELEGRAF_INPUT_PLUGIN: ${TELEGRAF_INPUT_PLUGIN:-opcua}
       # The Telegraf metric_batch_size specifies the number of metrics or data points 
       # that are grouped together and sent in a single batch to the InfluxDB.
       TELEGRAF_METRIC_BATCH_SIZE: 100
@@ -90,7 +90,7 @@ services:
     - no-new-privileges
     read_only: true
     healthcheck:
-      test: ["CMD-SHELL", "if [ \"$SECURE_MODE\" = \"true\" ]; then curl -f https://localhost:9092/kapacitor/v1/ping; else curl -f http://localhost:9092/kapacitor/v1/ping; fi"]
+      test: ["CMD-SHELL", "curl -f http://localhost:9092/kapacitor/v1/ping || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -263,14 +263,14 @@ services:
     environment:
       AppName: "ModelRegistry"
       MIN_LOG_LEVEL: ${LOG_LEVEL}
-      ENABLE_DEV_MODE: ${ENABLE_DEV_MODE}
+      ENABLE_DEV_MODE: ${ENABLE_DEV_MODE:-false}
       ENABLE_HTTPS_MODE: false
-      GETI_HOST: ${GETI_HOST}
-      GETI_TOKEN: ${GETI_TOKEN}
-      GETI_SERVER_API_VERSION: ${GETI_SERVER_API_VERSION}
-      GETI_ORGANIZATION_ID: ${GETI_ORGANIZATION_ID}
-      GETI_WORKSPACE_ID: ${GETI_WORKSPACE_ID}
-      GETI_SERVER_SSL_VERIFY: ${GETI_SERVER_SSL_VERIFY}
+      GETI_HOST: ${GETI_HOST:-""}
+      GETI_TOKEN: ${GETI_TOKEN:-""}
+      GETI_SERVER_API_VERSION: ${GETI_SERVER_API_VERSION:-""}
+      GETI_ORGANIZATION_ID: ${GETI_ORGANIZATION_ID:-""}
+      GETI_WORKSPACE_ID: ${GETI_WORKSPACE_ID:-""}
+      GETI_SERVER_SSL_VERIFY: ${GETI_SERVER_SSL_VERIFY:-""}
       MLFLOW_TRACKING_URI: postgresql+psycopg2://${MR_USER_NAME}:${MR_PSQL_PASSWORD}@mr_postgres:5432/model_registry_db
       MLFLOW_S3_ENDPOINT_URL: ${MR_MLFLOW_S3_ENDPOINT_URL}
       MINIO_HOSTNAME: mr_minio

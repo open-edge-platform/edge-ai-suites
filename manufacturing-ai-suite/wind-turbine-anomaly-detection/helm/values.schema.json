@@ -1,0 +1,213 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Helm Values Schema",
+  "type": "object",
+  "properties": {
+    "env": {
+      "type": "object",
+      "properties": {
+        "INFLUXDB_USERNAME": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 10,
+          "pattern": "^(?=.*\\d)[A-Za-z\\d]{5,10}$",
+          "not": { "const": "admin" },
+          "description": "Alphanumeric, 5-10 chars, at least one digit, not 'admin'"
+        },
+        "INFLUXDB_PASSWORD": { 
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 10,
+          "pattern": "^(?=.*\\d)[A-Za-z\\d]{5,10}$",
+          "description": "Alphanumeric, 5-10 chars, at least one digit"
+        },
+        "VISUALIZER_GRAFANA_USER": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 10,
+          "pattern": "^(?=.*\\d)[A-Za-z\\d]{5,10}$",
+          "description": "Alphanumeric, 5-10 chars, at least one digit"
+        },
+        "VISUALIZER_GRAFANA_PASSWORD": { 
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 10,
+          "pattern": "^(?=.*\\d)[A-Za-z\\d]{5,10}$",
+          "description": "Alphanumeric, 5-10 chars, at least one digit"
+        },
+        "POSTGRES_PASSWORD": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 10,
+          "pattern": "^(?=.*\\d)[A-Za-z\\d]{5,10}$",
+          "description": "Alphanumeric, 5-10 chars, at least one digit"
+        },
+        "MINIO_SECRET_KEY": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 10,
+          "pattern": "^(?=.*\\d)[A-Za-z\\d]{5,10}$",
+          "description": "Alphanumeric, 5-10 chars, at least one digit"
+        },
+        "MINIO_ACCESS_KEY": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 10,
+          "pattern": "^(?=.*\\d)[A-Za-z\\d]{6,18}$",
+          "description": "Alphanumeric, 6-18 chars, at least one digit"
+        },  
+        "HTTP_PROXY": { "type": "string" },
+        "HTTPS_PROXY": { "type": "string" },
+        "SECURE_MODE": { "type": "boolean" },
+        "TELEGRAF_INPUT_PLUGIN": { "type": "string" },
+        "TIMESERIES_USER_NAME": { "type": "string" },
+        "TIMESERIES_UID": { "type": "integer" },
+        "TIMESERIES_NO_PROXY": { "type": "string" },
+        "timeseries_no_proxy": { "type": "string" },
+        "INFLUXDB_RETENTION_DURATION": { "type": "string" },
+        "TELEGRAF_METRIC_BATCH_SIZE": { "type": "integer" },
+        "LOG_LEVEL": { "type": "string" },
+        "AppName": { "type": "string" },
+        "CA_CERT": { "type": "string" },
+        "ENABLE_HTTPS_MODE": { "type": "boolean" },
+        "MIN_LOG_LEVEL": { "type": "string" },
+        "MINIO_BUCKET_NAME": { "type": "string" },
+        "MINIO_HOSTNAME": { "type": "string" },
+        "MINIO_SERVER_PORT": { "type": "string" },
+        "MLFLOW_S3_ENDPOINT_URL": { "type": "string" },
+        "SERVER_CERT": { "type": "string" },
+        "SERVER_PORT": { "type": "string" },
+        "SERVER_PRIVATE_KEY": { "type": "string" },
+        "no_proxy": { "type": "string" },
+        "NO_PROXY": { "type": "string" },
+        "MR_USER_NAME": { "type": "string" },
+        "MR_UID": { "type": "integer" },
+        "POSTGRES_DB": { "type": "string" },
+        "POSTGRES_USER": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "images": {
+      "type": "object",
+      "properties": {
+        "model_registry": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "influx_db_server": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "influx_http": { "type": "integer" }
+          },
+          "required": ["name", "influx_http"]
+        },
+        "grafana": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "int": {
+              "type": "object",
+              "properties": {
+                "port": { "type": "string" }
+              },
+              "required": ["port"]
+            },
+            "ext": {
+              "type": "object",
+              "properties": {
+                "port": { "type": "string" }
+              },
+              "required": ["port"]
+            }
+          },
+          "required": ["name", "int", "ext"]
+        },
+        "telegraf": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "MQTT_BROKER_HOST": { "type": "string" }
+          },
+          "required": ["name", "MQTT_BROKER_HOST"]
+        },
+        "time_series_analytics_microservice": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "kapacitor_port": { "type": "integer" }
+          },
+          "required": ["name", "kapacitor_port"]
+        },
+        "mqttbroker": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "int": {
+              "type": "object",
+              "properties": {
+                "port": { "type": "integer" }
+              },
+              "required": ["port"]
+            },
+            "ext": {
+              "type": "object",
+              "properties": {
+                "port": { "type": "integer" }
+              },
+              "required": ["port"]
+            }
+          },
+          "required": ["name", "int", "ext"]
+        },
+        "opcuaserver": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "int": {
+              "type": "object",
+              "properties": {
+                "pub_port": { "type": "integer" }
+              },
+              "required": ["pub_port"]
+            }
+          },
+          "required": ["name", "int"]
+        },
+        "mqttpublisher": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" }
+          },
+          "required": ["name"]
+        },
+        "model_registry": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "int": {
+              "type": "object",
+              "properties": {
+                "port": { "type": "string" }
+              },
+              "required": ["port"]
+            },
+            "ext": {
+              "type": "object",
+              "properties": {
+                "port": { "type": "string" }
+              },
+              "required": ["port"]
+            }
+          },
+          "required": ["name", "int", "ext"]
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "required": ["namespace", "env", "images", "config"]
+}

@@ -27,7 +27,9 @@ env:
   # The POSTGRES_USER length must be a minimum of 5 and 10 characters respectively
   POSTGRES_PASSWORD: 
   # MinIO Secret Key length must be a minimum of 8 and 16 characters respectively and should contain alphanumeric characters with at least one digit 
-  MINIO_SECRET_KEY: 
+  MINIO_SECRET_KEY:
+  # MinIO Access Key length must be a minimum of 8 and 16 characters respectively and should contain alphanumeric characters with at least one digit
+  MINIO_ACCESS_KEY:
   HTTP_PROXY: 
   HTTPS_PROXY: 
   # SECURE_MODE environment variable should not be changed as it may cause unexpected behavior or system failure.
@@ -49,7 +51,6 @@ env:
   CA_CERT: /run/secrets/modelregistry-server/server-ca.crt
   ENABLE_HTTPS_MODE: false
   MIN_LOG_LEVEL: DEBUG
-  MINIO_ACCESS_KEY: intel
   MINIO_BUCKET_NAME: model-registry
   MINIO_HOSTNAME: mraas-minio 
   MINIO_SERVER_PORT: "8000"
