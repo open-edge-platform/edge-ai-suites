@@ -106,7 +106,7 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
     -H 'accept: application/json'
     ```
 
-    To activate the custom configuration, update the configuration as required and execute the below command
+    To activate the custom configuration, update the configuration as required, replace with `<Updated_config>` and execute the below command
     ```bash
     curl -X 'POST' \
     'http://<HOST_IP>:5000/config' \
