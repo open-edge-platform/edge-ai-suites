@@ -28,6 +28,8 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 1. Update the below fields in `timeseries-wind-turbine-values.yaml` in the above deployment package folder
 
+   > **Note**: Please note the `helm install` command fails if the above required fields are not populated as per the rules called out in `timeseries-wind-turbine-values.yaml` file
+
     ```sh
     INFLUXDB_USERNAME:
     INFLUXDB_PASSWORD:
