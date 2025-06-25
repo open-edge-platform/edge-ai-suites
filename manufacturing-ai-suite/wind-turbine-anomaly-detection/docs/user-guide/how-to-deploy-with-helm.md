@@ -108,6 +108,16 @@ You need to copy your own or existing model into Time Series Analytics Microserv
    > **Note**
    > You need to run the above commands only after performing the Helm install.
 
+## Activate the new UDF deployment package
+
+Run the below command to activate the UDF deployment package.
+
+```bash
+curl -X 'GET' \
+  'http://<HOST_IP>:30002/config?restart=true' \
+  -H 'accept: application/json'
+``
+
 ## Verify the wind turbine anomaly detection results
 
 Please follow the steps per helm deployment at [link](get-started.md#verify-the-wind-turbine-anomaly-detection-results)

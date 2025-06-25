@@ -72,11 +72,15 @@ The `task` section defines the settings for the Kapacitor task and User-Defined 
 
 | Key                     | Description                                                                                     | Example Value                          |
 |-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
-| `fetch_from_model_registry` | Boolean flag to enable fetching UDFs and models from the Model Registry.                     | `true` or `false`                      |
-| `version`               | Specifies the version of the task or model to use.                                             | `"1.0"`                                |
-| `tick_script`           | The name of the TICK script file used for data processing and analytics.                        | `"windturbine_anomaly_detector.tick"`  |
-| `task_name`             | The name of the Kapacitor task.                                                                | `"windturbine_anomaly_detector"`       |
+| `model_registry` | Configuration for the Model Registry microservice.       | See below for details.                      |
 | `udfs`                  | Configuration for the User-Defined Functions (UDFs).                                           | See below for details.                 |
+
+**Model Registry Configuration**:
+
+| Key                     | Description                                                                                     | Example Value                          |
+|-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
+| `enable` | Boolean flag to enable fetching UDFs and models from the Model Registry microservice.       | `true` or `false`                      |
+| `version`               | Specifies the version of the task or model to use.                                             | `"1.0"`                                |
 
 **UDFs Configuration**:
 
@@ -84,7 +88,6 @@ The `udfs` section specifies the details of the UDFs used in the task.
 
 | Key     | Description                                                                 | Example Value                          |
 |---------|-----------------------------------------------------------------------------|----------------------------------------|
-| `type`  | The type of UDF. Currently, only `python` is supported.                     | `"python"`                             |
 | `name`  | The name of the UDF script.                                                 | `"windturbine_anomaly_detector"`       |
 | `models`| The name of the model file used by the UDF.                                 | `"windturbine_anomaly_detector.pkl"`   |
 

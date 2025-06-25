@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "properties": {
+    "env": {
+      "type": "object",
+      "properties": {
+        "INFLUXDB_USERNAME": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9]{5,10}$",
+          "not": { "pattern": "^admin$" },
+          "description": "5-10 alphanumeric characters, cannot be 'admin'."
+        },
+        "INFLUXDB_PASSWORD": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9]{10,}$",
+          "description": "At least 10 alphanumeric, at least one digit."
+        },
+        "VISUALIZER_GRAFANA_USER": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9]{5,10}$",
+          "description": "5-10 alphanumeric, at least one digit."
+        },
+        "VISUALIZER_GRAFANA_PASSWORD": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9]{10,}$",
+          "description": "At least 10 alphanumeric, at least one digit."
+        },
+        "POSTGRES_PASSWORD": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9]{5,10}$",
+          "description": "At least 10 alphanumeric, at least one digit."
+        },
+        "MINIO_SECRET_KEY": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9]{8,16}$",
+          "description": "8-16 alphanumeric, at least one digit."
+        },
+        "MINIO_ACCESS_KEY": {
+          "type": "string",
+	  "pattern": "^[A-Za-z0-9]{8,16}$",
+	  "description": "8-16 alphanumeric, at least one digit."
+        }
+      }
+    }
+  }
+}

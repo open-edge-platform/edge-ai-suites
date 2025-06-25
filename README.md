@@ -19,8 +19,6 @@ These suites simplify the creation of custom AI solutions for specific industrie
 
 [The Media & Entertainment AI Suite](media-and-entertainment-ai-suite) provides libraries and sample applications to accelerate solution development for high-performance, high-quality, live video production helping improve viewer experience.
 
-[The Robotics AI Suite](robotics-ai-suite) provides ready to use samples leveraging AI to help solve common robotics problems such as perception, navigation, simulation, and planning.
-
 
 The Edge AI Suites project hosts a collection of sample applications organized as follows:
 
@@ -37,8 +35,6 @@ The Edge AI Suites project hosts a collection of sample applications organized a
 | Manufacturing AI Suite | [Wind Turbine Anomaly Detection](manufacturing-ai-suite/wind-turbine-anomaly-detection/) | [Link](manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/user-guide/get-started.md) | [Docker deployment](manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/user-guide/get-started.md#deploy-with-docker-compose-single-node) and [Helm deployment](manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/user-guide/how-to-deploy-with-helm.md) |
 | Retail AI Suite | [Automated Self Checkout](https://github.com/intel-retail/automated-self-checkout) | [Link](https://github.com/intel-retail/automated-self-checkout?tab=readme-ov-file#-quickstart) | [Advanced Guide](https://intel-retail.github.io/documentation/use-cases/automated-self-checkout/automated-self-checkout.html) |
 | Retail AI Suite | [Loss Prevention](https://github.com/intel-retail/loss-prevention) | [Link](https://github.com/intel-retail/loss-prevention?tab=readme-ov-file#quickstart) | [Advanced Guide](https://intel-retail.github.io/documentation/use-cases/loss-prevention/loss-prevention.html) |
-| Robotics AI Suite | [ACT Sample](robotics-ai-suite/act-sample) | [Link](robotics-ai-suite/act-sample) | [Tutorial](robotics-ai-suite/act-sample/README.md) |
-| Robotics AI Suite | [ORB-SLAM3 Sample](robotics-ai-suite/orb-slam3-sample) | [Link](robotics-ai-suite/orb-slam3-sample) | [Tutorial](robotics-ai-suite/orb-slam3-sample/README.md) |
 
 Please visit each sample application sub-directory for respective **Getting Started**, **Customization** instructions.
 

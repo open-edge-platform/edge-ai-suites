@@ -86,17 +86,7 @@ You can verify the publishing of OPC-UA alerts by checking the logs of the `Time
 
 ### Configuration
 
-Update the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` file:
-   ```json
-   "alerts": {
-       "opcua": {
-           "opcua_server": "opc.tcp://ia-opcua-server:4840/freeopcua/server/",
-           "namespace": 1,
-           "node_id": 2004
-       }
-   }
-   ```
-### Configuring OPC-UA Alert in TICK Script
+### 1. Configuring OPC-UA Alert in TICK Script
 
 The details below shows the snippet on how to add the OPC-UA alert if not 
 already added, please replace this in place of MQTT alert section at
@@ -111,9 +101,24 @@ data0
         .post('http://localhost:5000/opcua_alerts')
         .timeout(30s)
 ```
-
 > **Note**:
 > - The `noRecoveries()` method suppresses recovery alerts, ensuring only critical alerts are sent.
+> - If doing a Helm-based deployment on a Kubernetes cluster, after making changes to the tick script, copy the UDF deployment package using [step](./how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
+
+### 2. Configuring OPC-UA Alert in config.json
+
+Update the Time Series Analytics Microservice `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` to add the following `opcua` details to the `alerts` section by following the [steps to update config](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice).
+
+   ```json
+   "alerts": {
+       "opcua": {
+           "opcua_server": "opc.tcp://ia-opcua-server:4840/freeopcua/server/",
+           "namespace": 1,
+           "node_id": 2004
+       }
+   }
+   ```
+
 
 ### Subscribing to OPC UA Alerts using Sample OPCUA Subscriber
 
