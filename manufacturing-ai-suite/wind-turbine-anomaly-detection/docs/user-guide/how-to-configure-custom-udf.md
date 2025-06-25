@@ -109,8 +109,6 @@ to the Model Registry microservice.
 > 1. If doing docker based deployment, ensure the Wind Turbine Anomaly Detection sample app is deployed by following [getting started](./get-started.md)
 > 2. If doing Helm based deployment on Kubernetes cluster, ensure the Wind Turbine Anomaly Detection sample app is deployed by following [how to deploy with helm](./how-to-deploy-with-helm.md)
 
-To fetch UDFs and models from the Model Registry, one can dynamically update the configuration of Time Series Analytics microservice using [steps](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice) and set the below parameters.
-
 1. Copy the content of `config.json` from `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/`
 2. Set ``model_registry` key `enable` to `true`.
 3. Specify the `udf_name` and `version` as defined in the Model Registry.
@@ -142,3 +140,5 @@ To fetch UDFs and models from the Model Registry, one can dynamically update the
     }
     '
     ```
+
+For more details, please refer `Time Series Analytics` microservice API docs [here](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice).
