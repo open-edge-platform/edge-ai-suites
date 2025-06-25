@@ -62,18 +62,18 @@
 - OPC-UA ingestion flow:
 
     ```bash
-    helm install ts-wind-turbine-anomaly --set env.TELEGRAF_INPUT_PLUGIN=opcua . -n apps --create-namespace
+    helm install ts-wind-turbine-anomaly --set env.TELEGRAF_INPUT_PLUGIN=opcua . -n ts-wind-turbine-anomaly-app --create-namespace
     ```
 
 - MQTT ingestion flow:
 
     ```bash
-    helm install ts-wind-turbine-anomaly --set env.TELEGRAF_INPUT_PLUGIN=mqtt_consumer . -n apps --create-namespace
+    helm install ts-wind-turbine-anomaly --set env.TELEGRAF_INPUT_PLUGIN=mqtt_consumer . -n ts-wind-turbine-anomaly-app --create-namespace
     ```
 Use the following command to verify if all the application resources got installed w/ their status:
 
 ```bash
-   kubectl get all -n apps
+   kubectl get all -n ts-wind-turbine-anomaly-app
 ```
 
 ## Copy the windturbine_anomaly_detection udf package for helm deployment to Time Series Analytics Microservice
@@ -101,9 +101,9 @@ You need to copy your own or existing model into Time Series Analytics Microserv
     mkdir windturbine_anomaly_detector
     cp -r models tick_scripts udfs windturbine_anomaly_detector/.
 
-    POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
+    POD_NAME=$(kubectl get pods -n ts-wind-turbine-anomaly-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
 
-    kubectl cp windturbine_anomaly_detector $POD_NAME:/tmp/ -n apps
+    kubectl cp windturbine_anomaly_detector $POD_NAME:/tmp/ -n ts-wind-turbine-anomaly-app
     ```
    > **Note**
    > You need to run the above commands only after performing the Helm install.
@@ -125,8 +125,8 @@ Please follow the steps per helm deployment at [link](get-started.md#verify-the-
 ## Uninstall helm charts
 
 ```bash
-helm uninstall ts-wind-turbine-anomaly -n apps
-kubectl get all -n apps # it takes few mins to have all application resources cleaned up
+helm uninstall ts-wind-turbine-anomaly -n ts-wind-turbine-anomaly-app
+kubectl get all -n ts-wind-turbine-anomaly-app # it takes few mins to have all application resources cleaned up
 ```
 
 ## Troubleshooting
@@ -134,7 +134,7 @@ kubectl get all -n apps # it takes few mins to have all application resources cl
 - Check pod details or container logs to catch any failures:
  
   ```bash
-  kubectl get pods -n apps
-  kubectl describe pod <pod_name> -n apps # shows details of the pod
-  kubectl logs -f <pod_name> -n apps # shows logs of the container in the pod
+  kubectl get pods -n ts-wind-turbine-anomaly-app
+  kubectl describe pod <pod_name> -n ts-wind-turbine-anomaly-app # shows details of the pod
+  kubectl logs -f <pod_name> -n ts-wind-turbine-anomaly-app # shows logs of the container in the pod
   ```
