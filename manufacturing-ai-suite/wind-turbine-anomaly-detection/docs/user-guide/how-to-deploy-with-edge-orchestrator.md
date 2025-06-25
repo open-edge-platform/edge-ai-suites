@@ -93,11 +93,11 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
     export KUBECONFIG=~/kubeconfig.yaml
     ```
 
-1. Copy the udf deployment, please refer [here](how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice)
+1. Copy the udf deployment package, please refer [here](how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice)
 
 1. Download the kubeconfig of the cluster of the Edge Node on which the Application has been deployed. Refer [Kubeconfig Download](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/accessing_clusters.html#organize-cluster-access-with-a-kubeconfig-file>).
 
-1. Activate the new package with below command
+1. Activate the new udf deployment package with below command
 
     To activate the default configuration, execute the below command
     ```bash
@@ -106,7 +106,8 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
     -H 'accept: application/json'
     ```
 
-    To activate the custom configuration, update the configuration as required, replace with `<Updated_config>` and execute the below command
+    To activate the custom configuration like OPC-UA/MQTT alerts publishing, update the configuration as required, replace with `<Updated_config>` and execute the below command. Please refer [./how-to-configure-alerts](./how-to-configure-alerts) for more details on OPC-UA/MQTT alerts configuration.
+   
     ```bash
     curl -X 'POST' \
     'http://<HOST_IP>:5000/config' \
