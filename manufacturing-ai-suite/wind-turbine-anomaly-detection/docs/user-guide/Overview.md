@@ -1,4 +1,8 @@
-# Overview
+# Wind Turbine Anomaly Detection
+
+Time Series predictive maintenance use case to detect the anomalous power generation patterns relative to wind speed for the wind turbines.
+
+## Overview
 
 In the Energy Sector, such as wind turbines for power generation, unexpected equipment failures result in costly downtime and operational inefficiencies. Using AI-driven predictive analytics, edge devices can monitor equipment health through sensor data (e.g. power generation and wind speed), detect anomalous trends indicative of wear or failure, and alert operators to schedule maintenance proactively. This enhances productivity, reduces costs, and extends equipment lifespan.
 
@@ -6,20 +10,20 @@ This sample application demonstrates a time series use case by detecting the ano
 
 ## How it works
 
-## High-Level Architecture
+### High-Level Architecture
 
 ![Time Series AI Stack Architecture Diagram](./_images/time-series-ai-stack-architecture.png)
 
 As seen in the architecture diagram, the sample app at a high level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana. The Model Registry microservice helps to achieve the MLOps flow by uploading the **UDF deployment package**(comprises of UDF, TICKScripts, models).
 
-### 1. **Data Simulators/Destinations**:
+#### 1. **Data Simulators/Destinations**:
   We have two data simulators - OPC-UA server and MQTT Publisher which read the data from
   the CSV file and writes the data to the OPC-UA and MQTT input plugins in Telegraf.
   The OPC-UA server and the MQTT broker can act as data destinations for receiving the alerts respectively
 
 ---
 
-### 2. **Generic Time Series AI stack**
+#### 2. **Generic Time Series AI stack**
 
 **Key Features**:
 
@@ -29,7 +33,7 @@ As seen in the architecture diagram, the sample app at a high level comprises of
 - Extensible **Time Series Analytics Microservice** capable of running Deep Learning models by updating its container image, in addition to Machine Learning models accelerated by Intel® Extension for Scikit-learn*.
 - Enables users to ingest their own data via **Telegraf** and implement custom User-Defined Functions (UDFs) in the **Time Series Analytics Microservice** to address specific time series use cases.
 
-#### 2.1 **Data Ingestion**
+##### 2.1 **Data Ingestion**
 
 **Telegraf** is a plugin-driven server agent that collects and reports metrics from various sources. It uses input plugins to ingest data and sends it to **InfluxDB** for storage.
 
@@ -38,7 +42,7 @@ As seen in the architecture diagram, the sample app at a high level comprises of
 
 ---
 
-#### 2.2. **Data Storage**
+##### 2.2. **Data Storage**
 
 **InfluxDB** is a high-performance time series database designed to handle large volumes of write and query operations. It stores both raw ingested data and processed data, which can be organized into different measurements (tables).
 
@@ -49,7 +53,7 @@ As seen in the architecture diagram, the sample app at a high level comprises of
 
 ---
 
-#### 2.3. **Data Processing**
+##### 2.3. **Data Processing**
 
 **Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It supports both streaming and batch processing and integrates seamlessly with **InfluxDB**.
 Time Series Analytics Microservice has the Intel® Extension for Scikit-learn* python package which when used in the User Defined Functions (UDFs) of Kapacitor would improve the performance of the Machine Learning algorithms.
@@ -65,7 +69,7 @@ The Time Series Analytics microservice allows customization by reading the UDF d
 
 ---
 
-#### 2.4. **Data Visualization**
+##### 2.4. **Data Visualization**
 
 **Grafana** provides an intuitive user interface for visualizing time series data stored in **InfluxDB**. It allows users to create custom dashboards and monitor key metrics in real time.
 
