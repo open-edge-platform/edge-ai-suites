@@ -8,7 +8,7 @@
             "grpc"
         ],
         "model_registry": {
-            "url": "http://<HOST_IP_where_MRaaS_is_running>:32002",
+            "url": "10.223.22.63:32002",
             "request_timeout": 300,
             "saved_models_dir": "./mr_models"
         },
@@ -23,10 +23,10 @@
                     "properties": {
                         "classification-properties": {
                             "element": {
-                                "name": "classification",
-                                "format": "element-properties"
-                            }
-                        }
+                               "name": "classification",
+                               "format": "element-properties"
+                             }
+                       }
                     }
                 },
                 "auto_start": false
@@ -40,10 +40,10 @@
                     "type": "object",
                     "properties": {
                         "classification-properties": {
-                            "element": {
+                             "element": {
                                 "name": "classification",
                                 "format": "element-properties"
-                            }
+                              }
                         }
                     }
                 },
@@ -58,17 +58,17 @@
                     "type": "object",
                     "properties": {
                         "classification-properties": {
-                            "element": {
+                             "element": {
                                 "name": "classification",
                                 "format": "element-properties"
-                            }
+                              }
                         }
                     }
                 },
                 "S3_write": {
                     "bucket": "ecgdemo",
                     "folder_prefix": "camera1",
-                    "block": "false"
+                    "block":"false"
                 },
                 "auto_start": false
             },
@@ -81,10 +81,10 @@
                     "type": "object",
                     "properties": {
                         "classification-properties": {
-                            "element": {
+                             "element": {
                                 "name": "classification",
                                 "format": "element-properties"
-                            }
+                              }
                         }
                     }
                 },

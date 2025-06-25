@@ -22,10 +22,10 @@
                     "type": "object",
                     "properties": {
                         "detection-properties": {
-                            "element": {
+                             "element": {
                                 "name": "detection",
                                 "format": "element-properties"
-                            }
+                              }
                         }
                     }
                 },
@@ -35,15 +35,15 @@
                 "name": "pallet_defect_detection",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "detection-properties": {
-                            "element": {
+                             "element": {
                                 "name": "detection",
                                 "format": "element-properties"
-                            }
+                              }
                         }
                     }
                 },
@@ -53,22 +53,22 @@
                 "name": "pallet_defect_detection_s3write",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "detection-properties": {
-                            "element": {
+                             "element": {
                                 "name": "detection",
                                 "format": "element-properties"
-                            }
+                              }
                         }
                     }
                 },
                 "S3_write": {
                     "bucket": "ecgdemo",
                     "folder_prefix": "camera1",
-                    "block": "false"
+                    "block":"false"
                 },
                 "auto_start": false
             },
@@ -76,21 +76,21 @@
                 "name": "pallet_defect_detection_opcua",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "detection-properties": {
-                            "element": {
+                             "element": {
                                 "name": "detection",
                                 "format": "element-properties"
-                            }
+                              }
                         }
                     }
                 },
                 "opcua_publisher": {
-                    "publish_frame": true,
-                    "variable": "ns=3;s=Demo.Static.Scalar.String"
+                    "publish_frame" : true,
+                    "variable" : "ns=3;s=Demo.Static.Scalar.String"
                 },
                 "auto_start": false
             }
