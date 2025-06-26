@@ -47,6 +47,13 @@ volumes:
 
 services:
   ntpserver:
+    environment:
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=  
     image: docker.io/dockurr/chrony:4.6.1
     networks:
       scenescape:
@@ -56,6 +63,13 @@ services:
 
   broker:
     image: docker.io/library/eclipse-mosquitto:2.0.21
+    environment:
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
     ports:
      - "1883:1883"
     volumes:
@@ -82,7 +96,13 @@ services:
     image: docker.io/nodered/node-red:4.0
     user: root
     environment:
-      TZ: America/Los_Angeles
+      - TZ=America/Los_Angeles
+      - http_proxy=http://proxy.example.com:8080
+      - https_proxy=http://proxy.example.com:8080
+      - no_proxy=localhost,127.0.0.1,broker.scenescape.intel.com,influxdb2
+      - HTTP_PROXY=http://proxy.example.com:8080
+      - HTTPS_PROXY=http://proxy.example.com:8080
+      - NO_PROXY=localhost,127.0.0.1,broker.scenescape.intel.com,influxdb2
     ports:
       - "1880:1880"
     networks:
@@ -120,6 +140,12 @@ services:
     ports:
       - "8086:8086"
     environment:
+      http_proxy:
+      https_proxy:
+      no_proxy:
+      HTTP_PROXY:
+      HTTPS_PROXY:
+      NO_PROXY:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME_FILE: /run/secrets/influxdb2-admin-username
       DOCKER_INFLUXDB_INIT_PASSWORD_FILE: /run/secrets/influxdb2-admin-password
@@ -145,6 +171,13 @@ services:
   grafana:
     image: docker.io/grafana/grafana:11.6.0
     user: root
+    environment:
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
     volumes:
       - ./src/grafana/data/dashboards/anthem-intersection.json:/tmp/anthem-intersection.json
       - ./src/grafana/dashboards.yml:/tmp/dashboards.yml
@@ -189,6 +222,12 @@ services:
     - broker
     - ntpserver
     environment:
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
       - ENABLE_RTSP=true
       - ENABLE_WEBRTC=true
       - WEBRTC_SIGNALING_SERVER=ws://localhost:8443
@@ -219,6 +258,12 @@ services:
     networks:
       - scenescape
     environment:
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
       - "DBROOT=/workspace"
       - "EXAMPLEDB=smart-intersection-ri.tar.bz2"
     entrypoint: [
@@ -261,7 +306,13 @@ services:
     ports:
      - "443:443"
     environment:
-     - "DBROOT=/workspace"
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
+      - "DBROOT=/workspace"
     command: >
       webserver
       --dbhost pgserver
@@ -297,6 +348,13 @@ services:
   scene:
     image: docker.io/intel/scenescape-controller:v1.3.0
     init: true
+    environment:
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=    
     networks:
       scenescape:
     depends_on:
