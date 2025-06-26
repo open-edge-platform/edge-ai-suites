@@ -72,11 +72,15 @@ The `task` section defines the settings for the Kapacitor task and User-Defined 
 
 | Key                     | Description                                                                                     | Example Value                          |
 |-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
-| `fetch_from_model_registry` | Boolean flag to enable fetching UDFs and models from the Model Registry.                     | `true` or `false`                      |
-| `version`               | Specifies the version of the task or model to use.                                             | `"1.0"`                                |
-| `tick_script`           | The name of the TICK script file used for data processing and analytics.                        | `"windturbine_anomaly_detector.tick"`  |
-| `task_name`             | The name of the Kapacitor task.                                                                | `"windturbine_anomaly_detector"`       |
+| `model_registry` | Configuration for the Model Registry microservice.       | See below for details.                      |
 | `udfs`                  | Configuration for the User-Defined Functions (UDFs).                                           | See below for details.                 |
+
+**Model Registry Configuration**:
+
+| Key                     | Description                                                                                     | Example Value                          |
+|-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
+| `enable` | Boolean flag to enable fetching UDFs and models from the Model Registry microservice.       | `true` or `false`                      |
+| `version`               | Specifies the version of the task or model to use.                                             | `"1.0"`                                |
 
 **UDFs Configuration**:
 
@@ -84,7 +88,6 @@ The `udfs` section specifies the details of the UDFs used in the task.
 
 | Key     | Description                                                                 | Example Value                          |
 |---------|-----------------------------------------------------------------------------|----------------------------------------|
-| `type`  | The type of UDF. Currently, only `python` is supported.                     | `"python"`                             |
 | `name`  | The name of the UDF script.                                                 | `"windturbine_anomaly_detector"`       |
 | `models`| The name of the model file used by the UDF.                                 | `"windturbine_anomaly_detector.pkl"`   |
 
@@ -93,7 +96,8 @@ The `udfs` section specifies the details of the UDFs used in the task.
 **Alerts Configuration**:
 
 The `alerts` section defines the settings for alerting mechanisms, such as MQTT protocol.
-For OPC-UA configuration, please refer [Publishing OPC-UA alerts](./how-to-configure-alerts.md#publishing-opc-ua-alerts)
+For OPC-UA configuration, please refer [Publishing OPC-UA alerts](./how-to-configure-alerts.md#publishing-opc-ua-alerts).
+Please note to enable only one of the MQTT or OPC-UA alerts.
 
 **MQTT Configuration**:
 
@@ -143,9 +147,12 @@ cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
 
 2. Deploy the sample app, use only one of the options below:
 
-> **NOTE**: The sample app is deployed by pulling the pre-built container images of the sample app 
-> from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY` env
-> variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection`)
+> **NOTE**:
+> 1. The below `make up_opcua_ingestion` or `make up_mqtt_ingestion` fails if the above required fields are not populated
+>    as per the rules called out in `.env` file.
+> 2. The sample app is deployed by pulling the pre-built container images of the sample app 
+>    from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY` env
+>    variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection`)
 
    - **Using OPC-UA ingestion**:
      ```bash
@@ -171,7 +178,9 @@ make status
 
 1. Get into the InfluxDB* container:
 
-   > **Note**: Use `kubectl exec -it <influxdb-pod-name> -- /bin/bash` for the helm deployment
+   > **Note**: Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
+   > where for <namespace> replace with namespace name where the application was deployed and
+   > for <influxdb-pod-name> replace with InfluxDB pod name.
 
    ``` bash
     docker exec -it ia-influxdb bash

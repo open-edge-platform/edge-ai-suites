@@ -1,22 +1,17 @@
 {
-    "config": {
-        "task": {
-            "fetch_from_model_registry": false,
-            "version": "1.0",
-            "tick_script": "windturbine_anomaly_detector.tick",
-            "task_name": "windturbine_anomaly_detector",
-            "udfs": {
-                "type": "python",
-                "name": "windturbine_anomaly_detector",
-                "models": "windturbine_anomaly_detector.pkl"
-            }
-        },
-        "alerts": {
-            "mqtt": {
-                "mqtt_broker_host": "ia-mqtt-broker",
-                "mqtt_broker_port": 1883,
-                "name": "my_mqtt_broker"
-            }
+    "model_registry": {
+        "enable": false,
+        "version": "1.0"
+    },
+    "udfs": {
+        "name": "windturbine_anomaly_detector",
+        "models": "windturbine_anomaly_detector.pkl"
+    },
+    "alerts": {
+        "mqtt": {
+            "mqtt_broker_host": "ia-mqtt-broker",
+            "mqtt_broker_port": 1883,
+            "name": "my_mqtt_broker"
         }
     }
 }

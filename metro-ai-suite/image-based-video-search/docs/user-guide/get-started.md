@@ -23,10 +23,12 @@ By following this guide, you will learn how to:
 
 ## Set up and First Use
 
-1. **Download the Compose File**:
+1. **Clone the Repository and Build Containers**:
     - Create and navigate to directory:
       ```bash
+        git clone https://github.com/open-edge-platform/edge-ai-suites.git
         cd metro-ai-suite/image-based-video-search
+        docker compose build
       ```
 <!--
 a pre-step to prepare models may be needed
@@ -104,8 +106,9 @@ a pre-step to prepare models may be needed
       </details>
 
 3. **Start the Application**:
-    - Run the application using Docker Compose:
+    - Go back to the folder of compose.yml and run the application using Docker Compose:
       ```bash
+      cd ../..
       docker compose up -d
       ```
 

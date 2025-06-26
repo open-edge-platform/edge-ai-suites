@@ -21,13 +21,13 @@ export $(shell sed 's/=.*//' $(ENV_FILE))
 # Build Docker containers
 .PHONY: build
 build:
-	@echo "Building Docker containers...";
+	@echo "Building Docker containers..."
 	$(DOCKER_COMPOSE) build;
 
 # Check if multiple particular variables in .env are assigned with values
 .PHONY: check_env_variables
 check_env_variables:
-	@echo "Checking if username/password in .env are assigned..."
+	@echo "Checking if username/password in .env are matching the rules set..."
 	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD MR_PSQL_PASSWORD MR_MINIO_ACCESS_KEY MR_MINIO_SECRET_KEY"; \
 	for variable_name in $$variables; do \
 		value=$$(grep -E "^$$variable_name=" $(ENV_FILE) | cut -d'=' -f2); \
@@ -35,29 +35,77 @@ check_env_variables:
 			echo "'$$variable_name' in $(ENV_FILE) is unassigned."; \
 			exit 1; \
 		fi; \
-	done;
+		case "$$variable_name" in \
+			INFLUXDB_USERNAME) \
+				if [ "$$value" = "admin" ]; then \
+					echo "INFLUXDB_USERNAME must not be admin."; \
+					exit 1; \
+				fi; \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{5,}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+					echo "INFLUXDB_USERNAME must be at least 5 alphanumeric chars and contain at least one digit."; \
+					exit 1; \
+				fi \
+				;; \
+			INFLUXDB_PASSWORD) \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+					echo "INFLUXDB_PASSWORD must be at least 10 alphanumeric chars and contain at least one digit."; \
+					exit 1; \
+				fi \
+				;; \
+			VISUALIZER_GRAFANA_USER) \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{5,}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+					echo "VISUALIZER_GRAFANA_USER must be at least 5 alphanumeric chars and contain at least one digit."; \
+					exit 1; \
+				fi \
+				;; \
+			VISUALIZER_GRAFANA_PASSWORD) \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+					echo "VISUALIZER_GRAFANA_PASSWORD must be at least 10 alphanumeric chars and contain at least one digit."; \
+					exit 1; \
+				fi \
+				;; \
+			MR_PSQL_PASSWORD) \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{5,10}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+					echo "MR_PSQL_PASSWORD must be 5-10 alphanumeric chars and contain at least one digit."; \
+					exit 1; \
+				fi \
+				;; \
+			MR_MINIO_ACCESS_KEY) \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{5,10}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+					echo "MR_MINIO_ACCESS_KEY must be 5-10 alphanumeric chars and contain at least one digit."; \
+					exit 1; \
+				fi \
+				;; \
+			MR_MINIO_SECRET_KEY) \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{8,16}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+					echo "MR_MINIO_SECRET_KEY must be 8-16 alphanumeric chars and contain at least one digit."; \
+					exit 1; \
+				fi \
+				;; \
+		esac; \
+	done
 
 .PHONY: up_mqtt_ingestion
-up_mqtt_ingestion: down check_env_variables
-	docker compose pull --ignore-pull-failures;
+up_mqtt_ingestion: check_env_variables down
+	docker compose pull --ignore-pull-failures 2>&1 | grep -v 'WARNING:'
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
 	echo "Starting Docker containers..."; \
 	if [ $(INCLUDE) = 'validation' ]; then \
-		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-opcua-server=0 -d ;\
+		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-opcua-server=0 -d; \
 	else \
-		$(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d ;\
+		$(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d; \
 	fi;
 
 # Run Docker containers
 .PHONY: up_opcua_ingestion
-up_opcua_ingestion: down check_env_variables
-	docker compose pull --ignore-pull-failures;
+up_opcua_ingestion: check_env_variables down
+	docker compose pull --ignore-pull-failures 2>&1 | grep -v 'WARNING:'
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	echo "Starting Docker containers..."; \
 	if [ $(INCLUDE) = 'validation' ]; then \
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-mqtt-publisher=0 -d ;\
 	else \
-		$(DOCKER_COMPOSE) up --scale ia-mqtt-publisher=0 -d ;\
+		$(DOCKER_COMPOSE) up --scale ia-mqtt-publisher=0 -d; \
 	fi;
 
 
@@ -65,10 +113,10 @@ up_opcua_ingestion: down check_env_variables
 .PHONY: status
 status:
 	@echo "Status of the deployed containers..."; \
-	docker ps -a --filter "name=^ia-" --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"; \
+	docker ps -a --filter "name=^ia-" --filter "name=mr_" --filter "name=model_" --filter "name=wind-turbine" --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"; \
 	echo "Parsing the logs of all containers to catch any error messages..."; \
-	sleep 10; \
-	containers=$$(docker ps -a --filter "name=^ia-" --format "{{.Names}}"); \
+	sleep 20; \
+	containers=$$(docker ps -a --filter "name=^ia-" --filter "name=mr_" --filter "name=model_" --filter "name=wind-turbine" --format "{{.Names}}"); \
 	failure_cont_flag=0; \
 	for container in $$containers; do \
 		errors=$$(docker logs --tail 5 $$container 2>&1 | grep -i "error"); \
@@ -95,19 +143,17 @@ status:
 		echo ""; \
 	fi;
 	
-# Stop Docker containers
+# Removes docker compose containers and volumes
 .PHONY: down
 down:
 	@echo "Stopping Docker containers...";
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE)  down -v
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) down -v --remove-orphans
 
-# Remove all stopped containers and unused images
-.PHONY: clean
-clean:
-	@echo "Cleaning up unused Docker resources..."
-	docker system prune -f
-
-# Push the docker images to docker registry
+# Push the docker images to docker registry, ensure to configure DOCKER_REGISTRY in .env
+# and have logged into that. Applies mainly when one is dealing with internal docker registry.
+# If you are using docker hub, ensure to have logged in with `docker login` command
+# before running this command.
+.PHONY: push_images
 push_images: build
 	@echo "Pushing the images to docker registry"
 	docker compose -f $(DOCKER_COMPOSE_FILE) push

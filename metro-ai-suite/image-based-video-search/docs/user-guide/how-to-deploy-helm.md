@@ -1,21 +1,25 @@
 # Deploy with Helm
 
-Use Helm to deploy Image-Based Video Search to a Kubernetes cluster. This guide will help you:
+Use Helm to deploy Image-Based Video Search to a Kubernetes cluster. This guide
+will help you:
+
 - Add the Helm chart repository.
 - Configure the Helm chart to match your deployment needs.
 - Deploy and verify the application.
 
-Helm simplifies Kubernetes deployments by streamlining configurations and enabling easy scaling and updates. For more details, see [Helm Documentation](https://helm.sh/docs/).
-
+Helm simplifies Kubernetes deployments by streamlining configurations and
+enabling easy scaling and updates. For more details, see
+[Helm Documentation](https://helm.sh/docs/).
 
 ## Prerequisites
 
 Before You Begin, ensure the following:
 
-- **System Requirements**: Verify that your system meets the [minimum requirements](./system-requirements.md).
+- **System Requirements**: Verify that your system meets the
+  [minimum requirements](./system-requirements.md).
 - **Tools Installed**: Install the required tools:
-    - Kubernetes CLI (kubectl)
-    - Helm 3 or later
+  - Kubernetes CLI (kubectl)
+  - Helm 3 or later
 
 ## Steps to Deploy
 
@@ -26,8 +30,8 @@ helm upgrade \
     -n ibvs
 ```
 
-Some containers in the deployment requires network access.
-If you are in a proxy environment, pass the proxy environment variables as follows:
+Some containers in the deployment requires network access. If you are in a proxy
+environment, pass the proxy environment variables as follows:
 
 ```bash
 # Install the Image-Based Video Search chart in the ibvs namespace
@@ -73,7 +77,7 @@ helm uninstall -n ibvs ibvs
      helm repo list
      ```
 
-2. **Pods Not Running**:
+1. **Pods Not Running**:
 
    - Review pod logs:
 
@@ -81,14 +85,13 @@ helm uninstall -n ibvs ibvs
      kubectl logs {{pod-name}} -n {{namespace}}
      ```
 
-3. **Service Unreachable**:
+1. **Service Unreachable**:
 
    - Confirm the service configuration:
 
      ```bash
      kubectl get svc -n {{namespace}}
      ```
-
 
 ## Supporting Resources
 
