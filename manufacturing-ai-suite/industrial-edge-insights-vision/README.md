@@ -7,17 +7,20 @@ You only need to update the install.sh to get the required artifcats downloaded,
 ## Get Started
 ### Directory structure
 
-    application_name/
-        configs/
-            pipeline-server.json
-        resources/
-            models/
-            videos/
-        payload.json
+    apps/
+        application_name/
+            configs/
+                pipeline-server-config.json
+            payload.json
+            install.sh
+    resources/
+        models/
+        videos/
     
     .env_app_name
     docker-compose.yml
     
+    install.sh
     sample_list.sh
     sample_start.sh
     sample_status.sh
@@ -25,7 +28,7 @@ You only need to update the install.sh to get the required artifcats downloaded,
 
  - **configs**: directory containing dlstreamer pipeline server configuration files. To learn about it click here.
 
- - **resources**: directory containing artificacts such as models, videos etc. It can be populated by install script. Users can modify it as per their usecase requriements.
+ - **resources**: This directory and its subdirs are created only after installation is done by running `install.sh` for that application. It contains artificacts such as models, videos etc. It can be populated by install script. Users can modify it as per their usecase requriements.
 
  - **payload.json**: A JSON array file containing one or more pipeline requests. Each JSON inside the array has two keys- `pipeline` and `payload` that refers to the pipeline it belongs to and the payload used to launch an instance of the pipeline. To learn more click here. 
 
