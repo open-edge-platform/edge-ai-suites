@@ -1,0 +1,7 @@
+resources/
+*.bin
+*.xml
+*.avi
+*.mp4
+*.h264
+.env
