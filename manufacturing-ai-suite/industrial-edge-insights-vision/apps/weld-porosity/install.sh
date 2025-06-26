@@ -20,7 +20,7 @@ download_artifacts() {
         return 1
     fi
     # Download model artifacts if not already present
-    LOCAL_MODEL_DIR="$SCRIPT_DIR/../../resources/$app_name/models"
+    LOCAL_MODEL_DIR="$SCRIPT_DIR/../../resources/$app_name/models/weld-porosity"
     if [ ! -d $LOCAL_MODEL_DIR ]; then
         # create the models directory if it does not exist
         
