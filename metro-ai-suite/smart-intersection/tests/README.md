@@ -19,13 +19,7 @@
 
 ## Installation
 
-First, ensure that you have the required version of Python installed on your system. You can check your Python version by running:
-
-```bash
-python3 --version
-```
-
-Next, create virtual environment on your system:
+Create virtual environment on your system:
 
 ```bash
 python3 -m venv venv
