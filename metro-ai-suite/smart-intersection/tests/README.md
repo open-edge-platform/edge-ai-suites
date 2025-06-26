@@ -6,9 +6,10 @@
 
 # Testing with Pytest
 
-- [Testing with Pytest](#unit-testing-with-pytest)
+- [Testing with Pytest](#testing-with-pytest)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
+    - [Running tests](#running-tests)
 
 ## Prerequisites
 
@@ -41,4 +42,12 @@ Install the required packages using pip.
 python3 -m pip install -r requirements.txt
 ```
 
-Now you are ready to run tests on your system.
+Now you are ready to run tests on your system. 
+
+## Running tests
+
+Use make file to run all tests or pytests to run the one you choose.
+
+```bash
+make test
+```
