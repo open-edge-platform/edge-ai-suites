@@ -26,8 +26,8 @@ init() {
         echo "Running sample app: $SAMPLE_APP"
     fi
     # check if SAMPLE_APP directory exists
-    if [[ ! -d "$SAMPLE_APP" ]]; then
-        err "SAMPLE_APP directory $SAMPLE_APP does not exist."
+    if [[ ! -d "apps/$SAMPLE_APP" ]]; then
+        err "SAMPLE_APP directory apps/$SAMPLE_APP does not exist."
         exit 1
     fi
 
@@ -120,7 +120,7 @@ main() {
     else
         # initialize the compose based sample app, load env
         init
-        APP_DIR="$SCRIPT_DIR/$SAMPLE_APP"
+        APP_DIR="$SCRIPT_DIR/apps/$SAMPLE_APP"
     fi
     # set permissions for the sample_*.sh scripts in current directory
     for script in "$SCRIPT_DIR"/sample_*.sh; do
