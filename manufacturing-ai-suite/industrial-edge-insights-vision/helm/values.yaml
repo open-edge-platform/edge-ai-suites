@@ -4,7 +4,7 @@ namespace: apps
 DOCKER_REGISTRY: ''
 DOCKER_USERNAME: ''
 DOCKER_PASSWORD: ''
-imagePullPolicy: Always
+imagePullPolicy: IfNotPresent
 storageClassName: manual
 num_video_instances: 1
 env:
@@ -39,6 +39,10 @@ env:
   OPCUA_SERVER_PORT:
   OPCUA_SERVER_USERNAME:
   OPCUA_SERVER_PASSWORD:
+  MR_URL: <PROTOCOL>://<MR_IP>:32002
+  MR_SAVED_MODELS_DIR: ./mr_models
+  MR_REQUEST_TIMEOUT: 300
+  MR_VERIFY_CERT:
   SAMPLE_APP: pallet-defect-detection
 privileged_access_required: false
 gpu:
