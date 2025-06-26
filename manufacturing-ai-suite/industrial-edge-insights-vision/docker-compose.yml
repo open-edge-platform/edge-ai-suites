@@ -3,7 +3,7 @@ services:
     depends_on:
       model_registry:
         condition: service_healthy
-    image: ${DOCKER_REGISTRY}intel/dlstreamer-pipeline-server:3.0.0
+    image: ${DOCKER_REGISTRY}intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
     container_name: dlstreamer-pipeline-server
     hostname: dlstreamer-pipeline-server
     networks:
@@ -38,6 +38,11 @@ services:
       OPCUA_SERVER_PORT: ${OPCUA_SERVER_PORT}
       OPCUA_SERVER_USERNAME: ${OPCUA_SERVER_USERNAME}
       OPCUA_SERVER_PASSWORD: ${OPCUA_SERVER_PASSWORD}
+      # Model Registry Microservice
+      MR_URL: ${MR_URL}
+      MR_SAVED_MODELS_DIR: ${MR_SAVED_MODELS_DIR}
+      MR_REQUEST_TIMEOUT: ${MR_REQUEST_TIMEOUT}
+      MR_VERIFY_CERT: ${MR_VERIFY_CERT}
     volumes:
     - vol_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
     - /var/tmp:/var/tmp

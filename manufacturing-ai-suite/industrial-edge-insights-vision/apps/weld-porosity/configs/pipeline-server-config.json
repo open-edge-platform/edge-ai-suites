@@ -1,17 +1,5 @@
 {
     "config": {
-        "logging": {
-            "C_LOG_LEVEL": "INFO",
-            "PY_LOG_LEVEL": "INFO"
-        },
-        "cert_type": [
-            "grpc"
-        ],
-        "model_registry": {
-            "url": "http://<HOST_IP_where_MRaaS_is_running>:32002",
-            "request_timeout": 300,
-            "saved_models_dir": "./mr_models"
-        },
         "pipelines": [
             {
                 "name": "weld_porosity_classification_mlops",
