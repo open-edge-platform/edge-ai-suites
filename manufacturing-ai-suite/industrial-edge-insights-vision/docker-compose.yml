@@ -41,8 +41,8 @@ services:
     volumes:
     - vol_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
     - /var/tmp:/var/tmp
-    - ./${SAMPLE_APP}/resources/:/home/pipeline-server/resources/
-    - ./${SAMPLE_APP}/configs/pipeline-server-config.json:/home/pipeline-server/config.json
+    - ./apps/${SAMPLE_APP}/resources/:/home/pipeline-server/resources/
+    - ./apps/${SAMPLE_APP}/configs/pipeline-server-config.json:/home/pipeline-server/config.json
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
       # USB camera devices
@@ -199,7 +199,7 @@ services:
     ports:
       - "${PROMETHEUS_PORT}:9090"
     volumes:
-      - ./${SAMPLE_APP}/configs/open_telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./apps/${SAMPLE_APP}/configs/open_telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - mraas
 
@@ -214,7 +214,7 @@ services:
       - "4317:4317"  # OTLP gRPC receiver (default for metrics)
       - "4318:4318"  # Prometheus scrape target
     volumes:
-      - ./${SAMPLE_APP}/configs/open_telemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml  # OpenTelemetry Collector config
+      - ./apps/${SAMPLE_APP}/configs/open_telemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml  # OpenTelemetry Collector config
     restart: always
     networks:
       - mraas
