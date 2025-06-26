@@ -33,9 +33,9 @@ init() {
     else
         echo "Running sample app: $SAMPLE_APP"
     fi
-    # check if SAMPLE_APP directory exists
-    if [[ ! -d "$SAMPLE_APP" ]]; then
-        err "SAMPLE_APP directory $SAMPLE_APP does not exist."
+    # check if APP_DIR directory exists
+    if [[ ! -d "$APP_DIR" ]]; then
+        err "APP_DIR directory $APP_DIR does not exist."
         exit 1
     fi
 
@@ -43,7 +43,7 @@ init() {
 
 load_payload() {
     # Load all pipelines payload
-    PAYLOAD_FILE="$SAMPLE_APP/payload.json"
+    PAYLOAD_FILE="$APP_DIR/payload.json"
     if [[ -f "$PAYLOAD_FILE" ]]; then
         echo "Loading payload from $PAYLOAD_FILE"
         if command -v jq &>/dev/null; then

@@ -24,10 +24,22 @@ init() {
         exit 1
     else
         echo "Running sample app: $SAMPLE_APP"
+        # update APP_DIR in $SCRIPT_DIR/.env to $SAMPLE_APP
+        if grep -q "^APP_DIR=" "$SCRIPT_DIR/.env"; then
+            sed -i "s|^APP_DIR=.*|APP_DIR=$SCRIPT_DIR/apps/$SAMPLE_APP|" "$SCRIPT_DIR/.env"
+        else
+            # add APP_DIR to .env file in new line
+            if [[ -s "$SCRIPT_DIR/.env" && $(tail -c1 "$SCRIPT_DIR/.env" | wc -l) -eq 0 ]]; then
+                # Add a newline first
+                echo "" >>"$SCRIPT_DIR/.env"
+            fi
+            echo "APP_DIR=$SCRIPT_DIR/apps/$SAMPLE_APP" >>"$SCRIPT_DIR/.env"
+        fi
+        APP_DIR="$SCRIPT_DIR/apps/$SAMPLE_APP"
     fi
     # check if SAMPLE_APP directory exists
-    if [[ ! -d "apps/$SAMPLE_APP" ]]; then
-        err "SAMPLE_APP directory apps/$SAMPLE_APP does not exist."
+    if [[ ! -d "$APP_DIR" ]]; then
+        err "SAMPLE_APP directory $APP_DIR does not exist."
         exit 1
     fi
 
@@ -79,6 +91,18 @@ update_env_file() {
             echo "Variable $var not found in YAML"
         fi
     done
+
+    # update APP_DIR in $SCRIPT_DIR/.env to $SAMPLE_APP
+    if grep -q "^APP_DIR=" "$SCRIPT_DIR/.env"; then
+        sed -i "s|^APP_DIR=.*|APP_DIR=$SCRIPT_DIR/helm/apps/$SAMPLE_APP|" "$SCRIPT_DIR/.env"
+    else
+        # add APP_DIR to .env file in new line
+        if [[ -s "$SCRIPT_DIR/.env" && $(tail -c1 "$SCRIPT_DIR/.env" | wc -l) -eq 0 ]]; then
+            # Add a newline first
+            echo "" >>"$SCRIPT_DIR/.env"
+        fi
+        echo "APP_DIR=$SCRIPT_DIR/helm/apps/$SAMPLE_APP" >>"$SCRIPT_DIR/.env"
+    fi
     echo "Environment variables updated in $SCRIPT_DIR/.env"
 
 }
