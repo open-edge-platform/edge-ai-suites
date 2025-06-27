@@ -16,70 +16,64 @@ def run_command(cmd):
   out, err = proc.communicate()
   return out.decode(), err.decode(), proc.returncode
 
-def perform_login(driver, url, selector_type1, selector_value1, selector_type2, selector_value2, selector_type3, selector_value3, username, password):
+def perform_login(driver, url, username_selector, username_selector_value, password_selector, password_selector_value, login_selector, login_selector_value, username, password):
   """
   Performs login action.
 
   Args:
     driver: WebDriver instance.
     url: URL of the login page.
-    selector_type1: Type of selector for username input (e.g., By.CSS_SELECTOR).
-    selector_value1: Selector value for username input.
-    selector_type2: Type of selector for password input.
-    selector_value2: Selector value for password input.
-    selector_type3: Type of selector for login button.
-    selector_value3: Selector value for login button.
+    username_selector: Type of selector for the username input (e.g., By.CSS_SELECTOR).
+    username_selector_value: Selector value for the username input.
+    password_selector: Type of selector for the password input (e.g., By.CSS_SELECTOR).
+    password_selector_value: Selector value for the password input.
+    login_selector: Type of selector for the login button (e.g., By.CSS_SELECTOR).
+    login_selector_value: Selector value for the login button.
     username: Username string.
     password: Password string.
   """
   driver.get(url)  # Load login page
 
   try:
-    # Wait for the 'Username' input to be present
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((selector_type1, selector_value1)))
+    # Wait for the username selector to be present
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((username_selector, username_selector_value)))
   except TimeoutException:
-    assert False, 'Input field not found within 10 seconds'
+    assert False, 'username selector not found within 10 seconds'
 
-  username_input = driver.find_element(selector_type1, selector_value1)
-  password_input = driver.find_element(selector_type2, selector_value2)
-  login_button = driver.find_element(selector_type3, selector_value3)
+  username_input = driver.find_element(username_selector, username_selector_value)
+  password_input = driver.find_element(password_selector, password_selector_value)
+  login_button = driver.find_element(login_selector, login_selector_value)
 
   username_input.send_keys(username)
   password_input.send_keys(password)
   login_button.click()  # Try to log in
 
+def read_from_file(file_path):
+  """Read content from a specified file."""
+  try:
+    with open(file_path, 'r') as file:
+      content = file.read().strip()
+    return content
+  except FileNotFoundError:
+    print(f"Error: The file '{file_path}' was not found.")
+  except IOError:
+    print(f"Error: Could not read the file '{file_path}'.")
+  return None
+
 def get_password_from_supass_file():
   """Read the password from a supass file."""
-  # Path to the supass password file
   file_path = os.path.join('src', 'secrets', 'supass')
-  
-  # Read the password from the file
-  with open(file_path, 'r') as file:
-    password = file.read().strip()
-    
-  return password
+  return read_from_file(file_path)
 
 def get_username_from_influxdb2_admin_username_file():
   """Read the username from a influxdb2-admin-username file."""
-  # Path to the file with influxdb2-admin-username
   file_path = os.path.join('src', 'secrets', 'influxdb2', 'influxdb2-admin-username')
-
-  # Read the username from the file
-  with open(file_path, 'r') as file:
-    username = file.read().strip()
-
-  return username
+  return read_from_file(file_path)
 
 def get_password_from_influxdb2_admin_password_file():
   """Read the password from a influxdb2-admin-password file."""
-  # Path to the file with influxdb2-admin-password
   file_path = os.path.join('src', 'secrets', 'influxdb2', 'influxdb2-admin-password')
-
-  # Read the password from the file
-  with open(file_path, 'r') as file:
-    password = file.read().strip()
-
-  return password
+  return read_from_file(file_path)
 
 def suppress_insecure_request_warning(func):
   """Decorator to suppress InsecureRequestWarning during test execution."""
