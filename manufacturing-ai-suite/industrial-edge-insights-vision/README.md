@@ -7,13 +7,20 @@ By adding minimal application specific pre-requisites, the boiler plate code thi
 Both compose based as well as helm based deployments are supported by this application template.
 
 ## Description
+
+### Architecture
+It consists of the following microservices: DL Streamer Pipeline Server, Model Registry Microservice(MRaaS), MediaMTX server, Coturn server, Open Telemetry Collector, Prometheus, Postgres and Minio.
+
+
+<div style="text-align: center;">
+    <img src=defect-detection-arch-diagram.png width=800>
+</div>
+More details to be added..
+
 ### Directory structure
 
 Following directory structure consisting of generic deployment code as well as pre-baked sample applications are provided.
 
-<div style="text-align: center;">
-    <img src=application_arch.png width=600>
-</div>
 
 <br>
 
