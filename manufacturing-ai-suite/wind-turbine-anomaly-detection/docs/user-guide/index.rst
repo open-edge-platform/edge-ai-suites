@@ -1,3 +1,6 @@
+Wind Turbine Anomaly Detection
+==============================
+
 .. toctree::
    :hidden:
 
@@ -21,6 +24,7 @@
    how-to-configure-custom-udf
    how-to-configure-alerts
    how-to-enable-system-metrics
+   how-to-update-config
 
 .. toctree::
    :caption: Release Notes

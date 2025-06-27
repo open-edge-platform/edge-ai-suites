@@ -60,18 +60,18 @@ To subscribe to MQTT topics in a Helm deployment, execute the following command:
 
 Identify the MQTT broker pod name by running:
 ```sh
-kubectl get pods -n apps | grep mqtt-broker
+kubectl get pods -n ts-wind-turbine-anomaly-app | grep mqtt-broker
 ```
 
 Use the pod name from the output of the above command to subscribe to all topics:
 ```sh
-kubectl exec -it -n apps <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t '#' -p 1883
+kubectl exec -it -n ts-wind-turbine-anomaly-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t '#' -p 1883
 ```
 
 To subscribe to the `alerts/wind_turbine` topic, use the following command:
 
 ```sh
-kubectl exec -it -n apps <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
+kubectl exec -it -n ts-wind-turbine-anomaly-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
 ```
 
 ## Publishing OPC-UA Alerts
@@ -86,17 +86,7 @@ You can verify the publishing of OPC-UA alerts by checking the logs of the `Time
 
 ### Configuration
 
-Update the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` file:
-   ```json
-   "alerts": {
-       "opcua": {
-           "opcua_server": "opc.tcp://ia-opcua-server:4840/freeopcua/server/",
-           "namespace": 1,
-           "node_id": 2004
-       }
-   }
-   ```
-### Configuring OPC-UA Alert in TICK Script
+### 1. Configuring OPC-UA Alert in TICK Script
 
 The details below shows the snippet on how to add the OPC-UA alert if not 
 already added, please replace this in place of MQTT alert section at
@@ -111,33 +101,40 @@ data0
         .post('http://localhost:5000/opcua_alerts')
         .timeout(30s)
 ```
-
 > **Note**:
 > - The `noRecoveries()` method suppresses recovery alerts, ensuring only critical alerts are sent.
+> - If doing a Helm-based deployment on a Kubernetes cluster, after making changes to the tick script, copy the UDF deployment package using [step](./how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
+
+### 2. Configuring OPC-UA Alert in config.json
+
+Update the Time Series Analytics Microservice `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` to add the following `opcua` details to the `alerts` section by following the [steps to update config](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice).
+
+   ```json
+   "alerts": {
+       "opcua": {
+           "opcua_server": "opc.tcp://ia-opcua-server:4840/freeopcua/server/",
+           "namespace": 1,
+           "node_id": 2004
+       }
+   }
+   ```
+
 
 ### Subscribing to OPC UA Alerts using Sample OPCUA Subscriber
 
-1. Expose the port `4840` of `ia-opcua-server` service in `docker-compose.yml` under `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml#L183` as below
-
-    ```yaml
-    ia-opcua-server:
-    ...
-    ports:
-    - "4840:4840"
-    ```
-
-2. Deploy the Sample App using below commands
+1. Deploy the Sample App using below commands
     ```bash
     cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
     make up_opcua_ingestion
     ```
 
-3. Install python packages `asyncio` and `asyncua` to run the sample opc ua subscriber 
+2. Install python packages `asyncio` and `asyncua` to run the sample opc ua subscriber 
     ```bash
     pip install asyncio asyncua
     ```
 
-4. Run the following sample OPC UA subscriber by updating the `<IP-Address of OPCUA Server>` to read the alerts published to server on tag `ns=1;i=2004` from Time Series Analytics Microservice.
+3. Run the following sample OPC UA subscriber by updating the `<IP-Address of OPCUA Server>` to read the alerts published to server on tag `ns=1;i=2004` from Time Series Analytics Microservice.
+
     ```python
     import asyncio
     from asyncua import Client, Node
@@ -145,7 +142,7 @@ data0
         def datachange_notification(self, node: Node, val, data):
             print(val)
     async def main():
-        client = Client(url="opc.tcp://<IP-Address of OPCUA Server>:4840/freeopcua/server/")
+        client = Client(url="opc.tcp://<IP-Address of OPCUA Server>:30003/freeopcua/server/")
         async with client:
             handler = SubscriptionHandler()
             subscription = await client.create_subscription(50, handler)

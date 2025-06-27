@@ -11,11 +11,14 @@ metadata:
   name: {{ .Values.config.opcuaserver.name }}
   namespace: {{ .Values.namespace }}
 spec:
+  type: NodePort
   selector:
     app: ia-opcua-server
   ports:
     - name: opcua-port
-      port: {{ .Values.config.opcuaserver.int.pub_port }}
+      port: {{ .Values.config.opcuaserver.int.port }}
+      targetPort: {{ .Values.config.opcuaserver.int.port }}
+      nodePort: {{ .Values.config.opcuaserver.ext.port }}
 ---
 
 apiVersion: apps/v1
@@ -41,7 +44,7 @@ spec:
       {{- end }}
       containers:
       - name: ia-opcua-server
-        image: {{ .Values.DOCKER_REGISTRY }}intel/ia-opcua-server:1.0.0
+        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.opcua_server_image }}{{ if .Values.images.image_suffix }}-{{ .Values.images.image_suffix }}{{ end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true

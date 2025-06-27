@@ -30,7 +30,7 @@ In this tutorial, you will learn how to use your own dataset for searching.
 
 1.  Deploy the application
 
-2.  Go to the web UI, fill in `file dirctory on host` with the absolute path to your dataset directory, and click `UpdateDB`
+2.  Go to the web UI, fill in `file directory on host` with the absolute path to your dataset directory, and click `UpdateDB`
 
 ### Summary
 
@@ -42,14 +42,14 @@ In this tutorial, you will learn how to ingest data along with metadata to suppo
 
 ### Learning Objectives
 
--   By the end of this tutorial, you will be able to ingest data with metadata by providing matched metadata json file for each media data file in the `file dirctory on host` used for updating DB
+-   By the end of this tutorial, you will be able to ingest data with metadata by providing matched metadata json file for each media data file in the `file directory on host` used for updating DB
 -   By the end of this tutorial, you will be able to manually ingest single data file with specified metadata using dataprep microservice API
 
 -   By the end of this tutorial, you will be able to conduct filtered search on web UI
 
 ### Step 1: Prepare metadata json file
 
-1.  When processing data files in `file dirctory on host` (for simplicity, noted as `<host_data_path>` in the following steps), the dataprep microservice automatically looks for a json file in `<host_data_path>/meta` with the same basename with the file that is being processing. For example, when processing file ``<host_data_path>/image123.png`, it looks for a `<host_data_path>/meta/image123.json`. If found, the fields in the json file would be recorded into the vector DB along with the media file as its metadata.
+1.  When processing data files in `file directory on host` (for simplicity, noted as `<host_data_path>` in the following steps), the dataprep microservice automatically looks for a json file in `<host_data_path>/meta` with the same basename with the file that is being processing. For example, when processing file ``<host_data_path>/image123.png`, it looks for a `<host_data_path>/meta/image123.json`. If found, the fields in the json file would be recorded into the vector DB along with the media file as its metadata.
 
 2.  In the web UI, two example fields are supported: `camera` and `timestamp`. An example json is like:
 
