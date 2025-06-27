@@ -23,7 +23,7 @@ download_artifacts() {
     LOCAL_MODEL_DIR="$SCRIPT_DIR/../../resources/$app_name/models/pallet-defect-detection"
     if [ ! -d $LOCAL_MODEL_DIR ]; then
         # create the models directory if it does not exist
-        
+
         if ! mkdir -p $LOCAL_MODEL_DIR; then
             err "Failed to create models directory for $app_name."
             return 1
@@ -32,13 +32,13 @@ download_artifacts() {
         echo "Model XML: $MODEL_XML_URL"
         echo "Model BIN: $MODEL_BIN_URL"
         # Download model XML and BIN files
-        if curl -L "$MODEL_XML_URL" -o "$LOCAL_MODEL_DIR/model.xml" ; then
+        if curl -L "$MODEL_XML_URL" -o "$LOCAL_MODEL_DIR/model.xml"; then
             echo "Model XML for $app_name downloaded successfully."
         else
             err "Failed to download model XML for $app_name."
             return 1
         fi
-        if curl -L "$MODEL_BIN_URL" -o "$LOCAL_MODEL_DIR/model.bin" ; then
+        if curl -L "$MODEL_BIN_URL" -o "$LOCAL_MODEL_DIR/model.bin"; then
             echo "Model BIN for $app_name downloaded successfully."
         else
             err "Failed to download model BIN for $app_name."
@@ -57,7 +57,7 @@ download_artifacts() {
             return 1
         fi
         echo "Downloading video artifacts for $app_name..."
-        if ! wget -q -O "$LOCAL_VIDEO_DIR/$VIDEO_FILENAME" "$VIDEO_URL"; then
+        if ! curl -L "$VIDEO_URL" -o "$LOCAL_VIDEO_DIR/$(basename $VIDEO_URL)"; then
             err "Failed to download video for $app_name."
             return 1
         fi
