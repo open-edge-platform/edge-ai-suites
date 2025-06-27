@@ -1,8 +1,8 @@
 # Industrial Edge Insights Vision
-Industrial Edge Insights Vision is a template for users to create sample applications intended for industrial use cases in the edge.
-Users can refer to one of many sample built from the template as a reference.
+Industrial Edge Insights Vision is a template for users to create sample applications intended for industrial use cases on the edge.
+Users can refer to one of many samples built from the template as a reference.
 
-By adding mimimal application specific pre-requisites, the boiler plate code this template provides can help you successfully deploy your application in the edge. 
+By adding minimal application specific pre-requisites, the boiler plate code this template provides can help you successfully deploy your application on the edge. 
 
 Both compose based as well as helm based deployments are supported by this application template.
 
@@ -56,7 +56,7 @@ Following directory structure consisting of generic deployment code as well as p
     - *configs/*: 
             associated container configurations suchas DLStreamer Pipeline Server configuration, etc.
     - *install.sh*: 
-            pre-requisite installer to setup envs, download artificats such as models/videos to `resources/` directory.sets It also sets executable permissions for scripts.
+            pre-requisite installer to setup envs, download artificats such as models/videos to `resources/` directory. It also sets executable permissions for scripts.
     - *payload.json*: 
             A JSON array file containing one or more request(s) to be sent to DLStreamer Pipeline Server to launch GStreamer pipeline(s). The payload data is associated with the *configs/pipeline-server-config.json* provided for that application. Each JSON inside the array has two keys- `pipeline` and `payload` that refers to the pipeline it belongs to and the payload used to launch an instance of the pipeline. 
 
@@ -82,7 +82,7 @@ The shell scripts starting with `sample_*.sh` eases interaction with DLStreamer 
 General instructions for docker based deployment is as follows.
 
 1. Prepare the `.env` file for compose to source during deployment. This chosen env file defines the application you would be running.
-2. Run `install.sh` to setup pre-requisites, download artifacts,etc.
+2. Run `install.sh` to setup pre-requisites, download artifacts, etc.
 3. Bring the services up with `docker compose up`.
 4. Run `sample_start.sh` to start pipeline. This sends curl request with pre-defined payload to the running DLStreamer Pipeline Server.
 5. Run `sample_status.sh` or `sample_list.sh` to monitor pipeline status or list available pipelines.
