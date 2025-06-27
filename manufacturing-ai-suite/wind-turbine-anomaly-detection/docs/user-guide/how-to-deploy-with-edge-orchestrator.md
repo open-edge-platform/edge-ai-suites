@@ -121,8 +121,8 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
 
     i. Get the `internal-ip` of edge node to access the node using the below command 
 
-        ```bash
-            kubectl get node -o wide
-        ``` 
+    ```bash
+    kubectl get node -o wide
+    ``` 
     ii. To check the results in the Grafana dashboard at port 30001, please follow instructions for helm     
        deployment at [link](get-started.md#verify-the-wind-turbine-anomaly-detection-results)
