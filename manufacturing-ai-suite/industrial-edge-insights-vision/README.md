@@ -8,7 +8,14 @@ Both compose based as well as helm based deployments are supported by this appli
 
 ## Description
 ### Directory structure
-Following directory structure consisting of generic deployment code as well as pre-baked sample applications are provided
+
+Following directory structure consisting of generic deployment code as well as pre-baked sample applications are provided.
+
+<div style="text-align: center;">
+    <img src=application_arch.png width=600>
+</div>
+
+<br>
 
     apps/
         application_name/            
