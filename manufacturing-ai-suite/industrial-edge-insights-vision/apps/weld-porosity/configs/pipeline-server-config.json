@@ -23,7 +23,7 @@
                 "name": "weld_porosity_classification",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
