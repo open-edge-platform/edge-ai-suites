@@ -26,8 +26,9 @@ Following directory structure consisting of generic deployment code as well as p
         values.yaml
 
     resources/
-        models/
-        videos/
+        application_name/
+            models/
+            videos/
     
     .env_app_name
     docker-compose.yml
@@ -38,9 +39,9 @@ Following directory structure consisting of generic deployment code as well as p
     sample_status.sh
     sample_stop.sh
 
- - **apps**: containing application specific pre-requisite installers, configurations and runtime data. Users can follow the same structure to create their own application. The data from here is user for docker based deployments. More on the them [here]()
+ - **apps**: containing application specific pre-requisite installers, configurations and runtime data. Users can follow the same structure to create their own application. The data from here is used for docker based deployments.
 
- - **helm**: contains helm charts and application specific pre-requisite installers, configurations and runtime data. The configs and data within it are similar to **apps** but are kept here for easy packaging. More on the them [here]()
+ - **helm**: contains helm charts and application specific pre-requisite installers, configurations and runtime data. The configs and data within it are similar to **apps** but are kept here for easy packaging.
 
  - **resources**: This directory and its subdirs are created only after installation is done by running `install.sh` for that application. It contains artificacts such as models, videos etc. Users can modify their application's `install.sh` script to download artifacts as per their usecase requriements.
 
@@ -101,23 +102,34 @@ The application offers following features
  - Interconnected warehouses deliver analytics for quick and informed tracking and decision making.
 
 #### Steps
-
+> Note that the following instructions assume Docker engine is setup in the host system.
 1.  Set app specific environment variable file
     ```sh
     cp .env_pallet_defect_detection .env
     ```    
 
-2.  Install pre-requisites. Run with sudo if needed.
+2.  Edit the HOST_IP, proxy and other environment variables in `.env` file as follows
+    ```sh
+    HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.
+    http_proxy=<http proxy> # proxy details if behind proxy
+    https_proxy=<https proxy>
+
+    MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
+    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
+
+    SAMPLE_APP=pallet-defect-detection  # application directory
+    ```
+3.  Install pre-requisites. Run with sudo if needed.
     ```sh
     ./install.sh
     ```
     This sets up application pre-requisites, download artifacts, sets executable permissions for scripts etc. Downloaded resource directories are made available to the application via volume mounting in docker compose file automatically.
 
-3.  Bring up the application
+4.  Bring up the application
     ```sh
     docker compose up
     ```
-4.  Fetch the list of pipeline loaded available to launch
+5.  Fetch the list of pipeline loaded available to launch
     ```sh
     ./sample_list.sh
     ```
@@ -153,7 +165,7 @@ The application offers following features
         ...
     ]
     ```
-4.  Start the sample application with a pipeline.
+6.  Start the sample application with a pipeline.
     ```sh
     ./sample_start.sh -p pallet_defect_detection
     ```
@@ -179,7 +191,7 @@ The application offers following features
     NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to 
     http://<HOST_IP>:8889/pdd/
     
-5.  Get status of pipeline instance(s) running.
+7.  Get status of pipeline instance(s) running.
     ```sh
     ./sample_status.sh
     ```
@@ -200,7 +212,7 @@ The application offers following features
     }
     ]
     ```
-6.  Stop pipeline instance.
+8.  Stop pipeline instance.
     ```sh
     ./sample_stop.sh
     ```
@@ -228,7 +240,7 @@ The application offers following features
     If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.    
     For example, `./sample_stop.sh --id 4b36b3ce52ad11f0ad60863f511204e2`
 
-7.  Bring down the application
+9.  Bring down the application
     ```sh
     docker compose down -v
     ```
@@ -251,21 +263,32 @@ General instructions for helm based deployment is as follows. This assumes you h
 We will see how to deploy the Pallet Defect Detection application on Kubernetes cluster using Helm.
 
 #### Steps
-
+> Note that the following instructions assume Kubernetes and helm are setup in the host system.
 1. Set app specific values.yaml file.
     ```sh
     cp helm/values_pallet_defect_detection.yaml helm/values.yaml
     ```
-2.  Install pre-requisites. Run with sudo if needed.
+2.  Edit the HOST_IP, proxy and other environment variables in `values.yaml` as follows
+    ```yaml
+    env:        
+        HOST_IP: <HOST_IP>   # host IP address
+        http_proxy: <http proxy> # proxy details if behind proxy
+        https_proxy: <https proxy>
+        SAMPLE_APP: pallet-defect-detection # application directory
+    webrtcturnserver:
+        username: <username>  # WebRTC credentials e.g. intel1234
+        password: <password>
+    ```
+3.  Install pre-requisites. Run with sudo if needed.
     ```sh
     ./install.sh
     ```
     This sets up application pre-requisites, download artifacts, sets executable permissions for scripts etc. Downloaded resource directories.
-3.  Install the helm chart
+4.  Install the helm chart
     ```sh
     helm install pdd-deploy helm -n apps --create-namespace
     ```
-4.  Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
+5.  Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
     ```sh
     POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
@@ -273,7 +296,7 @@ We will see how to deploy the Pallet Defect Detection application on Kubernetes 
 
     kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n apps
     ```
-5.  Fetch the list of pipeline loaded available to launch
+6.  Fetch the list of pipeline loaded available to launch
     ```sh
     ./sample_list.sh
     ```
@@ -308,7 +331,7 @@ We will see how to deploy the Pallet Defect Detection application on Kubernetes 
         ...
     ]
     ```
-6.  Start the sample application with a pipeline.
+7.  Start the sample application with a pipeline.
     ```sh
     ./sample_start.sh -p pallet_defect_detection
     ```
@@ -333,7 +356,7 @@ We will see how to deploy the Pallet Defect Detection application on Kubernetes 
     NOTE: This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to 
     http://<HOST_IP>:31111/pdd/
 
-7.  Get status of pipeline instance(s) running.
+8.  Get status of pipeline instance(s) running.
     ```sh
     ./sample_status.sh
     ```
@@ -355,7 +378,7 @@ We will see how to deploy the Pallet Defect Detection application on Kubernetes 
     ]
     ```
 
-8.  Stop pipeline instance.
+9.  Stop pipeline instance.
     ```sh
     ./sample_stop.sh
     ```
@@ -383,7 +406,7 @@ We will see how to deploy the Pallet Defect Detection application on Kubernetes 
     If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.    
     For example, `./sample_stop.sh --id 99ac50d852b511f09f7c2242868ff651`
 
-9.  Uninstall the helm chart.
+10.  Uninstall the helm chart.
     ```sh
     helm uninstall pdd -n apps
     ```
