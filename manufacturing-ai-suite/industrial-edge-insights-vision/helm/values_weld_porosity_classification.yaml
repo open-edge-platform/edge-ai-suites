@@ -43,7 +43,7 @@ env:
   MR_SAVED_MODELS_DIR: ./mr_models
   MR_REQUEST_TIMEOUT: 300
   MR_VERIFY_CERT:
-  SAMPLE_APP: pallet-defect-detection
+  SAMPLE_APP: weld-porosity
 privileged_access_required: false
 gpu:
   enabled: false
@@ -61,7 +61,7 @@ config:
     int:
       prometheus_port: "9090"
     ext:
-      prometheus_port: "30909"
+      prometheus_port: "31909"
   otel_collector:
     name: otel-collector
     int:
