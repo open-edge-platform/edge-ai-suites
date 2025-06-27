@@ -9,62 +9,20 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from tests.utils.ui_utils import driver
-from tests.utils.utils import get_password_from_supass_file
+from tests.utils.utils import perform_login, get_password_from_supass_file
 from .conftest import SMART_INTERSECTION_URL
-
-def perform_successful_login(driver):
-  """Helper function to perform successful login with default credentials."""
-  username = "admin"
-  password = get_password_from_supass_file()
-  login(driver, username, password)
-
-def login(driver, username, password):
-  """Helper function to log in to the application."""
-  driver.get(SMART_INTERSECTION_URL) # load home page
-  
-  try:
-    # Wait for the 'username' input to be present
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "username")))
-  except TimeoutException:
-    assert False, '"username" input field not found within 10 seconds'
-    
-  username_input = driver.find_element(By.ID, "username")
-  password_input = driver.find_element(By.ID, "password")
-  login_button = driver.find_element(By.ID, "login-submit")
-
-  username_input.send_keys(username)
-  password_input.send_keys(password)
-  login_button.click() # try to log in
- 
-  try:
-    # Wait for either the next page element or the login error message
-    WebDriverWait(driver, 10).until(
-      EC.any_of(
-        EC.presence_of_element_located((By.ID, "nav-scenes")),
-        EC.presence_of_element_located((By.CLASS_NAME, "login-error"))
-      )
-    )
-  except TimeoutException:
-    assert False, "Neither next page element nor login error found within 10 seconds"
-
-  # Check if login error is present
-  if driver.find_elements(By.CLASS_NAME, "login-error"):
-    assert False, "Login failed: Incorrect username or password"
-
-def fill_password_fields(driver):
-  """Helper function to fill in the password fields."""
-  old_password_input = driver.find_element(By.ID, "id_old_password")
-  new_password1_input = driver.find_element(By.ID, "id_new_password1")
-  new_password2_input = driver.find_element(By.ID, "id_new_password2")
-
-  old_password_input.send_keys(get_password_from_supass_file())
-  new_password1_input.send_keys(get_password_from_supass_file())
-  new_password2_input.send_keys(get_password_from_supass_file())
 
 @pytest.mark.zephyr_id("NEX-T9389")
 def test_login(driver):
   """Test that the admin login functionality works correctly."""
-  perform_successful_login(driver)  # Use the helper function to log in
+  perform_login(
+    driver,
+    SMART_INTERSECTION_URL,
+    By.ID, "username",
+    By.ID, "password",
+    By.ID, "login-submit",
+    "admin", get_password_from_supass_file()
+  )
 
   # Verify that the expected elements are present on the page
   assert (
@@ -76,7 +34,14 @@ def test_login(driver):
 @pytest.mark.zephyr_id("NEX-T9390")
 def test_logout(driver):
   """Test that the admin login functionality works correctly."""
-  perform_successful_login(driver)  # Use the helper function to log in
+  perform_login(
+    driver,
+    SMART_INTERSECTION_URL,
+    By.ID, "username",
+    By.ID, "password",
+    By.ID, "login-submit",
+    "admin", get_password_from_supass_file()
+  )
 
   # Verify that the expected elements are present on the page
   assert (
@@ -98,7 +63,14 @@ def test_logout(driver):
 @pytest.mark.zephyr_id("NEX-T9388")
 def test_change_password(driver):
   """Test that the admin can change the password successfully."""
-  perform_successful_login(driver)  # Use the helper function to log in
+  perform_login(
+    driver,
+    SMART_INTERSECTION_URL,
+    By.ID, "username",
+    By.ID, "password",
+    By.ID, "login-submit",
+    "admin", get_password_from_supass_file()
+  )
 
   # Navigate to Password change page
   driver.get(SMART_INTERSECTION_URL + "/admin/password_change")
@@ -109,8 +81,13 @@ def test_change_password(driver):
   except TimeoutException:
     assert False, 'Password fields not found within 10 seconds'
 
-  # Use the helper function to fill in the password fields
-  fill_password_fields(driver)
+  old_password_input = driver.find_element(By.ID, "id_old_password")
+  new_password1_input = driver.find_element(By.ID, "id_new_password1")
+  new_password2_input = driver.find_element(By.ID, "id_new_password2")
+
+  old_password_input.send_keys(get_password_from_supass_file())
+  new_password1_input.send_keys(get_password_from_supass_file())
+  new_password2_input.send_keys(get_password_from_supass_file())
 
   # Submit the password change
   submit_button = driver.find_element(By.XPATH, "//input[@type='submit' and @value='Change my password']")
