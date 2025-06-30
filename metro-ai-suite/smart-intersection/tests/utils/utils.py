@@ -5,6 +5,7 @@
 import os
 import subprocess
 import warnings
+import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -86,3 +87,15 @@ def suppress_insecure_request_warning(func):
       # Restore the default warning behavior
       warnings.filterwarnings("default", category=InsecureRequestWarning)
   return wrapper
+
+@suppress_insecure_request_warning
+def check_components_access(url):
+  """Helper function to check if an components is accessible."""
+  try:
+    # Send a GET request to the URL, ignoring SSL certificate errors
+    response = requests.get(url, verify=False)
+    
+    # Check if the response status code is 200 (OK)
+    assert response.status_code == 200, f"Expected status code 200 for {url}, but got {response.status_code}"
+  except requests.exceptions.RequestException as e:
+    assert False, f"Request to {url} failed: {e}"

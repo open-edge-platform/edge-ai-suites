@@ -4,7 +4,6 @@
 
 import pytest
 import requests
-from tests.utils.utils import suppress_insecure_request_warning
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from .conftest import SMART_INTERSECTION_URL, GRAFANA_URL, INFLUX_DB_URL, NODE_RED_URL
 from selenium.webdriver.common.by import By
@@ -12,21 +11,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from tests.utils.ui_utils import driver
-from tests.utils.utils import perform_login, get_username_from_influxdb2_admin_username_file, get_password_from_influxdb2_admin_password_file
-
-def check_components_access(url):
-  """Helper function to check if an components is accessible."""
-  try:
-    # Send a GET request to the URL, ignoring SSL certificate errors
-    response = requests.get(url, verify=False)
-    
-    # Check if the response status code is 200 (OK)
-    assert response.status_code == 200, f"Expected status code 200 for {url}, but got {response.status_code}"
-  except requests.exceptions.RequestException as e:
-    assert False, f"Request to {url} failed: {e}"
+from tests.utils.utils import check_components_access, perform_login, get_username_from_influxdb2_admin_username_file, get_password_from_influxdb2_admin_password_file
 
 @pytest.mark.zephyr_id("NEX-T9368")
-@suppress_insecure_request_warning
 def test_components_access():
   """Test that all application components are accessible."""
   urls_to_check = [
