@@ -444,7 +444,7 @@ General instructions for helm based deployment is as follows. This assumes you h
     For example, `./sample_stop.sh --id 99ac50d852b511f09f7c2242868ff651`
 
 10.  Uninstall the helm chart.
-    ```sh
-    helm uninstall app-deploy -n apps
-    ```
+     ```sh
+     helm uninstall app-deploy -n apps
+     ```
     
