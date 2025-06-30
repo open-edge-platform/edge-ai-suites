@@ -83,7 +83,12 @@ Following directory structure consisting of generic deployment code as well as p
 
 The shell scripts starting with `sample_*.sh` eases interaction with DLStreamer Pipeline Server REST APIs.
 
+## Prerequisites
+
+Please ensure that you have the correct version of the DL Streamer Pipeline Server image as specified in the [compose](./docker-compose.yml) and [helm](./helm/templates/dlstreamer-pipeline-server.yaml) deployment files. Instructions to build DL Streamer Pipeline Server can be found [here](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/dlstreamer-pipeline-server#build-from-source)
+
 ## Getting Started
+
 ### 1. Docker based deployment 
 
 General instructions for docker based deployment is as follows.
@@ -102,24 +107,19 @@ Using the template above, several industrial recipies have been provided for use
 * Pallet Defect Detection
 * Weld Porosity
 
-We will now see how to deploy Pallet Defect Detection application using docker compose
-
-### Pallet Defect Detection
-#### Overview
-This sample application enables real-time pallet condition monitoring by running inference workflows across multiple AI models. It connects multiple video streams from warehouse cameras to AI-powered pipelines, all operating efficiently on a single industrial PC. This solution enhances logistics efficiency and inventory management by detecting defects before they impact operations.
-#### Features
-The application offers following features
-
- - High-speed data exchange with low-latency compute.
- - AI-assisted defect detection in real-time as pallets are received at the warehouse.
- - On-premise data processing for data privacy and efficient use of bandwidth.
- - Interconnected warehouses deliver analytics for quick and informed tracking and decision making.
+We will now see how to deploy an application using docker compose
 
 #### Steps
 > Note that the following instructions assume Docker engine is setup in the host system.
 1.  Set app specific environment variable file
     ```sh
+    # For Pallet Defect Detection Sample Application
     cp .env_pallet_defect_detection .env
+
+    # Or
+
+    # For Weld Porosity Detection Sample Application
+    cp .env_weld_porosity_classification .env
     ```    
 
 2.  Edit the HOST_IP, proxy and other environment variables in `.env` file as follows
@@ -131,7 +131,8 @@ The application offers following features
     MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
 
-    SAMPLE_APP=pallet-defect-detection  # application directory
+    # application directory
+    SAMPLE_APP=pallet-defect-detection # For weld porosity, SAMPLE_APP=weld-porosity
     ```
 3.  Install pre-requisites. Run with sudo if needed.
     ```sh
@@ -141,17 +142,18 @@ The application offers following features
 
 4.  Bring up the application
     ```sh
-    docker compose up
+    docker compose up -d
     ```
 5.  Fetch the list of pipeline loaded available to launch
     ```sh
     ./sample_list.sh
     ```
-    This lists the pipeline loaded in DLStreamer Pipeline Server.
+    This lists the pipeline loaded in DL Streamer Pipeline Server.
     
-    Output:
+    Example Output:
 
-    ```sh    
+    ```sh
+    # This is an example output for Pallet Defect Detection
     Environment variables loaded from /home/intel/OEP/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: pallet-defect-detection
     Checking status of dlstreamer-pipeline-server...
@@ -181,13 +183,20 @@ The application offers following features
     ```
 6.  Start the sample application with a pipeline.
     ```sh
+    # For Pallet Defect Detection
     ./sample_start.sh -p pallet_defect_detection
+
+    # Or
+
+    # For Weld Porosity Detection
+    ./sample_start.sh -p weld_porosity_classification
     ```
-    This command would look for the payload for the pipeline `pallet_defect_detection` inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available. 
+    This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available. 
     
     Output:
 
     ```sh
+    # This is an example output for Pallet Defect Detection
     Environment variables loaded from /home/intel/OEP/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: pallet-defect-detection
     Checking status of dlstreamer-pipeline-server...
@@ -202,8 +211,7 @@ The application offers following features
     Posting payload to REST server at http://<HOST_IP>:8080/pipelines/user_defined_pipelines/pallet_defect_detection
     Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "4b36b3ce52ad11f0ad60863f511204e2"
     ```
-    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to 
-    http://<HOST_IP>:8889/pdd/
+    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:8889/pdd/ for Pallet Defect Detection or http://<HOST_IP>:8889/weld/ for Weld Porosity Detection
     
 7.  Get status of pipeline instance(s) running.
     ```sh
@@ -213,6 +221,7 @@ The application offers following features
     
     Output:
     ```sh
+    # This is an example output for Pallet Defect Detection
     Environment variables loaded from /home/intel/OEP/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: pallet-defect-detection
     [
@@ -234,6 +243,7 @@ The application offers following features
     
     Output:
     ```sh
+    # This is an example output for Pallet Defect Detection
     No pipelines specified. Stopping all pipeline instances
     Environment variables loaded from /home/intel/OEP/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: pallet-defect-detection
@@ -273,14 +283,17 @@ General instructions for helm based deployment is as follows. This assumes you h
 7. Run `sample_stop.sh` to abort any running pipeline(s).
 8. Uninstall the helm chart.
 
-### Pallet Defect Detection
-We will see how to deploy the Pallet Defect Detection application on Kubernetes cluster using Helm.
-
 #### Steps
 > Note that the following instructions assume Kubernetes and helm are setup in the host system.
 1. Set app specific values.yaml file.
     ```sh
+    # For Pallet Defect Detection Sample Application
     cp helm/values_pallet_defect_detection.yaml helm/values.yaml
+
+    # Or
+
+    # For Weld Porosity Detection Sample Application
+    cp helm/values_weld_porosity_classification.yaml helm/values.yaml
     ```
 2.  Edit the HOST_IP, proxy and other environment variables in `values.yaml` as follows
     ```yaml
@@ -288,22 +301,23 @@ We will see how to deploy the Pallet Defect Detection application on Kubernetes 
         HOST_IP: <HOST_IP>   # host IP address
         http_proxy: <http proxy> # proxy details if behind proxy
         https_proxy: <https proxy>
-        SAMPLE_APP: pallet-defect-detection # application directory
+        SAMPLE_APP: pallet-defect-detection # application directory, for weld porosity it would be SAMPLE_APP: weld-porosity
     webrtcturnserver:
         username: <username>  # WebRTC credentials e.g. intel1234
         password: <password>
     ```
 3.  Install pre-requisites. Run with sudo if needed.
     ```sh
-    ./install.sh
+    ./install.sh helm
     ```
     This sets up application pre-requisites, download artifacts, sets executable permissions for scripts etc. Downloaded resource directories.
 4.  Install the helm chart
     ```sh
-    helm install pdd-deploy helm -n apps --create-namespace
+    helm install app-deploy helm -n apps --create-namespace
     ```
 5.  Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
     ```sh
+    # Below is an example for Pallet Defect Detection. Please adjust the source path of models and videos appropriately for other sample applications.
     POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
     kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
@@ -318,6 +332,7 @@ We will see how to deploy the Pallet Defect Detection application on Kubernetes 
     
     Output:
     ```sh
+    # This is an example output for Pallet Defect Detection
     Environment variables loaded from /home/intel/OEP/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: pallet-defect-detection
     Checking status of dlstreamer-pipeline-server...
@@ -347,12 +362,19 @@ We will see how to deploy the Pallet Defect Detection application on Kubernetes 
     ```
 7.  Start the sample application with a pipeline.
     ```sh
+    # For Pallet Defect Detection
     ./sample_start.sh -p pallet_defect_detection
+
+    # Or
+
+    # For Weld Porosity Detection
+    ./sample_start.sh -p weld_porosity_classification
     ```
-    This command would look for the payload for the pipeline `pallet_defect_detection` inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available. 
+    This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available. 
     
     Output:
     ```sh
+    # This is an example output for Pallet Defect Detection
     Environment variables loaded from /home/intel/OEP/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: pallet-defect-detection
     Checking status of dlstreamer-pipeline-server...
@@ -367,8 +389,7 @@ We will see how to deploy the Pallet Defect Detection application on Kubernetes 
     Posting payload to REST server at http://<HOST_IP>:30107/pipelines/user_defined_pipelines/pallet_defect_detection
     Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "99ac50d852b511f09f7c2242868ff651"
     ```
-    NOTE: This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to 
-    http://<HOST_IP>:31111/pdd/
+    NOTE: This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:31111/pdd/ for Pallet Defect Detection, http://<HOST_IP>:31111/weld/ for Weld Porosity Detection.
 
 8.  Get status of pipeline instance(s) running.
     ```sh
@@ -378,6 +399,7 @@ We will see how to deploy the Pallet Defect Detection application on Kubernetes 
     
     Output:
     ```sh
+    # This is an example output for Pallet Defect Detection
     Environment variables loaded from /home/intel/OEP/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: pallet-defect-detection
     [
@@ -400,6 +422,7 @@ We will see how to deploy the Pallet Defect Detection application on Kubernetes 
     
     Output:
     ```sh
+    # This is an example output for Pallet Defect Detection
     No pipelines specified. Stopping all pipeline instances
     Environment variables loaded from /home/intel/OEP/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: pallet-defect-detection
@@ -421,7 +444,7 @@ We will see how to deploy the Pallet Defect Detection application on Kubernetes 
     For example, `./sample_stop.sh --id 99ac50d852b511f09f7c2242868ff651`
 
 10.  Uninstall the helm chart.
-    ```sh
-    helm uninstall pdd -n apps
-    ```
+     ```sh
+     helm uninstall app-deploy -n apps
+     ```
     
