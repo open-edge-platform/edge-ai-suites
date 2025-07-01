@@ -18,6 +18,7 @@ jobs:
   trivy-scan-job:
     permissions:
       contents: read
+      packages: read          # needed for actions/checkout
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Code
@@ -101,6 +102,7 @@ jobs:
   trivy-config-opcua-dockerfile-scan:
     permissions:
       contents: read
+      packages: read          # needed for actions/checkout
     name: Scan OPCUA Dockerfile
     strategy:
       fail-fast: false
@@ -115,6 +117,7 @@ jobs:
   trivy-config-mqttpublisher-dockerfile-scan:
     permissions:
       contents: read
+      packages: read          # needed for actions/checkout
     name: Scan mqttpublisher Dockerfile
     strategy:
       fail-fast: false
@@ -127,6 +130,9 @@ jobs:
       name: Time Series mqttpublisher Dockerfile
   
   bandit-scans:
+    permissions:
+      contents: read
+      packages: read          # needed for actions/checkout
     name: Run Bandit Scan
     runs-on: ubuntu-24.04
     strategy:
@@ -154,6 +160,9 @@ jobs:
         path: reports/bandit-report.txt
 
   virus-scans:
+    permissions:
+      contents: read
+      packages: read          # needed for actions/checkout
     name: Run Virus Scan
     runs-on: ubuntu-24.04
     strategy:
