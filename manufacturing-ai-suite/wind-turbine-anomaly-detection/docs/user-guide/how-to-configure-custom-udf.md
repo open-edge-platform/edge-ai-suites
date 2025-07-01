@@ -65,6 +65,13 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
 
 ## With Model Registry
 
+> **Note**:
+> 1. If doing docker based deployment, ensure the Wind Turbine Anomaly Detection sample app is deployed by following [getting started](./get-started.md)
+> 2. If doing Helm based deployment on Kubernetes cluster, ensure the Wind Turbine Anomaly Detection sample app is deployed by following [how to deploy with helm](./how-to-deploy-with-helm.md)
+
+This approach facilitates the updates to `Time Series Analytics` microservice at runtime by updating the configuration and UDF deployment
+package using its REST APIs.
+
 ### 1. UDF Deployment Package structure
 
 If one wants to create a separate UDF deployment package, just ensure to have the following structure
@@ -104,10 +111,6 @@ to the Model Registry microservice.
     ```
 
 ### 3. Updating Time Series Analytics Microservice config for Model Registry usage
-
-> **Note**:
-> 1. If doing docker based deployment, ensure the Wind Turbine Anomaly Detection sample app is deployed by following [getting started](./get-started.md)
-> 2. If doing Helm based deployment on Kubernetes cluster, ensure the Wind Turbine Anomaly Detection sample app is deployed by following [how to deploy with helm](./how-to-deploy-with-helm.md)
 
 1. Copy the content of `config.json` from `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/`
 2. Set ``model_registry` key `enable` to `true`.
