@@ -112,13 +112,8 @@ to the Model Registry microservice.
 
 ### 3. Updating Time Series Analytics Microservice config for Model Registry usage
 
-1. Copy the content of `config.json` from `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/`
-2. Set ``model_registry` key `enable` to `true`.
-3. Specify the `udf_name` and `version` as defined in the Model Registry.
-   
-   > **Note**: Mismatched task names or versions will cause the microservice to restart.
-4. Update `udfs` sections with the appropriate `name` and `models` details.
-5. Run the below command, to update the configuration in `Time Series Analytics` microservice
+
+1. Run the below command, to update the configuration in `Time Series Analytics` microservice
     ```bash
     curl -X 'POST' \
     'http://<HOST_IP>:5000/config' \
