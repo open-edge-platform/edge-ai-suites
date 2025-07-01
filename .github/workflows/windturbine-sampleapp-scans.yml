@@ -145,8 +145,7 @@ jobs:
         mkdir -p reports
         docker pull ghcr.io/pycqa/bandit/bandit
         echo "### Bandit Scan Results" >> $GITHUB_STEP_SUMMARY
-        ls -la ${{ github.workspace }}
-        docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/ -f txt -o /src/reports/bandit-report.txt || true >> $GITHUB_STEP_SUMMARY
+        docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/manufacturing-ai-suite/wind-turbine-anomaly-detection/ -f txt -o /src/reports/bandit-report.txt || true >> $GITHUB_STEP_SUMMARY
         echo "Please find full report in bandit-report.txt" >> $GITHUB_STEP_SUMMARY
     - name: Upload Scan Reports
       uses: actions/upload-artifact@v4
@@ -156,7 +155,7 @@ jobs:
     - name: Clean up
       if: always()
       run: |
-        rm -rf edge-ai-libraries-repo
+        rm -rf ${{ github.workspace }}
         if [ -n "$(docker images -aq)" ]; then
               docker rmi -f $(docker images -aq) || true
         fi
@@ -179,7 +178,7 @@ jobs:
         mkdir -p reports
         docker pull clamav/clamav
         echo "### Virus Scan Results" >> $GITHUB_STEP_SUMMARY
-        docker run --rm -v "${{ github.workspace }}:/src" clamav/clamav clamscan -r  /src/edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/ > ./reports/clamav-report.txt || true
+        docker run --rm -v "${{ github.workspace }}:/src" clamav/clamav clamscan -r  /src/manufacturing-ai-suite/wind-turbine-anomaly-detection/ > ./reports/clamav-report.txt || true
         echo "Please find full report in clamav-report.txt" >> $GITHUB_STEP_SUMMARY
     - name: Upload Scan Reports
       uses: actions/upload-artifact@v4
@@ -189,7 +188,7 @@ jobs:
     - name: Clean up
       if: always()
       run: |
-        rm -rf edge-ai-libraries-repo
+        rm -rf ${{ github.workspace }}
         if [ -n "$(docker images -aq)" ]; then
               docker rmi -f $(docker images -aq) || true
         fi
