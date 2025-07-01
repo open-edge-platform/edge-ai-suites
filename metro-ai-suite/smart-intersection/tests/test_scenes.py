@@ -8,7 +8,7 @@ from tests.utils.ui_utils import driver
 from tests.utils.utils import perform_login, get_password_from_supass_file
 from .conftest import SMART_INTERSECTION_URL
 
-@pytest.mark.zephyr_id("NEX-T9389")
+@pytest.mark.zephyr_id("NEX-T9370")
 def test_intersection_demo_avability(driver):
     """Test that the admin login functionality works correctly."""
     perform_login(
