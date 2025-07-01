@@ -9,8 +9,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from tests.utils.ui_utils import driver
-from tests.utils.utils import perform_login, get_password_from_supass_file
-from .conftest import SMART_INTERSECTION_URL
+from tests.utils.utils import perform_login
+from .conftest import SMART_INTERSECTION_URL, SMART_INTERSECTION_PASSWORD, SMART_INTERSECTION_USERNAME
 
 @pytest.mark.zephyr_id("NEX-T9389")
 def test_login(driver):
@@ -21,7 +21,7 @@ def test_login(driver):
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
-    "admin", get_password_from_supass_file()
+    SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
   )
 
   # Verify that the expected elements are present on the page
@@ -40,7 +40,7 @@ def test_logout(driver):
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
-    "admin", get_password_from_supass_file()
+    SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
   )
 
   # Verify that the expected elements are present on the page
@@ -69,7 +69,7 @@ def test_change_password(driver):
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
-    "admin", get_password_from_supass_file()
+    SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
   )
 
   # Navigate to Password change page
@@ -85,9 +85,9 @@ def test_change_password(driver):
   new_password1_input = driver.find_element(By.ID, "id_new_password1")
   new_password2_input = driver.find_element(By.ID, "id_new_password2")
 
-  old_password_input.send_keys(get_password_from_supass_file())
-  new_password1_input.send_keys(get_password_from_supass_file())
-  new_password2_input.send_keys(get_password_from_supass_file())
+  old_password_input.send_keys(SMART_INTERSECTION_PASSWORD)
+  new_password1_input.send_keys(SMART_INTERSECTION_PASSWORD)
+  new_password2_input.send_keys(SMART_INTERSECTION_PASSWORD)
 
   # Submit the password change
   submit_button = driver.find_element(By.XPATH, "//input[@type='submit' and @value='Change my password']")

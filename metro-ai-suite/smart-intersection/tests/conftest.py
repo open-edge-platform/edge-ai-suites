@@ -8,15 +8,26 @@ import os
 import subprocess
 import requests
 from dotenv import load_dotenv
-from tests.utils.utils import run_command, check_components_access
+from tests.utils.utils import run_command, check_components_access, get_password_from_supass_file, get_username_from_influxdb2_admin_username_file, get_password_from_influxdb2_admin_password_file
 
 load_dotenv()
 
 DOCKER_COMPOSE_FILE = os.getenv("DOCKER_COMPOSE_FILE", "compose.yml")
+
 SMART_INTERSECTION_URL = os.getenv("SMART_INTERSECTION_URL", "https://localhost")
+SMART_INTERSECTION_USERNAME = os.getenv("SMART_INTERSECTION_USERNAME", "admin")
+SMART_INTERSECTION_PASSWORD = os.getenv("SMART_INTERSECTION_PASSWORD", get_password_from_supass_file())
+
 GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
+GRAFANA_USERNAME = os.getenv("GRAFANA_USERNAME", "admin")
+GRAFANA_PASSWORD = os.getenv("GRAFANA_PASSWORD", "admin")
+
 INFLUX_DB_URL = os.getenv("INFLUX_DB_URL", "http://localhost:8086")
+INFLUX_DB_ADMIN_USERNAME = os.getenv("INFLUX_DB_ADMIN_USERNAME", get_username_from_influxdb2_admin_username_file())
+INFLUX_DB_ADMIN_PASSWORD = os.getenv("INFLUX_DB_ADMIN_PASSWORD", get_password_from_influxdb2_admin_password_file())
+
 NODE_RED_URL = os.getenv("NODE_RED_URL", "http://localhost:1880")
+
 
 
 def wait_for_services_readiness(services_urls, timeout=120, interval=2):

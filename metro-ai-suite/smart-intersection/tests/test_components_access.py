@@ -5,13 +5,13 @@
 import pytest
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from .conftest import SMART_INTERSECTION_URL, GRAFANA_URL, INFLUX_DB_URL, NODE_RED_URL
+from .conftest import SMART_INTERSECTION_URL, GRAFANA_URL, INFLUX_DB_URL, NODE_RED_URL, INFLUX_DB_ADMIN_USERNAME, INFLUX_DB_ADMIN_PASSWORD
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from tests.utils.ui_utils import driver
-from tests.utils.utils import check_components_access, perform_login, get_username_from_influxdb2_admin_username_file, get_password_from_influxdb2_admin_password_file
+from tests.utils.utils import check_components_access, perform_login
 
 @pytest.mark.zephyr_id("NEX-T9368")
 def test_components_access():
@@ -54,7 +54,7 @@ def test_influx_db_login(driver):
     By.CSS_SELECTOR, "[data-testid='username']",
     By.CSS_SELECTOR, "[data-testid='password']",
     By.CSS_SELECTOR, "[data-testid='button']",
-    get_username_from_influxdb2_admin_username_file(), get_password_from_influxdb2_admin_password_file()
+    INFLUX_DB_ADMIN_USERNAME, INFLUX_DB_ADMIN_PASSWORD
   )
 
   try:
