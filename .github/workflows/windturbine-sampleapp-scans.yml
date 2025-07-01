@@ -45,7 +45,7 @@ jobs:
           trivy image --download-db-only
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o trivy-html.tpl
           # Use the downloaded template
-          trivy fs . --format template --template "@trivy-html.tpl" -o "trivy_fs_code_scan.html" 
+          trivy fs . --format template --template "@trivy-html.tpl" -o "trivy_fs_full_report_code_scan.html" 
           trivy fs --list-all-pkgs --format template --template "@trivy-html.tpl" --output trivy-fs-full-report-ignore-unfixed.csv .
           trivy fs --ignore-unfixed . | tee trivy-fs-full-report-ignore-unfixed.txt  
       
