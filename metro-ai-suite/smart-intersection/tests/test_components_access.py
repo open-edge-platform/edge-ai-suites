@@ -28,7 +28,7 @@ def test_components_access():
 
 
 @pytest.mark.zephyr_id("NEX-T9623")
-def test_gragana_failed_login(driver):
+def test_grafana_failed_login(driver):
   perform_login(
     driver,
     GRAFANA_URL,
