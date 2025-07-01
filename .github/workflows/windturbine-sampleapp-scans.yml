@@ -259,6 +259,44 @@ jobs:
           -v /var/run/docker.sock:/var/run/docker.sock:ro \
           --label docker_bench_security \
           docker-bench-security > dbs_scan_windturbine_opcua.txt
+      
+      - name: Deploy Wind Turbine Sample App - MQTT 
+        run: |
+          cd manufacturing-ai-suite/wind-turbine-anomaly-detection/
+          make down 
+          # Generate random values for sensitive environment variables
+          INFLUXDB_USERNAME=$(openssl rand -hex 4)
+          INFLUXDB_PASSWORD=$(openssl rand -hex 6)
+          VISUALIZER_GRAFANA_USER=$(openssl rand -hex 4)
+          VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 6)
+          MR_PSQL_PASSWORD=$(openssl rand -hex 4)
+          MR_MINIO_ACCESS_KEY=$(openssl rand -hex 4)
+          MR_MINIO_SECRET_KEY=$(openssl rand -hex 4)
+
+          sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
+          sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
+          sed -i "s/VISUALIZER_GRAFANA_USER=.*/VISUALIZER_GRAFANA_USER=${VISUALIZER_GRAFANA_USER}/g" .env
+          sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
+          sed -i "s/MR_PSQL_PASSWORD=.*/MR_PSQL_PASSWORD=${MR_PSQL_PASSWORD}/g" .env
+          sed -i "s/MR_MINIO_ACCESS_KEY=.*/MR_MINIO_ACCESS_KEY=${MR_MINIO_ACCESS_KEY}/g" .env
+          sed -i "s/MR_MINIO_SECRET_KEY=.*/MR_MINIO_SECRET_KEY=${MR_MINIO_SECRET_KEY}/g" .env 
+          make build
+          echo "Deploying using MQTT ingestion"
+          make up_mqtt_ingestion
+
+      - name: DBS download and scan for Wind Turbine Sample App - MQTT 
+        run: |
+          cd manufacturing-ai-suite/wind-turbine-anomaly-detection/
+          docker run --rm --net host --pid host --userns host --cap-add audit_control \
+          -e DOCKER_CONTENT_TRUST=$DOCKER_CONTENT_TRUST \
+          -v /etc:/etc:ro \
+          -v /usr/bin/containerd:/usr/bin/containerd:ro \
+          -v /usr/bin/runc:/usr/bin/runc:ro \
+          -v /usr/lib/systemd:/usr/lib/systemd:ro \
+          -v /var/lib:/var/lib:ro \
+          -v /var/run/docker.sock:/var/run/docker.sock:ro \
+          --label docker_bench_security \
+          docker-bench-security > dbs_scan_windturbine_mqtt.txt
 
       - name: Undeploy Time Series Analytics microservice
         run: |
