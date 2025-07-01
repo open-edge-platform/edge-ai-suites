@@ -256,7 +256,7 @@ jobs:
           echo "Deploying using opcua ingestion"
           docker compose up -d
 
-      - name: DBS download and scan for Wind Turbine Sample App - OPC UA 
+      - name: DBS download and scan for Wind Turbine Sample App
         run: |
           cd manufacturing-ai-suite/wind-turbine-anomaly-detection/
           docker run --rm --net host --pid host --userns host --cap-add audit_control \
