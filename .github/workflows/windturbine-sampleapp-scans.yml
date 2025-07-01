@@ -209,7 +209,7 @@ jobs:
           cd docker-bench-security
           docker build --no-cache -t docker-bench-security .
 
-      - name: Build Time Series Analytics microservice
+      - name: Checkout Time Series Analytics microservice (edge-ai-libraries)
         uses: actions/checkout@v4
         with:
           repository: open-edge-platform/edge-ai-libraries
