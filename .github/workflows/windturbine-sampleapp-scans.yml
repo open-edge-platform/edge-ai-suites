@@ -48,17 +48,6 @@ jobs:
           trivy fs --list-all-pkgs --format template --template "@trivy-html.tpl" --output trivy-fs-ignore-unfixed.csv .
           trivy fs --ignore-unfixed . | tee trivy-fs-ignore-unfixed.txt  
       
-      - name: Upload trivy filesystem/repo scan reports
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: Trivy FileSystem scan report
-          path: |
-              manufacturing-ai-suite/wind-turbine-anomaly-detection/trivy_fs_code_scan.html
-              manufacturing-ai-suite/wind-turbine-anomaly-detection/trivy-fs-ignore-unfixed.csv
-              manufacturing-ai-suite/wind-turbine-anomaly-detection/trivy-fs-ignore-unfixed.txt
-      
       - name: Trivy Image Scan
         continue-on-error: true
         shell: bash
@@ -92,7 +81,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: Trivy image scan report
+          name: Trivy Scan report fs and image
           path: |
                 manufacturing-ai-suite/wind-turbine-anomaly-detection/trivy*
 
@@ -136,3 +125,70 @@ jobs:
       severity-levels: 'HIGH,CRITICAL'
       output-report-path: trivy-mqttpublisher-dockerfile.json
       name: Time Series mqttpublisher Dockerfile
+  
+  bandit-scans:
+    name: Run Bandit Scan
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ubuntu_version: ubuntu24
+    steps:
+    - name: Check out edge-ai-suites repository
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+
+    - name: Run Bandit Scan
+      run: |
+        mkdir -p reports
+        docker pull ghcr.io/pycqa/bandit/bandit
+        echo "### Bandit Scan Results" >> $GITHUB_STEP_SUMMARY
+        docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/ -f txt -o /src/reports/bandit-report.txt || true >> $GITHUB_STEP_SUMMARY
+        echo "Please find full report in bandit-report.txt" >> $GITHUB_STEP_SUMMARY
+    - name: Upload Scan Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: bandit-report
+        path: reports/bandit-report.txt
+    - name: Clean up
+      if: always()
+      run: |
+        rm -rf edge-ai-libraries-repo
+        if [ -n "$(docker images -aq)" ]; then
+              docker rmi -f $(docker images -aq) || true
+        fi
+
+  virus-scans:
+    name: Run Virus Scan
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ubuntu_version: ubuntu24
+    steps:
+    - name: Check out edge-ai-libraries repository
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+    - name: Run Virus Scan
+      run: |
+        mkdir -p reports
+        docker pull clamav/clamav
+        echo "### Virus Scan Results" >> $GITHUB_STEP_SUMMARY
+        docker run --rm -v "${{ github.workspace }}:/src" clamav/clamav clamscan -r  /src/edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/ > ./reports/clamav-report.txt || true
+        echo "Please find full report in clamav-report.txt" >> $GITHUB_STEP_SUMMARY
+    - name: Upload Scan Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: virus-reports
+        path: reports/clamav-report.txt
+    - name: Clean up
+      if: always()
+      run: |
+        rm -rf edge-ai-libraries-repo
+        if [ -n "$(docker images -aq)" ]; then
+              docker rmi -f $(docker images -aq) || true
+        fi
