@@ -152,13 +152,6 @@ jobs:
       with:
         name: bandit-report
         path: reports/bandit-report.txt
-    - name: Clean up
-      if: always()
-      run: |
-        rm -rf ${{ github.workspace }}
-        if [ -n "$(docker images -aq)" ]; then
-              docker rmi -f $(docker images -aq) || true
-        fi
 
   virus-scans:
     name: Run Virus Scan
@@ -185,10 +178,3 @@ jobs:
       with:
         name: virus-reports
         path: reports/clamav-report.txt
-    - name: Clean up
-      if: always()
-      run: |
-        rm -rf ${{ github.workspace }}
-        if [ -n "$(docker images -aq)" ]; then
-              docker rmi -f $(docker images -aq) || true
-        fi
