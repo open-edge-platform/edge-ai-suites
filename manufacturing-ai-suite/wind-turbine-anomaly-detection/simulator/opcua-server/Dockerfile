@@ -16,17 +16,24 @@ RUN groupadd $TIMESERIES_USER_NAME -g $TIMESERIES_UID && \
 
 # Build arg to optionally download sources of all deb and python packages with MPL, GPL, EPL, CDDL, LGPL licenses
 ARG COPYLEFT_SOURCES=false
+
 RUN if [ "$COPYLEFT_SOURCES" = "true" ]; then \
-      # Download python package sources with relevant licenses
-      pip3 freeze | cut -d= -f1 | while read pkg; do \
-        meta=$(pip3 show $pkg 2>/dev/null); \
-        lic=$(echo "$meta" | grep -i '^License:' | grep -Ei 'MPL|GPL|EPL|CDDL|LGPL'); \
-        if [ ! -z "$lic" ]; then \
-          pip3 download --no-binary :all: $pkg || true; \
-        fi; \
-      done; \
+    mkdir -p /app/python-licenses && \
+    mkdir -p /tmp && chmod 1777 /tmp && \
+    cd /app/python-licenses && \
+    apt-get update && apt-get install -y gcc build-essential libffi-dev && \
+    pip3 freeze | cut -d= -f1 | while read pkg; do \
+      meta=$(pip3 show $pkg 2>/dev/null); \
+      lic=$(echo "$meta" | grep -i '^License:' | grep -Ei 'MPL|GPL|General Public License|EPL|Eclipse Public License|CDDL|LGPL'); \
+      if [ ! -z "$lic" ]; then \
+        echo "Downloading source for $pkg with license: $lic"; \
+        pip3 download --no-binary :all: $pkg || true; \
+      fi; \
+    done; \
+      apt-get remove --purge -y gcc build-essential libffi-dev; \
     fi
 
+WORKDIR /app
 COPY opcua-server/opcua_server.py .
 COPY simulation_data/windturbine_data.csv .
 

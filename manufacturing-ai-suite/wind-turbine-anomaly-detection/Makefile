@@ -24,6 +24,11 @@ build:
 	@echo "Building Docker containers..."
 	$(DOCKER_COMPOSE) build;
 
+.PHONY: build_copyleft_sources
+build_copyleft_sources:
+	@echo "Building Docker containers including copyleft licensed sources..."
+	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true;
+
 # Check if multiple particular variables in .env are assigned with values
 .PHONY: check_env_variables
 check_env_variables:
@@ -170,6 +175,7 @@ gen_helm_charts:
 help:
 	@echo "Makefile commands:"
 	@echo "  make build    - Build Docker containers"
+	@echo "  make build_copyleft_sources - Build Docker containers including copyleft licensed sources"
 	@echo "  make up_mqtt_ingestion     - Start Docker containers using mqtt ingestion"
 	@echo "  make up_opcua_ingestion    - Start Docker containers using opcua ingestion"
 	@echo "  make down     - Stop Docker containers"
