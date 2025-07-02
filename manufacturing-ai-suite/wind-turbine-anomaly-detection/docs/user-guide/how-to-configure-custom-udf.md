@@ -113,10 +113,12 @@ to the Model Registry microservice.
 ### 3. Updating Time Series Analytics Microservice config for Model Registry usage
 
 
-1. Run the below command, to update the configuration in `Time Series Analytics` microservice
+1. Run the below command, to update the configuration in `Time Series Analytics` microservice. 
+   Please note, the default of `<PORT>` value is `5000` for docker compose deployment and `30002` for helm based deployment.
+
     ```bash
     curl -X 'POST' \
-    'http://<HOST_IP>:5000/config' \
+    'http://<HOST_IP>:<PORT>/config' \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -d '{
