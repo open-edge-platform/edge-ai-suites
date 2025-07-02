@@ -20,8 +20,9 @@ The Suite also provides a collection of visual analytics sample applications, us
 
 See respective sample applications to learn more about using them in your application development as well as customizing them to meet your use case needs.
 
-Other software ingredients and refefence implementations of the Metro AI Suite:
+Other software ingredients and reference implementations of the Metro AI Suite:
 - Platform blueprints: System software, middleware, and applications bundled to provide a starting point for building 
 - [Video Processing Platform](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=metro-ai-suite-video-processing-software-development-kit): A platform blueprint for video security walls and similar applications utilizing video processing acceleration API
 - Traffic Fusion Control Computer([Sensor Fusion for Traffic Management](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=metro-ai-suite-sensor-fusion-for-traffic-management)): A platform blueprint that integrates AI inferencing with sensor fusion technology, utilizing multi-modal sensors such as cameras and radars to deliver unparalleled performance, guiding you with designing such sensor fusion capabilities in your application development
 - [Video Analytics Server](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=metro-ai-suite-image-search-by-image-server): A platform blueprint for building an edge video analytics server, including example feature matching microservices and an image search application
+- [Interactive Digital Avatar](interactive-digital-avatar): Integrate 2D/3D avatars with a backend LLM server to provide real-time, intelligent responses to user queries through speech-based conversational interfaces.
