@@ -15,7 +15,7 @@ applications:
 - name: ts-wind-turbine-anomaly
   version: 1.0.0
 defaultNamespaces:
-  ts-wind-turbine-anomaly: apps
+  ts-wind-turbine-anomaly: ts-wind-turbine-anomaly-app
 deploymentProfiles:
 - name: default
   applicationProfiles:

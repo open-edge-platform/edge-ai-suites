@@ -147,9 +147,12 @@ cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
 
 2. Deploy the sample app, use only one of the options below:
 
-> **NOTE**: The sample app is deployed by pulling the pre-built container images of the sample app 
-> from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY` env
-> variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection`)
+> **NOTE**:
+> 1. The below `make up_opcua_ingestion` or `make up_mqtt_ingestion` fails if the above required fields are not populated
+>    as per the rules called out in `.env` file.
+> 2. The sample app is deployed by pulling the pre-built container images of the sample app 
+>    from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY` env
+>    variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection`)
 
    - **Using OPC-UA ingestion**:
      ```bash

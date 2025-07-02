@@ -60,18 +60,18 @@ To subscribe to MQTT topics in a Helm deployment, execute the following command:
 
 Identify the MQTT broker pod name by running:
 ```sh
-kubectl get pods -n apps | grep mqtt-broker
+kubectl get pods -n ts-wind-turbine-anomaly-app | grep mqtt-broker
 ```
 
 Use the pod name from the output of the above command to subscribe to all topics:
 ```sh
-kubectl exec -it -n apps <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t '#' -p 1883
+kubectl exec -it -n ts-wind-turbine-anomaly-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t '#' -p 1883
 ```
 
 To subscribe to the `alerts/wind_turbine` topic, use the following command:
 
 ```sh
-kubectl exec -it -n apps <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
+kubectl exec -it -n ts-wind-turbine-anomaly-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
 ```
 
 ## Publishing OPC-UA Alerts

@@ -1,0 +1,23 @@
+[
+    {
+        "pipeline": "weld_porosity_classification",
+        "payload": {
+            "source": {
+                "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
+                "type": "uri"
+            },
+            "destination": {
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "weld"
+                }
+            },
+            "parameters": {
+                "classification-properties": {
+                    "model": "/home/pipeline-server/resources/models/weld-porosity/model.xml",
+                    "device": "CPU"
+                }
+            }
+        }
+    }
+]

@@ -1,8 +1,0 @@
-{
-    "task_type": "detection",
-    "model_type": "ssd",
-    "model_parameters": {
-        "labels": "box shipping_label defect No_Object",
-        "labels_ids": "67c1af441766e41edce24f0d 67c1af441766e41edce24f0e 67c1af441766e41edce24f0f 67c1af441766e41edce24f10"
-    }
-}

@@ -1,8 +1,0 @@
-{
-    "task_type": "classification",
-    "model_type": "Classification",
-    "model_parameters": {
-        "labels": "No_Weld Good_Weld Porosity",
-        "labels_ids": "67c8abaa1766e41edce268ed 67c8abaa1766e41edce268ee 67c8abaa1766e41edce268ef"
-    }
-}

@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-namespace: apps
+namespace: ts-wind-turbine-anomaly-app
 # Please provide docker registry details below for docker images pull/push operations.
 # Please provide full registry url with port trail by /
 # e.q. localhost:5000/

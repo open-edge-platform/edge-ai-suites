@@ -28,6 +28,8 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 1. Update the below fields in `timeseries-wind-turbine-values.yaml` in the above deployment package folder
 
+   > **Note**: Please note the `helm install` command fails if the above required fields are not populated as per the rules called out in `timeseries-wind-turbine-values.yaml` file
+
     ```sh
     INFLUXDB_USERNAME:
     INFLUXDB_PASSWORD:
@@ -119,8 +121,8 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
 
     i. Get the `internal-ip` of edge node to access the node using the below command 
 
-        ```bash
-            kubectl get node -o wide
-        ``` 
+    ```bash
+    kubectl get node -o wide
+    ``` 
     ii. To check the results in the Grafana dashboard at port 30001, please follow instructions for helm     
        deployment at [link](get-started.md#verify-the-wind-turbine-anomaly-detection-results)
