@@ -21,6 +21,7 @@ RUN if [ "$COPYLEFT_SOURCES" = "true" ]; then \
     mkdir -p /app/python-licenses && \
     cd /app/python-licenses && \
     apt-get update && apt-get install -y gcc build-essential libffi-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
     pip3 freeze | cut -d= -f1 | while read pkg; do \
       meta=$(pip3 show $pkg 2>/dev/null); \
       lic=$(echo "$meta" | grep -i '^License:' | grep -Ei 'MPL|GPL|General Public License|EPL|Eclipse Public License|CDDL|LGPL'); \
