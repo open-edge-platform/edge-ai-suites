@@ -19,7 +19,6 @@ ARG COPYLEFT_SOURCES=false
 
 RUN if [ "$COPYLEFT_SOURCES" = "true" ]; then \
     mkdir -p /app/python-licenses && \
-    mkdir -p /tmp && chmod 1777 /tmp && \
     cd /app/python-licenses && \
     apt-get update && apt-get install -y gcc build-essential libffi-dev && \
     pip3 freeze | cut -d= -f1 | while read pkg; do \
