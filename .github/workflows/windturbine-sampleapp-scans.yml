@@ -46,7 +46,7 @@ jobs:
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o trivy-html.tpl
           # Use the downloaded template
           trivy fs . --format template --template "@trivy-html.tpl" -o "trivy_fs_full_report_code_scan.html" 
-          trivy fs --list-all-pkgs --format template --template "@trivy-html.tpl" --output trivy-fs-full-report-ignore-unfixed.csv .
+          trivy fs --list-all-pkgs --format template --template "@trivy-html.tpl" --output trivy-fs-full-report.csv .
           trivy fs --ignore-unfixed . | tee trivy-fs-full-report-ignore-unfixed.txt  
       
       - name: Trivy Image Scan
@@ -65,14 +65,14 @@ jobs:
               trivy image ia-opcua-server:latest --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy_image_scan_opcua_server.html
               trivy image --quiet --format spdx-json --output trivy_image_scan_opcua_server.spdx.json ia-opcua-server:latest
 
-              trivy image --list-all-pkgs --format template --template "@trivy-html.tpl" --output trivy-fs-opcua-ignore-unfixed.csv ia-opcua-server:latest
+              trivy image --list-all-pkgs --format template --template "@trivy-html.tpl" --output trivy-fs-opcua.csv ia-opcua-server:latest
               trivy image --ignore-unfixed ia-opcua-server:latest | tee trivy-fs-opcua-ignore-unfixed.txt
 
 
               trivy image ia-mqtt-publisher:latest --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy_image_scan_mqtt_publisher.html
               trivy image --quiet --format spdx-json --output trivy_image_scan_mqtt_publisher.spdx.json ia-mqtt-publisher:latest
 
-              trivy image --list-all-pkgs --format template --template "@trivy-html.tpl" --output trivy-fs-mqttpublisher-ignore-unfixed.csv ia-mqtt-publisher:latest
+              trivy image --list-all-pkgs --format template --template "@trivy-html.tpl" --output trivy-fs-mqttpublisher.csv ia-mqtt-publisher:latest
               trivy image --ignore-unfixed ia-mqtt-publisher:latest | tee trivy-fs-mqttpublisher-ignore-unfixed.txt
 
               echo "completed Wind Turbine Sample App Image scanning"
