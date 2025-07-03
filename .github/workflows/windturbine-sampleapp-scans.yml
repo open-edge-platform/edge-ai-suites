@@ -63,6 +63,7 @@ jobs:
               curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o trivy-html.tpl
               
               trivy image ia-opcua-server:latest --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy_image_scan_opcua_server.html
+              trivy image ia-opcua-server:latest --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy_image_scan_opcua_server.csv
               trivy image --quiet --format spdx-json --output trivy_image_scan_opcua_server.spdx.json ia-opcua-server:latest
 
               trivy image --list-all-pkgs --format template --template "@trivy-html.tpl" --output trivy-fs-opcua.csv ia-opcua-server:latest
@@ -70,6 +71,7 @@ jobs:
 
 
               trivy image ia-mqtt-publisher:latest --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy_image_scan_mqtt_publisher.html
+              trivy image ia-mqtt-publisher:latest --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy_image_scan_mqtt_publisher.csv
               trivy image --quiet --format spdx-json --output trivy_image_scan_mqtt_publisher.spdx.json ia-mqtt-publisher:latest
 
               trivy image --list-all-pkgs --format template --template "@trivy-html.tpl" --output trivy-fs-mqttpublisher.csv ia-mqtt-publisher:latest
