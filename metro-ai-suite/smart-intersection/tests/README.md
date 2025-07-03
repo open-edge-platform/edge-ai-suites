@@ -14,6 +14,7 @@
 ## Prerequisites
 
 - Python 3.12 or higher
+- Python venv installed 
 - Newest Chrome browser installed
 - Prepare your environment according to https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-intersection/docs/user-guide/get-started.md and https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-intersection/docs/user-guide/how-to-deploy-docker.md guides.
 
