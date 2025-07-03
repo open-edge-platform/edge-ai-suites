@@ -8,6 +8,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from tests.utils.element_waiter import ElementWaiter
 
 @pytest.fixture
 def driver():
@@ -22,3 +23,7 @@ def driver():
   driver = webdriver.Chrome(service=service, options=chrome_options)
   yield driver
   driver.quit()
+
+@pytest.fixture
+def waiter(driver):
+    return ElementWaiter(driver)

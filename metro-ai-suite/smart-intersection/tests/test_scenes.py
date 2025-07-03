@@ -5,18 +5,14 @@
 import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from tests.utils.ui_utils import driver
-from tests.utils.utils import perform_login
-from tests.utils.element_waiter import ElementWaiter
+from tests.utils.ui_utils import waiter, driver
 from .conftest import SMART_INTERSECTION_URL, SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
 
 @pytest.mark.zephyr_id("NEX-T9370")
-def test_intersection_demo_avability(driver):
+def test_intersection_demo_avability(waiter):
     """Test that the admin login functionality works correctly."""
-    waiter = ElementWaiter(driver)
-
-    perform_login(
-        driver,
+    # Perform login using Waiter class object
+    waiter.perform_login(
         SMART_INTERSECTION_URL,
         By.ID, "username",
         By.ID, "password",
@@ -35,7 +31,14 @@ def test_intersection_demo_avability(driver):
     scene_name_element = waiter.wait_and_assert(
         EC.presence_of_element_located((By.ID, "scene_name")),
         error_message="Scene name element is not present or text does not match 'Intersection-Demo'"
-    )    
+    )
     assert scene_name_element.text == "Intersection-Demo", (
         "Scene name text does not match 'Intersection-Demo'"
     )
+
+
+# def test_add_scene(waiter):
+#     """Test that the admin can add a new scene."""
+#     # Perform login using Waiter class object
+#     waiter.perform_login(
+#         SMART_INTERSECTION_URL,
