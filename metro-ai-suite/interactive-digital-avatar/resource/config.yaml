@@ -1,0 +1,47 @@
+---
+qwen:
+  remote:
+    base_url: http://127.0.0.1:8000/chat
+  local:
+    ov_model_dir: resource/llm_models/qwen2_7b_instruct_int4
+    max_tokens: 512
+
+ecrag:
+  base_url: http://127.0.0.1:16011/v1/chatqna
+
+zhipu:
+  base_url: https://open.bigmodel.cn/api/paas/v4/chat/completions
+  token: ""
+  knowledge_id: ""
+
+llama:
+  base_url: http://127.0.0.1:8000/chat
+
+ov:
+  device: GPU
+
+mic:
+  channels: 1
+  bits: 16
+  rate: 16000
+  chunk_size: 1024
+
+wake:
+  wake_words:
+    - 小智同学
+    - 小志同学
+
+tts:
+  male_voice: false
+  qa_transition_wav: resource/audio/qa_transition.wav
+  male_hello_wav: resource/audio/hello_male.wav
+  female_hello_wav: resource/audio/hello_female.wav
+
+avatar2d:
+  render_fps: 25
+
+avatar3d:
+  sio_addr: http://127.0.0.1:3000
+  said_addr: http://127.0.0.1:5000/post-endpoint
+  said_fps: 60
+  pose_sync_fps: 25

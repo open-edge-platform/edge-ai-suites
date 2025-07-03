@@ -1,0 +1,16 @@
+version: '3.9'
+services:
+  said_ov:
+    build: 
+      context: .
+      args:
+        HTTP_PROXY: ${http_proxy}
+        HTTPS_PROXY: ${https_proxy}
+    privileged: true
+    image: said_ov
+    container_name: said_ov
+    ports:
+     - "5000:5000"
+    volumes:
+     - ./said_models/:/app/said_models
+     - ./test_materials/:/app/test_materials
