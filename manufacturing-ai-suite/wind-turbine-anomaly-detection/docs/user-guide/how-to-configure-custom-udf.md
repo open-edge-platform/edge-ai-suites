@@ -1,4 +1,4 @@
-# How to Configure Time Series Analytics Microservice with Custom UDF deployment package
+# Configure Time Series Analytics Microservice with Custom UDF deployment package
 
 This guide provides instructions for setting up custom UDF deployment package (UDFs, TICKscripts, models) and config.json in **Time Series Analytics Microservice**.
 
