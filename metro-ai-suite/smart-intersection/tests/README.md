@@ -42,8 +42,9 @@ Now you are ready to run tests on your system.
 
 ## Running tests
 
-Use make file to run all tests or pytests to run the one you choose.
+Use pytest to run all tests or just the one you choose.
 
 ```bash
-make test
+pytest tests
+pytest tests/test_admin.py::test_login
 ```

@@ -30,8 +30,6 @@ INFLUX_DB_ADMIN_PASSWORD = os.getenv("INFLUX_DB_ADMIN_PASSWORD", get_password_fr
 
 NODE_RED_URL = os.getenv("NODE_RED_URL", "http://localhost:1880")
 
-
-
 def wait_for_services_readiness(services_urls, timeout=120, interval=2):
     """
     Waits for services to become available.
@@ -80,3 +78,5 @@ def build_and_deploy():
 
     # Teardown: stop and remove containers
     run_command(f"docker compose -f {DOCKER_COMPOSE_FILE} down")
+    # Remove Docker volumes
+    run_command("docker volume ls | grep smart-intersection | awk '{ print $2 }' | xargs docker volume rm")
