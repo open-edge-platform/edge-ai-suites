@@ -11,15 +11,6 @@ from .conftest import GRAFANA_URL, GRAFANA_USERNAME, GRAFANA_PASSWORD
 
 logger = logging.getLogger(__name__)
 
-def skip_password_change(waiter):
-  """Check if the 'Skip' button is visible and click it if it is."""
-  skip_button = waiter.wait_and_assert(
-    EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='data-testid Skip change password button']")),
-    error_message="Skip button is not present on the page"
-  )
-  if skip_button.is_displayed():
-    skip_button.click()
-
 def check_grafana_panel_value(waiter):
   """Check the value of one of the Grafana panels."""
 
@@ -47,7 +38,11 @@ def test_grafana_anthem_dashboard_availability(waiter):
     GRAFANA_USERNAME, GRAFANA_PASSWORD
   )
 
-  skip_password_change(waiter)
+  skip_button = waiter.wait_and_assert(
+    EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='data-testid Skip change password button']")),
+    error_message="Skip button is not present on the page"
+  )
+  skip_button.click()
       
   # Find and click the "Dashboards" link
   dashboards_link = waiter.wait_and_assert(
