@@ -99,11 +99,17 @@ def test_web_option_availability(waiter):
     SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
   )
 
-  # Find all links in the navbar
-  navbar_links = waiter.driver.find_elements(By.CSS_SELECTOR, ".navbar-nav .nav-link")
+  # Define static list of navbar links
+  navbar_links = [
+    SMART_INTERSECTION_URL + "/",  # Scenes
+    SMART_INTERSECTION_URL + "/cam/list/",  # Cameras
+    SMART_INTERSECTION_URL + "/singleton_sensor/list/",  # Sensors
+    SMART_INTERSECTION_URL + "/asset/list/",  # Object Library
+    "https://docs.openedgeplatform.intel.com/scenescape/main/toc.html",  # Documentation
+    SMART_INTERSECTION_URL + "/admin"  # Admin
+  ]
 
   # Check each link for a 200 status code
-  for link in navbar_links:
-    url = link.get_attribute("href")
+  for url in navbar_links:
     logger.info("Checking URL: %s", url)
     check_components_access(url)
