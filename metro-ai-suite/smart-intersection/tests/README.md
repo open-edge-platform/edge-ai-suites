@@ -30,7 +30,7 @@ Activate virtual environment:
 
 ```bash
 source venv/bin/activate
-```
+``` 
 
 Install the required packages using pip.
 
