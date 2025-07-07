@@ -9,7 +9,13 @@ import os
 import subprocess
 import requests
 from dotenv import load_dotenv
-from tests.utils.utils import run_command, check_components_access, get_password_from_supass_file, get_username_from_influxdb2_admin_username_file, get_password_from_influxdb2_admin_password_file
+from tests.utils.utils import (
+  run_command,
+  check_components_access,
+  get_password_from_supass_file,
+  get_username_from_influxdb2_admin_username_file,
+  get_password_from_influxdb2_admin_password_file
+)
 
 load_dotenv()
 logger = logging.getLogger(__name__)
