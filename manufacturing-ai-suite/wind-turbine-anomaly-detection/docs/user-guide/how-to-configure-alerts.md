@@ -79,10 +79,9 @@ kubectl exec -it -n ts-wind-turbine-anomaly-app <mqtt_broker_pod_name> -- mosqui
 ### Prerequisite
 
 Please ensure that `make up_opcua_ingestion` has been executed by following the steps
-in the [getting started guide](./get-started.md#deploy-with-docker-compose)
+in the [getting started guide](./get-started.md#deploy-with-docker-compose) for the docker compose deployment
 
 To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow below steps.
-You can verify the publishing of OPC-UA alerts by checking the logs of the `Time Series Analytics Microservice`.
 
 ### Configuration
 
@@ -107,7 +106,7 @@ data0
 
 ### 2. Configuring OPC-UA Alert in config.json
 
-Update the Time Series Analytics Microservice `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` to add the following `opcua` details to the `alerts` section by following the [steps to update config](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice).
+Copy the contents of the Time Series Analytics Microservice `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` and replace the `mqtt` alerts with `opcua` alerts as below and pass this in the HTTP body while making the POST /config API call as mentioned at  [steps to update config](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice).
 
    ```json
    "alerts": {
@@ -122,18 +121,12 @@ Update the Time Series Analytics Microservice `edge-ai-suites/manufacturing-ai-s
 
 ### Subscribing to OPC UA Alerts using Sample OPCUA Subscriber
 
-1. Deploy the Sample App using below commands
-    ```bash
-    cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
-    make up_opcua_ingestion
-    ```
-
-2. Install python packages `asyncio` and `asyncua` to run the sample opc ua subscriber 
+1. Install python packages `asyncio` and `asyncua` to run the sample opc ua subscriber 
     ```bash
     pip install asyncio asyncua
     ```
 
-3. Run the following sample OPC UA subscriber by updating the `<IP-Address of OPCUA Server>` to read the alerts published to server on tag `ns=1;i=2004` from Time Series Analytics Microservice.
+2. Run the following sample OPC UA subscriber by updating the `<IP-Address of OPCUA Server>` to read the alerts published to server on tag `ns=1;i=2004` from Time Series Analytics Microservice.
 
     ```python
     import asyncio

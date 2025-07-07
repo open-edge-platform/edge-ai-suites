@@ -20,7 +20,7 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 1. Access to the web interface of the Edge Orchestrator with one or more [Edge Nodes Onboarded](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/edge_node_onboard.html>) to the Edge Orchestrator.
 
-1. Clusters with a [privilege template](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/additional_howtos/set_up_a_cluster_template.html>) have been created on the needed Edge Nodes following the procedures described in [Create Cluster](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/create_clusters.html#create-cluster>).
+1. Clusters with a [privilege template](<https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/advanced_functionality/set_up_a_cluster_template.html>) have been created on the needed Edge Nodes following the procedures described in [Create Cluster](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/create_clusters.html#create-cluster>).
 
 ### Making the Deployment Package Available
 
@@ -50,7 +50,7 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 See [Deployment Packages](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/deploy_packages.html#view-deployment-packages>) for more information on deployment packages.
 
-### Deploy the Application onto the Edge Nodes
+### Deploy the Application with default configuration onto the Edge Nodes
 
 To set up a deployment:
 
@@ -107,16 +107,6 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
     'http://<HOST_IP>:30002/config?restart=true' \
     -H 'accept: application/json'
     ```
-
-    To activate the custom configuration like OPC-UA/MQTT alerts publishing, update the configuration as required, replace with `<Updated_config>` and execute the below command. Please refer [./how-to-configure-alerts](./how-to-configure-alerts) for more details on OPC-UA/MQTT alerts configuration.
-   
-    ```bash
-    curl -X 'POST' \
-    'http://<HOST_IP>:5000/config' \
-    -H 'accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -d '<Updated_config>'
-    ```
 1. Follow the below steps for accessing `Grafana Dashboard` in the **Wind Turbine Anomaly Detection** sample application.
 
     i. Get the `internal-ip` of edge node to access the node using the below command 
@@ -126,3 +116,29 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
     ``` 
     ii. To check the results in the Grafana dashboard at port 30001, please follow instructions for helm     
        deployment at [link](get-started.md#verify-the-wind-turbine-anomaly-detection-results)
+
+### Deploy the application with OPC-UA alerts updated
+
+1. Point to the header link where we are configuring the tick script.
+
+1. Copy the tick script using `kubectl cp`
+
+1. Make the REST API call as below to `Time Series Analytics`    
+   microservice. As one can notice, the `mqtt` alerts key has been replaced with `opcua` key with its specific details.
+
+
+    ```bash
+    curl -X 'POST' \
+    'http://<HOST_IP>:30002/config' \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -d '<ADD details>'
+    ```
+
+1. Verification of alerts
+
+### Deploy the application with custom udf updated
+
+1. Update the deployment package like so and so
+2. Kubectl cp
+3. Verify the logs etc., 
