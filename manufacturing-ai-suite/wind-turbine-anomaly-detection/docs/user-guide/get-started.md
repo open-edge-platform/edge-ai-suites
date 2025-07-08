@@ -89,6 +89,7 @@ The `udfs` section specifies the details of the UDFs used in the task.
 | `name`  | The name of the UDF script.                                                 | `"windturbine_anomaly_detector"`       |
 | `models`| The name of the model file used by the UDF.                                 | `"windturbine_anomaly_detector.pkl"`   |
 
+> **Note:** The maximum allowed size for `config.json` is 5 KB.
 ---
 
 **Alerts Configuration**:
