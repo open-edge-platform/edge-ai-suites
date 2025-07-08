@@ -63,6 +63,43 @@ This guide provides instructions for setting up custom UDF deployment package (U
 The files at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice` representing the UDF deployment package (UDFs, TICKscripts, models)
 and config.json has been volume mounted for the Time Series Analytics Microservice service in `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and config.json, it has to be done at this location and the time series analytics microservice container needs to be restarted manually.
 
+### Helm Deployment
+
+1. Update the UDF deployment package by following the instructions in [Configure Time Series Analytics Microservice with Custom UDF Deployment Package](./how-to-configure-custom-udf.md#configure-time-series-analytics-microservice-with-custom-udf-deployment-package).
+
+2. Copy the updated UDF deployment package using the [steps above](#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
+
+3. Make the following REST API call to the Time Series Analytics microservice for the updated custom UDF:
+    ```sh
+    curl -X 'POST' \
+    'http://<HOST_IP>:30002/config' \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -d '{
+      "model_registry": {
+          "enable": false,
+          "version": "1.0"
+      },
+      "udfs": {
+          "name": "<custom_UDF>",
+          "models": "<custom_UDF>.pkl"
+      },
+      "alerts": {
+          "mqtt": {
+              "mqtt_broker_host": "ia-mqtt-broker",
+              "mqtt_broker_port": 1883,
+              "name": "my_mqtt_broker"
+          }
+      }
+    }'
+    ```
+
+4. Verify the logs of the Time Series Analytics Microservice:
+    ```sh
+    POD_NAME=$(kubectl get pods -n ts-wind-turbine-anomaly-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
+    kubectl logs -f -n ts-wind-turbine-anomaly-app $POD_NAME
+    ```
+
 ## With Model Registry
 
 > **Note**:

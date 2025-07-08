@@ -128,96 +128,15 @@ helm uninstall ts-wind-turbine-anomaly -n ts-wind-turbine-anomaly-app
 kubectl get all -n ts-wind-turbine-anomaly-app # It may take a few minutes for all application resources to be cleaned up.
 ```
 
+## Configure Alerts in Time Series Analytics Microservice
 
-### Deploy the Application with OPC-UA Alerts
+Follow [these steps](./how-to-configure-alerts.md#helm-deployment) to configure alerts in Time Series Analytics Microservice.
 
-#### Prerequisite
+## Deploy the Application with a Custom UDF
 
-Ensure the Wind Turbine Anomaly Detection sample app is deployed using the [installation step](#install-helm-charts---use-only-one-of-the-options-below) for OPC-UA ingestion.
+Follow [these steps](./how-to-configure-custom-udf.md#helm-deployment) to deploy the application with a custom UDF.
 
-To enable OPC-UA alerts in the Time Series Analytics Microservice, follow these steps:
-
-1. Configure the tick script by following [these instructions](./how-to-configure-alerts.md#1-configuring-opc-ua-alert-in-tick-script).
-
-2. Copy the tick script using the following command:
-    ```sh
-    cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection # path relative to git clone folder
-    cd time_series_analytics_microservice
-    mkdir windturbine_anomaly_detector
-    cp -r tick_scripts windturbine_anomaly_detector/.
-
-    POD_NAME=$(kubectl get pods -n ts-wind-turbine-anomaly-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
-
-    kubectl cp windturbine_anomaly_detector $POD_NAME:/tmp/ -n ts-wind-turbine-anomaly-app
-    ```
-
-3. Make the following REST API call to the Time Series Analytics microservice. Note that the `mqtt` alerts key is replaced with the `opcua` key and its specific details:
-    ```sh
-    curl -X 'POST' \
-    'http://<HOST_IP>:30002/config' \
-    -H 'accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -d '{
-      "model_registry": {
-          "enable": false,
-          "version": "1.0"
-      },
-      "udfs": {
-          "name": "windturbine_anomaly_detector",
-          "models": "windturbine_anomaly_detector.pkl"
-      },
-      "alerts": {
-          "opcua": {
-              "opcua_server": "opc.tcp://ia-opcua-server:4840/freeopcua/server/",
-              "namespace": 1,
-              "node_id": 2004
-          }
-      }
-    }'
-    ```
-
-4. To subscribe to OPC-UA alerts, follow [these steps](./how-to-configure-alerts.md#subscribing-to-opc-ua-alerts-using-sample-opcua-subscriber).
-
----
-
-### Deploy the Application with a Custom UDF
-
-1. Update the UDF deployment package by following the instructions in [Configure Time Series Analytics Microservice with Custom UDF Deployment Package](./how-to-configure-custom-udf.md#configure-time-series-analytics-microservice-with-custom-udf-deployment-package).
-
-2. Copy the updated UDF deployment package using the [steps above](#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
-
-3. Make the following REST API call to the Time Series Analytics microservice for the updated custom UDF:
-    ```sh
-    curl -X 'POST' \
-    'http://<HOST_IP>:30002/config' \
-    -H 'accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -d '{
-      "model_registry": {
-          "enable": false,
-          "version": "1.0"
-      },
-      "udfs": {
-          "name": "<custom_UDF>",
-          "models": "<custom_UDF>.pkl"
-      },
-      "alerts": {
-          "mqtt": {
-              "mqtt_broker_host": "ia-mqtt-broker",
-              "mqtt_broker_port": 1883,
-              "name": "my_mqtt_broker"
-          }
-      }
-    }'
-    ```
-
-4. Verify the logs of the Time Series Analytics Microservice:
-    ```sh
-    POD_NAME=$(kubectl get pods -n ts-wind-turbine-anomaly-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
-    kubectl logs -f -n ts-wind-turbine-anomaly-app $POD_NAME
-    ```
-
-### Deploy the Application with a Custom UDF by Uploading to the Model Registry
+## Deploy the Application with a Custom UDF by Uploading to the Model Registry
 
 Follow [these steps](./how-to-configure-custom-udf.md#with-model-registry) to deploy a custom UDF by uploading it to the Model Registry.
 

@@ -20,7 +20,7 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 1. Access to the web interface of the Edge Orchestrator with one or more [Edge Nodes Onboarded](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/edge_node_onboard.html>) to the Edge Orchestrator.
 
-1. Clusters with a [privilege template](<https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/advanced_functionality/set_up_a_cluster_template.html>) have been created on the needed Edge Nodes following the procedures described in [Create Cluster](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/create_clusters.html#create-cluster>).
+1. Clusters with a [privilege template](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/advanced_functionality/set_up_a_cluster_template.html>) have been created on the needed Edge Nodes following the procedures described in [Create Cluster](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/create_clusters.html#create-cluster>).
 
 ### Making the Deployment Package Available
 
@@ -117,92 +117,14 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
     ii. To check the results in the Grafana dashboard at port 30001, please follow instructions for helm     
        deployment at [link](get-started.md#verify-the-wind-turbine-anomaly-detection-results)
 
-### Deploy the application with OPC-UA alerts
 
-### Prerequisite
+### Configure Alerts in Time Series Analytics Microservice
 
-Please ensure the Wind Turbine Anomaly Detection sample app is deployed for OPC-UA ingestion.
-
-To enable OPC-UA alerts in the Time Series Analytics Microservice, follow these steps:
-
-1. Configure the tick script by following [these instructions](./how-to-configure-alerts.md#1-configuring-opc-ua-alert-in-tick-script).
-
-2. Copy the tick script using the following command:
-    ```sh
-    cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection # path relative to git clone folder
-    cd time_series_analytics_microservice
-    mkdir windturbine_anomaly_detector
-    cp -r tick_scripts windturbine_anomaly_detector/.
-
-    POD_NAME=$(kubectl get pods -n ts-wind-turbine-anomaly-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
-
-    kubectl cp windturbine_anomaly_detector $POD_NAME:/tmp/ -n ts-wind-turbine-anomaly-app
-    ```
-
-3. Make the following REST API call to the Time Series Analytics microservice. Note that the `mqtt` alerts key is replaced with the `opcua` key and its specific details:
-    ```sh
-    curl -X 'POST' \
-    'http://<HOST_IP>:30002/config' \
-    -H 'accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -d '{
-      "model_registry": {
-          "enable": false,
-          "version": "1.0"
-      },
-      "udfs": {
-          "name": "windturbine_anomaly_detector",
-          "models": "windturbine_anomaly_detector.pkl"
-      },
-      "alerts": {
-          "opcua": {
-              "opcua_server": "opc.tcp://ia-opcua-server:4840/freeopcua/server/",
-              "namespace": 1,
-              "node_id": 2004
-          }
-      }
-    }'
-    ```
-
-4. To subscribe to OPC-UA alerts, follow [these steps](./how-to-configure-alerts.md#subscribing-to-opc-ua-alerts-using-sample-opcua-subscriber).
-
+Follow [these steps](./how-to-configure-alerts.md#helm-deployment) to configure alerts in Time Series Analytics Microservice.
 
 ### Deploy the Application with a Custom UDF
 
-1. Update the UDF deployment package by following the instructions in [Configure Time Series Analytics Microservice with Custom UDF Deployment Package](./how-to-configure-custom-udf.md#configure-time-series-analytics-microservice-with-custom-udf-deployment-package).
-
-2. Copy the updated UDF deployment package using the [steps](./how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
-
-3. Make the following REST API call to the Time Series Analytics microservice for the updated custom UDF:
-    ```sh
-    curl -X 'POST' \
-    'http://<HOST_IP>:30002/config' \
-    -H 'accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -d '{
-      "model_registry": {
-          "enable": false,
-          "version": "1.0"
-      },
-      "udfs": {
-          "name": "<custom_UDF>",
-          "models": "<custom_UDF>.pkl"
-      },
-      "alerts": {
-          "mqtt": {
-              "mqtt_broker_host": "ia-mqtt-broker",
-              "mqtt_broker_port": 1883,
-              "name": "my_mqtt_broker"
-          }
-      }
-    }'
-    ```
-
-4. Verify the logs of the Time Series Analytics Microservice:
-    ```sh
-    POD_NAME=$(kubectl get pods -n ts-wind-turbine-anomaly-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
-    kubectl logs -f -n ts-wind-turbine-anomaly-app $POD_NAME
-    ```
+Follow [these steps](./how-to-configure-custom-udf.md#helm-deployment) to deploy the application with a custom UDF.
 
 ### Deploy the Application with a Custom UDF by Uploading to the Model Registry
 
