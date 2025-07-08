@@ -49,16 +49,15 @@
     POSTGRES_PASSWORD:
     MINIO_ACCESS_KEY:  
     MINIO_SECRET_KEY: 
-    http_proxy: # example: http_proxy: http://proxy.example.com:891
-    https_proxy: # example: http_proxy: http://proxy.example.com:891
+    HTTP_PROXY: # example: http_proxy: http://proxy.example.com:891
+    HTTPS_PROXY: # example: http_proxy: http://proxy.example.com:891
     ```
 
 ## Install helm charts - use only one of the options below:
 
 > **Note:**
 > 1. Please uninstall the helm charts if already installed.
-> 2. If the worker nodes are running behind proxy server, then please additionally set env.HTTP_PROXY and env.HTTPS_PROXY env like the way env.TELEGRAF_INPUT_PLUGIN is being set below with helm install command
-> 3. Please note the `helm install` command fails if the above required fields are not populated
+> 2. Please note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in `values.yaml` file.
 
 - OPC-UA ingestion flow:

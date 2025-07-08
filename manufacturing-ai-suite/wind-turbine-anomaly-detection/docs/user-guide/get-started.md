@@ -3,12 +3,10 @@
 -   **Time to Complete:** 30 minutes
 -   **Programming Language:**  Python 3
 
-## Prerequisites
 
-- [System Requirements](system-requirements.md)
+## Configure Docker
 
-
-### Docker Configuration
+To configure Docker:
 
 1. **Run Docker as Non-Root**: Follow the steps in [Manage Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user).
 2. **Configure Proxy (if required)**:
@@ -111,7 +109,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 
 
 #### **`config/`**:
-   - `kapacitor_devmode.conf` would be updated as per the above `config.json` at runtime for usage.
+   - `kapacitor_devmode.conf` would be updated as per the `config.json` at runtime for usage.
 
 #### **`udfs/`**:
    - Contains the python script to process the incoming data.
@@ -145,14 +143,14 @@ cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
    - `MR_MINIO_ACCESS_KEY`
    - `MR_MINIO_SECRET_KEY`
 
-2. Deploy the sample app, use only one of the options below:
+2. Deploy the sample app, use only one of the following options:
 
 > **NOTE**:
-> 1. The below `make up_opcua_ingestion` or `make up_mqtt_ingestion` fails if the above required fields are not populated
+>  - The below `make up_opcua_ingestion` or `make up_mqtt_ingestion` fails if the above required fields are not populated
 >    as per the rules called out in `.env` file.
-> 2. The sample app is deployed by pulling the pre-built container images of the sample app 
->    from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY` env
->    variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection`)
+>  - The sample app is deployed by pulling the pre-built container images of the sample app 
+>    from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY`
+>    env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection`)
 
    - **Using OPC-UA ingestion**:
      ```bash
@@ -167,7 +165,7 @@ Use the following command to verify that all containers are active and error-fre
 
 > **Note:** The command `make status` may show errors in containers like ia-grafana when user have not logged in
 > for the first login OR due to session timeout. Just login again in Grafana and functionality wise if things are working, then
-> please ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
+> ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
 
 
 ```sh
@@ -186,7 +184,7 @@ make status
     docker exec -it ia-influxdb bash
    ```
 
-2. Run below commands to see the data in InfluxDB*:
+2. Run following commands to see the data in InfluxDB*:
 
     > **NOTE**:
     > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
@@ -203,7 +201,7 @@ make status
     select * from wind_turbine_anomaly_data
     ```
 
-2. To check the output in Grafana, follow the below steps.
+2. To check the output in Grafana:
 
     - Use link `http://<host_ip>:3000` to launch Grafana from browser (preferably, chrome browser)
       
@@ -224,13 +222,13 @@ make status
   
       ![Anomaly prediction in grid active power](./_images/anomaly_power_prediction.png)
 
-## Bringing down the sample app
+## Bring down the sample app
 
   ```sh
   make down
   ```
 
-## Troubleshooting
+## Check logs - troubleshooting
 
 - Check container logs to catch any failures:
 

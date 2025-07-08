@@ -1,4 +1,4 @@
-# How to enable System Metrics Dashboard
+# Enable System Metrics Dashboard
 
 > **Note**: The system metrics dashboard is only supported with docker compose deployments and requires `Telegraf` to run as the `root` user.
 

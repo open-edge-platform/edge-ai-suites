@@ -1,4 +1,4 @@
-# How to Configure Time Series Analytics Microservice with Custom UDF deployment package
+# Configure Time Series Analytics Microservice with Custom UDF deployment package
 
 This guide provides instructions for setting up custom UDF deployment package (UDFs, TICKscripts, models) and config.json in **Time Series Analytics Microservice**.
 
@@ -65,6 +65,13 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
 
 ## With Model Registry
 
+> **Note**:
+> 1. If doing docker based deployment, ensure the Wind Turbine Anomaly Detection sample app is deployed by following [getting started](./get-started.md)
+> 2. If doing Helm based deployment on Kubernetes cluster, ensure the Wind Turbine Anomaly Detection sample app is deployed by following [how to deploy with helm](./how-to-deploy-with-helm.md)
+
+This approach facilitates the updates to `Time Series Analytics` microservice at runtime by updating the configuration and UDF deployment
+package using its REST APIs.
+
 ### 1. UDF Deployment Package structure
 
 If one wants to create a separate UDF deployment package, just ensure to have the following structure
@@ -105,20 +112,13 @@ to the Model Registry microservice.
 
 ### 3. Updating Time Series Analytics Microservice config for Model Registry usage
 
-> **Note**:
-> 1. If doing docker based deployment, ensure the Wind Turbine Anomaly Detection sample app is deployed by following [getting started](./get-started.md)
-> 2. If doing Helm based deployment on Kubernetes cluster, ensure the Wind Turbine Anomaly Detection sample app is deployed by following [how to deploy with helm](./how-to-deploy-with-helm.md)
 
-1. Copy the content of `config.json` from `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/`
-2. Set ``model_registry` key `enable` to `true`.
-3. Specify the `udf_name` and `version` as defined in the Model Registry.
-   
-   > **Note**: Mismatched task names or versions will cause the microservice to restart.
-4. Update `udfs` sections with the appropriate `name` and `models` details.
-5. Run the below command, to update the configuration in `Time Series Analytics` microservice
+1. Run the below command, to update the configuration in `Time Series Analytics` microservice. 
+   Please note, the default of `<PORT>` value is `5000` for docker compose deployment and `30002` for helm based deployment.
+
     ```bash
     curl -X 'POST' \
-    'http://<HOST_IP>:5000/config' \
+    'http://<HOST_IP>:<PORT>/config' \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -d '{
