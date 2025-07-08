@@ -89,7 +89,7 @@ def test_change_password(waiter):
   )
 
 @pytest.mark.zephyr_id("NEX-T9374")
-def test_web_option_availability(waiter):
+def test_web_options_availability(waiter):
   """Test that the web option is available in the admin interface."""
   waiter.perform_login(
     SMART_INTERSECTION_URL,
