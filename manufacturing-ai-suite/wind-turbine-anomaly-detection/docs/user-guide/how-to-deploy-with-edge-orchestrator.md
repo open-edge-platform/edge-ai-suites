@@ -50,7 +50,7 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 See [Deployment Packages](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/deploy_packages.html#view-deployment-packages>) for more information on deployment packages.
 
-### Deploy the Application with default configuration onto the Edge Nodes
+### Deploy the Application onto the Edge Nodes
 
 To set up a deployment:
 
