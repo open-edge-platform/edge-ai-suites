@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 8,
   "links": [],
   "panels": [
     {
@@ -27,102 +27,29 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 15,
-        "w": 11,
+        "h": 16,
+        "w": 24,
         "x": 0,
         "y": 0
       },
-      "id": 1,
+      "id": 19,
       "options": {
         "code": {
           "language": "plaintext",
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<iframe \n  src= \"${WEBRTC_URL}/object_detection_1\" \n  style=\"width:100%;height:500px\";\n  allow=\"autoplay; encrypted-media\"\n  >\n</iframe> ",
+        "content": "<iframe \n  src=\"${WEBRTC_URL}/object_detection_4\" \n  style=\"width:100%;height:500px\" \n  allow=\"autoplay; encrypted-media\">\n</iframe>",
         "mode": "html"
       },
       "pluginVersion": "11.5.4",
-      "title": "Zone 1",
-      "type": "text"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 15,
-        "w": 11,
-        "x": 11,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<iframe \n  src= \"${WEBRTC_URL}/object_detection_2\" \n  style=\"width:100%;height:500px\";\n  allow=\"autoplay; encrypted-media\"\n  >\n</iframe> ",
-        "mode": "html"
-      },
-      "pluginVersion": "11.5.4",
-      "title": "Zone 2",
-      "type": "text"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 15,
-        "w": 11,
-        "x": 0,
-        "y": 15
-      },
-      "id": 3,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<iframe \n  src= \"${WEBRTC_URL}/object_detection_3\" \n  style=\"width:100%;height:500px\";\n  allow=\"autoplay; encrypted-media\"\n  >\n</iframe> ",
-        "mode": "html"
-      },
-      "pluginVersion": "11.5.4",
-      "title": "Zone 3",
-      "type": "text"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 15,
-        "w": 11,
-        "x": 11,
-        "y": 15
-      },
-      "id": 4,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<iframe \n  src= \"${WEBRTC_URL}/object_detection_4\" \n  style=\"width:100%;height:500px\";\n  allow=\"autoplay; encrypted-media\"\n  >\n</iframe> ",
-        "mode": "html"
-      },
-      "pluginVersion": "11.5.4",
-      "title": "Zone 4",
+      "timeFrom": "now-1d",
+      "title": "WebRTC Stream",
       "type": "text"
     },
     {
       "datasource": {
+        "default": false,
         "type": "grafana-mqtt-datasource",
         "uid": "PBA9FB8DAC51D59B8"
       },
@@ -157,12 +84,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 20,
-        "w": 22,
+        "h": 6,
+        "w": 24,
         "x": 0,
-        "y": 30
+        "y": 16
       },
-      "id": 5,
+      "id": 9,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -183,7 +110,7 @@
             "uid": "PBA9FB8DAC51D59B8"
           },
           "refId": "A",
-          "topic": "object_detection_custom_total_1"
+          "topic": "object_detection_custom_4"
         }
       ],
       "title": "Occupancy Status",
@@ -198,21 +125,23 @@
           "id": "partitionByValues",
           "options": {
             "fields": [
-              "Region 1_1 1"
+              "Region 1_4 1"
             ],
-            "keepFields": true
+            "keepFields": true,
+            "naming": {
+              "asLabels": true
+            }
           }
         },
         {
           "id": "joinByLabels",
           "options": {
-            "value": "Region 1_1 1"
+            "value": "Region 1_4 1"
           }
         },
         {
           "id": "extractFields",
           "options": {
-            "delimiter": ",",
             "source": "[object Object]"
           }
         },
@@ -221,20 +150,71 @@
           "options": {
             "include": {
               "names": [
-                "Zone ID",
-                "Spot ID",
-                "Status",
-                "Type",
-                "Color",
                 "Entry Time",
-                "Dwell Time"
+                "Type",
+                "License Plate"
               ]
             }
           }
         },
         {
           "id": "organize",
-          "options": {}
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "License Plate": 1,
+              "Entry Time": 2,
+              "Type": 0
+            },
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": ""
+                  }
+                },
+                "fieldName": "Type"
+              }
+            ],
+            "match": "any",
+            "type": "exclude"
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "equal",
+                  "options": {}
+                },
+                "fieldName": "Type"
+              }
+            ],
+            "match": "any",
+            "type": "exclude"
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Entry Time"
+              }
+            ]
+          }
         }
       ],
       "type": "table"
@@ -268,10 +248,25 @@
     "from": "now-1s",
     "to": "now"
   },
-  "timepicker": {},
-  "timezone": "browser",
-  "title": "Smart Parking Dashboard",
-  "uid": "eeokpst3k6xogd",
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "15s",
+      "1m",
+      "10m",
+      "30m",
+      "1h",
+      "6h",
+      "12h",
+      "1d",
+      "7d",
+      "14d",
+      "30d"
+    ]
+  },
+  "timezone": "",
+  "title": "Zone 1 Lane 4",
+  "uid": "fecxe786edr0ge",
   "version": 1,
   "weekStart": ""
 }
