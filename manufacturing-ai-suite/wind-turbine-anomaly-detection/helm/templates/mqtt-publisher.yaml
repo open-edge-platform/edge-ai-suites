@@ -49,6 +49,8 @@ spec:
           value: "time-series-analytics-microservice"
         - name: TS_MS_PORT
           value: '{{ .Values.config.time_series_analytics_microservice.kapacitor_port }}'
+        - name: CONTINUOUS_SIMULATOR_INGESTION
+          value: '{{ .Values.env.CONTINUOUS_SIMULATOR_INGESTION }}'
         volumeMounts:
         {{ if eq .Values.env.SECURE_MODE true }}
         - name: certs
