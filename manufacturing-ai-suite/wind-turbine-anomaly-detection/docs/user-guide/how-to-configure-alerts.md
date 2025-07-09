@@ -142,11 +142,11 @@ curl -X 'POST' \
 
 ## Helm Deployment
 
-### Publishing MQTT Alerts
+- **Publishing MQTT Alerts**
 
 For detailed instructions on configuring and publishing MQTT alerts, refer to the [Publishing MQTT Alerts](#publishing-mqtt-alerts) section above.
 
-### Subscribing to MQTT Alerts
+- **Subscribing to MQTT Alerts**
 
 Follow the below steps to subscribe to the published MQTT alerts.
 
@@ -169,21 +169,21 @@ kubectl exec -it -n ts-wind-turbine-anomaly-app <mqtt_broker_pod_name> -- mosqui
 kubectl exec -it -n ts-wind-turbine-anomaly-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
 ```
 
-### Publishing OPC-UA Alerts
+- **Publishing OPC-UA Alerts**
 
-#### Prerequisite
 
-Ensure the Wind Turbine Anomaly Detection sample app is deployed using the [installation step](./how-to-deploy-with-helm.md#install-helm-charts---use-only-one-of-the-options-below) for OPC-UA ingestion.
+> **Note:**
+> Ensure the Wind Turbine Anomaly Detection sample app is deployed using the [installation step](./how-to-deploy-with-helm.md#install-helm-charts---use-only-one-of-the-options-below) for OPC-UA ingestion.
 
 To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow below steps.
 
-#### Configuration
+- Configuration
 
-#### 1. Configuring OPC-UA Alert in TICK Script
+1. Configuring OPC-UA Alert in TICK Script
 
 Configure the tick script by following [these instructions](#1-configuring-opc-ua-alert-in-tick-script).
 
-#### 2. Copying the TICK script
+2. Copying the TICK script
 
 Copy the TICK script using the following command:
 
@@ -198,7 +198,7 @@ POD_NAME=$(kubectl get pods -n ts-wind-turbine-anomaly-app -o jsonpath='{.items[
 kubectl cp windturbine_anomaly_detector $POD_NAME:/tmp/ -n ts-wind-turbine-anomaly-app
 ```
 
-#### 3. Configuring OPC-UA Alert in config.json
+3. Configuring OPC-UA Alert in config.json
 
 Make the following REST API call to the Time Series Analytics microservice. Note that the `mqtt` alerts key is replaced with the `opcua` key and its specific details:
 
@@ -226,7 +226,7 @@ curl -X 'POST' \
 }'
 ```
 
-#### Subscribing to OPC UA Alerts using Sample OPCUA Subscriber
+- **Subscribing to OPC UA Alerts using Sample OPCUA Subscriber**
 
 To subscribe to OPC-UA alerts, follow [these steps](#subscribing-to-opc-ua-alerts-using-sample-opcua-subscriber).
 

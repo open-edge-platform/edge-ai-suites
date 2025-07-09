@@ -65,6 +65,8 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
 
 ### Helm Deployment
 
+> **Note:** This method does not use a volume mount. Instead, the `kubectl cp` command is used to copy the UDF deployment package into the container, which serves the same purpose.
+
 1. Update the UDF deployment package by following the instructions in [Configure Time Series Analytics Microservice with Custom UDF Deployment Package](./how-to-configure-custom-udf.md#configure-time-series-analytics-microservice-with-custom-udf-deployment-package).
 
 2. Copy the updated UDF deployment package using the [steps above](#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
