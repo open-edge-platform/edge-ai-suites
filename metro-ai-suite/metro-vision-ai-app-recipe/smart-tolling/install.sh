@@ -55,6 +55,16 @@ omz_converter -d src/dlstreamer-pipeline-server/models --name license-plate-reco
 mv src/dlstreamer-pipeline-server/models/intel/public/license-plate-recognition-barrier-0007/* src/dlstreamer-pipeline-server/models/intel/license-plate-recognition-barrier-0007
 
 ##############################################################################
+mkdir -p src/dlstreamer-pipeline-server/videos
+declare -A video_urls=(
+    ["cars_extended.mp4"]="https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos/cars_extended.mp4"
+)
+for video_name in "\${!video_urls[@]}"; do
+    if [ ! -f src/dlstreamer-pipeline-server/videos/\${video_name} ]; then
+        echo "Download \${video_name}..."
+        curl -L "\${video_urls[\$video_name]}" -o "src/dlstreamer-pipeline-server/videos/\${video_name}"
+    fi
+done
 
 echo "Fix ownership..."
 chown -R "$(id -u):$(id -g)" src/dlstreamer-pipeline-server/models src/dlstreamer-pipeline-server/videos 2>/dev/null || true
