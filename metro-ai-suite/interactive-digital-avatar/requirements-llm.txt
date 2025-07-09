@@ -1,0 +1,10 @@
+# LLM + OV
+--extra-index-url https://download.pytorch.org/whl/cpu
+transformers
+optimum[openvino,nncf]
+
+# Fastapi
+fastapi[standard]
+
+# Misc
+numpy<2

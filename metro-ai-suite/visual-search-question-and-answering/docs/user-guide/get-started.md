@@ -102,10 +102,7 @@ You might want to pay some attention to `DEVICE` and `VLM_DEVICE` in `env.sh`. B
 
 It might take a while to start the services for the first time, as there are some models to be prepared.
 
-Check if all microservices are up and runnning
-    ```bash
-    docker compose -f compose_milvus.yaml ps
-    ```
+Check if all microservices are up and runnning with `docker compose -f compose_milvus.yaml ps`
 
 Output 
 ```

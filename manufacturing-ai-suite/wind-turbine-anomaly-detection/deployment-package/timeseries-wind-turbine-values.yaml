@@ -4,8 +4,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 ---
-namespace: apps
+namespace: ts-wind-turbine-anomaly-app
 DOCKER_REGISTRY: ''
+imagePullPolicy: Always
 env:
   # The INFLUXDB_USERNAME and INFLUXDB_PASSWORD length must be a minimum of 5 and 10 characters respectively and 
   # should contain alphanumeric characters with atleast one digit. 
@@ -17,9 +18,14 @@ env:
   # and should contain alphanumeric characters with atleast one digit
   VISUALIZER_GRAFANA_USER: 
   VISUALIZER_GRAFANA_PASSWORD: 
-  # The POSTGRES_USER length must be a minimum of 5 and 10 characters respectively
+  # The POSTGRES_PASSWORD length must be a minimum of 5 and 10 characters respectively and should contain alphanumeric characters with at least one digit
   POSTGRES_PASSWORD:
+  # MinIO Access Key length must be a minimum of 8 and 16 characters respectively and should contain alphanumeric characters with at least one digit 
+  MINIO_ACCESS_KEY:
   # MinIO Secret Key length must be a minimum of 8 and 16 characters respectively and should contain alphanumeric characters with at least one digit 
   MINIO_SECRET_KEY:
   HTTP_PROXY: 
   HTTPS_PROXY: 
+images:
+  # Please provide the suffix for the image version you want to use like rc1, rc2, git hash id etc.
+  image_suffix: ""

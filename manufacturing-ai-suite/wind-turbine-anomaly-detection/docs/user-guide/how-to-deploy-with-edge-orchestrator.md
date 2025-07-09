@@ -28,6 +28,8 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 1. Update the below fields in `timeseries-wind-turbine-values.yaml` in the above deployment package folder
 
+   > **Note**: Please note the `helm install` command fails if the above required fields are not populated as per the rules called out in `timeseries-wind-turbine-values.yaml` file
+
     ```sh
     INFLUXDB_USERNAME:
     INFLUXDB_PASSWORD:
@@ -93,16 +95,34 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
     export KUBECONFIG=~/kubeconfig.yaml
     ```
 
-1. Copy the udf deployment, please refer [here](how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice)
+1. Copy the udf deployment package, please refer [here](how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice)
 
 1. Download the kubeconfig of the cluster of the Edge Node on which the Application has been deployed. Refer [Kubeconfig Download](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/accessing_clusters.html#organize-cluster-access-with-a-kubeconfig-file>).
 
+1. Activate the new udf deployment package with below command
+
+    To activate the default configuration, execute the below command
+    ```bash
+    curl -X 'GET' \
+    'http://<HOST_IP>:30002/config?restart=true' \
+    -H 'accept: application/json'
+    ```
+
+    To activate the custom configuration like OPC-UA/MQTT alerts publishing, update the configuration as required, replace with `<Updated_config>` and execute the below command. Please refer [./how-to-configure-alerts](./how-to-configure-alerts) for more details on OPC-UA/MQTT alerts configuration.
+   
+    ```bash
+    curl -X 'POST' \
+    'http://<HOST_IP>:5000/config' \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -d '<Updated_config>'
+    ```
 1. Follow the below steps for accessing `Grafana Dashboard` in the **Wind Turbine Anomaly Detection** sample application.
 
-    1. Get the `internal-ip` of edge node to access the node using the below command 
+    i. Get the `internal-ip` of edge node to access the node using the below command 
 
-        ```bash
-            kubectl get node -o wide
-        ``` 
-    1. To check the results in the Grafana dashboard at port 30001, please follow instructions for helm     
+    ```bash
+    kubectl get node -o wide
+    ``` 
+    ii. To check the results in the Grafana dashboard at port 30001, please follow instructions for helm     
        deployment at [link](get-started.md#verify-the-wind-turbine-anomaly-detection-results)

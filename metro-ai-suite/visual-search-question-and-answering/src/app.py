@@ -615,7 +615,7 @@ if __name__ == '__main__':
                 st.session_state.de_duplicate = st.checkbox("",label_visibility="visible", key = "kded")
                 st.session_state.threshold = st.number_input("",label_visibility="visible", format="%0.1f", value=5.0, step=0.1, key="kthreshold")
         with col3.container(height=100):
-            file_path = st.text_input("file dirctory on host",value=file_path,key="kfilePath")
+            file_path = st.text_input("file directory on host",value=file_path,key="kfilePath")
         with col4.container(height=100,key = "bt"):
             with st.container():
                 st.write("")

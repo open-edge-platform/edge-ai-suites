@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-namespace: apps
+namespace: ts-wind-turbine-anomaly-app
 # Please provide docker registry details below for docker images pull/push operations.
 # Please provide full registry url with port trail by /
 # e.q. localhost:5000/
@@ -34,6 +34,9 @@ env:
   HTTPS_PROXY: 
   # SECURE_MODE environment variable should not be changed as it may cause unexpected behavior or system failure.
   SECURE_MODE: false 
+  # If CONTINUOUS_SIMULATOR_INGESTION is set to true (default), continuous looping of simulator data is enabled.
+  # To ingest the simulator data only once (without looping), set this variable to false.
+  CONTINUOUS_SIMULATOR_INGESTION: true
   TELEGRAF_INPUT_PLUGIN: opcua
   TIMESERIES_USER_NAME: timeseries_user
   TIMESERIES_UID: 1999
@@ -104,7 +107,9 @@ config:
   opcuaserver:
     name: ia-opcua-server
     int:
-      pub_port: 4840
+      port: 4840
+    ext:
+      port: 30003
   mqttpublisher:
       name: mqttpublisher
   model_registry:

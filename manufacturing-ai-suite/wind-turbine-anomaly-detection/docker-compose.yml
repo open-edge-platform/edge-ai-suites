@@ -201,6 +201,7 @@ services:
       NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
       TS_MS_SERVER: "ia-time-series-analytics-microservice"
       TS_MS_PORT: ${KAPACITOR_PORT}
+      CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
     restart: unless-stopped
     security_opt:
     - no-new-privileges
@@ -209,6 +210,8 @@ services:
       interval: 5m
     networks:
     - timeseries_network
+    ports:
+    - ${OPCUA_SERVER_PORT}:4840
     volumes:
     - ./simulator/simulation_data/windturbine_data.csv:/app/windturbine_data.csv
 
@@ -239,6 +242,7 @@ services:
       NO_PROXY: "ia-mqtt-broker,ia-time-series-analytics-microservice,${no_proxy}"
       TS_MS_SERVER: "ia-time-series-analytics-microservice"
       TS_MS_PORT: ${KAPACITOR_PORT}
+      CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
     networks:
     - timeseries_network
     command: ["--csv", "/windturbine_data.csv"]
@@ -270,7 +274,7 @@ services:
       GETI_SERVER_API_VERSION: ${GETI_SERVER_API_VERSION:-""}
       GETI_ORGANIZATION_ID: ${GETI_ORGANIZATION_ID:-""}
       GETI_WORKSPACE_ID: ${GETI_WORKSPACE_ID:-""}
-      GETI_SERVER_SSL_VERIFY: ${GETI_SERVER_SSL_VERIFY:-""}
+      GETI_SERVER_SSL_VERIFY: ${GETI_SERVER_SSL_VERIFY:-False}
       MLFLOW_TRACKING_URI: postgresql+psycopg2://${MR_USER_NAME}:${MR_PSQL_PASSWORD}@mr_postgres:5432/model_registry_db
       MLFLOW_S3_ENDPOINT_URL: ${MR_MLFLOW_S3_ENDPOINT_URL}
       MINIO_HOSTNAME: mr_minio
