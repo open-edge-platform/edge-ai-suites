@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from tests.utils.ui_utils import waiter, driver
 from tests.utils.utils import check_components_access
-from .conftest import SMART_INTERSECTION_URL, SMART_INTERSECTION_PASSWORD, SMART_INTERSECTION_USERNAME
+from .conftest import SCENESCAPE_URL, SCENESCAPE_PASSWORD, SCENESCAPE_USERNAME
 
 logger = logging.getLogger(__name__)
 
@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 def test_login(waiter):
   """Test that the admin login functionality works correctly."""
   waiter.perform_login(
-    SMART_INTERSECTION_URL,
+    SCENESCAPE_URL,
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
-    SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
+    SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
   )
 
   # Verify that the expected elements are present on the page
@@ -31,11 +31,11 @@ def test_login(waiter):
 def test_logout(waiter):
   """Test that the admin logout functionality works correctly."""
   waiter.perform_login(
-    SMART_INTERSECTION_URL,
+    SCENESCAPE_URL,
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
-    SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
+    SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
   )
 
   # Perform logout action
@@ -55,15 +55,15 @@ def test_logout(waiter):
 def test_change_password(waiter):
   """Test that the admin can change the password successfully."""
   waiter.perform_login(
-    SMART_INTERSECTION_URL,
+    SCENESCAPE_URL,
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
-    SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
+    SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
   )
 
   # Navigate to Password change page
-  waiter.driver.get(SMART_INTERSECTION_URL + "/admin/password_change")
+  waiter.driver.get(SCENESCAPE_URL + "/admin/password_change")
 
   # Wait for the 'Change my password' button to be present
   change_password_button = waiter.wait_and_assert(
@@ -75,9 +75,9 @@ def test_change_password(waiter):
   new_password1_input = waiter.driver.find_element(By.ID, "id_new_password1")
   new_password2_input = waiter.driver.find_element(By.ID, "id_new_password2")
 
-  old_password_input.send_keys(SMART_INTERSECTION_PASSWORD)
-  new_password1_input.send_keys(SMART_INTERSECTION_PASSWORD)
-  new_password2_input.send_keys(SMART_INTERSECTION_PASSWORD)
+  old_password_input.send_keys(SCENESCAPE_PASSWORD)
+  new_password1_input.send_keys(SCENESCAPE_PASSWORD)
+  new_password2_input.send_keys(SCENESCAPE_PASSWORD)
 
   # Submit the password change
   change_password_button.click()
@@ -92,21 +92,21 @@ def test_change_password(waiter):
 def test_web_options_availability(waiter):
   """Test that the web option is available in the admin interface."""
   waiter.perform_login(
-    SMART_INTERSECTION_URL,
+    SCENESCAPE_URL,
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
-    SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
+    SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
   )
 
   # Define static list of navbar links
   navbar_links = [
-    SMART_INTERSECTION_URL + "/",  # Scenes
-    SMART_INTERSECTION_URL + "/cam/list/",  # Cameras
-    SMART_INTERSECTION_URL + "/singleton_sensor/list/",  # Sensors
-    SMART_INTERSECTION_URL + "/asset/list/",  # Object Library
+    SCENESCAPE_URL + "/",  # Scenes
+    SCENESCAPE_URL + "/cam/list/",  # Cameras
+    SCENESCAPE_URL + "/singleton_sensor/list/",  # Sensors
+    SCENESCAPE_URL + "/asset/list/",  # Object Library
     "https://docs.openedgeplatform.intel.com/scenescape/main/toc.html",  # Documentation
-    SMART_INTERSECTION_URL + "/admin"  # Admin
+    SCENESCAPE_URL + "/admin"  # Admin
   ]
 
   # Check each link for a 200 status code

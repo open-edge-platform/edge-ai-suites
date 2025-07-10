@@ -7,17 +7,17 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from tests.utils.ui_utils import waiter, driver
-from .conftest import SMART_INTERSECTION_URL, SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
+from .conftest import SCENESCAPE_URL, SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
 
 
 def add_camera(waiter, camera_name, camera_id):
   """Helper function to log in and add a new camera."""
   waiter.perform_login(
-    SMART_INTERSECTION_URL,
+    SCENESCAPE_URL,
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
-    SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
+    SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
   )
 
   # Find the 'Cameras' navigation link and click it

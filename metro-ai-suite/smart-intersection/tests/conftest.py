@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 
 DOCKER_COMPOSE_FILE = os.getenv("DOCKER_COMPOSE_FILE", "compose.yml")
 
-SMART_INTERSECTION_URL = os.getenv("SMART_INTERSECTION_URL", "https://localhost")
-SMART_INTERSECTION_USERNAME = os.getenv("SMART_INTERSECTION_USERNAME", "admin")
-SMART_INTERSECTION_PASSWORD = os.getenv("SMART_INTERSECTION_PASSWORD", get_password_from_supass_file())
+SCENESCAPE_URL = os.getenv("SCENESCAPE_URL", "https://localhost")
+SCENESCAPE_USERNAME = os.getenv("SCENESCAPE_USERNAME", "admin")
+SCENESCAPE_PASSWORD = os.getenv("SCENESCAPE_PASSWORD", get_password_from_supass_file())
 
 GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
 GRAFANA_USERNAME = os.getenv("GRAFANA_USERNAME", "admin")
@@ -77,7 +77,7 @@ def build_and_deploy():
   assert code == 0, f"Deploy failed: {err}"
 
   # Wait for services to be ready
-  services_urls = [SMART_INTERSECTION_URL, GRAFANA_URL, INFLUX_DB_URL, NODE_RED_URL]
+  services_urls = [SCENESCAPE_URL, GRAFANA_URL, INFLUX_DB_URL, NODE_RED_URL]
   wait_for_services_readiness(services_urls)
 
   yield

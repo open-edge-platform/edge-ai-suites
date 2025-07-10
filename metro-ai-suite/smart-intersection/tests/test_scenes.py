@@ -6,17 +6,17 @@ import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from tests.utils.ui_utils import waiter, driver
-from .conftest import SMART_INTERSECTION_URL, SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
+from .conftest import SCENESCAPE_URL, SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
 
 def create_and_verify_scene(waiter, name_of_new_scene):
   """Helper function to create and verify a new scene."""
   # Perform login using Waiter class object
   waiter.perform_login(
-    SMART_INTERSECTION_URL,
+    SCENESCAPE_URL,
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
-    SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
+    SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
   )
 
   # Find the link element with id 'new_scene' and click it
@@ -54,11 +54,11 @@ def test_intersection_demo_avability(waiter):
     """Test that the admin login functionality works correctly."""
     # Perform login using Waiter class object
     waiter.perform_login(
-        SMART_INTERSECTION_URL,
+        SCENESCAPE_URL,
         By.ID, "username",
         By.ID, "password",
         By.ID, "login-submit",
-        SMART_INTERSECTION_USERNAME, SMART_INTERSECTION_PASSWORD
+        SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
     )
 
     # Find the link element that contains the image with alt text "Intersection-Demo"

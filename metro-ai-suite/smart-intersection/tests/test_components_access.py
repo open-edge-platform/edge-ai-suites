@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from tests.utils.ui_utils import waiter, driver
 from tests.utils.utils import check_components_access
 from .conftest import (
-  SMART_INTERSECTION_URL,
+  SCENESCAPE_URL,
   GRAFANA_URL,
   INFLUX_DB_URL,
   NODE_RED_URL,
@@ -22,7 +22,7 @@ from .conftest import (
 def test_components_access():
   """Test that all application components are accessible."""
   urls_to_check = [
-    SMART_INTERSECTION_URL,
+    SCENESCAPE_URL,
     GRAFANA_URL,
     INFLUX_DB_URL,
     NODE_RED_URL
