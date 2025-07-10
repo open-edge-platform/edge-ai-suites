@@ -71,14 +71,15 @@ spec:
         - -c
         - |
           mkdir -p /tmp/models
-          cd dlstreamer/samples
+          cd /tmp/
+          wget -O /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/v1.0.0.tar.gz && \
+          tar -xzf /tmp/main.tar.gz -C /tmp && \
+          cp -r /tmp/edge-ai-suites-1.0.0/metro-ai-suite/smart-parking/dlsps/models/* /tmp/models/ && \
+          rm -rf /tmp/main.tar.gz /tmp/edge-ai-suites-1.0.0
+          cd /home/dlstreamer/dlstreamer/samples
           chmod +x download_public_models.sh
           export MODELS_PATH=/tmp/models/ 
           ./download_public_models.sh yolov10s
-          cd /tmp/
-          git clone --depth=1 https://github.com/open-edge-platform/edge-ai-suites
-          cp -r /tmp/edge-ai-suites/metro-ai-suite/smart-parking/dlsps/models/* /tmp/models/
-          rm -rf /tmp/edge-ai-suites
         env:
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
@@ -183,4 +184,4 @@ metadata:
   name: dlstreamer-pipeline-server-config-input
 data:
   config.json: |-
-{{ .Files.Get "config/dlsps-config.json" | indent 4 }}
+{{ .Files.Get "config/dlstreamer-pipeline-server/config.json" | indent 4 }}

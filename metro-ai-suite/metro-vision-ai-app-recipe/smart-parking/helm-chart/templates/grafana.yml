@@ -15,39 +15,6 @@ spec:
       labels:
         app: grafana
     spec:
-      initContainers:
-      - name: intel-plugin-downloader
-        image: curlimages/curl:latest
-        command:
-        - /bin/sh
-        - -c
-        - |
-          mkdir -p /tmp/test_plugin
-          mkdir -p /tmp/dashboards
-          curl -L https://github.com/open-edge-platform/edge-ai-suites/archive/main.zip -o /tmp/main.zip && \
-          unzip -q /tmp/main.zip -d /tmp && \
-          cp -r /tmp/edge-ai-suites-main/metro-ai-suite/smart-parking/grafana/test_plugin/* /tmp/test_plugin/ && \
-          cp -r /tmp/edge-ai-suites-main/metro-ai-suite/smart-parking/grafana/dashboards/* /tmp/dashboards/ && \
-          for file in $(find /tmp/dashboards -name "*.json"); do
-            sed -i "s|0.0.0.0:8889|$HOST_IP:$WEBRTC_PORT|g" $file
-          done && \
-          rm -rf /tmp/main.zip /tmp/edge-ai-suites-main
-        env:
-        - name: http_proxy
-          value: {{ $.Values.env.http_proxy }}
-        - name: https_proxy
-          value: {{ $.Values.env.https_proxy }}
-        - name: no_proxy
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
-        - name: HOST_IP
-          value: {{ $.Values.env.HOST_IP }}
-        - name: WEBRTC_PORT
-          value: "{{ $.Values.config.mediamtx.ext.mediamtx_port }}"
-        volumeMounts:
-        - name: intel-plugin-volume
-          mountPath: /tmp/test_plugin
-        - name: dashboards-volume
-          mountPath: /tmp/dashboards
       containers:
       - name: grafana
         image: grafana/grafana:11.5.4
@@ -75,10 +42,9 @@ spec:
         - name: grafana-config
           mountPath: /etc/grafana/grafana.ini
           subPath: grafana.ini
-        - name: intel-plugin-volume
-          mountPath: /var/lib/grafana/plugins/intel-custom-panel
-        - name: dashboards-volume
-          mountPath: /var/lib/grafana/dashboards
+        - name: grafana-visualizer
+          mountPath: /var/lib/grafana/dashboards/visualizer.json
+          subPath: visualizer.json
       volumes:
       - name: dashboards-config
         configMap:
@@ -89,12 +55,9 @@ spec:
       - name: grafana-config
         configMap:
           name: grafana-config
-      - name: intel-plugin-volume
-        emptyDir:
-          sizeLimit: 100Mi
-      - name: dashboards-volume
-        emptyDir:
-          sizeLimit: 100Mi
+      - name: grafana-visualizer
+        configMap:
+          name: grafana-visualizer
 ---
 apiVersion: v1
 kind: Service
@@ -121,7 +84,7 @@ metadata:
   namespace: {{ $.Values.namespace }}
 data:
   dashboards.yml: |
-    {{ .Files.Get "config/grafana-dashboards.yml" | nindent 4 }}
+    {{ .Files.Get "config/grafana/dashboards.yml" | nindent 4 }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -130,7 +93,7 @@ metadata:
   namespace: {{ $.Values.namespace }}
 data:
   datasources.yml: |
-    {{ (.Files.Get "config/grafana-datasources.yml" | replace "0.0.0.0" .Values.env.HOST_IP | replace "1883" .Values.config.mqtt_broker.ext.mqtt_port) | nindent 4 }}
+    {{ .Files.Get "config/grafana/datasources.yml" | nindent 4 }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -139,4 +102,13 @@ metadata:
   namespace: {{ $.Values.namespace }}
 data:
   grafana.ini: |
-    {{ .Files.Get "config/grafana.ini" | nindent 4 }}
+    {{ .Files.Get "config/grafana/grafana.ini" | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-visualizer
+  namespace: {{ $.Values.namespace }}
+data:
+  visualizer.json: |
+    {{ (.Files.Get "config/grafana/dashboards/visualizer.json" | replace "0.0.0.0" .Values.env.HOST_IP | replace "8889" .Values.config.mediamtx.ext.mediamtx_port) | nindent 4 }}
