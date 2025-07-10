@@ -14,6 +14,10 @@
         "INFLUXDB_PASSWORD": {
           "type": "string",
           "pattern": "^[A-Za-z0-9]{10,}$",
+          "allOf": [
+            { "pattern": ".*[0-9].*" },
+            { "pattern": ".*[A-Za-z].*" }
+          ],
           "description": "At least 10 alphanumeric, at least one digit."
         },
         "VISUALIZER_GRAFANA_USER": {
@@ -24,21 +28,37 @@
         "VISUALIZER_GRAFANA_PASSWORD": {
           "type": "string",
           "pattern": "^[A-Za-z0-9]{10,}$",
+          "allOf": [
+            { "pattern": ".*[0-9].*" },
+            { "pattern": ".*[A-Za-z].*" }
+          ],
           "description": "At least 10 alphanumeric, at least one digit."
         },
         "POSTGRES_PASSWORD": {
           "type": "string",
           "pattern": "^[A-Za-z0-9]{10,}$",
+          "allOf": [
+            { "pattern": ".*[0-9].*" },
+            { "pattern": ".*[A-Za-z].*" }
+          ],
           "description": "At least 10 alphanumeric, at least one digit."
         },
         "MINIO_SECRET_KEY": {
           "type": "string",
           "pattern": "^[A-Za-z0-9]{10,}$",
+          "allOf": [
+            { "pattern": ".*[0-9].*" },
+            { "pattern": ".*[A-Za-z].*" }
+          ],
           "description": "At least 10 alphanumeric, at least one digit."
         },
         "MINIO_ACCESS_KEY": {
           "type": "string",
           "pattern": "^[A-Za-z0-9]{10,}$",
+          "allOf": [
+            { "pattern": ".*[0-9].*" },
+            { "pattern": ".*[A-Za-z].*" }
+          ],
           "description": "At least 10 alphanumeric, at least one digit."
         }
       }

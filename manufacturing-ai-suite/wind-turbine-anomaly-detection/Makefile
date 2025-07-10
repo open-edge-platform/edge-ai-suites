@@ -46,43 +46,43 @@ check_env_variables:
 					echo "INFLUXDB_USERNAME must not be admin."; \
 					exit 1; \
 				fi; \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z]{5,}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z]{5,}$$"; then \
 					echo "INFLUXDB_USERNAME length must be a minimum of 5 characters"; \
 					exit 1; \
 				fi \
 				;; \
 			INFLUXDB_PASSWORD) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
 					echo "The INFLUXDB_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit"; \
 					exit 1; \
 				fi \
 				;; \
 			VISUALIZER_GRAFANA_USER) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z]{5,}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z]{5,}$$"; then \
 					echo "VISUALIZER_GRAFANA_USER length must be a minimum of 5 characters"; \
 					exit 1; \
 				fi \
 				;; \
 			VISUALIZER_GRAFANA_PASSWORD) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
 					echo "VISUALIZER_GRAFANA_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit"; \
 					exit 1; \
 				fi \
 				;; \
 			MR_PSQL_PASSWORD) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
 					echo "MR_PSQL_PASSWORD length must be a minimum of 10 alphanumeric characters with atleast one digit"; \
 					exit 1; \
 				fi \
 				;; \
 			MR_MINIO_ACCESS_KEY) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
-					echo "MR_MINIO_ACCESS_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit; \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
+					echo "MR_MINIO_ACCESS_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit"; \
 					exit 1; \
 				fi \
 				;; \
 			MR_MINIO_SECRET_KEY) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]"; then \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
 					echo "MR_MINIO_SECRET_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit"; \
 					exit 1; \
 				fi \
