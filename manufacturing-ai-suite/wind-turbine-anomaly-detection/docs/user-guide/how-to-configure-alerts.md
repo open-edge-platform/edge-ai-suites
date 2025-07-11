@@ -1,14 +1,14 @@
 # Configure Alerts in Time Series Analytics Microservice
 
-This guide provides instructions for setting up alerts in **Time Series Analytics Microservice**.
+This section provides instructions for setting up alerts in **Time Series Analytics Microservice**.
 
 ## Docker Compose Deployment
 
-### Publishing MQTT Alerts
+### Publish MQTT Alerts
 
-#### Configurating MQTT Alerts
+#### Configure MQTT Alerts
 
-By default, the below MQTT alerts is configured in `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` file.
+By default, the following MQTT alerts is configured in `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` file.
 
   ```json
     "alerts": {
@@ -20,10 +20,10 @@ By default, the below MQTT alerts is configured in `edge-ai-suites/manufacturing
      }
    ```
 
-#### Configuring MQTT Alert in TICK Script
+#### Configure MQTT Alert in TICK Script
 
-The details below shows the snippet on how to add the MQTT if not 
-already added. By default, the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/tick_scripts/windturbine_anomaly_detector.tick` TICK Script has the below configuration done by default.
+The following snippet shows how to add the MQTT if not 
+already added. By default, the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/tick_scripts/windturbine_anomaly_detector.tick` TICK Script has the following configuration done by default.
 
 ```bash
 @windturbine_anomaly_detector()
@@ -39,7 +39,7 @@ already added. By default, the `edge-ai-suites/manufacturing-ai-suite/wind-turbi
 
 ### Subscribing to MQTT Alerts
 
-Follow the below steps to subscribe to the published MQTT alerts.
+Follow the steps to subscribe to the published MQTT alerts.
 
 - To subscribe to all MQTT topics, execute the following command:
 
@@ -57,17 +57,17 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/wind_turb
 
 #### Prerequisite
 
-Please ensure that `make up_opcua_ingestion` has been executed by following the steps
+Ensure that `make up_opcua_ingestion` has been executed by following the steps
 in the [getting started guide](./get-started.md#deploy-with-docker-compose) for the docker compose deployment
 
-To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow below steps.
+To enable OPC-UA alerts in `Time Series Analytics Microservice`, use the following steps.
 
 #### Configuration
 
-#### 1. Configuring OPC-UA Alert in TICK Script
+#### 1. Configure OPC-UA Alert in TICK Script
 
-The details below shows the snippet on how to add the OPC-UA alert if not 
-already added, please replace this in place of MQTT alert section at
+The following details shows the snippet on how to add the OPC-UA alert if not 
+already added, replace this in place of MQTT alert section at
 `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/tick_scripts/windturbine_anomaly_detector.tick`.
 
 ```bash
@@ -111,7 +111,7 @@ curl -X 'POST' \
 }'
 ```
 
-#### Subscribing to OPC UA Alerts using Sample OPCUA Subscriber
+#### Subscribe to OPC UA Alerts using Sample OPCUA Subscriber
 
 1. Install python packages `asyncio` and `asyncua` to run the sample opc ua subscriber 
     ```bash
@@ -142,13 +142,13 @@ curl -X 'POST' \
 
 ## Helm Deployment
 
-- **Publishing MQTT Alerts**
+- **Publish MQTT Alerts**
 
-For detailed instructions on configuring and publishing MQTT alerts, refer to the [Publishing MQTT Alerts](#publishing-mqtt-alerts) section above.
+For detailed instructions on configuring and publishing MQTT alerts, refer to the [Publishing MQTT Alerts](#publishing-mqtt-alerts) section.
 
-- **Subscribing to MQTT Alerts**
+- **Subscribe to MQTT Alerts**
 
-Follow the below steps to subscribe to the published MQTT alerts.
+Follow the steps to subscribe to the published MQTT alerts.
 
 To subscribe to MQTT topics in a Helm deployment, execute the following command:
 
@@ -169,7 +169,7 @@ kubectl exec -it -n ts-wind-turbine-anomaly-app <mqtt_broker_pod_name> -- mosqui
 kubectl exec -it -n ts-wind-turbine-anomaly-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
 ```
 
-- **Publishing OPC-UA Alerts**
+- **Publish OPC-UA Alerts**
 
 
 > **Note:**
@@ -226,7 +226,7 @@ curl -X 'POST' \
 }'
 ```
 
-- **Subscribing to OPC UA Alerts using Sample OPCUA Subscriber**
+- **Subscribe to OPC UA Alerts using Sample OPCUA Subscriber**
 
 To subscribe to OPC-UA alerts, follow [these steps](#subscribing-to-opc-ua-alerts-using-sample-opcua-subscriber).
 
