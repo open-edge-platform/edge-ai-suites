@@ -10,10 +10,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from tests.utils.ui_utils import waiter, driver
 from tests.utils.utils import check_components_access
 from .conftest import (
-  SCENESCAPE_URL,
+  SCENESCAPE_URL,  
+  SCENESCAPE_REMOTE_URL,
   GRAFANA_URL,
+  GRAFANA_REMOTE_URL,
   INFLUX_DB_URL,
+  INFLUX_REMOTE_DB_URL,
   NODE_RED_URL,
+  NODE_RED_REMOTE_URL,
   INFLUX_DB_ADMIN_USERNAME,
   INFLUX_DB_ADMIN_PASSWORD
 )
@@ -25,8 +29,26 @@ def test_components_access():
     SCENESCAPE_URL,
     GRAFANA_URL,
     INFLUX_DB_URL,
-    NODE_RED_URL
+    NODE_RED_URL,
   ]
+
+  for url in urls_to_check:
+    check_components_access(url)
+
+@pytest.mark.zephyr_id("NEX-T9369")
+def test_remote_components_access():
+  """Test that all remote application components are accessible."""
+
+  urls_to_check = [
+    SCENESCAPE_REMOTE_URL,
+    GRAFANA_REMOTE_URL,
+    INFLUX_REMOTE_DB_URL,
+    NODE_RED_REMOTE_URL
+  ]
+
+  # Check if any URL is not set
+  if any(url is None or url == "" for url in urls_to_check):
+    pytest.skip("One or more remote URL environment variables are not set")
 
   for url in urls_to_check:
     check_components_access(url)
@@ -51,6 +73,25 @@ def test_grafana_failed_login(waiter):
 def test_influx_db_login(waiter):
   waiter.perform_login(
     INFLUX_DB_URL,
+    By.CSS_SELECTOR, "[data-testid='username']",
+    By.CSS_SELECTOR, "[data-testid='password']",
+    By.CSS_SELECTOR, "[data-testid='button']",
+    INFLUX_DB_ADMIN_USERNAME, INFLUX_DB_ADMIN_PASSWORD
+  )
+
+    # Wait for the header element to be visible after login
+  waiter.wait_and_assert(
+    EC.visibility_of_element_located((By.CSS_SELECTOR, "[data-testid='home-page--header']")),
+    error_message='Welcome message not visible within 10 seconds after login'
+  )
+
+@pytest.mark.zephyr_id("NEX-T9619")
+def test_remote_influx_db_login(waiter):
+  if not INFLUX_REMOTE_DB_URL:
+    pytest.skip("INFLUX_REMOTE_DB_URL is not set")
+    
+  waiter.perform_login(
+    INFLUX_REMOTE_DB_URL,
     By.CSS_SELECTOR, "[data-testid='username']",
     By.CSS_SELECTOR, "[data-testid='password']",
     By.CSS_SELECTOR, "[data-testid='button']",

@@ -6,7 +6,35 @@ import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from tests.utils.ui_utils import waiter, driver
-from .conftest import SCENESCAPE_URL, SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
+from .conftest import SCENESCAPE_URL, SCENESCAPE_REMOTE_URL, SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
+
+
+def verify_intersection_demo_avability(waiter, url):
+  """Helper function to verify the Intersection-Demo scene."""
+  # Perform login using Waiter class object
+  waiter.perform_login(
+    SCENESCAPE_URL,
+    By.ID, "username",
+    By.ID, "password",
+    By.ID, "login-submit",
+    SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
+  )
+
+  # Find the link element that contains the image with alt text "Intersection-Demo"
+  link_element = waiter.wait_and_assert(
+    EC.presence_of_element_located((By.XPATH, "//a[img[@alt='Intersection-Demo']]")),
+    error_message="Link containing image with alt text 'Intersection-Demo' is not present on the page"
+  )
+  link_element.click()
+
+  # Verify that the scene name element is present and has the correct text
+  scene_name_element = waiter.wait_and_assert(
+    EC.presence_of_element_located((By.ID, "scene_name")),
+    error_message="Scene name element is not present or text does not match 'Intersection-Demo'"
+  )
+  assert scene_name_element.text == "Intersection-Demo", (
+    "Scene name text does not match 'Intersection-Demo'"
+  )
 
 def create_and_verify_scene(waiter, name_of_new_scene):
   """Helper function to create and verify a new scene."""
@@ -51,31 +79,17 @@ def create_and_verify_scene(waiter, name_of_new_scene):
 
 @pytest.mark.zephyr_id("NEX-T9370")
 def test_intersection_demo_avability(waiter):
-    """Test that the admin login functionality works correctly."""
-    # Perform login using Waiter class object
-    waiter.perform_login(
-        SCENESCAPE_URL,
-        By.ID, "username",
-        By.ID, "password",
-        By.ID, "login-submit",
-        SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
-    )
+  """Test that Intersection-Demo is visible after login."""
+  # Perform login using Waiter class object
+  verify_intersection_demo_avability(waiter, SCENESCAPE_URL)
 
-    # Find the link element that contains the image with alt text "Intersection-Demo"
-    link_element = waiter.wait_and_assert(
-        EC.presence_of_element_located((By.XPATH, "//a[img[@alt='Intersection-Demo']]")),
-        error_message="Link containing image with alt text 'Intersection-Demo' is not present on the page"
-    )
-    link_element.click()
+@pytest.mark.zephyr_id("NEX-T9372")
+def test_remote_intersection_demo_avability(waiter):
+  """Test that Intersection-Demo is visible after login via remote."""
+  if not SCENESCAPE_REMOTE_URL:
+    pytest.skip("SCENESCAPE_REMOTE_URL is not set")
 
-    # Verify that the scene name element is present and has the correct text
-    scene_name_element = waiter.wait_and_assert(
-        EC.presence_of_element_located((By.ID, "scene_name")),
-        error_message="Scene name element is not present or text does not match 'Intersection-Demo'"
-    )
-    assert scene_name_element.text == "Intersection-Demo", (
-        "Scene name text does not match 'Intersection-Demo'"
-    )
+  verify_intersection_demo_avability(waiter, SCENESCAPE_REMOTE_URL)
 
 @pytest.mark.zephyr_id("NEX-T9380")
 def test_add_scene(waiter):
