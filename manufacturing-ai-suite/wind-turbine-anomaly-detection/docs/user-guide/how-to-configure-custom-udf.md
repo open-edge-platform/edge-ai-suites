@@ -116,7 +116,7 @@ package using its REST APIs.
 If one wants to create a separate UDF deployment package, just ensure to have the following structure
 before zipping and uploading it to Model Registry.
 
-> **NOTE**: Please ensure to have the same name for udf python script, TICK script and model name.
+> **NOTE**: Ensure to have the same name for udf python script, TICK script, and model name.
 
 ```
 udfs/
@@ -149,10 +149,10 @@ to the Model Registry microservice.
    -F 'file=@<udf_deployment_package_path.zip>;type=application/zip'
     ```
 
-### 3. Updating Time Series Analytics Microservice config for Model Registry usage
+### 3. Update Time Series Analytics Microservice config for Model Registry usage
 
 
-1. Run the below command, to update the configuration in `Time Series Analytics` microservice. 
+1. Run the following command, to update the configuration in `Time Series Analytics` microservice. 
    Please note, the default of `<PORT>` value is `5000` for docker compose deployment and `30002` for helm based deployment.
 
     ```bash
@@ -180,4 +180,4 @@ to the Model Registry microservice.
     '
     ```
 
-For more details, please refer `Time Series Analytics` microservice API docs [here](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice).
+For more details, refer `Time Series Analytics` microservice API docs [here](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice).
