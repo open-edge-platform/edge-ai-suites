@@ -39,7 +39,7 @@
 
 ## Configure and update the environment variables
 
-1. Update the below fields in `values.yaml` file in the helm chart
+1. Update the following fields in `values.yaml` file of the helm chart
 
     ``` sh
     INFLUXDB_USERNAME:
@@ -53,11 +53,11 @@
     HTTPS_PROXY: # example: http_proxy: http://proxy.example.com:891
     ```
 
-## Install helm charts - use only one of the options below:
+## Install helm charts - use only one of the following options:
 
 > **Note:**
-> 1. Please uninstall the helm charts if already installed.
-> 2. Please note the `helm install` command fails if the above required fields are not populated
+> 1. Uninstall the helm charts if already installed.
+> 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in `values.yaml` file.
 
 - OPC-UA ingestion flow:
@@ -81,7 +81,7 @@ Use the following command to verify if all the application resources got install
 
 You need to copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
-1. The udf package is placed as below in the repository under `time_series_analytics_microservice`. 
+1. The following udf package is placed in the repository under `time_series_analytics_microservice`. 
 
     ```
     - time_series_analytics_microservice/
@@ -106,7 +106,7 @@ You need to copy your own or existing model into Time Series Analytics Microserv
     kubectl cp windturbine_anomaly_detector $POD_NAME:/tmp/ -n ts-wind-turbine-anomaly-app
     ```
    > **Note:**  
-   > Run the above commands only after performing the Helm install.
+   > Run the commands only after performing the Helm install.
 
 ## Activate the New UDF Deployment Package
 
