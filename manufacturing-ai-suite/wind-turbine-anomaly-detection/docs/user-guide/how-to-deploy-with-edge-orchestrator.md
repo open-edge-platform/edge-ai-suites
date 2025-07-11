@@ -26,9 +26,9 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 1. Download Deployment Package present in the folder **`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/deployment-package`**
 
-1. Update the below fields in `timeseries-wind-turbine-values.yaml` in the above deployment package folder
+1. Update the following fields in `timeseries-wind-turbine-values.yaml` in the above deployment package folder
 
-   > **Note**: Please note the `helm install` command fails if the above required fields are not populated as per the rules called out in `timeseries-wind-turbine-values.yaml` file
+   > **Note**: Note that the `helm install` command fails if the above required fields are not populated as per the rules called out in `timeseries-wind-turbine-values.yaml` file:
 
     ```sh
     INFLUXDB_USERNAME:
@@ -44,7 +44,7 @@ To deploy the **Wind Turbine Anomaly Detection** Sample Application with the Edg
 
 1. From the web browser, open the URL of the Edge Orchestrator and import the updated Deployment Package following the steps described in [Import Deployment Package](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/import_deployment.html#import-deployment-package>).
 
-1. Once the deployment package has been imported into the Edge Orchestrator, you can see it in the list of Web UI as shown here.
+2. Once the deployment package has been imported into the Edge Orchestrator, you can see it in the list of Web UI as shown here.
 
 **![Deployment Image](./_images/emf_deployment.png)**
 
@@ -56,25 +56,25 @@ To set up a deployment:
 
 1. Click the **Deployments** tab on the top menu to view the Deployments page. On the Deployments page, you can view the list of deployments that have been created. The status indicator shows a quick view of the status of the deployment, which depends on many factors.
 
-1. Select the **Deployments** tab and click the **Setup a Deployment** button. The Setup a Deployment page appears.
+2. Select the **Deployments** tab and click the **Setup a Deployment** button. The Setup a Deployment page appears.
 
-1. On the Setup a Deployment page, select the **ts-wind-turbine-anomaly** package for the deployment from the list, and click **Next**. The Select a Profile step appears.
+3. On the Setup a Deployment page, select the **ts-wind-turbine-anomaly** package for the deployment from the list, and click **Next**. The Select a Profile step appears.
 
-1. In the Select a Profile step, select the deployment profile, and click **Next**. The Override Profile Values page appears.
+4. In the Select a Profile step, select the deployment profile, and click **Next**. The Override Profile Values page appears.
 
-1. The Override Profile Values page shows the deployment profile values that are available for overriding. Provide the user credentials for Grafana logging in overriding values, then click **Next** to proceed to the Select Deployment Type step.
+5. The Override Profile Values page shows the deployment profile values that are available for overriding. Provide the user credentials for Grafana logging in overriding values, then click **Next** to proceed to the Select Deployment Type step.
 
-1. On the Select Deployment Type page, select the type of deployment, and click **Next**:
+6. On the Select Deployment Type page, select the type of deployment, and click **Next**:
 
     1. If you select **Automatic** as the deployment type, enter the deployment name and metadata in key-value format to select the target cluster.
 
     1. If you select **Manual** as the deployment type, enter the deployment name and select the clusters from the list of clusters.
 
-1. Click **Next** to view the Review page.
+7. Click **Next** to view the Review page.
 
-1. Verify if the deployment details are correct and click **Deploy**.
+8. Verify if the deployment details are correct and click **Deploy**.
 
-After a few minutes, the deployment will start and will take about 5 minutes to complete.
+After a few minutes, the deployment starts and takes about 5 minutes to complete.
 
 In the Edge Orchestrator Web UI, you can track the application installation through the [View Deployment Details](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/deployment_details.html#view-deployment-details>) view.
 
@@ -95,26 +95,26 @@ For more information on setting up a deployment, see [Set up a Deployment](<http
     export KUBECONFIG=~/kubeconfig.yaml
     ```
 
-1. Copy the udf deployment package, please refer [here](how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice)
+2. Copy the udf deployment package, refer [here](how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice)
 
-1. Download the kubeconfig of the cluster of the Edge Node on which the Application has been deployed. Refer [Kubeconfig Download](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/accessing_clusters.html#organize-cluster-access-with-a-kubeconfig-file>).
+3. Download the kubeconfig of the cluster of the Edge Node on which the Application has been deployed. Refer [Kubeconfig Download](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/accessing_clusters.html#organize-cluster-access-with-a-kubeconfig-file>).
 
-1. Activate the new udf deployment package with below command
+4. Activate the new udf deployment package with below command
 
-    To activate the default configuration, execute the below command
+    To activate the default configuration, execute the following command:
     ```bash
     curl -X 'GET' \
     'http://<HOST_IP>:30002/config?restart=true' \
     -H 'accept: application/json'
     ```
-1. Follow the below steps for accessing `Grafana Dashboard` in the **Wind Turbine Anomaly Detection** sample application.
+5. Follow the steps for accessing `Grafana Dashboard` in the **Wind Turbine Anomaly Detection** sample application.
 
-    i. Get the `internal-ip` of edge node to access the node using the below command 
+    i. Get the `internal-ip` of edge node to access the node using the following command: 
 
     ```bash
     kubectl get node -o wide
     ``` 
-    ii. To check the results in the Grafana dashboard at port 30001, please follow instructions for helm     
+    ii. To check the results in the Grafana dashboard at port 30001, follow instructions for helm     
        deployment at [link](get-started.md#verify-the-wind-turbine-anomaly-detection-results)
 
 
