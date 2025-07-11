@@ -1,12 +1,12 @@
-README.md @xwu2intel
+README.md @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 LICENSE @xwu2intel
-CONTRIBUTING.md @xwu2intel
+CONTRIBUTING.md @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 CODE_OF_CONDUCT.md @xwu2intel
 SECURITY.md @xwu2intel
 /metro-ai-suite/image-based-video-search/ @dnoliver @rajpatel9498 @basakcap
 /metro-ai-suite/interactive-digital-avatar/ @senhui2intel @Junyu-B @wzq112358 @myqi
 /metro-ai-suite/smart-parking/ @vagheshp @tjanczak @xwu2intel
-/metro-ai-suite/smart-intersection/ @saratpoluri @dnoliver @rajpatel9498
+/metro-ai-suite/smart-intersection/ @saratpoluri @sarthakdeva-intel
 /metro-ai-suite/loitering-detection/ @vagheshp @tjanczak @xwu2intel
 /metro-ai-suite/visual-search-question-and-answering/ @llin60 @guangli-zhang @Johere @zhangcong2019
 /manufacturing-ai-suite/pallet-defect-detection/ @ajagadi1 @sugnanprabhu @rrajore
@@ -14,3 +14,13 @@ SECURITY.md @xwu2intel
 /manufacturing-ai-suite/wind-turbine-anomaly-detection/ @vkb1 @sathyendranv @pooja-intel
 /manufacturing-ai-suite/industrial-edge-insights-vision/ @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput
 /robotics-ai-suite/ @jouillet @jb-balaji @pirouf @mohitmeh12
+
+# documentation content
+/metro-ai-suite/README.md/*.md @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/**/docs @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/**/README.md @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/README.md @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/**/docs @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/**/README.md @open-edge-platform/open-edge-platform-docs-write
+/retail-ai-suite/README.md @open-edge-platform/open-edge-platform-docs-write
+/media-and-entertainment-ai-suite/README.md @open-edge-platform/open-edge-platform-docs-write

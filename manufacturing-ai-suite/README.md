@@ -16,6 +16,6 @@ The important components from Edge AI Libraries that help you develop such pipel
 - [Time Series Analytics Microservice](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/time-series-analytics): Built on top of **Kapacitor**, a containerized microservice for development and deployment of time series analytics capabilities
 - [Intel&reg; Geti&trade; SDK](https://github.com/open-edge-platform/geti-sdk): A python package containing tools to interact with an Intel&reg; Geti&trade; server via the REST API, helping you build a full MLOps for vision based use cases.
 
-Please see sample applications such as [Pallet Defect Detection](pallet-defect-detection), [Weld Porosity](weld-porosity) and [Wind Turbine Anomaly Detection](wind-turbine-anomaly-detection/) to learn utilizing these workflows to accelerate your solution development for AI in manufacturing use cases.
+Please see sample applications such as [HMI Augmented worker](./hmi-augmented-worker/), [Pallet Defect Detection](pallet-defect-detection), [Weld Porosity](weld-porosity) and [Wind Turbine Anomaly Detection](wind-turbine-anomaly-detection/) to learn utilizing these workflows to accelerate your solution development for AI in manufacturing use cases.
 
 

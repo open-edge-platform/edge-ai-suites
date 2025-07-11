@@ -72,43 +72,47 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, filename):
     """
     Stream the csv file
     """
-    target_start_time = time.time()
-    row_count = 0
-    row_served = 0
+    continous_simulator_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true").lower()
+
+    print(f"\nMQTT Topic - {topic}\nSubsample - {subsample}\nSampling Rate - {sampling_rate}\nFilename - {filename}\n")
     jencoder = json.JSONEncoder()
 
-    print("\nMQTT Topic - {}\nSubsample - {}\n \
-          Sampling Rate - {}\nFilename - {}\n".format(topic,
-                                                      subsample,
-                                                      sampling_rate,
-                                                      filename))
+    while True:
+        start_time = time.time()
+        row_served = 0
+        
 
-    with open(filename, 'r') as fileobject:
-        tick = g_tick(float(subsample) / float(sampling_rate))
+        with open(filename, 'r') as fileobject:
+            tick = g_tick(float(subsample) / float(sampling_rate))
 
-        for row in fileobject:
+            for row in fileobject:
+                row = [x.strip() for x in row.split(',') if x.strip()]
+                if not row or not re.match(r'^-?\d+', row[0]):
+                    continue
 
-            row = [x for x in row.split(',') if x not in (' \n', ' \r\n')]
-            if re.match(r'^-?\d+', row[0]) is None:
-                continue
+                if subsample > 1 and (row_served % subsample) != 0:
+                    row_served += 1
+                    continue
 
-            row_count += 1
-            if (subsample > 1) and (row_count % subsample) != 1:
-                continue
-            row_served += 1
+                try:
+                    values = [float(x) for x in row]
+                    msg = jencoder.encode({'grid_active_power': values[0], 'wind_speed': values[1]})
+                    print("Publishing message", msg)
+                    mqttc.publish(topic, msg)
+                except (ValueError, IndexError):
+                    print(f"Skipping row {row_served}- {row} due to ValueError: {ValueError} or IndexError: {IndexError}")
+                    continue
 
-            values = [float(x) for x in row]
-            msg = jencoder.encode({'grid_active_power': values[0], 'wind_speed': values[1]})
-            print("Publishing message ", msg)
-            mqttc.publish(topic, msg)
+                row_served += 1
+                time.sleep(next(tick))
+                if row_served % max(1, int(sampling_rate) // max(1, int(subsample))) == 0:
+                    print(f'{row_served} rows served in {time.time() - start_time:.2f} seconds')
 
-            time.sleep(next(tick))
-            if (row_served % (int(sampling_rate) / subsample)) == 0:
-                print('{} rows served in {}'.format(
-                    row_served, time.time() - target_start_time))
-
-    print('{} Done! {} rows served in {}'.format(
-        filename, row_served, time.time() - target_start_time))
+        print(f'{filename} Done! {row_served} rows served in {time.time() - start_time:.2f} seconds')
+        if continous_simulator_ingestion == "false":
+            print("End of data reached.")
+            while True:
+                time.sleep(1)
 
 
 def send_json_cb(instance_id, host, port, topic, data, qos, service):
