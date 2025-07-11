@@ -181,4 +181,4 @@ metadata:
   name: dlstreamer-pipeline-server-config-input
 data:
   config.json: |-
-{{ .Files.Get "config/dlsps-config.json" | indent 4 }}
+{{ .Files.Get "config/dlstreamer-pipeline-server/config.json" | indent 4 }}

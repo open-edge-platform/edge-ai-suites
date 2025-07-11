@@ -8,7 +8,7 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30483",
+            "host": "broker:1883",
             "topic": "object_detection_1",
             "timeout": 1000
         },
@@ -31,7 +31,7 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30483",
+            "host": "broker:1883",
             "topic": "object_detection_2",
             "timeout": 1000
         },
@@ -54,7 +54,7 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30483",
+            "host": "broker:1883",
             "topic": "object_detection_3",
             "timeout": 1000
         },
@@ -77,7 +77,7 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30483",
+            "host": "broker:1883",
             "topic": "object_detection_4",
             "timeout": 1000
         },
