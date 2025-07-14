@@ -1,15 +1,32 @@
 #!/bin/bash
 
 # Download artifacts for a specific sample application
-#   by calling respective app's install.sh script
+#   by calling respective app's setup.sh script
 SCRIPT_DIR=$(dirname $(readlink -f "$0"))
-MODEL_XML_URL="https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/9da6eb59431eb7edbc5491e8d6ee37d347bebcbb/manufacturing-ai-suite/pallet-defect-detection/resources/models/geti/pallet_defect_detection/deployment/Detection/model/model.xml"
-MODEL_BIN_URL="https://github.com/open-edge-platform/edge-ai-suites/raw/9da6eb59431eb7edbc5491e8d6ee37d347bebcbb/manufacturing-ai-suite/pallet-defect-detection/resources/models/geti/pallet_defect_detection/deployment/Detection/model/model.bin"
-VIDEO_URL="https://github.com/open-edge-platform/edge-ai-suites/raw/9da6eb59431eb7edbc5491e8d6ee37d347bebcbb/manufacturing-ai-suite/pallet-defect-detection/resources/videos/warehouse.avi"
-VIDEO_FILENAME="warehouse.avi"
+MODEL_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/c13b8dbf23d514c2667d39b66615bd1400cb889d/models/weld_porosity_classification.zip"
+VIDEO_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/c13b8dbf23d514c2667d39b66615bd1400cb889d/videos/welding.avi"
 
 err() {
     echo "ERROR: $1" >&2
+}
+
+unzip_compressed_file() {
+    local zip_file=$1
+    local target_dir=$2
+    if [ ! -f "$zip_file" ]; then
+        err "Zip file '$zip_file' does not exist."
+        return 1
+    fi
+    if [ ! -d "$target_dir" ]; then
+        mkdir -p "$target_dir"
+    fi
+    echo "Unzipping $zip_file to $target_dir..."
+    if unzip -q "$zip_file" -d "$target_dir"; then
+        echo "Unzipped successfully."
+    else
+        err "Failed to unzip $zip_file."
+        return 1
+    fi
 }
 
 download_artifacts() {
@@ -20,7 +37,7 @@ download_artifacts() {
         return 1
     fi
     # Download model artifacts if not already present
-    LOCAL_MODEL_DIR="$SCRIPT_DIR/../../resources/$app_name/models/pallet-defect-detection"
+    LOCAL_MODEL_DIR="$SCRIPT_DIR/../../resources/$app_name/models/$app_name"
     if [ ! -d $LOCAL_MODEL_DIR ]; then
         # create the models directory if it does not exist
 
@@ -29,19 +46,19 @@ download_artifacts() {
             return 1
         fi
         echo "Downloading model artifacts for $app_name..."
-        echo "Model XML: $MODEL_XML_URL"
-        echo "Model BIN: $MODEL_BIN_URL"
+        # echo "Model XML: $MODEL_XML_URL"
+        echo "Model URL: $MODEL_URL"
         # Download model XML and BIN files
-        if curl -L "$MODEL_XML_URL" -o "$LOCAL_MODEL_DIR/model.xml"; then
-            echo "Model XML for $app_name downloaded successfully."
+        if curl -L "$MODEL_URL" -o "$LOCAL_MODEL_DIR/$(basename $MODEL_URL)"; then
+            echo "Model zip for $app_name downloaded successfully."
+            # Unzip the downloaded model file
+            if unzip_compressed_file "$LOCAL_MODEL_DIR/$(basename $MODEL_URL)" "$LOCAL_MODEL_DIR"; then
+                echo "Model artifacts for $app_name unzipped successfully."
+                # remove the zip file after unzipping
+                rm -f "$LOCAL_MODEL_DIR/$(basename $MODEL_URL)"
+            fi
         else
-            err "Failed to download model XML for $app_name."
-            return 1
-        fi
-        if curl -L "$MODEL_BIN_URL" -o "$LOCAL_MODEL_DIR/model.bin"; then
-            echo "Model BIN for $app_name downloaded successfully."
-        else
-            err "Failed to download model BIN for $app_name."
+            err "Failed to download model for $app_name."
             return 1
         fi
     else
@@ -69,4 +86,4 @@ download_artifacts() {
 
 }
 
-download_artifacts "pallet-defect-detection"
+download_artifacts "weld-porosity"

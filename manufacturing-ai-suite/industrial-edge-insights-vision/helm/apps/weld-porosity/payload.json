@@ -14,7 +14,7 @@
             },
             "parameters": {
                 "classification-properties": {
-                    "model": "/home/pipeline-server/resources/models/weld-porosity/model.xml",
+                    "model": "/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml",
                     "device": "CPU"
                 }
             }

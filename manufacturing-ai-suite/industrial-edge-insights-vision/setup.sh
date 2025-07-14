@@ -1,6 +1,6 @@
 #!/bin/bash
 # Download artifacts for a specific sample application
-#   by calling respective app's install.sh script
+#   by calling respective app's setup.sh script
 
 SCRIPT_DIR=$(dirname $(readlink -f "$0"))
 
@@ -154,16 +154,16 @@ main() {
         fi
     done
 
-    # set permissions for the install.sh script
-    chmod +x "$APP_DIR/install.sh"
+    # set permissions for the setup.sh script
+    chmod +x "$APP_DIR/setup.sh"
 
-    # check if install.sh exists in the sample app directory
-    if [[ -f "$APP_DIR/install.sh" ]]; then
+    # check if setup.sh exists in the sample app directory
+    if [[ -f "$APP_DIR/setup.sh" ]]; then
         echo "Running install script for $APP_DIR"
         # run the install script
-        bash "$APP_DIR/install.sh"
+        bash "$APP_DIR/setup.sh"
     else
-        err "No install.sh found in $APP_DIR directory."
+        err "No setup.sh found in $APP_DIR directory."
         exit 1
     fi
 }
