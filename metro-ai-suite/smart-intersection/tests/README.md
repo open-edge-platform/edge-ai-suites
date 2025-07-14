@@ -14,6 +14,7 @@
 ## Prerequisites
 
 - Python 3.12 or higher
+- Python venv installed 
 - Newest Chrome browser installed
 - Prepare your environment according to https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-intersection/docs/user-guide/get-started.md and https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-intersection/docs/user-guide/how-to-deploy-docker.md guides.
 
@@ -41,8 +42,9 @@ Now you are ready to run tests on your system.
 
 ## Running tests
 
-Use make file to run all tests or pytests to run the one you choose.
+Use pytest to run all tests or just the one you choose.
 
 ```bash
-make test
+pytest tests
+pytest tests/test_admin.py::test_login
 ```

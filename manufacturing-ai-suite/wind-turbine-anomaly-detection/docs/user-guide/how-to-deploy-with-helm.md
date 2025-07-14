@@ -39,7 +39,7 @@
 
 ## Configure and update the environment variables
 
-1. Update the below fields in `values.yaml` file in the helm chart
+1. Update the following fields in `values.yaml` file of the helm chart
 
     ``` sh
     INFLUXDB_USERNAME:
@@ -53,11 +53,11 @@
     HTTPS_PROXY: # example: http_proxy: http://proxy.example.com:891
     ```
 
-## Install helm charts - use only one of the options below:
+## Install helm charts - use only one of the following options:
 
 > **Note:**
-> 1. Please uninstall the helm charts if already installed.
-> 2. Please note the `helm install` command fails if the above required fields are not populated
+> 1. Uninstall the helm charts if already installed.
+> 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in `values.yaml` file.
 
 - OPC-UA ingestion flow:
@@ -81,7 +81,7 @@ Use the following command to verify if all the application resources got install
 
 You need to copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
-1. The udf package is placed as below in the repository under `time_series_analytics_microservice`. 
+1. The following udf package is placed in the repository under `time_series_analytics_microservice`. 
 
     ```
     - time_series_analytics_microservice/
@@ -94,9 +94,8 @@ You need to copy your own or existing model into Time Series Analytics Microserv
             - windturbine_anomaly_detector.py
     ```
 
-2. Copy your new udf package (windturbine anomaly detection udf package used here as an example) to `time-series-analytics-microservice` pod.
-
-    ```bash
+2. Copy your new UDF package (using the windturbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
+    ```sh
     cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection # path relative to git clone folder
     cd time_series_analytics_microservice
     mkdir windturbine_anomaly_detector
@@ -106,36 +105,46 @@ You need to copy your own or existing model into Time Series Analytics Microserv
 
     kubectl cp windturbine_anomaly_detector $POD_NAME:/tmp/ -n ts-wind-turbine-anomaly-app
     ```
-   > **Note**
-   > You need to run the above commands only after performing the Helm install.
+   > **Note:**  
+   > Run the commands only after performing the Helm install.
 
-## Activate the new UDF deployment package
+## Activate the New UDF Deployment Package
 
-Run the below command to activate the UDF deployment package.
-
-```bash
+Run the following command to activate the UDF deployment package:
+```sh
 curl -X 'GET' \
   'http://<HOST_IP>:30002/config?restart=true' \
   -H 'accept: application/json'
 ```
 
-## Verify the wind turbine anomaly detection results
+## Verify the Wind Turbine Anomaly Detection Results
 
-Please follow the steps per helm deployment at [link](get-started.md#verify-the-wind-turbine-anomaly-detection-results)
+Follow the steps in the Helm deployment guide at [this link](get-started.md#verify-the-wind-turbine-anomaly-detection-results).
 
-## Uninstall helm charts
+## Uninstall Helm Charts
 
-```bash
+```sh
 helm uninstall ts-wind-turbine-anomaly -n ts-wind-turbine-anomaly-app
-kubectl get all -n ts-wind-turbine-anomaly-app # it takes few mins to have all application resources cleaned up
+kubectl get all -n ts-wind-turbine-anomaly-app # It may take a few minutes for all application resources to be cleaned up.
 ```
+
+## Configure Alerts in Time Series Analytics Microservice
+
+Follow [these steps](./how-to-configure-alerts.md#helm-deployment) to configure alerts in Time Series Analytics Microservice.
+
+## Deploy the Application with a Custom UDF
+
+Follow [these steps](./how-to-configure-custom-udf.md#helm-deployment) to deploy the application with a custom UDF.
+
+## Deploy the Application with a Custom UDF by Uploading to the Model Registry
+
+Follow [these steps](./how-to-configure-custom-udf.md#with-model-registry) to deploy a custom UDF by uploading it to the Model Registry.
 
 ## Troubleshooting
 
-- Check pod details or container logs to catch any failures:
- 
-  ```bash
-  kubectl get pods -n ts-wind-turbine-anomaly-app
-  kubectl describe pod <pod_name> -n ts-wind-turbine-anomaly-app # shows details of the pod
-  kubectl logs -f <pod_name> -n ts-wind-turbine-anomaly-app # shows logs of the container in the pod
-  ```
+- Check pod details or container logs to diagnose failures:
+    ```sh
+    kubectl get pods -n ts-wind-turbine-anomaly-app
+    kubectl describe pod <pod_name> -n ts-wind-turbine-anomaly-app # Shows details of the pod
+    kubectl logs -f <pod_name> -n ts-wind-turbine-anomaly-app # Shows logs of the container in the pod
+    ```

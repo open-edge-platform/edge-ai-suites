@@ -1,0 +1,74 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: LicenseRef-Intel
+---
+specSchema: "Application"
+schemaVersion: "0.1"
+$schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
+
+name: sp-app
+version: 1.1.0
+description: "Smart Parking Sample Application"
+
+helmRegistry: "docker-hub"
+chartName: "intel/smart-parking"
+chartVersion: "1.1.0"
+
+profiles:
+  - name: "default"
+    description: "Uses CPU for inferencing"
+    valuesFileName: "sp-values.yaml"
+    parameterTemplates:
+      - name: env.HOST_IP
+        displayName: "IP address of the target Edge Node"
+        type: string
+        mandatory: true
+      - name: webrtcturnserver.username
+        displayName: "WebRTC user"
+        type: string
+        mandatory: true
+      - name: webrtcturnserver.password
+        displayName: "WebRTC password"
+        type: string
+        secret: true
+        mandatory: true
+      - name: env.http_proxy
+        displayName: "Http proxy"
+        type: string
+        default: ""
+      - name: env.https_proxy
+        displayName: "Https proxy"
+        type: string
+        default: ""
+      - name: env.no_proxy
+        displayName: "No proxy"
+        type: string
+        default: "localhost,127.0.0.1"
+  - name: "with-intel-gpu"
+    description: "Uses Intel GPU for inferencing, needs Intel GPU extension"
+    valuesFileName: "sp-values-with-intel-gpu.yaml"
+    parameterTemplates:
+      - name: env.HOST_IP
+        displayName: "IP address of the target Edge Node"
+        type: string
+        mandatory: true
+      - name: webrtcturnserver.username
+        displayName: "WebRTC user"
+        type: string
+        mandatory: true
+      - name: webrtcturnserver.password
+        displayName: "WebRTC password"
+        type: string
+        secret: true
+        mandatory: true
+      - name: env.http_proxy
+        displayName: "Http proxy"
+        type: string
+        default: ""
+      - name: env.https_proxy
+        displayName: "Https proxy"
+        type: string
+        default: ""
+      - name: env.no_proxy
+        displayName: "No proxy"
+        type: string
+        default: "localhost,127.0.0.1"

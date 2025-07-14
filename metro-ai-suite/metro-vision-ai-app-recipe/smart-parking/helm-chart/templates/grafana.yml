@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-grafana
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:11.5.4
+        ports:
+        - containerPort: {{ $.Values.config.grafana.int.web_ui_port }}
+          name: http
+        env:
+        - name: GF_INSTALL_PLUGINS
+          value: "yesoreyeram-infinity-datasource,ryantxu-ajax-panel,grafana-mqtt-datasource"
+        - name: GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS
+          value: "intel-custom-panel"
+        - name: http_proxy
+          value: {{ $.Values.env.http_proxy }}
+        - name: https_proxy
+          value: {{ $.Values.env.https_proxy }}
+        - name: no_proxy
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        volumeMounts:
+        - name: dashboards-config
+          mountPath: /etc/grafana/provisioning/dashboards/main.yml
+          subPath: dashboards.yml
+        - name: datasources-config
+          mountPath: /etc/grafana/provisioning/datasources/datasources.yml
+          subPath: datasources.yml
+        - name: grafana-config
+          mountPath: /etc/grafana/grafana.ini
+          subPath: grafana.ini
+        - name: grafana-visualizer
+          mountPath: /var/lib/grafana/dashboards/visualizer.json
+          subPath: visualizer.json
+      volumes:
+      - name: dashboards-config
+        configMap:
+          name: grafana-dashboards-config
+      - name: datasources-config
+        configMap:
+          name: grafana-datasources
+      - name: grafana-config
+        configMap:
+          name: grafana-config
+      - name: grafana-visualizer
+        configMap:
+          name: grafana-visualizer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app: grafana
+spec:
+  type: NodePort
+  ports:
+  - port: {{ $.Values.config.grafana.int.web_ui_port }}
+    targetPort: {{ $.Values.config.grafana.int.web_ui_port }}
+    protocol: TCP
+    name: http
+    nodePort: {{ $.Values.config.grafana.ext.web_ui_port }}
+  selector:
+    app: grafana
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-config
+  namespace: {{ $.Values.namespace }}
+data:
+  dashboards.yml: |
+    {{ .Files.Get "config/grafana/dashboards.yml" | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: {{ $.Values.namespace }}
+data:
+  datasources.yml: |
+    {{ .Files.Get "config/grafana/datasources.yml" | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-config
+  namespace: {{ $.Values.namespace }}
+data:
+  grafana.ini: |
+    {{ .Files.Get "config/grafana/grafana.ini" | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-visualizer
+  namespace: {{ $.Values.namespace }}
+data:
+  visualizer.json: |
+    {{ (.Files.Get "config/grafana/dashboards/visualizer.json" | replace "0.0.0.0" .Values.env.HOST_IP | replace "8889" .Values.config.mediamtx.ext.mediamtx_port) | nindent 4 }}

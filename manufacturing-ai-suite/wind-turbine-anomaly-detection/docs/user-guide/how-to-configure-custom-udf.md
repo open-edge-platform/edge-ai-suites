@@ -63,6 +63,45 @@ This guide provides instructions for setting up custom UDF deployment package (U
 The files at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice` representing the UDF deployment package (UDFs, TICKscripts, models)
 and config.json has been volume mounted for the Time Series Analytics Microservice service in `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and config.json, it has to be done at this location and the time series analytics microservice container needs to be restarted manually.
 
+### Helm Deployment
+
+> **Note:** This method does not use a volume mount. Instead, the `kubectl cp` command is used to copy the UDF deployment package into the container, which serves the same purpose.
+
+1. Update the UDF deployment package by following the instructions in [Configure Time Series Analytics Microservice with Custom UDF Deployment Package](./how-to-configure-custom-udf.md#configure-time-series-analytics-microservice-with-custom-udf-deployment-package).
+
+2. Copy the updated UDF deployment package using the [steps above](#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
+
+3. Make the following REST API call to the Time Series Analytics microservice for the updated custom UDF:
+    ```sh
+    curl -X 'POST' \
+    'http://<HOST_IP>:30002/config' \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -d '{
+      "model_registry": {
+          "enable": false,
+          "version": "1.0"
+      },
+      "udfs": {
+          "name": "<custom_UDF>",
+          "models": "<custom_UDF>.pkl"
+      },
+      "alerts": {
+          "mqtt": {
+              "mqtt_broker_host": "ia-mqtt-broker",
+              "mqtt_broker_port": 1883,
+              "name": "my_mqtt_broker"
+          }
+      }
+    }'
+    ```
+
+4. Verify the logs of the Time Series Analytics Microservice:
+    ```sh
+    POD_NAME=$(kubectl get pods -n ts-wind-turbine-anomaly-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
+    kubectl logs -f -n ts-wind-turbine-anomaly-app $POD_NAME
+    ```
+
 ## With Model Registry
 
 > **Note**:
@@ -77,7 +116,7 @@ package using its REST APIs.
 If one wants to create a separate UDF deployment package, just ensure to have the following structure
 before zipping and uploading it to Model Registry.
 
-> **NOTE**: Please ensure to have the same name for udf python script, TICK script and model name.
+> **NOTE**: Ensure to have the same name for udf python script, TICK script, and model name.
 
 ```
 udfs/
@@ -110,10 +149,10 @@ to the Model Registry microservice.
    -F 'file=@<udf_deployment_package_path.zip>;type=application/zip'
     ```
 
-### 3. Updating Time Series Analytics Microservice config for Model Registry usage
+### 3. Update Time Series Analytics Microservice config for Model Registry usage
 
 
-1. Run the below command, to update the configuration in `Time Series Analytics` microservice. 
+1. Run the following command, to update the configuration in `Time Series Analytics` microservice. 
    Please note, the default of `<PORT>` value is `5000` for docker compose deployment and `30002` for helm based deployment.
 
     ```bash
@@ -141,4 +180,4 @@ to the Model Registry microservice.
     '
     ```
 
-For more details, please refer `Time Series Analytics` microservice API docs [here](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice).
+For more details, refer `Time Series Analytics` microservice API docs [here](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice).

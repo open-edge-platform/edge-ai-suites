@@ -1,0 +1,150 @@
+services:
+  ntpserver:
+    image: docker.io/dockurr/chrony:4.6.1
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},${HOST_IP}
+      - NO_PROXY=${no_proxy},${HOST_IP}
+    networks:
+      app_network:
+        aliases:
+         - ntpserv
+    restart: on-failure:5
+
+  broker:
+    image: docker.io/library/eclipse-mosquitto:2.0.21
+    ports:
+      - "1883:1883"
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},${HOST_IP}
+      - NO_PROXY=${no_proxy},${HOST_IP}
+    volumes:
+      - ./${SAMPLE_APP}/src/mosquitto/config:/mosquitto/config:ro
+    networks:
+      - app_network
+    restart: on-failure:5
+
+  dlstreamer-pipeline-server:
+    image: intel/dlstreamer-pipeline-server:3.0.0
+    container_name: dlstreamer-pipeline-server
+    ports:
+    - '8080:8080'
+    - '8554:8554'
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},${HOST_IP}
+      - NO_PROXY=${no_proxy},${HOST_IP}
+      - ENABLE_WEBRTC=true
+      - WEBRTC_SIGNALING_SERVER=http://${HOST_IP}:8889
+      - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true
+      - RUN_MODE=EVA
+      - EMIT_SOURCE_AND_DESTINATION=true
+      - REST_SERVER_PORT=8080
+      - SERVICE_NAME=dlstreamer-pipeline-server
+    volumes:
+      - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999
+      - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/models:/home/pipeline-server/models"
+      - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/videos:/home/pipeline-server/videos"
+      - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/config.json:/home/pipeline-server/config.json"
+      - "/run/udev:/run/udev:ro"
+      - "/dev:/dev"
+      - "/tmp:/tmp"
+    group_add:
+      - "109"
+      - "110"
+      - "992"
+    device_cgroup_rules:
+      - 'c 189:* rmw'
+      - 'c 209:* rmw'
+      - 'a 189:* rwm'
+    devices:
+      - "/dev:/dev"
+    networks:
+    - app_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+  
+  mediamtx:
+    image: bluenviron/mediamtx:1.11.3
+    container_name: mediamtx-server
+    environment:
+      - MTX_LOGLEVEL=debug
+      - MTX_RTSP=no
+      - MTX_RTMP=no
+      - MTX_HLS=no
+      - MTX_SRT=no
+      - MTX_WEBRTCICESERVERS2_0_URL=turn:${HOST_IP}:3478
+      - MTX_WEBRTCICESERVERS2_0_USERNAME=myusername
+      - MTX_WEBRTCICESERVERS2_0_PASSWORD=mypassword
+      - MTX_WEBRTCTRACKGATHERTIMEOUT=10s
+    ports:
+      - "8889:8889"
+      - "8189:8189"
+      - "9997:9997"
+    networks:
+    - app_network
+
+  coturn:
+    image: coturn/coturn:latest
+    container_name: coturn
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+    command: ["-v"]  # Verbose mode for logging
+    networks:
+      - app_network
+
+  grafana:
+    image: grafana/grafana:11.5.4
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./${SAMPLE_APP}/src/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/main.yml"
+      - "./${SAMPLE_APP}/src/grafana/dashboards:/var/lib/grafana/dashboards"
+      - "./${SAMPLE_APP}/src/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml"
+      - "./${SAMPLE_APP}/src/grafana/grafana.ini:/etc/grafana/grafana.ini"
+    networks:
+      - app_network
+    environment:
+      - GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource,ryantxu-ajax-panel,grafana-mqtt-datasource
+      - WEBRTC_URL=http://${HOST_IP}:8889
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},${HOST_IP}
+      - NO_PROXY=${no_proxy},${HOST_IP}
+
+  node-red:
+    image: nodered/node-red
+    container_name: node-red
+    environment:
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy}
+    volumes:
+      - "./${SAMPLE_APP}/src/node-red:/data"
+      - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/videos:/data/public/videos"
+    ipc: "none"
+    entrypoint: [ "/bin/bash", "-c", "/data/install_package.sh && /usr/src/node-red/entrypoint.sh" ]
+    user: root
+    networks:
+      - app_network
+    ports:
+      - "1880:1880"
+
+networks:
+  app_network:
+    driver: "bridge"
+
+volumes:
+  dlstreamer-pipeline-server-pipeline-root:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
