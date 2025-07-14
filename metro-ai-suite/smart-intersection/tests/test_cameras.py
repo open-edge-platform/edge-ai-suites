@@ -12,6 +12,7 @@ from .conftest import SCENESCAPE_URL, SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
 
 def add_camera(waiter, camera_name, camera_id):
   """Helper function to log in and add a new camera."""
+  # Perform login using Waiter class object
   waiter.perform_login(
     SCENESCAPE_URL,
     By.ID, "username",
