@@ -45,7 +45,8 @@ def prepend_project_github_url(file_path, url, repo_root):
   # Construct the full URL
   return f"{PROJECT_GITHUB_URL}/{relative_path.parent}/{url}"
 
-@suppress_insecure_request_warning
+
+@pytest.mark.zephyr_id("NEX-T9364")
 def test_links_in_md_files():
   """Test all links in markdown files for HTTP 200 response."""
   # Determine the directory one level above the current tests folder
