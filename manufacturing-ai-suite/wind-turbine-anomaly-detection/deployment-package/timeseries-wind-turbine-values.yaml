@@ -8,7 +8,7 @@ namespace: ts-wind-turbine-anomaly-app
 DOCKER_REGISTRY: ''
 imagePullPolicy: Always
 env:
-  # The INFLUXDB_USERNAME length must be a minimum of 5 characters
+  # The INFLUXDB_USERNAME must contain only alphabets and be at least 5 characters minimum
   # Do not set INFLUXDB_USERNAME to 'admin'.
   INFLUXDB_USERNAME: 
   
@@ -16,7 +16,7 @@ env:
   # Do not use the following special characters in the INFLUXDB_PASSWORD "~:'+[/@^{%(-"*|,&<`}._=}!>;?#$)\"
   INFLUXDB_PASSWORD:
 
-  # The VISUALIZER_GRAFANA_USER length must be a minimum of 5 characters
+  # The VISUALIZER_GRAFANA_USER must contain only alphabets and be at least 5 characters minimum
   VISUALIZER_GRAFANA_USER: 
   
   # The VISUALIZER_GRAFANA_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit
