@@ -61,7 +61,7 @@ def suppress_insecure_request_warning(func):
   return wrapper
 
 @suppress_insecure_request_warning
-def check_components_access(url, timeout=10):
+def check_url_access(url, timeout=10):
   """Helper function to check if a component is accessible."""
   try:
     # Send a GET request to the URL, ignoring SSL certificate errors

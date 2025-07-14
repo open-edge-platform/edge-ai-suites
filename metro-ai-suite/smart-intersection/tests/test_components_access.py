@@ -2,13 +2,18 @@
 # SPDX-License-Identifier: LicenseRef-Intel-Edge-Software
 # This file is licensed under the Limited Edge Software Distribution License Agreement.
 
+
+import os
+import re
 import pytest
+import logging
 import requests
+from pathlib import Path
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from tests.utils.ui_utils import waiter, driver
-from tests.utils.utils import check_components_access
+from tests.utils.utils import check_url_access, suppress_insecure_request_warning
 from .conftest import (
   SCENESCAPE_URL,  
   SCENESCAPE_REMOTE_URL,
@@ -33,7 +38,7 @@ def test_components_access():
   ]
 
   for url in urls_to_check:
-    check_components_access(url)
+    check_url_access(url)
 
 @pytest.mark.zephyr_id("NEX-T9369")
 def test_remote_components_access():
@@ -51,7 +56,7 @@ def test_remote_components_access():
     pytest.skip("One or more remote URL environment variables are not set")
 
   for url in urls_to_check:
-    check_components_access(url)
+    check_url_access(url)
 
 @pytest.mark.zephyr_id("NEX-T9623")
 def test_grafana_failed_login(waiter):
@@ -89,7 +94,7 @@ def test_influx_db_login(waiter):
 def test_remote_influx_db_login(waiter):
   if not INFLUX_REMOTE_DB_URL:
     pytest.skip("INFLUX_REMOTE_DB_URL is not set")
-    
+
   waiter.perform_login(
     INFLUX_REMOTE_DB_URL,
     By.CSS_SELECTOR, "[data-testid='username']",

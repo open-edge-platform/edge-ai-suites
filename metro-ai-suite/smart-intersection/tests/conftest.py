@@ -11,7 +11,7 @@ import requests
 from dotenv import load_dotenv
 from tests.utils.utils import (
   run_command,
-  check_components_access,
+  check_url_access,
   get_password_from_supass_file,
   get_username_from_influxdb2_admin_username_file,
   get_password_from_influxdb2_admin_password_file
@@ -41,6 +41,8 @@ INFLUX_DB_ADMIN_PASSWORD = os.getenv("INFLUX_DB_ADMIN_PASSWORD", get_password_fr
 NODE_RED_URL = os.getenv("NODE_RED_URL", "http://localhost:1880")
 NODE_RED_REMOTE_URL = os.getenv("NODE_RED_REMOTE_URL")
 
+PROJECT_GITHUB_URL = os.getenv("PROJECT_GITHUB_URL", "https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-intersection")
+
 def wait_for_services_readiness(services_urls, timeout=120, interval=2):
   """
   Waits for services to become available.
@@ -55,7 +57,7 @@ def wait_for_services_readiness(services_urls, timeout=120, interval=2):
     all_services_ready = True
     for url in services_urls:
       try:
-        check_components_access(url)
+        check_url_access(url)
       except AssertionError as e:
         all_services_ready = False
         break
