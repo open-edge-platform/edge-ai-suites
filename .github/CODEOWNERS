@@ -11,12 +11,12 @@ README.md          @xwu2intel
 /manufacturing-ai-suite/wind-turbine-anomaly-detection/   @vkb1 @sathyendranv @pooja-intel
 
 # metro-ai
-/metro-ai-suite/image-based-video-search/               @dnoliver @rajpatel9498 @basakcap
-/metro-ai-suite/interactive-digital-avatar/             @senhui2intel @Junyu-B @wzq112358 @myqi
-/metro-ai-suite/smart-parking/                          @vagheshp @tjanczak @xwu2intel
-/metro-ai-suite/smart-intersection/                     @saratpoluri @sarthakdeva-intel
-/metro-ai-suite/loitering-detection/                    @vagheshp @tjanczak @xwu2intel
-/metro-ai-suite/visual-search-question-and-answering/   @llin60 @Johere @zhangcong2019
+/metro-ai-suite/image-based-video-search/                 @dnoliver @rajpatel9498 @basakcap
+/metro-ai-suite/interactive-digital-avatar/               @senhui2intel @Junyu-B @wzq112358 @myqi
+/metro-ai-suite/smart-parking/                            @vagheshp @tjanczak @xwu2intel
+/metro-ai-suite/smart-intersection/                       @saratpoluri @sarthakdeva-intel
+/metro-ai-suite/loitering-detection/                      @vagheshp @tjanczak @xwu2intel
+/metro-ai-suite/visual-search-question-and-answering/     @llin60 @Johere @zhangcong2019
 
 # robotics-ai
 /robotics-ai-suite/        @jouillet @jb-balaji @pirouf @mohitmeh12
@@ -25,31 +25,35 @@ README.md          @xwu2intel
 # documentation content - manufacturing-ai
 #/manufacturing-ai-suite/hmi-augmented-worker/docs/ - needs to be defined
 #/manufacturing-ai-suite/hmi-augmented-worker/README.md - needs to be defined
-/manufacturing-ai-suite/industrial-edge-insights-vision/docs/      @open-edge-platform/open-edge-platform-docs-write @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput
-/manufacturing-ai-suite/industrial-edge-insights-vision/README.md  @open-edge-platform/open-edge-platform-docs-write @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput
-/manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/       @open-edge-platform/open-edge-platform-docs-write @vkb1 @sathyendranv @pooja-intel
-/manufacturing-ai-suite/wind-turbine-anomaly-detection/README.md   @open-edge-platform/open-edge-platform-docs-write @vkb1 @sathyendranv @pooja-intel
+/manufacturing-ai-suite/industrial-edge-insights-vision/docs/         @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput   @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-vision/README.md     @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput   @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/          @vkb1 @sathyendranv @pooja-intel                 @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/wind-turbine-anomaly-detection/README.md      @vkb1 @sathyendranv @pooja-intel                 @open-edge-platform/open-edge-platform-docs-write
 
 # documentation content - media-and-entertainment-ai
-# /media-and-entertainment-ai-suite/**/* - needs to be defined once content appears
+# /media-and-entertainment-ai-suite - needs to be defined once content appears
 
 # documentation content - metro-ai
 # /metro-ai-suite/holographic-sensor-fusion/docs/               needs to be defined
 # /metro-ai-suite/holographic-sensor-fusion/README.md           needs to be defined
-/metro-ai-suite/image-based-video-search/docs/                  @open-edge-platform/open-edge-platform-docs-write @dnoliver @rajpatel9498 @basakcap
-/metro-ai-suite/image-based-video-search/README.md              @open-edge-platform/open-edge-platform-docs-write @dnoliver @rajpatel9498 @basakcap
-/metro-ai-suite/interactive-digital-avatar/docs/                @open-edge-platform/open-edge-platform-docs-write @senhui2intel @Junyu-B @wzq112358 @myqi
-/metro-ai-suite/interactive-digital-avatar/README.md            @open-edge-platform/open-edge-platform-docs-write @senhui2intel @Junyu-B @wzq112358 @myqi
-/metro-ai-suite/loitering-detection/docs/                       @open-edge-platform/open-edge-platform-docs-write @vagheshp @tjanczak @xwu2intel
-/metro-ai-suite/loitering-detection/README.md                   @open-edge-platform/open-edge-platform-docs-write @vagheshp @tjanczak @xwu2intel
+/metro-ai-suite/image-based-video-search/docs/                  @dnoliver @rajpatel9498 @basakcap       @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/image-based-video-search/README.md              @dnoliver @rajpatel9498 @basakcap       @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/interactive-digital-avatar/docs/                @senhui2intel @Junyu-B @wzq112358 @myqi @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/interactive-digital-avatar/README.md            @senhui2intel @Junyu-B @wzq112358 @myqi @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/loitering-detection/docs/                       @vagheshp @tjanczak @xwu2intel          @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/loitering-detection/README.md                   @vagheshp @tjanczak @xwu2intel          @open-edge-platform/open-edge-platform-docs-write
 # /metro-ai-suite/metro-vision-ai-app-recipe/docs/              needs to be defined
 # /metro-ai-suite/metro-vision-ai-app-recipe/README.md          needs to be defined
-/metro-ai-suite/smart-intersection/docs/                        @open-edge-platform/open-edge-platform-docs-write @saratpoluri @sarthakdeva-intel
-/metro-ai-suite/smart-intersection/README.md                    @open-edge-platform/open-edge-platform-docs-write @saratpoluri @sarthakdeva-intel
-/metro-ai-suite/smart-parking/docs/                             @open-edge-platform/open-edge-platform-docs-write @vagheshp @tjanczak @xwu2intel
-/metro-ai-suite/smart-parking/README.md                         @open-edge-platform/open-edge-platform-docs-write @vagheshp @tjanczak @xwu2intel
-/metro-ai-suite/visual-search-question-and-answering/docs/      @open-edge-platform/open-edge-platform-docs-write @llin60 @Johere @zhangcong2019
-/metro-ai-suite/visual-search-question-and-answering/README.md  @open-edge-platform/open-edge-platform-docs-write @llin60 @Johere @zhangcong2019
+/metro-ai-suite/smart-intersection/docs/                        @saratpoluri @sarthakdeva-intel         @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/smart-intersection/README.md                    @saratpoluri @sarthakdeva-intel         @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/smart-parking/docs/                             @vagheshp @tjanczak @xwu2intel          @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/smart-parking/README.md                         @vagheshp @tjanczak @xwu2intel          @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/visual-search-question-and-answering/docs/      @llin60 @Johere @zhangcong2019          @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/visual-search-question-and-answering/README.md  @llin60 @Johere @zhangcong2019          @open-edge-platform/open-edge-platform-docs-write
+
+# documentation content - robotics-ai
+/robotics-ai-suite/docs/                                       @jouillet @jb-balaji @pirouf @mohitmeh12 @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/README.md                                   @jouillet @jb-balaji @pirouf @mohitmeh12 @open-edge-platform/open-edge-platform-docs-write
 
 # documentation content - retail-ai
-#/retail-ai-suite//**/* - needs to be defined once content appears
+# /retail-ai-suite/  - needs to be defined once content appears
