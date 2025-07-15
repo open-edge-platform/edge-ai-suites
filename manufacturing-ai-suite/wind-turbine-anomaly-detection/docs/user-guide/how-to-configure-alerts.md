@@ -144,7 +144,7 @@ curl -X 'POST' \
 
 - **Publish MQTT Alerts**
 
-For detailed instructions on configuring and publishing MQTT alerts, refer to the [Publishing MQTT Alerts](#publishing-mqtt-alerts) section.
+For detailed instructions on configuring and publishing MQTT alerts, refer to the [Publish MQTT Alerts](#publish-mqtt-alerts) section.
 
 - **Subscribe to MQTT Alerts**
 
@@ -181,7 +181,7 @@ To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow b
 
 1. Configuring OPC-UA Alert in TICK Script
 
-Configure the tick script by following [these instructions](#1-configuring-opc-ua-alert-in-tick-script).
+Configure the tick script by following [these instructions](#1-configure-opc-ua-alert-in-tick-script).
 
 2. Copying the TICK script
 
@@ -190,8 +190,8 @@ Copy the TICK script using the following command:
 ```sh
 cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection # path relative to git clone folder
 cd time_series_analytics_microservice
-mkdir windturbine_anomaly_detector
-cp -r tick_scripts windturbine_anomaly_detector/.
+mkdir -p windturbine_anomaly_detector
+cp -r models tick_scripts udfs windturbine_anomaly_detector/.
 
 POD_NAME=$(kubectl get pods -n ts-wind-turbine-anomaly-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
 
@@ -228,7 +228,7 @@ curl -X 'POST' \
 
 - **Subscribe to OPC UA Alerts using Sample OPCUA Subscriber**
 
-To subscribe to OPC-UA alerts, follow [these steps](#subscribing-to-opc-ua-alerts-using-sample-opcua-subscriber).
+To subscribe to OPC-UA alerts, follow [these steps](#subscribe-to-opc-ua-alerts-using-sample-opcua-subscriber).
 
 ## Supporting Resources
 
