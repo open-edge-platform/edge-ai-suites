@@ -16,11 +16,11 @@ SECURITY.md @xwu2intel
 /robotics-ai-suite/ @jouillet @jb-balaji @pirouf @mohitmeh12
 
 # documentation content
-/metro-ai-suite/README.md/*.md @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/**/docs @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/**/README.md @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/README.md @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/**/docs @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/**/README.md @open-edge-platform/open-edge-platform-docs-write
-/retail-ai-suite/README.md @open-edge-platform/open-edge-platform-docs-write
-/media-and-entertainment-ai-suite/README.md @open-edge-platform/open-edge-platform-docs-write
+#/metro-ai-suite/README.md/*.md @open-edge-platform/open-edge-platform-docs-write
+#/metro-ai-suite/**/docs @open-edge-platform/open-edge-platform-docs-write
+#/metro-ai-suite/**/README.md @open-edge-platform/open-edge-platform-docs-write
+#/manufacturing-ai-suite/README.md @open-edge-platform/open-edge-platform-docs-write
+#/manufacturing-ai-suite/**/docs @open-edge-platform/open-edge-platform-docs-write
+#/manufacturing-ai-suite/**/README.md @open-edge-platform/open-edge-platform-docs-write
+#/retail-ai-suite/README.md @open-edge-platform/open-edge-platform-docs-write
+#/media-and-entertainment-ai-suite/README.md @open-edge-platform/open-edge-platform-docs-write
