@@ -44,7 +44,7 @@ This guide provides instructions for setting up custom UDF deployment package (U
        - Key sections:
          - **Input**: Fetch data from Telegraf (stream).
          - **Processing**: Apply UDFs for analytics.
-         - **Alerts**: Configuration for publishing alerts (e.g., MQTT). Refer [link](#Publishing-mqtt-alerts)
+         - **Alerts**: Configuration for publishing alerts (e.g., MQTT). Refer [link](./how-to-configure-alerts.md#publish-mqtt-alerts)
          - **Logging**: Set log levels (`INFO`, `DEBUG`, `WARN`, `ERROR`).
          - **Output**: Publish processed data.
       
@@ -69,7 +69,7 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
 
 1. Update the UDF deployment package by following the instructions in [Configure Time Series Analytics Microservice with Custom UDF Deployment Package](./how-to-configure-custom-udf.md#configure-time-series-analytics-microservice-with-custom-udf-deployment-package).
 
-2. Copy the updated UDF deployment package using the [steps above](#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
+2. Copy the updated UDF deployment package using the [steps](./how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
 
 3. Make the following REST API call to the Time Series Analytics microservice for the updated custom UDF:
     ```sh

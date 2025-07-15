@@ -12,7 +12,7 @@ The `HMI Augmened worker` sample application has been validated on Intel® Core&
 Required Software:
 
 - Python 3.10
-
+- [EMT](https://github.com/open-edge-platform/edge-microvisor-toolkit) configuration requirments are documented in the [system requirement](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/docs/developer-guide/emt-system-requirements.md) page.
 
 ## Supporting Resources
 * [Overview](./Overview.md)

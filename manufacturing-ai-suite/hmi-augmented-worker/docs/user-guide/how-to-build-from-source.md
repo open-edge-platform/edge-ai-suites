@@ -1,19 +1,19 @@
 # How to Build from Source
 
-This document provides step-by-step instructions for building the ChatQ&A Core microservices and File Watcher service from source. Please refer to the prerequiresites section in the guide to install the appropriate software dependencies.
+This document provides step-by-step instructions for building the `ChatQnA Core` sample application and File Watcher service from source. Refer to the [prerequisites section](./get-started.md/#prerequisites) in the guide to install the appropriate software dependencies.
 
-## Build ChatQ&A Core from Source
+## Build ChatQnA Core from Source
 
-For detailed instructions on building from source, please visit the [Build from Source Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md)
+For detailed instructions on building from source, visit the [Build from Source Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md).
 
-### ChatQ&A Core Docker Compose Deployment
+### ChatQnA Core Docker Compose Deployment
 
-For docker compose deployment instructions, please visit the [Running Application Container Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md#running-the-application-container)
+For docker compose deployment instructions, visit the [Running Application Container Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md#running-the-application-container).
 
 
 ## Build File Watcher Service from Source
 
-In the `Windows environment`, the File Watcher Service operates in conjunction with the HMI application, continuously monitoring file system activities such as creation, modification, and deletion. Upon detecting any changes, it transmits the relevant file data over the network to the ChatQ&A service for ingestion and contextual processing, thereby supporting Retrieval-Augmented Generation (RAG) workflows.
+In the Windows® environment, the File Watcher Service works with the HMI application to continuously monitor file system activities such as creation, modification, and deletion. When it detects any changes, it sends the relevant file data over the network to the `ChatQnA Core` service for ingestion and contextual processing, supporting Retrieval-Augmented Generation (RAG) workflows.
 
 ### Prerequisites
 
@@ -26,8 +26,11 @@ In the `Windows environment`, the File Watcher Service operates in conjunction w
 To build the File Watcher executable binary, follow these steps:
 
 1. Clone and download the source code by either using Git clone or downloading the source code as a ZIP file directly from the [repository](https://github.com/open-edge-platform/edge-ai-suites).
+   ```bash
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
+   ```
 
-2. Setup the Virtual Environment with python venv.
+2. Set up the Virtual Environment with Python venv.
 
    - Open Command Prompt.
 
@@ -36,7 +39,7 @@ To build the File Watcher executable binary, follow these steps:
    - Create Virtual Environment.
 
      ```sh
-     # Replace `<venv_name>` with your preffered name.
+     # Replace `<venv_name>` with your preferred name.
      python -m venv <venv_name>
      ```
 
@@ -46,16 +49,16 @@ To build the File Watcher executable binary, follow these steps:
    <venv_name>\Scripts\activate
    ```
 
-   Once it's activated, you will see the environment name in parenthesis as below:
+   Once it's activated, the environment name appears in parentheses as follows:
 
    ```
    (venv_name) C:\Users\YourName\project>
    ```
 
-4. Navigate to Project Folder downloaded in Step 1.
+4. Navigate to the Project folder downloaded in Step 1.
 
    ```sh
-   cd \path\to\your\project\manufacturing-ai-suite\hmi-augmented-worker\file_watcher
+   cd edge-ai-suites\manufacturing-ai-suite\hmi-augmented-worker\file_watcher
    ```
 
 5. Install Packages Inside the Virtual Environment.
@@ -64,24 +67,38 @@ To build the File Watcher executable binary, follow these steps:
    pip install -r requirements.txt --no-cache-dir
    ```
 
-   If your system is behind a proxy, please try below:
+   If your system is behind a proxy, do as follows:
 
    ```sh
    # Replace <your_proxy> and <port> to your network proxy and port number
    pip install -r requirements.txt --no-cache-dir --proxy <your_proxy>:<port>
    ```
+   On Windows®, typically, proxy information can be fetched using the command,
+   ```sh
+   netsh winhttp show proxy
+   ```
+   This will output one of the following two outputs:
+   ```sh
+   Current WinHTTP proxy settings:
+        Direct access (no proxy server).
+   ```
+   or
+   ```sh
+   Current WinHTTP proxy settings:
+        Proxy Server:  <your_proxy>:<port>
+        Bypass List:   <bypass_list>
+   ```
 
-6. Setup Environment Variables using `.bat`.
+6. Set up Environment Variables using `.bat`.
 
    - Open and edit the values for the variables with your corresponding setup.
-
-   - Then, execute the `.bat` file via below:
+   - Then, execute the `.bat` file as shown:
 
      ```sh
      .\set_env_vars.bat
      ```
 
-7. Compile and Build the File Watcher Service executable.
+7. Compile and build the File Watcher Service executable.
 
    ```sh
    pyinstaller file_watcher.py -F --onefile
@@ -89,13 +106,13 @@ To build the File Watcher executable binary, follow these steps:
 
 8. Execute the File Watcher Service executable.
 
-   - Before starting the File Watcher Service, please do make sure that your backend ChatQ&A Core service is up.
+   - Before starting the File Watcher Service, ensure that your backend `ChatQnA Core` service is up.
 
      ```sh
      .\dist\file_watcher.exe
      ```
 
-9. After the service starts, the file watcher will continuously monitor file events occurring in the designated folder specified by `WATCH_DIRECTORY` in the `set_env_vars.bat` file, until it is stopped by a keyboard interrupt.
+9. After the service starts, the file watcher continuously monitors file events occurring in the designated folder specified by `WATCH_DIRECTORY` in the `set_env_vars.bat` file, until it is stopped by a keyboard interrupt.
 
 ## Troubleshooting
 
@@ -128,6 +145,6 @@ ERROR: Could not install packages due to an OSError: [WinError 206] The filename
      - Double-click on it and set its value to `1`.
      - Click OK to save the changes.
 
-After enabling long path support, you might need to restart your computer for the changes to take effect. Once done, try running your `pip install` command again.
+After enabling long path support, you may need to restart your computer for the changes to take effect. Once done, try running your `pip install` command again.
 
-If the issue persists, consider using a shorter path for your project or virtual environment as mentioned earlier. Moving your project to a directory with a shorter path can help avoid hitting the path length limit.
+If the issue persists, consider using a shorter path for your project or virtual environment, as mentioned earlier. Moving your project to a directory with a shorter path can help avoid hitting the path length limit.
