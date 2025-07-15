@@ -144,7 +144,7 @@ curl -X 'POST' \
 
 - **Publish MQTT Alerts**
 
-For detailed instructions on configuring and publishing MQTT alerts, refer to the [Publishing MQTT Alerts](#publishing-mqtt-alerts) section.
+For detailed instructions on configuring and publishing MQTT alerts, refer to the [Publish MQTT Alerts](#publish-mqtt-alerts) section.
 
 - **Subscribe to MQTT Alerts**
 
