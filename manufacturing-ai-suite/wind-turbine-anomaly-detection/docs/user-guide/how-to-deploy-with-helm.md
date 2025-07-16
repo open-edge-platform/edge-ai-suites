@@ -19,7 +19,7 @@
 
     1. Download helm chart with the following command
 
-        `helm pull oci://<path-to-internal-harbor-registry-OR-intel-docker-hub-registry-path>/wind-turbine-anomaly-detection-sample-app --version 1.0.0`
+        `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.0.0`
 
     2. unzip the package using the following command
 
