@@ -19,7 +19,7 @@
    how-to-scale-video-resolution
    how-to-use-an-ai-model-and-video-file-of-your-own
    how-to-use-opcua-publisher
-
+   how-to-use-gpu-for-inference
 
 .. toctree::
    :caption: References
