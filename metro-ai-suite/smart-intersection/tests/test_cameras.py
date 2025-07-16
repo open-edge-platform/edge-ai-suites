@@ -61,6 +61,7 @@ def add_camera(waiter, camera_name, camera_id):
   )
   return camera_card
 
+@pytest.mark.zephyr_id("NEX-T9632")
 def test_manage_cameras(waiter):
   """Test that the admin can manage cameras."""
   camera_name = "south crosswalk view"
