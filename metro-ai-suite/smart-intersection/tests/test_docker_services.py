@@ -128,5 +128,3 @@ def test_docker_application_restart():
   wait_for_services_readiness(services_urls)
 
   check_all_urls()
-
-
