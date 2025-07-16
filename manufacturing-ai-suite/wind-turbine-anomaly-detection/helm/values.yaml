@@ -14,22 +14,29 @@ DOCKER_PASSWORD: ''
 imagePullPolicy: IfNotPresent
 storageClassName: manual
 env:
-  # The INFLUXDB_USERNAME and INFLUXDB_PASSWORD length must be a minimum of 5 and 10 characters respectively and 
-  # should contain alphanumeric characters with atleast one digit. 
+  # The INFLUXDB_USERNAME must contain only alphabets and be at least 5 characters minimum
   # Do not set INFLUXDB_USERNAME to 'admin'.
-  # Do not use the following special characters in the influxdb_username and influxdb_password "~:'+[/@^{%(-"*|,&<`}._=}!>;?#$)\"
   INFLUXDB_USERNAME:
+
+  # The INFLUXDB_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit
+  # Do not use the following special characters in the INFLUXDB_PASSWORD "~:'+[/@^{%(-"*|,&<`}._=}!>;?#$)\"
   INFLUXDB_PASSWORD:
-  # The VISUALIZER_GRAFANA_USER and VISUALIZER_GRAFANA_PASSWORD length must be a minimum of 5 and 10 characters respectively 
-  # and should contain alphanumeric characters with atleast one digit
+
+  # The VISUALIZER_GRAFANA_USER must contain only alphabets and be at least 5 characters minimum
   VISUALIZER_GRAFANA_USER:
+
+  # The VISUALIZER_GRAFANA_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit
   VISUALIZER_GRAFANA_PASSWORD:
-  # The POSTGRES_PASSWORD length must be a minimum of 5 and 10 characters respectively and should contain alphanumeric characters with at least one digit
+
+  # MR_PSQL_PASSWORD length must be a minimum of 10 alphanumeric characters with atleast one digit
   POSTGRES_PASSWORD:
-  # MinIO Secret Key length must be a minimum of 8 and 16 characters respectively and should contain alphanumeric characters with at least one digit 
-  MINIO_SECRET_KEY: 
-  # MinIO Access Key length must be a minimum of 8 and 16 characters respectively and should contain alphanumeric characters with at least one digit 
+
+  # MINIO_ACCESS_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit
   MINIO_ACCESS_KEY:
+
+  # MINIO_SECRET_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit
+  MINIO_SECRET_KEY:
+
   HTTP_PROXY: 
   HTTPS_PROXY: 
   # SECURE_MODE environment variable should not be changed as it may cause unexpected behavior or system failure.

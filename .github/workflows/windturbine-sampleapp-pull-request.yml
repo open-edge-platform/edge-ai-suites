@@ -51,13 +51,13 @@ jobs:
         cd ./timeseries/manufacturing-ai-suite/wind-turbine-anomaly-detection
         make down 
         # Generate random values for sensitive environment variables
-        INFLUXDB_USERNAME=$(openssl rand -hex 4)
+        INFLUXDB_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
         INFLUXDB_PASSWORD=$(openssl rand -hex 6)
-        VISUALIZER_GRAFANA_USER=$(openssl rand -hex 4)
+        VISUALIZER_GRAFANA_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
         VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 6)
-        MR_PSQL_PASSWORD=$(openssl rand -hex 4)
-        MR_MINIO_ACCESS_KEY=$(openssl rand -hex 4)
-        MR_MINIO_SECRET_KEY=$(openssl rand -hex 4)
+        MR_PSQL_PASSWORD=$(openssl rand -hex 10)
+        MR_MINIO_ACCESS_KEY=$(openssl rand -hex 10)
+        MR_MINIO_SECRET_KEY=$(openssl rand -hex 10)
 
         sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
         sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env

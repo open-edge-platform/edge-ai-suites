@@ -42,7 +42,7 @@ To configure Docker:
      ```
 ## Data flow explanation
 
-The data flow remains same as that explained in the [Overview.md](./Overview.md).
+The data flow remains same as that explained in the [High-Level Architecture](./how-it-works.md#high-level-architecture).
 Let's specifically talk about the wind turbine anomaly detection use case here by ingesting the data using the
 OPC-UA simulator and publishing the anomaly alerts to MQTT broker.
 

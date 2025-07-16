@@ -6,7 +6,7 @@ Wind Turbine Anomaly Detection sample application demonstrates a time series use
 
 - **Overview**
   - [Overview](docs/user-guide/Overview.md): A high-level introduction.
-  - [Architecture](docs/user-guide/Overview.md#high-level-architecture): High Level Architecture.
+  - [Architecture](docs/user-guide/how-it-works.md#high-level-architecture): High Level Architecture.
 
 - **Getting Started**
   - [System Requirements](docs/user-guide/system-requirements.md): Hardware and software requirements for running the sample application.

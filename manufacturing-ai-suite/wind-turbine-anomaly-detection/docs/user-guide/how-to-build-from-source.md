@@ -2,7 +2,7 @@
 
 This guide provides step-by-step instructions for building the `Time Series Analytics`
 microservice and `Wind Turbine Anomaly Detection` Sample Application from source.
-Please follow [prerequisites](./get-started.md#prerequisites) and understand [data flow explanation](./get-started.md#data-flow-explanation)
+Please follow [prerequisites](./get-started.md#configure-docker) and understand [data flow explanation](./get-started.md#data-flow-explanation)
 before proceeding with the below steps.
 
 ## Steps to Build from Source
