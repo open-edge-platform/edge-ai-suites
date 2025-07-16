@@ -66,6 +66,12 @@ def test_change_password(waiter):
     SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
   )
 
+  # Verify that the expected elements are present on the page
+  waiter.wait_and_assert(
+    EC.presence_of_element_located((By.ID, "nav-scenes")),
+    error_message='"nav-scenes" element not found on the page'
+  )
+
   # Navigate to Password change page
   waiter.driver.get(SCENESCAPE_URL + "/admin/password_change")
 
