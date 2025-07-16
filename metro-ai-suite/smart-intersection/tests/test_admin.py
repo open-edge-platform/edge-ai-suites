@@ -23,13 +23,11 @@ def test_login(waiter):
     SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
   )
 
-  # Verify that the expected elements are present on the page
-  nav_scenes = waiter.wait_and_assert(
+  # Verify that the element visible after login is present on the page
+  waiter.wait_and_assert(
     EC.presence_of_element_located((By.ID, "nav-scenes")),
     error_message='"nav-scenes" element not found on the page'
   )
-
-  assert nav_scenes
 
 @pytest.mark.zephyr_id("NEX-T9390")
 def test_logout(waiter):
@@ -66,7 +64,7 @@ def test_change_password(waiter):
     SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
   )
 
-  # Verify that the expected elements are present on the page
+  # Verify that the element visible after login is present on the page
   waiter.wait_and_assert(
     EC.presence_of_element_located((By.ID, "nav-scenes")),
     error_message='"nav-scenes" element not found on the page'
