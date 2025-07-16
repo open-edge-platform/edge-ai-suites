@@ -13,7 +13,7 @@ SECRETS_DIR = os.path.join(SOURCE, "secrets")
 
 @pytest.mark.zephyr_id("NEX-T9365")
 def test_setup():
-  """Test that init.sh setup completed successfully - secrets and videos."""
+  """Verify that secrets and videos have been set up."""
   
   # Check if browser.auth file exists
   browser_auth = os.path.join(SECRETS_DIR, "browser.auth")
