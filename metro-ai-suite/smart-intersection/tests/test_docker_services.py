@@ -40,15 +40,14 @@ def wait_for_container_to_start(container, timeout=30):
   return False
 
 def get_running_dlstreamer_container():
-  """Get DLStreamer container if it exists and is running, otherwise skip test."""
+  """Get DLStreamer container if it exists and is running, otherwise fail test."""
   client = docker.from_env()
   try:
     container = client.containers.get(DLSTREAMER_CONTAINER)
-    if container.status != 'running':
-      pytest.skip(f"DLStreamer container is not running (status: {container.status})")
+    assert container.status == 'running', f"DLStreamer container is not running (status: {container.status})"
     return container
   except docker.errors.NotFound:
-    pytest.skip(f"DLStreamer container '{DLSTREAMER_CONTAINER}' not found")
+    assert False, f"DLStreamer container '{DLSTREAMER_CONTAINER}' not found"
 
 def check_all_urls():
   """Check access to all application URLs."""
