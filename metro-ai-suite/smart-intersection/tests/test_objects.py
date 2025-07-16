@@ -80,7 +80,7 @@ def test_delete_object(waiter):
   )
   confirm_delete_button.click()
 
-  # Wait for the table row containing the object name
+  # Wait to verify that the object row is no longer present
   object_row = waiter.wait_and_assert(
     EC.invisibility_of_element_located((By.XPATH, f"//tr/td[text()='{new_object_name}']")),
     error_message=f"Table row with object name '{new_object_name}' is not present on the page"

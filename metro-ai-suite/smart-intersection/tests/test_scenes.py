@@ -6,7 +6,12 @@ import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from tests.utils.ui_utils import waiter, driver
-from .conftest import SCENESCAPE_URL, SCENESCAPE_REMOTE_URL, SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
+from .conftest import (
+  SCENESCAPE_URL,
+  SCENESCAPE_REMOTE_URL,
+  SCENESCAPE_USERNAME,
+  SCENESCAPE_PASSWORD,
+)
 
 
 def verify_intersection_demo_avability(waiter, url):
@@ -77,58 +82,58 @@ def create_and_verify_scene(waiter, name_of_new_scene):
   )
 
 def interact_with_help_section(waiter, tab_id, help_button_id, modal_id):
-    """Interact with a help section by clicking the tab, help button, and closing the modal."""
-    # Find and click the tab
-    tab = waiter.wait_and_assert(
-        EC.presence_of_element_located((By.ID, tab_id)),
-        error_message=f"{tab_id} is not present on the page"
-    )
-    tab.click()
+  """Interact with a help section by clicking the tab, help button, and closing the modal."""
+  # Find and click the tab
+  tab = waiter.wait_and_assert(
+    EC.presence_of_element_located((By.ID, tab_id)),
+    error_message=f"{tab_id} is not present on the page"
+  )
+  tab.click()
 
-    # Find and click the help button
-    help_button = waiter.wait_and_assert(
-        EC.element_to_be_clickable((By.ID, help_button_id)),
-        error_message=f"{help_button_id} is not present on the page"
-    )
-    help_button.click()
+  # Find and click the help button
+  help_button = waiter.wait_and_assert(
+    EC.element_to_be_clickable((By.ID, help_button_id)),
+    error_message=f"{help_button_id} is not present on the page"
+  )
+  help_button.click()
 
-    # Wait for the modal to be visible
-    waiter.wait_and_assert(
-        EC.visibility_of_element_located((By.ID, modal_id)),
-        error_message=f"{modal_id} is not visible"
-    )
+  # Wait for the modal to be visible
+  waiter.wait_and_assert(
+    EC.visibility_of_element_located((By.ID, modal_id)),
+    error_message=f"{modal_id} is not visible"
+  )
 
-    # Find and click the "Close" button in the modal
-    close_button = waiter.wait_and_assert(
-        EC.element_to_be_clickable((By.XPATH, f"//div[@id='{modal_id}']//button[@type='button' and @class='btn btn-secondary' and @data-dismiss='modal']")),
-        error_message=f"Close button is not clickable in the {modal_id}"
-    )
-    close_button.click()
+  # Find and click the "Close" button in the modal
+  close_button = waiter.wait_and_assert(
+    EC.element_to_be_clickable((By.XPATH, f"//div[@id='{modal_id}']//button[@type='button' and @class='btn btn-secondary' and @data-dismiss='modal']")),
+    error_message=f"Close button is not clickable in the {modal_id}"
+  )
+  close_button.click()
 
 @pytest.mark.zephyr_id("NEX-T9391")
 def test_scene_help(waiter):
-    """Test that the scene help is available."""
-    # Perform login using Waiter class object
-    waiter.perform_login(
-        SCENESCAPE_URL,
-        By.ID, "username",
-        By.ID, "password",
-        By.ID, "login-submit",
-        SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
-    )  
+  """Test that the scene help is available."""
+  # Perform login using Waiter class object
+  waiter.perform_login(
+    SCENESCAPE_URL,
+    By.ID, "username",
+    By.ID, "password",
+    By.ID, "login-submit",
+    SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
+  )
 
-    # Find the link element that contains the image with alt text "Intersection-Demo"
-    link_element = waiter.wait_and_assert(
-        EC.presence_of_element_located((By.XPATH, "//a[img[@alt='Intersection-Demo']]")),
-        error_message="Link containing image with alt text 'Intersection-Demo' is not present on the page"
-    )
-    link_element.click()
+  # Find the link element that contains the image with alt text "Intersection-Demo"
+  link_element = waiter.wait_and_assert(
+    EC.presence_of_element_located((By.XPATH, "//a[img[@alt='Intersection-Demo']]")),
+    error_message="Link containing image with alt text 'Intersection-Demo' is not present on the page"
+  )
+  link_element.click()
 
-    # Interact with each help section
-    interact_with_help_section(waiter, "sensors-tab", "sensor-help", "sensorHelpModal")
-    interact_with_help_section(waiter, "regions-tab", "roi-help", "roiHelpModal")
-    interact_with_help_section(waiter, "tripwires-tab", "tripwire-help", "tripwireHelpModal")
-    interact_with_help_section(waiter, "children-tab", "children-help", "childrenHelpModal")
+  # Interact with each help section
+  interact_with_help_section(waiter, "sensors-tab", "sensor-help", "sensorHelpModal")
+  interact_with_help_section(waiter, "regions-tab", "roi-help", "roiHelpModal")
+  interact_with_help_section(waiter, "tripwires-tab", "tripwire-help", "tripwireHelpModal")
+  interact_with_help_section(waiter, "children-tab", "children-help", "childrenHelpModal")
 
 
 @pytest.mark.zephyr_id("NEX-T9370")
