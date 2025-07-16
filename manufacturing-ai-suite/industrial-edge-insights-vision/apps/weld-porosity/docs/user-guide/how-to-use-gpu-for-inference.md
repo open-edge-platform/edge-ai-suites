@@ -28,7 +28,7 @@ Gstreamer has a variety of hardware specific encoders and decoders elements such
 
 Additionally, one can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel GPUs (integrated and discrete).
 
-Read DL Streamer [docs](https://dlstreamer.github.io/dev_guide/gpu_device_selection.html) for more.
+Read DL Streamer [docs](https://dlstreamer.github.io/dev_guide/gpu_device_selection.html) for more details.
 
 ### GPU specific element properties
 DL Streamer inference elements also provides property such as `device=GPU` and `pre-process-backend=va-surface-sharing` to infer and pre-process on GPU. Read DL Streamer [docs](https://dlstreamer.github.io/dev_guide/model_preparation.html#model-pre-and-post-processing) for more.
@@ -39,7 +39,7 @@ DL Streamer inference elements also provides property such as `device=GPU` and `
 
 For inferencing with GPU backend, we will use the REST API to start a pipeline.
 
-The pipeline `weld_porosity_classification_gpu` in [pipeline-server-config](../../configs/pipeline-server-config.json) contains GPU specific elements. We will now start the pipeline with a curl request
+The pipeline `weld_porosity_classification_gpu` in [pipeline-server-config](../../configs/pipeline-server-config.json) contains GPU specific elements. We will now start the pipeline with a curl request.
 
 ```sh
 curl localhost:8080/pipelines/user_defined_pipelines/weld_porosity_classification_gpu -X POST -H 'Content-Type: application/json' -d '{
