@@ -62,4 +62,4 @@ curl localhost:8080/pipelines/user_defined_pipelines/weld_porosity_classificatio
 }'
 ```
 
-We should see the metadata results in `/tmp/results.jsonl` file like in previous tutorial.
+We should see the metadata results in `/tmp/results.jsonl` file.
