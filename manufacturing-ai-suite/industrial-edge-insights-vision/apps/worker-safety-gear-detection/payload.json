@@ -7,10 +7,10 @@
                 "type": "uri"
             },
             "destination": {
-            "frame": {
-                "type": "webrtc",
-                "peer-id": "worker_safety"
-            }
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "worker_safety"
+                }
             },
             "parameters": {
                 "detection-properties": {
