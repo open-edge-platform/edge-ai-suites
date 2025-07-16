@@ -21,6 +21,7 @@
    how-to-setup-helm-locally
    how-to-use-an-ai-model-and-video-file-of-your-own
    how-to-use-opcua-publisher
+   how-to-use-gpu-for-inference
 
 
 .. toctree::

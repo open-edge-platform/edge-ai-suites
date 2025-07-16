@@ -37,12 +37,12 @@ DL Streamer inference elements also provides property such as `device=GPU` and `
 
 > Note - This sample application already provides a default `docker-compose.yml` file that includes the necessary GPU access to the containers.
 
-The pipeline `weld_porosity_classification_gpu` in [pipeline-server-config](../../configs/pipeline-server-config.json) contains GPU specific elements and uses GPU backend for inferencing. We will now start the pipeline with a curl request.
+The pipeline `pallet_defect_detection_gpu` in [pipeline-server-config](../../configs/pipeline-server-config.json) contains GPU specific elements and uses GPU backend for inferencing. We will now start the pipeline with a curl request.
 
 ```sh
-curl localhost:8080/pipelines/user_defined_pipelines/weld_porosity_classification_gpu -X POST -H 'Content-Type: application/json' -d '{
+curl localhost:8080/pipelines/user_defined_pipelines/pallet_defect_detection_gpu -X POST -H 'Content-Type: application/json' -d '{
     "source": {
-        "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
+        "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
         "type": "uri"
     },
     "destination": {
@@ -53,8 +53,8 @@ curl localhost:8080/pipelines/user_defined_pipelines/weld_porosity_classificatio
         }
     },
     "parameters": {
-        "classification-properties": {
-            "model": "/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml"
+        "detection-properties": {
+            "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml"
         }
     }
 }'
