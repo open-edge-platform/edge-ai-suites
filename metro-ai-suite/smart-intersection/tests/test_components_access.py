@@ -24,7 +24,7 @@ from .conftest import (
   NODE_RED_URL,
   NODE_RED_REMOTE_URL,
   INFLUX_DB_ADMIN_USERNAME,
-  INFLUX_DB_ADMIN_PASSWORD
+  INFLUX_DB_ADMIN_PASSWORD,
 )
 
 @pytest.mark.zephyr_id("NEX-T9368")

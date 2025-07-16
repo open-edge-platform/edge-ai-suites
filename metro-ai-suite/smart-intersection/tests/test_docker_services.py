@@ -109,7 +109,7 @@ def test_docker_build_and_deployment():
   expected = get_all_services()
   assert expected == running, f"Not all services are running. Expected: {expected}, Running: {running}"
 
-@pytest.mark.zephyr_id("NEX-T9367")
+@pytest.mark.zephyr_id("NEX-T9376")
 def test_docker_application_restart():
   """Test that all application components are accessible after Docker restart."""
   # Teardown: stop and remove containers
