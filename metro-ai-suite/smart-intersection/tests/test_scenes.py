@@ -130,6 +130,7 @@ def test_scene_help(waiter):
   link_element.click()
 
   # Interact with each help section
+  interact_with_help_section(waiter, "cameras-tab", "camera-help", "cameraHelpModal")
   interact_with_help_section(waiter, "sensors-tab", "sensor-help", "sensorHelpModal")
   interact_with_help_section(waiter, "regions-tab", "roi-help", "roiHelpModal")
   interact_with_help_section(waiter, "tripwires-tab", "tripwire-help", "tripwireHelpModal")
