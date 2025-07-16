@@ -86,8 +86,6 @@ spec:
           value: "{{ $.Values.env.ENABLE_RTSP }}"
         - name: WEBRTC_SIGNALING_SERVER
           value: "http://{{ $.Values.env.HOST_IP }}:{{ $.Values.config.mediamtx.ext.mediamtx_port }}"
-        - name: RUN_MODE
-          value: "EVA"
         - name: SERVICE_NAME
           value: "dlstreamer-pipeline-server"
         - name: REST_SERVER_PORT

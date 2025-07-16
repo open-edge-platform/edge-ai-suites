@@ -20,10 +20,7 @@ services:
       WEBRTC_SIGNALING_SERVER: http://${HOST_IP}:${WHIP_SERVER_PORT}
       ENABLE_RTSP: false
       no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector
-      READ_CONFIG_FROM_FILE_ENV: ${READ_CONFIG_FROM_FILE_ENV}
-      RUN_MODE: "EVA"
       GST_DEBUG: "1"
-      APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC: "true"
       REST_SERVER_PORT: ${REST_SERVER_PORT}
       S3_STORAGE_HOST: ${HOST_IP}
       S3_STORAGE_PORT: ${MR_MINIO_SERVER_PORT}
@@ -64,6 +61,8 @@ services:
     - "109"
       # render group ID for ubuntu 22.04 host OS
     - "110"
+      # render group ID for ubuntu 24.04 host OS
+    - "992"
     device_cgroup_rules:
       # Default run - device-cgroup-rule='c 189:* rmw'
       # Selective rules can be applied for deployment
