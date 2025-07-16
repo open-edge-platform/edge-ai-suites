@@ -14,7 +14,6 @@
 
    how-to-change-the-input-video-source
    how-to-deploy-using-helm-charts
-   how-to-deploy-with-edge-orchestrator
    how-to-enable-mlops
    how-to-manage-pipelines
    how-to-scale-video-resolution

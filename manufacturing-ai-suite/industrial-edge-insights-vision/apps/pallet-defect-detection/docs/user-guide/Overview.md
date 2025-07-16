@@ -30,7 +30,6 @@ It also consists of the below Third-party microservices:
 - [Postgres](https://hub.docker.com/_/postgres) is object-relational database system that provides reliability and data integrity.
 - [Minio](https://hub.docker.com/r/minio/minio) is high performance object storage that is API compatible with Amazon S3 cloud storage service.
 
-[This sample application is ready for deployment with Edge Orchestrator. Download the deployment package and follow the instructions](../user-guide/how-to-deploy-with-edge-orchestrator.md)
 
 ## Features
 

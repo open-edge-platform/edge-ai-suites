@@ -1,0 +1,87 @@
+{
+    "config": {
+        "pipelines": [
+            {
+                "name": "worker_safety_gear_detection_mlops",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4 name=source ! h264parse ! decodebin ! queue max-size-buffers=10 ! videoconvert ! gvadetect name=detection ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                            "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "worker_safety_gear_detection",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                            "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "worker_safety_gear_detection_s3write",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                            "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "S3_write": {
+                    "bucket": "ecgdemo",
+                    "folder_prefix": "camera1",
+                    "block": "false"
+                },
+                "auto_start": false
+            },
+            {
+                "name": "worker_safety_gear_detection_opcua",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                            "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "opcua_publisher": {
+                    "publish_frame": true,
+                    "variable": "ns=3;s=Demo.Static.Scalar.String"
+                },
+                "auto_start": false
+            }
+        ]
+    }
+}

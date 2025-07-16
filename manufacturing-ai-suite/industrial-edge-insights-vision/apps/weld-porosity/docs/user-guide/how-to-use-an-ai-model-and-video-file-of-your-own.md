@@ -99,7 +99,7 @@ You can bring your own model and run this sample application the same way as how
 
 3. Since this is a detection model, ensure to use gvadetect in the pipeline. For example: See the `weld_porosity_classification` pipeline in `pipeline-server-config.json` (present in the repository) where gvadetect is used.
 
-4. The `pipelnine-server-config.json` is volume mounted into DL Streamer Pipeline Server in `provision-configmap.yaml` as follows:
+4. The `pipeline-server-config.json` is volume mounted into DL Streamer Pipeline Server in `provision-configmap.yaml` as follows:
 
     ```sh
     apiVersion: v1

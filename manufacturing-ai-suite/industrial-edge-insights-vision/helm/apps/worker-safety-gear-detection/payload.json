@@ -1,0 +1,23 @@
+[
+    {
+        "pipeline": "worker_safety_gear_detection",
+        "payload":{
+            "source": {
+                "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4",
+                "type": "uri"
+            },
+            "destination": {
+            "frame": {
+                "type": "webrtc",
+                "peer-id": "worker_safety"
+            }
+            },
+            "parameters": {
+                "detection-properties": {
+                    "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml",
+                    "device": "CPU"
+                }
+            }
+        }
+    }
+]

@@ -1,0 +1,83 @@
+{
+    "config": {
+        "pipelines": [
+            {
+                "name": "pcb_anomaly_detection_mlops",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/anomalib_pcb_test.avi name=source ! decodebin ! gvaclassify name=classification inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 ! queue ! gvawatermark ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "pcb_anomaly_detection",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin ! gvaclassify name=classification inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 ! queue ! gvawatermark ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "pcb_anomaly_detection_s3write",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin ! gvaclassify name=classification inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 ! queue ! gvawatermark ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "S3_write": {
+                    "bucket": "ecgdemo",
+                    "folder_prefix": "camera1",
+                    "block": "false"
+                },
+                "auto_start": false
+            },
+            {
+                "name": "pcb_anomaly_detection_mqtt",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin ! gvaclassify name=classification inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 ! queue ! gvawatermark ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
+            }
+        ]
+    }
+}
