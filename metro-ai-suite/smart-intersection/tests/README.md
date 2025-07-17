@@ -60,7 +60,7 @@ Now you are ready to run tests on your system.
 
 ## Running tests
 
-Use pytest to run all tests or specific tests:
+Use pytest to run all or selected tests:
 
 ```bash
 # Run all tests
