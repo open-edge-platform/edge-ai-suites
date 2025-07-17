@@ -4,10 +4,8 @@
 
 
 import os
-import re
 import pytest
 import requests
-from pathlib import Path
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
