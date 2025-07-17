@@ -14,7 +14,7 @@ from .conftest import (
 )
 
 
-def verify_intersection_demo_avability(waiter, url):
+def verify_intersection_demo_availability(waiter, url):
   """Helper function to verify the Intersection-Demo scene."""
   # Perform login using Waiter class object
   waiter.perform_login(
@@ -141,7 +141,7 @@ def test_scene_help(waiter):
 def test_intersection_demo_avability(waiter):
   """Test that Intersection-Demo is visible after login."""
   # Perform login using Waiter class object
-  verify_intersection_demo_avability(waiter, SCENESCAPE_URL)
+  verify_intersection_demo_availability(waiter, SCENESCAPE_URL)
 
 @pytest.mark.zephyr_id("NEX-T9372")
 def test_remote_intersection_demo_avability(waiter):
@@ -149,7 +149,7 @@ def test_remote_intersection_demo_avability(waiter):
   if not SCENESCAPE_REMOTE_URL:
     pytest.skip("SCENESCAPE_REMOTE_URL is not set")
 
-  verify_intersection_demo_avability(waiter, SCENESCAPE_REMOTE_URL)
+  verify_intersection_demo_availability(waiter, SCENESCAPE_REMOTE_URL)
 
 
 

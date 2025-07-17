@@ -81,7 +81,7 @@ def test_delete_sensor(waiter):
   name_of_new_sensor = "sensor_NEX-T9385"
   id_of_new_sensor = "sensor_id_NEX-T9385"
 
-  sensor = add_sensor(waiter, name_of_new_sensor, id_of_new_sensor)
+  add_sensor(waiter, name_of_new_sensor, id_of_new_sensor)
 
   # Verify the presence of the delete link in the same card body
   delete_link = waiter.wait_and_assert(
