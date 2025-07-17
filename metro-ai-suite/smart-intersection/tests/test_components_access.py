@@ -84,7 +84,7 @@ def test_influx_db_login(waiter):
     INFLUX_DB_ADMIN_USERNAME, INFLUX_DB_ADMIN_PASSWORD
   )
 
-    # Wait for the header element to be visible after login
+  # Wait for the header element to be visible after login
   waiter.wait_and_assert(
     EC.visibility_of_element_located((By.CSS_SELECTOR, "[data-testid='home-page--header']")),
     error_message='Welcome message not visible within 10 seconds after login'
@@ -103,7 +103,7 @@ def test_remote_influx_db_login(waiter):
     INFLUX_DB_ADMIN_USERNAME, INFLUX_DB_ADMIN_PASSWORD
   )
 
-    # Wait for the header element to be visible after login
+  # Wait for the header element to be visible after login
   waiter.wait_and_assert(
     EC.visibility_of_element_located((By.CSS_SELECTOR, "[data-testid='home-page--header']")),
     error_message='Welcome message not visible within 10 seconds after login'

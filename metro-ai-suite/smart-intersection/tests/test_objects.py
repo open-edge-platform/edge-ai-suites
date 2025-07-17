@@ -40,8 +40,8 @@ def add_object(waiter, object_name):
     error_message="Add New Object button is not present on the page"
   )  
 
-  obnect_name_input = waiter.driver.find_element(By.ID, "id_name")
-  obnect_name_input.send_keys(object_name)
+  object_name_input = waiter.driver.find_element(By.ID, "id_name")
+  object_name_input.send_keys(object_name)
 
   add_new_object_button.click()
 

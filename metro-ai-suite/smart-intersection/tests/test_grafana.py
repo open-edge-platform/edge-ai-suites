@@ -64,7 +64,7 @@ def test_grafana_anthem_dashboard_availability(waiter):
 def test_remote_grafana_anthem_dashboard_availability(waiter):
   """Test the availability of the Anthem dashboard in remote Grafana."""
   if not GRAFANA_REMOTE_URL:
-    pytest.skip("SCENESCAPE_REMOTE_URL is not set")
+    pytest.skip("GRAFANA_REMOTE_URL is not set")
 
   navigate_to_dashboard(waiter, GRAFANA_REMOTE_URL)
   check_grafana_panel_value(waiter)
