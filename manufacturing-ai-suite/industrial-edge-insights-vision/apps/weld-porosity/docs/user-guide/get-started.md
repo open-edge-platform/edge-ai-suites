@@ -30,7 +30,7 @@
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
 
     # application directory
-    SAMPLE_APP=env_weld_porosity_classification
+    SAMPLE_APP=weld-porosity
     ```
 4.  Install pre-requisites. Run with sudo if needed.
     ```sh

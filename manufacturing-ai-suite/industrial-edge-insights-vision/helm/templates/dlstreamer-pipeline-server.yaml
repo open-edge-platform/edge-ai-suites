@@ -36,7 +36,7 @@ spec:
         app: dlstreamer-pipeline-server
     spec:
       securityContext:
-        supplementalGroups: [109,110]
+        supplementalGroups: [109,110,992]  # render group IDs for ubuntu 20.04, 22.04 and 24.04 host OS
       {{- if and $.Values.DOCKER_USERNAME $.Values.DOCKER_PASSWORD }}
       imagePullSecrets:
       - name: registryauth
@@ -86,8 +86,6 @@ spec:
           value: "{{ $.Values.env.ENABLE_RTSP }}"
         - name: WEBRTC_SIGNALING_SERVER
           value: "http://{{ $.Values.env.HOST_IP }}:{{ $.Values.config.mediamtx.ext.mediamtx_port }}"
-        - name: RUN_MODE
-          value: "EVA"
         - name: SERVICE_NAME
           value: "dlstreamer-pipeline-server"
         - name: REST_SERVER_PORT

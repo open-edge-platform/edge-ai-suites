@@ -20,7 +20,7 @@
    how-to-setup-helm-locally
    how-to-use-an-ai-model-and-video-file-of-your-own
    how-to-start-mqtt-publisher
-
+   how-to-use-gpu-for-inference
 
 
 .. toctree::

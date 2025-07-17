@@ -19,7 +19,6 @@ By utilizing cutting-edge technologies and pre-trained deep learning models, thi
 
    how-to-customize-application
    how-to-deploy-with-helm
-   how-to-deploy-with-edge-orchestrator
 
 .. toctree::
    :caption: Source Code

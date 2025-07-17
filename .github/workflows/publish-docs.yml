@@ -47,7 +47,7 @@ jobs:
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
-      docs_directory: metro-ai-suite/smart-parking
+      docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/smart-parking
 
   build_smart-intersection:
     permissions:
@@ -61,7 +61,7 @@ jobs:
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
-      docs_directory: metro-ai-suite/smart-intersection
+      docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection
       branch_pattern: '^main$'  # Smart Intersection only exists on 'main' branch
 
   build_loitering-detection:
@@ -76,7 +76,7 @@ jobs:
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
-      docs_directory: metro-ai-suite/loitering-detection
+      docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection
 
   build_pallet-defect-detection:
     permissions:

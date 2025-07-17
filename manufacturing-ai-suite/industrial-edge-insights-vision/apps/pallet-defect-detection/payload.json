@@ -7,10 +7,10 @@
                 "type": "uri"
             },
             "destination": {
-            "frame": {
-                "type": "webrtc",
-                "peer-id": "pdd"
-            }
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "pdd"
+                }
             },
             "parameters": {
                 "detection-properties": {
