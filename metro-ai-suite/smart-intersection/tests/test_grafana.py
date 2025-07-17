@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: LicenseRef-Intel-Edge-Software
 # This file is licensed under the Limited Edge Software Distribution License Agreement.
 
-import time
 import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC

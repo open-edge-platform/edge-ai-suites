@@ -6,7 +6,6 @@
 import os
 import re
 import pytest
-import logging
 import requests
 from pathlib import Path
 from requests.packages.urllib3.exceptions import InsecureRequestWarning

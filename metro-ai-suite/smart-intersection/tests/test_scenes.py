@@ -18,7 +18,7 @@ def verify_intersection_demo_availability(waiter, url):
   """Helper function to verify the Intersection-Demo scene."""
   # Perform login using Waiter class object
   waiter.perform_login(
-    SCENESCAPE_URL,
+    url,
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
@@ -138,13 +138,13 @@ def test_scene_help(waiter):
 
 
 @pytest.mark.zephyr_id("NEX-T9370")
-def test_intersection_demo_avability(waiter):
+def test_intersection_demo_availability(waiter):
   """Test that Intersection-Demo is visible after login."""
   # Perform login using Waiter class object
   verify_intersection_demo_availability(waiter, SCENESCAPE_URL)
 
 @pytest.mark.zephyr_id("NEX-T9372")
-def test_remote_intersection_demo_avability(waiter):
+def test_remote_intersection_demo_availability(waiter):
   """Test that Intersection-Demo is visible after login via remote."""
   if not SCENESCAPE_REMOTE_URL:
     pytest.skip("SCENESCAPE_REMOTE_URL is not set")
