@@ -23,7 +23,7 @@ def test_login(waiter):
     SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
   )
 
-  # Verify that the element visible after login is present on the page
+  # Verify that the element visible after login is present in the page
   waiter.wait_and_assert(
     EC.presence_of_element_located((By.ID, "nav-scenes")),
     error_message='"nav-scenes" element not found on the page'
