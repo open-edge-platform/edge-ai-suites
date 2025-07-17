@@ -92,7 +92,6 @@ check_env_variables:
 
 .PHONY: up_mqtt_ingestion
 up_mqtt_ingestion: check_env_variables down
-	docker compose pull --ignore-pull-failures 2>&1 | grep -v 'WARNING:'
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
 	echo "Starting Docker containers..."; \
 	if [ $(INCLUDE) = 'validation' ]; then \
@@ -104,7 +103,6 @@ up_mqtt_ingestion: check_env_variables down
 # Run Docker containers
 .PHONY: up_opcua_ingestion
 up_opcua_ingestion: check_env_variables down
-	docker compose pull --ignore-pull-failures 2>&1 | grep -v 'WARNING:'
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	echo "Starting Docker containers..."; \
 	if [ $(INCLUDE) = 'validation' ]; then \
