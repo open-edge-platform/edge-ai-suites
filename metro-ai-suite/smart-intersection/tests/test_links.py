@@ -83,5 +83,5 @@ def test_links_in_md_files():
 
   # Assert at the end if there are any failed URLs
   if any_failed_urls:
-    error_message = "Some links were unaccessible"
+    error_message = "Some links were inaccessible"
     assert False, error_message
