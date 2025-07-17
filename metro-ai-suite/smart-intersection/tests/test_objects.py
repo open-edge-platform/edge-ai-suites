@@ -61,7 +61,7 @@ def test_add_object(waiter):
 
 @pytest.mark.zephyr_id("NEX-T9387")
 def test_delete_object(waiter):
-  """Test that the admin can add a new object."""
+  """Test that the admin can delete an existing object."""
   new_object_name = "object_NEX-T9387"
 
   add_object(waiter, new_object_name)
