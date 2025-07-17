@@ -47,7 +47,7 @@ check_env_variables:
 					exit 1; \
 				fi; \
 				if ! echo "$$value" | grep -Eq "^[A-Za-z]{5,}$$"; then \
-					echo "INFLUXDB_USERNAME length must be a minimum of 5 characters"; \
+					echo "INFLUXDB_USERNAME must contain only alphabets and be at least 5 characters minimum"; \
 					exit 1; \
 				fi \
 				;; \
@@ -59,7 +59,7 @@ check_env_variables:
 				;; \
 			VISUALIZER_GRAFANA_USER) \
 				if ! echo "$$value" | grep -Eq "^[A-Za-z]{5,}$$"; then \
-					echo "VISUALIZER_GRAFANA_USER length must be a minimum of 5 characters"; \
+					echo "VISUALIZER_GRAFANA_USER must contain only alphabets and be at least 5 characters minimum"; \
 					exit 1; \
 				fi \
 				;; \
