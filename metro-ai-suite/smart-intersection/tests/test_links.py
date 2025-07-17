@@ -9,7 +9,7 @@ import logging
 import requests
 from pathlib import Path
 from urllib.parse import urlparse
-from tests.utils.utils import check_url_access, suppress_insecure_request_warning
+from tests.utils.utils import check_url_access
 from .conftest import PROJECT_GITHUB_URL
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,11 @@ def prepend_project_github_url(file_path, url, repo_root):
   # Remove leading '.' if present
   url = url.lstrip('.')
   # Get the relative path from the repo root to the file's directory
-  relative_path = Path(file_path).relative_to(repo_root)
+  try:
+    relative_path = Path(file_path).relative_to(repo_root)
+  except ValueError:
+    logger.error(f"File path {file_path} is not relative to the repository root {repo_root}.")
+    return None  # Skip processing this URL
   # Construct the full URL
   return f"{PROJECT_GITHUB_URL}/{relative_path.parent}/{url}"
 
@@ -74,6 +78,9 @@ def test_links_in_md_files():
     if not url.startswith(('http://', 'https://')):
       # Prepend PROJECT_GITHUB_URL to relative URLs
       url = prepend_project_github_url(file_path, url, repo_root)
+      if not url:
+        any_failed_urls = True
+        continue
 
     try:
       check_url_access(url)  # Use the predefined method to check URL accessibility
