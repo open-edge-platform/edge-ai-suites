@@ -30,6 +30,7 @@ Wind Turbine Anomaly Detection
    how-to-configure-alerts
    how-to-enable-system-metrics
    how-to-update-config
+   how-to-create-a-new-sample-app
 
 .. toctree::
    :caption: Release Notes
