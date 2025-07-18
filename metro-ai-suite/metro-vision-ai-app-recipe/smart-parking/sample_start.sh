@@ -25,9 +25,8 @@ function run_sample() {
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "broker:1883",
             "topic": "object_detection_$x",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",

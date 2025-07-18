@@ -89,7 +89,7 @@ spec:
           mountPath: /tmp/models
       containers:
       - name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
-        image: {{ $.Values.DOCKER_REGISTRY }}intel/dlstreamer-pipeline-server:3.0.0
+        image: {{ $.Values.DOCKER_REGISTRY }}{{ $.Values.dlstreamer_pipeline_server.image }}:{{ $.Values.dlstreamer_pipeline_server.imageTag }}
         imagePullPolicy: {{ $.Values.imagePullPolicy }}
         {{- if $.Values.privileged_access_required }}
         securityContext:
@@ -143,6 +143,10 @@ spec:
           value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
           value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        - name: MQTT_HOST
+          value: "broker"
+        - name: MQTT_PORT
+          value: "1883"
       volumes:
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}

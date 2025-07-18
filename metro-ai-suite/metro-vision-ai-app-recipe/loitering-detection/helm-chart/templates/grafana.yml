@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: grafana
-        image: grafana/grafana:11.5.4
+        image: {{ $.Values.grafana.image }}:{{ $.Values.grafana.imageTag }}
         ports:
         - containerPort: {{ $.Values.config.grafana.int.web_ui_port }}
           name: http

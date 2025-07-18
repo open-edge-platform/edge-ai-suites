@@ -67,6 +67,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)
 
 ``` sh
+#!/bin/bash
 curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
@@ -76,9 +77,8 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30483",
             "topic": "object_detection_1",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",
@@ -99,9 +99,8 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30483",
             "topic": "object_detection_2",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",
@@ -122,9 +121,8 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30483",
             "topic": "object_detection_3",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",
@@ -145,9 +143,8 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30483",
             "topic": "object_detection_4",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",

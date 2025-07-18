@@ -159,7 +159,7 @@ services:
     ]
 
   dlstreamer-pipeline-server:
-    image: docker.io/intel/dlstreamer-pipeline-server:3.0.0
+    image: ${DOCKER_REGISTRY}intel/dlstreamer-pipeline-server:latest
     networks:
       - app_network
     privileged: true
@@ -204,7 +204,7 @@ services:
     restart: on-failure:5
 
   pgserver:
-    image: docker.io/intel/scenescape-manager:v1.3.0
+    image: ${DOCKER_REGISTRY}intel/scenescape-manager:v1.3.0
     init: true
     networks:
       - app_network
@@ -246,7 +246,7 @@ services:
     restart: on-failure:5
 
   web:
-    image: docker.io/intel/scenescape-manager:v1.3.0
+    image: ${DOCKER_REGISTRY}intel/scenescape-manager:v1.3.0
     init: true
     networks:
       app_network:
@@ -297,7 +297,7 @@ services:
     restart: on-failure:5
 
   scene:
-    image: docker.io/intel/scenescape-controller:v1.3.0
+    image: ${DOCKER_REGISTRY}intel/scenescape-controller:v1.3.0
     init: true
     environment:
      - http_proxy=

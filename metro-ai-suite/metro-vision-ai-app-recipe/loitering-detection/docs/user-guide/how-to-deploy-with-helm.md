@@ -76,9 +76,8 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_1 -
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30383",
             "topic": "object_tracking_1",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",
@@ -99,9 +98,8 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_2 -
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30383",
             "topic": "object_tracking_2",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",
@@ -122,9 +120,8 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_3 -
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30383",
             "topic": "object_tracking_3",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",
@@ -145,9 +142,8 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_4 -
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30383",
             "topic": "object_tracking_4",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",

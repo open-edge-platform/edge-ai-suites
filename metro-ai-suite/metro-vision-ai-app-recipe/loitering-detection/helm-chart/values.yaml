@@ -6,6 +6,24 @@ DOCKER_USERNAME: ''
 DOCKER_PASSWORD: ''
 imagePullPolicy: Always
 storageClassName: manual
+mqtt_broker:
+  image: eclipse-mosquitto
+  imageTag: latest
+coturn:
+  image: coturn/coturn
+  imageTag: latest
+mediamtx:
+  image: bluenviron/mediamtx
+  imageTag: 1.11.3
+dlstreamer_pipeline_server:
+  image: intel/dlstreamer-pipeline-server
+  imageTag: 3.0.0
+grafana:
+  image: grafana/grafana
+  imageTag: 11.5.4
+node_red:
+  image: nodered/node-red
+  imageTag: latest
 env:
   ENABLE_WEBRTC: "true"
   ENABLE_RTSP: "true"
