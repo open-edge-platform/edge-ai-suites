@@ -23,12 +23,12 @@ folder and replace with the sample app name to be created.
     would be read and the topics in MQTT input plugin and name_override in OPC-UA
     input plugin is used for writing this as measurement in InfluxDB.
 
-    In the above same conf file, the two `[[outpus.influxdb]]` plugins publishes the 
+    In the above same conf file, the two `[[outputs.influxdb]]` plugins publish the 
     data to InfluxDB and Time Series Analytics microservice
 
 - **Data Processing - Time Series Analytics Microservice**
 
-    The `tick_scripts`, `models` and `udfs` folders at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_sereis_analytics_microservice` constitutes the User Defined Function (UDF) deployment package. The `config.json` at the same location is the Time Series microservice configuration.
+    The `tick_scripts`, `models` and `udfs` folders at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice` constitutes the User Defined Function (UDF) deployment package. The `config.json` at the same location is the Time Series microservice configuration.
 
     More details at [how-to-configure-custom-udf](./how-to-configure-custom-udf.md)
 
