@@ -1,35 +1,39 @@
 # How to Deploy with Helm
 
+This guide provides step-by-step instructions for deploying the Wind Turbine Anomaly Detection sample application using Helm.
+
 ## Prerequisites
 
 - [System Requirements](system-requirements.md)
--  K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
+-  K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to tutorials such as <https://adamtheautomator.com/installing-kubernetes-on-ubuntu> and many other
-  online tutorials to setup kubernetes cluster on the web with host OS as ubuntu 22.04.
-- For helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
+  online tutorials to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
+- For Helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
 
 > **Note**
-> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
+> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop). Target system refers to the system where you are installing the application.
 
-## Generate or Download the helm charts
+## Step 1: Generate or download the Helm charts
 
-- Using pre-built helm charts:
+You can either generate or download the Helm charts.
+
+- To download the Helm charts:
 
     Follow this procedure on the target system to install the package.
 
-    1. Download helm chart with the following command
+    1. Download Helm chart with the following command:
 
         `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.0.0`
 
-    2. unzip the package using the following command
+    2. unzip the package using the following command:
 
         `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.0.0.tgz`
 
-    - Get into the helm directory
+    - Get into the Helm directory:
 
         `cd wind-turbine-anomaly-detection-sample-app`
 
-- Generate the helm charts
+- To generate the Helm charts:
    
     ```bash
     cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection # path relative to git clone folder
@@ -37,7 +41,7 @@
     cd helm/
     ```
 
-## Configure and update the environment variables
+## Step 2: Configure and update the environment variables
 
 1. Update the following fields in `values.yaml` file of the helm chart
 
@@ -53,10 +57,12 @@
     HTTPS_PROXY: # example: http_proxy: http://proxy.example.com:891
     ```
 
-## Install helm charts - use only one of the following options:
+## Step 3: Install Helm charts 
+
+To install Helm charts, use one of the following options:
 
 > **Note:**
-> 1. Uninstall the helm charts if already installed.
+> 1. Uninstall the Helm charts if already installed.
 > 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in `values.yaml` file.
 
@@ -77,9 +83,9 @@ Use the following command to verify if all the application resources got install
    kubectl get all -n ts-wind-turbine-anomaly-app
 ```
 
-## Copy the windturbine_anomaly_detection udf package for helm deployment to Time Series Analytics Microservice
+## Step 4: Copy the windturbine_anomaly_detection udf package for helm deployment to Time Series Analytics Microservice
 
-You need to copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
+To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
 1. The following udf package is placed in the repository under `time_series_analytics_microservice`. 
 
@@ -108,7 +114,7 @@ You need to copy your own or existing model into Time Series Analytics Microserv
    > **Note:**  
    > Run the commands only after performing the Helm install.
 
-## Activate the New UDF Deployment Package
+## Step 5: Activate the New UDF Deployment Package
 
 Run the following command to activate the UDF deployment package:
 ```sh
@@ -117,11 +123,13 @@ curl -X 'GET' \
   -H 'accept: application/json'
 ```
 
-## Verify the Wind Turbine Anomaly Detection Results
+## Step 6: Verify the Wind Turbine Anomaly Detection Results
 
-Follow the steps in the Helm deployment guide at [this link](get-started.md#verify-the-wind-turbine-anomaly-detection-results).
+To verify the Wind Turbine Anomaly Detection Results, follow the steps [here](get-started.md#verify-the-wind-turbine-anomaly-detection-results).
 
 ## Uninstall Helm Charts
+
+To uninstall Helm charts:
 
 ```sh
 helm uninstall ts-wind-turbine-anomaly -n ts-wind-turbine-anomaly-app
@@ -130,15 +138,15 @@ kubectl get all -n ts-wind-turbine-anomaly-app # It may take a few minutes for a
 
 ## Configure Alerts in Time Series Analytics Microservice
 
-Follow [these steps](./how-to-configure-alerts.md#helm-deployment) to configure alerts in Time Series Analytics Microservice.
+To configure alerts in Time Series Analytics Microservice, follow the steps [here](./how-to-configure-alerts.md#helm-deployment).
 
 ## Deploy the Application with a Custom UDF
 
-Follow [these steps](./how-to-configure-custom-udf.md#helm-deployment) to deploy the application with a custom UDF.
+To deploy the application with a custom UDF, follow the steps [here](./how-to-configure-custom-udf.md#helm-deployment).
 
 ## Deploy the Application with a Custom UDF by Uploading to the Model Registry
 
-Follow [these steps](./how-to-configure-custom-udf.md#with-model-registry) to deploy a custom UDF by uploading it to the Model Registry.
+To deploy a custom UDF by uploading it to the Model Registry, follow the steps [here](./how-to-configure-custom-udf.md#with-model-registry).
 
 ## Troubleshooting
 
