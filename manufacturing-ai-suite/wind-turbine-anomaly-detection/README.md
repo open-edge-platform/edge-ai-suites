@@ -20,7 +20,8 @@ Wind Turbine Anomaly Detection sample application demonstrates a time series use
   - [How to build from source and deploy](docs/user-guide/how-to-build-from-source.md): Guide to build from source and docker compose deployment
   - [How to configure OPC-UA/MQTT alerts](docs/user-guide/how-to-configure-alerts.md): Guide for configuring the OPC-UA/MQTT alerts in the Time Series Analytics microservice
   - [How to configure custom UDF deployment package](docs/user-guide/how-to-configure-custom-udf.md): Guide for deploying a customized UDF deployment package (udfs/models/tick scripts)
-
+  - [How to create a new sample app](docs/user-guide/how-to-create-a-new-sample-app.md): Guide for creating a new sample app by referencing Wind Turbine Anomaly Detection sample app
+  
 - **Release Notes**
   - [Release Notes](docs/user-guide/release_notes/Overview.md): Information on the latest updates, improvements, and bug fixes.
 
