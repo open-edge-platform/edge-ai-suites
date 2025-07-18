@@ -12,8 +12,13 @@ folder and replace with the sample app name to be created.
 
 #### 1. **Data Simulators/Destinations**:
    
-   Update the OPC-UA/MQTT simulator containers (`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator`) as needed
-   to ingest the needed dataset to analyze via a CSV file
+   Options available:
+   1. Update the OPC-UA/MQTT simulator containers (`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator`) as needed
+      to ingest the needed dataset to analyze via a CSV file
+   2. If you have existing `OPC-UA/MQTT` simulators, you can use that too. Just model the compose and helm template files like
+      the way it's done for the above existing OPC-UA/MQTT simulators
+   3. Directly configure `Telegraf` to connect to the device acting as `OPC-UA` server OR `MQTT publisher/broker`.
+      Refer to the [Telegraf plugin documentation](https://docs.influxdata.com/telegraf/v1/plugins/#input-plugins/) for more details
 
 #### 2. **Generic Time Series AI stack**
 
