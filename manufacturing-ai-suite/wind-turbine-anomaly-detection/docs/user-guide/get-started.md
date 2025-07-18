@@ -40,6 +40,13 @@ To configure Docker:
      sudo systemctl daemon-reload
      sudo systemctl restart docker
      ```
+
+## Clone source code
+
+```bash
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
+```
 ## Data flow explanation
 
 The data flow remains same as that explained in the [High-Level Architecture](./how-it-works.md#high-level-architecture).
@@ -125,13 +132,6 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 #### **`models/`**:
    - The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo.
      More details on how it is built is accessible at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/training/windturbine/README.md`
-
-## Clone source code
-
-```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
-```
 
 ## Deploy with Docker Compose
 
@@ -247,7 +247,6 @@ make status
 ## Other Deployment options
 
 - [How to Deploy with Helm](./how-to-deploy-with-helm.md): Guide for deploying the sample application on a k8s cluster using Helm.
-- [How to Deploy with Edge Orchestrator](./how-to-deploy-with-edge-orchestrator.md): Guide for deploying the sample application using Edge Manageability Framework
 
 ## Advanced setup
 

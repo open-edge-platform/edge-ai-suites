@@ -14,8 +14,8 @@ on:
         - loitering-detection
         - pallet-defect-detection
         - weld-porosity
-        - anomaly-detection
-        - worker-safety
+        - pcb-anomaly-detection
+        - worker-safety-gear-detection
         - wind-turbine-anomaly-detection
 
 permissions: {}
@@ -106,33 +106,33 @@ jobs:
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity
 
-  build_anomaly-detection:
+  build_pcb-anomaly-detection:
     permissions:
       contents: read          # needed for actions/checkout
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
-    if: ${{ (github.event.inputs.target == 'anomaly-detection') || (github.event.inputs.target == 'all-documentation') }}
+    if: ${{ (github.event.inputs.target == 'pcb-anomaly-detection') || (github.event.inputs.target == 'all-documentation') }}
     uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
-      docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/anomaly-detection
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection
 
-  build_worker-safety:
+  build_worker-safety-gear-detection:
     permissions:
       contents: read          # needed for actions/checkout
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
-    if: ${{ (github.event.inputs.target == 'worker-safety') || (github.event.inputs.target == 'all-documentation') }}
+    if: ${{ (github.event.inputs.target == 'worker-safety-gear-detection') || (github.event.inputs.target == 'all-documentation') }}
     uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
-      docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection
 
   build_wind-turbine-anomaly-detection:
     permissions:

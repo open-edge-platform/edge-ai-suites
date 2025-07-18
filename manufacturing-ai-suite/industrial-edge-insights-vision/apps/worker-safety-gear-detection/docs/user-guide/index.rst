@@ -12,7 +12,7 @@
 .. toctree::
    :caption: How to
 
-   how-to-change-the-input-video-source
+   how-to-change-input-video-source
    how-to-deploy-using-helm-charts
    how-to-enable-mlops
    how-to-manage-pipelines

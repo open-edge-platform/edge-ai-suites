@@ -3,7 +3,7 @@
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "$(dirname "$(readlink -f "$0")"):/opt/project" \
-  openvino/ubuntu22_dev:2024.6.0 bash -c "$(cat <<EOF
+  intel/dlstreamer:2025.0.1.3-ubuntu24 bash -c "$(cat <<EOF
 
 cd /opt/project
 export HOST_IP="${1:-$(hostname -I | cut -f1 -d' ')}"
@@ -19,11 +19,13 @@ mkdir -p src/dlstreamer-pipeline-server/models/intel
 OMZ_MODELS=(pedestrian-and-vehicle-detector-adas-0001)
 for model in "\${OMZ_MODELS[@]}"; do
   if [ ! -e "src/dlstreamer-pipeline-server/models/intel/\$model/\$model.json" ]; then
+    python3 -m pip install openvino-dev[onnx]
     echo "Download \$model..." && \
     omz_downloader --name "\$model" --output_dir src/dlstreamer-pipeline-server/models && \
 
     echo "Download \$model proc file..." && \
-    curl -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/\${model}.json" "https://github.com/dlstreamer/dlstreamer/blob/master/samples/gstreamer/model_proc/intel/\${model}.json?raw=true"
+    wget -O "src/dlstreamer-pipeline-server/models/intel/\${model}/\${model}.json" "https://github.com/dlstreamer/dlstreamer/blob/master/samples/gstreamer/model_proc/intel/\${model}.json?raw=true"
+
   fi
 done
 
@@ -40,7 +42,7 @@ declare -A video_urls=(
 for video_name in "\${!video_urls[@]}"; do
     if [ ! -f src/dlstreamer-pipeline-server/videos/\${video_name} ]; then
         echo "Download \${video_name}..."
-        curl -L "\${video_urls[\$video_name]}" -o "src/dlstreamer-pipeline-server/videos/\${video_name}"
+        wget -O "src/dlstreamer-pipeline-server/videos/\${video_name}" "\${video_urls[\$video_name]}"
     fi
 done
 
