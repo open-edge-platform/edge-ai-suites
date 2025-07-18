@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-docker run --rm -ti \
+docker run --rm -t \
     -e http_proxy -e https_proxy -e no_proxy \
     -v $(pwd)/init.sh:/init.sh \
     -v $(pwd)/chart:/chart \
