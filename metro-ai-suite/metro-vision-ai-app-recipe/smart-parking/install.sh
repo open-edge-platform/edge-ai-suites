@@ -3,7 +3,7 @@
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "$(dirname "$(readlink -f "$0")"):/opt/project" \
-  openvino/ubuntu22_dev:2024.6.0 bash -c "$(cat <<EOF
+  intel/dlstreamer:2025.0.1.3-ubuntu24 bash -c "$(cat <<EOF
 
 cd /opt/project
 export HOST_IP="${1:-$(hostname -I | cut -f1 -d' ')}"
@@ -20,7 +20,7 @@ YOLO_MODELS=(
     yolov10s
 )
 download_script="\$(
-  curl -L -o - 'https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/tags/v2025.0.1.3/samples/download_public_models.sh'
+  cat /home/dlstreamer/dlstreamer/samples/download_public_models.sh
 )"
 for model in \${YOLO_MODELS[@]}; do
     if [ ! -e "src/dlstreamer-pipeline-server/models/public/\$model" ]; then
@@ -47,7 +47,7 @@ declare -A video_urls=(
 for video_name in "\${!video_urls[@]}"; do
     if [ ! -f src/dlstreamer-pipeline-server/videos/\${video_name} ]; then
         echo "Download \${video_name}..."
-        curl -L "\${video_urls[\$video_name]}" -o "src/dlstreamer-pipeline-server/videos/\${video_name}"
+        wget -O "src/dlstreamer-pipeline-server/videos/\${video_name}" "\${video_urls[\$video_name]}"
     fi
 done
 
