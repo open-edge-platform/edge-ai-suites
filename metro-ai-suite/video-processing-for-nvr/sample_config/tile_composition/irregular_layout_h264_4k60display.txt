@@ -1,0 +1,57 @@
+newvl -i 0 -W 3840  -H 2160  --refresh=60  --format=nv12  --dispid=0 --tilenum=5
+dispch  --id=0 -W 640 -H 360 -x 0 -y 0 --videolayer=0 --tileid=0
+newdec --id=0 --input=1080p.h264 --codec=h264 --sink=disp0 -f NV12
+dispch  --id=1 -W 640 -H 360 -x 640 -y 0 --videolayer=0 --tileid=0
+newdec --id=1 --input=1080p.h264 --codec=h264 --sink=disp1 -f NV12
+dispch  --id=2 -W 640 -H 360 -x 1280 -y 0 --videolayer=0 --tileid=0
+newdec --id=2 --input=1080p.h264 --codec=h264 --sink=disp2 -f NV12
+dispch  --id=3 -W 640 -H 360 -x 1920 -y 0 --videolayer=0 --tileid=0
+newdec --id=3 --input=1080p.h264 --codec=h264 --sink=disp3 -f NV12
+dispch  --id=4 -W 640 -H 360 -x 2560 -y 0 --videolayer=0 --tileid=0
+newdec --id=4 --input=1080p.h264 --codec=h264 --sink=disp4 -f NV12
+dispch  --id=5 -W 640 -H 360 -x 3200 -y 0 --videolayer=0 --tileid=0
+newdec --id=5 --input=1080p.h264 --codec=h264 --sink=disp5 -f NV12
+dispch  --id=6 -W 640 -H 360 -x 0 -y 360 --videolayer=0 --tileid=1
+newdec --id=6 --input=1080p.h264 --codec=h264 --sink=disp6 -f NV12
+dispch  --id=7 -W 640 -H 360 -x 640 -y 360 --videolayer=0 --tileid=1
+newdec --id=7 --input=1080p.h264 --codec=h264 --sink=disp7 -f NV12
+dispch  --id=8 -W 640 -H 360 -x 1280 -y 360 --videolayer=0 --tileid=1
+newdec --id=8 --input=1080p.h264 --codec=h264 --sink=disp8 -f NV12
+dispch  --id=9 -W 640 -H 360 -x 1920 -y 360 --videolayer=0 --tileid=1
+newdec --id=9 --input=1080p.h264 --codec=h264 --sink=disp9 -f NV12
+dispch  --id=10 -W 640 -H 360 -x 2560 -y 360 --videolayer=0 --tileid=1
+newdec --id=10 --input=1080p.h264 --codec=h264 --sink=disp10 -f NV12
+dispch  --id=11 -W 640 -H 360 -x 3200 -y 360 --videolayer=0 --tileid=1
+newdec --id=11 --input=1080p.h264 --codec=h264 --sink=disp11 -f NV12
+dispch  --id=12 -W 1280 -H 720 -x 0 -y 720 --videolayer=0 --tileid=2
+newdec --id=12 --input=1080p.h264 --codec=h264 --sink=disp12 -f NV12
+dispch  --id=13 -W 1280 -H 720 -x 1280 -y 720 --videolayer=0 --tileid=2
+newdec --id=13 --input=1080p.h264 --codec=h264 --sink=disp13 -f NV12
+dispch  --id=14 -W 1280 -H 720 -x 2560 -y 720 --videolayer=0 --tileid=2
+newdec --id=14 --input=1080p.h264 --codec=h264 --sink=disp14 -f NV12
+dispch  --id=15 -W 640 -H 360 -x 0 -y 1440 --videolayer=0 --tileid=3
+newdec --id=15 --input=1080p.h264 --codec=h264 --sink=disp15 -f NV12
+dispch  --id=16 -W 640 -H 360 -x 640 -y 1440 --videolayer=0 --tileid=3
+newdec --id=16 --input=1080p.h264 --codec=h264 --sink=disp16 -f NV12
+dispch  --id=17 -W 640 -H 360 -x 1280 -y 1440 --videolayer=0 --tileid=3
+newdec --id=17 --input=1080p.h264 --codec=h264 --sink=disp17 -f NV12
+dispch  --id=18 -W 640 -H 360 -x 1920 -y 1440 --videolayer=0 --tileid=3
+newdec --id=18 --input=1080p.h264 --codec=h264 --sink=disp18 -f NV12
+dispch  --id=19 -W 640 -H 360 -x 2560 -y 1440 --videolayer=0 --tileid=3
+newdec --id=19 --input=1080p.h264 --codec=h264 --sink=disp19 -f NV12
+dispch  --id=20 -W 640 -H 360 -x 3200 -y 1440 --videolayer=0 --tileid=3
+newdec --id=20 --input=1080p.h264 --codec=h264 --sink=disp20 -f NV12
+dispch  --id=21 -W 640 -H 360 -x 0 -y 1800 --videolayer=0 --tileid=4
+newdec --id=21 --input=1080p.h264 --codec=h264 --sink=disp21 -f NV12
+dispch  --id=22 -W 640 -H 360 -x 640 -y 1800 --videolayer=0 --tileid=4
+newdec --id=22 --input=1080p.h264 --codec=h264 --sink=disp22 -f NV12
+dispch  --id=23 -W 640 -H 360 -x 1280 -y 1800 --videolayer=0 --tileid=4
+newdec --id=23 --input=1080p.h264 --codec=h264 --sink=disp23 -f NV12
+dispch  --id=24 -W 640 -H 360 -x 1920 -y 1800 --videolayer=0 --tileid=4
+newdec --id=24 --input=1080p.h264 --codec=h264 --sink=disp24 -f NV12
+dispch  --id=25 -W 640 -H 360 -x 2560 -y 1800 --videolayer=0 --tileid=4
+newdec --id=25 --input=1080p.h264 --codec=h264 --sink=disp25 -f NV12
+dispch  --id=26 -W 640 -H 360 -x 3200 -y 1800 --videolayer=0 --tileid=4
+newdec --id=26 --input=1080p.h264 --codec=h264 --sink=disp26 -f NV12
+ctrl --cmd=run  --time=15000
+ctrl --cmd=stop --time=0

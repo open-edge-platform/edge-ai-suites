@@ -14,7 +14,6 @@ Wind Turbine Anomaly Detection sample application demonstrates a time series use
 
 - **Deployment**
   - [How to Deploy with Helm](docs/user-guide/how-to-deploy-with-helm.md): Guide for deploying the sample application on a k8s cluster using Helm.
-  - [How to Deploy with Edge Orchestrator](docs/user-guide/how-to-deploy-with-edge-orchestrator.md): Guide for deploying the sample application using Edge Manageability Framework
 
 - **Advanced**
   - [How to build from source and deploy](docs/user-guide/how-to-build-from-source.md): Guide to build from source and docker compose deployment

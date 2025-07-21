@@ -1,0 +1,19 @@
+newvl -i 0 -W 1920 -H 1080 --refresh=60 --format=nv12 --dispid=0
+dispch --id=0 -W 960 -H 540 -x 0 -y 0 --videolayer 0
+dispch --id=1 -W 960 -H 540 -x 0 -y 540 --videolayer 0
+newdec --id=0 --input=1080p.h264 --codec=h264   --sink=disp0 -f NV12 -l 1
+newdec --id=1 --input=1080p.h264 --codec=h264   --sink=disp1 -f NV12 -l 1
+ctrl --cmd=run  --time=6000
+dispchctrl --id=0 --void 0 --cmd hide
+ctrl --cmd=run  --time=3000
+dispchctrl --id=0 --void 0 --cmd show
+ctrl --cmd=run  --time=3000
+dispchctrl --id=0 --void 0 --cmd pause
+ctrl --cmd=run  --time=3000
+dispchctrl --id=0 --void 0 --cmd resume
+ctrl --cmd=run  --time=3000
+dispchctrl --id=0 --void 0 --cmd zoomin -x 200 -y 200 -W 176 -H 128
+ctrl --cmd=run  --time=3000
+dispchctrl --id=0 --void 0 --cmd zoomout
+ctrl --cmd=run  --time=3000
+ctrl --cmd=stop  --time=0

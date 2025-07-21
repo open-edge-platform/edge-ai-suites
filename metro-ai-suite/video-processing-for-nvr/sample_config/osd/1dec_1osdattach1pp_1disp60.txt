@@ -1,0 +1,10 @@
+newvl -i 0 -W 1920 -H 1080 --refresh=60 --format=nv12 --dispid=0
+dispch --id=0 -W 960 -H 540 -x 0 -y 0 --videolayer 0
+newpp --id=0 --sink=disp0 --cropW 960 --cropH 540
+newdec --id=0 --input=1080p.h264 --codec=h264   --sink=pp0 -f NV12 -l 1
+ctrl --cmd=run  --time=0
+osdctrl --id=0 --cmd add --ppstream 0 -W 500 -H 300 -g 8 -x 500 -y 300
+ctrl --cmd=run  --time=10000
+osdctrl --id=0 --cmd remove --ppstream 0
+ctrl --cmd=run  --time=5000
+ctrl --cmd=stop  --time=0

@@ -14,7 +14,7 @@ The sample application has mandatory prerequisites that are covered in other doc
 
 ## Application Configuration
 
-This section covers the details of the configuration of each constitutent blocks of the application.
+This section covers the details of the configuration of each constituent blocks of the application.
 
 ### Chat-Question-and-Answer Core (ChatQnA Core)
 

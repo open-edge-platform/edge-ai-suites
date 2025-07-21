@@ -1,0 +1,19 @@
+newvl -i 0 -W 3840  -H 2160  --refresh=30  --format=nv12  --dispid=0
+dispch  --id=0 -W 960 -H 540 -x 0 -y 0 --videolayer=0
+newdec --id=0 --input=rtsp://127.0.0.1:1554/simu0000 --codec=h264    --sink=disp0 -f NV12
+dispch  --id=1 -W 960 -H 540 -x 960 -y 0 --videolayer=0
+newdec --id=1 --input=rtsp://127.0.0.1:1554/simu0001 --codec=h264    --sink=disp1 -f NV12
+dispch  --id=2 -W 960 -H 540 -x 1920 -y 0 --videolayer=0
+newdec --id=2 --input=rtsp://127.0.0.1:1554/simu0002 --codec=h264    --sink=disp2 -f NV12
+dispch  --id=3 -W 960 -H 540 -x 2880 -y 0 --videolayer=0
+newdec --id=3 --input=rtsp://127.0.0.1:1554/simu0003 --codec=h264    --sink=disp3 -f NV12
+dispch  --id=4 -W 960 -H 540 -x 0 -y 540 --videolayer=0
+newdec --id=4 --input=rtsp://127.0.0.1:1554/simu0000 --codec=h264    --sink=disp4 -f NV12
+dispch  --id=5 -W 960 -H 540 -x 960 -y 540 --videolayer=0
+newdec --id=5 --input=rtsp://127.0.0.1:1554/simu0001 --codec=h264    --sink=disp5 -f NV12
+dispch  --id=6 -W 960 -H 540 -x 1920 -y 540 --videolayer=0
+newdec --id=6 --input=rtsp://127.0.0.1:1554/simu0002 --codec=h264    --sink=disp6 -f NV12
+dispch  --id=7 -W 960 -H 540 -x 2880 -y 540 --videolayer=0
+newdec --id=7 --input=rtsp://127.0.0.1:1554/simu0003 --codec=h264    --sink=disp7 -f NV12
+ctrl --cmd=run  --time=80000
+ctrl --cmd=stop  --time=0

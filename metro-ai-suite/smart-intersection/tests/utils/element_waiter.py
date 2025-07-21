@@ -16,6 +16,15 @@ class ElementWaiter:
     except TimeoutException:
         assert False, error_message
 
+  def wait_for_text_change(self, element_locator, initial_text, timeout=30, error_message="Text did not change"):
+    """Wait for the text of an element to change from a specific value."""
+    try:
+      WebDriverWait(self.driver, timeout).until(
+        lambda driver: driver.find_element(*element_locator).text != initial_text
+      )
+    except TimeoutException:
+      assert False, error_message
+
   def perform_login(self, url, username_selector, username_selector_value, password_selector, password_selector_value, login_selector, login_selector_value, username, password):
     """Performs login action."""
     self.driver.get(url)  # Load login page

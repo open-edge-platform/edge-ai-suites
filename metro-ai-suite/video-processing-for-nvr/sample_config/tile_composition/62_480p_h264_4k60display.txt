@@ -1,0 +1,127 @@
+newvl -i 0 -W 3840  -H 2160  --refresh=60  --format=nv12  --dispid=0 --tilenum=8
+dispch  --id=1 -W 480 -H 270 -x 480 -y 0 --videolayer=0 --tileid=0
+newdec --id=1 --input=480p.h264 --codec=h264 --sink=disp1 -f NV12 -l 1
+dispch  --id=2 -W 480 -H 270 -x 960 -y 0 --videolayer=0 --tileid=0
+newdec --id=2 --input=480p.h264 --codec=h264 --sink=disp2 -f NV12 -l 1
+dispch  --id=3 -W 480 -H 270 -x 1440 -y 0 --videolayer=0 --tileid=0
+newdec --id=3 --input=480p.h264 --codec=h264 --sink=disp3 -f NV12 -l 1
+dispch  --id=4 -W 480 -H 270 -x 1920 -y 0 --videolayer=0 --tileid=0
+newdec --id=4 --input=480p.h264 --codec=h264 --sink=disp4 -f NV12 -l 1
+dispch  --id=5 -W 480 -H 270 -x 2400 -y 0 --videolayer=0 --tileid=0
+newdec --id=5 --input=480p.h264 --codec=h264 --sink=disp5 -f NV12 -l 1
+dispch  --id=6 -W 480 -H 270 -x 2880 -y 0 --videolayer=0 --tileid=0
+newdec --id=6 --input=480p.h264 --codec=h264 --sink=disp6 -f NV12 -l 1
+dispch  --id=7 -W 480 -H 270 -x 3360 -y 0 --videolayer=0 --tileid=0
+newdec --id=7 --input=480p.h264 --codec=h264 --sink=disp7 -f NV12 -l 1
+dispch  --id=8 -W 480 -H 270 -x 0 -y 270 --videolayer=0 --tileid=1
+newdec --id=8 --input=480p.h264 --codec=h264 --sink=disp8 -f NV12 -l 1
+dispch  --id=9 -W 480 -H 270 -x 480 -y 270 --videolayer=0 --tileid=1
+newdec --id=9 --input=480p.h264 --codec=h264 --sink=disp9 -f NV12 -l 1
+dispch  --id=10 -W 480 -H 270 -x 960 -y 270 --videolayer=0 --tileid=1
+newdec --id=10 --input=480p.h264 --codec=h264 --sink=disp10 -f NV12 -l 1
+dispch  --id=11 -W 480 -H 270 -x 1440 -y 270 --videolayer=0 --tileid=1
+newdec --id=11 --input=480p.h264 --codec=h264 --sink=disp11 -f NV12 -l 1
+dispch  --id=12 -W 480 -H 270 -x 1920 -y 270 --videolayer=0 --tileid=1
+newdec --id=12 --input=480p.h264 --codec=h264 --sink=disp12 -f NV12 -l 1
+dispch  --id=13 -W 480 -H 270 -x 2400 -y 270 --videolayer=0 --tileid=1
+newdec --id=13 --input=480p.h264 --codec=h264 --sink=disp13 -f NV12 -l 1
+dispch  --id=14 -W 480 -H 270 -x 2880 -y 270 --videolayer=0 --tileid=1
+newdec --id=14 --input=480p.h264 --codec=h264 --sink=disp14 -f NV12 -l 1
+dispch  --id=15 -W 480 -H 270 -x 3360 -y 270 --videolayer=0 --tileid=1
+newdec --id=15 --input=480p.h264 --codec=h264 --sink=disp15 -f NV12 -l 1
+dispch  --id=16 -W 480 -H 270 -x 0 -y 540 --videolayer=0 --tileid=2
+newdec --id=16 --input=480p.h264 --codec=h264 --sink=disp16 -f NV12 -l 1
+dispch  --id=17 -W 480 -H 270 -x 480 -y 540 --videolayer=0 --tileid=2
+newdec --id=17 --input=480p.h264 --codec=h264 --sink=disp17 -f NV12 -l 1
+dispch  --id=18 -W 480 -H 270 -x 960 -y 540 --videolayer=0 --tileid=2
+newdec --id=18 --input=480p.h264 --codec=h264 --sink=disp18 -f NV12 -l 1
+dispch  --id=19 -W 480 -H 270 -x 1440 -y 540 --videolayer=0 --tileid=2
+newdec --id=19 --input=480p.h264 --codec=h264 --sink=disp19 -f NV12 -l 1
+dispch  --id=20 -W 480 -H 270 -x 1920 -y 540 --videolayer=0 --tileid=2
+newdec --id=20 --input=480p.h264 --codec=h264 --sink=disp20 -f NV12 -l 1
+dispch  --id=21 -W 480 -H 270 -x 2400 -y 540 --videolayer=0 --tileid=2
+newdec --id=21 --input=480p.h264 --codec=h264 --sink=disp21 -f NV12 -l 1
+dispch  --id=22 -W 480 -H 270 -x 2880 -y 540 --videolayer=0 --tileid=2
+newdec --id=22 --input=480p.h264 --codec=h264 --sink=disp22 -f NV12 -l 1
+dispch  --id=23 -W 480 -H 270 -x 3360 -y 540 --videolayer=0 --tileid=2
+newdec --id=23 --input=480p.h264 --codec=h264 --sink=disp23 -f NV12 -l 1
+dispch  --id=24 -W 480 -H 270 -x 0 -y 810 --videolayer=0 --tileid=3
+newdec --id=24 --input=480p.h264 --codec=h264 --sink=disp24 -f NV12 -l 1
+dispch  --id=25 -W 480 -H 270 -x 480 -y 810 --videolayer=0 --tileid=3
+newdec --id=25 --input=480p.h264 --codec=h264 --sink=disp25 -f NV12 -l 1
+dispch  --id=26 -W 480 -H 270 -x 960 -y 810 --videolayer=0 --tileid=3
+newdec --id=26 --input=480p.h264 --codec=h264 --sink=disp26 -f NV12 -l 1
+dispch  --id=27 -W 480 -H 270 -x 1440 -y 810 --videolayer=0 --tileid=3
+newdec --id=27 --input=480p.h264 --codec=h264 --sink=disp27 -f NV12 -l 1
+dispch  --id=28 -W 480 -H 270 -x 1920 -y 810 --videolayer=0 --tileid=3
+newdec --id=28 --input=480p.h264 --codec=h264 --sink=disp28 -f NV12 -l 1
+dispch  --id=29 -W 480 -H 270 -x 2400 -y 810 --videolayer=0 --tileid=3
+newdec --id=29 --input=480p.h264 --codec=h264 --sink=disp29 -f NV12 -l 1
+dispch  --id=30 -W 480 -H 270 -x 2880 -y 810 --videolayer=0 --tileid=3
+newdec --id=30 --input=480p.h264 --codec=h264 --sink=disp30 -f NV12 -l 1
+dispch  --id=31 -W 480 -H 270 -x 3360 -y 810 --videolayer=0 --tileid=3
+newdec --id=31 --input=480p.h264 --codec=h264 --sink=disp31 -f NV12 -l 1
+dispch  --id=32 -W 480 -H 270 -x 0 -y 1080 --videolayer=0 --tileid=4
+newdec --id=32 --input=480p.h264 --codec=h264 --sink=disp32 -f NV12 -l 1
+dispch  --id=33 -W 480 -H 270 -x 480 -y 1080 --videolayer=0 --tileid=4
+newdec --id=33 --input=480p.h264 --codec=h264 --sink=disp33 -f NV12 -l 1
+dispch  --id=34 -W 480 -H 270 -x 960 -y 1080 --videolayer=0 --tileid=4
+newdec --id=34 --input=480p.h264 --codec=h264 --sink=disp34 -f NV12 -l 1
+dispch  --id=35 -W 480 -H 270 -x 1440 -y 1080 --videolayer=0 --tileid=4
+newdec --id=35 --input=480p.h264 --codec=h264 --sink=disp35 -f NV12 -l 1
+dispch  --id=36 -W 480 -H 270 -x 1920 -y 1080 --videolayer=0 --tileid=4
+newdec --id=36 --input=480p.h264 --codec=h264 --sink=disp36 -f NV12 -l 1
+dispch  --id=37 -W 480 -H 270 -x 2400 -y 1080 --videolayer=0 --tileid=4
+newdec --id=37 --input=480p.h264 --codec=h264 --sink=disp37 -f NV12 -l 1
+dispch  --id=38 -W 480 -H 270 -x 2880 -y 1080 --videolayer=0 --tileid=4
+newdec --id=38 --input=480p.h264 --codec=h264 --sink=disp38 -f NV12 -l 1
+dispch  --id=39 -W 480 -H 270 -x 3360 -y 1080 --videolayer=0 --tileid=4
+newdec --id=39 --input=480p.h264 --codec=h264 --sink=disp39 -f NV12 -l 1
+dispch  --id=40 -W 480 -H 270 -x 0 -y 1350 --videolayer=0 --tileid=5
+newdec --id=40 --input=480p.h264 --codec=h264 --sink=disp40 -f NV12 -l 1
+dispch  --id=41 -W 480 -H 270 -x 480 -y 1350 --videolayer=0 --tileid=5
+newdec --id=41 --input=480p.h264 --codec=h264 --sink=disp41 -f NV12 -l 1
+dispch  --id=42 -W 480 -H 270 -x 960 -y 1350 --videolayer=0 --tileid=5
+newdec --id=42 --input=480p.h264 --codec=h264 --sink=disp42 -f NV12 -l 1
+dispch  --id=43 -W 480 -H 270 -x 1440 -y 1350 --videolayer=0 --tileid=5
+newdec --id=43 --input=480p.h264 --codec=h264 --sink=disp43 -f NV12 -l 1
+dispch  --id=44 -W 480 -H 270 -x 1920 -y 1350 --videolayer=0 --tileid=5
+newdec --id=44 --input=480p.h264 --codec=h264 --sink=disp44 -f NV12 -l 1
+dispch  --id=45 -W 480 -H 270 -x 2400 -y 1350 --videolayer=0 --tileid=5
+newdec --id=45 --input=480p.h264 --codec=h264 --sink=disp45 -f NV12 -l 1
+dispch  --id=46 -W 480 -H 270 -x 2880 -y 1350 --videolayer=0 --tileid=5
+newdec --id=46 --input=480p.h264 --codec=h264 --sink=disp46 -f NV12 -l 1
+dispch  --id=47 -W 480 -H 270 -x 3360 -y 1350 --videolayer=0 --tileid=5
+newdec --id=47 --input=480p.h264 --codec=h264 --sink=disp47 -f NV12 -l 1
+dispch  --id=48 -W 480 -H 270 -x 0 -y 1620 --videolayer=0 --tileid=6
+newdec --id=48 --input=480p.h264 --codec=h264 --sink=disp48 -f NV12 -l 1
+dispch  --id=49 -W 480 -H 270 -x 480 -y 1620 --videolayer=0 --tileid=6
+newdec --id=49 --input=480p.h264 --codec=h264 --sink=disp49 -f NV12 -l 1
+dispch  --id=50 -W 480 -H 270 -x 960 -y 1620 --videolayer=0 --tileid=6
+newdec --id=50 --input=480p.h264 --codec=h264 --sink=disp50 -f NV12 -l 1
+dispch  --id=51 -W 480 -H 270 -x 1440 -y 1620 --videolayer=0 --tileid=6
+newdec --id=51 --input=480p.h264 --codec=h264 --sink=disp51 -f NV12 -l 1
+dispch  --id=52 -W 480 -H 270 -x 1920 -y 1620 --videolayer=0 --tileid=6
+newdec --id=52 --input=480p.h264 --codec=h264 --sink=disp52 -f NV12 -l 1
+dispch  --id=53 -W 480 -H 270 -x 2400 -y 1620 --videolayer=0 --tileid=6
+newdec --id=53 --input=480p.h264 --codec=h264 --sink=disp53 -f NV12 -l 1
+dispch  --id=54 -W 480 -H 270 -x 2880 -y 1620 --videolayer=0 --tileid=6
+newdec --id=54 --input=480p.h264 --codec=h264 --sink=disp54 -f NV12 -l 1
+dispch  --id=55 -W 480 -H 270 -x 3360 -y 1620 --videolayer=0 --tileid=6
+newdec --id=55 --input=480p.h264 --codec=h264 --sink=disp55 -f NV12 -l 1
+dispch  --id=56 -W 480 -H 270 -x 0 -y 1890 --videolayer=0 --tileid=7
+newdec --id=56 --input=480p.h264 --codec=h264 --sink=disp56 -f NV12 -l 1
+dispch  --id=57 -W 480 -H 270 -x 480 -y 1890 --videolayer=0 --tileid=7
+newdec --id=57 --input=480p.h264 --codec=h264 --sink=disp57 -f NV12 -l 1
+dispch  --id=58 -W 480 -H 270 -x 960 -y 1890 --videolayer=0 --tileid=7
+newdec --id=58 --input=480p.h264 --codec=h264 --sink=disp58 -f NV12 -l 1
+dispch  --id=59 -W 480 -H 270 -x 1440 -y 1890 --videolayer=0 --tileid=7
+newdec --id=59 --input=480p.h264 --codec=h264 --sink=disp59 -f NV12 -l 1
+dispch  --id=60 -W 480 -H 270 -x 1920 -y 1890 --videolayer=0 --tileid=7
+newdec --id=60 --input=480p.h264 --codec=h264 --sink=disp60 -f NV12 -l 1
+dispch  --id=61 -W 480 -H 270 -x 2400 -y 1890 --videolayer=0 --tileid=7
+newdec --id=61 --input=480p.h264 --codec=h264 --sink=disp61 -f NV12 -l 1
+dispch  --id=62 -W 480 -H 270 -x 2880 -y 1890 --videolayer=0 --tileid=7
+newdec --id=62 --input=480p.h264 --codec=h264 --sink=disp62 -f NV12 -l 1
+ctrl --cmd=run  --time=15000
+ctrl --cmd=stop  --time=0

@@ -9,6 +9,7 @@ README.md          @xwu2intel
 /manufacturing-ai-suite/weld-porosity/                    @ajagadi1 @sugnanprabhu @rrajore
 /manufacturing-ai-suite/industrial-edge-insights-vision/  @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput
 /manufacturing-ai-suite/wind-turbine-anomaly-detection/   @vkb1 @sathyendranv @pooja-intel
+/manufacturing-ai-suite/hmi-augmented-worker/             @hteeyeoh @madhuri-rai07 @bharagha
 
 # metro-ai
 /metro-ai-suite/image-based-video-search/                 @dnoliver @rajpatel9498 @basakcap
@@ -17,14 +18,16 @@ README.md          @xwu2intel
 /metro-ai-suite/smart-intersection/                       @saratpoluri @sarthakdeva-intel
 /metro-ai-suite/loitering-detection/                      @vagheshp @tjanczak @xwu2intel
 /metro-ai-suite/visual-search-question-and-answering/     @llin60 @Johere @zhangcong2019
+/metro-ai-suite/video-processing-for-nvr/                 @zhangcong2019 @llin60 @Johere
 
 # robotics-ai
 /robotics-ai-suite/        @jouillet @jb-balaji @pirouf @mohitmeh12
 
 
 # documentation content - manufacturing-ai
-#/manufacturing-ai-suite/hmi-augmented-worker/docs/ - needs to be defined
-#/manufacturing-ai-suite/hmi-augmented-worker/README.md - needs to be defined
+/manufacturing-ai-suite/hmi-augmented-worker/docs                                  @hteeyeoh @madhuri-rai07 @bharagha      @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/hmi-augmented-worker/README.md                             @hteeyeoh @madhuri-rai07 @bharagha      @open-edge-platform/open-edge-platform-docs-write
+
 /manufacturing-ai-suite/industrial-edge-insights-vision/docs/         @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput   @open-edge-platform/open-edge-platform-docs-write
 /manufacturing-ai-suite/industrial-edge-insights-vision/README.md     @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput   @open-edge-platform/open-edge-platform-docs-write
 /manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/          @vkb1 @sathyendranv @pooja-intel                 @open-edge-platform/open-edge-platform-docs-write

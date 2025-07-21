@@ -11,7 +11,7 @@ import requests
 from dotenv import load_dotenv
 from tests.utils.utils import (
   run_command,
-  check_components_access,
+  check_url_access,
   get_password_from_supass_file,
   get_username_from_influxdb2_admin_username_file,
   get_password_from_influxdb2_admin_password_file
@@ -23,18 +23,25 @@ logger = logging.getLogger(__name__)
 DOCKER_COMPOSE_FILE = os.getenv("DOCKER_COMPOSE_FILE", "compose.yml")
 
 SCENESCAPE_URL = os.getenv("SCENESCAPE_URL", "https://localhost")
+SCENESCAPE_REMOTE_URL = os.getenv("SCENESCAPE_REMOTE_URL")
+
 SCENESCAPE_USERNAME = os.getenv("SCENESCAPE_USERNAME", "admin")
 SCENESCAPE_PASSWORD = os.getenv("SCENESCAPE_PASSWORD", get_password_from_supass_file())
 
 GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
+GRAFANA_REMOTE_URL = os.getenv("GRAFANA_REMOTE_URL")
 GRAFANA_USERNAME = os.getenv("GRAFANA_USERNAME", "admin")
 GRAFANA_PASSWORD = os.getenv("GRAFANA_PASSWORD", "admin")
 
 INFLUX_DB_URL = os.getenv("INFLUX_DB_URL", "http://localhost:8086")
+INFLUX_REMOTE_DB_URL = os.getenv("INFLUX_REMOTE_DB_URL")
 INFLUX_DB_ADMIN_USERNAME = os.getenv("INFLUX_DB_ADMIN_USERNAME", get_username_from_influxdb2_admin_username_file())
 INFLUX_DB_ADMIN_PASSWORD = os.getenv("INFLUX_DB_ADMIN_PASSWORD", get_password_from_influxdb2_admin_password_file())
 
 NODE_RED_URL = os.getenv("NODE_RED_URL", "http://localhost:1880")
+NODE_RED_REMOTE_URL = os.getenv("NODE_RED_REMOTE_URL")
+
+PROJECT_GITHUB_URL = os.getenv("PROJECT_GITHUB_URL", "https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-intersection")
 
 def wait_for_services_readiness(services_urls, timeout=120, interval=2):
   """
@@ -50,7 +57,7 @@ def wait_for_services_readiness(services_urls, timeout=120, interval=2):
     all_services_ready = True
     for url in services_urls:
       try:
-        check_components_access(url)
+        check_url_access(url)
       except AssertionError as e:
         all_services_ready = False
         break

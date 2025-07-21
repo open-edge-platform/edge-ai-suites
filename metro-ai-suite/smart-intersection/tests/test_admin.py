@@ -7,7 +7,7 @@ import logging
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from tests.utils.ui_utils import waiter, driver
-from tests.utils.utils import check_components_access
+from tests.utils.utils import check_url_access
 from .conftest import SCENESCAPE_URL, SCENESCAPE_PASSWORD, SCENESCAPE_USERNAME
 
 logger = logging.getLogger(__name__)
@@ -23,13 +23,11 @@ def test_login(waiter):
     SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
   )
 
-  # Verify that the expected elements are present on the page
-  nav_scenes = waiter.wait_and_assert(
+  # Verify that the element visible after login is present in the page
+  waiter.wait_and_assert(
     EC.presence_of_element_located((By.ID, "nav-scenes")),
     error_message='"nav-scenes" element not found on the page'
   )
-
-  assert nav_scenes
 
 @pytest.mark.zephyr_id("NEX-T9390")
 def test_logout(waiter):
@@ -64,6 +62,12 @@ def test_change_password(waiter):
     By.ID, "password",
     By.ID, "login-submit",
     SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
+  )
+
+  # Verify that the element visible after login is present on the page
+  waiter.wait_and_assert(
+    EC.presence_of_element_located((By.ID, "nav-scenes")),
+    error_message='"nav-scenes" element not found on the page'
   )
 
   # Navigate to Password change page
@@ -116,4 +120,4 @@ def test_web_options_availability(waiter):
   # Check each link for a 200 status code
   for url in navbar_links:
     logger.info("Checking URL: %s", url)
-    check_components_access(url)
+    check_url_access(url)

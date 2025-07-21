@@ -1,0 +1,7 @@
+newvl -i 0 -W 1920 -H 1080 --refresh=60 --format=nv12 --dispid=0
+dispch --id=0 -W 960 -H 540 -x 0 -y 0 --videolayer 0
+dispch --id=1 -W 960 -H 540 -x 960 -y 0 --videolayer 0
+newdec --id=0 --input=1080p.h264 --codec=h264   --sink=disp0 -f NV12
+newdec --id=1 --input=1080p.h264 --codec=h264   --sink=disp1 -f NV12
+ctrl --cmd=run  --time=8000
+ctrl --cmd=stop  --time=0

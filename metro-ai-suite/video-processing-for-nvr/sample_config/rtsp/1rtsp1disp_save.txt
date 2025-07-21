@@ -1,0 +1,5 @@
+newvl -i 0 -W 1920 -H 1080 --refresh=60 --format=nv12 --dispid=0
+dispch --id=0 -W 960 -H 540 -x 0 -y 0 --videolayer 0
+newdec --id=0 --input=rtsp://127.0.0.1:1554/simu0005 --codec=h265  --sink=disp0 -f NV12 -d /tmp/1.h265
+ctrl --cmd=run  --time=8000
+ctrl --cmd=stop  --time=0

@@ -1,0 +1,5 @@
+newvl -i 0 -W 1920 -H 1080 --refresh=30 --format=nv12 --dispid=0
+dispch --id=0 -W 960 -H 540 -x 0 -y 0 --videolayer 0
+newdec --id=0 --input=wrongfilename.h264 --codec=h264   --sink=disp0 -f NV12
+ctrl --cmd=run  --time=0
+ctrl --cmd=stop  --time=100

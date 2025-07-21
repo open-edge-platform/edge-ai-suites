@@ -1,0 +1,8 @@
+newvl -i 2 -W 1920 -H 1080 --refresh=30 --format=nv12 --dispid=1
+dispch --id=3 -W 480 -H 320 -x 540 -y 450 --videolayer 3
+newdec --id=1 --input=tcltestvideo.mp4 --dump=tcldump.out --codec=h264 --decW=1080 --decH=768 -r 90 --sink=fakesink -f NV12 -m preview
+decctrl --id=7 -c resume
+newpp --id=0 --sink=fakesink0 --sink=fakesink1
+newpp --id=5 --sink=fakesink4 --sink=fakesink6
+osdctrl --id=9 --cmd=add  -d 8 -f osdtest.264 -W 768 -H 480 -x 50 -y 40
+ctrl --cmd=run 

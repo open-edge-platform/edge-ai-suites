@@ -1,0 +1,25 @@
+ARG BASE=ubuntu
+ARG BASE_VERSION=24.04
+FROM $BASE:${BASE_VERSION} AS base
+
+SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN useradd -m -s /bin/bash vpp && \
+echo "vpp ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+mkdir -p /home/vpp && \
+chown -R vpp /home/vpp
+
+COPY . /home/vpp/vppsample
+
+WORKDIR /home/vpp/vppsample
+
+RUN bash ./live555_install.sh
+
+RUN bash ./build.sh
+
+USER vpp 
+WORKDIR /home/vpp
+
+ENTRYPOINT ["/bin/bash", "-c", "source /opt/intel/vppsdk/env.sh && bash"]

@@ -12,6 +12,7 @@ from .conftest import SCENESCAPE_URL, SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
 
 def add_camera(waiter, camera_name, camera_id):
   """Helper function to log in and add a new camera."""
+  # Perform login using Waiter class object
   waiter.perform_login(
     SCENESCAPE_URL,
     By.ID, "username",
@@ -59,6 +60,51 @@ def add_camera(waiter, camera_name, camera_id):
     error_message=f"Camera card with ID 'rate-{camera_id}' is not visible on the page"
   )
   return camera_card
+
+@pytest.mark.zephyr_id("NEX-T9632")
+def test_manage_cameras(waiter):
+  """Test that the admin can manage cameras."""
+  camera_name = "south crosswalk view"
+  modified_camera_name = "south crosswalk view modified"  
+
+  waiter.perform_login(
+    SCENESCAPE_URL,
+    By.ID, "username",
+    By.ID, "password",
+    By.ID, "login-submit",
+    SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
+  )
+
+  # Navigate to the Cameras page
+  cameras_nav_link = waiter.wait_and_assert(
+    EC.presence_of_element_located((By.ID, "nav-cameras")),
+    error_message="Cameras navigation link is not present on the page"
+  )
+  cameras_nav_link.click()
+
+  # Open the manage page for the specified camera
+  manage_link = waiter.wait_and_assert(
+    EC.presence_of_element_located((By.XPATH, f"//tr[td[contains(text(), '{camera_name}')]]//a[@title='Manage']")),
+    error_message="Manage link is not present in the specified row"
+  )
+  manage_link.click()
+
+  # Find "Save Camera" button
+  save_button = waiter.wait_and_assert(
+    EC.presence_of_element_located((By.ID, "bottom_save")),
+    error_message="Save Camera button is not present on the page"
+  )
+
+  id_name_input = waiter.driver.find_element(By.ID, "id_name")
+  id_name_input.send_keys(modified_camera_name)
+  
+  save_button.click()
+
+  # Verify that the modified name appears in the specified element
+  modified_name_header = waiter.wait_and_assert(
+    EC.presence_of_element_located((By.XPATH, f"//h6[@class='card-header' and contains(., '{modified_camera_name}')]")),
+    error_message="Modified camera name is not present in the header"
+  )
 
 @pytest.mark.zephyr_id("NEX-T9382")
 def test_add_camera(waiter):
