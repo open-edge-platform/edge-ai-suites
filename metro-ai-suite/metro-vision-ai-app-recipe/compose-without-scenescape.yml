@@ -81,7 +81,7 @@ services:
     - app_network
 
   coturn:
-    image: coturn/coturn:latest
+    image: coturn/coturn:4.7
     container_name: coturn
     ports:
       - "3478:3478"
@@ -111,7 +111,7 @@ services:
       - NO_PROXY=${no_proxy},${HOST_IP}
 
   node-red:
-    image: nodered/node-red
+    image: nodered/node-red:3.1
     container_name: node-red
     environment:
       http_proxy: ${http_proxy}

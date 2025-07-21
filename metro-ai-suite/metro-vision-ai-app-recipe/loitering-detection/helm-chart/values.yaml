@@ -8,10 +8,10 @@ imagePullPolicy: Always
 storageClassName: manual
 mqtt_broker:
   image: eclipse-mosquitto
-  imageTag: latest
+  imageTag: 2.0.21
 coturn:
   image: coturn/coturn
-  imageTag: latest
+  imageTag: 4.7
 mediamtx:
   image: bluenviron/mediamtx
   imageTag: 1.11.3
@@ -23,7 +23,7 @@ grafana:
   imageTag: 11.5.4
 node_red:
   image: nodered/node-red
-  imageTag: latest
+  imageTag: 3.1
 env:
   ENABLE_WEBRTC: "true"
   ENABLE_RTSP: "true"
@@ -33,7 +33,6 @@ env:
   http_proxy:
   https_proxy:
   no_proxy:
-  NO_PROXY:
 privileged_access_required: false
 gpu:
   enabled: false
