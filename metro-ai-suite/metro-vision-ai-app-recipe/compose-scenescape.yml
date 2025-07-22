@@ -2,12 +2,14 @@ services:
   ntpserver:
     image: docker.io/dockurr/chrony:4.6.1
     environment:
-      - http_proxy=${http_proxy}
-      - https_proxy=${https_proxy}
-      - no_proxy=${no_proxy},${HOST_IP}
-      - NO_PROXY=${no_proxy},${HOST_IP}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},*.scenescape.intel.com
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: ${no_proxy},*.scenescape.intel.com
     networks:
-      app_network:
+      scenescape:
         aliases:
          - ntpserv
     restart: on-failure:5
@@ -17,12 +19,12 @@ services:
     ports:
      - "1883:1883"
     environment:
-      http_proxy: ""
-      https_proxy: ""
-      no_proxy: ""
-      HTTP_PROXY: ""
-      HTTPS_PROXY: ""
-      NO_PROXY: ""
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},*.scenescape.intel.com
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: ${no_proxy},*.scenescape.intel.com
     volumes:
     - ./${SAMPLE_APP}/src/mosquitto/mosquitto-secure.conf:/mosquitto/config/mosquitto.conf
     secrets:
@@ -37,7 +39,7 @@ services:
       /docker-entrypoint.sh /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf"
     ]
     networks:
-      app_network:
+      scenescape:
         aliases:
          - broker.scenescape.intel.com
     user: "${UID}:${GID}"
@@ -50,14 +52,14 @@ services:
       TZ: America/Los_Angeles
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},broker.scenescape.intel.com,influxdb2
+      no_proxy: ${no_proxy},*.scenescape.intel.com
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
-      NO_PROXY: ${no_proxy},broker.scenescape.intel.com,influxdb2
+      NO_PROXY: ${no_proxy},*.scenescape.intel.com
     ports:
       - "1880:1880"
     networks:
-      - app_network
+      - scenescape
     volumes:
       - ./${SAMPLE_APP}/src/node-red/flows.json:/tmp/flows.json
       - ./${SAMPLE_APP}/src/node-red/flows_cred.json:/tmp/flows_cred.json
@@ -98,12 +100,12 @@ services:
       DOCKER_INFLUXDB_INIT_ORG: ITM
       DOCKER_INFLUXDB_INIT_BUCKET: SS-Anthem
       DOCKER_INFLUXDB_INIT_RETENTION: 1w
-      http_proxy: ""
-      https_proxy: ""
-      no_proxy: ""
-      HTTP_PROXY: ""
-      HTTPS_PROXY: ""
-      NO_PROXY: ""
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},*.scenescape.intel.com
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: ${no_proxy},*.scenescape.intel.com
     secrets:
       - influxdb2-admin-username
       - influxdb2-admin-password
@@ -117,7 +119,9 @@ services:
         target: /etc/influxdb2
     restart: on-failure:5
     networks:
-      - app_network
+      scenescape:
+        aliases:
+         - influxdb2.scenescape.intel.com
 
   grafana:
     image: docker.io/grafana/grafana:11.6.0
@@ -128,17 +132,17 @@ services:
       - ./${SAMPLE_APP}/src/grafana/datasources.yml:/tmp/datasources.yml
       - grafana-storage:/var/lib/grafana
     environment:
-      http_proxy: ""
-      https_proxy: ""
-      no_proxy: ""
-      HTTP_PROXY: ""
-      HTTPS_PROXY: ""
-      NO_PROXY: ""
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},*.scenescape.intel.com
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: ${no_proxy},*.scenescape.intel.com
     ports:
       - "3000:3000"
     restart: on-failure:5
     networks:
-      - app_network
+      - scenescape
     secrets:
       - influxdb2-admin-token
     depends_on:
@@ -161,7 +165,7 @@ services:
   dlstreamer-pipeline-server:
     image: ${DOCKER_REGISTRY}intel/dlstreamer-pipeline-server:latest
     networks:
-      - app_network
+      - scenescape
     privileged: true
     entrypoint: ["./run.sh"]
     ports:
@@ -185,12 +189,12 @@ services:
       - REST_SERVER_PORT=8080
       - MQTT_HOST=broker.scenescape.intel.com
       - MQTT_PORT=1883
-      - http_proxy=
-      - https_proxy=
-      - no_proxy=
-      - NO_PROXY=
-      - HTTP_PROXY=
-      - HTTPS_PROXY=
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},*.scenescape.intel.com
+      - NO_PROXY=${no_proxy},*.scenescape.intel.com
+      - HTTP_PROXY=${http_proxy}
+      - HTTPS_PROXY=${https_proxy}
     volumes:
       - ./${SAMPLE_APP}/src/dlstreamer-pipeline-server/config.json:/home/pipeline-server/config.json
       - ./${SAMPLE_APP}/src/dlstreamer-pipeline-server/user_scripts:/home/pipeline-server/user_scripts
@@ -207,16 +211,16 @@ services:
     image: ${DOCKER_REGISTRY}intel/scenescape-manager:v1.3.0
     init: true
     networks:
-      - app_network
+      - scenescape
     environment:
       - "DBROOT=/workspace"
       - "EXAMPLEDB=smart-intersection-ri.tar.bz2"
-      - http_proxy=
-      - https_proxy=
-      - no_proxy=
-      - NO_PROXY=
-      - HTTP_PROXY=
-      - HTTPS_PROXY=
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},*.scenescape.intel.com
+      - NO_PROXY=${no_proxy},*.scenescape.intel.com
+      - HTTP_PROXY=${http_proxy}
+      - HTTPS_PROXY=${https_proxy}
     entrypoint: [
       "/bin/bash",
       "-e",
@@ -249,7 +253,7 @@ services:
     image: ${DOCKER_REGISTRY}intel/scenescape-manager:v1.3.0
     init: true
     networks:
-      app_network:
+      scenescape:
         aliases:
          - web.scenescape.intel.com
     depends_on:
@@ -258,12 +262,12 @@ services:
      - "443:443"
     environment:
      - "DBROOT=/workspace"
-     - http_proxy=
-     - https_proxy=
-     - no_proxy=
-     - NO_PROXY=
-     - HTTP_PROXY=
-     - HTTPS_PROXY=
+     - http_proxy=${http_proxy}
+     - https_proxy=${https_proxy}
+     - no_proxy=${no_proxy},*.scenescape.intel.com
+     - NO_PROXY=${no_proxy},*.scenescape.intel.com
+     - HTTP_PROXY=${http_proxy}
+     - HTTPS_PROXY=${https_proxy}
     command: >
       webserver
       --dbhost pgserver
@@ -300,14 +304,14 @@ services:
     image: ${DOCKER_REGISTRY}intel/scenescape-controller:v1.3.0
     init: true
     environment:
-     - http_proxy=
-     - https_proxy=
-     - no_proxy=
-     - NO_PROXY=
-     - HTTP_PROXY=
-     - HTTPS_PROXY=
+     - http_proxy=${http_proxy}
+     - https_proxy=${https_proxy}
+     - no_proxy=${no_proxy},*.scenescape.intel.com
+     - NO_PROXY=${no_proxy},*.scenescape.intel.com
+     - HTTP_PROXY=${http_proxy}
+     - HTTPS_PROXY=${https_proxy}
     networks:
-      app_network:
+      scenescape:
     depends_on:
       web:
         condition: service_healthy
@@ -327,7 +331,7 @@ services:
     restart: on-failure:5
 
 networks:
-  app_network:
+  scenescape:
 
 secrets:
   root-cert:

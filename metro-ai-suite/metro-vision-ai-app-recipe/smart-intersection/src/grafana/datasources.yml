@@ -4,7 +4,7 @@ datasources:
   - name: InfluxDB
     type: influxdb
     access: proxy
-    url: http://influxdb2:8086
+    url: http://influxdb2.scenescape.intel.com:8086
     basicAuth: true
     secureJsonData:
       token: <influx-api-token>
