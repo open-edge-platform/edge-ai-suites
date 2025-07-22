@@ -124,6 +124,11 @@ services:
     - ./time_series_analytics_microservice/models/:/tmp/windturbine_anomaly_detector/models/
     - /dev/dri:/dev/dri
     - "/run/udev:/run/udev:ro"
+    group_add:
+    # render group ID for ubuntu 20.04 host OS
+    - "109"
+    # render group ID for ubuntu 22.04 host OS
+    - "110"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
