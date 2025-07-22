@@ -19,14 +19,16 @@ coding or deep learning expertise. Its key features are:
 
 ## Get Started
 
-- [System Requirements](docs/user-guide/system-requirements.md)
-- [Deploy with Docker Compose](docs/user-guide/get-started.md)
-- [Deploy with Helm](docs/user-guide/how-to-deploy-with-helm.md)
+- [System Requirements](./docs/user-guide/system-requirements.md)
+- [Deploy with Docker Compose](./docs/user-guide/get-started.md)
+- [Deploy with Helm](./docs/user-guide/how-to-deploy-with-helm.md)
 
 
 ## How It Works
 
-![Architecture Diagram](docs/user-guide/_images/smart-parking-architecture.drawio.svg)
+Here is an overview of the architecture and logic of the application.
+
+![Architecture Diagram](./docs/user-guide/_images/smart-parking-architecture.drawio.svg)
 
 
 - **DL Streamer Pipeline Server** is a core component of the app. It receives video feed from
@@ -50,6 +52,6 @@ for display in Grafana.
 
 ## Learn More
 
-- [Release Notes](docs/user-guide/release-notes.md)
-- [How to customize the application](docs/user-guide/how-to-customize-application.md)
+- [Release Notes](./docs/user-guide/release-notes.md)
+- [How to customize the application](./docs/user-guide/how-to-customize-application.md)
 - [Support and Troubleshooting](./docs/user-guide/support.md)
