@@ -26,7 +26,7 @@ if [ -d "/opt/intel/media" ]; then
     cd build
     cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_VAAPI=ON -DMINIMAL_PACKAGE=ON ..
     # cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_VAAPI=ON -DMINIMAL_PACKAGE=ON ..
-    cp ../ai_inference/libradar/libradar.so lib/
+    # cp ../ai_inference/libradar/libradar.so lib/
     make -j8
 else
     source /opt/intel/openvino_2024/setupvars.sh
@@ -60,6 +60,6 @@ else
     cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_VAAPI=ON -DMINIMAL_PACKAGE=ON ..
     # cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_VAAPI=ON -DMINIMAL_PACKAGE=ON ..
     grep -rnl "\-isystem" | xargs sed -i "s/-isystem /-I/g"
-    cp ../ai_inference/libradar/libradar.so lib/
+    # cp ../ai_inference/libradar/libradar.so lib/
     make -j8
 fi

@@ -2,15 +2,23 @@
 
 ## 1. Overview
 ### 1.1 Prerequisites
-- Operating System: Ubuntu* 22.04.1 Desktop LTS (fresh installation) on target system
+- Operating System: [Ubuntu 22.04.1 Desktop LTS](https://old-releases.ubuntu.com/releases/22.04.1/ubuntu-22.04.1-desktop-amd64.iso) (fresh installation) on target system
 - Platform
   - Intel® Celeron® Processor 7305E (1C+1R/2C+1R usecase)
   - Intel® Core™ Ultra 7 Processor 165H (4C+4R usecase)
-  - 13th Gen Intel(R) Core(TM) i7-13700 (16C+4R usecase)
+  - Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics (16C+4R usecase)
 - Intel® OpenVINO™ Toolkit
+  
   - Version Type: 2024.6
 - RADDet Dataset
+  
   - https://github.com/ZhangAoCanada/RADDet#Dataset
+  
+  - For how to get RADDet dataset, please refer to this guide: [how_to_get_RADDet_datasets.md](How-To-Get-RADDET-Dataset.md)
+  
+      Upon success, bin files will be extracted, save to $RADDET_DATASET_ROOT/bin_files_{VERSION}:
+  
+      > NOTE: latest converted dataset version should be: v1.0
 - Ensure that proxy settings are configured if target system is within proxy environment
   ```bash
   export http_proxy=<Your-Proxy>
@@ -43,7 +51,7 @@ address=0.0.0.0
 RESTfulPort=50051
 gRPCPort=50052
 ```
- 
+
 - RESTful API: listen on port 50051
 - gRPC API: listen on port 50052
 
@@ -60,29 +68,57 @@ The media processing and sensor fusion results will be displayed. Here's an exam
 
 For more details about the display mode, please refer to [section 4.3 Run Entry Program](#43-run-entry-program)
 
-## 2. Install Dependencies and Build Project
-
-### 2.1 BIOS setting
-
-#### 2.1.1 MTL
-
-| Setting                                          | Step                                                         |
-| ------------------------------------------------ | ------------------------------------------------------------ |
-| Enable the Hidden BIOS Setting in Seavo Platform | "Right Shift+F7" Then Change Enabled Debug Setup Menu from [Enabled] to [Disable] |
-| Disable VT-d in BIOS                             | Intel Advanced Menu → System Agent (SA) Configuration → VT-d setup menu → VT-d<Disabled>    <br>Note: If VT-d can’t be disabled, please disable Intel Advanced Menu → CPU Configuration → X2APIC |
-| Disable SAGV in BIOS                             | Intel Advanced Menu → [System Agent (SA) Configuration]  →  Memory configuration →  SAGV <Disabled> |
-| Enable NPU Device                                | Intel Advanced Menu → CPU Configuration → Active SOC-North Efficient-cores <ALL>   <br>Intel Advanced Menu → System Agent (SA) Configuration → NPU Device <Enabled> |
-| TDP Configuration                                | SOC TDP configuration is very important for performance. Suggestion: TDP = 45W. For extreme heavy workload, TDP = 64W <br>---TDP = 45W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations → Power Limit 1 <45000> <br>---TDP = 64W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations →  Configurable TDP Boot Mode [Level2] |
 
 
+##	2. System Requirements
 
-#### 2.1.2 RPL-S+A770
+### 2.1 Hardware requirements
 
-| Setting                  | Step                                                         |
-| ------------------------ | ------------------------------------------------------------ |
-| Enable ResizeBar in BIOS | Intel Advanced Menu -> System Agent (SA) Configuration -> PCI Express Configuration -> PCIE Resizable BAR Support <Enabled> |
+- Platform
 
-### 2.2 Install Dependencies
+    - Intel® Celeron® Processor 7305E (1C+1R/2C+1R usecase)
+    - Intel® Core™ Ultra 7 Processor 165H (4C+4R usecase)
+
+    - Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics (16C+4R usecase)
+
+- BIOS setting
+
+    - MTL
+
+        | Setting                                          | Step                                                         |
+        | ------------------------------------------------ | ------------------------------------------------------------ |
+        | Enable the Hidden BIOS Setting in Seavo Platform | "Right Shift+F7" Then Change Enabled Debug Setup Menu from [Enabled] to [Disable] |
+        | Disable VT-d in BIOS                             | Intel Advanced Menu → System Agent (SA) Configuration → VT-d setup menu → VT-d<Disabled>    <br>Note: If VT-d can’t be disabled, please disable Intel Advanced Menu → CPU Configuration → X2APIC |
+        | Disable SAGV in BIOS                             | Intel Advanced Menu → [System Agent (SA) Configuration]  →  Memory configuration →  SAGV <Disabled> |
+        | Enable NPU Device                                | Intel Advanced Menu → CPU Configuration → Active SOC-North Efficient-cores <ALL>   <br>Intel Advanced Menu → System Agent (SA) Configuration → NPU Device <Enabled> |
+        | TDP Configuration                                | SOC TDP configuration is very important for performance. Suggestion: TDP = 45W. For extreme heavy workload, TDP = 64W <br>---TDP = 45W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations → Power Limit 1 <45000> <br>---TDP = 64W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations →  Configurable TDP Boot Mode [Level2] |
+
+    - RPL-S+A770
+
+        | Setting                  | Step                                                         |
+        | ------------------------ | ------------------------------------------------------------ |
+        | Enable ResizeBar in BIOS | Intel Advanced Menu -> System Agent (SA) Configuration -> PCI Express Configuration -> PCIE Resizable BAR Support <Enabled> |
+
+
+
+### 2.2 Software requirements
+
+| Software           | Version                |
+| ------------------ | ---------------------- |
+| Intel  OpenVINO    | 2024.6.0               |
+| Intel  oneMKL      | 2025.1.0               |
+| NEO OpenCL         | Release/23.22.26516.25 |
+| cmake              | 3.21.2                 |
+| boost              | 1.83.0                 |
+| spdlog             | 1.8.2                  |
+| thrift             | 0.18.1                 |
+| gRPC               | 1.58.1                 |
+| zlib               | 1.3.1                 |
+| oneAPI Level  Zero | 1.17.19                |
+
+
+
+## 3. Install Dependencies and Build Project
 
 * install driver related libs
 
@@ -104,7 +140,7 @@ For more details about the display mode, please refer to [section 4.3 Run Entry 
 
 - set $PROJ_DIR
   ```bash
-  cd Metro_AI_Suite_Sensor_Fusion_for_Traffic_Management_1.0/sensor_fusion_service
+  cd applications.iot.video-edge-device.holographic-sensor-fusion
   export PROJ_DIR=$PWD
   ```
 - prepare global radar configs in folder: /opt/datasets
@@ -125,13 +161,9 @@ For more details about the display mode, please refer to [section 4.3 Run Entry 
     bash -x build.sh
     ```
 
-## 3. Download and Convert Dataset
-For how to get RADDet dataset, please refer to this guide: [how_to_get_RADDet_datasets.md](How-To-Get-RADDET-Dataset.md)
 
-Upon success, bin files will be extracted, save to $RADDET_DATASET_ROOT/bin_files_{VERSION}:
-> NOTE: latest converted dataset version should be: v1.0
 
-## 4. Run Sensor Fusion Application
+## 4. How it works
 
 In this section, we describe how to run Metro AI Suite Sensor Fusion for Traffic Management application.
 
@@ -146,24 +178,28 @@ Besides, users can test each component (without display) following the guides at
 ### 4.1 Resources Summary
 - Local File Pipeline for Media pipeline
   - Json File: localMediaPipeline.json 
+    
     > File location: `$PROJ_DIR/ai_inference/test/configs/raddet/1C1R/localMediaPipeline.json`
   - Pipeline Description: 
     ```
     input -> decode -> detection -> tracking -> output
     ```
-
+  
+  
 - Local File Pipeline for mmWave Radar pipeline
   - Json File: localRadarPipeline.json
+    
     > File location: `$PROJ_DIR/ai_inference/test/configs/raddet/1C1R/localRadarPipeline.json`
-  - Pipeline Description: 
-
+- Pipeline Description: 
+  
     ```
     input -> preprocess -> radar_detection -> clustering -> tracking -> output
-    ```
-
+  ```
+  
 - Local File Pipeline for `Camera + Radar(1C+1R)` Sensor fusion pipeline
 
   - Json File: localFusionPipeline.json
+    
     > File location: `$PROJ_DIR/ai_inference/test/configs/raddet/1C1R/localFusionPipeline.json`
   - Pipeline Description: 
     ```
@@ -173,6 +209,7 @@ Besides, users can test each component (without display) following the guides at
 - Local File Pipeline for `Camera + Radar(4C+4R)` Sensor fusion pipeline
 
   - Json File: localFusionPipeline.json
+    
     > File location: `$PROJ_DIR/ai_inference/test/configs/raddet/4C4R/localFusionPipeline.json`
   - Pipeline Description: 
     ```
@@ -266,6 +303,8 @@ sudo pkill Hce
 ### 4.3 Run Entry Program
 #### 4.3.1 1C+1R
 
+**The target platform is Intel® Celeron® Processor 7305E.**
+
 All executable files are located at: $PROJ_DIR/build/bin
 
 Usage:
@@ -307,6 +346,8 @@ sudo -E ./build/bin/CRSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/conf
 
 #### 4.3.2 4C+4R
 
+**The target platform is Intel® Core™ Ultra 7 Processor 165H.**
+
 All executable files are located at: $PROJ_DIR/build/bin
 
 Usage:
@@ -347,6 +388,8 @@ sudo -E ./build/bin/CRSensorFusion4C4RDisplay 127.0.0.1 50052 ai_inference/test/
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 
 #### 4.3.3 2C+1R
+
+**The target platform is Intel® Celeron® Processor 7305E.**
 
 All executable files are located at: $PROJ_DIR/build/bin
 
@@ -394,6 +437,8 @@ sudo -E ./build/bin/CRSensorFusion2C1RDisplay 127.0.0.1 50052 ai_inference/test/
 
 #### 4.3.4 16C+4R
 
+**The target platform is Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics.**
+
 All executable files are located at: $PROJ_DIR/build/bin
 
 Usage:
@@ -430,10 +475,12 @@ More specifically, open another terminal, run the following commands:
 
 ```bash
 # multi-sensor inputs test-case
-sudo -E ./build/bin/CRSensorFusion16C4RDisplay 127.0.0.1 50052 ./ai_inference/test/configs/raddet/16C4R/localFusionPipeline.json 4 1 /path-to-dataset media_fusion
+sudo -E ./build/bin/CRSensorFusion16C4RDisplay 127.0.0.1 50052 ai_inference/test/configs/raddet/16C4R/localFusionPipeline.json 4 1 /path-to-dataset media_fusion
 ```
 
 > Note: Run with `root` if users want to get the GPU utilization profiling.
+
+
 
 
 ## 5. Code Reference
@@ -443,10 +490,14 @@ Some of the code is referenced from the following projects:
 - [Intel DL Streamer](https://github.com/dlstreamer/dlstreamer) (MIT License)
 - [Open Model Zoo](https://github.com/openvinotoolkit/open_model_zoo) (Apache-2.0 License)
 
+
+
 ## Troubleshooting
+
 1. If you run different pipelines in a short period of time, you may encounter the following error:
     ![workload_error](./_images/workload_error.png)
-    <center>Figure 2: Workload constraints error</center>
+
+    <center>Figure 1: Workload constraints error</center>
 
     This is because the maxConcurrentWorkload limitation in `AiInference.config` file. If the workloads hit the maximum, task will be canceled due to workload constrains. To solve this problem, you can kill the service with the commands below, and re-execute the command.
 
@@ -454,9 +505,10 @@ Some of the code is referenced from the following projects:
     sudo pkill Hce
     ```
 
-3. If you encounter the following error during code compilation, it is because mkl is not installed successfully:
+2. If you encounter the following error during code compilation, it is because mkl is not installed successfully:
     ![mkl_error](./_images/mkl_error.png)
-    <center>Figure 3: Build failed due to mkl error</center>
+
+    <center>Figure 2: Build failed due to mkl error</center>
 
     Run `ls /opt/intel` to check if there is a OneAPI directory in the output. If not, it means that mkl was not installed successfully. You need to reinstall mkl by following the steps below:
 
@@ -468,9 +520,10 @@ Some of the code is referenced from the following projects:
     sudo -E apt-get install -y intel-oneapi-mkl-devel lsb-release
     ```
 
-    If the system time is incorrect, you may encounter the following errors during installation:
+3. If the system time is incorrect, you may encounter the following errors during installation:
     ![oneapi_time_error](./_images/oneapi_time_error.png)
-    <center>Figure 4: System Time Error</center>
+
+    <center>Figure 3: System Time Error</center>
 
     You need to set the correct system time, for example:
 
@@ -486,16 +539,24 @@ Some of the code is referenced from the following projects:
     sudo apt-get install -y intel-oneapi-mkl-devel
     ```
 
+4. If you encounter the following errors during running 16C+4R pipeline:
+    ![device_index_error](./_images/device_index_error.png)
+
+    <center>Figure 4: Device Index Error</center>
+
+    It may be because the iGPU is not enabled, only the A770 is enabled.
+
+    You can use `lspci | grep VGA` to view the number of GPU devices on the machine.
+    
+    The solution is either enable iGPU in BIOS, or change config `Device=(STRING)GPU.1` to `Device=(STRING)GPU` in pipeline config file `ai_inference/test/configs/raddet/16C4R/localFusionPipeline.json`.
+
+
 ## Release Notes
-Current Version: 1.0
-- Enhanced radar signal processing pipeline and added radar library.
-- Supported multiple CFAR algorithms including CACFAR and OSCFAR.
-- Supported multiple AoA estimation algorithms including FFT, DBF, CAPON and MUSIC.
-- Enhanced media processing pipeline with input control.
-- Added accuracy benchmark test for deep learning model and radar detection results.
-- Added cross-stream batching support for 4C+4R pipeline.
-- Added profiling tools for modular latency analysis.
-- Added ESC package support.
-- Updated OpenVINO to 2024.5.
-- Updated oneMKL to 2025.0.0.
+
+Current Version: 2.0
+- Support 2C+1R pipeline
+- Support 16C+4R pipeline
+- Support YOLOv6 model
+- Updated OpenVINO to 2024.6
+- Updated oneMKL to 2025.1.0
 

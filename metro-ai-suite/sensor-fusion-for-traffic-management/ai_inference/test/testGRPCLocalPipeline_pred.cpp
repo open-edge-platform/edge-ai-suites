@@ -38,7 +38,10 @@ std::vector<std::size_t> g_frameCnt;
 std::mutex g_mutex;
 double g_latency_sum = 0;
 int64_t g_latency_count = 0;
-
+double g_inference_latency_sum = 0;
+int64_t g_inference_latency_count = 0;
+double g_video_latency_sum = 0;
+int64_t g_video_latency_count = 0;
 // system metrics
 GPUMetrics gpuMetrics;
 CPUMetrics cpuMetrics;
@@ -245,6 +248,18 @@ void workload(const std::string &host,
                         latency = jsonMessage.get<double>("latency");
                         g_latency_sum += latency;
                         ++g_latency_count;
+
+                        if (jsonMessage.count("inference_latency") > 0) {
+                            latency = jsonMessage.get<double>("inference_latency");
+                            g_inference_latency_sum += latency;
+                            ++g_inference_latency_count;
+                        }
+
+                        if (jsonMessage.count("video_latency") > 0) {
+                            latency = jsonMessage.get<double>("video_latency");
+                            g_video_latency_sum += latency;
+                            ++g_video_latency_count;
+                        }
 
                         char buf[16];
                         std::sprintf(buf, "%05d.txt", frameCnt);
@@ -463,11 +478,21 @@ int main(int argc, char **argv)
         /* frames_each_stream / time_each_stream => fps_each_stream */
         float fps = (((float)totalFrames - pipeline_repeats) / totalStreamNum) / (mean / 1000.0);
         double latency_ave = g_latency_sum / (double)g_latency_count;
+        double inference_latency_ave = 0;
+        double video_latency_ave = 0.0;
+        if (g_inference_latency_count != 0) {
+            inference_latency_ave = g_inference_latency_sum / (double)g_inference_latency_count;
+        }
+        if (g_video_latency_count != 0) {
+            video_latency_ave = g_video_latency_sum / (double)g_video_latency_count;
+        }
 
         std::cout << "\n=================================================\n" << std::endl;
         std::cout << "WARMUP: " << std::to_string(warmupFlag) << std::endl;
         std::cout << "fps: " << fps << std::endl;
         std::cout << "average latency " << latency_ave << std::endl;
+        std::cout << "video pipeline average latency " << video_latency_ave << std::endl;
+        std::cout << "inference average latency " << inference_latency_ave << std::endl;
         std::cout << "For each repeat: " << threadNum << " threads have been processed, total-stream = " << totalStreamNum << ", each thread processed "
                   << crossStreamNum << " streams" << std::endl;
         std::cout << "fps per stream: " << fps << ", including " << totalFrames << " frames" << std::endl;

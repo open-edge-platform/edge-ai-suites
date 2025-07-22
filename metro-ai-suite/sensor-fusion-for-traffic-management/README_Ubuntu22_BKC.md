@@ -2,9 +2,9 @@
 
 Get Started Guide for running on bare metal.
 
-**OS: ubuntu 22.04.1**
+**OS: [ubuntu 22.04.1](https://old-releases.ubuntu.com/releases/22.04.1/ubuntu-22.04.1-desktop-amd64.iso)**
 
-**Note: Must install this specific ubuntu version 22.04.1.**
+**Note: Must install this specific version [ubuntu 22.04.1](https://old-releases.ubuntu.com/releases/22.04.1/ubuntu-22.04.1-desktop-amd64.iso).**
 
 ## 1. Overview
 ### 1.1 Prerequisites
@@ -15,7 +15,7 @@ Get Started Guide for running on bare metal.
 - Platform
   - Intel® Celeron® Processor 7305E (1C+1R/2C+1R usecase)
   - Intel® Core™ Ultra 7 Processor 165H (4C+4R usecase)
-  - 13th Gen Intel(R) Core(TM) i7-13700 (16C+4R usecase)
+  - Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics (16C+4R usecase)
 ### 1.2 Modules
 - AI Inference Service:
   - Media Processing (Camera)
@@ -261,6 +261,8 @@ sudo pkill Hce
 ### 5.3 Run Entry Program
 #### 5.3.1 1C+1R
 
+**The target platform is Intel® Celeron® Processor 7305E.**
+
 All executable files are located at: $PROJ_DIR/build/bin
 
 Usage:
@@ -301,6 +303,9 @@ sudo -E ./build/bin/CRSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/conf
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 
 #### 5.3.2 1C+1R Unit Tests
+
+**The target platform is Intel® Celeron® Processor 7305E.**
+
 In this section, the unit tests of four major components will be described: media processing, radar processing, fusion pipeline without display and other tools for intermediate results.
 
 Usage:
@@ -389,6 +394,8 @@ source /opt/intel/oneapi/setvars.sh
 
 #### 5.3.3 4C+4R
 
+**The target platform is Intel® Core™ Ultra 7 Processor 165H.**
+
 All executable files are located at: $PROJ_DIR/build/bin
 
 Usage:
@@ -441,6 +448,9 @@ sudo -E ./build/bin/CRSensorFusion4C4RDisplayCrossStream 127.0.0.1 50052 ai_infe
 ```
 
 #### 5.3.4 4C+4R Unit Tests
+
+**The target platform is Intel® Core™ Ultra 7 Processor 165H.**
+
 In this section, the unit tests of two major components will be described: fusion pipeline without display and media processing.
 
 Usage:
@@ -511,6 +521,8 @@ sudo -E ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/conf
 
 #### 5.3.5 2C+1R
 
+**The target platform is Intel® Celeron® Processor 7305E.**
+
 All executable files are located at: $PROJ_DIR/build/bin
 
 Usage:
@@ -554,6 +566,8 @@ sudo -E ./build/bin/CRSensorFusion2C1RDisplay 127.0.0.1 50052 ai_inference/test/
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 
 #### 5.3.6 2C+1R Unit Tests
+
+**The target platform is Intel® Celeron® Processor 7305E.**
 
 In this section, the unit tests of three major components will be described: media processing, radar processing, fusion pipeline without display.
 
@@ -608,6 +622,8 @@ Open another terminal, run the following commands:
 
 #### 5.3.7 16C+4R
 
+**The target platform is Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics.**
+
 All executable files are located at: $PROJ_DIR/build/bin
 
 Usage:
@@ -650,6 +666,8 @@ sudo -E ./build/bin/CRSensorFusion16C4RDisplay 127.0.0.1 50052 ./ai_inference/te
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 
 #### 5.3.8 16C+4R Unit Tests
+
+**The target platform is Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics.**
 
 In this section, the unit tests of two major components will be described: fusion pipeline without display and media processing.
 
@@ -855,7 +873,35 @@ sudo -E apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plug
 
 
 
-3. Verify that the installation is successful by running the `hello-world` image:
+
+
+3. Set proxy(Optional).
+
+Note you may need to set proxy for docker.
+
+```bash
+sudo mkdir -p /etc/systemd/system/docker.service.d
+sudo vim /etc/systemd/system/docker.service.d/http-proxy.conf
+
+# Modify the file contents as follows
+[Service]
+Environment="HTTP_PROXY=http://proxy.example.com:8080"
+Environment="HTTPS_PROXY=http://proxy.example.com:8080"
+Environment="NO_PROXY=localhost,127.0.0.1"
+```
+
+
+
+Then restart docker:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+
+
+4. Verify that the installation is successful by running the `hello-world` image:
 
 ```bash
 sudo docker run hello-world
@@ -863,7 +909,7 @@ sudo docker run hello-world
 
 This command downloads a test image and runs it in a container. When the container runs, it prints a confirmation message and exits.
 
-4. Add user to group
+5. Add user to group
 
 ```bash
 sudo usermod -aG docker $USER
@@ -872,7 +918,7 @@ newgrp docker
 
 
 
-5. Then pull base image
+6. Then pull base image
 
 ```bash
 docker pull ubuntu:22.04
@@ -888,9 +934,7 @@ bash install_driver_related_libs.sh
 
 
 
-**Note that above driver is the BKC(best known configuration) version, which can get the best performance but with many restrictions when installing the driver and building the docker image.**
-
-**If BKC is not needed and other versions of the driver are already installed on the machine, you don't need to do this step.**
+**If driver are already installed on the machine, you don't need to do this step.**
 
 
 
@@ -900,15 +944,17 @@ bash install_driver_related_libs.sh
 
 ##### Build and run docker image
 
+Usage:
+
 ```bash
 bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 22.04> 
 ```
 
 ```
-bash run_docker.sh <DOCKER_IMAGE, default tfcc:latest> <NPU_ON, default true>
+bash run_docker.sh <DOCKER_IMAGE, default tfcc:latest> <NPU_ON, default false>
 ```
 
-
+Example:
 
 ```bash
 cd $PROJ_DIR/docker
@@ -918,6 +964,13 @@ bash run_docker.sh tfcc:latest false
 ```
 
 ##### Enter docker
+Get the container id by command bellow:
+
+```bash
+docker ps -a
+```
+
+And then enter docker by command bellow:
 
 ```bash
 docker exec -it <container id> /bin/bash
@@ -926,8 +979,9 @@ docker exec -it <container id> /bin/bash
 
 
 ##### Copy dataset
+If you want to copy dataset or other files to docker, you can refer the command bellow:
 
-```
+```bash
 docker cp /path/to/dataset <container id>:/path/to/dataset
 ```
 
@@ -937,7 +991,7 @@ docker cp /path/to/dataset <container id>:/path/to/dataset
 
 > **Note that the default username is `openvino` and password is `intel` in docker image.**
 
-Modify `proxy`, `VIDEO_GROUP_ID` and `RENDER_GROUP_ID` in tfcc.env.
+Modify `proxy`, `VIDEO_GROUP_ID` and `RENDER_GROUP_ID` in `.env` file.
 
 ```bash
 # proxy settings
@@ -965,14 +1019,32 @@ echo $(getent group render | awk -F: '{printf "%s\n", $3}')
 
 
 ##### Build and run docker image
+Uasge:
+```bash
+cd $PROJ_DIR/docker
+docker compose up <services-name> -d # tfcc and tfcc-npu. tfcc-npu means with NPU support
+```
+
+Example:
 
 ```bash
 cd $PROJ_DIR/docker
 docker compose up tfcc -d
 ```
 
-##### Enter docker
+Note if you need NPU support, for example, on MTL platform please run the command bellow:
 
+```bash
+cd $PROJ_DIR/docker
+docker compose up tfcc-npu -d
+```
+
+##### Enter docker
+Usage:
+```bash
+docker compose exec <services-name> /bin/bash
+```
+Example:
 ```bash
 docker compose exec tfcc /bin/bash
 ```

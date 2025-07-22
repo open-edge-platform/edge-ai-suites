@@ -102,7 +102,7 @@ def test_components_access_after_dlstreamer_restart():
   check_all_urls()
 
 
-@pytest.mark.zephyr_id("NEX-T9367")
+@pytest.mark.zephyr_id("NEX-T9366")
 def test_docker_build_and_deployment():
   """Test that all docker-compose services are running after build and deploy."""
   running = get_running_services()

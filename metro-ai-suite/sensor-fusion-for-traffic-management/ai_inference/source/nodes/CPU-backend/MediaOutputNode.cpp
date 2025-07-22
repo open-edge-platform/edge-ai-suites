@@ -66,6 +66,8 @@ void MediaOutputNodeWorker::process(std::size_t batchIdx)
         hva::hvaVideoFrameWithROIBuf_t::Ptr mediaBuf = std::dynamic_pointer_cast<hva::hvaVideoFrameWithROIBuf_t>(mediaBlob->get(0));
 
         hce::ai::inference::TimeStamp_t timeMeta;
+        hce::ai::inference::InferenceTimeStamp_t inferenceTimeMeta;
+        hce::ai::inference::VideoTimeStamp_t videoTimeMeta;
         std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
 
         mediaBlob->get(0)->getMeta(timeMeta);
@@ -74,6 +76,15 @@ void MediaOutputNodeWorker::process(std::size_t batchIdx)
         endTime = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> latencyDuration = endTime - startTime;
         double latency = latencyDuration.count();
+        double inferenceLatency = 0.0;
+        double videoLatency = 0.0;
+
+        if (mediaBlob->get(0)->getMeta(inferenceTimeMeta) == hva::hvaSuccess) {
+            inferenceLatency = std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
+        }
+        if (mediaBlob->get(0)->getMeta(videoTimeMeta) == hva::hvaSuccess) {
+            videoLatency = std::chrono::duration<double, std::milli>(videoTimeMeta.endTime - videoTimeMeta.startTime).count();
+        }
 
         jsonTree.clear();
         roisTree.clear();
@@ -122,20 +133,20 @@ void MediaOutputNodeWorker::process(std::size_t batchIdx)
             if (mediaBuf->drop) {
                 jsonTree.put("status_code", -2);
                 jsonTree.put("description", "Read or decode input media failed");
-                jsonTree.put("latency", latency);
             }
             else {
                 jsonTree.put("status_code", 1u);
                 jsonTree.put("description", "noRoiDetected");
-                jsonTree.put("latency", latency);
             }
         }
         else {
             jsonTree.put("status_code", 0u);
             jsonTree.put("description", "succeeded");
             jsonTree.add_child("roi_info", roisTree);
-            jsonTree.put("latency", latency);
         }
+        jsonTree.put("inference_latency", inferenceLatency);
+        jsonTree.put("latency", latency);
+        jsonTree.put("video_latency", videoLatency);
 
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, jsonTree);
