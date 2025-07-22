@@ -46,7 +46,7 @@
         "usetls": false,
         "tls": "",
         "influxdbVersion": "2.0",
-        "url": "http://influxdb2:8086",
+        "url": "http://influxdb2.scenescape.intel.com:8086",
         "timeout": 10,
         "rejectUnauthorized": false
     },

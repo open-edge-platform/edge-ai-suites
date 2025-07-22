@@ -20,11 +20,9 @@
     cp .env_pallet_defect_detection .env
     ```    
 
-3.  Edit the HOST_IP, proxy and other environment variables in `.env` file as follows
+3.  Edit the HOST_IP and other environment variables in `.env` file as follows
     ```sh
     HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.
-    http_proxy=<http proxy> # proxy details if behind proxy
-    https_proxy=<https proxy>
 
     MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
