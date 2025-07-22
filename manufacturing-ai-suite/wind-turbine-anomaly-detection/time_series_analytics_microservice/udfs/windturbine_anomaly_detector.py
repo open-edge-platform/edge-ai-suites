@@ -199,26 +199,7 @@ class AnomalyDetectorHandler(Handler):
         else:
             logger.error(f"No input received for {self.x_name} {x}, {self.y_name} {y}. Skipping anomaly detection.")
             point.fieldsDouble.add(key = "analytic", value = False)
-        #temp = None
-        # for kv in point.fieldsDouble:
-        #     if kv.key == "temperature":
-        #         temp = kv.value
-        #         break
-        # if temp is None or isinstance(temp, (int, float)) is False:
-        #     logger.error(f"Invalid temperature data received - {temp}")
-        # else:
-        #     logger.debug(f"Received temperature point data {temp}")
-            # if temp < 20 or temp > 25:
-        #response = udf_pb2.Response()
-        #response.point.CopyFrom(point)
-        #logger.info(f"Temperature {temp} is outside the range 20-25.")
-        # #self._agent.write_response(response, True)
-        # #while (True):
-        # X_lr = np.random.random((5000, 100)).astype(np.float32)
-        # y_lr = np.random.random(5000).astype(np.float32)
-        # with config_context(target_offload="gpu"):
-        #     lr = LinearRegression().fit(X_lr, y_lr)
-        
+
         # write data back to db if it is an anomaly point or there is an alarm for the point
         response = udf_pb2.Response()
         if not any(kv.key == "anomaly_status" for kv in point.fieldsDouble):
