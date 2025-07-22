@@ -1,6 +1,6 @@
 # How to Build from Source
 
-This document provides step-by-step instructions for building the `ChatQnA Core` sample application and File Watcher service from source. Refer to the [prerequisites section](./get-started.md/#prerequisites) in the guide to install the appropriate software dependencies.
+This document provides step-by-step instructions for building the `ChatQnA Core` sample application and File Watcher service from source. Refer to the [prerequisites section](./get-started.md/##prerequisites) in the guide to install the appropriate software dependencies.
 
 ## Build ChatQnA Core from Source
 
@@ -13,13 +13,28 @@ For docker compose deployment instructions, visit the [Running Application Conta
 
 ## Build File Watcher Service from Source
 
-In the Windows® environment, the File Watcher Service works with the HMI application to continuously monitor file system activities such as creation, modification, and deletion. When it detects any changes, it sends the relevant file data over the network to the `ChatQnA Core` service for ingestion and contextual processing, supporting Retrieval-Augmented Generation (RAG) workflows.
+File Watcher Service works with the HMI application to continuously monitor file system activities such as creation, modification, and deletion. When it detects any changes, it sends the relevant file data over the network to the `ChatQnA Core` service for ingestion and contextual processing, supporting Retrieval-Augmented Generation (RAG) workflows.
+
+The File Watcher Service can be compiled in both Windows® and Linux operating systems. Please follow the specific instructions for your system environment.
 
 ### Prerequisites
+
+#### Windows
 
 - **Python Installer**: Visit the [official Python website](https://www.python.org/downloads/windows/). Select the latest version available under the "Python Releases for Windows" section.
 
 - **Git[OPTIONAL]**: Visit the [official GIT website](https://git-scm.com/download/win) to download the executable
+
+#### Linux
+
+- **Python Installer**: Visit the [official Python website](https://www.python.org/downloads/source/) and download the source code or use your package manager to install Python. For example, on Ubuntu, you can use:
+
+  ```sh
+  sudo apt update
+  sudo apt install python3 python3-venv python3-pip
+  ```
+
+- **Git**: Visit the [official GIT website](https://git-scm.com/downloads/linux) for installation instructions.
 
 ### Build File Watcher Service in Windows
 
@@ -114,6 +129,64 @@ To build the File Watcher executable binary, follow these steps:
 
 9. After the service starts, the file watcher continuously monitors file events occurring in the designated folder specified by `WATCH_DIRECTORY` in the `set_env_vars.bat` file, until it is stopped by a keyboard interrupt.
 
+### Build File Watcher Service on Linux
+
+To build the File Watcher executable binary on Linux, follow these steps:
+
+1. Clone and download the source code by either using Git clone or downloading the source code as a ZIP file directly from the [repository](https://github.com/open-edge-platform/edge-ai-suites).
+
+   ```bash
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
+   ```
+
+2. Set up the Virtual Environment with Python venv.
+
+   ```bash
+   # Replace `<venv_name>` with your preferred name.
+   python3 -m venv <venv_name>
+   ```
+
+3. Activate the Virtual Environment.
+
+   ```bash
+   source <venv_name>/bin/activate
+   ```
+
+4. Navigate to the project folder downloaded.
+
+   ```bash
+   cd edge-ai-suites/manufacturing-ai-suite/hmi-augmented-worker/file_watcher
+   ```
+
+5. Install the dependencies packages.
+
+   ```bash
+   pip install -r requirements.txt --no-cache-dir
+   ```
+
+6. Setup up Environment Variables using `.sh`.
+
+   - Open and edit the values for the variables with your corresponding setup.
+
+   - Then, execute the `.sh` file as shown:
+
+     ```bash
+     source setup_env.sh
+     ```
+
+7. Compile and build the File Watcher Servce executable.
+
+   ```bash
+   pyinstaller file_watcher.py -F --onefile
+   ```
+
+8. Execute the File Watcher Service executable.
+
+   ```bash
+   ./dist/file_watcher
+   ```
+
+9. After the service starts, the file watcher continuously monitors file events occurring in the designated folder specified by WATCH_DIRECTORY in the `setup_env.sh` file, until it is stopped by a keyboard interrupt.
 ## Troubleshooting
 
 ### `Error: [WinError 206] The filename or extension is too long`
