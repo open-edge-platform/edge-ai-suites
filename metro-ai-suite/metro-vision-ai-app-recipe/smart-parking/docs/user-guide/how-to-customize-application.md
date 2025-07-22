@@ -270,7 +270,7 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 
 > For detailed Grafana documentation, visit the [Official Grafana Documentation](https://grafana.com/docs/)
 
-![Grafana Dashboard](_images/grafana.png)
+![Grafana Dashboard](_images/grafana-smart-parking.jpg)
 
 ### Overview of Grafana
 

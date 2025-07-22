@@ -30,7 +30,7 @@ Follow this procedure on the target system to install the package.
 2. Unzip the package using the following command:
 
     `tar xvf smart-parking-1.1.0.tgz`
-    
+
 - Go to the Helm directory:
 
     `cd smart-parking`
@@ -45,7 +45,7 @@ Follow this procedure on the target system to install the package.
     http_proxy: # example: http_proxy: http://proxy.example.com:891
     https_proxy: # example: http_proxy: http://proxy.example.com:891
     webrtcturnserver:
-        username: # example: username: myuser 
+        username: # example: username: myuser
         password: # example: password: mypassword
     ```
 
@@ -165,7 +165,7 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
         - **Password:** `admin`
     - Check under the Dashboards section for the default dashboard named "Video Analytics Dashboard".
 
-   ![Example of Grafana and WebRTC streaming](_images/grafana.png)
+   ![Example of Grafana and WebRTC streaming](_images/grafana-smart-parking.jpg)
 
    Figure 1: Grafana and WebRTC streaming
 
@@ -178,7 +178,7 @@ Follow this procedure to stop the sample application and end this demonstration.
     ```sh
     helm uninstall smart-parking -n sp
     ```
-    
+
 
 2. Confirm the pods are no longer running.
 
