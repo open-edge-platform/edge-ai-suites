@@ -1,6 +1,6 @@
 # Overview 
 
-Loitering Detection monitor and manage areas with AI-driven video analytics for real-time insights and enhanced security.
+Loitering Detection monitors and manages areas with AI-driven video analytics for real-time insights and enhanced security.
 
 It leverages advanced AI algorithms to monitor and analyze real-time video feeds, identifying individuals lingering in designated areas. By proactively detecting suspicious behavior, this system helps to address potential security threats effectively.
 
