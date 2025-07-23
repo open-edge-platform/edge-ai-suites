@@ -10,4 +10,4 @@
 - **Expanded Device Support:** Added compatibility with a wider range of cameras and video input devices.
 - **Optimized Edge Processing:** Performance enhancements for real-time video processing on edge devices, reducing latency and resource usage.
 
-For more details on the new features and improvements, please refer to the [documentation](Overview.md).
+For more details on the new features and improvements, refer to the [documentation](Overview.md).

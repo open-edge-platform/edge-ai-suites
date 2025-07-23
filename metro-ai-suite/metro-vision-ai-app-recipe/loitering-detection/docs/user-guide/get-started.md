@@ -18,7 +18,7 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 <!--
 **Setup and First Use**: Include installation instructions, basic operation, and initial validation.
 -->
-## Set up and First Use
+## Set up and first use
 
 <!--
 **User Story 1**: Setting Up the Application  
@@ -43,7 +43,7 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      ./install.sh loitering-detection
      ```
 
-## Run the Application
+## Run the application
 
 1. **Start the Application**:
    - Download container images with Application microservices and run with Docker Compose:
@@ -112,7 +112,7 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 
 ## Next Steps
 
-### How to Use Applications
+### How to use applications
 
 - [Loitering Detection](./how-to-use-application.md)
 
