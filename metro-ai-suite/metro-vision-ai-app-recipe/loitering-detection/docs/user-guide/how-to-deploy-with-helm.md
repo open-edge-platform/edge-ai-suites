@@ -168,7 +168,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_4 -
 
    Figure 1: Grafana and WebRTC streaming
 
-## Step 3: End the demonstration
+## Step 4: End the demonstration
 
 Follow this procedure to stop the sample application and end this demonstration.
 
