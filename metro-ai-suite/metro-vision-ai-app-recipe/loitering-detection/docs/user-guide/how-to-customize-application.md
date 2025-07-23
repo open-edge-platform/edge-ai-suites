@@ -335,4 +335,4 @@ The system operates as follows:
 
 ## Conclusion
 
-This section has demonstrated a complete object tracking and loitering detection system using the DL Streamer Pipeline Server, Node-RED, and Grafana. The system provides a balance of edge processing, flexible data manipulation, and powerful visualization. The low-code nature of Node-RED and the user-friendly interface of Grafana make this solution accessible, without extensive programming knowledge. This allows for quick deployment, easy customization for specific use cases, and scalability to handle multiple cameras and locations.
+This section has demonstrated a complete object tracking and loitering detection system using the DL Streamer Pipeline Server, Node-RED, and Grafana. The system provides a balance of edge processing, flexible data manipulation, and powerful visualization. The low-code nature of Node-RED and the user-friendly interface of Grafana make this solution accessible to users, without extensive programming knowledge. This allows for quick deployment, easy customization for specific use cases, and scalability to handle multiple cameras and locations.
