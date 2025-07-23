@@ -49,7 +49,7 @@ Follow this procedure on the target system to install the package.
         password: # example: password: mypassword
     ```
 
-## Step 3:Deploy the application and Run multiple AI pipelines
+## Step 3: Deploy the application and Run multiple AI pipelines
 
 Follow this procedure to run the sample application. In a typical deployment, multiple cameras deliver video streams that are connected to AI pipelines to improve the classification and recognition accuracy. The following demonstrates running multiple AI pipelines and visualization in the Grafana.
 
