@@ -4,10 +4,10 @@ services:
     environment:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},*.scenescape.intel.com
+      no_proxy: ${no_proxy},.scenescape.intel.com,influxdb2
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
-      NO_PROXY: ${no_proxy},*.scenescape.intel.com
+      NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
     networks:
       scenescape:
         aliases:
@@ -21,10 +21,10 @@ services:
     environment:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},*.scenescape.intel.com
+      no_proxy: ${no_proxy},.scenescape.intel.com,influxdb2
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
-      NO_PROXY: ${no_proxy},*.scenescape.intel.com
+      NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
     volumes:
     - ./${SAMPLE_APP}/src/mosquitto/mosquitto-secure.conf:/mosquitto/config/mosquitto.conf
     secrets:
@@ -52,10 +52,10 @@ services:
       TZ: America/Los_Angeles
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},*.scenescape.intel.com
+      no_proxy: ${no_proxy},.scenescape.intel.com,influxdb2
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
-      NO_PROXY: ${no_proxy},*.scenescape.intel.com
+      NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
     ports:
       - "1880:1880"
     networks:
@@ -102,10 +102,10 @@ services:
       DOCKER_INFLUXDB_INIT_RETENTION: 1w
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},*.scenescape.intel.com
+      no_proxy: ${no_proxy},.scenescape.intel.com,influxdb2
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
-      NO_PROXY: ${no_proxy},*.scenescape.intel.com
+      NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
     secrets:
       - influxdb2-admin-username
       - influxdb2-admin-password
@@ -119,9 +119,7 @@ services:
         target: /etc/influxdb2
     restart: on-failure:5
     networks:
-      scenescape:
-        aliases:
-         - influxdb2.scenescape.intel.com
+      - scenescape
 
   grafana:
     image: docker.io/grafana/grafana:11.6.0
@@ -134,10 +132,10 @@ services:
     environment:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},*.scenescape.intel.com
+      no_proxy: ${no_proxy},.scenescape.intel.com,influxdb2
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
-      NO_PROXY: ${no_proxy},*.scenescape.intel.com
+      NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
     ports:
       - "3000:3000"
     restart: on-failure:5
@@ -191,8 +189,8 @@ services:
       - MQTT_PORT=1883
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
-      - no_proxy=${no_proxy},*.scenescape.intel.com
-      - NO_PROXY=${no_proxy},*.scenescape.intel.com
+      - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
+      - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
     volumes:
@@ -217,8 +215,8 @@ services:
       - "EXAMPLEDB=smart-intersection-ri.tar.bz2"
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
-      - no_proxy=${no_proxy},*.scenescape.intel.com
-      - NO_PROXY=${no_proxy},*.scenescape.intel.com
+      - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
+      - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
     entrypoint: [
@@ -264,8 +262,8 @@ services:
      - "DBROOT=/workspace"
      - http_proxy=${http_proxy}
      - https_proxy=${https_proxy}
-     - no_proxy=${no_proxy},*.scenescape.intel.com
-     - NO_PROXY=${no_proxy},*.scenescape.intel.com
+     - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
+     - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
      - HTTP_PROXY=${http_proxy}
      - HTTPS_PROXY=${https_proxy}
     command: >
@@ -306,8 +304,8 @@ services:
     environment:
      - http_proxy=${http_proxy}
      - https_proxy=${https_proxy}
-     - no_proxy=${no_proxy},*.scenescape.intel.com
-     - NO_PROXY=${no_proxy},*.scenescape.intel.com
+     - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
+     - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
      - HTTP_PROXY=${http_proxy}
      - HTTPS_PROXY=${https_proxy}
     networks:

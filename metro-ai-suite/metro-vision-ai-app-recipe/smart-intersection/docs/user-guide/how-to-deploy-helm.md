@@ -22,79 +22,57 @@ Before You Begin, ensure the following:
 
 To deploy the Smart Intersection Sample Application, copy and paste the entire block of commands below into your terminal and run them:
 
+### Clone the Repository and Install Prerequisites
+
+**Note**: Skip this step if you have already followed the steps as part of the [Get Started guide](./get-started.md).
+
+Before you can deploy with Helm, you need to clone the repository and run the installation script:
+
 ```bash
-# change the permissions of the secrets folder
-sudo chown -R $USER:$USER chart/files/secrets
-sudo chown -R $USER:$USER src/secrets
+# Clone the repository
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
 
-# Create namespace
-kubectl create namespace smart-intersection
+# Navigate to the Metro AI Suite directory
+cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
-# ==========================
-# Apply PersistentVolumes
-# ==========================
-# Ensure the PersistentVolumes (PVs) are created before deploying the application.
+# Run the installation script for smart-intersection
+./install.sh smart-intersection
 
-kubectl apply -n smart-intersection -f ./chart/templates/grafana/pv.yaml  # PV for Grafana
-kubectl apply -n smart-intersection -f ./chart/templates/influxdb/pv.yaml  # PV for InfluxDB
-kubectl apply -n smart-intersection -f ./chart/templates/pgserver/pv.yaml  # PV for pgserver
+```
 
+### Configure Proxy Settings (If Behind a Proxy)
 
-# Install the chart with secrets injected via --set
-helm upgrade --install smart-intersection ./chart \
+If you are deploying in a proxy environment, update the values.yml file with your proxy settings before installation:
+
+```bash
+# Edit the values.yml file to add proxy configuration
+nano ./smart-intersection/chart/values.yaml
+```
+
+Add the following proxy configuration to your values.yml:
+
+```yaml
+# Proxy configuration
+proxy:
+  http_proxy: "http://your-proxy-server:port"
+  https_proxy: "http://your-proxy-server:port"
+  no_proxy: "localhost,127.0.0.1,.local,.cluster.local"
+```
+
+Replace `your-proxy-server:port` with your actual proxy server details.
+
+### Deploy the application
+
+Now you're ready to deploy the Smart Intersection application:
+
+```bash
+
+# Install the chart 
+helm upgrade --install smart-intersection ./smart-intersection/chart \
   --create-namespace \
   --set grafana.service.type=NodePort \
   -n smart-intersection
 
-# Some containers in the deployment requires network access.
-# If you are in a proxy environment, pass the proxy environment variables as follows:
-# helm upgrade \
-#     --install  smart-intersection ./chart \
-#     --create-namespace \
-#     --set httpProxy="http://proxy.example.com:8080" \
-#     --set httpsProxy="http://proxy.example.com:8080" \
-#     --set noProxy="localhost\,127.0.0.1" \
-#     --set grafana.service.type=NodePort \
-#     -n smart-intersection
-```
-
-Next, transfer the videos to DL Streamer Pipeline Server with the following commands:
-
-```bash
-# Get pod name
-DLS_PS_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-dlstreamer-pipeline-server -o jsonpath="{.items[0].metadata.name}")
-
-# Copy videos to the init container
-kubectl cp ./src/dlstreamer-pipeline-server/videos smart-intersection/${DLS_PS_POD}:/data/ -c init-dlstreamer-pipeline-server-videos
-
-# Create .done flag
-kubectl -n smart-intersection exec $DLS_PS_POD -c init-dlstreamer-pipeline-server-videos -- touch /data/videos/.done
-```
-
-Next, transfer the model to DL Streamer Pipeline Server with the following commands:
-
-```bash
-# Get pod name
-DLS_PS_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-dlstreamer-pipeline-server -o jsonpath="{.items[0].metadata.name}")
-
-# Copy model to the init container
-kubectl cp ./src/dlstreamer-pipeline-server/models/intersection smart-intersection/${DLS_PS_POD}:/data/models -c init-dlstreamer-pipeline-server-models
-
-# Create .done flag
-kubectl -n smart-intersection exec $DLS_PS_POD -c init-dlstreamer-pipeline-server-models -- touch /data/models/.done
-```
-
-Finally, transfer the data base archive to Scene DB with the following commands:
-
-```bash
-# Get pod name
-PGSERVER_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-pgserver -o jsonpath="{.items[0].metadata.name}")
-
-# Copy archive to the init container
-kubectl cp ./src/webserver/smart-intersection-ri.tar.bz2 smart-intersection/${PGSERVER_POD}:/data/ -c init-smart-intersection-ri
-
-# Create .done flag
-kubectl -n smart-intersection exec $PGSERVER_POD -c init-smart-intersection-ri -- touch /data/.done
 ```
 
 ## Access Application Services

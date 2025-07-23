@@ -17,20 +17,32 @@ spec:
     spec:
       initContainers:
       - name: init-smart-intersection-ri
-        image: busybox
-        command: ['sh', '-c', '
+        image: alpine:latest
+        env:
+          - name: http_proxy
+            value: {{ .Values.http_proxy | quote }}
+          - name: https_proxy
+            value: {{ .Values.https_proxy | quote }}
+          - name: no_proxy
+            value: {{ .Values.no_proxy | quote }}
+        command:
+        - /bin/sh
+        - -c
+        - |
           if [ -f /data/smart-intersection-ri.tar.bz2 ]; then
-            echo "File exists: /data/smart-intersection-ri.tar.bz2";
+            echo "File exists: /data/smart-intersection-ri.tar.bz2"
           else
-            echo "File does NOT exist: /data/smart-intersection-ri.tar.bz2";
-          fi &&
-          until [ -f /data/.done ]; do
-            echo "Waiting for .done ...";
-            sleep 5;
-          done &&
-          ls /tmp &&
-          echo "Files copied to /tmp";
-        ']
+            echo "File does NOT exist: /data/smart-intersection-ri.tar.bz2"
+            echo "Downloading file from GitHub..."
+            apk add --no-cache wget
+            wget -O /data/smart-intersection-ri.tar.bz2 "https://github.com/open-edge-platform/edge-ai-suites/raw/refs/tags/v1.2.0-20250624/metro-ai-suite/smart-intersection/src/webserver/smart-intersection-ri.tar.bz2"
+            if [ $? -eq 0 ]; then
+              echo "File downloaded successfully to /data/smart-intersection-ri.tar.bz2"
+            else
+              echo "Failed to download file"
+              exit 1
+            fi
+          fi
         volumeMounts:
         - name: smart-intersection-ri-data
           mountPath: /data
@@ -39,6 +51,12 @@ spec:
         image: {{ .Values.pgserver.repository }}:{{ .Values.pgserver.tag }}
         imagePullPolicy: IfNotPresent
         env:
+        - name: http_proxy
+          value: {{ .Values.http_proxy | quote }}
+        - name: https_proxy
+          value: {{ .Values.https_proxy | quote }}
+        - name: no_proxy
+          value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
         - name: DBROOT
           value: /workspace
         - name: EXAMPLEDB
@@ -59,7 +77,6 @@ spec:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
-          fsGroup: 0
           readOnlyRootFilesystem: false
           capabilities:
             add:

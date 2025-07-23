@@ -4,6 +4,9 @@
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
+http_proxy: http://proxy-pilot.intel.com:911
+https_proxy: http://proxy-pilot.intel.com:912
+no_proxy: localhost,127.0.0.1,10.96.0.0/12,192.168.59.0/24,192.168.49.0/24,192.168.39.0/24,192.168.50.0/24,10.223.22.102,*.svc,*.svc.cluster.local
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 ntpserver:
@@ -127,21 +130,6 @@ dlstreamerPipelineServer:
   # Overrides the storage class name
   storageClassName: "standard"
 
-# httpProxy allows you to specify a http proxy for the containers.
-# You must provide a string value with the following format:
-# http://<proxy>:<port>
-httpProxy: ""
-
-# httpsProxy allows you to specify a https proxy for the containers.
-# You must provide a string value with the following format:
-# https://<proxy>:<port>
-httpsProxy: ""
-
-# noProxy allows you to specify a no proxy for the containers.
-# You must provide a string value with the following format:
-# <no_proxy>,<no_proxy>
-noProxy: ""
-
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 
@@ -168,9 +156,6 @@ podAnnotations: {}
 # This is for setting Kubernetes Labels to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 podLabels: {}
-
-podSecurityContext: {}
-  # fsGroup: 2000
 
 securityContext: {}
   # capabilities:

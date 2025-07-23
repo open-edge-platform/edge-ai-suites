@@ -1,29 +1,27 @@
 # Customize Application
 
-## Introduction
-
-This comprehensive guide provides a detailed walkthrough of building a complete object tracking and smart parking system. We will utilize a combination of technologies designed for ease of use: the DL Streamer Pipeline Server, the visual programming tool Node-RED, and the data visualization platform Grafana. This approach caters to no-code/low-code users, enabling the creation of sophisticated analytics solutions with minimal programming.
+This section provides a detailed walkthrough of building a complete object tracking and smart parking system. It utilizes a combination of technologies designed for ease of use: the Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server), the visual programming tool Node-RED, and the data visualization platform Grafana. This approach caters to no-code/low-code users, enabling them to create sophisticated analytics solutions with minimal programming.
 
 ## Overall System Architecture
 
 The system follows a modular architecture:
 
 *   **Video Input:** Cameras or video streams provide the raw data.
-*   **DL Streamer Pipeline Server (DLSPS):** Processes video streams locally using AI models to detect and track objects.
+*   **Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server):** Processes video streams locally using AI models to detect and track objects.
 *   **Node-RED:** Consumes object tracking data from the DL Streamer Pipeline Server, performs further analysis (like calculating distances), and publishes results.
 *   **Grafana:** Visualizes the processed data from Node-RED (or a database fed by Node-RED), providing real-time dashboards.
 
 ## DL Streamer Pipeline Server
 
-> For detailed documentation on DL Streamer Pipeline Server (DLSPS), visit the [DL Streamer Pipeline Server Documentation](https://eiidocs.intel.com/IEdgeInsights/EdgeVideoAnalyticsMicroservice/eii/README.html)
+> For detailed documentation on DL Streamer Pipeline Server, visit the [DL Streamer Pipeline Server Documentation](https://eiidocs.intel.com/IEdgeInsights/EdgeVideoAnalyticsMicroservice/eii/README.html)
 
 ![Pipeline Architecture](_images/pipeline.png)
 
-### Overview of DLSPS
+### Overview of DL Streamer Pipeline Server
 
 The DL Streamer Pipeline Server is a powerful tool designed to process video feeds directly on edge devices. It leverages GStreamer pipelines and OpenVINO-optimized AI models to perform real-time object detection and tracking, minimizing latency and reducing bandwidth consumption.
 
-### Key DLSPS Components
+### Key DL Streamer Pipeline Server Components
 
 #### Logging and General Configuration
 
@@ -73,7 +71,7 @@ Each pipeline is designed to be user-friendly and customizable:
 
 #### Messaging Interface (MQTT)
 
-To share the results of the video analysis with other parts of your system, the DL Streamer Pipeline Server uses a messaging interface based on MQTT:
+To share the results of the video analysis with other parts of your system, the DL Streamer Pipeline Server uses a messaging interface based on Message Queuing Telemetry Transport (MQTT):
 
 *   **Publisher Configuration:**
     *   `Name: default`
@@ -82,7 +80,7 @@ To share the results of the video analysis with other parts of your system, the 
     *   `Topics: Messages are published under topics like yolov5 and yolov5_effnet (you can update these as needed).`
     *   `Allowed Clients: All (*), ensuring that any subscribed system can receive the data.`
 
-### DLSPS Workflow
+### DL Streamer Pipeline Server Workflow
 
 1.  **Capture and Decode:** Live video is captured and decoded using GStreamer.
 2.  **Detection and Tracking:** The object detection pipelines analyze each frame to identify objects. The tracking pipelines then follow these objects over time, ensuring that moving objects are continuously monitored.
@@ -106,7 +104,7 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 
 #### MQTT Input Nodes
 
-*   **Purpose:** To receive real-time object tracking data from DLSPS via MQTT. Assume the DL Streamer Pipeline Server is configured to forward its MQTT messages to an MQTT broker.
+*   **Purpose:** To receive real-time object tracking data from DL Streamer Pipeline Server via MQTT. Assume the DL Streamer Pipeline Server is configured to forward its MQTT messages to an MQTT broker.
 *   **Configuration Details:**
     *   `Server Address: 0.0.0.0:1883 (Example - replace with your MQTT broker's address)`
     *   `Topics: For example, object_tracking_1, object_tracking_2, etc.`
@@ -326,7 +324,7 @@ The system operates as follows:
 
 1.  **Video Input:** A camera captures video and sends the stream to the DL Streamer Pipeline Server.
 2.  **DL Streamer Pipeline Server Processing:** The DL Streamer Pipeline Server processes the video, detects and tracks objects using its AI models. It publishes metadata about the detected objects (ID, bounding box coordinates, object type, timestamps) to MQTT.
-3.  **MQTT Bridging (DLSPS Configuration):** The DL Streamer Pipeline Server is configured to relay the MQTT messages to an MQTT broker. This broker acts as a central hub for the data.
+3.  **MQTT Bridging (DL Streamer Pipeline Server Configuration):** The DL Streamer Pipeline Server is configured to relay the MQTT messages to an MQTT broker. This broker acts as a central hub for the data.
 4.  **Node-RED Processing:** Node-RED subscribes to the relevant MQTT topics. It receives the object metadata, filters the data, calculates the Euclidean distance to determine loitering, and adds the loitering flag to the data.
 5.  **Grafana Visualization:** Grafana directly consumes MQTT topics through its MQTT datasource to create dashboards showing real-time object counts and events.
 

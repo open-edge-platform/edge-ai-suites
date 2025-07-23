@@ -1,13 +1,14 @@
 # How to Use the Application
 
-Once deployed (via Docker Compose or Helm) this guide will help you:
+Once deployed (via Docker Compose or Helm), this section will help you:
 - Verify that the application is running correctly.
 - Access the application's features and user interfaces.
-- Understand how to interact with the various components of the Smart Parking Sample Application.
+- Interact with the various components of the Smart Parking sample application.
 
 ## **Access the Application and Components** ##
 
 ### **Grafana UI** ###
+
 - **URL**: [http://localhost:3000](http://localhost:3000)
 - **Log in with credentials**:
     - **Username**: `admin`
@@ -22,5 +23,5 @@ Once deployed (via Docker Compose or Helm) this guide will help you:
 
 ## Verify the Application
 
-- **Grafana Dashboard**: In Grafana UI, the dashboard displays detected cars in the parking lot
+- **Grafana Dashboard**: In Grafana UI, the dashboard displays the detected cars in the parking lot.
       ![Grafana Dashboard](_images/grafana.png)
