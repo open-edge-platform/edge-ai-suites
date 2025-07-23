@@ -6,6 +6,7 @@ The Smart Parking application uses AI-driven video analytics to optimize parking
 By following this guide, you will learn how to:
 - **Set up the sample application**: Use Docker Compose to quickly deploy the application in your environment.
 - **Run a predefined pipeline**: Execute a pipeline to see smart parking application in action.
+- **Access the application's features and user interfaces**: Explore the Grafana dashboard, Node-RED interface, and DL Streamer Pipeline Server to monitor, analyze and customize workflows.
 
 ## Prerequisites
 - Verify that your system meets the [minimum requirements](./system-requirements.md).
@@ -68,7 +69,6 @@ By following this guide, you will learn how to:
      </details>
 
 2. **Run Predefined Pipelines**:
-   - Pipeline startup depends on your application type:
    
    - Start video streams to run video inference pipelines:
      ```bash
@@ -100,60 +100,41 @@ By following this guide, you will learn how to:
    - Check under the Dashboards section for the application-specific preloaded dashboard.
    - **Expected Results**: The dashboard displays real-time video streams with AI overlays and detection metrics.
 
-4. **Stop the Application**:
-   - To stop the application microservices, use the following command:
-     ```bash
-     docker compose down
-     ```
+## **Access the Application and Components** ##
 
-## Next Steps
+### **Grafana UI** ###
 
-### How to Use Applications
+- **URL**: [http://localhost:3000](http://localhost:3000)
+- **Log in with credentials**:
+    - **Username**: `admin`
+    - **Password**: `admin` (You will be prompted to change it on first login.)
+- In Grafana UI, the dashboard displays the detected cars in the parking lot.
+      ![Grafana Dashboard](_images/grafana.png)
 
-- [Smart Parking](./how-to-use-application.md)
+### **NodeRED UI** ###
+- **URL**: [http://localhost:1880](http://localhost:1880)
 
-## Troubleshooting
+### **DL Streamer Pipeline Server** ###
+- **REST API**: [http://localhost:8080](http://localhost:8080)
+  -   - **Check Pipeline Status**:
+    ```bash
+    curl http://localhost:8080/pipelines
+    ```
+- **WebRTC**: [http://localhost:8889](http://localhost:8889)
 
-1. **Changing the Host IP Address**
+## **Stop the Application**:
 
-   - If you need to use a specific Host IP address instead of the one automatically detected during installation, you can explicitly provide it using the following command:
+- To stop the application microservices, use the following command:
+  ```bash
+  docker compose down
+  ```
 
-     ```bash
-     ./install.sh <application-name> <HOST_IP>
-     ```
-     
-     Example:
-     ```bash
-     ./install.sh smart-parking 192.168.1.100
-     ```
+## Other Deployment Option
 
-2. **Containers Not Starting**:
-   - Check the Docker logs for errors:
-     ```bash
-     docker ps -a
-     docker logs <CONTAINER_ID>
-     ```
+Choose one of the following methods to deploy the Smart Parking Sample Application:
 
-3. **Failed Service Deployment**:
-   - If unable to deploy services successfully due to proxy issues, ensure the proxy is configured in the `~/.docker/config.json`:
-
-     ```json
-     {
-       "proxies": {
-         "default": {
-           "httpProxy": "http://your-proxy:port",
-           "httpsProxy": "https://your-proxy:port",
-           "noProxy": "localhost,127.0.0.1"
-         }
-       }
-     }
-     ```
-
-   - After editing the file, restart docker:
-     ```bash
-     sudo systemctl daemon-reload
-     sudo systemctl restart docker
-     ```
+- **[Deploy Using Helm](./how-to-deploy-with-helm.md)**: Use Helm to deploy the application to a Kubernetes cluster for scalable and production-ready deployments.
 
 ## Supporting Resources
+- [Troubleshooting Guide](./support.md): Find detailed steps to resolve common issues during deployments.
 - [DL Streamer Pipeline Server](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/Overview.html)
