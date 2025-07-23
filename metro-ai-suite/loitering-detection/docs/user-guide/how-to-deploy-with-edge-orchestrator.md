@@ -27,7 +27,7 @@ To deploy the **Loitering Detection** Sample Application with the Edge Orchestra
 1. Clone the **Loitering Detection** repository:
 
     ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-suites
+    git clone https://github.com/open-edge-platform/edge-ai-suites -b hotfix/release-1.0.0/emf-metro-apps
     cd edge-ai-suites/metro-ai-suite/loitering-detection
     ```
 

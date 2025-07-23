@@ -27,7 +27,7 @@ To deploy the **Smart Parking** Sample Application with the Edge Orchestrator, f
 1. Clone the **Smart Parking** repository:
 
     ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-suites
+    git clone https://github.com/open-edge-platform/edge-ai-suites -b hotfix/release-1.0.0/emf-metro-apps
     cd edge-ai-suites/metro-ai-suite/smart-parking
     ```
 
