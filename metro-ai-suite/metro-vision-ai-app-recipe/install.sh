@@ -13,12 +13,12 @@ fi
 SAMPLE_APP_ARG="$1"
 if [ -z "$SAMPLE_APP_ARG" ]; then
     echo "Error: First argument (SAMPLE_APP) is required."
-    echo "Usage: $0 <smart-parking|loitering-detection|smart-intersection|smart-tolling> [HOST_IP]"
+    echo "Usage: $0 <smart-parking|loitering-detection|smart-intersection> [HOST_IP]"
     exit 1
 fi
 
 case "$SAMPLE_APP_ARG" in
-    "smart-parking"|"loitering-detection"|"smart-intersection"|"smart-tolling")
+    "smart-parking"|"loitering-detection"|"smart-intersection")
         # Update SAMPLE_APP in .env file
         if grep -q "^SAMPLE_APP=" "$ENV_FILE"; then
             sed -i "s/^SAMPLE_APP=.*/SAMPLE_APP=$SAMPLE_APP_ARG/" "$ENV_FILE"
@@ -27,7 +27,7 @@ case "$SAMPLE_APP_ARG" in
         fi
         ;;
     *)
-        echo "Error: Invalid SAMPLE_APP value '$SAMPLE_APP_ARG'. Must be one of: smart-parking, loitering-detection, smart-intersection, smart-tolling."
+        echo "Error: Invalid SAMPLE_APP value '$SAMPLE_APP_ARG'. Must be one of: smart-parking, loitering-detection, smart-intersection."
         exit 1
         ;;
 esac
