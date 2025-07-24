@@ -1,4 +1,4 @@
-# How to Build from Source
+# Build from source
 
 This guide provides step-by-step instructions for building the `Time Series Analytics`
 microservice and `Wind Turbine Anomaly Detection` Sample Application from source.
@@ -43,4 +43,4 @@ before proceeding with the below steps.
 
 2. **Docker compose deployment and Verification**:
     
-    Follow all the remaining steps/sections starting from [docker compose deployment](./get-started.md#deploy-with-docker-compose)
+    Follow the remaining steps/sections starting from [docker compose deployment](./get-started.md#deploy-with-docker-compose)
