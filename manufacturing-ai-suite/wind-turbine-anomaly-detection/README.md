@@ -13,7 +13,7 @@ To see the system requirements and other installation, see the following guides:
 
 The Wind Turbine Anomaly Detection sample application comprises of data simulators, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor, and Grafana. The Model Registry microservice helps to achieve the MLOps flow by uploading the **UDF deployment package**(comprises of UDF, TICKScripts, models).
 
-![Time Series AI Stack Architecture Diagram](../../_images/time-series-ai-stack-architecture.png)
+![Time Series AI Stack Architecture Diagram](./docs/user-guide/_images/time-series-ai-stack-architecture.png)
 
   - **Data Simulators/Destinations**: OPC-UA server and MQTT Publisher simulate data sources and destinations, reading from CSV files and interfacing with Telegraf plugins for data ingestion.
   - **Generic Time Series AI Stack**: A customizable pipeline for data ingestion, storage, processing, and visualization, supporting integration with various databases, and enabling deep learning model execution.
