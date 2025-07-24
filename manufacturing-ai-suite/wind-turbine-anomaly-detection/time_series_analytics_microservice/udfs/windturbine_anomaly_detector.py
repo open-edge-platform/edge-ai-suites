@@ -3,9 +3,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-
-""" Custom user defined function for anomaly detection on the windturbine speed and generated power data. """
-
 import os
 import sys
 import json
@@ -18,16 +15,17 @@ import logging
 import tempfile
 import pickle
 import math
-import numpy as np
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
-from sklearnex import patch_sklearn
-patch_sklearn()
 # import paho.mqtt.client as mqtt
 import modin.pandas as pd
 import datetime
 import time
 import requests
+import numpy as np
+from sklearnex import patch_sklearn, config_context
+patch_sklearn()
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+
 
 # from gcp_mqtt_client import get_client
 
@@ -43,7 +41,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger()
-        
 
 # Anomaly detection on the windturbine speed and generated power data
 class AnomalyDetectorHandler(Handler):
@@ -166,7 +163,8 @@ class AnomalyDetectorHandler(Handler):
             check_for_anomalies = process_the_point(x,y)
             point.fieldsDouble.add(key = "analytic", value = True)
             if (check_for_anomalies):
-                y_pred = self.rf.predict(np.reshape(x,(-1,1)))
+                with config_context(target_offload="gpu"):
+                    y_pred = self.rf.predict(np.reshape(x,(-1,1)))
                 error = (y_pred[0]-y)/(y)
                 if (error>self.error_threshold):
                     self.last_states.append(1)
@@ -180,8 +178,9 @@ class AnomalyDetectorHandler(Handler):
                     x_feat = np.reshape(x_feat, (-1,1))
                     y_feat = list(zip(*self.last_anomalies))[1]
 
-                    lm = LinearRegression()
-                    lm.fit(x_feat, y_feat)
+                    with config_context(target_offload="gpu"):
+                        lm = LinearRegression()
+                        lm.fit(x_feat, y_feat)
 
                     if (abs(lm.coef_)<200):
                         is_anomaly = 1
@@ -197,11 +196,10 @@ class AnomalyDetectorHandler(Handler):
                             point.fieldsDouble.add(key = "anomaly_status", value = 1)
                     else:
                         self.last_states.append(0)
-                    
         else:
             logger.error(f"No input received for {self.x_name} {x}, {self.y_name} {y}. Skipping anomaly detection.")
             point.fieldsDouble.add(key = "analytic", value = False)
-        
+
         # write data back to db if it is an anomaly point or there is an alarm for the point
         response = udf_pb2.Response()
         if not any(kv.key == "anomaly_status" for kv in point.fieldsDouble):
