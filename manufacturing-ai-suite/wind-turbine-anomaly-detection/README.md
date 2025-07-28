@@ -11,7 +11,7 @@ To see the system requirements and other installation, see the following guides:
 
 ## Architecture and Functionality Overview
 
-The Wind Turbine Anomaly Detection sample application comprises of data simulators, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor, and Grafana. The Model Registry microservice helps to achieve the MLOps flow by uploading the **UDF deployment package**(comprises of UDF, TICKScripts, models).
+The Wind Turbine Anomaly Detection sample application comprises of data simulators, the generic Time Series AI stack based on **TICK Stack**, and Grafana. The Model Registry microservice helps to achieve the MLOps flow by uploading the **UDF deployment package**.
 
 ![Time Series AI Stack Architecture Diagram](./docs/user-guide/_images/time-series-ai-stack-architecture.png)
 
