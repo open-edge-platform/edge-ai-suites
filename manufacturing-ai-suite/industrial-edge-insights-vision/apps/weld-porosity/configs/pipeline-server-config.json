@@ -79,6 +79,28 @@
                 "auto_start": false
             },
             {
+                "name": "weld_porosity_classification_opcua",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification model-instance-id=inst0  ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "opcua_publisher": {
+                    "publish_frame": true,
+                    "variable": "ns=3;s=Demo.Static.Scalar.String"
+                },
+                "auto_start": false
+            },
+            {
                 "name": "weld_porosity_classification_gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,

@@ -1,3 +1,6 @@
+> [!WARNING]
+> The sample is not functional as is. Work in progress to release the sample model files.
+
 # Get Started
 
 -   **Time to Complete:** 30 minutes

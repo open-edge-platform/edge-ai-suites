@@ -75,11 +75,32 @@ helm upgrade --install smart-intersection ./smart-intersection/chart \
 
 ```
 
-## Access Application Services
+## Access Application Services using Node Port
 
-Use `kubectl port-forward` to access the application services on <protocol>://localhost:<service-port>
-For more available options, see [kubectl port-forward options](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_port-forward/#options)
+### Access the Application UI
 
+- Get the Node Port Number using following command and use it to access the Application UI
+```bash
+kubectl get service smart-intersection-web -n smart-intersection -o jsonpath='{.spec.ports[0].nodePort}'
+```
+- Go to https://<HOST_IP>:<Node_PORT>
+- - **Log in with credentials**:
+    - **Username**: `admin`
+    - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
+
+### Access the Grafana UI
+
+- Get the Node Port Number using following command and use it to access the Grafana UI
+```bash
+kubectl get service smart-intersection-grafana -n smart-intersection -o jsonpath='{.spec.ports[0].nodePort}'
+```
+- Go to http://<HOST_IP>:<Node_PORT>
+- - **Log in with credentials**:
+    - **Username**: `admin`
+    - **Password**: `admin`
+
+
+## Access Application Services using Port Forwarding (Optional)
 
 ### Access the Application UI
 
@@ -87,6 +108,11 @@ For more available options, see [kubectl port-forward options](https://kubernete
 WEB_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-web -o jsonpath="{.items[0].metadata.name}")
 sudo -E kubectl -n smart-intersection port-forward $WEB_POD 443:443
 ```
+- Go to https://<HOST_IP>
+- - **Log in with credentials**:
+    - **Username**: `admin`
+    - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
+
 
 ### Access the Grafana UI
 
@@ -94,6 +120,10 @@ sudo -E kubectl -n smart-intersection port-forward $WEB_POD 443:443
 GRAFANA_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-grafana -o jsonpath="{.items[0].metadata.name}")
 kubectl -n smart-intersection port-forward $GRAFANA_POD 3000:3000
 ```
+- Go to http://<HOST_IP>:<Node_PORT>
+- - **Log in with credentials**:
+    - **Username**: `admin`
+    - **Password**: `admin`
 
 ### Access the InfluxDB UI
 
@@ -135,7 +165,6 @@ kubectl delete namespace smart-intersection
 
 ## What to Do Next
 
-- **[How to Use the Application](./how-to-use-application.md)**: Verify the application and access its features.
 - **[Troubleshooting Helm Deployments](./support.md#troubleshooting-helm-deployments)**: Consolidated troubleshooting steps for resolving issues during Helm deployments.
 - **[Get Started](./get-started.md)**: Ensure you have completed the initial setup steps before proceeding.
 

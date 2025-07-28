@@ -54,7 +54,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
             }
         },
         "parameters": {
-            "detection-properties": {
+            "classification-properties": {
                 "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
                 "device": "CPU"
             }

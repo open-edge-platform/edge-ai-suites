@@ -6,21 +6,36 @@ With this feature, during runtime, you can download a new model from the registr
 
 ### Steps
 
-> The following steps assume a pipeline is already running on DLStreamer Pipeline Server that you wish to update with a new model. If you would like to launch a sample pipeline for this demonstration, see [here](#launch-a-pipeline-in-dlstreamer-pipeline-server).
+> The following steps assume a pipeline is already running on DLStreamer Pipeline Server that you wish to update with a new model. If you would like to launch a sample pipeline for this demonstration, see [here](#launch-a-pipeline-in-dlstreamer-pipeline-server). Note the instance ID. You would need it in the steps below while restarting the pipeline with a newer model.
 
-1. List all the registered models in the model registry
+1. Update the following variables in `.env` file
+    ``` sh
+    HOST_IP= # <IP Adress of the host machine>
+
+    MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
+
+    MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
+    MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+    
+    MR_URL= # Model registry url. Example http://<IP_address_of_model_registry_server>:32002
+
+    MTX_WEBRTCICESERVERS2_0_USERNAME=  # Webrtc-mediamtx username. e.g intel1234
+    MTX_WEBRTCICESERVERS2_0_PASSWORD=  # Webrtc-mediamtx password. e.g intel1234
+    ```
+
+2. List all the registered models in the model registry
     ```sh
     curl 'http://<HOST_IP>:32002/models'
     ```
     If you do not have a model available, follow the steps [here](#upload-a-model-to-model-registry) to upload a sample model in Model Registry
 
-2. Check the instance ID of the currently running pipeline to use it for the next step.
+3. Check the instance ID of the currently running pipeline to use it for the next step.
    ```sh
    curl --location -X GET http://<HOST_IP>:8080/pipelines/status
    ```
    > NOTE- Replace the port in the curl request according to the deployment method i.e. default 8080 for compose based.
 
-3. Restart the model with a new model from Model Registry.
+4. Restart the model with a new model from Model Registry.
     The following curl command downloads the model from Model Registry using the specs provided in the payload. Upon download, the running pipeline is restarted with replacing the older model with this new model. Replace the `<instance_id_of_currently_running_pipeline>` in the URL below with the id of the pipeline instance currently running.
     ```sh
     curl 'http://<HOST_IP>:8080/pipelines/user_defined_pipelines/pallet_defect_detection_mlops/{instance_id_of_currently_running_pipeline}/models' \
@@ -41,11 +56,10 @@ With this feature, during runtime, you can download a new model from the registr
     > NOTE- The data above assumes there is a model in the registry that contains these properties. Also, the pipeline name that follows `user_defined_pipelines/`, will affect the `deployment` folder name.
 
 4. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
-    <div style="text-align: center;">
-        <img src=images/webrtc-streaming.png width=800>
-    </div>
 
-5. You can also stop any running pipeline by using the pipeline instance "id"
+    ![WebRTC streaming](./images/webrtc-streaming.png)
+
+6. You can also stop any running pipeline by using the pipeline instance "id"
    ```sh
    curl --location -X DELETE http://<HOST_IP>:8080/pipelines/{instance_id}
    ```

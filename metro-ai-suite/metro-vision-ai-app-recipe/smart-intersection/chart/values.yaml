@@ -4,9 +4,9 @@
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
-http_proxy: http://proxy-pilot.intel.com:911
-https_proxy: http://proxy-pilot.intel.com:912
-no_proxy: localhost,127.0.0.1,10.96.0.0/12,192.168.59.0/24,192.168.49.0/24,192.168.39.0/24,192.168.50.0/24,10.223.22.102,*.svc,*.svc.cluster.local
+http_proxy: 
+https_proxy: 
+no_proxy: 
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 ntpserver:

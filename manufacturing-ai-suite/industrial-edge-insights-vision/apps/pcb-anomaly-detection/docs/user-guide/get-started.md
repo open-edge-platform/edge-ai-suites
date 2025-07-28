@@ -156,7 +156,7 @@
     If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.    
     For example, `./sample_stop.sh --id f0c0b5aa5d4911f0bca7023bb629a486`
 
-10.  Bring down the application
+10. Bring down the application
     ```sh
     docker compose down -v
     ```

@@ -12,7 +12,14 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     ```
     > **Note** DLStreamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
     
-2. Create a S3 bucket using the following script.
+2. Update the following variables related to minio S3 storage in `.env` file
+    ``` sh
+    HOST_IP= # <IP Adress of the host machine>
+    MR_MINIO_ACCESS_KEY= # <DATABASE USERNAME> example: minioadmin
+    MR_MINIO_SECRET_KEY= # <DATABASE PASSWORD> example: minioadmin
+    ```
+
+3. Create a S3 bucket using the following script.
 
    ```python
    import boto3
@@ -32,7 +39,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
    print("Buckets:", [b["Name"] for b in buckets.get("Buckets", [])])
    ```
 
-3. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
+4. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
 
     ```sh
     curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/weld_porosity_classification_s3write -X POST -H 'Content-Type: application/json' -d '{
@@ -55,6 +62,6 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     }'
     ```
 
-4. Go to MinIO console on `http://<HOST_IP>:8000/` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `.env` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
+5. Go to MinIO console on `http://<HOST_IP>:8000/` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `.env` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
    ![S3 minio image storage](./images/s3-minio-storage.png)
