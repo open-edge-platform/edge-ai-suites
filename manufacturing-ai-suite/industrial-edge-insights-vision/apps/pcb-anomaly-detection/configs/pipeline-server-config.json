@@ -38,6 +38,24 @@
                 "auto_start": false
             },
             {
+                "name": "pcb_anomaly_detection_mqtt",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin ! gvaclassify name=classification inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
                 "name": "pcb_anomaly_detection_s3write",
                 "source": "gstreamer",
                 "queue_maxsize": 50,

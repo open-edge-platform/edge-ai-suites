@@ -32,6 +32,7 @@ then
 fi
 cd $topdir
 
+source /opt/intel/vppsdk/env.sh
 mkdir -p build
 cd build
 cmake ../svet_app

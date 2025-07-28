@@ -20,6 +20,6 @@ spec:
     storage: 1Gi
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
+  persistentVolumeReclaimPolicy: Delete
   hostPath:
     path: /data/dlstreamer-pipeline-server-models

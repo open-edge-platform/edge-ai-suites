@@ -3,9 +3,10 @@
 Pre-requisites:
 - Configure and start MQTT broker
 
-Start the MQTT broker [eclipse mosquitto](https://mosquitto.org/) using configuration `configs/mosquitto.conf` as below.
+Start the MQTT broker [eclipse mosquitto](https://mosquitto.org/) using configuration `configs/mosquitto.conf` in the application directory as below.
 
   ```sh
+  cd <WORKDIR>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity
   docker run -d --name=mqtt_broker -p 1883:1883 -v $PWD/configs/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
   ```
 

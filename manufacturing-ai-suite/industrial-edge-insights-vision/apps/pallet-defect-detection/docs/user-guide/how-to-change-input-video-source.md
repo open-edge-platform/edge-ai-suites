@@ -9,7 +9,7 @@ Typically, a pipeline is started with a cURL request with JSON payload containin
             },
             "parameters": {
                "detection-properties": {
-                  "model": "/home/pipeline-server/resources/models/geti/pallet_defect_detection/deployment/Detection/model/model.xml",
+                  "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
                   "device": "CPU"
                }
             }

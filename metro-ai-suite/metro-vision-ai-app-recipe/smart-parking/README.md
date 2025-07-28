@@ -36,4 +36,8 @@ It integrates various components such as MQTT, Node-RED, and Grafana to provide 
 
 ## Learn More
 
-- [Get Started](../docs/user-guide/get-started.md)
+- [System Requirements](./docs/user-guide/system-requirements.md): Check the hardware and software requirements for deploying the application.
+- [Get Started](./docs/user-guide/get-started.md): Follow step-by-step instructions to set up the application.
+- [How to Deploy with Helm](./docs/user-guide/how-to-deploy-with-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
+- [Support and Troubleshooting](./docs/user-guide/support.md): Find solutions to common issues and troubleshooting steps.
+

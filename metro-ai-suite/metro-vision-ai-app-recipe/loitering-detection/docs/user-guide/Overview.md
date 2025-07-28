@@ -1,19 +1,20 @@
-# Loitering Detection
-Effortlessly monitor and manage areas with AI-driven video analytics for real-time insights and enhanced security.
+# Overview 
 
-## Overview
+Loitering Detection monitors and manages areas with AI-driven video analytics for real-time insights and enhanced security.
 
-Loitering Detection leverages advanced AI algorithms to monitor and analyze real-time video feeds, identifying individuals lingering in designated areas. By proactively detecting suspicious behavior, this system helps to address potential security threats effectively.
+It leverages advanced AI algorithms to monitor and analyze real-time video feeds, identifying individuals lingering in designated areas. By proactively detecting suspicious behavior, this system helps to address potential security threats effectively.
 
-By utilizing cutting-edge technologies and pre-trained deep learning models, this application enables real-time processing and analysis of video streams, making it an ideal solution. Its modular architecture and integration capabilities ensure that users can easily customize and extend its functionalities to meet their specific needs.
+By utilizing cutting-edge technologies and pre-trained deep learning models, this application enables real-time processing and analysis of video streams, making it an ideal solution. Its modular architecture and integration capabilities ensure that you can easily customize and extend its functionalities to meet your specific needs.
 
-### Key Features
+## Key features
+
+The key features are as follows:
 
 - **Vision Analytics Pipeline:** Detect and classify objects using pre-configured AI models. Customize parameters such as thresholds and object types without requiring additional coding.
 - **Integration with MQTT, Node-RED, and Grafana:** Facilitates efficient message handling, real-time monitoring, and insightful data visualization.
 - **User-Friendly:** Simplifies configuration and operation through prebuilt scripts and configuration files.
 
-## How It Works
+## How it works
 
 The architecture is designed to facilitate seamless integration and operation of various components involved in AI-driven video analytics.
 
@@ -22,7 +23,7 @@ The architecture is designed to facilitate seamless integration and operation of
 ### Components
 
 - **DL Streamer Pipeline Server (VA Pipeline):** Processes video frames, extracts metadata, and integrates AI inference results.
-- **Mosquitto MQTT Broker:** Facilitates message communication between components like Node-RED and DL Streamer Pipeline Server using the MQTT protocol.
+- **Mosquitto Message Queuing Telemetry Transport (MQTT) Broker:** Facilitates message communication between components like Node-RED and DL Streamer Pipeline Server using the MQTT protocol.
 - **Node-RED:** A low-code platform for setting up application-specific rules and triggering MQTT-based events.
 - **WebRTC Stream Viewer:** Displays real-time video streams processed by the pipeline for end-user visualization.
 - **Grafana Dashboard:** A monitoring and visualization tool for analyzing pipeline metrics, logs, and other performance data.
