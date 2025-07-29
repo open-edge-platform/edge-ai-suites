@@ -35,6 +35,8 @@ To deploy the **Smart Parking** Sample Application with the Edge Orchestrator, f
 
 1. Once the deployment package has been imported into the Edge Orchestrator, you can see it in the list of Web UI.
 
+**![Image](./_images/sp-dp.png)**
+
 See [Deployment Packages](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/deploy_packages.html#view-deployment-packages>) for more information on deployment packages.
 
 ### Deploy the Application onto the Edge Nodes
