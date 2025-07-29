@@ -27,7 +27,7 @@ By following this guide, you will learn how to:
     - Create and navigate to directory:
       ```bash
         git clone https://github.com/open-edge-platform/edge-ai-suites.git
-        cd metro-ai-suite/image-based-video-search
+        cd edge-ai-suites/metro-ai-suite/image-based-video-search
         docker compose build
       ```
 <!--
@@ -294,6 +294,14 @@ a pre-step to prepare models may be needed
 2. **Port Conflicts**:
    - Update the `ports` section in the Compose file to resolve conflicts.
 
+3. **ibvs-milvusdb container is unhealthy**:
+   - Currently, milvusdb does not work with proxy servers. Make sure that the proxies `http_proxy`, `https_proxy` and `no_proxy` are set to empty string in `compose.yml` file
+
+4. **Empty search results after clicking on `Search Object`**:
+   - Make sure the models are able to detect the objects in the stream correctly
+   - Make sure you have analysed the stream first to capture the video frames into milvus database
+   - Make sure you are using the right frame to search the object
+   - Increase the 'To' timestamp in the search results to accommodate the latest results
 
 ## Supporting Resources
 - [Docker Compose Documentation](https://docs.docker.com/compose/)

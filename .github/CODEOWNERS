@@ -12,7 +12,8 @@ README.md          @xwu2intel
 /manufacturing-ai-suite/hmi-augmented-worker/             @hteeyeoh @madhuri-rai07 @bharagha
 
 # metro-ai
-/metro-ai-suite/image-based-video-search/                 @dnoliver @rajpatel9498 @basakcap
+/metro-ai-suite/                                          @rrajore @vagheshp @ArokiEdgard
+/metro-ai-suite/image-based-video-search/                 @rrajore @vagheshp @ArokiEdgard @rohitkatakol
 /metro-ai-suite/interactive-digital-avatar/               @senhui2intel @Junyu-B @wzq112358 @myqi
 /metro-ai-suite/smart-parking/                            @vagheshp @tjanczak @xwu2intel
 /metro-ai-suite/smart-intersection/                       @saratpoluri @sarthakdeva-intel
@@ -39,8 +40,8 @@ README.md          @xwu2intel
 # documentation content - metro-ai
 # /metro-ai-suite/holographic-sensor-fusion/docs/               needs to be defined
 # /metro-ai-suite/holographic-sensor-fusion/README.md           needs to be defined
-/metro-ai-suite/image-based-video-search/docs/                  @dnoliver @rajpatel9498 @basakcap       @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/image-based-video-search/README.md              @dnoliver @rajpatel9498 @basakcap       @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/image-based-video-search/docs/                  @rrajore @vagheshp @ArokiEdgard @rohitkatakol      @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/image-based-video-search/README.md              @rrajore @vagheshp @ArokiEdgard @rohitkatakol      @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/interactive-digital-avatar/docs/                @senhui2intel @Junyu-B @wzq112358 @myqi @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/interactive-digital-avatar/README.md            @senhui2intel @Junyu-B @wzq112358 @myqi @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/loitering-detection/docs/                       @vagheshp @tjanczak @xwu2intel          @open-edge-platform/open-edge-platform-docs-write

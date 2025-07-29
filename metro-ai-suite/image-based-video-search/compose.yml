@@ -9,6 +9,12 @@ services:
       - ETCD_DATA_DIR=/var/lib/milvus/etcd
       - ETCD_CONFIG_PATH=/milvus/configs/embedEtcd.yaml
       - COMMON_STORAGETYPE=local
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
     volumes:
       - milvus-data:/var/lib/milvus
       - ./src/milvus-db/embedEtcd.yaml:/milvus/configs/embedEtcd.yaml
@@ -31,6 +37,12 @@ services:
     container_name: ibvs-milvusui
     environment:
       - MILVUS_URL=milvus-db:19530
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
     ports:
       - "8000:3000"
     restart: always
@@ -52,6 +64,12 @@ services:
       MQTT_PORT: 1883
       MQTT_TOPIC: edge_video_analytics_results
       CONFIDENCE_THRESHOLD: 0.4
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      NO_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: ""
     depends_on:
       milvus-db:
         condition: service_healthy
@@ -85,6 +103,12 @@ services:
     environment:
       - MTX_PROTOCOLS=tcp
       - MTX_WEBRTCADDITIONALHOSTS=127.0.0.1
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
     ports:
       - "8554:8554"
       - "1935:1935"
@@ -139,6 +163,12 @@ services:
       - REST_SERVER_PORT=8080
       - MQTT_HOST=ibvs-broker
       - MQTT_PORT=1883
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
     volumes:
       - "./src/dlstreamer-pipeline-server/configs/filter-pipeline/config.cpu.json:/home/pipeline-server/config.json"
       # - "./src/dlstreamer-pipeline-server/configs/filter-pipeline/config.gpu.json:/home/pipeline-server/config.json"
