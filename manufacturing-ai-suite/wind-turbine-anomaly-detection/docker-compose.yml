@@ -113,8 +113,6 @@ services:
       MODEL_REGISTRY_URL: http://model-registry:8111
     networks:
     - timeseries_network
-    ports:
-    - 5000:5000
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
     - ./time_series_analytics_microservice/udfs/:/tmp/windturbine_anomaly_detector/udfs/
@@ -158,8 +156,6 @@ services:
     - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
     - ./grafana/dashboards/datasources_dev.yml:/etc/grafana/provisioning/datasources/datasources.yml
     - ./grafana/entrypoint.sh:/entrypoint.sh
-    ports:
-    - ${GRAFANA_PORT}:3000
 
   ia-mqtt-broker:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -177,8 +173,8 @@ services:
       interval: 5m
     networks:
     - timeseries_network
-    ports:
-    - "1883:1883"
+    # ports:
+    # - "1883:1883"
     volumes:
     - ./mqtt-broker/mosquitto_devmode.conf:/mosquitto/config/mosquitto.conf:ro
 
@@ -327,6 +323,22 @@ services:
       MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
     command: server --address ":8000" --certs-dir /certs /data
+  
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    environment:
+      no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
+      NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
+    ports:
+      - "${GRAFANA_PORT}:443"   # HTTPS for Grafana
+      - "5000:5000" # API microservice
+      - "1883:1883" # MQTT TCP Proxy
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - timeseries_network
 
 networks:
   timeseries_network:
