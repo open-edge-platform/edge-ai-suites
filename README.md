@@ -24,12 +24,13 @@ The Edge AI Suites project hosts a collection of sample applications organized a
 
 | Suite | Sample Application | Get Started | Developers Docs |
 |:------|:-------------------|:------------|:----------------|
-| Metro AI Suite | [Loitering Detection](metro-ai-suite/loitering-detection) | [Link](metro-ai-suite/loitering-detection/docs/user-guide/get-started.md) | [Customize the Application](metro-ai-suite/loitering-detection/docs/user-guide/how-to-customize-application.md) |
+| Metro AI Suite | [Loitering Detection](metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection) | [Link](metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/docs/user-guide/get-started.md) | [Deployment](metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/docs/user-guide/how-to-deploy-with-helm.md) |
 | Metro AI Suite | [Image-Based Video Search](metro-ai-suite/image-based-video-search) | [Link](metro-ai-suite/image-based-video-search/docs/user-guide/get-started.md) | [Build](metro-ai-suite/image-based-video-search/docs/user-guide/how-to-build-source.md) and [Deployment](metro-ai-suite/image-based-video-search/docs/user-guide/how-to-deploy-helm.md) instructions |
 | Metro AI Suite | [Interactive Digital Avatar](metro-ai-suite/interactive-digital-avatar) | [Link](metro-ai-suite/interactive-digital-avatar/docs/get-started.md) | [Tutorials](metro-ai-suite/interactive-digital-avatar/docs/tutorials.md) |
 | Metro AI Suite | [Sensor Fusion For Traffic Management](metro-ai-suite/sensor-fusion-for-traffic-management) | [Link](metro-ai-suite/sensor-fusion-for-traffic-management/docs/user-guide/Get-Started-Guide.md) | [Customize the Application](metro-ai-suite/sensor-fusion-for-traffic-management/docs/user-guide/Advanced-User-Guide.md) |
-| Metro AI Suite | [Smart Intersection](metro-ai-suite/smart-intersection) [*](#license) | [Link](metro-ai-suite/smart-intersection/docs/user-guide/get-started.md) | [Deployment](metro-ai-suite/smart-intersection/docs/user-guide/how-to-deploy-docker.md) |
-| Metro AI Suite | [Smart Parking](metro-ai-suite/smart-parking) | [Link](metro-ai-suite/smart-parking/docs/user-guide/get-started.md) | [Customize the Application](metro-ai-suite/smart-parking/docs/user-guide/how-to-customize-application.md) |
+| Metro AI Suite | [Smart Intersection](metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection) [*](#license) | [Link](metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md) | [Deployment](metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/how-to-deploy-helm.md) |
+| Metro AI Suite | [Smart NVR](metro-ai-suite/smart-nvr) | [Link](metro-ai-suite/smart-nvr/docs/user-guide/get-started.md) | [Deployment](metro-ai-suite/smart-nvr/docs/user-guide/how-to-build-from-source.md) |
+| Metro AI Suite | [Smart Parking](metro-ai-suite/metro-vision-ai-app-recipe/smart-parking) | [Link](metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/user-guide/get-started.md) | [Deployment](metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/user-guide/how-to-deploy-with-helm.md) |
 | Metro AI Suite | [Video Processing for NVR](metro-ai-suite/video-processing-for-nvr) | [Link](metro-ai-suite/video-processing-for-nvr/docs/user-guide/get-started-guide.md) | [Advanced Guide](metro-ai-suite/video-processing-for-nvr/docs/user-guide/Overview.md) |
 | Metro AI Suite | [Visual Search Question and Answering](metro-ai-suite/visual-search-question-and-answering) | [Link](metro-ai-suite/visual-search-question-and-answering/docs/user-guide/get-started.md) | [Tutorials](metro-ai-suite/visual-search-question-and-answering/docs/user-guide/tutorials.md) |
 | Manufacturing AI Suite | [HMI Augmented worker](manufacturing-ai-suite/hmi-augmented-worker/) | [Link](manufacturing-ai-suite/hmi-augmented-worker/docs/user-guide/get-started.md) | [Build instructions](manufacturing-ai-suite/hmi-augmented-worker/docs/user-guide/how-to-build-from-source.md) |
@@ -57,7 +58,7 @@ The **Edge AI Suites** project is licensed under the [APACHE 2.0](LICENSE), exce
 
 | Sample Application | License |
 |:-------------------|:--------|
-|[Smart Intersection](metro-ai-suite/smart-intersection) | [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](metro-ai-suite/smart-intersection/LICENSE.txt) |
+|[Smart Intersection](metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection) | [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/LICENSE.txt) |
 |[Sensor Fusion For Traffic Management](metro-ai-suite/sensor-fusion-for-traffic-management) | [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](metro-ai-suite/sensor-fusion-for-traffic-management/LICENSE.txt) |
 |[Video Processing for NVR](metro-ai-suite/video-processing-for-nvr) | [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](metro-ai-suite/video-processing-for-nvr/LICENSE.txt) |
 

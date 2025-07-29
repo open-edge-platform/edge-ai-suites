@@ -46,7 +46,5 @@ This section provides a high-level view of how the application integrates with a
 - [System Requirements](system-requirements.md): Check the hardware and software requirements for deploying the application.
 - [Get Started](get-started.md): Follow step-by-step instructions to set up the application.
 - [How to Deploy with Helm](how-to-deploy-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
-- [How to Deploy with Docker Compose](how-to-deploy-docker.md): How to deploy the application using Docker Compose.
-- [How to Use the Application](how-to-use-application.md): Explore the application's features and verify its functionality.
 - [Support and Troubleshooting](support.md): Find solutions to common issues and troubleshooting steps.
 

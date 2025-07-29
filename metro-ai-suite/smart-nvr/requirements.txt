@@ -1,0 +1,11 @@
+fastapi==0.115.2  # Note: Latest is 0.111.0 (your version seems higher than current)
+uvicorn[standard]==0.29.0  # Upgraded from 0.24.0
+requests==2.32.4  # Upgraded from 2.31.0 (fixes CVE-2024-35195 and CVE-2024-47081)
+aiofiles==23.2.1  # Latest is 23.2.1 (no update needed)
+pydantic>=2.0  # Latest is 2.7.1 (keep as >=2.0)
+python-dotenv==1.0.0  # Latest is 1.0.1 (minor update available)
+gradio==5.34.2  # Latest is 4.28.3 (your version seems higher than current)
+paho-mqtt==1.6.1  # Latest is 2.0.0 (consider upgrading)
+redis>=6.2.0  # Latest is 5.0.1 (keep as >=6.2.0)
+aiohttp==3.9.4  # Upgraded from 3.9.3 (fixes CVE-2024-30251, CVE-2024-27306)
+#setuptools>=70.0.0  # Added to address setuptools CVEs (CVE-2024-6345, etc.)

@@ -1,0 +1,12 @@
+{
+   "APP001": {
+      "type": "pdd",
+      "device": "CPU",
+      "dlsps_log_param" : ["fps","number-streams=1"]
+   },
+   "APP002": {
+      "type": "weld",
+      "device": "CPU",
+      "dlsps_log_param" : ["fps","number-streams=1"]
+   }
+}

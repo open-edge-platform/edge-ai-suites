@@ -1,0 +1,150 @@
+services:
+  frigate:
+    container_name: frigate-vms
+    image: ghcr.io/blakeblackshear/frigate:0.15.1
+    restart: unless-stopped
+    shm_size: "64mb" 
+    networks:
+      - nvr-network
+    ports:
+      - "5000:5000" 
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 1m
+      timeout: 20s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ../resources/frigate-config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - type: tmpfs # Necessary for optimized performance
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000 # 1GB cache
+      - ../resources/videos:/videos # Add volume for video files
+    depends_on:
+       mqtt-broker:
+         condition: service_healthy
+    environment:
+      no_proxy: ${no_proxy}, frigate, ${VSS_SUMMARY_IP}, ${VLM_SERVING_IP}
+      FRIGATE_MQTT_PASSWORD: ${MQTT_PASSWORD} 
+      FRIGATE_MQTT_USER: ${MQTT_USER}
+      OPENAI_BASE_URL: "http://${VLM_SERVING_IP}:${VLM_SERVING_PORT}/v1"
+      OPENAI_API_KEY: "your_openai_api_key" 
+  
+  nvr-event-router:
+    container_name: nvr-event-router
+    image: ${REGISTRY}nvr-event-router:${TAG}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        - http_proxy=${http_proxy}
+        - https_proxy=${https_proxy}
+        - no_proxy=${no_proxy}
+    restart: unless-stopped
+    networks:
+      - nvr-network
+    volumes:
+      - ../src:/app
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    depends_on:
+      frigate:
+        condition: service_healthy
+      mqtt-broker:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000" 
+    environment:
+      MODE: "backend"
+      FRIGATE_BASE_URL: "http://frigate-vms:5000"
+      VSS_SEARCH_URL: "http://${VSS_SEARCH_IP}:${VSS_SEARCH_PORT}"
+      VSS_SUMMARY_URL: "http://${VSS_SUMMARY_IP}:${VSS_SUMMARY_PORT}"
+      no_proxy: ${no_proxy}, frigate-vms, ${VSS_SEARCH_IP}, ${VSS_SUMMARY_IP}, ${VLM_SERVING_IP}
+      MQTT_USER: ${MQTT_USER}
+      MQTT_PASSWORD: ${MQTT_PASSWORD} 
+      HOST_IP: ${HOST_IP}
+
+  nvr-event-router-ui:
+    container_name: nvr-event-router-ui
+    image: ${REGISTRY}nvr-event-router:${TAG}
+    restart: unless-stopped
+    networks:
+      - nvr-network
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    depends_on:
+      - nvr-event-router
+    ports:
+      - "7860:7860"
+    environment:
+      MODE: "ui" 
+      API_BASE_URL: "http://${HOST_IP}:8000" 
+      EVENT_POLL_INTERVAL: "10"
+      NVR_GENAI: ${NVR_GENAI}
+      no_proxy: ${no_proxy}, frigate, nvr-event-router, ${VSS_SUMMARY_IP}, ${VLM_SERVING_IP}
+      
+  mqtt-broker:
+    image: eclipse-mosquitto:2.0.21
+    container_name: mqtt-broker
+    networks:
+      - nvr-network
+    ports:
+      - "1884:1883" #default mqtt port
+    volumes:
+      - ../resources/mqtt-config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    environment:
+      MQTT_USER: ${MQTT_USER} 
+      MQTT_PASSWORD: ${MQTT_PASSWORD} 
+    command: >
+      sh -c "
+        touch /mosquitto/config/pwfile &&
+        mosquitto_passwd -c -b /mosquitto/config/pwfile $${MQTT_USER} $${MQTT_PASSWORD} &&
+        chmod 0700 /mosquitto/config/pwfile &&
+        chown mosquitto:mosquitto /mosquitto/config/pwfile &&
+        mosquitto -c /mosquitto/config/mosquitto.conf
+      "
+    healthcheck:
+      test: mosquitto_sub -u $$MQTT_USER -P $$MQTT_PASSWORD -t '$$SYS/#' -C 1 -i healthcheck -W 3
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: unless-stopped
+    networks:
+      - nvr-network
+    volumes:
+      - redis_data:/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    ports:
+      - "6379:6379"  # Optional: expose Redis externally
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      
+networks:
+  nvr-network:
+    driver: bridge
+    name: nvr-network
+volumes:
+  mosquitto_data:
+  mosquitto_log:
+  redis_data:
+

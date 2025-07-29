@@ -42,7 +42,7 @@ This page provides comprehensive support and troubleshooting information for the
    - Follow these steps to reset the application to the initial state
      ```bash
      docker compose down
-     docker volume ls | grep smart-intersection | awk '{ print $2 }' | xargs docker volume rm
+     docker volume ls | grep metro-vision-ai-app-recipe | awk '{ print $2 }' | xargs docker volume rm
      ```
 ### 4. Cleanup secrets:
    - Follow these steps to re-generate the secrets:
@@ -129,8 +129,5 @@ This page provides comprehensive support and troubleshooting information for the
      kubectl get svc -n {{namespace}}
      ```
 
-<!--
 ## Support
-- **Developer Forum**: Join the community forum
-- **Contact Support**: [Support Page](#)
--->
+- **Raise an Issue on GitHub**: [GitHub Issues](https://github.com/open-edge-platform/edge-ai-suites/issues)

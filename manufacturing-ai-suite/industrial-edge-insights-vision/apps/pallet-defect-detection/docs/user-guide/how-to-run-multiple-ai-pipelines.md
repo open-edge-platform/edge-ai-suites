@@ -25,7 +25,7 @@ The DLStreamer Pipeline Server config supports multiple pipelines that you can u
         },
         "parameters": {
             "detection-properties": {
-                "model": "/home/pipeline-server/resources/models/geti/pallet_defect_detection/deployment/Detection/model/model.xml",
+                "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
                 "device": "CPU"
             }
         }

@@ -39,6 +39,12 @@ spec:
         image: {{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}
         imagePullPolicy: IfNotPresent
         env:
+        - name: http_proxy
+          value: {{ .Values.http_proxy | quote }}
+        - name: https_proxy
+          value: {{ .Values.https_proxy | quote }}
+        - name: no_proxy
+          value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
         - name: DBROOT
           value: /workspace
         - name: RUNSECRETS
@@ -55,7 +61,6 @@ spec:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
-          fsGroup: 0
           readOnlyRootFilesystem: false
           capabilities:
             add:

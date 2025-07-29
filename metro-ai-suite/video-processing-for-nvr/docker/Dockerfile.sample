@@ -6,6 +6,13 @@ SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    sudo \
+    wget \
+    unzip
+
 RUN useradd -m -s /bin/bash vpp && \
 echo "vpp ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
 mkdir -p /home/vpp && \
@@ -14,6 +21,9 @@ chown -R vpp /home/vpp
 COPY . /home/vpp/vppsample
 
 WORKDIR /home/vpp/vppsample
+
+RUN dpkg -i ./intel-vppsdk_2025.0.0_amd64.deb
+RUN bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
 
 RUN bash ./live555_install.sh
 

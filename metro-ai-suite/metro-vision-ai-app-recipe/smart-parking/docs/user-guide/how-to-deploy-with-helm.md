@@ -1,10 +1,12 @@
 # How to Deploy with Helm
 
--   **Time to Complete:** 30 minutes
+This section provides step-by-step instructions for deploying the Smart Parking sample application using Helm.
+
+The estimated time to complete this procedure is **30 minutes**.
 
 ## Get Started
 
-Complete this guide to confirm that your setup is working correctly and try out workflows in the sample application.
+Complete this section to confirm that your setup is working correctly and try out workflows in the sample application.
 
 ## Prerequisites
 
@@ -15,28 +17,28 @@ Complete this guide to confirm that your setup is working correctly and try out 
 - For helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
 
 > **Note**
-> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
+> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).The target system refers to the system where you are installing the application.
 
-## Download the helm chart
+## Step 1: Download the Helm chart
 
 Follow this procedure on the target system to install the package.
 
-1. Download helm chart with the following command
+1. Download Helm chart with the following command:
 
     `helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.1.0`
 
-2. unzip the package using the following command
+2. Unzip the package using the following command:
 
     `tar xvf smart-parking-1.1.0.tgz`
     
-- Get into the helm directory
+- Go to the Helm directory:
 
     `cd smart-parking`
 
 
-## Configure and update the environment variables
+## Step 2: Configure and update the environment variables
 
-1. Update the below fields in `values.yaml` file in the helm chart
+1. Update the below fields in `values.yaml` file in the Helm chart
 
     ``` sh
     HOST_IP: # replace localhost with system IP example: HOST_IP: 10.100.100.100
@@ -47,11 +49,11 @@ Follow this procedure on the target system to install the package.
         password: # example: password: mypassword
     ```
 
-## Deploy the application and Run multiple AI pipelines
+## Step 3: Deploy the application and Run multiple AI pipelines
 
 Follow this procedure to run the sample application. In a typical deployment, multiple cameras deliver video streams that are connected to AI pipelines to improve the classification and recognition accuracy. The following demonstrates running multiple AI pipelines and visualization in the Grafana.
 
-1. Deploy helm chart
+1. Deploy Helm chart
 
     ```sh
     helm install smart-parking . -n sp  --create-namespace
@@ -167,7 +169,7 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
 
    Figure 1: Grafana and WebRTC streaming
 
-## End the demonstration
+## Step 4: End the demonstration
 
 Follow this procedure to stop the sample application and end this demonstration.
 
@@ -194,9 +196,9 @@ In this guide, you installed and validated Smart Parking sample application. You
 
 The following are options to help you resolve issues with the sample application.
 
-### Deploying with Intel GPU K8S Extension on ITEP
+### Deploy with Intel GPU K8S Extension on Intel® Tiber™ Edge Platform
 
-If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) with Intel GPU k8s Extension on ITEP, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
+If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) with Intel GPU k8s Extension on Intel® Tiber™ Edge Platform, ensure to set the following details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
 ```sh
 gpu:
   enabled: true
@@ -213,6 +215,6 @@ privileged_access_required: true
 
 ### Error Logs
 
-View the container logs using this command.
+View the container logs using the following command:
 
          kubectl logs -f <pod_name> -n sp
