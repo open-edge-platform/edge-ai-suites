@@ -98,7 +98,7 @@ Open a browser and go to the following endpoints to access the application. Use 
 - **URL**: [https://localhost](https://localhost)
 - **Log in with credentials**:
     - **Username**: `admin`
-    - **Password**: Stored in `supass`. (Check `./src/secrets/supass`)
+    - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
 
 > **Notes**:
 > - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface. Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, it is recommended to use **Google Chrome**.
@@ -112,8 +112,8 @@ Open a browser and go to the following endpoints to access the application. Use 
 ### **InfluxDB UI** ###
 - **URL**: [http://localhost:8086](http://localhost:8086)
 - **Log in with credentials**:
-    - **Username**: `<your_influx_username>` (Check `./src/secrets/influxdb2/influxdb2-admin-username`)
-    - **Password**: `<your_influx_password>` (Check `./src/secrets/influxdb2/influxdb2-admin-password`).
+    - **Username**: `<your_influx_username>` (Check `./smart-intersection/src/secrets/influxdb2/influxdb2-admin-username`)
+    - **Password**: `<your_influx_password>` (Check `./smart-intersection/src/secrets/influxdb2/influxdb2-admin-password`).
 
 ### **NodeRED UI** ###
 - **URL**: [http://localhost:1880](http://localhost:1880)

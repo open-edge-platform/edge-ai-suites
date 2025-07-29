@@ -1,19 +1,12 @@
 Wind Turbine Anomaly Detection
 ==============================
 
-.. toctree::
-   :hidden:
-
-   Overview
 
 .. toctree::
    :caption: How it works
-   
+
+   Overview
    how-it-works
-
-.. toctree::
-   :caption: Get Started
-
    system-requirements
    get-started
 
