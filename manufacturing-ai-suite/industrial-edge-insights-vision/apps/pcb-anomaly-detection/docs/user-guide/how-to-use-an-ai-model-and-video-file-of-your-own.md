@@ -55,7 +55,7 @@ For compose based deployment, the entire resources directory is volume mounted a
                 }
             },
             "parameters": {
-                "detection-properties": {
+                "classification-properties": {
                     "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
                     "device": "CPU"
                 }
@@ -126,7 +126,7 @@ You can bring your own model and run this sample application the same way as how
                 }
             },
             "parameters": {
-                "detection-properties": {
+                "classification-properties": {
                         "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
                         "device": "CPU"
                 }

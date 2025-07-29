@@ -97,7 +97,7 @@ You can bring your own model and run this sample application the same way as how
     ```
     - Please update `imagePullPolicy` as `imagePullPolicy: IfNotPresent` in `values.yaml` in order to use the above built image.
 
-3. Since this is a detection model, ensure to use gvadetect in the pipeline. For example: See the `weld_porosity_classification` pipeline in `pipeline-server-config.json` (present in the repository) where gvadetect is used.
+3. Since this is a classification model, ensure to use gvaclassify in the pipeline. For example: See the `weld_porosity_classification` pipeline in `pipeline-server-config.json` (present in the repository) where gvaclassify is used.
 
 4. The `pipeline-server-config.json` is volume mounted into DL Streamer Pipeline Server in `provision-configmap.yaml` as follows:
 

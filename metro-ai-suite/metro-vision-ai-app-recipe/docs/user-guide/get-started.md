@@ -128,65 +128,44 @@ By following this guide, you will learn how to:
    - Check under the Dashboards section for the application-specific preloaded dashboard.
    - **Expected Results**: The dashboard displays real-time video streams with AI overlays and detection metrics.
 
-4. **Stop the Application**:
-   - To stop the application microservices, use the following command:
-     ```bash
-     docker compose down
-     ```
+## **Access the Application and Components** ##
 
-## Next Steps
+### **Grafana UI** ###
+- **URL**: [http://localhost:3000](http://localhost:3000)
+- **Log in with credentials**:
+    - **Username**: `admin`
+    - **Password**: `admin` (You will be prompted to change it on first login.)
 
-### How to Use Applications
+### **NodeRED UI** ###
+- **URL**: [http://localhost:1880](http://localhost:1880)
 
-To learn more about working with each specific application dashboard and visualization:
+### **DL Streamer Pipeline Server** ###
+- **REST API**: [http://localhost:8080](http://localhost:8080)
+  - **Check Pipeline Status**:
+    ```bash
+    curl http://localhost:8080/pipelines
+    ```
+- **WebRTC**: [http://localhost:8555](http://localhost:8555) [Only available for Non Scenescape Applications]
 
-- [Smart Intersection](../../smart-intersection/docs/user-guide/how-to-use-application.md)
-- [Loitering Detection](../../loitering-detection/docs/user-guide/how-to-use-application.md)
-- [Smart Parking](../../smart-parking/docs/user-guide/how-to-use-application.md)
-- [Smart Tolling](../../smart-tolling/docs/user-guide/how-to-use-application.md)
+### **Scenescape UI** ### [Only available for Scenescape Application]
 
-## Troubleshooting
+- **URL**: [https://localhost](https://localhost)
+- **Log in with credentials**:
+    - **Username**: `admin`
+    - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
 
-1. **Changing the Host IP Address**
+### **InfluxDB UI** ### [Only available for Scenescape Application]
+- **URL**: [http://localhost:8086](http://localhost:8086)
+- **Log in with credentials**:
+    - **Username**: `<your_influx_username>` (Check `./smart-intersection/src/secrets/influxdb2/influxdb2-admin-username`)
+    - **Password**: `<your_influx_password>` (Check `./smart-intersection/src/secrets/influxdb2/influxdb2-admin-password`).
 
-   - If you need to use a specific Host IP address instead of the one automatically detected during installation, you can explicitly provide it using the following command:
 
-     ```bash
-     ./install.sh <application-name> <HOST_IP>
-     ```
-     
-     Example:
-     ```bash
-     ./install.sh smart-parking 192.168.1.100
-     ```
-
-2. **Containers Not Starting**:
-   - Check the Docker logs for errors:
-     ```bash
-     docker ps -a
-     docker logs <CONTAINER_ID>
-     ```
-
-3. **Failed Service Deployment**:
-   - If unable to deploy services successfully due to proxy issues, ensure the proxy is configured in the `~/.docker/config.json`:
-
-     ```json
-     {
-       "proxies": {
-         "default": {
-           "httpProxy": "http://your-proxy:port",
-           "httpsProxy": "https://your-proxy:port",
-           "noProxy": "localhost,127.0.0.1"
-         }
-       }
-     }
-     ```
-
-   - After editing the file, restart docker:
-     ```bash
-     sudo systemctl daemon-reload
-     sudo systemctl restart docker
-     ```
+## **Stop the Application**:
+  - To stop the application microservices, use the following command:
+    ```bash
+    docker compose down
+    ```
 
 ## Supporting Resources
 - [DL Streamer Pipeline Server](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/Overview.html)

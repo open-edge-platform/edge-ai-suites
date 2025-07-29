@@ -138,7 +138,7 @@
     ]
     ```
 
-10.  Stop pipeline instance.
+10. Stop pipeline instance.
     ```sh
     ./sample_stop.sh
     ```

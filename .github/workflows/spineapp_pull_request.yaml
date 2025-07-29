@@ -1,0 +1,77 @@
+name: "[industrial-edge-insights-vision] PR workflow"
+run-name: "[industrial-edge-insights-vision] PR  workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'manufacturing-ai-suite/industrial-edge-insights-vision/**'
+      
+  pull_request:
+    paths:
+      - 'manufacturing-ai-suite/industrial-edge-insights-vision/**'
+      
+      
+  workflow_call:
+permissions: {}
+
+jobs:
+  
+          
+  virus-scan:
+    name: Run Virus Scan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - name: Check out edge-ai-suites repository
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+      with:
+        persist-credentials: false
+        path: edge-ai-suites-repo
+    - name: Run Virus Scan
+      run: |
+        mkdir -p reports
+        docker pull clamav/clamav
+        echo "### Virus Scan Results" >> $GITHUB_STEP_SUMMARY
+        docker run --rm -v "${{ github.workspace }}:/src" clamav/clamav clamscan -r  /src/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/ > ./reports/clamav-report.txt || true
+        echo "Please find full report in clamav-report.txt" >> $GITHUB_STEP_SUMMARY 
+    - name: Upload Scan Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: virus-report
+        path: reports/
+    - name: Clean up
+      if: always()
+      run: |
+        rm -rf edge-ai-suites-repo
+        if [ -n "$(docker images -aq)" ]; then
+               docker rmi -f $(docker images -aq) || true
+        fi
+  shellcheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out edge-ai-suites repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+        with:
+          persist-credentials: false
+          path: edge-ai-suites-repo
+
+      - name: Install ShellCheck
+        run:  sudo apt-get update &&  sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck
+        run: |
+          cd edge-ai-suites-repo/manufacturing-ai-suite/industrial-edge-insights-vision/
+          echo "Scanning for .sh files and running ShellCheck..."
+          find . -type f -name "*.sh" | tee shell_files.txt | xargs -r shellcheck -f gcc > shellcheck_report.txt || true
+          echo "### ShellCheck Results" >> $GITHUB_STEP_SUMMARY
+          echo "Please find ShellCheck report in shellcheck_report.txt" >> $GITHUB_STEP_SUMMARY
+          cp shellcheck_report.txt ${{ github.workspace }}
+
+      - name: Upload ShellCheck report
+        uses: actions/upload-artifact@v4
+        with:
+          name: shellcheck-report
+          path: shellcheck_report.txt  

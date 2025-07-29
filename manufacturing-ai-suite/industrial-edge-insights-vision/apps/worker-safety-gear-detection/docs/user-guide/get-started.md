@@ -20,11 +20,9 @@
     cp .env_worker_safety_gear_detection .env
     ```    
 
-3.  Edit the HOST_IP, proxy and other environment variables in `.env` file as follows
+3.  Edit the HOST_IP and other environment variables in `.env` file as follows
     ```sh
     HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.
-    http_proxy=<http proxy> # proxy details if behind proxy
-    https_proxy=<https proxy>
 
     MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
@@ -158,7 +156,7 @@
     If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.    
     For example, `./sample_stop.sh --id 784b87b45d1511f08ab0da88aa49c01e`
 
-10.  Bring down the application
+10. Bring down the application
     ```sh
     docker compose down -v
     ```

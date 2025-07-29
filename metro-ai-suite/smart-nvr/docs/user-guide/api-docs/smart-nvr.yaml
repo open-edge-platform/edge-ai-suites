@@ -1,0 +1,494 @@
+openapi: 3.1.0
+info:
+  title: NVR Event Router
+  description: FastAPI app to interface with Frigate and handle event routing
+  version: 1.0.0
+paths:
+  /cameras:
+    get:
+      summary: Get list of camera names
+      operationId: get_cameras_cameras_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  '/cameras/{camera_name}/clip':
+    get:
+      summary: Get video clip for specific camera and time range
+      operationId: get_camera_clip_cameras__camera_name__clip_get
+      parameters:
+        - name: camera_name
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Camera Name
+        - name: start_time
+          in: query
+          required: true
+          schema:
+            type: number
+            title: Start Time
+        - name: end_time
+          in: query
+          required: true
+          schema:
+            type: number
+            title: End Time
+        - name: download
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+            title: Download
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/events/{event_id}/clip.mp4':
+    get:
+      summary: Get event clip by event ID
+      operationId: get_event_clip_events__event_id__clip_mp4_get
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Event Id
+        - name: download
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+            title: Download
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/cameras/{camera_name}/export':
+    post:
+      summary: Export video from Frigate
+      operationId: export_camera_clip_cameras__camera_name__export_post
+      parameters:
+        - name: camera_name
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Camera Name
+        - name: start_time
+          in: query
+          required: true
+          schema:
+            type: number
+            title: Start Time
+        - name: end_time
+          in: query
+          required: true
+          schema:
+            type: number
+            title: End Time
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/exports/{export_id}':
+    get:
+      summary: Get details of a specific export
+      operationId: get_export_details_exports__export_id__get
+      parameters:
+        - name: export_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Export Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /events:
+    get:
+      summary: Get list of events for a specific camera
+      operationId: get_camera_events_events_get
+      parameters:
+        - name: camera
+          in: query
+          required: true
+          schema:
+            type: string
+            title: Camera
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/exports/{export_id}/video':
+    get:
+      summary: Stream or download export video
+      operationId: get_export_video_exports__export_id__video_get
+      parameters:
+        - name: export_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Export Id
+        - name: download
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+            title: Download
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/summary/{camera_name}':
+    get:
+      summary: Stream video using clip.mp4 API
+      operationId: summarize_video_summary__camera_name__get
+      parameters:
+        - name: camera_name
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Camera Name
+        - name: start_time
+          in: query
+          required: true
+          schema:
+            type: number
+            title: Start Time
+        - name: end_time
+          in: query
+          required: true
+          schema:
+            type: number
+            title: End Time
+        - name: download
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+            title: Download
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/search-embeddings/{camera_name}':
+    get:
+      summary: Stream video using clip.mp4 API
+      operationId: search_video_embeddings_search_embeddings__camera_name__get
+      parameters:
+        - name: camera_name
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Camera Name
+        - name: start_time
+          in: query
+          required: true
+          schema:
+            type: number
+            title: Start Time
+        - name: end_time
+          in: query
+          required: true
+          schema:
+            type: number
+            title: End Time
+        - name: download
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+            title: Download
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/summary-status/{summary_id}':
+    get:
+      summary: Get the summary using id
+      operationId: get_summary_summary_status__summary_id__get
+      parameters:
+        - name: summary_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Summary Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /rules/responses/:
+    get:
+      summary: Get All Rule Summaries
+      operationId: get_all_rule_summaries_rules_responses__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /rules/search-responses/:
+    get:
+      summary: Get Search Responses
+      description: Fetch search responses for all rules with action 'search'.
+      operationId: get_search_responses_rules_search_responses__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /rules/:
+    get:
+      summary: List Rules
+      operationId: list_rules_rules__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+    post:
+      summary: Add Rule
+      operationId: add_rule_rules__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Rule'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/rules/{rule_id}':
+    get:
+      summary: Get Rule
+      operationId: get_rule_rules__rule_id__get
+      parameters:
+        - name: rule_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Rule Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      summary: Delete Rule
+      operationId: delete_rule_rules__rule_id__delete
+      parameters:
+        - name: rule_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Rule Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /:
+    get:
+      summary: Root
+      operationId: root__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+components:
+  schemas:
+    ExportRequest:
+      properties:
+        playback:
+          type: string
+          title: Playback
+        source:
+          type: string
+          title: Source
+        name:
+          type: string
+          title: Name
+        image_path:
+          type: string
+          title: Image Path
+      type: object
+      required:
+        - playback
+        - source
+        - name
+        - image_path
+      title: ExportRequest
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    Rule:
+      properties:
+        id:
+          type: string
+          title: Id
+        label:
+          type: string
+          title: Label
+        action:
+          type: string
+          title: Action
+        camera:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Camera
+      type: object
+      required:
+        - id
+        - label
+        - action
+      title: Rule
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError

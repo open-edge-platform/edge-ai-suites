@@ -1,6 +1,9 @@
 # Get Started Guide
+  
+-   **Time to Complete:** 20min
+-   **Programming Language:** c++
 
-## 1.0 Sample Application Introduction
+## Get Started
 The svet_app sample application is based on Intel VPP SDK. It can be configured to run typical video composition workloads. You can use it for performance evaluation and implementation reference.  
   
 Figure 1 shows a typical multi-channel decode, composition, and display workload.  
@@ -17,20 +20,36 @@ High-level Architecture of svet_app
 ![Architecture](./_images/svet-Architecture.png)  
 Figure 2. High-level Architecture of svet_app   
 
-## 2.0 Installation Guide
+### Prerequisites
+
+**Operating System:**
+* Ubuntu 24.04
+
+**Software:**
+* VPP SDK
+
+## 2. Installation Guide
 
 ### 2.1	System Installation
-Install Ubuntu* 22.04 and set up the network correctly and run the sudo apt update.  
-  
-To make sure SVET2 can run 3+ displays successfully, refer to the Intel VPP SDK Get Started Guide section 4 to install the kernel package. Also, ensure that the environment variables below are used in the terminal before running the SVET2 sample.  
-  
-```# export MULTI_DISPLAY_PATCH=1```
+Install Ubuntu* 24.04 and set up the network correctly and run the sudo apt update.  
 
 ### 2.2 Install Software Dependencies
 The SVET2 sample application depends on Intel VPP SDK for video decode, encoding, and post-processing functionalities. It also depends on the live555 library for RTSP streaming.  
 
 #### 2.2.1 Install Intel VPP SDK
-Refer to the Intel VPP SDK Get Started Guide and install VPP SDK first. Assume the VPP SDK package directory is vppsdk and the default install path is /opt/intel/media/. Run command `vainfo` to verify the media stack is installed successfully:  
+Install VPP SDK first. 
+```
+sudo -E wget -O- https://eci.intel.com/sed-repos/gpg-keys/GPG-PUB-KEY-INTEL-SED.gpg | sudo tee /usr/share/keyrings/sed-archive-keyring.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee /etc/apt/sources.list.d/sed.list
+echo "deb-src [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee -a /etc/apt/sources.list.d/sed.list
+sudo bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
+sudo apt update
+sudo apt install intel-vppsdk
+
+sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
+source /opt/intel/vppsdk/env.sh
+```
+Assume the VPP SDK package directory is vppsdk and the default install path is /opt/intel/media/. Run command `vainfo` to verify the media stack is installed successfully:  
   
 ```
 # sudo su
@@ -98,7 +117,7 @@ $ ./build.sh
   
 If the build.sh runs successfully, you can find `svet_app` binary under the build directory.  
   
-## 3 Run Sample Application svet_app
+## 3. Run Sample Application svet_app
 ### 3.1	Configuration Files
 You can pass the configuration file to svet_app by option `load`.  
   

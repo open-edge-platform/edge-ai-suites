@@ -1,3 +1,6 @@
+> [!WARNING]
+> The sample is not functional as is. Work in progress to release the sample model files.
+
 # Deploy using Helm charts
 
 ## Prerequisites

@@ -24,7 +24,7 @@ The DLStreamer Pipeline Server config supports multiple pipelines that you can u
             }
         },
         "parameters": {
-            "detection-properties": {
+            "classification-properties": {
                 "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
                 "device": "CPU"
             }
@@ -47,7 +47,7 @@ The DLStreamer Pipeline Server config supports multiple pipelines that you can u
             }
         },
         "parameters": {
-            "detection-properties": {
+            "classification-properties": {
                 "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
                 "device": "CPU"
             }

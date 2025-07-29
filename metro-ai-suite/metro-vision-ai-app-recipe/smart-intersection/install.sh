@@ -6,3 +6,6 @@ docker run --rm -t \
     -v $(pwd)/chart:/chart \
     -v $(pwd)/src:/src \
     docker.io/library/python:3.12 bash init.sh
+
+sudo chown -R $USER:$USER chart/files/secrets
+sudo chown -R $USER:$USER src/secrets

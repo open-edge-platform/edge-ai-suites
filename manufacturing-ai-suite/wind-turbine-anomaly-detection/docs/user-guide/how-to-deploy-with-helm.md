@@ -1,4 +1,4 @@
-# How to Deploy with Helm
+# Deploy with Helm
 
 This guide provides step-by-step instructions for deploying the Wind Turbine Anomaly Detection sample application using Helm.
 
@@ -11,7 +11,7 @@ This guide provides step-by-step instructions for deploying the Wind Turbine Ano
 - For Helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
 
 > **Note**
-> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop). Target system refers to the system where you are installing the application.
+> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop). The target system refers to the system where you are installing the application.
 
 ## Step 1: Generate or download the Helm charts
 
