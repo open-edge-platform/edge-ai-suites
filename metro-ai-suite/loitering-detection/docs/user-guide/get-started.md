@@ -36,7 +36,7 @@ By following this guide, you will learn how to:
 
       **Models**
       - **pedestrian-and-vehicle-detector-adas-0001**: This model is obtained from the Open Model Zoo.
-    
+
       **Videos**
 
       | **Video Name**       | **Download URL**         |
@@ -59,11 +59,11 @@ By following this guide, you will learn how to:
       <summary>
       Check Status of Microservices
       </summary>
-      
+
       - The application starts the following microservices, see also [How it Works](./Overview.md#how-it-works).
 
-      ![Architecture Diagram](_images/arch.png)
-    
+      ![Architecture Diagram](./_images/loitering-detection-architecture.drawio.svg)
+
       - To check if all microservices are in Running state:
         ```bash
         docker ps
@@ -79,12 +79,12 @@ By following this guide, you will learn how to:
       <summary>
       Check Status and Stop pipelines
       </summary>
-      
+
       - To check the status:
         ```bash
         ./sample_status.sh
         ```
-      
+
       - To stop the pipelines without waiting for video streams to finish replay:
         ```bash
         ./sample_stop.sh
@@ -129,10 +129,10 @@ By following this guide, you will learn how to:
 
 3. **No Video Streaming on Grafana Dashboard**
     - Go to the Grafana "Video Analytics Dashboard".
-    - Click on the Edit option (located on the right side) under the WebRTC Stream panel. 
+    - Click on the Edit option (located on the right side) under the WebRTC Stream panel.
     - Update the URL from `http://localhost:8083` to `http://host-ip:8083`.
 
-4. **Failed Grafana Deployment** 
+4. **Failed Grafana Deployment**
     - If unable to deploy grafana container successfully due to fail to GET "https://grafana.com/api/plugins/yesoreyeram-infinity-datasource/versions": context deadline exceeded, please ensure the proxy is configured in the ~/.docker/config.json as shown below:
 
       ```bash

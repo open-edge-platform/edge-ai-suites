@@ -19,7 +19,7 @@ By leveraging cutting-edge technologies and pre-trained deep learning models, th
 
 The architecture is designed to facilitate seamless integration and operation of various components involved in AI-driven video analytics.
 
-![Architecture Diagram](_images/arch.png)
+![Architecture Diagram](./_images/smart-parking-architecture.drawio.svg)
 
 ### Components
 

@@ -17,7 +17,7 @@ By utilizing cutting-edge technologies and pre-trained deep learning models, thi
 
 The architecture is designed to facilitate seamless integration and operation of various components involved in AI-driven video analytics.
 
-![Architecture Diagram](docs/user-guide/_images/arch.png)
+![Architecture Diagram](./docs/user-guide/_images/loitering-detection-architecture.drawio.svg)
 
 ### Components
 
