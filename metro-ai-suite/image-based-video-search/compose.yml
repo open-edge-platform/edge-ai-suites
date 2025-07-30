@@ -126,7 +126,7 @@ services:
       - "1883:1883"
     restart: on-failure:5
   dlstreamer-pipeline-server:
-    image: docker.io/intel/dlstreamer-pipeline-server:3.0.0
+    image: ${DOCKER_REGISTRY}intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
     hostname: dlstreamer-pipeline-server
     container_name: ibvs-dlstreamer-pipeline-server
     read_only: true

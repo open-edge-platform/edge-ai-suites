@@ -1,5 +1,7 @@
 FROM docker.io/library/node:23
 
+USER root
+
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
@@ -17,6 +19,14 @@ COPY . .
 
 # Expose the port the app runs on
 EXPOSE 3000
+
+# Add non root user
+ARG USER=intelmicroserviceuser
+ARG UID=1999
+RUN useradd -ms /bin/bash ${USER} -o -u $UID && \
+    chown ${USER}:${USER} -R /usr/src/app /root
+RUN mkdir -p /home/${USER}/ && chown -R ${USER}:${USER} /home/${USER}
+USER ${USER}
 
 # Start the application
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
