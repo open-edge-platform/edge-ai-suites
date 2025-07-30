@@ -2,8 +2,8 @@
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-name: "[WindTurbine Sample App] SDLe Scans - Trivy, DBS, Bandit and Virus Scan"
-run-name: "[WindTurbine Sample App] SDLe Scans - Trivy, DBS, Bandit and Virus Scans workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+name: "[WindTurbine Sample App] SDLe Scans"
+run-name: "[WindTurbine Sample App] SDLe Scans workflow (by @${{ github.actor }} via ${{ github.event_name }})"
 
 
 # Only run at most 1 workflow concurrently per PR, unlimited for branches
@@ -19,13 +19,15 @@ on:
         type: choice
         options:
         - all-scans
-        - codeql-scan
+        - trivy-fs-scan
+        - trivy-image-scan
+        - trivy-config-scan
+        - trivy-dockerfile-scan
+        - trivy-helm-scan
         - bandit-scan
         - virus-scan
-        - pylint-scan
         - dbs-scan
-        - trivy-fs-image-scan
-        - trivy-dockerfile-scan
+        
   workflow_call: 
     inputs:
       target:
@@ -35,6 +37,7 @@ on:
 
 jobs:   
   trivy-fs-scan:
+    if: ${{ (inputs.target == 'trivy-fs-scan') || (inputs.target == 'all-scans') }}
     permissions:
       contents: read
       packages: read          # needed for actions/checkout
@@ -105,24 +108,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: rivy Scan Report-FileSystem
+          name: Trivy Report - Filesystem Scan
           path: |
                 manufacturing-ai-suite/wind-turbine-anomaly-detection/trivy*
-
-      - name: Trivy config scan for helm charts 
-        run: |
-          cd manufacturing-ai-suite/wind-turbine-anomaly-detection/
-          make gen_helm_charts
-          cd helm
-          trivy config . >> trivy_helm.txt
-          
-      - name: Upload Scan artifact to Github
-        uses: actions/upload-artifact@v4
-        with:
-          name: Trivy Config Scan for Helm
-          path: manufacturing-ai-suite/wind-turbine-anomaly-detection/helm/trivy_fs*
     
   trivy-image-scan:
+    if: ${{ (inputs.target == 'trivy-image-scan') || (inputs.target == 'all-scans') }}
     permissions:
       contents: read
       packages: read          # needed for actions/checkout
@@ -217,11 +208,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: Trivy Scan Report-Image
+          name: Trivy Report - Image Scan
           path: |
                 manufacturing-ai-suite/wind-turbine-anomaly-detection/trivy-image-scan*
 
   trivy-config-helm-scan:
+    if: ${{ (inputs.target == 'trivy-config-scan') || (inputs.target == 'trivy-helm-scan') || (inputs.target == 'all-scans') }}
     permissions:
       contents: read
       packages: read          # needed for actions/checkout
@@ -292,10 +284,11 @@ jobs:
       - name: Upload Scan artifact to Github
         uses: actions/upload-artifact@v4
         with:
-          name: Trivy Config Scan for Helm
+          name: Trivy Report - Config scan for Helm
           path: manufacturing-ai-suite/wind-turbine-anomaly-detection/helm/trivy-wind-turbine-helm.txt
       
   trivy-config-dockerfile-scan:
+    if: ${{ (inputs.target == 'trivy-config-scan') || (inputs.target == 'trivy-dockerfile-scan') || (inputs.target == 'all-scans') }}
     permissions:
       contents: read
       packages: read          # needed for actions/checkout
@@ -319,6 +312,7 @@ jobs:
       name: ${{ matrix.scan-name }}
   
   bandit-scans:
+    if: ${{ (inputs.target == 'bandit-scan') || (inputs.target == 'all-scans') }}
     permissions:
       contents: read
       packages: read          # needed for actions/checkout
@@ -342,13 +336,39 @@ jobs:
         echo "### Bandit Scan Results" >> $GITHUB_STEP_SUMMARY
         docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/manufacturing-ai-suite/wind-turbine-anomaly-detection/ -f txt -o /src/reports/bandit-report.txt || true >> $GITHUB_STEP_SUMMARY
         echo "Please find full report in bandit-report.txt" >> $GITHUB_STEP_SUMMARY
+    - name: Convert JSON to CSV
+      run: |
+        python3 <<EOF
+        import json
+        import csv
+
+        with open("reports/bandit-report.json") as f:
+            data = json.load(f)
+
+        with open("reports/bandit-report.csv", "w", newline="") as csvfile:
+            fieldnames = ["filename", "line_number", "issue_text", "severity", "confidence", "test_name"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for issue in data.get("results", []):
+                writer.writerow({
+                    "filename": issue["filename"],
+                    "line_number": issue["line_number"],
+                    "issue_text": issue["issue_text"],
+                    "severity": issue["issue_severity"],
+                    "confidence": issue["issue_confidence"],
+                    "test_name": issue["test_name"]
+                })
+        EOF
     - name: Upload Scan Reports
       uses: actions/upload-artifact@v4
       with:
         name: bandit-report
-        path: reports/bandit-report.txt
+        path: |
+          reports/bandit-report.json
+          reports/bandit-report.csv
 
   virus-scans:
+    if: ${{ (inputs.target == 'virus-scan') || (inputs.target == 'all-scans') }}
     permissions:
       contents: read
       packages: read          # needed for actions/checkout
@@ -378,6 +398,7 @@ jobs:
         path: reports/clamav-report.txt
   
   DBS_job:
+    if: ${{ (inputs.target == 'dbs-scan') || (inputs.target == 'all-scans') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
