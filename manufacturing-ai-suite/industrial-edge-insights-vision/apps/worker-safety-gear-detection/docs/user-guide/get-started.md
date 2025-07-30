@@ -103,7 +103,10 @@
     Posting payload to REST server at http://10.223.23.156:8080/pipelines/user_defined_pipelines/worker_safety_gear_detection
     Payload for pipeline 'worker_safety_gear_detection' posted successfully. Response: "784b87b45d1511f08ab0da88aa49c01e"
     ```
-    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:8889/worker_safety/
+    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to below url
+    ```
+    http://<HOST_IP>:8889/worker_safety/
+    ```
     
 8.  Get status of pipeline instance(s) running.
     ```sh

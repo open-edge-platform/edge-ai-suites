@@ -104,7 +104,10 @@
     Payload for pipeline 'weld_porosity_classification' posted successfully. Response: "6d06422c5c7511f091f03266c7df2abf"
 
     ```
-    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:8889/weld/
+    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to below url
+    ```
+    http://<HOST_IP>:8889/weld/
+    ```
     
 8.  Get status of pipeline instance(s) running.
     ```sh

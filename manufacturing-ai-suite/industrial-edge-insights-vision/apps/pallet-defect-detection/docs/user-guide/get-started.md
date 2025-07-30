@@ -103,7 +103,10 @@
     Posting payload to REST server at http://<HOST_IP>:8080/pipelines/user_defined_pipelines/pallet_defect_detection
     Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "4b36b3ce52ad11f0ad60863f511204e2"
     ```
-    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:8889/pdd/
+    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to below url
+    ```
+    http://<HOST_IP>:8889/pdd/
+    ```
     
 8.  Get status of pipeline instance(s) running.
     ```sh
