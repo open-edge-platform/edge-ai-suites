@@ -35,66 +35,6 @@ on:
         required: false
         type: string
 
-# Define reusable steps using YAML anchors
-x-common-steps:
-  - &checkout-step
-    name: Checkout Code
-    uses: actions/checkout@v4
-    with:
-      persist-credentials: false
-  
-  - &install-trivy-step
-    name: Install Trivy from Aqua Security APT repo
-    run: |
-      sudo apt-get update
-      sudo apt-get install -y gnupg lsb-release wget apt-transport-https curl jq
-      curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
-      echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | \
-      sudo tee /etc/apt/sources.list.d/trivy.list > /dev/null
-      sudo apt-get update
-      sudo apt-get install -y trivy
-  
-  - &setup-trivy-templates-step
-    name: Setup Trivy templates and download DB
-    shell: bash
-    run: |
-      cd manufacturing-ai-suite/wind-turbine-anomaly-detection/
-      trivy --version
-      which trivy
-      trivy image --download-db-only
-      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o trivy-html.tpl
-      cat << 'EOF' > csv.tpl
-      {{ range . }}
-      Trivy Vulnerability Scan Results ({{- .Target -}})
-      VulnerabilityID,Severity,CVSS Score,Title,Library,Vulnerable Version,Fixed Version,Information URL,Triage Information
-      {{ range .Vulnerabilities }}
-          {{- .VulnerabilityID }},
-          {{- .Severity }},
-          {{- range $key, $value := .CVSS }}
-              {{- if (eq $key "nvd") }}
-                  {{- .V3Score -}}
-              {{- end }}
-          {{- end }},
-          {{- quote .Title }},
-          {{- quote .PkgName }},
-          {{- quote .InstalledVersion }},
-          {{- quote .FixedVersion }},
-          {{- .PrimaryURL }}
-      {{ else -}}
-          No vulnerabilities found at this time.
-      {{ end }}
-      Trivy Dependency Scan Results ({{ .Target }})
-      ID,Name,Version,Notes
-      {{ range .Packages -}}
-          {{- quote .ID }},
-          {{- quote .Name }},
-          {{- quote .Version }}
-      {{ else -}}
-          No dependencies found at this time.
-      {{ end }}
-      {{ end }}
-      EOF
-
 jobs:   
   trivy-fs-scan:
     if: ${{ (inputs.target == 'trivy-fs-scan') || (inputs.target == 'all-scans') }}
@@ -103,15 +43,61 @@ jobs:
       packages: read          # needed for actions/checkout
     runs-on: ubuntu-24.04
     steps:
-      - <<: *checkout-step
-      - <<: *install-trivy-step
-      - <<: *setup-trivy-templates-step
-      
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  
+      - name: Install Trivy from Aqua Security APT repo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg lsb-release wget apt-transport-https curl jq
+          curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | \
+          sudo tee /etc/apt/sources.list.d/trivy.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y trivy
       - name: Trivy filesystem/repo scan
         continue-on-error: true
         shell: bash
         run: |
+          pwd
           cd manufacturing-ai-suite/wind-turbine-anomaly-detection/
+          trivy --version
+          which trivy
+          trivy image --download-db-only
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o trivy-html.tpl
+          cat << 'EOF' > csv.tpl
+          {{ range . }}
+          Trivy Vulnerability Scan Results ({{- .Target -}})
+          VulnerabilityID,Severity,CVSS Score,Title,Library,Vulnerable Version,Fixed Version,Information URL,Triage Information
+          {{ range .Vulnerabilities }}
+              {{- .VulnerabilityID }},
+              {{- .Severity }},
+              {{- range $key, $value := .CVSS }}
+                  {{- if (eq $key "nvd") }}
+                      {{- .V3Score -}}
+                  {{- end }}
+              {{- end }},
+              {{- quote .Title }},
+              {{- quote .PkgName }},
+              {{- quote .InstalledVersion }},
+              {{- quote .FixedVersion }},
+              {{- .PrimaryURL }}
+          {{ else -}}
+              No vulnerabilities found at this time.
+          {{ end }}
+          Trivy Dependency Scan Results ({{ .Target }})
+          ID,Name,Version,Notes
+          {{ range .Packages -}}
+              {{- quote .ID }},
+              {{- quote .Name }},
+              {{- quote .Version }}
+          {{ else -}}
+              No dependencies found at this time.
+          {{ end }}
+          {{ end }}
+          EOF
+
           # Use the downloaded template
           trivy fs . --format template --template "@trivy-html.tpl" -o "trivy_fs_full_report_code_scan.html" 
           trivy fs --list-all-pkgs --format template --template "@csv.tpl" --output trivy-fs-full-report.csv .
@@ -133,14 +119,66 @@ jobs:
       packages: read          # needed for actions/checkout
     runs-on: ubuntu-24.04
     steps:
-      - <<: *checkout-step
-      - <<: *install-trivy-step
-      - <<: *setup-trivy-templates-step
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  
+      - name: Install Trivy from Aqua Security APT repo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg lsb-release wget apt-transport-https curl jq
+          curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | \
+          sudo tee /etc/apt/sources.list.d/trivy.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y trivy
+      - name: Install Trivy
+        continue-on-error: true
+        shell: bash
+        run: |
+          pwd
+          cd manufacturing-ai-suite/wind-turbine-anomaly-detection/
+          trivy --version
+          which trivy
+          trivy image --download-db-only
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o trivy-html.tpl
+          cat << 'EOF' > csv.tpl
+          {{ range . }}
+          Trivy Vulnerability Scan Results ({{- .Target -}})
+          VulnerabilityID,Severity,CVSS Score,Title,Library,Vulnerable Version,Fixed Version,Information URL,Triage Information
+          {{ range .Vulnerabilities }}
+              {{- .VulnerabilityID }},
+              {{- .Severity }},
+              {{- range $key, $value := .CVSS }}
+                  {{- if (eq $key "nvd") }}
+                      {{- .V3Score -}}
+                  {{- end }}
+              {{- end }},
+              {{- quote .Title }},
+              {{- quote .PkgName }},
+              {{- quote .InstalledVersion }},
+              {{- quote .FixedVersion }},
+              {{- .PrimaryURL }}
+          {{ else -}}
+              No vulnerabilities found at this time.
+          {{ end }}
+          Trivy Dependency Scan Results ({{ .Target }})
+          ID,Name,Version,Notes
+          {{ range .Packages -}}
+              {{- quote .ID }},
+              {{- quote .Name }},
+              {{- quote .Version }}
+          {{ else -}}
+              No dependencies found at this time.
+          {{ end }}
+          {{ end }}
+          EOF
       
       - name: Trivy Image Scan
         continue-on-error: true
         shell: bash
         run: |
+              pwd
               echo "Building Wind Turbine Sample App and scanning Image"
               cd manufacturing-ai-suite/wind-turbine-anomaly-detection/
               make down
@@ -181,9 +219,60 @@ jobs:
       packages: read          # needed for actions/checkout
     runs-on: ubuntu-24.04
     steps:
-      - <<: *checkout-step
-      - <<: *install-trivy-step
-      - <<: *setup-trivy-templates-step
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  
+      - name: Install Trivy from Aqua Security APT repo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg lsb-release wget apt-transport-https curl jq
+          curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | \
+          sudo tee /etc/apt/sources.list.d/trivy.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y trivy
+      - name: Install Trivy
+        continue-on-error: true
+        shell: bash
+        run: |
+          pwd
+          cd manufacturing-ai-suite/wind-turbine-anomaly-detection/
+          trivy --version
+          which trivy
+          trivy image --download-db-only
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o trivy-html.tpl
+          cat << 'EOF' > csv.tpl
+          {{ range . }}
+          Trivy Vulnerability Scan Results ({{- .Target -}})
+          VulnerabilityID,Severity,CVSS Score,Title,Library,Vulnerable Version,Fixed Version,Information URL,Triage Information
+          {{ range .Vulnerabilities }}
+              {{- .VulnerabilityID }},
+              {{- .Severity }},
+              {{- range $key, $value := .CVSS }}
+                  {{- if (eq $key "nvd") }}
+                      {{- .V3Score -}}
+                  {{- end }}
+              {{- end }},
+              {{- quote .Title }},
+              {{- quote .PkgName }},
+              {{- quote .InstalledVersion }},
+              {{- quote .FixedVersion }},
+              {{- .PrimaryURL }}
+          {{ else -}}
+              No vulnerabilities found at this time.
+          {{ end }}
+          Trivy Dependency Scan Results ({{ .Target }})
+          ID,Name,Version,Notes
+          {{ range .Packages -}}
+              {{- quote .ID }},
+              {{- quote .Name }},
+              {{- quote .Version }}
+          {{ else -}}
+              No dependencies found at this time.
+          {{ end }}
+          {{ end }}
+          EOF
 
       - name: Trivy config scan for helm charts 
         run: |
