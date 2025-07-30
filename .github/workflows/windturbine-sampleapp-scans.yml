@@ -303,13 +303,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-      include:
-        - dockerfile-path: manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator/opcua-server/Dockerfile
-          output-report-path: trivy-opcua-dockerfile.json
-          scan-name: Time Series OPCUA Dockerfile
-        - dockerfile-path: manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator/mqtt-publisher/Dockerfile
-          output-report-path: trivy-mqttpublisher-dockerfile.json
-          scan-name: Time Series mqttpublisher Dockerfile
+        include:
+          - dockerfile-path: manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator/opcua-server/Dockerfile
+            output-report-path: trivy-opcua-dockerfile.json
+            scan-name: Time Series OPCUA Dockerfile
+          - dockerfile-path: manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator/mqtt-publisher/Dockerfile
+            output-report-path: trivy-mqttpublisher-dockerfile.json
+            scan-name: Time Series mqttpublisher Dockerfile
     uses: open-edge-platform/edge-ai-libraries/.github/workflows/trivy-config-mode.yaml@e6e04af3dbca805db9118b85a22ad2998f7eec39
     with:
       dockerfile-path: ${{ matrix.dockerfile-path }}
