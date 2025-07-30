@@ -27,7 +27,7 @@ on:
         - bandit-scan
         - virus-scan
         - dbs-scan
-        
+
   workflow_call: 
     inputs:
       target:
@@ -334,7 +334,7 @@ jobs:
         mkdir -p reports
         docker pull ghcr.io/pycqa/bandit/bandit
         echo "### Bandit Scan Results" >> $GITHUB_STEP_SUMMARY
-        docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/manufacturing-ai-suite/wind-turbine-anomaly-detection/ -f txt -o /src/reports/bandit-report.txt || true >> $GITHUB_STEP_SUMMARY
+        docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/manufacturing-ai-suite/wind-turbine-anomaly-detection/ -f txt -o /src/manufacturing-ai-suite/wind-turbine-anomaly-detection/reports/bandit-report.txt || true >> $GITHUB_STEP_SUMMARY
         echo "Please find full report in bandit-report.txt" >> $GITHUB_STEP_SUMMARY
     - name: Convert JSON to CSV
       run: |
@@ -342,10 +342,10 @@ jobs:
         import json
         import csv
 
-        with open("reports/bandit-report.json") as f:
+        with open("manufacturing-ai-suite/wind-turbine-anomaly-detection/reports/bandit-report.json") as f:
             data = json.load(f)
 
-        with open("reports/bandit-report.csv", "w", newline="") as csvfile:
+        with open("/manufacturing-ai-suite/wind-turbine-anomaly-detection/reports/bandit-report.csv", "w", newline="") as csvfile:
             fieldnames = ["filename", "line_number", "issue_text", "severity", "confidence", "test_name"]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
@@ -364,8 +364,8 @@ jobs:
       with:
         name: bandit-report
         path: |
-          reports/bandit-report.json
-          reports/bandit-report.csv
+          manufacturing-ai-suite/wind-turbine-anomaly-detection/reports/bandit-report.json
+          manufacturing-ai-suite/wind-turbine-anomaly-detection/reports/bandit-report.csv
 
   virus-scans:
     if: ${{ (inputs.target == 'virus-scan') || (inputs.target == 'all-scans') }}
