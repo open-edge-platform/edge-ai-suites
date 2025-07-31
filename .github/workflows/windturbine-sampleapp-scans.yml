@@ -2,8 +2,8 @@
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-name: "[WindTurbine Sample App] SDLe Scans - Trivy, DBS, Bandit and Virus Scan"
-run-name: "[WindTurbine Sample App] SDLe Scans - Trivy, DBS, Bandit and Virus Scans workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+name: "[WindTurbine Sample App] SDLe Scans"
+run-name: "[WindTurbine Sample App] SDLe Scans workflow (by @${{ github.actor }} via ${{ github.event_name }})"
 
 
 # Only run at most 1 workflow concurrently per PR, unlimited for branches
@@ -13,9 +13,31 @@ concurrency:
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which Scans to run'
+        type: choice
+        options:
+        - all-scans
+        - trivy-fs-scan
+        - trivy-image-scan
+        - trivy-config-scan
+        - trivy-dockerfile-scan
+        - trivy-helm-scan
+        - bandit-scan
+        - virus-scan
+        - dbs-scan
+
+  workflow_call: 
+    inputs:
+      target:
+        description: 'Which Scans to run'
+        required: false
+        type: string
 
 jobs:   
-  trivy-scan-job:
+  trivy-fs-scan:
+    if: ${{ (inputs.target == 'trivy-fs-scan') || (inputs.target == 'all-scans') }}
     permissions:
       contents: read
       packages: read          # needed for actions/checkout
@@ -80,6 +102,77 @@ jobs:
           trivy fs . --format template --template "@trivy-html.tpl" -o "trivy_fs_full_report_code_scan.html" 
           trivy fs --list-all-pkgs --format template --template "@csv.tpl" --output trivy-fs-full-report.csv .
           trivy fs --ignore-unfixed . | tee trivy-fs-full-report-ignore-unfixed.txt  
+
+      - name: Upload Trivy FS Scan Report
+        continue-on-error: true
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Trivy Report - Filesystem Scan
+          path: |
+                manufacturing-ai-suite/wind-turbine-anomaly-detection/trivy*
+    
+  trivy-image-scan:
+    if: ${{ (inputs.target == 'trivy-image-scan') || (inputs.target == 'all-scans') }}
+    permissions:
+      contents: read
+      packages: read          # needed for actions/checkout
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  
+      - name: Install Trivy from Aqua Security APT repo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg lsb-release wget apt-transport-https curl jq
+          curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | \
+          sudo tee /etc/apt/sources.list.d/trivy.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y trivy
+      - name: Install Trivy
+        continue-on-error: true
+        shell: bash
+        run: |
+          pwd
+          cd manufacturing-ai-suite/wind-turbine-anomaly-detection/
+          trivy --version
+          which trivy
+          trivy image --download-db-only
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o trivy-html.tpl
+          cat << 'EOF' > csv.tpl
+          {{ range . }}
+          Trivy Vulnerability Scan Results ({{- .Target -}})
+          VulnerabilityID,Severity,CVSS Score,Title,Library,Vulnerable Version,Fixed Version,Information URL,Triage Information
+          {{ range .Vulnerabilities }}
+              {{- .VulnerabilityID }},
+              {{- .Severity }},
+              {{- range $key, $value := .CVSS }}
+                  {{- if (eq $key "nvd") }}
+                      {{- .V3Score -}}
+                  {{- end }}
+              {{- end }},
+              {{- quote .Title }},
+              {{- quote .PkgName }},
+              {{- quote .InstalledVersion }},
+              {{- quote .FixedVersion }},
+              {{- .PrimaryURL }}
+          {{ else -}}
+              No vulnerabilities found at this time.
+          {{ end }}
+          Trivy Dependency Scan Results ({{ .Target }})
+          ID,Name,Version,Notes
+          {{ range .Packages -}}
+              {{- quote .ID }},
+              {{- quote .Name }},
+              {{- quote .Version }}
+          {{ else -}}
+              No dependencies found at this time.
+          {{ end }}
+          {{ end }}
+          EOF
       
       - name: Trivy Image Scan
         continue-on-error: true
@@ -93,20 +186,20 @@ jobs:
               sed -i -e "s|MQTT_PUBLISHER_IMAGE=.*|MQTT_PUBLISHER_IMAGE=ia-mqtt-publisher:latest|g" .env
               make build
 
-              trivy image ia-opcua-server:latest --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy_image_scan_opcua_server.html
-              trivy image ia-opcua-server:latest --ignore-unfixed --format template --template "@csv.tpl" -o trivy_image_scan_opcua_server.csv
-              trivy image --quiet --format spdx-json --output trivy_image_scan_opcua_server.spdx.json ia-opcua-server:latest
+              trivy image ia-opcua-server:latest --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy-image-scan-opcua-server-ignore-unfixed.html
+              trivy image ia-opcua-server:latest --ignore-unfixed --format template --template "@csv.tpl" -o trivy-image-scan-opcua-server-ignore-unfixed.csv
+              trivy image --quiet --format spdx-json --output trivy-image-scan-opcua-server.spdx.json ia-opcua-server:latest
 
-              trivy image --list-all-pkgs --format template --template "@csv.tpl" --output trivy-fs-opcua.csv ia-opcua-server:latest
-              trivy image --ignore-unfixed ia-opcua-server:latest | tee trivy-fs-opcua-ignore-unfixed.txt
+              trivy image --list-all-pkgs --format template --template "@csv.tpl" --output trivy-image-scan_opcua-server-list-all-pkgs.csv ia-opcua-server:latest
+              trivy image --ignore-unfixed ia-opcua-server:latest | tee trivy-image-scan-opcua-server-ignore-unfixed.txt
 
 
-              trivy image ia-mqtt-publisher:latest --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy_image_scan_mqtt_publisher.html
-              trivy image ia-mqtt-publisher:latest --ignore-unfixed --format template --template "@csv.tpl" -o trivy_image_scan_mqtt_publisher.csv
-              trivy image --quiet --format spdx-json --output trivy_image_scan_mqtt_publisher.spdx.json ia-mqtt-publisher:latest
+              trivy image ia-mqtt-publisher:latest --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy-image-scan-mqtt-publisher-ignore-unfixed.html
+              trivy image ia-mqtt-publisher:latest --ignore-unfixed --format template --template "@csv.tpl" -o trivy-image-scan-mqtt-publisher-ignore-unfixed.csv
+              trivy image --quiet --format spdx-json --output trivy-image-scan-mqtt-publisher.spdx.json ia-mqtt-publisher:latest
 
-              trivy image --list-all-pkgs --format template --template "@csv.tpl" --output trivy-fs-mqttpublisher.csv ia-mqtt-publisher:latest
-              trivy image --ignore-unfixed ia-mqtt-publisher:latest | tee trivy-fs-mqttpublisher-ignore-unfixed.txt
+              trivy image --list-all-pkgs --format template --template "@csv.tpl" --output trivy-image-scan-mqtt-publisher-list-all-pkgs.csv ia-mqtt-publisher:latest
+              trivy image --ignore-unfixed ia-mqtt-publisher:latest | tee trivy-image-scan-mqtt-publisher-ignore-unfixed.txt
 
               echo "completed Wind Turbine Sample App Image scanning"
             
@@ -115,54 +208,111 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: Trivy Scan report fs and image
+          name: Trivy Report - Image Scan
           path: |
-                manufacturing-ai-suite/wind-turbine-anomaly-detection/trivy*
+                manufacturing-ai-suite/wind-turbine-anomaly-detection/trivy-image-scan*
+
+  trivy-config-helm-scan:
+    if: ${{ (inputs.target == 'trivy-config-scan') || (inputs.target == 'trivy-helm-scan') || (inputs.target == 'all-scans') }}
+    permissions:
+      contents: read
+      packages: read          # needed for actions/checkout
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  
+      - name: Install Trivy from Aqua Security APT repo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg lsb-release wget apt-transport-https curl jq
+          curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | \
+          sudo tee /etc/apt/sources.list.d/trivy.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y trivy
+      - name: Install Trivy
+        continue-on-error: true
+        shell: bash
+        run: |
+          pwd
+          cd manufacturing-ai-suite/wind-turbine-anomaly-detection/
+          trivy --version
+          which trivy
+          trivy image --download-db-only
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o trivy-html.tpl
+          cat << 'EOF' > csv.tpl
+          {{ range . }}
+          Trivy Vulnerability Scan Results ({{- .Target -}})
+          VulnerabilityID,Severity,CVSS Score,Title,Library,Vulnerable Version,Fixed Version,Information URL,Triage Information
+          {{ range .Vulnerabilities }}
+              {{- .VulnerabilityID }},
+              {{- .Severity }},
+              {{- range $key, $value := .CVSS }}
+                  {{- if (eq $key "nvd") }}
+                      {{- .V3Score -}}
+                  {{- end }}
+              {{- end }},
+              {{- quote .Title }},
+              {{- quote .PkgName }},
+              {{- quote .InstalledVersion }},
+              {{- quote .FixedVersion }},
+              {{- .PrimaryURL }}
+          {{ else -}}
+              No vulnerabilities found at this time.
+          {{ end }}
+          Trivy Dependency Scan Results ({{ .Target }})
+          ID,Name,Version,Notes
+          {{ range .Packages -}}
+              {{- quote .ID }},
+              {{- quote .Name }},
+              {{- quote .Version }}
+          {{ else -}}
+              No dependencies found at this time.
+          {{ end }}
+          {{ end }}
+          EOF
 
       - name: Trivy config scan for helm charts 
         run: |
           cd manufacturing-ai-suite/wind-turbine-anomaly-detection/
           make gen_helm_charts
           cd helm
-          trivy config . >> trivy_helm.txt
+          trivy config . >> trivy-wind-turbine-helm.txt
           
       - name: Upload Scan artifact to Github
         uses: actions/upload-artifact@v4
         with:
-          name: Trivy Config Scan for Helm
-          path: manufacturing-ai-suite/wind-turbine-anomaly-detection/helm/trivy_*
+          name: Trivy Report - Config scan for Helm
+          path: manufacturing-ai-suite/wind-turbine-anomaly-detection/helm/trivy-wind-turbine-helm.txt
       
-  trivy-config-opcua-dockerfile-scan:
+  trivy-config-dockerfile-scan:
+    if: ${{ (inputs.target == 'trivy-config-scan') || (inputs.target == 'trivy-dockerfile-scan') || (inputs.target == 'all-scans') }}
     permissions:
       contents: read
       packages: read          # needed for actions/checkout
-    name: Scan OPCUA Dockerfile
+    name: Scan Dockerfiles (OPCUA & mqttpublisher)
     strategy:
       fail-fast: false
+      matrix:
+        include:
+          - dockerfile-path: manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator/opcua-server/Dockerfile
+            output-report-path: trivy-opcua-dockerfile.json
+            scan-name: Time Series OPCUA Dockerfile
+          - dockerfile-path: manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator/mqtt-publisher/Dockerfile
+            output-report-path: trivy-mqttpublisher-dockerfile.json
+            scan-name: Time Series mqttpublisher Dockerfile
     uses: open-edge-platform/edge-ai-libraries/.github/workflows/trivy-config-mode.yaml@e6e04af3dbca805db9118b85a22ad2998f7eec39
     with:
-      dockerfile-path: manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator/opcua-server/Dockerfile
+      dockerfile-path: ${{ matrix.dockerfile-path }}
       trivy-report-format: 'json'
       severity-levels: 'HIGH,CRITICAL'
-      output-report-path: trivy-opcua-dockerfile.json
-      name: Time Series OPCUA Dockerfile
-
-  trivy-config-mqttpublisher-dockerfile-scan:
-    permissions:
-      contents: read
-      packages: read          # needed for actions/checkout
-    name: Scan mqttpublisher Dockerfile
-    strategy:
-      fail-fast: false
-    uses: open-edge-platform/edge-ai-libraries/.github/workflows/trivy-config-mode.yaml@e6e04af3dbca805db9118b85a22ad2998f7eec39
-    with:
-      dockerfile-path: manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator/mqtt-publisher/Dockerfile
-      trivy-report-format: 'json'
-      severity-levels: 'HIGH,CRITICAL'
-      output-report-path: trivy-mqttpublisher-dockerfile.json
-      name: Time Series mqttpublisher Dockerfile
+      output-report-path: ${{ matrix.output-report-path }}
+      name: ${{ matrix.scan-name }}
   
   bandit-scans:
+    if: ${{ (inputs.target == 'bandit-scan') || (inputs.target == 'all-scans') }}
     permissions:
       contents: read
       packages: read          # needed for actions/checkout
@@ -184,15 +334,43 @@ jobs:
         mkdir -p reports
         docker pull ghcr.io/pycqa/bandit/bandit
         echo "### Bandit Scan Results" >> $GITHUB_STEP_SUMMARY
-        docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/manufacturing-ai-suite/wind-turbine-anomaly-detection/ -f txt -o /src/reports/bandit-report.txt || true >> $GITHUB_STEP_SUMMARY
+        docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/manufacturing-ai-suite/wind-turbine-anomaly-detection/ -f json -o /src/reports/bandit-report.json || true >> $GITHUB_STEP_SUMMARY
         echo "Please find full report in bandit-report.txt" >> $GITHUB_STEP_SUMMARY
+        ls -al 
+        pwd
+    - name: Convert JSON to CSV
+      run: |
+        python3 <<EOF
+        import json
+        import csv
+
+        with open("reports/bandit-report.json") as f:
+            data = json.load(f)
+
+        with open("reports/bandit-report.csv", "w", newline="") as csvfile:
+            fieldnames = ["filename", "line_number", "issue_text", "severity", "confidence", "test_name"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for issue in data.get("results", []):
+                writer.writerow({
+                    "filename": issue["filename"],
+                    "line_number": issue["line_number"],
+                    "issue_text": issue["issue_text"],
+                    "severity": issue["issue_severity"],
+                    "confidence": issue["issue_confidence"],
+                    "test_name": issue["test_name"]
+                })
+        EOF
     - name: Upload Scan Reports
       uses: actions/upload-artifact@v4
       with:
         name: bandit-report
-        path: reports/bandit-report.txt
+        path: |
+          reports/bandit-report.json
+          reports/bandit-report.csv
 
   virus-scans:
+    if: ${{ (inputs.target == 'virus-scan') || (inputs.target == 'all-scans') }}
     permissions:
       contents: read
       packages: read          # needed for actions/checkout
@@ -222,6 +400,7 @@ jobs:
         path: reports/clamav-report.txt
   
   DBS_job:
+    if: ${{ (inputs.target == 'dbs-scan') || (inputs.target == 'all-scans') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read

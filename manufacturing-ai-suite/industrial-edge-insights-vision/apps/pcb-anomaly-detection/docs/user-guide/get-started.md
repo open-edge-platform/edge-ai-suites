@@ -103,7 +103,10 @@
     Posting payload to REST server at http://10.223.23.156:8080/pipelines/user_defined_pipelines/pcb_anomaly_detection
     Payload for pipeline 'pcb_anomaly_detection' posted successfully. Response: "f0c0b5aa5d4911f0bca7023bb629a486"
     ```
-    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:8889/anomaly/
+    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to below url 
+    ```
+    http://<HOST_IP>:8889/anomaly/
+    ```
     
 8.  Get status of pipeline instance(s) running.
     ```sh

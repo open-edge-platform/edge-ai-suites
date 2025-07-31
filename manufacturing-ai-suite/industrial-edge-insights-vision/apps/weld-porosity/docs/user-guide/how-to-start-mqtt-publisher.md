@@ -10,7 +10,7 @@ Start the MQTT broker [eclipse mosquitto](https://mosquitto.org/) using configur
   docker run -d --name=mqtt_broker -p 1883:1883 -v $PWD/configs/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
   ```
 
-With the above configuration, the broker listens on port 1883.
+With the above configuration, the broker listens on port `1883`.
 
 - `MQTT_HOST` and `MQTT_PORT` environment variable must be set for DL Streamer Pipeline Server prior to sending this curl request.
     You can add them to the `environments` for DL Streamer Pipeline Server section in `docker-compose.yml`.
