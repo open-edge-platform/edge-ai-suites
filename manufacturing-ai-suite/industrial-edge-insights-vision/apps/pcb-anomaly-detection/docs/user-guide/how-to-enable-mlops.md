@@ -65,8 +65,6 @@ With this feature, during runtime, you can download a new model from the registr
     export MODEL_URL='<URL to MODEL.zip>'
     
     curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
-
-    unzip -q "$(basename $MODEL_URL)" -d .
     ```
 
 2.  Run the following curl command to upload the local model. 
