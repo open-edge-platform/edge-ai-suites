@@ -24,8 +24,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     MR_MINIO_SECRET_KEY= # <DATABASE PASSWORD> example: minioadmin
     ```
 
-4. Create a S3 bucket using the following script.
-
+4. Create a S3 bucket using the following script (create_bucket.py).
    ```python
    import boto3
    url = "http://<HOST_IP>:8000"
@@ -42,6 +41,11 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
    client.create_bucket(Bucket=bucket_name)
    buckets = client.list_buckets()
    print("Buckets:", [b["Name"] for b in buckets.get("Buckets", [])])
+   ```
+
+   Run the above script to create the bucket.
+   ```sh
+   python3 create_bucket.py
    ```
 
 5. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
