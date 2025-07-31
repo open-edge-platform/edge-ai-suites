@@ -21,7 +21,7 @@
     ```sh
     cp helm/values_worker_safety_gear_detection.yaml helm/values.yaml
     ```
-3.  Edit the HOST_IP, proxy and other environment variables in `values.yaml` as follows
+3.  Edit the HOST_IP, proxy and other environment variables in `helm/values.yaml` as follows
     ```yaml
     env:        
         HOST_IP: <HOST_IP>   # host IP address
