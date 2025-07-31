@@ -28,6 +28,15 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
     ```
 
 4. Bring up the containers for docker or deploy helm chart.
+    * Step to bring up the containers.
+        ```sh
+        docker compose up -d
+        ```
+    or
+    * Step to install the helm chart
+        ```sh
+        helm install app-deploy helm -n apps --create-namespace
+        ```
 
 5. Start the pipeline with the following cURL command. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
 
