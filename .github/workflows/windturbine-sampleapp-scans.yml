@@ -569,5 +569,5 @@ jobs:
       - name: Upload ZIP Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Time Series CodeQL Reports
+          name: Wind Turbine CodeQL Reports
           path: codeql_reports.zip
