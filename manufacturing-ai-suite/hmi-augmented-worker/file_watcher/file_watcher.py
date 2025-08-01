@@ -8,6 +8,7 @@ import os
 import time
 import logging
 import requests
+import signal
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -16,7 +17,6 @@ logging.basicConfig(
     format="%(asctime)s: %(name)s: %(levelname)s: %(message)s", level=logging.INFO
 )
 
-
 # List of file extensions or patterns to ignore
 IGNORED_EXTENSIONS = ['.swp', '.swx', '.tmp']
 IGNORED_SUFFIXES = ['~']
@@ -24,6 +24,17 @@ IGNORED_TEMP_FILENAMES = ['4913']  # 4913 is a common temporary file suffix for 
 DEBOUNCE_INTERVAL = 2.0 # seconds
 DOCUMENT_ENDPOINT = os.getenv("DOCUMENT_ENDPOINT", "http://localhost:8888/documents")
 
+# Global flag for shutdown
+should_stop = False
+
+def handle_shutdown(signum, func):
+    global should_stop
+    logging.info("Received shutdown signal.")
+    should_stop = True
+
+# Register signal handlers
+signal.signal(signal.SIGINT, handle_shutdown)
+signal.signal(signal.SIGTERM, handle_shutdown)
 
 # --- File Event Handler ---
 class FileChangeHandler(FileSystemEventHandler):
@@ -130,14 +141,14 @@ class FileWatcher:
         self.observer.start()
 
         try:
-            while True:
+            while not should_stop:
                 time.sleep(1)
 
-        except KeyboardInterrupt:
-            logging.info("Stopping watcher...")
+        finally:
+            logging.info("Stopping observer...")
             self.observer.stop()
+            self.observer.join()
 
-        self.observer.join()
 
 # --- Entrypoint ---
 if __name__ == "__main__":
