@@ -11,20 +11,21 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     docker compose up -d
     ```
 
-2. Install the pip package boto3 in your python environment once if not installed with the following command
-    ```sh
-    pip3 install boto3==1.36.17
-    ```
-    > **Note** DLStreamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
-    
-3. Update the following variables related to minio S3 storage in `.env` file
+2. Update the following variables related to minio S3 storage in `.env` file
     ``` sh
     HOST_IP= # <IP Adress of the host machine>
     MR_MINIO_ACCESS_KEY= # <DATABASE USERNAME> example: minioadmin
     MR_MINIO_SECRET_KEY= # <DATABASE PASSWORD> example: minioadmin
     ```
 
+3. Install the pip package boto3 in your python environment once if not installed with the following command
+    ```sh
+    pip3 install boto3==1.36.17
+    ```
+    > **Note** DLStreamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
+
 4. Create a S3 bucket using the following script (create_bucket.py).
+
    ```python
    import boto3
    url = "http://<HOST_IP>:8000"
