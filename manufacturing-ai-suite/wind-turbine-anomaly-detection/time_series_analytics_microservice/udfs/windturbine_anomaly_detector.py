@@ -208,8 +208,6 @@ class AnomalyDetectorHandler(Handler):
         point.fieldsDouble.add(key = 'processing_time', value = time_now-start_time)
 
         point.fieldsDouble.add(key = 'end_end_time', value = time_now-point.time)
-        # logger.info(f"*********************************{point.fieldsDouble['processing_time'] } \
-        # { point.fieldsDouble['end_end_time']}")
         response.point.CopyFrom(point)
 
         self._agent.write_response(response, True)
