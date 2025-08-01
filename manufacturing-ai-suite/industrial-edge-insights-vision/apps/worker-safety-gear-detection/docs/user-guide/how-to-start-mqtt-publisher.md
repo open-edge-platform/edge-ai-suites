@@ -29,7 +29,7 @@ WebRTC Stream will be accessible at `http://<HOST_IP>:8889/mqttstream`.
 ```sh
 curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/worker_safety_gear_detection_mqtt -X POST -H 'Content-Type: application/json' -d '{
     "source": {
-        "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4",
+        "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
         "type": "uri"
     },
     "destination": {

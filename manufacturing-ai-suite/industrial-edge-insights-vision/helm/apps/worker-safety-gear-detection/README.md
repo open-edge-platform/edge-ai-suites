@@ -1,6 +1,3 @@
-> [!WARNING]
-> The sample is not functional as is. Work in progress to release the sample model files.
-
 # Deploy using Helm charts
 
 ## Prerequisites
@@ -61,7 +58,7 @@
     
     POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
-    kubectl cp resources/worker-safety-gear-detection/videos/Safety_Full_Hat_and_Vest.mp4 $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
+    kubectl cp resources/worker-safety-gear-detection/videos/Safety_Full_Hat_and_Vest.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
 
     kubectl cp resources/worker-safety-gear-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n apps
     ```
@@ -120,7 +117,7 @@
     Launching pipeline: worker_safety_gear_detection
     Extracting payload for pipeline: worker_safety_gear_detection
     Found 1 payload(s) for pipeline: worker_safety_gear_detection
-    Payload for pipeline 'worker_safety_gear_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"worker_safety"}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/models/worker-safety-gear-detection/model.xml","device":"CPU"}}}
+    Payload for pipeline 'worker_safety_gear_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"worker_safety"}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/models/worker-safety-gear-detection/model.xml","device":"CPU"}}}
     Posting payload to REST server at http://<HOST_IP>:30107/pipelines/user_defined_pipelines/worker_safety_gear_detection
     Payload for pipeline 'worker_safety_gear_detection' posted successfully. Response: "99ac50d852b511f09f7c2242868ff651"
     ```

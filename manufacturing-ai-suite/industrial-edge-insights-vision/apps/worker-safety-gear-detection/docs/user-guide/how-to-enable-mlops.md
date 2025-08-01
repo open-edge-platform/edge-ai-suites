@@ -32,7 +32,7 @@ With this feature, during runtime, you can download a new model from the registr
             "pipeline": "worker_safety_gear_detection_mlops",
             "payload":{
                 "source": {
-                    "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4",
+                    "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
                     "type": "uri"
                 },
                 "destination": {

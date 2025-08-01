@@ -19,7 +19,7 @@ For compose based deployment, the entire resources directory is volume mounted a
               - model.bin
               - model.xml
     - videos/
-      - Safety_Full_Hat_and_Vest.mp4
+      - Safety_Full_Hat_and_Vest.avi
 
    > **Note**
    > You can organize the directory structure for models for different use cases.
@@ -45,7 +45,7 @@ For compose based deployment, the entire resources directory is volume mounted a
     ```sh
         curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/worker_safety_gear_detection -X POST -H 'Content-Type: application/json' -d '{
             "source": {
-                "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4",
+                "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
                 "type": "uri"
             },
             "destination": {
@@ -79,7 +79,7 @@ You can bring your own model and run this sample application the same way as how
               - model.bin
               - model.xml
     - videos/
-      - Safety_Full_Hat_and_Vest.mp4
+      - Safety_Full_Hat_and_Vest.avi
 
    > **Note**
    > You can organize the directory structure for models for different use cases.
@@ -91,7 +91,7 @@ You can bring your own model and run this sample application the same way as how
     # Below is an example for Worker Safety gear detection. Please adjust the source path of models and videos appropriately for other sample applications.
     POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
-    kubectl cp resources/worker-safety-gear-detection/videos/Safety_Full_Hat_and_Vest.mp4 $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
+    kubectl cp resources/worker-safety-gear-detection/videos/Safety_Full_Hat_and_Vest.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
  
     kubectl cp resources/worker-safety-gear-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n apps
     ```
@@ -116,7 +116,7 @@ You can bring your own model and run this sample application the same way as how
     ```sh
         curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/worker_safety_gear_detection -X POST -H 'Content-Type: application/json' -d '{
             "source": {
-                "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4",
+                "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
                 "type": "uri"
             },
             "destination": {
