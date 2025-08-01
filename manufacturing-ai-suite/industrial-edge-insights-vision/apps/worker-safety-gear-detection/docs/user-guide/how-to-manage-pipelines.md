@@ -4,9 +4,9 @@ This section describes how to create custom AI pipelines for the sample applicat
 
 ## Create Pipelines
 
-The AI pipelines are defined by the **pipeline-server-config.json** file present under the configs subdirectory of a particular application directory (for docker compose deployment) and similary inside the helm directory (for helm based deployment. Please also note that the port in the cURL/REST requests needs to be changed from 8080 to 30107 for helm based deployment).
+The AI pipelines are defined by the `pipeline-server-config.json` file present under the configs subdirectory of a particular application directory (for docker compose deployment) and similary inside the helm directory (for helm based deployment. Please also note that the port in the cURL/REST requests needs to be changed from 8080 to 30107 for helm based deployment).
 
-The following is an example of the Worker Safety Gear Detection pipeline, which is included in the **pipeline-server-config.json** file.
+The following is an example of the Worker Safety Gear Detection pipeline, which is included in the `pipeline-server-config.json` file.
 ```sh
     "pipelines": [
     {
@@ -38,7 +38,7 @@ Customize the pipeline according to your needs. For details, see the following D
 
 Follow this procedure to start the pipeline.
 
-1. In the **pipeline-server-config.json** file, identify the name of the pipeline you want to start.
+1. In the `pipeline-server-config.json` file, identify the name of the pipeline you want to start.
 
    The name of the pipeline is defined by the **name** parameter.
 
@@ -53,7 +53,7 @@ Follow this procedure to start the pipeline.
 
 2. You use a Client URL (cURL) command to start the pipeline.
 
-      In this example, a pipeline included in this sample application is **worker_safety_gear_detection**. Start this pipeline with the following cURL command.
+      In this example, a pipeline included in this sample application is `worker_safety_gear_detection`. Start this pipeline with the following cURL command.
 
             curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/worker_safety_gear_detection -X POST -H 'Content-Type: application/json' -d '{
                 "source": {
@@ -81,7 +81,7 @@ Follow this procedure to start the pipeline.
 
 Request the pipeline statistics with this cURL command.
 
-Replace **HOST_IP** with the IP address of your system.
+Replace `HOST_IP` with the IP address of your system.
 
          curl --location -X GET http://<HOST_IP>:8080/pipelines/status
 
@@ -89,7 +89,7 @@ Replace **HOST_IP** with the IP address of your system.
 
 Stop the pipeline with the following cURL command.
 
-Replace **HOST_IP** with the IP address of your system and **instance_id** with the instance ID (without quotes) of the running pipeline.
+Replace `HOST_IP` with the IP address of your system and `instance_id` with the instance ID (without quotes) of the running pipeline.
 
          curl --location -X DELETE http://<HOST_IP>:8080/pipelines/{instance_id}
 

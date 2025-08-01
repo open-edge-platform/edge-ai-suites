@@ -49,14 +49,12 @@ If you are deploying in a proxy environment, update the values.yml file with you
 nano ./smart-intersection/chart/values.yaml
 ```
 
-Add the following proxy configuration to your values.yml:
+Update the existing proxy configuration in your values.yaml with following values:
 
 ```yaml
-# Proxy configuration
-proxy:
-  http_proxy: "http://your-proxy-server:port"
-  https_proxy: "http://your-proxy-server:port"
-  no_proxy: "localhost,127.0.0.1,.local,.cluster.local"
+http_proxy: "http://your-proxy-server:port"
+https_proxy: "http://your-proxy-server:port"
+no_proxy: "localhost,127.0.0.1,.local,.cluster.local"
 ```
 
 Replace `your-proxy-server:port` with your actual proxy server details.

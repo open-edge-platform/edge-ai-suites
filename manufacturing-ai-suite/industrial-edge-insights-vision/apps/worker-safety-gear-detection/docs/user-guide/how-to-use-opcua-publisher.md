@@ -18,7 +18,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
     OPCUA_SERVER_PASSWORD= # example: secret
     ```
 
-3. Update the OPC UA `variable` to appropriate value for the pipeline `worker_safety_gear_detection_opcua` in `configs/config.json` for docker or `helm/config.json` for helm.
+3. Update the OPC UA `variable` to appropriate value for the pipeline `worker_safety_gear_detection_opcua` in ``configs/pipeline-server-config.json`` for docker or `helm/config.json` for helm.
 
     ```shell
         "opcua_publisher": {
@@ -28,6 +28,23 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
     ```
 
 4. Bring up the containers for docker or deploy helm chart.
+    * Step to bring up the containers.
+        ```sh
+        docker compose up -d
+        ```
+    or
+    * Step to install the helm chart
+        ```sh
+        helm install app-deploy helm -n apps --create-namespace
+        ```
+        After installation, check the status of the running pods:
+        ```sh
+        kubectl get pods -n apps
+        ```
+        To view logs of a specific pod, replace `<pod_name>` with the actual pod name from the output above:
+        ```sh
+        kubectl logs -n apps -f <pod_name>
+        ```
 
 5. Start the pipeline with the following cURL command. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
 
@@ -83,4 +100,8 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
          await asyncio.sleep(1)
    if __name__ == "__main__":
       asyncio.run(main())
+   ```
+   Install asyncua before running the above script (if not already installed):
+   ```sh
+   pip3 install asyncua
    ```

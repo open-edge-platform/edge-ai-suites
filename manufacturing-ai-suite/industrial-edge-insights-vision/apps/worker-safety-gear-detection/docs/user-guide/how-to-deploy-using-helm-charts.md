@@ -21,7 +21,7 @@
     ```sh
     cp helm/values_worker_safety_gear_detection.yaml helm/values.yaml
     ```
-3.  Edit the HOST_IP, proxy and other environment variables in `values.yaml` as follows
+3.  Edit the HOST_IP, proxy and other environment variables in `helm/values.yaml` as follows
     ```yaml
     env:        
         HOST_IP: <HOST_IP>   # host IP address
@@ -44,6 +44,15 @@
     ```sh
     helm install app-deploy helm -n apps --create-namespace
     ```
+    After installation, check the status of the running pods:
+    ```sh
+    kubectl get pods -n apps
+    ```
+    To view logs of a specific pod, replace `<pod_name>` with the actual pod name from the output above:
+    ```sh
+    kubectl logs -n apps -f <pod_name>
+    ```
+
 6.  Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
     ```sh
     # Below is an example for Worker safety gear detection. Please adjust the source path of models and videos appropriately for other sample applications.
@@ -113,7 +122,7 @@
     Posting payload to REST server at http://<HOST_IP>:30107/pipelines/user_defined_pipelines/worker_safety_gear_detection
     Payload for pipeline 'worker_safety_gear_detection' posted successfully. Response: "74bebe7a5d1211f08ab0da88aa49c01e"
     ```
-    >NOTE- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:31111/worker_safety/ for Pallet Defect Detection.
+    >NOTE- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:31111/worker_safety/.
 
 9.  Get status of pipeline instance(s) running.
     ```sh
