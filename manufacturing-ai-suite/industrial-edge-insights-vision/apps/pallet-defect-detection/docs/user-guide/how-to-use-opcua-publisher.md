@@ -101,3 +101,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
    if __name__ == "__main__":
       asyncio.run(main())
    ```
+   Install asyncua before running the above script (if not already installed):
+   ```sh
+   pip3 install asyncua
+   ```
