@@ -102,7 +102,9 @@ bash install_project_related_libs.sh
 ## 3. Build Project
 - clone project
   ```bash
-  git clone https://github.com/intel-innersource/applications.iot.video-edge-device.holographic-sensor-fusion.git
+  git clone https://github.com/open-edge-platform/edge-ai-suites.git
+  cd metro-ai-suite/sensor-fusion-for-traffic-management
+  export PROJ_DIR=$PWD
   ```
 - prepare global radar configs in folder: /opt/datasets
     ```bash

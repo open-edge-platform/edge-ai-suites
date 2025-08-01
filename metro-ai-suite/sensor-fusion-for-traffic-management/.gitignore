@@ -138,5 +138,6 @@ profiling.sh
 !docs/user-guide/_images/*.png
 !ai_inference/test/demo/*.png
 .vscode/
+../../.vscode/
 
 
