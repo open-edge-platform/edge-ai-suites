@@ -1,4 +1,4 @@
-FROM docker.io/library/node:23
+FROM docker.io/library/node:24
 
 USER root
 

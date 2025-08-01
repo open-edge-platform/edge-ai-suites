@@ -38,7 +38,7 @@ download_artifacts() {
     fi
     # Download model artifacts if not already present
     LOCAL_MODEL_DIR="$SCRIPT_DIR/../../../resources/$app_name/models/$app_name"
-    if [ ! -d $LOCAL_MODEL_DIR ]; then
+    if [ ! -d $LOCAL_MODEL_DIR ] || [ -z "$(ls -A "$LOCAL_MODEL_DIR")" ]; then
         # create the models directory if it does not exist
 
         if ! mkdir -p $LOCAL_MODEL_DIR; then

@@ -20,7 +20,7 @@
     ```sh
     cp helm/values_weld_porosity_classification.yaml helm/values.yaml
     ```
-3.  Edit the HOST_IP, proxy and other environment variables in `values.yaml` as follows
+3.  Edit the HOST_IP, proxy and other environment variables in `helm/values.yaml` as follows
     ```yaml
     env:        
         HOST_IP: <HOST_IP>   # host IP address
@@ -43,6 +43,15 @@
     ```sh
     helm install app-deploy helm -n apps --create-namespace
     ```
+    After installation, check the status of the running pods:
+    ```sh
+    kubectl get pods -n apps
+    ```
+    To view logs of a specific pod, replace `<pod_name>` with the actual pod name from the output above:
+    ```sh
+    kubectl logs -n apps -f <pod_name>
+    ```
+
 6.  Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
     ```sh
     # Below is an example for Weld Porosity Classification. Please adjust the source path of models and videos appropriately for other sample applications.

@@ -1,6 +1,6 @@
 services:
   milvus-db:
-    image: docker.io/milvusdb/milvus:v2.4.16
+    image: docker.io/milvusdb/milvus:v2.5.15
     container_name: ibvs-milvusdb
     security_opt:
       - seccomp:unconfined

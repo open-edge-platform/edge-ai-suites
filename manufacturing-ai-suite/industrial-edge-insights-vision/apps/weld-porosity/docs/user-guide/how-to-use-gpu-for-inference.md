@@ -40,7 +40,7 @@ DL Streamer inference elements also provides property such as `device=GPU` and `
 The pipeline `weld_porosity_classification_gpu` in [pipeline-server-config](../../configs/pipeline-server-config.json) contains GPU specific elements and uses GPU backend for inferencing. We will now start the pipeline with a curl request.
 
 ```sh
-curl localhost:8080/pipelines/user_defined_pipelines/weld_porosity_classification_gpu -X POST -H 'Content-Type: application/json' -d '{
+curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/weld_porosity_classification_gpu -X POST -H 'Content-Type: application/json' -d '{
     "source": {
         "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
         "type": "uri"
