@@ -18,7 +18,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
     OPCUA_SERVER_PASSWORD= # example: secret
     ```
 
-3. Update the OPC UA `variable` to appropriate value for the pipeline `pallet_defect_detection_opcua` in `configs/config.json` for docker or `helm/config.json` for helm.
+3. Update the OPC UA `variable` to appropriate value for the pipeline `pallet_defect_detection_opcua` in ``configs/pipeline-server-config.json`` for docker or `helm/config.json` for helm.
 
     ```shell
         "opcua_publisher": {
