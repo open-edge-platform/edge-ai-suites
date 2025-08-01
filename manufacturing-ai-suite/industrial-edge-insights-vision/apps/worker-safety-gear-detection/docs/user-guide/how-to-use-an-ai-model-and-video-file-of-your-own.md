@@ -8,13 +8,13 @@ For compose based deployment, the entire resources directory is volume mounted a
 ## For docker compose based deployment
 
 1. The worker safety gear detection model is placed in the repository under  `resources/worker-safety-gear-detection/models`. You can also find the input video file source for inference under `resources/worker-safety-gear-detection/videos`.
-/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml
+/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml
 - resources/
   - worker-safety-gear-detection/
     - models/
       - worker-safety-gear-detection/
         - deployment/
-          - detection_1/
+          - Detection/
             - model/
               - model.bin
               - model.xml
@@ -56,7 +56,7 @@ For compose based deployment, the entire resources directory is volume mounted a
             },
             "parameters": {
                 "detection-properties": {
-                    "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml",
+                    "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
                     "device": "CPU"
                 }
             }
@@ -74,7 +74,7 @@ You can bring your own model and run this sample application the same way as how
     - models/
       - worker-safety-gear-detection/
         - deployment/
-          - detection_1/
+          - Detection/
             - model/
               - model.bin
               - model.xml
@@ -127,7 +127,7 @@ You can bring your own model and run this sample application the same way as how
             },
             "parameters": {
                 "detection-properties": {
-                        "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml",
+                        "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
                         "device": "CPU"
                 }
             }

@@ -43,7 +43,7 @@ With this feature, during runtime, you can download a new model from the registr
                 },
                 "parameters": {
                     "detection-properties": {
-                        "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml",
+                        "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
                         "device": "CPU"
                     }
                 }

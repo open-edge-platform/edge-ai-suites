@@ -54,7 +54,7 @@ curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/worker_safety_gear_d
     },
     "parameters": {
         "detection-properties": {
-            "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml"
+            "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml"
         }
     }
 }'

@@ -9,7 +9,7 @@ Typically, a pipeline is started with a cURL request with JSON payload containin
             },
             "parameters": {
                "detection-properties": {
-                  "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml",
+                  "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
                   "device": "CPU"
                }
             }

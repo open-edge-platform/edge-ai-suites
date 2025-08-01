@@ -118,7 +118,7 @@
     Launching pipeline: worker_safety_gear_detection
     Extracting payload for pipeline: worker_safety_gear_detection
     Found 1 payload(s) for pipeline: worker_safety_gear_detection
-    Payload for pipeline 'worker_safety_gear_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"worker_safety"}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml","device":"CPU"}}}
+    Payload for pipeline 'worker_safety_gear_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"worker_safety"}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml","device":"CPU"}}}
     Posting payload to REST server at http://<HOST_IP>:30107/pipelines/user_defined_pipelines/worker_safety_gear_detection
     Payload for pipeline 'worker_safety_gear_detection' posted successfully. Response: "74bebe7a5d1211f08ab0da88aa49c01e"
     ```
