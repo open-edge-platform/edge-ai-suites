@@ -37,6 +37,14 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
         ```sh
         helm install app-deploy helm -n apps --create-namespace
         ```
+        After installation, check the status of the running pods:
+        ```sh
+        kubectl get pods -n apps
+        ```
+        To view logs of a specific pod, replace `<pod_name>` with the actual pod name from the output above:
+        ```sh
+        kubectl logs -n apps -f <pod_name>
+        ```
 
 5. Start the pipeline with the following cURL command. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
 
