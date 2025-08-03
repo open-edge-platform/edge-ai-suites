@@ -81,7 +81,7 @@ With this feature, during runtime, you can download a new model from the registr
     -F 'file=@<model_file_path.zip>;type=application/zip' \
     -F 'project_name="pcb-anomaly-detection"' \
     -F 'architecture="YOLO"' \
-    -F 'category="Classification"'
+    -F 'category="Anomaly classification"'
     ```
    > NOTE: Replace model_file_path.zip in the cURL request with the actual file path of your model's .zip file, and HOST_IP with the IP address of the host machine.
 
@@ -130,7 +130,7 @@ With this feature, during runtime, you can download a new model from the registr
     --data '{
     "project_name": "pcb-anomaly-detection",
     "version": "v1",
-    "category": "Classification",
+    "category": "Anomaly classification",
     "architecture": "YOLO",
     "precision": "fp32",
     "deploy": true,

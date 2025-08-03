@@ -5,7 +5,7 @@
                 "name": "worker_safety_gear_detection_mlops",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4 name=source ! h264parse ! decodebin ! queue max-size-buffers=10 ! videoconvert ! gvadetect name=detection ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi name=source ! h264parse ! decodebin ! queue max-size-buffers=10 ! videoconvert ! gvadetect name=detection ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {

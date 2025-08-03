@@ -53,7 +53,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
    ```sh
     curl http://<HOST_IP>:<port>/pipelines/user_defined_pipelines/worker_safety_gear_detection_opcua -X POST -H 'Content-Type: application/json' -d '{
         "source": {
-            "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4",
+            "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
             "type": "uri"
         },
         "destination": {
@@ -72,7 +72,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
         },
         "parameters": {
             "detection-properties": {
-                "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml",
+                "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
                 "device": "CPU"
             }
         }

@@ -5,14 +5,16 @@ The following are options to help you resolve issues with the sample application
 
 ## WebRTC Stream on web browser
 The firewall may prevent you from viewing the video stream on web browser. Please disable the firewall using this command.
-
-         sudo ufw disable
+```sh
+sudo ufw disable
+```
 
 ## Error Logs
 
 View the container logs using this command.
-
-         docker logs -f <CONTAINER_NAME>
+```sh
+docker logs -f <CONTAINER_NAME>
+```
 
 ## Resolving Time Sync Issues in Prometheus
 
