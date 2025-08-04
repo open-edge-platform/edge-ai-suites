@@ -1,4 +1,4 @@
-.. Table of contents contained in `toc.rst`
+.. Table of contents contained in `index.rst`
 
 .. _getstarted:
 
@@ -15,4 +15,4 @@ The following steps will help you get started with using RVC in a reference setu
    getstarted/prepare_system
    getstarted/install
 
-.. Table of contents contained in `toc.rst`
+.. Table of contents contained in `index.rst`

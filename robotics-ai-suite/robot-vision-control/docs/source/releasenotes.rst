@@ -1,4 +1,4 @@
-.. Table of contents contained in `toc.rst`
+.. Table of contents contained in `index.rst`
 
 .. _releasenotes:
 
@@ -149,4 +149,4 @@ Click each tab to learn about the new and updated features in each release of In
       - Only the Universal Robots™ family has been tested (more specifically, UR5e), the Robotiq 2F-85 Gripper and D415 Intel® RealSense™ Camera.
       - Only one object can be placed under the camera. Multiple objects could work, however there are known issues. For this release, make sure that there is only one object under the camera or none.
 
-.. Table of contents contained in `toc.rst`
+.. Table of contents contained in `index.rst`

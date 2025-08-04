@@ -12,37 +12,27 @@
 .. |oneapi_full| replace:: Intel\ |reg| oneAPI\ |TM| Base Toolkit
 .. |openvino_full| replace:: Intel\ |reg| Distribution of OpenVINO\ |TM| toolkit
 
-
 .. |eci| replace:: Intel\ |reg| Edge Controls for Industrial
-
 .. |eci_getting_started| replace:: `Intel\ |reg| Edge Controls for Industrial Getting Started <https://eci.intel.com/docs/3.3/getstarted.html>`__
-
 
 .. |ros| replace:: ROS 2
 .. |ros_version| replace:: Humble
-
 .. |ros_install_instructions| replace:: `ROS2 setup guide <https://docs.ros.org/en/humble/Installation.html>`__
 .. |ros_install_instructions_debian| replace:: `ROS2 setup with Ubuntu Deb Packages <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages>`__
 
-
+.. |Ubuntu_OS| replace:: Canonical Ubuntu OS
 .. |Ubuntu| replace:: Canonical Ubuntu
 .. |Ubuntu22| replace:: |Ubuntu| 22.04 LTS (Jammy Jellyfish)
-
 .. |ubuntu_iso_download| replace:: `Ubuntu OS ISO Download <https://releases.ubuntu.com/22.04>`__
 .. |ubuntu_install_instructions| replace:: `Install Ubuntu OS <https://ubuntu.com/download/desktop>`__
 .. |ubuntu_version| replace:: |Ubuntu22|
 .. |ubuntu_variant| replace:: Desktop
 
-
-.. Links
-
-
-
+.. |asrockind_platform| replace:: ASRock Industrial intelligent edge platform
 .. |linux| replace:: Linux
-
 .. |distro-ubuntu| replace:: Jammy
 .. |distro-format-ubuntu| replace:: ``jammy``
-
+.. |Docker_Engine| replace:: Docker Engine
 .. |Docker| replace:: Docker
 .. |Podman| replace:: Podman
 .. |Windows| replace:: Microsoft Windows
