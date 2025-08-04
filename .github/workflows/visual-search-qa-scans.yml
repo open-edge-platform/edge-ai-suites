@@ -128,7 +128,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Bandit Scan
-        uses: orch-ci/bandit-action@67a458d90fa11fb1463e91e7f4c8f068b5863c7f
+        uses: orch-ci/bandit-action@293fa307caffa9b8742cb22ab3c31aa340083454
         with:
           target: 'metro-ai-suite/visual-search-question-and-answering/'
           output-format: 'sarif'
