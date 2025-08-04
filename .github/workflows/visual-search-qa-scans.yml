@@ -66,24 +66,57 @@ jobs:
           exit-code: '0'
           command: '--skip-dirs node_modules'
 
-      - name: Run Trivy image scan
-        uses: aquasecurity/trivy-action@77137e9dc3ab1b329b7c8a38c2eb7475850a14e8
+      - name: Scan dataprep-visualdata-milvus image
+        uses: aquasecurity/trivy-action@0.32.0
         with:
           scan-type: 'image'
-          image-ref: 'dataprep-visualdata-milvus:latest,retriever-milvus:latest,vlm-openvino-serving:latest,visual-search-qa-app:latest'
+          image-ref: 'dataprep-visualdata-milvus:latest'
           format: 'sarif'
-          output: 'trivy-results.sarif'
+          output: 'dataprep-visualdata-milvus.sarif'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: Scan retriever-milvus image
+        uses: aquasecurity/trivy-action@0.32.0
+        with:
+          scan-type: 'image'
+          image-ref: 'retriever-milvus:latest'
+          format: 'sarif'
+          output: 'retriever-milvus.sarif'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: Scan vlm-openvino-serving image
+        uses: aquasecurity/trivy-action@0.32.0
+        with:
+          scan-type: 'image'
+          image-ref: 'vlm-openvino-serving:latest'
+          format: 'sarif'
+          output: 'vlm-openvino-serving.sarif'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: Scan visual-search-qa-app image
+        uses: aquasecurity/trivy-action@0.32.0
+        with:
+          scan-type: 'image'
+          image-ref: 'visual-search-qa-app:latest'
+          format: 'sarif'
+          output: 'visual-search-qa-app.sarif'
           severity: 'HIGH,CRITICAL'
           ignore-unfixed: true
           exit-code: '0'
 
       - name: Upload scan results
-        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-scan-results
           path: |
             trivy_fs_report.html
-            trivy-results.sarif
+            *.sarif
 
   bandit-scans:
     permissions:
