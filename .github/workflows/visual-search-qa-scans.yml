@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Code
-        uses: actions/checkout@542607bc8b7adabaf67d9aed705077a701f59a66
+        uses: actions/checkout@0a2a74d6d9a6c39911d7c4db94ec079ca3866869
         with:
           persist-credentials: false  
 
