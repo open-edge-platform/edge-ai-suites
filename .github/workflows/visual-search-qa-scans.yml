@@ -118,35 +118,37 @@ jobs:
             trivy_fs_report.html
             *.sarif
 
-  bandit-scans:
+  bandit-scan:
     permissions:
       contents: read
-      packages: read          # needed for actions/checkout
-    name: Run Bandit Scan
+      security-events: write  # 用于向GitHub安全中心提交结果
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - ubuntu_version: ubuntu24
     steps:
-    - name: Check out edge-ai-suites repository
-      uses: actions/checkout@v4
-      with:
-        persist-credentials: false
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Run Bandit Scan
-      run: |
-        mkdir -p reports
-        docker pull ghcr.io/pycqa/bandit/bandit
-        echo "### Bandit Scan Results" >> $GITHUB_STEP_SUMMARY
-        docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/metro-ai-suite/visual-search-question-and-answering/ -f txt -o /src/reports/bandit-report.txt || true >> $GITHUB_STEP_SUMMARY
-        echo "Please find full report in bandit-report.txt" >> $GITHUB_STEP_SUMMARY
-    - name: Upload Scan Reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: bandit-report
-        path: reports/bandit-report.txt
+      - name: Run Bandit Scan
+        uses: orch-ci/bandit-action@v1
+        with:
+          target: 'metro-ai-suite/visual-search-question-and-answering/'
+          output-format: 'sarif'
+          output-file: 'bandit-report.sarif'
+          severity-level: 'low,medium,high'  # 可调整过滤级别
+          confidence-level: 'medium,high'    # 可调整置信度要求
+          exclude-paths: '*/tests/*,*/migrations/*'  # 排除测试目录
+
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'bandit-report.sarif'
+
+      - name: Upload text report (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-text-report
+          path: |
+            bandit-report.sarif
         
   virus-scans:
     permissions:
@@ -178,4 +180,35 @@ jobs:
         path: reports/clamav-report.txt
     
 
+  virus-scan:
+    permissions:
+      contents: read
+      security-events: write  
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run ClamAV Scan
+        uses: orch-ci/clamav-action@v1
+        with:
+          target: 'metro-ai-suite/visual-search-question-and-answering/'
+          output-format: 'sarif'
+          output-file: 'clamav-report.sarif'
+          db-update: true  
+          max-filesize: '25M'  
+          exclude: '*.log,*.tmp'  
+
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'clamav-report.sarif'
+
+      - name: Upload text report (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clamav-text-report
+          path: |
+            clamav-report.sarif
 
