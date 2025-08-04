@@ -1,0 +1,11 @@
+Source: ros-humble-turtlesim-tutorial-demo
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: debhelper (>= 9.0.0), python3-pytest <!nocheck>, ros-rolling-ament-copyright <!nocheck>, ros-rolling-ament-flake8 <!nocheck>, ros-rolling-ament-pep257 <!nocheck>, python3-all, python3-setuptools, dh-python
+Standards-Version: 4.1.4
+
+Package: ros-humble-turtlesim-tutorial-demo
+Architecture: any
+Depends: ${python3:Depends}, ${misc:Depends}, ros-humble-turtlesim, ros-humble-rqt, ros-humble-rqt-common-plugins, ros-humble-rviz2,
+Description: turtlesim is a tool made for teaching ROS and ROS packages - sample application

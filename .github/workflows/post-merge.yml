@@ -24,6 +24,7 @@ jobs:
       smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
       smart-intersection_changed: ${{ steps.filter.outputs.smart-intersection }}
       pallet-defect-detection_changed: ${{ steps.filter.outputs.pallet-defect-detection }}
+      robotics-ai-suite_changed: ${{ steps.filter.outputs.robotics-ai-suite }}
       weld-porosity_changed: ${{ steps.filter.outputs.weld-porosity }}
       wind-turbine-anomaly-detection-docs: ${{ steps.filter.outputs.wind-turbine-anomaly-detection-docs }}
     steps:
@@ -45,6 +46,8 @@ jobs:
               - 'metro-ai-suite/smart-intersection/docs/**'
             pallet-defect-detection:
               - 'manufacturing-ai-suite/pallet-defect-detection/docs/**'
+            robotics-ai-suite:
+              - 'robotics-ai-suite/docs/**'
             weld-porosity:
               - 'manufacturing-ai-suite/weld-porosity/docs/**'
             wind-turbine-anomaly-detection-docs:
@@ -126,6 +129,22 @@ jobs:
     with:
       docs_directory: manufacturing-ai-suite/pallet-defect-detection
 
+  build_robotics-ai-suite:
+    permissions:
+      contents: read          # needed for actions/checkout
+      pull-requests: read     # needed for gh pr list
+      issues: write           # needed to post PR comment
+    needs: filter
+    if: ${{ needs.filter.outputs.robotics-ai-suite_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: robotics-ai-suite
+      simple_mode: false
+
   build_weld-porosity:
     permissions:
       contents: read          # needed for actions/checkout
@@ -156,5 +175,3 @@ jobs:
     with:
       docs_directory: manufacturing-ai-suite/wind-turbine-anomaly-detection
       branch_pattern: '^main$'  # Wind Turbine Anomaly Detection only exists on 'main' branch
-
-

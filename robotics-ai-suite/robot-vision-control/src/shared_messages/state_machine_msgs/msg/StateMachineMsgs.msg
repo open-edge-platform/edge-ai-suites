@@ -1,0 +1,6 @@
+uint16 last_state
+string drop_object
+string who_am_i
+uint16 actual_controller
+bool quit_all
+bool next_object_defective

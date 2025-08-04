@@ -1,0 +1,5 @@
+<library path="oriented_grasp">
+  <class type="RVCControl::OrientedGrasp" base_class_type="RVCControl::RVCGraspInterface">
+    <description>This is a grasp plugin aligning the gripper parallel to rvc_message pose orientation.</description>
+  </class>
+</library>

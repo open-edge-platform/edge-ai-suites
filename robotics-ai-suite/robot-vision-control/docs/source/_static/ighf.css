@@ -1,0 +1,30 @@
+/* -- Extra CSS styles for RVC content (RTD theme) ----------------------- */
+
+/* Intel IGHF compatibility */
+
+.wy-grid-for-nav {
+    overflow-y: scroll;
+    z-index: 0;
+    top: 70px;
+    height: calc(100% - 70px);
+}
+
+.wy-nav-side {
+    top: 70px;
+}
+
+.wy-side-scroll {
+    height: calc(100% - 80px);
+}
+
+header {
+    position: fixed;
+    z-index: 9999;
+    width: 100vw;
+}
+
+.recode50 div.container {
+    max-width: 100% !important;
+    margin-top: 50px !important;
+}
+

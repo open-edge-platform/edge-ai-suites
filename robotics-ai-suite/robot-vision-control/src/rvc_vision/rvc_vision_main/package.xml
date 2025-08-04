@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rvc_vision_main</name>
+  <version>2.0.0</version>
+  <description>Start up and configuration files for the whole vision component</description>
+  <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
+  <license>Rapid Prototype License</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -1,0 +1,12 @@
+Source: ros-humble-trac-ik-kinematics-plugin
+Section: misc
+Priority: optional
+Maintainer: Abrar Rahman Protyasha <aprotyas@u.rochester.edu>
+Build-Depends: debhelper (>= 9.0.0), libnlopt-dev, ros-humble-ament-cmake-ros, ros-humble-moveit-core, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-rclcpp-components, ros-humble-tf2, ros-humble-tf2-eigen, ros-humble-tf2-geometry-msgs, ros-humble-tf2-kdl, ros-humble-trac-ik-lib, ros-humble-visualization-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-trac-ik-kinematics-plugin
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnlopt-dev, libnlopt0, ros-humble-moveit-core, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-tf2, ros-humble-tf2-eigen, ros-humble-tf2-geometry-msgs, ros-humble-tf2-kdl, ros-humble-trac-ik-lib, ros-humble-visualization-msgs
+Description: A MoveIt! Kinematics plugin using TRAC-IK

@@ -1,0 +1,446 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller" kind="class" language="C++" prot="public">
+    <compoundname>RVCMotionController::Moveit2ServoMotionController</compoundname>
+    <basecompoundref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" prot="public" virt="non-virtual">RVCMotionController::RVCMotionControllerInterface</basecompoundref>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a90d2c235971578ab5851defbef09f8f4" prot="private" static="no" mutable="no">
+        <type>std::unique_ptr&lt; <ref refid="class_pose_tracking" kindref="compound">PoseTracking</ref> &gt;</type>
+        <definition>std::unique_ptr&lt;PoseTracking&gt; RVCMotionController::Moveit2ServoMotionController::poseTracker</definition>
+        <argsstring></argsstring>
+        <name>poseTracker</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="68" column="21" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" bodystart="68" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a2e88088670069a05689e9a40925236b4" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool RVCMotionController::Moveit2ServoMotionController::initialized</definition>
+        <argsstring></argsstring>
+        <name>initialized</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="69" column="10" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a5c88ea14208899b98de4515874960ca3" prot="private" static="no" mutable="no">
+        <type>std::shared_ptr&lt; std::thread &gt;</type>
+        <definition>std::shared_ptr&lt;std::thread&gt; RVCMotionController::Moveit2ServoMotionController::move_to_pose_thread</definition>
+        <argsstring></argsstring>
+        <name>move_to_pose_thread</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="71" column="21" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" bodystart="71" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a0a1e0f510f9b4bc236610ff12242fecb" prot="private" static="no" mutable="no">
+        <type>std::shared_ptr&lt; moveit::core::RobotState &gt;</type>
+        <definition>std::shared_ptr&lt;moveit::core::RobotState&gt; RVCMotionController::Moveit2ServoMotionController::kinematic_state</definition>
+        <argsstring></argsstring>
+        <name>kinematic_state</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="72" column="21" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" bodystart="72" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a76954502f3949f1c5cfe57d593fd1cbf" prot="private" static="no" mutable="no">
+        <type>moveit_servo::StatusCode</type>
+        <definition>moveit_servo::StatusCode RVCMotionController::Moveit2ServoMotionController::status_</definition>
+        <argsstring></argsstring>
+        <name>status_</name>
+        <initializer>= moveit_servo::StatusCode::INVALID</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="74" column="30" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" bodystart="74" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a63f6d884db19fcb917bb7a76cef9134f" prot="private" static="no" mutable="no">
+        <type>rclcpp::Subscription&lt; std_msgs::msg::Int8 &gt;::SharedPtr</type>
+        <definition>rclcpp::Subscription&lt;std_msgs::msg::Int8&gt;::SharedPtr RVCMotionController::Moveit2ServoMotionController::sub_</definition>
+        <argsstring></argsstring>
+        <name>sub_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="75" column="38" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a1c200a39ac45c5c435d00bb8f9705ea5" prot="private" static="no" mutable="no">
+        <type>geometry_msgs::msg::PoseStamped</type>
+        <definition>geometry_msgs::msg::PoseStamped RVCMotionController::Moveit2ServoMotionController::currentPose</definition>
+        <argsstring></argsstring>
+        <name>currentPose</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="78" column="37" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" bodystart="78" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ab2c9213952eb3150242acd4897630166" prot="private" static="no" mutable="no">
+        <type>rclcpp::Publisher&lt; std_msgs::msg::Float64MultiArray &gt;::SharedPtr</type>
+        <definition>rclcpp::Publisher&lt;std_msgs::msg::Float64MultiArray&gt;::SharedPtr RVCMotionController::Moveit2ServoMotionController::gripper_controller_goal_pub</definition>
+        <argsstring></argsstring>
+        <name>gripper_controller_goal_pub</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="79" column="36" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" bodystart="79" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ace3a0dfb12ab35bcae919676ae1b29e7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>RVCMotionController::Moveit2ServoMotionController::Moveit2ServoMotionController</definition>
+        <argsstring>()</argsstring>
+        <name>Moveit2ServoMotionController</name>
+        <briefdescription>
+<para>Constructor. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>node</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>ros node </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="46" column="5" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" bodystart="75" bodyend="78"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3f8495c71f5ef0a7b422b03a64b49a5c" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type></type>
+        <definition>RVCMotionController::Moveit2ServoMotionController::~Moveit2ServoMotionController</definition>
+        <argsstring>()</argsstring>
+        <name>~Moveit2ServoMotionController</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="47" column="13" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" bodystart="217" bodyend="223"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a37df9d2b464a7563829e164291f8ef63" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool RVCMotionController::Moveit2ServoMotionController::init</definition>
+        <argsstring>(rclcpp::Node::SharedPtr node)</argsstring>
+        <name>init</name>
+        <reimplements refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ab207b1f50cc7b3bb726221e0b782f255">init</reimplements>
+        <param>
+          <type>rclcpp::Node::SharedPtr</type>
+          <declname>node</declname>
+        </param>
+        <briefdescription>
+<para>initialization api </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>node</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the rclcpp::Node associated </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>true if succeded </para>
+</simplesect>
+<simplesect kind="return"><para>false if failed </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="48" column="10" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" bodystart="80" bodyend="215"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3cea9779b1b4f41dade9674f48f810d7" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void RVCMotionController::Moveit2ServoMotionController::setControllerSpeed</definition>
+        <argsstring>(const double controllerSpeed)</argsstring>
+        <name>setControllerSpeed</name>
+        <reimplements refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a267aaac3902ac1bf47a870f9b02b4d58">setControllerSpeed</reimplements>
+        <param>
+          <type>const double</type>
+          <declname>controllerSpeed</declname>
+        </param>
+        <briefdescription>
+<para>Implementation of the pure virtual function for a linear controller. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>destPose</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>controllerSpeed</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="54" column="10" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" bodystart="225" bodyend="228"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a20b86cf9f2c710722ee94fd3cd267f02" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void RVCMotionController::Moveit2ServoMotionController::sendGoal</definition>
+        <argsstring>(const geometry_msgs::msg::Pose destPose)</argsstring>
+        <name>sendGoal</name>
+        <reimplements refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a5a54d8631325fb402fcd1412960c4357">sendGoal</reimplements>
+        <param>
+          <type>const geometry_msgs::msg::Pose</type>
+          <declname>destPose</declname>
+        </param>
+        <briefdescription>
+<para>Send the target goal Pose to the controller. Pure virtual function. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>destPose</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>target Pose </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>controllerSpeed</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Speed of the robot </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="55" column="10" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" bodystart="230" bodyend="247"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a54c67ade6b09d153f429f791269881f2" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void RVCMotionController::Moveit2ServoMotionController::sendGoal</definition>
+        <argsstring>(const std::vector&lt; vector6d_t &gt; dest, const bool recomputeTraj)</argsstring>
+        <name>sendGoal</name>
+        <reimplements refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a0b35fed01e1e1018a831d2dfedafbe99">sendGoal</reimplements>
+        <param>
+          <type>const std::vector&lt; vector6d_t &gt;</type>
+          <declname>dest</declname>
+        </param>
+        <param>
+          <type>const bool</type>
+          <declname>recomputeTraj</declname>
+        </param>
+        <briefdescription>
+<para>implementation of send goal with vector6d_t as input </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>dest</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>6 double elements vector input </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>controllerSpeed</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>speed input </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="60" column="10" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" bodystart="260" bodyend="271"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ad2d7f8e6b49f9f325fbd311cc8ec1420" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void RVCMotionController::Moveit2ServoMotionController::sendGripperPosition</definition>
+        <argsstring>(double pos)</argsstring>
+        <name>sendGripperPosition</name>
+        <reimplements refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aef5ea596277bb87030274d71a0add677">sendGripperPosition</reimplements>
+        <param>
+          <type>double</type>
+          <declname>position</declname>
+        </param>
+        <briefdescription>
+<para>send the gripper position </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>position</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="61" column="10" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" bodystart="272" bodyend="278"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a1524873c6fac09410295f18988adaaf3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>double</type>
+        <definition>double RVCMotionController::Moveit2ServoMotionController::getGripperPositionFeedback</definition>
+        <argsstring>(void)</argsstring>
+        <name>getGripperPositionFeedback</name>
+        <reimplements refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aeb1c0f524dd83957f70d359e9a719df2">getGripperPositionFeedback</reimplements>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+<para>returns current value of the gripper position. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>current value of the gripper position. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="62" column="12" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" bodystart="62" bodyend="65"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a5ecf5b6f4e46bac90b2d0b8aa41de14d" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool RVCMotionController::Moveit2ServoMotionController::isGoalNear</definition>
+        <argsstring>()</argsstring>
+        <name>isGoalNear</name>
+        <reimplements refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a75decf28e1a228ebd57d730a5638017c">isGoalNear</reimplements>
+        <briefdescription>
+<para>Controller gives an indication if the target is close enough. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>true if the goal is close enough </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="66" column="18" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" bodystart="249" bodyend="258"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1aff2434d2bec7aed50b0e566f57869250" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void RVCMotionController::Moveit2ServoMotionController::statusCB</definition>
+        <argsstring>(const std_msgs::msg::Int8::ConstSharedPtr msg)</argsstring>
+        <name>statusCB</name>
+        <param>
+          <type>const std_msgs::msg::Int8::ConstSharedPtr</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="76" column="10" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" bodystart="36" bodyend="44"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>RVCMotionController::Moveit2ServoMotionController</label>
+        <link refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>RVCMotionController::RVCMotionControllerInterface</label>
+        <link refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>RVCMotionController::Moveit2ServoMotionController</label>
+        <link refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>RVCMotionController::RVCMotionControllerInterface</label>
+        <link refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface"/>
+      </node>
+    </collaborationgraph>
+    <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="41" column="1" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" bodystart="42" bodyend="80"/>
+    <listofallmembers>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a05b4cd37612329c645a4240864b45745" prot="protected" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>current_control_mode</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a1c200a39ac45c5c435d00bb8f9705ea5" prot="private" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>currentPose</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a1524873c6fac09410295f18988adaaf3" prot="public" virt="virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>getGripperPositionFeedback</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ab2c9213952eb3150242acd4897630166" prot="private" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>gripper_controller_goal_pub</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a37df9d2b464a7563829e164291f8ef63" prot="public" virt="virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>init</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a2e88088670069a05689e9a40925236b4" prot="private" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>initialized</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a5ecf5b6f4e46bac90b2d0b8aa41de14d" prot="public" virt="virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>isGoalNear</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a38c11ed8f522a3e87077259b5b8824cdae40ba45aef1e82b91f2141f36dec3aff" prot="protected" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>JOINT_CONTROL_MODE</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a0a1e0f510f9b4bc236610ff12242fecb" prot="private" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>kinematic_state</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1af579517cbf66e8ac5550a77c52dd1dce" prot="protected" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>lastJointGoal</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac3a613c724464f9317665dbac0fe4c64" prot="protected" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>lastTCPGoal</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a5c88ea14208899b98de4515874960ca3" prot="private" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>move_to_pose_thread</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ace3a0dfb12ab35bcae919676ae1b29e7" prot="public" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>Moveit2ServoMotionController</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aac3f97e64f67377c59593a6b2853f1e9" prot="protected" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>node_</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a90d2c235971578ab5851defbef09f8f4" prot="private" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>poseTracker</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac8f879e7d8652768338343eec731b5b0" prot="protected" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>RVCMotionControllerInterface</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a20b86cf9f2c710722ee94fd3cd267f02" prot="public" virt="virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>sendGoal</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a54c67ade6b09d153f429f791269881f2" prot="public" virt="virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>sendGoal</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ad2d7f8e6b49f9f325fbd311cc8ec1420" prot="public" virt="virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>sendGripperPosition</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3cea9779b1b4f41dade9674f48f810d7" prot="public" virt="virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>setControllerSpeed</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a76954502f3949f1c5cfe57d593fd1cbf" prot="private" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>status_</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1aff2434d2bec7aed50b0e566f57869250" prot="private" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>statusCB</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a63f6d884db19fcb917bb7a76cef9134f" prot="private" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>sub_</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a38c11ed8f522a3e87077259b5b8824cda7372a70cf929bbd05baf01b424359f65" prot="protected" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>TCP_CONTROL_MODE</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a38c11ed8f522a3e87077259b5b8824cdaf48d41d5029ea214fffcb16beec6b79b" prot="protected" virt="non-virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>UNDEFINED</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3f8495c71f5ef0a7b422b03a64b49a5c" prot="public" virt="virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>~Moveit2ServoMotionController</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a53c5a7a5136e94d0b7b0882bfca5ae83" prot="public" virt="virtual"><scope>RVCMotionController::Moveit2ServoMotionController</scope><name>~RVCMotionControllerInterface</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

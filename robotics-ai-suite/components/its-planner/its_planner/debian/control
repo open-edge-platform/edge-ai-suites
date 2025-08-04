@@ -1,0 +1,12 @@
+Source: ros-humble-its-planner
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-ament-lint-auto, ros-humble-ament-cmake-gtest, ros-humble-rclcpp, ros-humble-rclcpp-action, ros-humble-rclcpp-lifecycle, ros-humble-std-msgs, ros-humble-geometry-msgs, ros-humble-geometry-msgs, ros-humble-visualization-msgs, ros-humble-nav-msgs, ros-humble-tf2-ros, ros-humble-nav2-core, ros-humble-builtin-interfaces, ros-humble-pluginlib, libboost-dev, libboost-serialization-dev
+Standards-Version: 4.1.4
+
+Package: ros-humble-its-planner
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-humble-rcl, ros-humble-rclcpp, ros-humble-rclcpp-lifecycle, ros-humble-visualization-msgs, ros-humble-nav2-core, ros-humble-class-loader, ros-humble-rcutils, ros-humble-nav2-costmap-2d, ros-humble-console-bridge-vendor, ros-humble-rclcpp-action, ros-humble-std-msgs, ros-humble-nav-msgs, ros-humble-geometry-msgs, ros-humble-builtin-interfaces, ros-humble-tf2-ros, ros-humble-pluginlib, libboost-serialization1.74.0, ros-humble-robotics-sdk-license,
+Description: Intelligent Sampling and Two-Way Search

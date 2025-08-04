@@ -1,0 +1,200 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="class_r_v_c_1_1_object_matcher" kind="class" language="C++" prot="public">
+    <compoundname>RVC::ObjectMatcher</compoundname>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_r_v_c_1_1_object_matcher_1a275e274049546bd726ec978f2708b260" prot="private" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string RVC::ObjectMatcher::m_name</definition>
+        <argsstring></argsstring>
+        <name>m_name</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="95" column="17" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="95" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_object_matcher_1a316131eb2e0a9c4d548faa9ac8f4a31e" prot="private" static="no" mutable="no">
+        <type><ref refid="struct_r_v_c_1_1_match_settings" kindref="compound">MatchSettings</ref></type>
+        <definition>MatchSettings RVC::ObjectMatcher::m_config</definition>
+        <argsstring></argsstring>
+        <name>m_config</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="96" column="19" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="96" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_object_matcher_1a91e9ced748c400375067ce4213334885" prot="private" static="no" mutable="no">
+        <type>pcl::PointCloud&lt; PointT &gt;::Ptr</type>
+        <definition>pcl::PointCloud&lt;PointT&gt;::Ptr RVC::ObjectMatcher::m_points</definition>
+        <argsstring></argsstring>
+        <name>m_points</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="97" column="27" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="97" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_object_matcher_1ad2386c81ba3de1b4a59c9e7f9a630c65" prot="private" static="no" mutable="no">
+        <type>pcl::PointCloud&lt; pcl::FPFHSignature33 &gt;::Ptr</type>
+        <definition>pcl::PointCloud&lt;pcl::FPFHSignature33&gt;::Ptr RVC::ObjectMatcher::m_signature</definition>
+        <argsstring></argsstring>
+        <name>m_signature</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="98" column="27" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="98" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_r_v_c_1_1_object_matcher_1a7384590c535fea91b38f4fd9a976f6ab" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>ObjectMatcher::ObjectMatcher</definition>
+        <argsstring>(const std::string name, const std::string &amp;load_path, MatchSettings settings)</argsstring>
+        <name>ObjectMatcher</name>
+        <param>
+          <type>const std::string</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>load_path</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_r_v_c_1_1_match_settings" kindref="compound">MatchSettings</ref></type>
+          <declname>settings</declname>
+        </param>
+        <briefdescription>
+<para>Create an <ref refid="class_r_v_c_1_1_object_matcher" kindref="compound">ObjectMatcher</ref> by loading a point-cloud from the filesystem. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>The passed path must be a filesystem path to a <computeroutput>.pcd</computeroutput> point-cloud file. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="106" column="5" bodyfile="rvc_pose_detector/src/matcher.cpp" bodystart="74" bodyend="82"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_1_1_object_matcher_1ad603c28b3a1ed8fa9e103c9a34838b70" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>ObjectMatcher::ObjectMatcher</definition>
+        <argsstring>(const std::string name, pcl::PointCloud&lt; PointT &gt;::Ptr points, MatchSettings settings)</argsstring>
+        <name>ObjectMatcher</name>
+        <param>
+          <type>const std::string</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>pcl::PointCloud&lt; PointT &gt;::Ptr</type>
+          <declname>points</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_r_v_c_1_1_match_settings" kindref="compound">MatchSettings</ref></type>
+          <declname>settings</declname>
+        </param>
+        <briefdescription>
+<para>Create an <ref refid="class_r_v_c_1_1_object_matcher" kindref="compound">ObjectMatcher</ref> from an in-memory point-cloud. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="113" column="5" bodyfile="rvc_pose_detector/src/matcher.cpp" bodystart="84" bodyend="113"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_1_1_object_matcher_1a5a2d2a559d02ddff9b22af804ff4d33d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="struct_r_v_c_1_1_match_result" kindref="compound">MatchResult</ref></type>
+        <definition>MatchResult ObjectMatcher::match</definition>
+        <argsstring>(pcl::PointCloud&lt; PointT &gt;::Ptr cloud)</argsstring>
+        <name>match</name>
+        <param>
+          <type>pcl::PointCloud&lt; PointT &gt;::Ptr</type>
+          <declname>cloud</declname>
+        </param>
+        <briefdescription>
+<para>Try to match a given point cloud against the one stored in this object. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="120" column="17" bodyfile="rvc_pose_detector/src/matcher.cpp" bodystart="115" bodyend="284"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_1_1_object_matcher_1adcdf9f2d7d819d4a7995f74bbb662a2e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ObjectMatcher::compute_fpfh_features</definition>
+        <argsstring>(pcl::PointCloud&lt; PointT &gt;::ConstPtr points, const MatchSettings &amp;config, pcl::PointCloud&lt; pcl::FPFHSignature33 &gt; &amp;out)</argsstring>
+        <name>compute_fpfh_features</name>
+        <param>
+          <type>pcl::PointCloud&lt; PointT &gt;::ConstPtr</type>
+          <declname>points</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_r_v_c_1_1_match_settings" kindref="compound">MatchSettings</ref> &amp;</type>
+          <declname>config</declname>
+        </param>
+        <param>
+          <type>pcl::PointCloud&lt; pcl::FPFHSignature33 &gt; &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+<para>compute features of the pointclouds </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>points</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input pointcloud </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>config</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>configuration Matching settings </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="128" column="10" bodyfile="rvc_pose_detector/src/matcher.cpp" bodystart="44" bodyend="72"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_pose_detector/include/matcher.hpp" line="92" column="1" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="93" bodyend="133"/>
+    <listofallmembers>
+      <member refid="class_r_v_c_1_1_object_matcher_1adcdf9f2d7d819d4a7995f74bbb662a2e" prot="public" virt="non-virtual"><scope>RVC::ObjectMatcher</scope><name>compute_fpfh_features</name></member>
+      <member refid="class_r_v_c_1_1_object_matcher_1a316131eb2e0a9c4d548faa9ac8f4a31e" prot="private" virt="non-virtual"><scope>RVC::ObjectMatcher</scope><name>m_config</name></member>
+      <member refid="class_r_v_c_1_1_object_matcher_1a275e274049546bd726ec978f2708b260" prot="private" virt="non-virtual"><scope>RVC::ObjectMatcher</scope><name>m_name</name></member>
+      <member refid="class_r_v_c_1_1_object_matcher_1a91e9ced748c400375067ce4213334885" prot="private" virt="non-virtual"><scope>RVC::ObjectMatcher</scope><name>m_points</name></member>
+      <member refid="class_r_v_c_1_1_object_matcher_1ad2386c81ba3de1b4a59c9e7f9a630c65" prot="private" virt="non-virtual"><scope>RVC::ObjectMatcher</scope><name>m_signature</name></member>
+      <member refid="class_r_v_c_1_1_object_matcher_1a5a2d2a559d02ddff9b22af804ff4d33d" prot="public" virt="non-virtual"><scope>RVC::ObjectMatcher</scope><name>match</name></member>
+      <member refid="class_r_v_c_1_1_object_matcher_1a7384590c535fea91b38f4fd9a976f6ab" prot="public" virt="non-virtual"><scope>RVC::ObjectMatcher</scope><name>ObjectMatcher</name></member>
+      <member refid="class_r_v_c_1_1_object_matcher_1ad603c28b3a1ed8fa9e103c9a34838b70" prot="public" virt="non-virtual"><scope>RVC::ObjectMatcher</scope><name>ObjectMatcher</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

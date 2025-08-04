@@ -1,0 +1,12 @@
+<launch>
+    <arg name="mode" default="demo"/>
+    <arg name="saved_pose_dir" default=""/>
+    <node pkg="send_localization" exec="send_localization" />
+    <node pkg="pose_checker" exec="pose_checker">
+        <param name="mode" value="$(var mode)"/>
+    </node>
+    <node pkg="reloc_benchmarking" exec="reloc_benchmarking">
+        <param name="mode" value="$(var mode)"/>
+        <param name="saved_pose_dir" value="$(var saved_pose_dir)"/>
+    </node>
+</launch>

@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+#################################
+# PID parameters for pose seeking
+#################################
+
+# Maximum value of error integral for all PID controllers
+windup_limit: 0.05
+
+positional_tolerance:
+    x: 0.01
+    y: 0.01
+    z: 0.01
+
+angular_tolerance: 0.1
+
+#publish_robot_description_semantic: true
+#publish_robot_description: true
+

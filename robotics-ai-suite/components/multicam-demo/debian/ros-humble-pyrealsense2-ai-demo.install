@@ -1,0 +1,3 @@
+config/*.js /opt/ros/humble/share/pyrealsense2-ai-demo/config
+scripts/generate_ai_models.sh /opt/ros/humble/share/pyrealsense2-ai-demo/scripts
+src/mo.py /opt/ros/humble/share/pyrealsense2-ai-demo/src

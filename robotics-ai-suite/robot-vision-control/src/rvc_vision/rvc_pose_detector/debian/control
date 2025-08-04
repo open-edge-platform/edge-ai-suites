@@ -1,0 +1,12 @@
+Source: ros-humble-rvc-pose-detector
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0), ros-humble-ament-cmake, ros-humble-ament-index-cpp, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-geometry-msgs, ros-humble-message-filters, ros-humble-pcl-conversions, ros-humble-rclcpp, ros-humble-rclcpp-components, ros-humble-rvc-messages, ros-humble-rvc-vision-messages, ros-humble-sensor-msgs, ros-humble-std-msgs, ros-humble-tf2-eigen
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-rvc-pose-detector
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-humble-geometry-msgs, ros-humble-message-filters, ros-humble-pcl-conversions, ros-humble-rclcpp, ros-humble-rclcpp-components, ros-humble-rvc-messages, ros-humble-rvc-vision-messages, ros-humble-sensor-msgs, ros-humble-std-msgs, ros-humble-tf2-eigen
+Description: AI pose alignment stage Package

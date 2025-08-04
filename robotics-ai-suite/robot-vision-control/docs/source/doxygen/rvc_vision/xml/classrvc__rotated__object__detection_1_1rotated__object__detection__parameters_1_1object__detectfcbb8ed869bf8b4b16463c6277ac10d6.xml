@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detectfcbb8ed869bf8b4b16463c6277ac10d6" kind="class" language="Python" prot="public">
+    <compoundname>rvc_rotated_object_detection::rotated_object_detection_parameters::object_detection::Params::__Object::__MapObjects</compoundname>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detectfcbb8ed869bf8b4b16463c6277ac10d6_1aeb42e5625e0b3931c4059f4778d6843e" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.rotated_object_detection_parameters.object_detection.Params.__Object.__MapObjects::id</definition>
+        <argsstring></argsstring>
+        <name>id</name>
+        <initializer>=  None</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/rotated_object_detection_parameters.py" line="31" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/rotated_object_detection_parameters.py" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detectfcbb8ed869bf8b4b16463c6277ac10d6_1ad3d84abce933518b358aa0293dcbdbe5" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.rotated_object_detection_parameters.object_detection.Params.__Object.__MapObjects::image_path</definition>
+        <argsstring></argsstring>
+        <name>image_path</name>
+        <initializer>=  None</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/rotated_object_detection_parameters.py" line="32" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/rotated_object_detection_parameters.py" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/rotated_object_detection_parameters.py" line="30" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/rotated_object_detection_parameters.py" bodystart="30" bodyend="32"/>
+    <listofallmembers>
+      <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detectfcbb8ed869bf8b4b16463c6277ac10d6_1aeb42e5625e0b3931c4059f4778d6843e" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::rotated_object_detection_parameters::object_detection::Params::__Object::__MapObjects</scope><name>id</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detectfcbb8ed869bf8b4b16463c6277ac10d6_1ad3d84abce933518b358aa0293dcbdbe5" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::rotated_object_detection_parameters::object_detection::Params::__Object::__MapObjects</scope><name>image_path</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

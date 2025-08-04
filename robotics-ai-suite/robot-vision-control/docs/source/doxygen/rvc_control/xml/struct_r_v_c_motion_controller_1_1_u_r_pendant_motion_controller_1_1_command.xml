@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command" kind="struct" language="C++" prot="private">
+    <compoundname>RVCMotionController::URPendantMotionController::Command</compoundname>
+      <sectiondef kind="public-type">
+      <memberdef kind="enum" id="struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54" prot="public" static="no" strong="no">
+        <type></type>
+        <name>type</name>
+        <enumvalue id="struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54a834be917165a39283f26832a19b69e35" prot="public">
+          <name>sendPose</name>
+          <initializer>= 0</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54ad6e6908acb9b5af7142399291421a0ff" prot="public">
+          <name>receiveJoints</name>
+          <initializer>= 65</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54a8ad6b7c87606b85c4edf038eecc14186" prot="public">
+          <name>receiveIsNear</name>
+          <initializer>= 66</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54a9e6f69d4229262c1487ed5a5ee4fcdca" prot="public">
+          <name>receiveGripperSensor</name>
+          <initializer>= 67</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/ur_pendant_motion_controller.hpp" line="64" column="5" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/ur_pendant_motion_controller.hpp" bodystart="64" bodyend="69"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/ur_pendant_motion_controller.hpp" line="63" column="1" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/ur_pendant_motion_controller.hpp" bodystart="63" bodyend="70"/>
+    <listofallmembers>
+      <member refid="struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54a9e6f69d4229262c1487ed5a5ee4fcdca" prot="public" virt="non-virtual"><scope>RVCMotionController::URPendantMotionController::Command</scope><name>receiveGripperSensor</name></member>
+      <member refid="struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54a8ad6b7c87606b85c4edf038eecc14186" prot="public" virt="non-virtual"><scope>RVCMotionController::URPendantMotionController::Command</scope><name>receiveIsNear</name></member>
+      <member refid="struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54ad6e6908acb9b5af7142399291421a0ff" prot="public" virt="non-virtual"><scope>RVCMotionController::URPendantMotionController::Command</scope><name>receiveJoints</name></member>
+      <member refid="struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54a834be917165a39283f26832a19b69e35" prot="public" virt="non-virtual"><scope>RVCMotionController::URPendantMotionController::Command</scope><name>sendPose</name></member>
+      <member refid="struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54" prot="public" virt="non-virtual"><scope>RVCMotionController::URPendantMotionController::Command</scope><name>type</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

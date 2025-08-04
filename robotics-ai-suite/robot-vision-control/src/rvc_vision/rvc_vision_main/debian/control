@@ -1,0 +1,12 @@
+Source: ros-humble-rvc-vision-main
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0), ros-humble-ament-cmake
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-rvc-vision-main
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, 
+Description: Start up and configuration files for the whole vision component

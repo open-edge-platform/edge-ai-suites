@@ -1,0 +1,12 @@
+Source: ros-humble-moveit2-servo-motion-controller
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0), ros-humble-ament-cmake-ros, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-moveit-core, ros-humble-moveit-ros-planning-interface, ros-humble-moveit-servo, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-rvc-motion-controller-interface
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-moveit2-servo-motion-controller
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-humble-moveit-core, ros-humble-moveit-ros-planning-interface, ros-humble-moveit-servo, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-rvc-motion-controller-interface
+Description: RVC Motion controller interface-based plugin implemented using moveit2 servo

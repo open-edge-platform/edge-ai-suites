@@ -1,0 +1,7 @@
+<library path="trac_ik_kinematics_plugin">
+  <class name="trac_ik_kinematics_plugin/TRAC_IKKinematicsPlugin" type="trac_ik_kinematics_plugin::TRAC_IKKinematicsPlugin" base_class_type="kinematics::KinematicsBase">
+    <description>
+      A implementation of kinematics as a plugin based on TRAC-IK.
+    </description>
+  </class>
+</library>

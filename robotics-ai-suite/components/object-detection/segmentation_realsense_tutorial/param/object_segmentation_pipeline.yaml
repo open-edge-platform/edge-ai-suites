@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+Pipelines:
+- name: segmentation
+  inputs: [RealSenseCameraTopic]
+  infers:
+    - name: ObjectSegmentation
+      model: /opt/openvino_toolkit/models/convert/public/deeplabv3/FP16/deeplabv3.xml
+      engine: {device}
+      label: install/segmentation_realsense_tutorial/share/segmentation_realsense_tutorial/label/object.labels
+      batch: 1
+      confidence_threshold: 0.5
+  outputs: [ImageWindow, RosTopic, RViz]
+  connects:
+    - left: RealSenseCameraTopic
+      right: [ObjectSegmentation]
+    - left: ObjectSegmentation
+      right: [ImageWindow]
+    - left: ObjectSegmentation
+      right: [RosTopic]
+    - left: ObjectSegmentation
+      right: [RViz]
+
+OpenvinoCommon:

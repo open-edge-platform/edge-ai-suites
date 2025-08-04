@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_08679506a480dd55fc6684542e246377" kind="dir">
+    <compoundname>rvc_dynamic_motion_controller/rvc_motion_controller_plugins</compoundname>
+    <innerdir refid="dir_dc4d6e6b349cb82894f8573f8d624ac5">rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller</innerdir>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/"/>
+  </compounddef>
+</doxygen>

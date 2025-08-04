@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespacesetup" kind="namespace" language="Python">
+    <compoundname>setup</compoundname>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="setup_8py_1a3c783d982ab5a3d08b5fcf646a62976d" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string setup.package_name</definition>
+        <argsstring></argsstring>
+        <name>package_name</name>
+        <initializer>=  &apos;rvc_rotated_object_detection&apos;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="11" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="11" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1ab3a7a0638d76a01367c5bc3cc699447f" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.name</definition>
+        <argsstring></argsstring>
+        <name>name</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="14" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="14" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1a2aa722b36a933088812b50ea79b97a5c" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.version</definition>
+        <argsstring></argsstring>
+        <name>version</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="15" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="15" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1aff2375a361fd5865c77bd9aa093be747" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.packages</definition>
+        <argsstring></argsstring>
+        <name>packages</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="16" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="16" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1ad027a8e9452da003dca32bf7467bd16e" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.data_files</definition>
+        <argsstring></argsstring>
+        <name>data_files</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="17" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1abead4f26b530856f858f0d44c7cf2588" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.install_requires</definition>
+        <argsstring></argsstring>
+        <name>install_requires</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="24" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="24" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1a13510753661cb74083a0c664db11dde9" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.zip_safe</definition>
+        <argsstring></argsstring>
+        <name>zip_safe</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="25" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="25" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1aa1a7cf9bbf76004bb72697dc00bbee9d" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.maintainer</definition>
+        <argsstring></argsstring>
+        <name>maintainer</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="26" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1a92a81adbfdd219564d5246ce8d77f869" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.maintainer_email</definition>
+        <argsstring></argsstring>
+        <name>maintainer_email</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="27" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1aedf461ec52a946bda975938ba0b93ec0" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.description</definition>
+        <argsstring></argsstring>
+        <name>description</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="28" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="28" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1a8ed6f50a28bd6a8794f8e1153baa6de9" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.license</definition>
+        <argsstring></argsstring>
+        <name>license</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="29" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="29" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1a6369bb060267ccf90b93519796e7cc2c" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.tests_require</definition>
+        <argsstring></argsstring>
+        <name>tests_require</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="30" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="30" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1ada7058afc98897f073d3f3b8b9157059" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.entry_points</definition>
+        <argsstring></argsstring>
+        <name>entry_points</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/setup.py" line="31" column="1" bodyfile="rvc_rotated_object_detection/setup.py" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_rotated_object_detection/setup.py" line="1" column="1"/>
+  </compounddef>
+</doxygen>

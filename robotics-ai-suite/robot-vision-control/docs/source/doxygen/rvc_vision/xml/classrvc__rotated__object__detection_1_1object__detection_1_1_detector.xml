@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classrvc__rotated__object__detection_1_1object__detection_1_1_detector" kind="class" language="Python" prot="public">
+    <compoundname>rvc_rotated_object_detection::object_detection::Detector</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1aebfeb29c7ec2a1dfcb44c2711d85e5db" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.Detector::logger</definition>
+        <argsstring></argsstring>
+        <name>logger</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="54" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="54" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a83cacd45f87dda5c035e0df578d1fb28" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.Detector::ratio</definition>
+        <argsstring></argsstring>
+        <name>ratio</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="55" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="55" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1aa44b71b067707214517fc22402f72e6a" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.Detector::matches_limit</definition>
+        <argsstring></argsstring>
+        <name>matches_limit</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="56" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="56" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a272148538019efbc8867924865c05b24" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.Detector::orb</definition>
+        <argsstring></argsstring>
+        <name>orb</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="58" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="58" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a0d03f1b94f0e91863feed3b59b3bcd65" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.Detector::matcher</definition>
+        <argsstring></argsstring>
+        <name>matcher</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="59" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="59" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a5f1cfd6f4c43ae1db44d3c5e3950e64f" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.Detector::objects</definition>
+        <argsstring></argsstring>
+        <name>objects</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="61" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a7d19cdc202a8ff672c92a0441934da0f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>None</type>
+        <definition> None rvc_rotated_object_detection.object_detection.Detector.__init__</definition>
+        <argsstring>(self, ratio, matches_limit, logger)</argsstring>
+        <name>__init__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>ratio</type>
+          <defname>ratio</defname>
+        </param>
+        <param>
+          <type>matches_limit</type>
+          <defname>matches_limit</defname>
+        </param>
+        <param>
+          <type>logger</type>
+          <defname>logger</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="53" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="53" bodyend="62"/>
+      </memberdef>
+      <memberdef kind="function" id="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a4ca3ce4815eee8c812cbae7b91a1ebfc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def rvc_rotated_object_detection.object_detection.Detector.initialize_object</definition>
+        <argsstring>(self, obj_name, id, image_path)</argsstring>
+        <name>initialize_object</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>obj_name</type>
+          <defname>obj_name</defname>
+        </param>
+        <param>
+          <type>id</type>
+          <defname>id</defname>
+        </param>
+        <param>
+          <type>image_path</type>
+          <defname>image_path</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="63" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="63" bodyend="71"/>
+      </memberdef>
+      <memberdef kind="function" id="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1aa992385a2f1fd395e864ab51a50be064" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def rvc_rotated_object_detection.object_detection.Detector.detect</definition>
+        <argsstring>(self, img)</argsstring>
+        <name>detect</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>img</type>
+          <defname>img</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="72" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="72" bodyend="121"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="51" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="51" bodyend="122"/>
+    <listofallmembers>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a7d19cdc202a8ff672c92a0441934da0f" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::Detector</scope><name>__init__</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1aa992385a2f1fd395e864ab51a50be064" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::Detector</scope><name>detect</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a4ca3ce4815eee8c812cbae7b91a1ebfc" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::Detector</scope><name>initialize_object</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1aebfeb29c7ec2a1dfcb44c2711d85e5db" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::Detector</scope><name>logger</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a0d03f1b94f0e91863feed3b59b3bcd65" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::Detector</scope><name>matcher</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1aa44b71b067707214517fc22402f72e6a" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::Detector</scope><name>matches_limit</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a5f1cfd6f4c43ae1db44d3c5e3950e64f" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::Detector</scope><name>objects</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a272148538019efbc8867924865c05b24" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::Detector</scope><name>orb</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a83cacd45f87dda5c035e0df578d1fb28" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::Detector</scope><name>ratio</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

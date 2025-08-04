@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rvc_grasp_interface</name>
+  <version>2.0.0</version>
+  <description>pluginlib interface that a pose to grasp plugin has to implement</description>
+  <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
+  <license>Propertary</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>rvc_messages</depend>
+  
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

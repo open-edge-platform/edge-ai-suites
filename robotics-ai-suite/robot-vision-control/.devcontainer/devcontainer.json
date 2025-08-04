@@ -1,0 +1,71 @@
+// See https://aka.ms/vscode-remote/devcontainer.json for format details.
+{
+	"dockerFile": "Dockerfile",
+	"build": {
+		"args": {
+			"http_proxy": "${localEnv:http_proxy}",
+			"https_proxy": "${localEnv:https_proxy}",
+			"no_proxy": "${localEnv:no_proxy}",
+			"WORKSPACE": "${containerWorkspaceFolder}"
+		}
+	},
+	"remoteUser": "ros",
+	"runArgs": [
+		"--network=host",
+		"--cap-add=SYS_PTRACE",
+		"--security-opt=seccomp:unconfined",
+		"--security-opt=apparmor:unconfined",
+		"--volume=/dev:/dev",
+		"--volume=/tmp/.X11-unix:/tmp/.X11-unix",
+		"--ipc=host",
+		"--privileged"
+		// realsense video devices
+		// "--device=/dev/video0",
+		// "--device=/dev/video1",
+		// "--device=/dev/video2",
+		// "--device=/dev/video3",
+		// "--device=/dev/video4",
+		// "--device=/dev/video5",
+		// "--device=/dev/video6",
+		// "--device=/dev/video7",
+		// "--device=/dev/video8",
+		// "--device=/dev/video9",
+		// "--device=/dev/video10",
+		// "--device=/dev/video11"
+		// uncomment to use intel iGPU
+		// "--device=/dev/dri"
+	],
+	"containerEnv": {
+		"http_proxy": "${localEnv:http_proxy}",
+		"https_proxy": "${localEnv:https_proxy}",
+		"no_proxy": "${localEnv:no_proxy}",
+		"DISPLAY": "${localEnv:DISPLAY}", // Needed for GUI try ":0" for windows
+		"WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
+		"XDG_RUNTIME_DIR": "${localEnv:XDG_RUNTIME_DIR}",
+		"PULSE_SERVER": "${localEnv:PULSE_SERVER}",
+		"LIBGL_ALWAYS_SOFTWARE": "1" // Needed for software rendering of opengl
+	},
+	// Set *default* container specific settings.json values on container create.
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"http.proxy": "${localEnv:http_proxy}"
+			},
+			"extensions": [
+				"althack.ament-task-provider",
+				"betwo.b2-catkin-tools",
+				"DotJoshJohnson.xml",
+				"ms-azuretools.vscode-docker",
+				"ranch-hand-robotics.rde-pack",
+				"ms-python.python",
+				"ms-vscode.cpptools",
+				"redhat.vscode-yaml",
+				"smilerobotics.urdf",
+				"streetsidesoftware.code-spell-checker",
+				"twxs.cmake",
+				"yzhang.markdown-all-in-one",
+				"zachflower.uncrustify"
+			]
+		}
+	}
+}

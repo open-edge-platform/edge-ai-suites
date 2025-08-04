@@ -1,0 +1,18 @@
+ros-humble-follow-me-tutorial-w-gesture (2.2-1) UNRELEASED; urgency=low
+
+  * Change the bash scripts to ros2 launch scripts for all the follow-me applications
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 22 Jul 2025 00:00:00 +0000
+
+ros-humble-follow-me-tutorial-w-gesture (2.1-2) UNRELEASED; urgency=low
+
+  * Minor change to the default config parameters in adbscan.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 13 Aug 2024 00:00:00 +0000
+
+ros-humble-follow-me-tutorial-w-gesture (2.1-1) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 07 Feb 2024 00:00:00 +0000
+

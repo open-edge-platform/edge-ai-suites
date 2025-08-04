@@ -1,0 +1,158 @@
+From 26b7e790c95c52cac9b746eafa71d484c3d04409 Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Fri, 7 Mar 2025 10:19:44 +0800
+Subject: [PATCH 2/2] Enable real robot.
+
+Signed-off-by: HKH347710 <kanghua.he@intel.com>
+---
+ constants.py        |  9 +++++++++
+ imitate_episodes.py | 49 ++++++++++++++++++++++++++++++++++++---------
+ 2 files changed, 48 insertions(+), 10 deletions(-)
+
+diff --git a/constants.py b/constants.py
+index b9eb747..cd941d5 100644
+--- a/constants.py
++++ b/constants.py
+@@ -33,6 +33,15 @@ SIM_TASK_CONFIGS = {
+     },
+ }
+ 
++TASK_CONFIGS = {
++    'insertion': {
++        'dataset_dir': DATA_DIR + '/insertion',
++        'num_episodes': 50,
++        'episode_len': 1000,
++        'camera_names': ['cam_high', 'cam_low', 'cam_left_wrist', 'cam_right_wrist']
++    },
++}
++
+ ### Simulation envs fixed constants
+ DT = 0.02
+ JOINT_NAMES = ["waist", "shoulder", "elbow", "forearm_roll", "wrist_angle", "wrist_rotate"]
+diff --git a/imitate_episodes.py b/imitate_episodes.py
+index 43a4375..3977bf9 100644
+--- a/imitate_episodes.py
++++ b/imitate_episodes.py
+@@ -25,6 +25,10 @@ from transformers import AutoTokenizer
+ import IPython
+ e = IPython.embed
+ 
++XPU='xpu'
++# xpu:0 dGPU
++# xpu:1 iGPU
++
+ def main(args):
+     set_seed(1)
+     # command line parameters
+@@ -45,7 +49,7 @@ def main(args):
+         from constants import SIM_TASK_CONFIGS
+         task_config = SIM_TASK_CONFIGS[task_name]
+     else:
+-        from aloha_scripts.constants import TASK_CONFIGS
++        from constants import TASK_CONFIGS
+         task_config = TASK_CONFIGS[task_name]
+     dataset_dir = task_config['dataset_dir']
+     num_episodes = task_config['num_episodes']
+@@ -156,7 +160,7 @@ def get_image(device, ts, camera_names):
+     if device == 'CPU':
+         curr_image = torch.from_numpy(curr_image / 255.0).float().cpu().unsqueeze(0)
+     if device == 'GPU':
+-        curr_image = torch.from_numpy(curr_image / 255.0).float().xpu().unsqueeze(0)
++        curr_image = torch.from_numpy(curr_image / 255.0).float().to(XPU).unsqueeze(0)
+     elif device == 'CUDA':
+         curr_image = torch.from_numpy(curr_image / 255.0).float().cuda().unsqueeze(0)
+     return curr_image
+@@ -187,9 +191,9 @@ def eval_bc(config, ckpt_name, save_episode=True):
+         print(loading_status)
+         policy.cpu()
+     elif device == 'GPU':
+-        loading_status = policy.deserialize(torch.load(ckpt_path, map_location=torch.device('xpu')))
++        loading_status = policy.deserialize(torch.load(ckpt_path, map_location=torch.device(XPU)))
+         print(loading_status)
+-        policy.to("xpu")
++        policy.to(XPU)
+     elif device == 'CUDA':
+         loading_status = policy.deserialize(torch.load(ckpt_path))
+         print(loading_status)
+@@ -209,9 +213,23 @@ def eval_bc(config, ckpt_name, save_episode=True):
+ 
+     # load environment
+     if real_robot:
+-        from aloha_scripts.robot_utils import move_grippers # requires aloha
+-        from aloha_scripts.real_env import make_real_env # requires aloha
+-        env = make_real_env(init_node=True)
++        from aloha.robot_utils import move_grippers # requires aloha
++        from aloha.real_env import make_real_env # requires aloha
++        from interbotix_common_modules.common_robot.robot import (
++            create_interbotix_global_node,
++            get_interbotix_global_node,
++            robot_startup,
++        )
++        from interbotix_common_modules.common_robot.exceptions import InterbotixException
++        try:
++            node = get_interbotix_global_node()
++        except:
++            node = create_interbotix_global_node('aloha')
++        env = make_real_env(node=node, setup_base=False)
++        try:
++            robot_startup(node)
++        except InterbotixException:
++            pass
+         env_max_reward = 0
+     else:
+         from sim_env import make_sim_env
+@@ -249,7 +267,7 @@ def eval_bc(config, ckpt_name, save_episode=True):
+             if device == 'CPU':
+                 all_time_actions = torch.zeros([max_timesteps, max_timesteps+num_queries, state_dim]).cpu()
+             elif device == 'GPU':
+-                all_time_actions = torch.zeros([max_timesteps, max_timesteps+num_queries, state_dim]).to('xpu')
++                all_time_actions = torch.zeros([max_timesteps, max_timesteps+num_queries, state_dim]).to(XPU)
+             elif device == 'CUDA':
+                 all_time_actions = torch.zeros([max_timesteps, max_timesteps+num_queries, state_dim]).cuda()
+             else:
+@@ -290,7 +308,7 @@ def eval_bc(config, ckpt_name, save_episode=True):
+                 if device == 'CPU':
+                     qpos = torch.from_numpy(qpos).float().cpu().unsqueeze(0)
+                 elif device == 'GPU':
+-                    qpos = torch.from_numpy(qpos).float().to('xpu').unsqueeze(0)
++                    qpos = torch.from_numpy(qpos).float().to(XPU).unsqueeze(0)
+                 elif device == "CUDA":
+                     qpos = torch.from_numpy(qpos).float().cuda().unsqueeze(0)
+                 # qpos_history[:, t] = qpos
+@@ -342,6 +360,13 @@ def eval_bc(config, ckpt_name, save_episode=True):
+                     print(f'{t} - screen render:{latencies[0]:.9f}s, process image:{(latencies[1]):.9f}s, model inference:{latencies[2]:.9f}, query policy:{(latencies[3]):.9f}s, post process:{(latencies[4]):.9f}, env:{(latencies[5]):.9f}')
+                 latencies_all.append(latencies)
+ 
++                ### Cycle time
++                if real_robot:
++                    duration = time.time() - onscreen_time
++                    sleep_time = max(0, DT - duration)
++                    if temporal_agg == False:
++                        time.sleep(sleep_time)
++
+             print(f'Avg fps {max_timesteps / (time.time() - time0)}')
+             if print_time:
+                 latencies_all = np.array(latencies_all)
+@@ -350,7 +375,7 @@ def eval_bc(config, ckpt_name, save_episode=True):
+                     screen render:{average_latency[0]:.9f}s, process image:{average_latency[1]:.9f}s, model inference:{average_latency[2]:.9f}, query policy:{average_latency[3]:.9f}s, post process:{average_latency[4]:.9f}, env:{average_latency[5]:.9f}')
+             plt.close()
+         if real_robot:
+-            move_grippers([env.puppet_bot_left, env.puppet_bot_right], [PUPPET_GRIPPER_JOINT_OPEN] * 2, move_time=0.5)  # open
++            move_grippers([env.follower_bot_left, env.follower_bot_right], [PUPPET_GRIPPER_JOINT_OPEN] * 2, moving_time=0.5)  # open
+             pass
+ 
+         rewards = np.array(rewards)
+@@ -363,6 +388,10 @@ def eval_bc(config, ckpt_name, save_episode=True):
+         if save_episode:
+             save_videos(image_list, DT, video_path=os.path.join(ckpt_dir, f'video{rollout_id}.mp4'))
+ 
++        ### reset real env
++        if real_robot:
++            time.sleep(3)
++
+     success_rate = np.mean(np.array(highest_rewards) == env_max_reward)
+     avg_return = np.mean(episode_returns)
+     summary_str = f'\nSuccess rate: {success_rate}\nAverage return: {avg_return}\n\n'
+-- 
+2.34.1
+

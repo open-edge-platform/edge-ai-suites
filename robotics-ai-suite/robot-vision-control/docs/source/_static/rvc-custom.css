@@ -1,0 +1,711 @@
+/* -- Extra CSS styles for RVC content (RTD theme) ----------------------- */
+
+/* Adjust nav bar colors */
+
+.wy-nav-side {
+    background: #f2f2f2;
+}
+
+.wy-side-nav-search {
+    background: #f2f2f2;
+}
+
+.wy-menu-vertical a {
+    color: black;
+}
+
+/* Page width */
+
+.wy-nav-content {
+    max-width: 1200px !important;
+}
+
+/* Version opacity */
+
+.wy-side-nav-search div.version {
+    color: hsla(0,0%,100%,.5);
+}
+
+/* and fix wrap bug per https://rackerlabs.github.io/docs-rackspace/tools/rtd-tables.html */
+.wy-table-responsive table td {
+    /* !important prevents the common CSS stylesheets from overriding
+    this as on RTD they are loaded after this stylesheet */
+    white-space: normal !important;
+}
+
+.wy-table-responsive {
+    overflow: visible !important;
+}
+
+
+/* pygments tweak for white-on-black console */
+
+.highlight-console .highlight {
+   background-color: #222222;
+}
+.highlight-console .highlight pre, .highlight-console .highlight .go, .highlight-console .highlight .gp {
+   color: white;
+}
+.highlight-console .highlight .hll {
+   background-color: white;
+}
+.highlight-console .highlight .hll .go, .highlight-console .highlight .hll .gp {
+   color: black;
+   font-weight: bold;
+}
+
+/* code block highlight color in rtd changed to lime green, no no no */
+
+.rst-content tt.literal, .rst-content code.literal, .highlight {
+   background: #f0f0f0;
+}
+.rst-content tt.literal, .rst-content code.literal {
+    color: #000000;
+}
+
+div.non-compliant-code div.highlight {
+   background: #f7d7d7;
+}
+
+
+/* Copy Button */
+a.copybtn {
+  opacity: 0.5;
+  width: 1.5em;
+}
+
+/* Add radius to code blocks */
+
+.highlight-console , .highlight-bash {
+   border-radius: 5px;
+}
+
+/* Tweak sidebar colors for RVC theme */
+
+.wy-side-nav-search {
+   background-color: #0068b5;
+}
+
+/* squish the space between a paragraph before a list */
+div > p + ul, div > p + ol {
+   margin-top: -20px;
+}
+
+/* add some space before the figure caption */
+p.caption  {
+#    border-top: 1px solid;
+    margin-top: 1em;
+}
+
+/* add a colon after the figure/table number (before the caption) */
+span.caption-number::after {
+   content: ": ";
+}
+
+p.extrafooter {
+   text-align: right;
+   margin-top: -36px;
+}
+
+table.align-center {
+   display: table !important;
+}
+
+/* put the table caption at the bottom, as done for figures */
+table {
+   caption-side: bottom;
+}
+
+
+.code-block-caption {
+    color: #000;
+    font: italic 85%/1 arial,sans-serif;
+    padding: 1em 0;
+    text-align: center;
+}
+
+/*  make .. hlist:: tables fill the page */
+table.hlist {
+    width: 95% !important;
+}
+
+/*  override rtd theme white-space no-wrap in table heading and content
+ *  and top align for content too (not middle)
+ */
+th,td {
+    white-space: normal !important;
+    vertical-align: top !important;
+}
+
+/* dbk tweak for doxygen-generated API headings (for RTD theme) */
+.rst-content dl.group>dt, .rst-content dl.group>dd>p {
+   display:none !important;
+}
+.rst-content dl.group {
+  margin: 0 0 12px 0px;
+}
+.rst-content dl.group>dd {
+  margin-left: 0  !important;
+}
+.rst-content p.breathe-sectiondef-title {
+  text-decoration: underline;  /* dbk for API sub-headings */
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+.rst-content div.breathe-sectiondef {
+  padding-left: 0 !important;
+}
+
+/* doxygenXX item color tweaks, light blue background with dark blue top border */
+.rst-content dl:not(.docutils) dl dt {
+  background: #e7f2fa !important;
+  border-top: solid 3px #2980B9 !important;
+  border-left: none !important;
+}
+
+/* tweak display of option tables to make first column wider */
+col.option {
+  width: 25%;
+}
+
+/* tweak format for <kbd> (:kbd:`F10`) */
+kbd
+{
+  -moz-border-radius:3px;
+  -moz-box-shadow:0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+  -webkit-border-radius:3px;
+  -webkit-box-shadow:0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+  background-color:#f7f7f7;
+  border:1px solid #ccc;
+  border-radius:3px;
+  box-shadow:0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+  color:#333;
+  display:inline-block;
+  font-family:Arial,Helvetica,sans-serif;
+  font-size:11px;
+  line-height:1.4;
+  margin:0 .1em;
+  padding:.1em .6em;
+  text-shadow:0 1px 0 #fff;
+}
+
+
+/* heading styles */
+
+h1:not(a *) {
+    margin-top: 40px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #CCCCCC;
+    width: 100%;
+}
+
+h2:not(a *) {
+    margin-top: 30px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #CCCCCC;
+    width: 75%;
+}
+
+h3:not(a *) {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    padding-bottom: 0px;
+}
+
+/* hidden drop-down toggle style */
+
+.toggle-header {
+   display: block;
+   clear: both;
+   cursor: pointer;
+   color: #fff;
+   background: #0054AE;
+   margin: -12px;
+   padding: 6px 12px;
+   margin-bottom: 12px;
+}
+
+/* home page grid display */
+
+.grid {
+    list-style-type: none !important;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
+    margin: 1rem auto;
+    max-width: calc((250px + 2rem) * 3);
+}
+
+.grid-item {
+    list-style-type: none !important;
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 auto;
+            flex: 0 0 auto;
+    width: 200px;
+    text-align: center;
+    margin: 1rem;
+}
+
+.grid-item a {
+    display: block;
+    width: 200px;
+    height: 200px;
+    padding: 20px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    border: 1px solid #00C7FD;
+    background-color: #ffffff;
+    border-radius: 30px;
+    color: #000000;
+}
+
+.grid-item h2 {
+    font-size: 1.1rem;
+}
+
+.grid-item img {
+    max-width: 50%;
+    max-height: 50%;
+    margin-bottom: 0.7rem;
+}
+
+
+.grid-item a:hover {
+    background-color: #DFF4FD;
+    color: #000000;
+}
+
+
+.grid-item p {
+    margin-top: 0.5rem;
+    font-size: 85%;
+    line-height:1.2;
+    color: #404040;
+}
+
+.grid-icon {
+   line-height: 1.8;
+   font-size: 4rem;
+   color: #3FC2F3;
+}
+
+/* install page grid display - left aligned*/
+
+.install-item {
+    list-style-type: none !important;
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 auto;
+            flex: 0 0 auto;
+    width: 200px;
+    text-align: center;
+    margin: 1rem;
+}
+
+.install-item a {
+    display: block;
+    width: 200px;
+    height: 200px;
+    padding: 20px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    border: 1px solid #3FC2F3;
+    background-color: #ffffff;
+    border-radius: 30px;
+    color: #000000;
+}
+
+.install-item h2 {
+    font-size: 1.1rem;
+}
+
+.install-item li {
+    margin-top: 0.5rem;
+    font-size: 85%;
+    line-height:1.2;
+    color: #404040;
+    align: left;
+}
+
+.install-item img {
+    max-width: 50%;
+    max-height: 50%;
+    margin-bottom: 0.7rem;
+}
+
+
+.install-item a:hover {
+    background-color: #DFF4FD;
+    color: #000000;
+}
+
+
+.install-item p {
+    margin-top: 0.5rem;
+    font-size: 85%;
+    line-height:1.2;
+    color: #404040;
+}
+
+.install-icon {
+   line-height: 1.8;
+   font-size: 4rem;
+   color: #3FC2F3;
+}
+
+/* tweak last updated section of footer to be right-aligned */
+.lastupdated {
+    float:right;
+}
+
+.rowtitle {
+   font-size:14px !important;
+   font-weight:bold !important;
+   vertical-align:middle !important;
+   border-color:#000000 !important;
+}
+
+.blur {
+   color: transparent;
+   text-shadow: 0 0 5px rgba(0,0,0,0.5);
+   user-select: none; /* supported by Chrome and Opera */
+   -webkit-user-select: none; /* Safari */
+   -khtml-user-select: none; /* Konqueror HTML */
+   -moz-user-select: none; /* Firefox */
+   -ms-user-select: none; /* Internet Explorer/Edge */
+}
+
+/* Assign background colors */
+.bgdr-parent {background-color:#FF848A !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bglr-parent {background-color:#FFB6B9 !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bgdo-parent {background-color:#FF8F51 !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bglo-parent {background-color:#FFC599 !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bgdg-parent {background-color:#B1D272 !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bglg-parent {background-color:#D7F3A2 !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bgdb-parent {background-color:#0099EC !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bglb-parent {background-color:#6CC4F5 !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bgdy-parent {background-color:#FEC91B !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bgly-parent {background-color:#FFE17A !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bgdp-parent {background-color:#CC94DA !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bglp-parent {background-color:#EEC3F7 !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bgdc-parent {background-color:#7BD2D5 !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bglc-parent {background-color:#BEEAEB !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bgd-parent {background-color:#AEAEAE !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bgl-parent {background-color:#E9E9E9 !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+.bgw-parent {background-color:#FFFFFF !important; border-top-color:#444444 !important; border-bottom-color:#444444 !important;}
+
+/* Box in Install RVC */
+
+
+.box {
+    list-style-type: none !important;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
+    margin: 1rem auto;
+    max-width: calc((500px + 2rem)* 2);
+}
+
+.box-item {
+    list-style-type: none !important;
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 auto;
+            flex: 0 0 auto;
+    width: 350px;
+    text-align: center;
+    margin: 1rem;
+}
+
+.box-item a {
+    display: block;
+    width: 350px;
+    height: 300px;
+    padding: 20px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    border: 1px solid #00C7FD;
+    background-color: #ffffff;
+    border-radius: 30px;
+    color: #000000;
+}
+
+.box-item h2 {
+    font-size: 1.1rem;
+}
+
+.box-item img {
+    max-width: 50%;
+    max-height: 50%;
+    margin-bottom: 0.7rem;
+}
+
+
+.box-item a:hover {
+    background-color: #DFF4FD;
+    color: #000000;
+}
+
+
+.box-item p {
+    margin-top: 0.5rem;
+    font-size: 95%;
+    line-height:1.2;
+    color: #404040;
+}
+
+.box-icon {
+   line-height: 1.8;
+   font-size: 4rem;
+   color: #3FC2F3;
+}
+
+@keyframes example {
+    0%   {border-left: 2px solid #ffffff;}
+    25%  {border-left: 3px solid #ffe6e6;}
+    50%  {border-left: 4px solid #ff8080;}
+    100% {border-left: 5px solid #ff0000;}
+}
+
+/* Step layout for Get Started */
+
+.archive body {
+  background: #001628;
+  color: black;
+  padding: 4em;
+  font-family: sans-serif;
+  line-height: 1.15;
+}
+
+.archive h2 {
+    font-size: 1.1rem;
+}
+
+.archive p {
+    margin-top: 0.5rem;
+    font-size: 95%;
+    line-height:1.2;
+    color: #404040;
+}
+
+.archive hr{
+    display: block;
+    border: none;
+    height: 3px;
+    background-color: #00C7FD;
+   
+ }
+
+
+.archive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-gap: 1.2em;
+  grid-auto-flow: dense;
+  height: 150px;
+}
+
+.article {
+  padding: 1em;
+  background: #fff;
+  box-shadow:
+    0 5px 10px rgba(0, 0, 0, 0.1),
+    0 20px 20px rgba(0, 0, 0, 0.05);
+}
+
+.archive a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.archive a:visited, a:hover, a:active {
+  color: inherit;
+  text-decoration: none;
+}
+
+.archive a:active {
+  color: inherit;
+  text-decoration: none;
+}
+
+.archive a:active {
+  color: inherit;
+  text-decoration: none;
+}
+
+/**
+ * Tabs
+ */
+.tabs {
+	display: flex;
+	flex-wrap: wrap; // make sure it wraps
+}
+.tabs label {
+	order: 1; // Put the labels first
+	display: block;
+	padding: 0.97rem;
+	margin-right: 0.2rem;
+	cursor: pointer;
+  	background: #FFFFFF;
+  	font-weight: bold;
+  	font-size: 95%;
+  	transition: background ease 0.2s;
+}
+.tabs .tab {
+  order: 99; // Put the tabs last
+  flex-grow: 1;
+	width: 100%;
+	display: none;
+  	padding: 1rem;
+  	background: #E9E9E9;
+  	}
+.tabs input[type="radio"] {
+	display: none;
+}
+.tabs input[type="radio"]:checked + label {
+	background: #E9E9E9;
+	
+}
+.tabs input[type="radio"]:checked + label + .tab {
+	display: block;
+	background: #E9E9E9;
+	
+}
+
+@media (max-width: 45em) {
+  .tabs .tab,
+  .tabs label {
+    order: initial;
+  }
+  .tabs label {
+    width: 100%;
+    margin-right: 0;
+    margin-top: 0.2rem;
+  }
+}
+
+
+/* Developer Resources grid display */
+
+.dev {
+    list-style-type: none !important;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
+    margin: 1rem auto;
+    max-width: calc((300px + 2rem) * 4);
+}
+
+.dev-item {
+    list-style-type: none !important;
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 auto;
+            flex: 0 0 auto;
+     width: 250px;
+    text-align: center;
+    margin: 1rem;
+}
+
+.dev-item a {
+    display: block;
+    width: 200px;
+    height: 200px;
+    padding: 20px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    border: 1px solid #00C7FD;
+    background-color: #ffffff;
+    border-radius: 30px;
+    color: #000000;
+}
+
+.dev-item h2 {
+    font-size: 1.1rem;
+}
+
+.dev-item img {
+    max-width: 50%;
+    max-height: 50%;
+    margin-bottom: 0.7rem;
+}
+
+
+.dev-item a:hover {
+    background-color: #DFF4FD;
+    color: #000000;
+}
+
+
+.dev-item p {
+    margin-top: 0.5rem;
+    font-size: 85%;
+    line-height:1.2;
+    color: #404040;
+}
+
+.dev-icon {
+   line-height: 1.8;
+   font-size: 4rem;
+   color: #3FC2F3;
+}
+

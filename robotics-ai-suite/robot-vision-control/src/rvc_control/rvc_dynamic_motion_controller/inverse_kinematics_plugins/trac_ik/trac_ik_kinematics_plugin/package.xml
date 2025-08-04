@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>trac_ik_kinematics_plugin</name>
+  <version>1.6.6</version>
+  <description>A MoveIt! Kinematics plugin using TRAC-IK</description>
+  <maintainer email="aprotyas@u.rochester.edu">Abrar Rahman Protyasha</maintainer>
+  <author>Patrick Beeson</author>
+  <license>BSD</license>
+
+    <depend>rclcpp</depend>
+
+  <build_depend>moveit_core</build_depend>
+  <build_depend>pluginlib</build_depend>
+  <depend>tf2</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_kdl</depend>
+  <depend>visualization_msgs</depend>
+  <depend>tf2_geometry_msgs</depend>
+
+  <build_depend>trac_ik_lib</build_depend>
+  <build_depend>libnlopt-dev</build_depend>
+  <exec_depend>moveit_core</exec_depend>
+  <exec_depend>pluginlib</exec_depend>
+  <exec_depend>trac_ik_lib</exec_depend>
+  <exec_depend>libnlopt-dev</exec_depend>
+  <exec_depend>libnlopt0</exec_depend>
+  <buildtool_depend>ament_cmake_ros</buildtool_depend>                                                                
+  <build_depend>rclcpp_components</build_depend>                                                                      
+  <export>
+    <build_type>ament_cmake</build_type>                                                                              
+    <moveit_core plugin="${prefix}/trac_ik_kinematics_description.xml"/>
+  </export>
+</package>
