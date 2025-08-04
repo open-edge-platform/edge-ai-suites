@@ -67,7 +67,7 @@ jobs:
           command: '--skip-dirs node_modules'
 
       - name: Scan dataprep-visualdata-milvus image
-        uses: aquasecurity/trivy-action@0.32.0
+        uses: aquasecurity/trivy-action@77137e9dc3ab1b329b7c8a38c2eb7475850a14e8
         with:
           scan-type: 'image'
           image-ref: 'dataprep-visualdata-milvus:latest'
@@ -78,7 +78,7 @@ jobs:
           exit-code: '0'
 
       - name: Scan retriever-milvus image
-        uses: aquasecurity/trivy-action@0.32.0
+        uses: aquasecurity/trivy-action@77137e9dc3ab1b329b7c8a38c2eb7475850a14e8
         with:
           scan-type: 'image'
           image-ref: 'retriever-milvus:latest'
@@ -89,7 +89,7 @@ jobs:
           exit-code: '0'
 
       - name: Scan vlm-openvino-serving image
-        uses: aquasecurity/trivy-action@0.32.0
+        uses: aquasecurity/trivy-action@77137e9dc3ab1b329b7c8a38c2eb7475850a14e8
         with:
           scan-type: 'image'
           image-ref: 'vlm-openvino-serving:latest'
@@ -100,7 +100,7 @@ jobs:
           exit-code: '0'
 
       - name: Scan visual-search-qa-app image
-        uses: aquasecurity/trivy-action@0.32.0
+        uses: aquasecurity/trivy-action@77137e9dc3ab1b329b7c8a38c2eb7475850a14e8
         with:
           scan-type: 'image'
           image-ref: 'visual-search-qa-app:latest'
@@ -111,7 +111,7 @@ jobs:
           exit-code: '0'
 
       - name: Upload scan results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
           name: trivy-scan-results
           path: |
@@ -121,64 +121,35 @@ jobs:
   bandit-scan:
     permissions:
       contents: read
-      security-events: write  # 用于向GitHub安全中心提交结果
+      security-events: write  
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Run Bandit Scan
-        uses: orch-ci/bandit-action@v1
+        uses: orch-ci/bandit-action@67a458d90fa11fb1463e91e7f4c8f068b5863c7f
         with:
           target: 'metro-ai-suite/visual-search-question-and-answering/'
           output-format: 'sarif'
           output-file: 'bandit-report.sarif'
-          severity-level: 'low,medium,high'  # 可调整过滤级别
-          confidence-level: 'medium,high'    # 可调整置信度要求
-          exclude-paths: '*/tests/*,*/migrations/*'  # 排除测试目录
+          severity-level: 'low,medium,high'  
+          confidence-level: 'medium,high'    
+          exclude-paths: '*/tests/*,*/migrations/*' 
 
       - name: Upload SARIF report
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@7273f08caa1dcf2c2837f362f1982de0ab4dc344
         with:
           sarif_file: 'bandit-report.sarif'
 
       - name: Upload text report (optional)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
           name: bandit-text-report
           path: |
             bandit-report.sarif
         
-  virus-scans:
-    permissions:
-      contents: read
-      packages: read          # needed for actions/checkout
-    name: Run Virus Scan
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - ubuntu_version: ubuntu24
-    steps:
-    - name: Check out edge-ai-libraries repository
-      uses: actions/checkout@v4
-      with:
-        persist-credentials: false
-    - name: Run Virus Scan
-      run: |
-        mkdir -p reports
-        docker pull clamav/clamav
-        echo "### Virus Scan Results" >> $GITHUB_STEP_SUMMARY
-        docker run --rm -v "${{ github.workspace }}:/src" clamav/clamav clamscan -r  /src/metro-ai-suite/visual-search-question-and-answering/ > ./reports/clamav-report.txt || true
-        echo "Please find full report in clamav-report.txt" >> $GITHUB_STEP_SUMMARY
-    - name: Upload Scan Reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: virus-reports
-        path: reports/clamav-report.txt
-    
 
   virus-scan:
     permissions:
@@ -190,7 +161,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run ClamAV Scan
-        uses: orch-ci/clamav-action@v1
+        uses: orch-ci/clamav-action@293fa307caffa9b8742cb22ab3c31aa340083454
         with:
           target: 'metro-ai-suite/visual-search-question-and-answering/'
           output-format: 'sarif'
@@ -200,13 +171,13 @@ jobs:
           exclude: '*.log,*.tmp'  
 
       - name: Upload SARIF report
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@7273f08caa1dcf2c2837f362f1982de0ab4dc344
         with:
           sarif_file: 'clamav-report.sarif'
 
       - name: Upload text report (optional)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
           name: clamav-text-report
           path: |
