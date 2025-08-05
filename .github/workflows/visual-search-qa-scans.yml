@@ -17,32 +17,20 @@ on:
 
 jobs:   
 
-  trivy-scan-job:
-    permissions:
-      contents: read
-      packages: read          # needed for actions/checkout
-    runs-on: ubuntu-24.04
+  trivy-scan:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false  
+      - uses: actions/checkout@v4
 
-      - name: Free Disk Space
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+      - name: Run Trivy Filesystem Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
+        id: trivy-fs
         with:
-          tool-cache: true    
-          android: true       
-          dotnet: true        
-          haskell: true       
-          large-packages: true 
-          docker-images: true 
-          swap-storage: true  
-      - name: Free Disk Space
-        # You may pin to the exact commit or the version.
-        # uses: ShubhamTatvamasi/free-disk-space-action@01128c655592f81375a0e0bb73d80031a2b44762
-        uses: ShubhamTatvamasi/free-disk-space-action@559b7211811f3b7a54d07049da947649193f776d
-          
+          scan_type: "fs"  # 关键参数
+          scan-scope: "all"  # 或 "changed" 仅扫描变更文件
+          severity: "HIGH,CRITICAL"  # 只报告高危漏洞
+          format: "sarif"  # 兼容GitHub安全面板
+      
       - name: Build Docker images
         run: |
           git clone https://github.com/open-edge-platform/edge-ai-libraries.git
@@ -54,70 +42,48 @@ jobs:
           cd ../../..
           cd metro-ai-suite
           docker build -t visual-search-qa-app:latest -f visual-search-question-and-answering/src/Dockerfile .
-
-      - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@77137e9dc3ab1b329b7c8a38c2eb7475850a14e8
+          
+      - name: Run trivy Scan - dataprep-visualdata-milvus
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
+        id: dataprep-visualdata-milvus
         with:
-          scan-type: 'fs'
-          format: 'template'
-          template: 'html'
-          output: 'trivy_fs_report.html'
-          ignore-unfixed: true
-          severity: 'HIGH,CRITICAL'
-          exit-code: '0'
-          command: '--skip-dirs node_modules'
+          scan_type: "image"  # 关键参数
+          scan_target: "dataprep-visualdata-milvus:latest"  # 镜像名称
+          severity: "HIGH,CRITICAL"  # 只报告高危漏洞
+          format: "sarif"  # 兼容GitHub安全面板
 
-      - name: Scan dataprep-visualdata-milvus image
-        uses: aquasecurity/trivy-action@77137e9dc3ab1b329b7c8a38c2eb7475850a14e8
+      - name: Run trivy Scan - retriever-milvus
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
+        id: retriever-milvus
         with:
-          scan-type: 'image'
-          image-ref: 'dataprep-visualdata-milvus:latest'
-          format: 'sarif'
-          output: 'dataprep-visualdata-milvus.sarif'
-          severity: 'HIGH,CRITICAL'
-          ignore-unfixed: true
-          exit-code: '0'
+          scan_type: "image"  # 关键参数
+          scan_target: "retriever-milvus:latest"  # 镜像名称
+          severity: "HIGH,CRITICAL"  # 只报告高危漏洞
+          format: "sarif"  # 兼容GitHub安全面板
 
-      - name: Scan retriever-milvus image
-        uses: aquasecurity/trivy-action@77137e9dc3ab1b329b7c8a38c2eb7475850a14e8
+      - name: Run trivy Scan - vlm-openvino-serving
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
+        id:  vlm-openvino-serving
         with:
-          scan-type: 'image'
-          image-ref: 'retriever-milvus:latest'
-          format: 'sarif'
-          output: 'retriever-milvus.sarif'
-          severity: 'HIGH,CRITICAL'
-          ignore-unfixed: true
-          exit-code: '0'
+          scan_type: "image"  # 关键参数
+          scan_target: "vlm-openvino-serving:latest"  # 镜像名称
+          severity: "HIGH,CRITICAL"  # 只报告高危漏洞
+          format: "sarif"  # 兼容GitHub安全面板
 
-      - name: Scan vlm-openvino-serving image
-        uses: aquasecurity/trivy-action@77137e9dc3ab1b329b7c8a38c2eb7475850a14e8
+      - name: Run trivy Scan - visual-search-qa-app
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
+        id:  visual-search-qa-app
         with:
-          scan-type: 'image'
-          image-ref: 'vlm-openvino-serving:latest'
-          format: 'sarif'
-          output: 'vlm-openvino-serving.sarif'
-          severity: 'HIGH,CRITICAL'
-          ignore-unfixed: true
-          exit-code: '0'
-
-      - name: Scan visual-search-qa-app image
-        uses: aquasecurity/trivy-action@77137e9dc3ab1b329b7c8a38c2eb7475850a14e8
+          scan_type: "image"  # 关键参数
+          scan_target: "visual-search-qa-app:latest"  # 镜像名称
+          severity: "HIGH,CRITICAL"  # 只报告高危漏洞
+          format: "sarif"  # 兼容GitHub安全面板
+          
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
         with:
-          scan-type: 'image'
-          image-ref: 'visual-search-qa-app:latest'
-          format: 'sarif'
-          output: 'visual-search-qa-app.sarif'
-          severity: 'HIGH,CRITICAL'
-          ignore-unfixed: true
-          exit-code: '0'
-
-      - name: Upload scan results
-        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
-        with:
-          name: trivy-scan-results
-          path: |
-            trivy_fs_report.html
-            *.sarif
+          name: clamav-report
+          path: security-results/*
 
   bandit-scan:
     runs-on: ubuntu-latest
