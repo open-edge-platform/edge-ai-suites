@@ -166,7 +166,7 @@ jobs:
           max_file_size: '25'
 
       - name: Upload Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: clamav-report
           path: ${{ steps.clamav.outputs.report_path }}
