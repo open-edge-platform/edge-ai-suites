@@ -163,11 +163,17 @@ jobs:
         with:
           args: '--scan-scope=all --exclude-dirs=.git,node_modules --max-file-size=25'
           report-path: './clamav_report.json'
-
+          
+      - name: Display Outputs
+        run: |
+          echo "Scan result code: ${{ steps.clamav.outputs.scan_result }}"
+          echo "Report location: ${{ steps.clamav.outputs.report_path }}"
+          echo "Threats detected: ${{ steps.clamav.outputs.threats_found }}"
+          
       - name: Upload Report
         uses: actions/upload-artifact@v4
         with:
           name: clamav-report
-          path: ${{ github.workspace }}/clamav_report.json
+          path: ${{ steps.clamav.outputs.report_path }}
 
 
