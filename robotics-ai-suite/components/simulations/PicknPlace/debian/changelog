@@ -1,0 +1,5 @@
+ros-humble-picknplace-simulation (1.0) UNRELEASED; urgency=medium
+
+  * Initial Release.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 26 Sep 2023 08:17:46 +0800

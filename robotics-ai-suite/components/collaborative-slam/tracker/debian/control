@@ -1,0 +1,45 @@
+Source: ros-humble-univloc-tracker
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), ros-humble-univloc-slam-dev, liborb-lze-dev, ros-humble-libg2o-intel-sse, ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-ament-lint-auto, ros-humble-ament-cmake-gtest, ros-humble-univloc-msgs, ros-humble-std-msgs, ros-humble-geometry-msgs, ros-humble-sensor-msgs, ros-humble-visualization-msgs, ros-humble-nav-msgs, ros-humble-tf2-geometry-msgs, ros-humble-statistics-msgs, ros-humble-cv-bridge, ros-humble-rosbag2-cpp, ros-humble-rosbag2-transport, ros-humble-tf2-ros, ros-humble-tf2-eigen, ros-humble-message-filters, ros-humble-cv-bridge, ros-humble-image-transport, ros-humble-image-transport-plugins, ros-humble-dbow2, libspdlog-dev, nlohmann-json3-dev, libboost-dev, python3-ament-package, libopencv-dev, libeigen3-dev, ros-humble-rclcpp, ros-humble-rosidl-default-generators, libgtest-dev, ros-humble-ament-cmake-gtest
+Standards-Version: 4.1.4
+
+Package: ros-humble-univloc-tracker-lze
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, ros-humble-univloc-slam-lze, ros-humble-libg2o-intel-avx2,  ros-humble-univloc-msgs, ros-humble-std-msgs, ros-humble-geometry-msgs, ros-humble-sensor-msgs, ros-humble-visualization-msgs, ros-humble-nav-msgs, ros-humble-tf2-geometry-msgs, ros-humble-statistics-msgs, ros-humble-tf2-ros, ros-humble-tf2-eigen, ros-humble-message-filters, ros-humble-cv-bridge, ros-humble-image-transport, ros-humble-image-transport-plugins, ros-humble-rclcpp, ros-humble-rosidl-default-runtime, ros-humble-dbow2, ros-humble-robotics-sdk-license,
+Description: Intel GPU Level-Zero accelerated package for Collaborative SLAM tracker node
+Provides: ros-humble-univloc-tracker
+Conflicts: ros-humble-univloc-tracker
+Replaces: ros-humble-univloc-tracker
+
+Package: ros-humble-univloc-tracker-sse
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, ros-humble-univloc-slam-sse, ros-humble-libg2o-intel-sse,  ros-humble-univloc-msgs, ros-humble-std-msgs, ros-humble-geometry-msgs, ros-humble-sensor-msgs, ros-humble-visualization-msgs, ros-humble-nav-msgs, ros-humble-tf2-geometry-msgs, ros-humble-statistics-msgs, ros-humble-tf2-ros, ros-humble-tf2-eigen, ros-humble-message-filters, ros-humble-cv-bridge, ros-humble-image-transport, ros-humble-image-transport-plugins, ros-humble-rclcpp, ros-humble-rosidl-default-runtime, ros-humble-dbow2, ros-humble-robotics-sdk-license,
+Description:  Intel SSE-only CPU instruction accelerated package for Collaborative SLAM tracker node
+Provides: ros-humble-univloc-tracker
+Conflicts: ros-humble-univloc-tracker
+Replaces: ros-humble-univloc-tracker
+
+Package: ros-humble-univloc-tracker-avx2
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, ros-humble-univloc-slam-avx2, ros-humble-libg2o-intel-avx2,  ros-humble-univloc-msgs, ros-humble-std-msgs, ros-humble-geometry-msgs, ros-humble-sensor-msgs, ros-humble-visualization-msgs, ros-humble-nav-msgs, ros-humble-tf2-geometry-msgs, ros-humble-statistics-msgs, ros-humble-tf2-ros, ros-humble-tf2-eigen, ros-humble-message-filters, ros-humble-cv-bridge, ros-humble-image-transport, ros-humble-image-transport-plugins, ros-humble-rclcpp, ros-humble-rosidl-default-runtime, ros-humble-dbow2, ros-humble-robotics-sdk-license,
+Description:  Intel AVX/AVX2 CPU instruction accelerated package for Collaborative SLAM tracker node
+Provides: ros-humble-univloc-tracker
+Conflicts: ros-humble-univloc-tracker
+Replaces: ros-humble-univloc-tracker
+
+Package: ros-humble-univloc-tracker-smoke-test
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, ros-humble-univloc-tracker-sse (= ${binary:Version}) | ros-humble-univloc-tracker-avx2 (= ${binary:Version}) | ros-humble-univloc-tracker-lze (= ${binary:Version}), ros-humble-bagfile-demo-mapping
+Description: [internal] smoke test for Collaborative SLAM tracker node
+
+Package: ros-humble-univloc-tracker-testsuite
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, ros-humble-univloc-tracker-sse (= ${binary:Version}) | ros-humble-univloc-tracker-avx2 (= ${binary:Version}) | ros-humble-univloc-tracker-lze (= ${binary:Version}), ros-humble-bagfile-2d-lidar, ros-humble-cslam-unit-test-bagfiles
+Description: [internal] test suite for Collaborative SLAM tracker node

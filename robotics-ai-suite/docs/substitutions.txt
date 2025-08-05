@@ -1,0 +1,148 @@
+.. |GSG Robot| replace::  :doc:`/robotics/gsg_robot/index`
+.. |Dev Guide| replace:: :doc:`/robotics/dev_guide/index`
+
+.. |GSG Robot Index| replace::  :doc:`/robotics/gsg_robot/index`
+.. |Dev Guide Index| replace:: :doc:`/robotics/dev_guide/index`
+
+.. |GSG Robot Requirements| replace::  :doc:`/robotics/gsg_robot/requirements`
+.. |Dev Guide Robot Tutorials| replace::  :doc:`/robotics/dev_guide/tutorials_amr/index`
+.. |EDSQ| replace:: :doc:`/robotics/dev_guide/system_integrator/esdq`
+
+.. |ros_install_instructions| replace:: `ROS2 setup guide <https://docs.ros.org/en/humble/Installation.html>`__
+.. |ros_install_instructions_debian| replace:: `ROS2 setup with Ubuntu Deb Packages <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages>`__
+
+.. |ubuntu_iot_iso_download| replace:: `Download Ubuntu image for Intel® IoT platforms <https://ubuntu.com/download/iot/intel-iot>`__
+.. |ubuntu_iso_download| replace:: `Ubuntu OS version 22.04 LTS (Jammy Jellyfish) <https://releases.ubuntu.com/22.04>`__
+.. |ubuntu_install_instructions| replace:: `Install Ubuntu desktop <https://ubuntu.com/tutorials/install-ubuntu-desktop>`__
+.. |ubuntu_inteliot| replace:: `Ubuntu OS for Intel® IOT platforms <https://ubuntu.com/download/iot/intel-iotg>`__
+
+.. |vtune_get_started_guide| replace:: `Get Started with VTune™ Profiler <https://www.intel.com/content/www/us/en/docs/vtune-profiler/get-started-guide/2024-0/overview.html>`__
+.. |vtune_get_the_intel_oneapi_base_toolkit| replace:: `Get the Intel® oneAPI Base Toolkit <https://www.intel.com/content/www/us/en/developer/tools/oneapi/base-toolkit-download.html>`__
+.. |vtune_get_the_intel_vtune_profiler| replace:: `Get the VTune™ Profiler <https://www.intel.com/content/www/us/en/developer/tools/oneapi/vtune-profiler-download.html>`__
+.. |vtune_profiler_installation_guide| replace:: `VTune™ Profiler installation guide <https://www.intel.com/content/www/us/en/docs/vtune-profiler/installation-guide/2023-1/overview.html>`__
+.. |vtune_sampling_driver_installation_guide| replace:: `Build and Install the Sampling Drivers for Linux Targets <https://www.intel.com/content/www/us/en/docs/vtune-profiler/user-guide/2024-0/build-install-sampling-drivers-for-linux-targets.html>`__
+.. |vtune_setup_system_for_GPU_analysis| replace:: `Set Up System for GPU Analysis <https://www.intel.com/content/www/us/en/docs/vtune-profiler/user-guide/2024-0/set-up-system-for-gpu-analysis.html>`__
+.. |vtune_analyze_microarchitecture_usage| replace:: `Analyze Microarchitecture Usage <https://www.intel.com/content/www/us/en/docs/vtune-profiler/tutorial-common-bottlenecks-linux/2020/analyze-microarchitecture-usage.html>`__
+.. |vtune_run_and_interrupt_hotspots_analysis| replace:: `Run and Interpret Hotspots Analysis <https://www.intel.com/content/www/us/en/docs/vtune-profiler/tutorial-common-bottlenecks-linux/2020/run-and-interpret-hotspots-analysis.html>`__
+
+.. |axiomtek_robox500_ros2_amr_controller| replace:: `Axiomtek Robox500 ROS2 AMR Controller <https://www.axiomtek.com/Default.aspx?MenuId=Products&FunctionId=ProductView&ItemId=27392&C=ROBOX500&upcat=408>`__
+.. |intel_realsense_depth_camera_d457| replace:: `Intel® RealSense™ Depth Camera D457 <https://www.intelrealsense.com/depth-camera-d457/>`__
+.. |ultralytics_yolov8| replace:: `Ultralytics YOLOv8 object detection model. <https://docs.ultralytics.com/>`__
+.. |mobilenet_ssd| replace:: `mobilenet-ssd <https://docs.openvino.ai/2023.3/omz_models_model_mobilenet_ssd.html>`__
+
+.. |irobot_create3_documentation| replace:: `iRobot Create 3 mobile robotics platform documentation <https://iroboteducation.github.io/create3_docs/>`__
+.. |irobot_create3_webserver_set_wired_subnet| replace:: `iRobot Create 3 Webserver - Set Wired Subnet <https://iroboteducation.github.io/create3_docs/webserver/set-wired-subnet/>`__
+.. |irobot_create3_webserver_application| replace:: `iRobot Create 3 Webserver - Application <https://iroboteducation.github.io/create3_docs/webserver/application/>`__
+
+.. |slamtec_rplidar_a3| replace:: `Slamtec RPLIDAR A3 laser range scanner <https://www.slamtec.ai/product/slamtec-rplidar-a3>`__
+.. |slamtec_rplidar_a2m8| replace:: `Slamtec RPLIDAR A2 laser range scanner (A2M8) <https://www.slamtec.ai/product/slamtec-rplidar-a2>`__
+
+.. |intel_compute_runtime_release_notes_24_09| replace:: `Release Notes of the Intel® Graphics Compute Runtime <https://github.com/intel/compute-runtime/releases/tag/24.09.28717.12>`__
+
+.. |Prod Page| replace:: `Learn More <https://www.intel.com/content/www/us/en/developer/topic-technology/edge-5g/edge-solutions/autonomous-mobile-robots/overview.html>`__
+.. |Prod Download| replace:: `Product Download <https://software.intel.com/iot/edgesoftwarehub/download/home/edge_insights_for_amr>`__
+.. |EULA| replace:: `End User License Agreements <https://www.intel.com/content/www/us/en/developer/articles/license/end-user-license-agreement.html>`__
+
+.. |asrockind| replace:: ASRock Industrial
+.. |asrockind_platform| replace:: ASRock Industrial intelligent edge platform
+.. |Atom| replace:: Intel Atom®
+.. |atom| replace:: Intel Atom®
+.. |axiomtek| replace:: Axiomtek Robox500 ROS2 AMR Controller
+.. |Core| replace:: Intel® Core™
+.. |core| replace:: Intel® Core™
+.. |clearpath_robotics| replace:: Clearpath Robotics
+.. |cse| replace:: Intel® Converged Security Engine (Intel® CSE)
+.. |Debian_OS| replace:: Debian OS
+.. |deb_pack| replace:: Deb package
+.. |deb_packs| replace:: Deb packages
+.. |DKMS| replace:: Dynamic Kernel Module Support package
+.. |Docker| replace:: Docker
+.. |docker| replace:: Docker
+.. |Docker_Engine| replace:: Docker Engine
+.. |dpct| replace:: Intel® DPC++ Compatibility Tool
+.. |EAE| replace:: EcoStruxure Automation Expert
+.. |ECI| replace:: Intel® Edge Controls for Industrial
+.. |ehl| replace:: Elkhart Lake platform
+.. |EII| replace:: Intel® Edge Insights for Industrial
+.. |esdq| replace:: Intel® Edge Software Device Qualification (Intel® ESDQ)
+.. |Grafana_Dashboard| replace:: Grafana Dashboard
+.. |gsc| replace:: Intel® Graphics System Controller (Intel® GSC)
+.. |GStreamer_Framework| replace:: GStreamer Open Source Multimedia Framework
+.. |gstreamer| replace:: GStreamer
+.. |intel| replace:: Intel®
+.. |Intel| replace:: Intel®
+.. |Intel_Corporation| replace:: Intel
+.. |intel_core| replace:: |intel| |core|
+.. |intel-extension-for-openxla| replace:: Intel® Extension for OpenXLA
+.. |IPEX| replace:: Intel® Extension for PyTorch
+.. |IPEX-LLM| replace:: Intel® LLM Library for PyTorch
+.. |irobot_create3| replace:: iRobot Create 3
+.. |i915| replace:: Intel® Graphics Driver
+.. |jackal| replace:: Jackal
+.. |l_esdq| replace:: Intel® Edge Software Device Qualification
+.. |l_oneapi| replace:: Intel® oneAPI Base Toolkit
+.. |l_openvino| replace:: Intel® Distribution of OpenVINO™ toolkit
+.. |l_ros| replace:: ROS 2 Humble
+.. |Linux| replace:: Linux
+.. |oneAPI| replace:: oneAPI™
+.. |oneapi| replace:: oneAPI™
+.. |opencl| replace:: OpenCL™
+.. |OpenVINO| replace:: OpenVINO™
+.. |openvino| replace:: OpenVINO™
+.. |orchestration| replace:: robot orchestration
+.. |pmt| replace:: Intel® Platform Monitoring Technology (Intel® PMT)
+.. |Podman| replace:: Podman
+.. |Prometheus_Server| replace:: Prometheus Server
+.. |PyTorch| replace:: PyTorch
+.. |realsense| replace:: Intel® RealSense™
+.. |ROS2| replace:: ROS2
+.. |ros| replace:: ROS 2
+.. |seo| replace:: Intel® Smart Edge Open
+.. |serDes| replace:: Intel® GMSL Serializer-Deserializer ACPI devices
+.. |slamtec_rplidar| replace:: Slamtec RPLIDAR
+.. |tgl| replace:: Tiger Lake platform
+.. |tb3| replace:: TurtleBot3
+.. |up_xtreme| replace:: AAEON UP Xtreme i11 Robotic Development Kit
+.. |Ubuntu| replace:: Canonical Ubuntu
+.. |Ubuntu_OS| replace:: Canonical Ubuntu OS
+.. |ubuntu| replace:: Canonical Ubuntu
+.. |vtune| replace:: VTune™ Profiler
+.. |Windows| replace:: Microsoft Windows
+.. |xe| replace:: Intel® Iris® X\ :sup:`e` Integrated Graphics
+.. |xeon| replace:: Intel® Xeon®
+
+.. |lp_amr| replace:: Autonomous Mobile Robot
+.. |lp_embodied| replace:: Humanoid - Imitation Learning
+.. |p_amr| replace:: Autonomous Mobile Robot
+.. |amr_package_name| replace:: Autonomous Mobile Robot
+.. |top_name| replace:: Robotics AI Suite
+
+.. RVC Specific Substitutions
+
+.. |rvc_full| replace:: Stationary Robot Vision & Control
+.. |rvc| replace:: RVC
+
+.. |Ubuntu22| replace:: |Ubuntu| 22.04 LTS (Jammy Jellyfish)
+.. |ubuntu_version| replace:: |Ubuntu22|
+.. |ubuntu_variant| replace:: Desktop
+
+.. |distro-ubuntu| replace:: Jammy
+.. |distro-format-ubuntu| replace:: ``jammy``
+
+.. |ros_version| replace:: Humble
+
+.. |oneapi_full| replace:: Intel\ |reg| oneAPI Base Toolkit
+.. |openvino_full| replace:: Intel\ |reg| Distribution of OpenVINO\ |TM| toolkit
+
+.. |eci| replace:: Intel\ |reg| Edge Controls for Industrial
+.. |eci_getting_started| replace:: `Intel\ |reg| Edge Controls for Industrial Getting Started <https://eci.intel.com/docs/3.3/getstarted.html>`__
+
+.. |Moveit2| replace:: `MoveIt 2 <https://moveit.picknik.ai/main/index.html>`__
+.. |servo| replace:: `Servo <https://moveit.picknik.ai/humble/doc/examples/realtime_servo/realtime_servo_tutorial.html>`__
+.. |ros2_control| replace:: `ROS 2 Control <https://control.ros.org/master/index.html>`__
+.. |RealSense| replace:: |intel| RealSense\ |TM|
+.. |D4xx| replace:: `D400 Family <https://www.intelrealsense.com/introducing-intel-realsense-d400-product-family/>`__
+.. |reg|    unicode:: U+000AE .. REGISTERED SIGN
+.. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
+.. |TM| unicode:: U+2122 .. TRADEMARK SIGN
+.. |UR5e| replace:: Universal Robots UR5e

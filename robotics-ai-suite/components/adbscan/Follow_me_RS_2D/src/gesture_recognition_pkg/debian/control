@@ -1,0 +1,12 @@
+Source: ros-humble-gesture-recognition-pkg
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), python3-ament-package, ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-sensor-msgs, ros-humble-rclcpp, ros-humble-rclpy, ros-humble-follow-me-interfaces, ros-humble-cv-bridge, ros-humble-robotics-sdk-license
+Standards-Version: 4.1.4
+
+Package: ros-humble-gesture-recognition-pkg
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-humble-sensor-msgs, ros-humble-rclcpp, ros-humble-rclpy, ros-humble-follow-me-interfaces,ros-humble-cv-bridge, python3-pip, ros-humble-robotics-sdk-license
+Description: This package contains nodes for hand gesture (Thumbs up and Down) Recognition model adapted from Google's mediapipe pipeline and publishing simulated trajectory as well as gesture images for a robot

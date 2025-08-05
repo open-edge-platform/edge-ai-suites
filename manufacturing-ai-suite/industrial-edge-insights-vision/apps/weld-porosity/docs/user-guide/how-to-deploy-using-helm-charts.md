@@ -181,4 +181,7 @@
      ```sh
      helm uninstall app-deploy -n apps
      ```
-    
+
+
+## Troubleshooting
+- [Troubleshooting Guide](troubleshooting-guide.md)

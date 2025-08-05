@@ -19,6 +19,8 @@ These suites simplify the creation of custom AI solutions for specific industrie
 
 [The Media & Entertainment AI Suite](media-and-entertainment-ai-suite) provides libraries and sample applications to accelerate solution development for high-performance, high-quality, and live video production, which improves viewer experience.
 
+[The Robotics AI Suite](robotics-ai-suite) provides ready to use samples leveraging AI to help solve common robotics problems such as perception, navigation, simulation, and planning.
+
 
 The Edge AI Suites project hosts a collection of sample applications organized as follows:
 
@@ -41,6 +43,10 @@ The Edge AI Suites project hosts a collection of sample applications organized a
 | Manufacturing AI Suite | [Wind Turbine Anomaly Detection](manufacturing-ai-suite/wind-turbine-anomaly-detection/) | [Link](manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/user-guide/get-started.md) | [Docker deployment](manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/user-guide/get-started.md#deploy-with-docker-compose-single-node) and [Helm deployment](manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/user-guide/how-to-deploy-with-helm.md) |
 | Retail AI Suite | [Automated Self Checkout](https://github.com/intel-retail/automated-self-checkout) | [Link](https://github.com/intel-retail/automated-self-checkout?tab=readme-ov-file#-quickstart) | [Advanced Guide](https://intel-retail.github.io/documentation/use-cases/automated-self-checkout/automated-self-checkout.html) |
 | Retail AI Suite | [Loss Prevention](https://github.com/intel-retail/loss-prevention) | [Link](https://github.com/intel-retail/loss-prevention?tab=readme-ov-file#quickstart) | [Advanced Guide](https://intel-retail.github.io/documentation/use-cases/loss-prevention/loss-prevention.html) |
+| Robotics AI Suite | [Humanoid - Imitation Learning: ACT Sample](robotics-ai-suite/pipelines/act-sample) [**](#Third-Party) | [Link](robotics-ai-suite/pipelines/act-sample) | [Tutorial](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/embodied/sample_pipelines/imitation_learning_act.html) |
+| Robotics AI Suite | [Stationary Robot Vision & Control](robotics-ai-suite/robot-vision-control) | [Link](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/rvc/getstarted.html) | [Tutorial](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/rvc/development.html) |
+| Robotics AI Suite | [Autonomous Mobile Robot: Wandering](robotics-ai-suite/components/wandering) | [Link](robotics-ai-suite/components/wandering) | [Tutorial](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/dev_guide/tutorials_amr/navigation/wandering_app/index.html) |
+
 
 Visit each sample application sub-directory for the respective **Getting Started** and **Customization** instructions.
 
@@ -62,5 +68,14 @@ The **Edge AI Suites** project is licensed under the [APACHE 2.0](LICENSE), exce
 |[Sensor Fusion For Traffic Management](metro-ai-suite/sensor-fusion-for-traffic-management) | [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](metro-ai-suite/sensor-fusion-for-traffic-management/LICENSE.txt) |
 |[Video Processing for NVR](metro-ai-suite/video-processing-for-nvr) | [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](metro-ai-suite/video-processing-for-nvr/LICENSE.txt) |
 
-Last Updated Date: June 10, 2025.
+## Third-Party
+
+Applications in this repository which are based on third-party content are listed below:
+
+| Sample Application | Third-Party Application |
+|:-------------------|:------------------------|
+|[ACT Sample](robotics-ai-suite/pipelines/act-sample) | [ACT](https://github.com/tonyzhaozh/act) |
+|[ORB-SLAM3 Sample](robotics-ai-suite/pipelines/orb-slam3-sample) | [ORB-SLAM3](https://github.com/UZ-SLAMLab/ORB_SLAM3.git) |
+
+Last Updated Date: August 04, 2025.  
  

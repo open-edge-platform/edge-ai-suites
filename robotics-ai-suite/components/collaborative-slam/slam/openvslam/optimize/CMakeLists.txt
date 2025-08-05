@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+# Add sources
+target_sources(${PROJECT_NAME}
+               PRIVATE
+               ${CMAKE_CURRENT_SOURCE_DIR}/pose_optimizer.h
+               ${CMAKE_CURRENT_SOURCE_DIR}/local_bundle_adjuster.h
+               ${CMAKE_CURRENT_SOURCE_DIR}/transform_optimizer.h
+               ${CMAKE_CURRENT_SOURCE_DIR}/global_bundle_adjuster.h
+               ${CMAKE_CURRENT_SOURCE_DIR}/pose_optimizer.cc
+               ${CMAKE_CURRENT_SOURCE_DIR}/local_bundle_adjuster.cc
+               ${CMAKE_CURRENT_SOURCE_DIR}/transform_optimizer.cc
+               ${CMAKE_CURRENT_SOURCE_DIR}/global_bundle_adjuster.cc
+               ${CMAKE_CURRENT_SOURCE_DIR}/imu_edge.cc
+               ${CMAKE_CURRENT_SOURCE_DIR}/multi_camera_edge.cc
+               ${CMAKE_CURRENT_SOURCE_DIR}/graph_optimizer.cc
+               ${CMAKE_CURRENT_SOURCE_DIR}/imu_initializer.cc
+               )
+# Install headers
+file(GLOB HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+install(FILES ${HEADERS}
+        DESTINATION ${OPENVSLAM_INCLUDE_INSTALL_DIR}/optimize)
+
+# Append subdirectory
+add_subdirectory(g2o)

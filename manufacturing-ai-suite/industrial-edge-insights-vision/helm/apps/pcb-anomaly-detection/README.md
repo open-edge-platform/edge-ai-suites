@@ -180,3 +180,6 @@
      helm uninstall app-deploy -n apps
      ```
     
+
+## Troubleshooting
+- [Troubleshooting Guide](../../../apps/pcb-anomaly-detection/docs/user-guide/troubleshooting-guide.md)

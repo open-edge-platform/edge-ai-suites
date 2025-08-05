@@ -1,0 +1,26 @@
+Source: ros-humble-pointcloud-groundfloor-segmentation
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),  ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-ament-lint-auto, ros-humble-rclcpp, ros-humble-sensor-msgs, ros-humble-tf2-ros, ros-humble-tf2-eigen, ros-humble-pcl-conversions, ros-humble-nav2-bringup, ros-humble-tf2-geometry-msgs, ros-humble-depth-image-proc, libpcl-dev, ros-humble-robotics-sdk-license
+Standards-Version: 4.1.4
+
+Package: ros-humble-pointcloud-groundfloor-segmentation
+Architecture: any
+Multi-Arch: foreign
+Depends:  ${misc:Depends}, 
+          ${shlibs:Depends}, 
+          ros-humble-ament-cmake, 
+          ros-humble-ament-lint-common, 
+          ros-humble-ament-lint-auto, 
+          ros-humble-rclcpp, 
+          ros-humble-sensor-msgs, 
+          ros-humble-tf2-ros, 
+          ros-humble-tf2-eigen, 
+          ros-humble-pcl-conversions, 
+          ros-humble-nav2-bringup, 
+          ros-humble-tf2-geometry-msgs, 
+          ros-humble-depth-image-proc, 
+          libpcl-dev, 
+          ros-humble-robotics-sdk-license
+Description: Pointcloud groundfloor segmentation, a ROS package for real-time groundfloor extraction from 3D pointcloud.

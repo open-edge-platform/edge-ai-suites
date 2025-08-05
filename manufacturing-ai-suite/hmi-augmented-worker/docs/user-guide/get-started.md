@@ -68,5 +68,7 @@ To use the application effectively, make sure that all the steps mentioned in th
 
 ## Other Documentation
 - [EMT Main Page](https://github.com/open-edge-platform/edge-microvisor-toolkit)
-- [Setting up EMT as Hypervisor Host](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/3.0/docs/developer-guide)
+- [Create EMT bootable USB drive using source code](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/get-started-guide.md#create-a-bootable-usb-drive-using-source-code)
+- [Desktop Virtualization on EMT](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/desktop-virtualization-image-guide.md)
+- [EMT Documentation](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/3.0/docs/developer-guide)
 - [Chat Question and Answer Core Main Page](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/chat-question-and-answer-core)

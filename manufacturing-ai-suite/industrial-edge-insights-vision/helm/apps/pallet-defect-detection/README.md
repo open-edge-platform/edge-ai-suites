@@ -179,4 +179,8 @@
      ```sh
      helm uninstall app-deploy -n apps
      ```
+
+
+## Troubleshooting
+- [Troubleshooting Guide](../../../apps/pallet-defect-detection/docs/user-guide/troubleshooting-guide.md)
     

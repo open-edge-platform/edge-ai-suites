@@ -1,0 +1,12 @@
+Source: ros-humble-wandering
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-rclcpp, ros-humble-rclcpp-action, ros-humble-geometry-msgs, ros-humble-std-msgs, ros-humble-nav-msgs, ros-humble-nav2-msgs, ros-humble-nav2-util, ros-humble-nav2-costmap-2d, ros-humble-ament-lint-auto, ros-humble-ament-cmake-gtest,
+Standards-Version: 4.1.4
+
+Package: ros-humble-wandering
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-humble-rclcpp, ros-humble-std-msgs, ros-humble-nav-msgs, ros-humble-nav2-msgs, ros-humble-nav2-util, ros-humble-nav2-costmap-2d, ros-humble-robotics-sdk-license,
+Description: Wandering application

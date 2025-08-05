@@ -1,0 +1,12 @@
+Source: ros-humble-followme-turtlebot3-gazebo
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), python3-ament-package, ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-nav-msgs, ros-humble-geometry-msgs, ros-humble-sensor-msgs, ros-humble-rclcpp, ros-humble-tf2, ros-humble-adbscan-ros2-follow-me, ros-humble-gesture-recognition-pkg, ros-humble-speech-recognition-pkg, ros-humble-gazebo-ros-pkgs, ros-humble-robotics-sdk-license
+Standards-Version: 4.1.4
+
+Package: ros-humble-followme-turtlebot3-gazebo
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, ros-humble-nav-msgs, ros-humble-geometry-msgs, ros-humble-sensor-msgs, ros-humble-rclcpp, ros-humble-tf2, ros-humble-adbscan-ros2-follow-me, ros-humble-gesture-recognition-pkg, ros-humble-speech-recognition-pkg, ros-humble-gazebo-ros-pkgs, ros-humble-xacro, ros-humble-rviz2, psmisc, ros-humble-robotics-sdk-license
+Description: An adaptation of turtlebot3 simulation by Intel to include a multi robot environment to demo the follow me algorithm

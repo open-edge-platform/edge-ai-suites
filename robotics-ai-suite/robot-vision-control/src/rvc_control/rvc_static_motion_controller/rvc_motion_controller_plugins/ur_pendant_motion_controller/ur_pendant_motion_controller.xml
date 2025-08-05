@@ -1,0 +1,5 @@
+<library path="ur_pendant_motion_controller">
+  <class type="RVCMotionController::URPendantMotionController" base_class_type="RVCMotionController::RVCMotionControllerInterface">
+    <description>This is a ur direct controller plugin.</description>
+  </class>
+</library>

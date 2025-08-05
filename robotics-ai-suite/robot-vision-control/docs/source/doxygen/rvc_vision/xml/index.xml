@@ -1,0 +1,357 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygenindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="index.xsd" version="1.9.1" xml:lang="en-US">
+  <compound refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detectfcbb8ed869bf8b4b16463c6277ac10d6" kind="class"><name>rvc_rotated_object_detection::rotated_object_detection_parameters::object_detection::Params::__Object::__MapObjects</name>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detectfcbb8ed869bf8b4b16463c6277ac10d6_1aeb42e5625e0b3931c4059f4778d6843e" kind="variable"><name>id</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detectfcbb8ed869bf8b4b16463c6277ac10d6_1ad3d84abce933518b358aa0293dcbdbe5" kind="variable"><name>image_path</name></member>
+  </compound>
+  <compound refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1_1_____object" kind="class"><name>rvc_rotated_object_detection::rotated_object_detection_parameters::object_detection::Params::__Object</name>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1_1_____object_1af41c8899c3f36ff37160b8b0e889319a" kind="variable"><name>__map_type</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1_1_____object_1a6f7d9ce8e190c248894a8cffdf915483" kind="function"><name>add_entry</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1_1_____object_1ac54461ebc8179d59a245bda5cb3600e5" kind="function"><name>get_entry</name></member>
+  </compound>
+  <compound refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector" kind="class"><name>rvc_rotated_object_detection::object_detection::Detector</name>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1aebfeb29c7ec2a1dfcb44c2711d85e5db" kind="variable"><name>logger</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a83cacd45f87dda5c035e0df578d1fb28" kind="variable"><name>ratio</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1aa44b71b067707214517fc22402f72e6a" kind="variable"><name>matches_limit</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a272148538019efbc8867924865c05b24" kind="variable"><name>orb</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a0d03f1b94f0e91863feed3b59b3bcd65" kind="variable"><name>matcher</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a5f1cfd6f4c43ae1db44d3c5e3950e64f" kind="variable"><name>objects</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a7d19cdc202a8ff672c92a0441934da0f" kind="function"><name>__init__</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1a4ca3ce4815eee8c812cbae7b91a1ebfc" kind="function"><name>initialize_object</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector_1aa992385a2f1fd395e864ab51a50be064" kind="function"><name>detect</name></member>
+  </compound>
+  <compound refid="struct_r_v_c_1_1_match_operation" kind="struct"><name>RVC::MatchOperation</name>
+    <member refid="struct_r_v_c_1_1_match_operation_1a8ffd2ec99ed9d2f23184d97996b38597" kind="variable"><name>rotated_bb_list</name></member>
+    <member refid="struct_r_v_c_1_1_match_operation_1a7c631ed0a4b33f7e2474638f499b99cf" kind="variable"><name>cloud</name></member>
+  </compound>
+  <compound refid="struct_r_v_c_1_1_match_result" kind="struct"><name>RVC::MatchResult</name>
+    <member refid="struct_r_v_c_1_1_match_result_1a37c1d01b3c3c1be0f414d244d2e2f331" kind="variable"><name>matched</name></member>
+    <member refid="struct_r_v_c_1_1_match_result_1a57ac58ddf2780f99f50f05ea7719168a" kind="variable"><name>ransac_score</name></member>
+    <member refid="struct_r_v_c_1_1_match_result_1a3114f1c76d70b486e595e1fb73ab868d" kind="variable"><name>icp_score</name></member>
+    <member refid="struct_r_v_c_1_1_match_result_1ae715a51ac1ae44d28fe66124bc5e3463" kind="variable"><name>position</name></member>
+    <member refid="struct_r_v_c_1_1_match_result_1a50eb9ebe0dd6d60b08cad2f2cd3e8a52" kind="variable"><name>xform</name></member>
+    <member refid="struct_r_v_c_1_1_match_result_1a6e51cb912e0515e075664f7a1b32e713" kind="variable"><name>registered_cloud</name></member>
+  </compound>
+  <compound refid="struct_r_v_c_1_1_match_settings" kind="struct"><name>RVC::MatchSettings</name>
+    <member refid="struct_r_v_c_1_1_match_settings_1ab66b047808b670dd6aa59a997ea52aad" kind="variable"><name>downsampling</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1a9bda510de472eac7d79aeb2439c2ff20" kind="variable"><name>downsample_clouds</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1a986895fad02b9814d943b2634998c7b5" kind="variable"><name>normal_search_radius</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1aa80d3d170aee499d2d80e8c023306304" kind="variable"><name>fpfh_search_radius</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1aab8b22434af4a002060f27fd8a6ff28d" kind="variable"><name>stddev_mul_threshold</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1a0aaf041f9f166cde1b4d8cde03197359" kind="variable"><name>z_threshold</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1a75764de3a9d4c83b0d22226c6238a334" kind="variable"><name>inlier_fraction</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1a33fbc70c2a250075a42146f9cbe276d6" kind="variable"><name>similarity_threshold</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1a57342ee6a9ac15a8aad86d70007ab05a" kind="variable"><name>max_corresp_randomness</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1a3fda88e8ba2072763b318d2dbd74f1e7" kind="variable"><name>max_corresp_distance</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1abbce8795a9b38e2a854dab6220f844be" kind="variable"><name>max_iterations</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1a0d4d9154a4d5ca44ec47e18027b26cfc" kind="variable"><name>num_samples</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1ad48473757db5672a214c9c4926863e95" kind="variable"><name>icp_max_corresp_distance</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1a31dfcecdd14ab796ea13312bd2d1e7f8" kind="variable"><name>icp_xform_epsilon</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1a60fd1973f2303e330fd3dbf59b41cdfe" kind="variable"><name>icp_fitness_epsilon</name></member>
+    <member refid="struct_r_v_c_1_1_match_settings_1aaec6f468be04d44fa5f516ae0d0700b8" kind="variable"><name>icp_max_iterations</name></member>
+  </compound>
+  <compound refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object" kind="class"><name>rvc_rotated_object_detection::object_detection::Object</name>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1a21452f1c402540cbf7a913fa286b16da" kind="variable"><name>_name</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1aeaefd29b0e4700bd818fc31d8aa2bbea" kind="variable"><name>_id</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1af4ffbd012c3414d0d47f7fdeb3b55652" kind="variable"><name>_image_path</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1a52c34a404f44c1c2d2195d0b15254381" kind="variable"><name>_image_size</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1a5de9321a17a2edca5aaff48427a7f0be" kind="variable"><name>_keypoints</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1a7c3bad6999f0f7dd801df15d08bb06e3" kind="variable"><name>_descriptors</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1af878bb1651bc3f4c2f7087816c015ac9" kind="function"><name>__init__</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1aa86b8ced2862ebce90eed588b8fefd45" kind="function"><name>name</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1a58f33244246b3b38953e8ca7cc583c44" kind="function"><name>id</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1aa1bc3b09ed9b83cbaf2033df85e65ba0" kind="function"><name>image_path</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1aeecdd05f349d58ef19b6bf3b6de4a94b" kind="function"><name>image_size</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1a0e24ca86e9a80e393aac375de57f31c0" kind="function"><name>keypoints</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_1a22cc5082c9fc1061514d67f07fdd2466" kind="function"><name>descriptors</name></member>
+  </compound>
+  <compound refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection" kind="class"><name>rvc_rotated_object_detection::rotated_object_detection_parameters::object_detection</name>
+  </compound>
+  <compound refid="class_r_v_c_1_1_object_detection" kind="class"><name>RVC::ObjectDetection</name>
+    <member refid="class_r_v_c_1_1_object_detection_1ae4705bcc05117a558c3624db7cf0d596" kind="variable"><name>ai</name></member>
+    <member refid="class_r_v_c_1_1_object_detection_1aa9fa0fb36489468deea60b348b05855d" kind="variable"><name>m_image_sub</name></member>
+    <member refid="class_r_v_c_1_1_object_detection_1a5910883f2fd5aaebfea9f47963729add" kind="variable"><name>m_rotated_bb_list_msg</name></member>
+    <member refid="class_r_v_c_1_1_object_detection_1acb87e6da300becb7568c5330ebb3fd7c" kind="variable"><name>publish_inference_images_param</name></member>
+    <member refid="class_r_v_c_1_1_object_detection_1a8d21b1b86955aa83db38f9669b619229" kind="variable"><name>model_name_param</name></member>
+    <member refid="class_r_v_c_1_1_object_detection_1a6b42a0db59bd15d89c9c1e1525931029" kind="variable"><name>m_inference_image_pub_</name></member>
+    <member refid="class_r_v_c_1_1_object_detection_1ae989f2fa4abcddc3cd96d09efdd52175" kind="function"><name>m_image_callback</name></member>
+    <member refid="class_r_v_c_1_1_object_detection_1ad5d9d344ab55095927725733590f0da5" kind="function"><name>~ObjectDetection</name></member>
+    <member refid="class_r_v_c_1_1_object_detection_1ad6eafb0b6623457e048b2baa3c163f49" kind="function"><name>ObjectDetection</name></member>
+  </compound>
+  <compound refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection" kind="class"><name>rvc_rotated_object_detection::object_detection::ObjectDetection</name>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a80c034a30e20180a0fc527dcb1dcf6d1" kind="variable"><name>param_listener</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a443cc4f29c9f38903f1228c94cda7f4b" kind="variable"><name>params</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1aca9f3c897ef41534f72228ff72223af2" kind="variable"><name>detection_publisher</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a4d4e10859df29e97cae4e0047e2f6428" kind="variable"><name>cam_subscription</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1aa08b27700b37107672d08a5ed20ca378" kind="variable"><name>cam_info_subscription</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a867242d1313132e997c7daae2b68707f" kind="variable"><name>image_publisher</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a6000d73d4ee39615fba54053f925c4f1" kind="variable"><name>detector</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a7c41aba79e53dfa41afc346a82cbec27" kind="variable"><name>bridge</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a9c2405922e27360f270b1b6a3d36dcf0" kind="variable"><name>camera_info</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1aaf90ef13e9664892169040fba08ec6b3" kind="function"><name>__init__</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1aeb18ea1a5342754a3e97a6a8dd0c2f33" kind="function"><name>image_callback</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1af185ca7ee4cf51d57940980b5a74cc77" kind="function"><name>camera_info_callback</name></member>
+  </compound>
+  <compound refid="class_r_v_c_1_1_object_matcher" kind="class"><name>RVC::ObjectMatcher</name>
+    <member refid="class_r_v_c_1_1_object_matcher_1a275e274049546bd726ec978f2708b260" kind="variable"><name>m_name</name></member>
+    <member refid="class_r_v_c_1_1_object_matcher_1a316131eb2e0a9c4d548faa9ac8f4a31e" kind="variable"><name>m_config</name></member>
+    <member refid="class_r_v_c_1_1_object_matcher_1a91e9ced748c400375067ce4213334885" kind="variable"><name>m_points</name></member>
+    <member refid="class_r_v_c_1_1_object_matcher_1ad2386c81ba3de1b4a59c9e7f9a630c65" kind="variable"><name>m_signature</name></member>
+    <member refid="class_r_v_c_1_1_object_matcher_1a7384590c535fea91b38f4fd9a976f6ab" kind="function"><name>ObjectMatcher</name></member>
+    <member refid="class_r_v_c_1_1_object_matcher_1ad603c28b3a1ed8fa9e103c9a34838b70" kind="function"><name>ObjectMatcher</name></member>
+    <member refid="class_r_v_c_1_1_object_matcher_1a5a2d2a559d02ddff9b22af804ff4d33d" kind="function"><name>match</name></member>
+    <member refid="class_r_v_c_1_1_object_matcher_1adcdf9f2d7d819d4a7995f74bbb662a2e" kind="function"><name>compute_fpfh_features</name></member>
+  </compound>
+  <compound refid="class_r_v_c___a_i_1_1_o_i_inference" kind="class"><name>RVC_AI::OIInference</name>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1afdc5cd358e9f86c54313542fb7cb160c" kind="variable"><name>core</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1abaa33d9fa665c79b08d2645aa9a6e0c7" kind="variable"><name>model</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1abe6eeac6c611defd0bc91c71b111cad1" kind="variable"><name>compiledModel</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1ab7b2512bdbdd71f32115d5390d738172" kind="variable"><name>idleRequests</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1af26745493d17b3a8c184b6ebee04d3e0" kind="variable"><name>idleRequestsMutex</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1ac868919023c9392a97c83f3e32fca4b5" kind="variable"><name>idleRequestsCV</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a7f7aba51a06378a91537e3e3904c6655" kind="variable"><name>startTime</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a9fef241d5fe901440db077d9d3bbb54e" kind="variable"><name>frameRate</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1ad6fe82d1a73198ab374c34e8b9e22318" kind="variable"><name>m_ratio</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1ab9e1de98b39f152ddf962b279dbcb153" kind="variable"><name>m_pad_width</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1af139334d8accb30f8fa9affb0590d845" kind="variable"><name>m_pad_height</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1aac1de0e24680e525d3c81a5d97ddf76f" kind="variable"><name>m_resX</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a8fe41c4395a447172a4c3e2c7b8bc648" kind="variable"><name>m_resY</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a80db6ed86db9f9252ad8039d55e5dcc8" kind="variable"><name>m_input_shape_x</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a0876b94edc3051c00601675906b9c1d6" kind="variable"><name>m_input_shape_y</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1af83eb2c38a3f654162a5efa017aad1b9" kind="variable"><name>model_version</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1aaa4d0a90815db13bdd84f0435b8eaf90" kind="variable"><name>confidence_threshold</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1add81eb9a63c9e3343d3ff3ce92b23e36" kind="variable"><name>nms_threshold</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1aceb81f63ac9cab36f664a494f193025c" kind="variable"><name>class_name_array_param</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1aa424734061f1813aac551bf6564efcaf" kind="function"><name>pre_process_image</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1ac9de2c3f5e06c2a1d970e2743652c1b1" kind="function"><name>run_inference_pipeline</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a189c86fa5755e322bc73ab34d1463ab4" kind="function"><name>post_process_image</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a7ed98def3e15c9d40d26dd3151d147d6" kind="function"><name>init</name></member>
+    <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a68d6f0ae8aa4c2e0094adffd07ca2d64" kind="function"><name>OIInference</name></member>
+  </compound>
+  <compound refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener" kind="class"><name>rvc_rotated_object_detection::rotated_object_detection_parameters::object_detection::ParamListener</name>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener_1adeba50745686223f7dd632e1721e12b9" kind="variable"><name>prefix_</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener_1ae10670ff2e93f9d065837840a738576b" kind="variable"><name>params_</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener_1a8adbe639a81a54f06a9a95fe805bd151" kind="variable"><name>node_</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener_1a9d9afb4468745bbb4402a2e175a233ea" kind="variable"><name>logger_</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener_1a3cd326bd98de96dee681467b81dd5043" kind="variable"><name>clock_</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener_1afcc6a09d6ab1f384e04b81a48abec682" kind="function"><name>__init__</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener_1a5103494f9fe9e50e531bb140d73a946a" kind="function"><name>get_params</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener_1a22134c131b68061c62607b48fc6dab1d" kind="function"><name>is_old</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener_1a28e1b78881fba164d1b6ea93fd59175b" kind="function"><name>refresh_dynamic_parameters</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener_1a99544058cbba6b255752a90d033ad09a" kind="function"><name>update</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener_1aad01ebd74edbe35848f5b8a406fc13eb" kind="function"><name>update_internal_params</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_param_listener_1aa898ce00847e11d8b4f8cb770597fac4" kind="function"><name>declare_params</name></member>
+  </compound>
+  <compound refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params" kind="class"><name>rvc_rotated_object_detection::rotated_object_detection_parameters::object_detection::Params</name>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1a67df81e4ae8f2fee505e52871c4aa5ec" kind="variable"><name>stamp_</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1ab30859a3002330f98d32b5180482d476" kind="variable"><name>cam_prefix</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1ad5953ce7d2338e355bf60f925b31e049" kind="variable"><name>cam_image_suffix</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1a1e84f1a2e386d702f487235ec5f2b8cd" kind="variable"><name>cam_info_suffix</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1ad9db2b4312668e220eab596472099518" kind="variable"><name>log_level</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1a7d54a405407acdce964c3163997ce9de" kind="variable"><name>ratio</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1a8308e55b8952416e0b867ac8ba193e82" kind="variable"><name>match_limit</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1a63941cb6d0c6f481dd51e7ed14ff3256" kind="variable"><name>annotate</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1afaa679443086b4f62a38ab250158c681" kind="variable"><name>objects</name></member>
+    <member refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection_1_1_params_1a36a0d35dd6ea9c3139498a5938ed1e41" kind="variable"><name>object</name></member>
+  </compound>
+  <compound refid="class_r_v_c_1_1_pose_detector" kind="class"><name>RVC::PoseDetector</name>
+    <member refid="class_r_v_c_1_1_pose_detector_1a0c0b7d62cb8e570b46222d32522c64d0" kind="typedef"><name>RVCSyncPolicy</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1a0b76af0bf9bf8ae5b30230504178a462" kind="typedef"><name>MySync</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1a1543fa5c748140de585586e4d1af753c" kind="variable"><name>m_rotated_bb_list_sub</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1a98ede0d8e0e7c420e438e8e41bfa82e8" kind="variable"><name>m_pcl_sub</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1afd55842c0c7122ea77beba3c85d20645" kind="variable"><name>synchronizer</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1a941059dbd619aed97ff218953096467f" kind="variable"><name>m_pub_poses</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1ac556f319271dcfebdeb1a08e93a5a1e7" kind="variable"><name>m_pub_cloud</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1a569f1d7e8ddd83c664d7f9149d2917a4" kind="variable"><name>m_matchers</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1aa3d9cf6e122b75974bcc51b032ee9e7c" kind="variable"><name>m_obj_classes</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1a90bba294fb658c56a854b664a5fed73e" kind="variable"><name>classIds</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1af534214a7ef367fd299fe1b249728249" kind="variable"><name>my_callback_group</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1a8defdaf6bd9c096a07e8db37dd9a0b60" kind="function"><name>mostFrequentClass</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1a6ed495460e62fef9c9a517d5a3127749" kind="function"><name>SynchronizedCallback</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1a5315c7ac15fec2eb65bcea6a5ee327c4" kind="function"><name>mat44_to_pose</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1a2c11e06c8fedb049fb0bf81557e3debe" kind="function"><name>PoseDetector</name></member>
+    <member refid="class_r_v_c_1_1_pose_detector_1a886c22ded71c5468442a64ff3303ad87" kind="function"><name>~PoseDetector</name></member>
+  </compound>
+  <compound refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct" kind="struct"><name>RVC::Profiler::ProfileDataStruct</name>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1af6d946c29258971e759933a99aada895" kind="variable"><name>m_roi_count</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1aacb40d7361b86aeed7cca6d13599d61f" kind="variable"><name>rs_pcl_count</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a1df4fc48502e479aeb3bd5729d61222d" kind="variable"><name>object_poses_count</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a9379383aaf80ce5c9920345de1f484c1" kind="variable"><name>inference_count</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a8ad75d3ca93db256ffe5b1947e0459a9" kind="variable"><name>second_count</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1ad77aea54ae65568e995cfb4bb2eee50a" kind="variable"><name>rs_rgb</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1ab01cdb18f4f1f8116155dadeb8a61d32" kind="variable"><name>m_roi_count_total</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a83b1cb3612505bfc7225be10e5492dda" kind="variable"><name>rs_pcl_count_total</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a629afb2e956668bd9dfe87fff1187975" kind="variable"><name>object_poses_count_total</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a35f21de1ed93d79ae556ca19d3fb804f" kind="variable"><name>inference_count_total</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1ae7548c5b3fb9bf8336baa7de8ac82468" kind="variable"><name>second_count_total</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a9e69ab8a502fd21b6acf12c1d8e39972" kind="variable"><name>rs_rgb_total</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a9171b5b6c2159c51ce526090071db68d" kind="variable"><name>successful_object_detection_count</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1ae4228816b5b9c6a4e7478f988a950f22" kind="variable"><name>successful_object_detection_count_total</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a381e68a93b89333d8384e9900b602973" kind="variable"><name>inversekinematics_failed</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a7cca64031a76fa8448b80c5830d95fa3" kind="variable"><name>inversekinematics_total</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a6e09dd79b3ea184fc2698b778170d4f4" kind="variable"><name>deadline_failed</name></member>
+    <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a48a92d3e09741e7ff0d9eb9209913019" kind="variable"><name>deadline_total</name></member>
+  </compound>
+  <compound refid="class_r_v_c_1_1_profiler" kind="class"><name>RVC::Profiler</name>
+    <member refid="class_r_v_c_1_1_profiler_1af37376a663f3fc96e52458996d22b629" kind="variable"><name>m_rotated_bb_list_sub</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a18c5d49a3acb5360db3869a3d8661e5b" kind="variable"><name>m_rs_pcl_sub</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a6f97b2ac83c81da301ba1ad1b3865180" kind="variable"><name>m_object_pose_stamped_list_msg</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a9a1a082f95a44bebf071d29435a68176" kind="variable"><name>m_image_raw_sub</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1afe65ada675ad9dd0bda558270fe11148" kind="variable"><name>m_rotated_bb_list_msg</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a802908a7f7e5cefd50a246ae396d4878" kind="variable"><name>m_last_cloud</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a6294dcd32f531f75da549f58a12f6bda" kind="variable"><name>profile_timer</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a31b9cd68cf7d676d42ff8083a3a8fb3f" kind="variable"><name>m_image_sub</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a2512c60c89396f329b70f75a89f5227e" kind="variable"><name>m_sub_rtloop</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1ada637b6952ee0a6ff5eceaefa0a49452" kind="variable"><name>profileData</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a229c6db3af88fbc193d9ddd395f3062a" kind="variable"><name>pipe_fd</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1af481b310a951930b1aada7f2a4c62a32" kind="function"><name>handle_roi</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1ad22643c2e5871b7118debd465075c5ed" kind="function"><name>handle_rs_pointcloud</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a92d5d38f9019769159c009efb0b743cd" kind="function"><name>handle_object_poses</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a3d865e10f6ea1ab8fc1ba983739a3b46" kind="function"><name>handle_image_raw</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1af5e4262c73077e9e88d8783a88c30452" kind="function"><name>handle_inference</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a1758c773ca3d44fa72e969d15cd3ac86" kind="function"><name>handle_rtloop</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a0436009f594017523c0975458c63dc25" kind="function"><name>handleTimer</name></member>
+    <member refid="class_r_v_c_1_1_profiler_1a23f31bac80fc3cc415bf8d806e82d2bc" kind="function"><name>Profiler</name></member>
+  </compound>
+  <compound refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface" kind="class"><name>RVC_AI::RVCAIInterface</name>
+    <member refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1a0a839a4ed106c72706cb6a38973de0d4" kind="function"><name>pre_process_image</name></member>
+    <member refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1ad3e276f984317f998145b251b1acdba9" kind="function"><name>run_inference_pipeline</name></member>
+    <member refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1aad50f1571455622adcbf11244b67b5fe" kind="function"><name>post_process_image</name></member>
+    <member refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1a459a971143e9947a67ab4d16750f4304" kind="function"><name>init</name></member>
+    <member refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1a07c5979b6c062d279fda2a75c46c8e7a" kind="function"><name>on_shutdown</name></member>
+    <member refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1a09c3ea974dba8c813444ef238b1e2065" kind="function"><name>~RVCAIInterface</name></member>
+    <member refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1ad0bdc4b8803c28cdfe7990cf1dcae78f" kind="function"><name>RVCAIInterface</name></member>
+    <member refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1a21b9b49c879be6b13438bb12c9c8df26" kind="function"><name>RVCAIInterface</name></member>
+    <member refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1a3248efb291c88a9c5b79b649c2eeb016" kind="function"><name>operator=</name></member>
+  </compound>
+  <compound refid="namespacerclcpp" kind="namespace"><name>rclcpp</name>
+  </compound>
+  <compound refid="namespacerotated__object__detection" kind="namespace"><name>rotated_object_detection</name>
+    <member refid="rotated__object__detection_8launch_8py_1a7e08d0978a3180f0e456d91a2cbefc21" kind="function"><name>generate_launch_description</name></member>
+  </compound>
+  <compound refid="namespace_r_v_c" kind="namespace"><name>RVC</name>
+  </compound>
+  <compound refid="namespace_r_v_c___a_i" kind="namespace"><name>RVC_AI</name>
+  </compound>
+  <compound refid="namespacervc__rotated__object__detection" kind="namespace"><name>rvc_rotated_object_detection</name>
+  </compound>
+  <compound refid="namespacervc__rotated__object__detection_1_1object__detection" kind="namespace"><name>rvc_rotated_object_detection::object_detection</name>
+    <member refid="object__detection_8py_1a1ceab1907020b622516e2bc285eb9129" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="namespacervc__rotated__object__detection_1_1rotated__object__detection__parameters" kind="namespace"><name>rvc_rotated_object_detection::rotated_object_detection_parameters</name>
+  </compound>
+  <compound refid="namespacesetup" kind="namespace"><name>setup</name>
+    <member refid="setup_8py_1a3c783d982ab5a3d08b5fcf646a62976d" kind="variable"><name>package_name</name></member>
+    <member refid="setup_8py_1ab3a7a0638d76a01367c5bc3cc699447f" kind="variable"><name>name</name></member>
+    <member refid="setup_8py_1a2aa722b36a933088812b50ea79b97a5c" kind="variable"><name>version</name></member>
+    <member refid="setup_8py_1aff2375a361fd5865c77bd9aa093be747" kind="variable"><name>packages</name></member>
+    <member refid="setup_8py_1ad027a8e9452da003dca32bf7467bd16e" kind="variable"><name>data_files</name></member>
+    <member refid="setup_8py_1abead4f26b530856f858f0d44c7cf2588" kind="variable"><name>install_requires</name></member>
+    <member refid="setup_8py_1a13510753661cb74083a0c664db11dde9" kind="variable"><name>zip_safe</name></member>
+    <member refid="setup_8py_1aa1a7cf9bbf76004bb72697dc00bbee9d" kind="variable"><name>maintainer</name></member>
+    <member refid="setup_8py_1a92a81adbfdd219564d5246ce8d77f869" kind="variable"><name>maintainer_email</name></member>
+    <member refid="setup_8py_1aedf461ec52a946bda975938ba0b93ec0" kind="variable"><name>description</name></member>
+    <member refid="setup_8py_1a8ed6f50a28bd6a8794f8e1153baa6de9" kind="variable"><name>license</name></member>
+    <member refid="setup_8py_1a6369bb060267ccf90b93519796e7cc2c" kind="variable"><name>tests_require</name></member>
+    <member refid="setup_8py_1ada7058afc98897f073d3f3b8b9157059" kind="variable"><name>entry_points</name></member>
+  </compound>
+  <compound refid="namespacestd_1_1chrono__literals" kind="namespace"><name>std::chrono_literals</name>
+  </compound>
+  <compound refid="namespacetest__detector" kind="namespace"><name>test_detector</name>
+    <member refid="test__detector_8py_1a1a599c9bb4e9df56000baced9288dde1" kind="variable"><name>level</name></member>
+    <member refid="test__detector_8py_1a42bc63d9df65e3ffc4fbd6039012ace2" kind="variable"><name>mylogger</name></member>
+    <member refid="test__detector_8py_1a64fa68966e54b75ba8fca3a36dc70b9a" kind="function"><name>resources_dir</name></member>
+    <member refid="test__detector_8py_1a4a06d44e3ba61a02f79fd63956672412" kind="function"><name>detector</name></member>
+    <member refid="test__detector_8py_1afe0a692e4d19fb452ad6435dead47ef1" kind="function"><name>test_image</name></member>
+  </compound>
+  <compound refid="namespacevision" kind="namespace"><name>vision</name>
+    <member refid="vision_8composition_8launch_8py_1a870ee0cc5a184fda3c5b86a9413339e4" kind="function"><name>exit_process_function</name></member>
+    <member refid="vision_8composition_8launch_8py_1afcd802f4723f2a858cac49b79ed0a7b9" kind="function"><name>launch_setup</name></member>
+    <member refid="vision_8composition_8launch_8py_1aeef55e94bd39e0dd525c1fae86fde8b9" kind="function"><name>generate_launch_description</name></member>
+    <member refid="vision_8launch_8py_1a8e0422ff567a0e20735c1be54e6e13ec" kind="function"><name>generate_tmp_conf_file</name></member>
+  </compound>
+  <compound refid="rvc__ai__interface_8hpp" kind="file"><name>rvc_ai_interface.hpp</name>
+    <member refid="rvc__ai__interface_8hpp_1a84450f4c1267bdf4e9013a5b74a5c285" kind="define"><name>__RVC_AI_INTERFACE_HPP__</name></member>
+    <member refid="rvc__ai__interface_8hpp_1a983a73aa86f38f90930a4d20d42f3804" kind="typedef"><name>vector6d_t</name></member>
+  </compound>
+  <compound refid="oi__inference_8hpp" kind="file"><name>oi_inference.hpp</name>
+  </compound>
+  <compound refid="oi__inference_8cpp" kind="file"><name>oi_inference.cpp</name>
+  </compound>
+  <compound refid="rvc__object__detection_8hpp" kind="file"><name>rvc_object_detection.hpp</name>
+  </compound>
+  <compound refid="rvc__object__detection_8cpp" kind="file"><name>rvc_object_detection.cpp</name>
+    <member refid="rvc__object__detection_8cpp_1acefb5a635590539da29d456ef3ba210a" kind="variable"><name>exitBool</name></member>
+  </compound>
+  <compound refid="matcher_8hpp" kind="file"><name>matcher.hpp</name>
+    <member refid="matcher_8hpp_1abd10555a534258e2739a38c928ef5db1" kind="typedef"><name>PointT</name></member>
+  </compound>
+  <compound refid="rvc__pose__detector_8hpp" kind="file"><name>rvc_pose_detector.hpp</name>
+  </compound>
+  <compound refid="matcher_8cpp" kind="file"><name>matcher.cpp</name>
+    <member refid="matcher_8cpp_1a6926864424637458c7d1a91456639cf4" kind="function"><name>load_pcd_file</name></member>
+  </compound>
+  <compound refid="rvc__pose__detector_8cpp" kind="file"><name>rvc_pose_detector.cpp</name>
+  </compound>
+  <compound refid="rvc__profiler_8cpp" kind="file"><name>rvc_profiler.cpp</name>
+    <member refid="rvc__profiler_8cpp_1ab701e3ac61a85b337ec5c1abaad6742d" kind="typedef"><name>json</name></member>
+  </compound>
+  <compound refid="rotated__object__detection_8launch_8py" kind="file"><name>rotated_object_detection.launch.py</name>
+  </compound>
+  <compound refid="____init_____8py" kind="file"><name>__init__.py</name>
+  </compound>
+  <compound refid="object__detection_8py" kind="file"><name>object_detection.py</name>
+  </compound>
+  <compound refid="rotated__object__detection__parameters_8py" kind="file"><name>rotated_object_detection_parameters.py</name>
+  </compound>
+  <compound refid="setup_8py" kind="file"><name>setup.py</name>
+  </compound>
+  <compound refid="test__detector_8py" kind="file"><name>test_detector.py</name>
+  </compound>
+  <compound refid="vision_8composition_8launch_8py" kind="file"><name>vision.composition.launch.py</name>
+  </compound>
+  <compound refid="vision_8launch_8py" kind="file"><name>vision.launch.py</name>
+  </compound>
+  <compound refid="dir_d8d4d175dfd56c454faf34ddea33420a" kind="dir"><name>rvc_object_detection/rvc_ai_interface/include</name>
+  </compound>
+  <compound refid="dir_17c743da32067969fc5b62dfd4007867" kind="dir"><name>rvc_object_detection/rvc_ai_plugins/openvino_inference/include</name>
+  </compound>
+  <compound refid="dir_9678588e389913bd4671673c8d12c440" kind="dir"><name>rvc_pose_detector/include</name>
+  </compound>
+  <compound refid="dir_0036a99b4dc908a3b7eabdb35acca247" kind="dir"><name>rvc_object_detection/rvc_object_detection_engine/include</name>
+  </compound>
+  <compound refid="dir_4ca55adbf6dcf3598cbefa949f849e5e" kind="dir"><name>rvc_vision_main/launch</name>
+  </compound>
+  <compound refid="dir_bdb84c75313122c5ce3020b902f2adfb" kind="dir"><name>rvc_rotated_object_detection/launch</name>
+  </compound>
+  <compound refid="dir_faccfe360743e0afb249eec3f202d0d1" kind="dir"><name>rvc_object_detection/rvc_ai_plugins/openvino_inference</name>
+  </compound>
+  <compound refid="dir_10324e70106c5d5426afc2aaa7c728a1" kind="dir"><name>rvc_object_detection/rvc_ai_interface</name>
+  </compound>
+  <compound refid="dir_3496d5ec7390beed9fdf0f6e9183757e" kind="dir"><name>rvc_object_detection/rvc_ai_plugins</name>
+  </compound>
+  <compound refid="dir_72f9540478a969afa3edae1a0287fd43" kind="dir"><name>rvc_object_detection</name>
+  </compound>
+  <compound refid="dir_9526c01be8bb30566b7361d2f8284441" kind="dir"><name>rvc_object_detection/rvc_object_detection_engine</name>
+  </compound>
+  <compound refid="dir_24a8b4e1caeb82fd5a679874f3814b77" kind="dir"><name>rvc_pose_detector</name>
+  </compound>
+  <compound refid="dir_b94e658e8ef8206483d1b6f8fd411d5f" kind="dir"><name>rvc_profiler</name>
+  </compound>
+  <compound refid="dir_a6636bfae65a647d39bfeb79e3204c08" kind="dir"><name>rvc_rotated_object_detection</name>
+  </compound>
+  <compound refid="dir_fe394525b36c38382bdc54aef9549993" kind="dir"><name>rvc_rotated_object_detection/rvc_rotated_object_detection</name>
+  </compound>
+  <compound refid="dir_bfed9713bde9aba8a6db095ae4e6b3b5" kind="dir"><name>rvc_vision_main</name>
+  </compound>
+  <compound refid="dir_51cb7170a8f3382d577dc874d2589ec2" kind="dir"><name>rvc_object_detection/rvc_object_detection_engine/src</name>
+  </compound>
+  <compound refid="dir_cdd9077d695010337f144822761bce76" kind="dir"><name>rvc_object_detection/rvc_ai_plugins/openvino_inference/src</name>
+  </compound>
+  <compound refid="dir_dd35f5f1d59983efa0a188cccd5c6ecf" kind="dir"><name>rvc_pose_detector/src</name>
+  </compound>
+  <compound refid="dir_49c5b068317e04a11189e7d7330effe3" kind="dir"><name>rvc_profiler/src</name>
+  </compound>
+  <compound refid="dir_6ad5aed89ef22bf4172598b40b478a11" kind="dir"><name>rvc_rotated_object_detection/test</name>
+  </compound>
+</doxygenindex>

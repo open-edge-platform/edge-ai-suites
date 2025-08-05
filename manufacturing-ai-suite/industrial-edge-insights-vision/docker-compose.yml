@@ -3,7 +3,7 @@ services:
     depends_on:
       model_registry:
         condition: service_healthy
-    image: ${DOCKER_REGISTRY}intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
+    image: ghcr.io/open-edge-platform/edge-ai-libraries/intel/edge-ai-dlstreamer-pipeline-server:20250731_EAL1.2_DLSPS_RC4-ubuntu22
     container_name: dlstreamer-pipeline-server
     hostname: dlstreamer-pipeline-server
     networks:

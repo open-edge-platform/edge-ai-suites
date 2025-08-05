@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_13135bbbb32b75950d4ec478feffc4cb" kind="dir">
+    <compoundname>rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller</compoundname>
+    <innerfile refid="moveit2__pose__tracking_8hpp">moveit2_pose_tracking.hpp</innerfile>
+    <innerfile refid="moveit2__servo__motion__controller_8hpp">moveit2_servo_motion_controller.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/"/>
+  </compounddef>
+</doxygen>

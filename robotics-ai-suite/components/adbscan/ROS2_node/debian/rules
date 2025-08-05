@@ -1,0 +1,121 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+ROS_DISTRO ?= humble
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+# TODO: remove the LDFLAGS override.  It's here to avoid esoteric problems
+# of this sort:
+#  https://code.ros.org/trac/ros/ticket/2977
+#  https://code.ros.org/trac/ros/ticket/3842
+export LDFLAGS=-pthread
+export PKG_CONFIG_PATH=/opt/ros/$(ROS_DISTRO)/lib/pkgconfig
+# Explicitly enable -DNDEBUG, see:
+# 	https://github.com/ros-infrastructure/bloom/issues/327
+export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG
+ifneq ($(filter nocheck,$(DEB_BUILD_OPTIONS)),)
+       BUILD_TESTING_ARG=-DBUILD_TESTING=OFF
+endif
+export DEB_CXXFLAGS_MAINT_APPEND=-Wno-error=maybe-uninitialized
+# export DEB_LDFLAGS_MAINT_APPEND = -lpthread
+
+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+
+BUILD_DIR=$(CURDIR)/.obj-$(DEB_HOST_GNU_TYPE)
+BUILD_ONEAPI_DIR=$(CURDIR)/.obj-$(DEB_HOST_GNU_TYPE)-oneapi
+
+CFLAGS := $(filter-out "-flto=auto -ffat-lto-objects -flto=auto -ffat-lto-objects", $(shell dpkg-buildflags --get CFLAGS))
+CXXFLAGS := $(filter-out "-flto=auto -ffat-lto-objects -flto=auto -ffat-lto-objects", $(shell dpkg-buildflags --get CXXFLAGS))
+LDFLAGS  := $(filter-out "-flto=auto -ffat-lto-objects -flto=auto -ffat-lto-objects", $(shell dpkg-buildflags --get LDFLAGS))
+
+%:
+	dh $@ -v --buildsystem=cmake --parallel \
+	--sourcedirectory=./
+
+
+override_dh_auto_clean:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/$(ROS_DISTRO)/setup.sh" ]; then . "/opt/ros/$(ROS_DISTRO)/setup.sh"; fi && \
+	dh_auto_clean --builddirectory=$(BUILD_DIR) -- && \
+	dh_auto_clean --builddirectory=$(BUILD_ONEAPI_DIR) --
+
+override_dh_auto_configure:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/$(ROS_DISTRO)/setup.sh" ]; then . "/opt/ros/$(ROS_DISTRO)/setup.sh"; fi && \
+	if [ -f "/opt/intel/oneapi/setvars.sh" ]; then . "/opt/intel/oneapi/setvars.sh"; fi && \
+	dh_auto_configure  --builddirectory=$(BUILD_DIR) -- \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/$(ROS_DISTRO) \
+		-DAMENT_PREFIX_PATH=/opt/ros/$(ROS_DISTRO) \
+		-DCMAKE_PREFIX_PATH=/opt/ros/$(ROS_DISTRO) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DWITH_ONEAPI=OFF \
+		$(BUILD_TESTING_ARG)
+	dh_auto_configure --builddirectory=$(BUILD_ONEAPI_DIR) -- \
+		-DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/latest/bin/icx \
+		-DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/latest/bin/icpx \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/$(ROS_DISTRO) \
+		-DAMENT_PREFIX_PATH=/opt/ros/$(ROS_DISTRO) \
+		-DCMAKE_PREFIX_PATH=/opt/ros/$(ROS_DISTRO) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DWITH_ONEAPI=ON \
+		$(BUILD_TESTING_ARG) 
+
+override_dh_auto_build:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/$(ROS_DISTRO)/setup.sh" ]; then . "/opt/ros/$(ROS_DISTRO)/setup.sh"; fi && \
+	if [ -f "/opt/intel/oneapi/setvars.sh" ]; then . "/opt/intel/oneapi/setvars.sh"; fi && \
+	dh_auto_build  --builddirectory=$(BUILD_DIR) --  && \
+	dh_auto_build --builddirectory=$(BUILD_ONEAPI_DIR) --
+
+override_dh_auto_test:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	echo -- Running tests. Even if one of them fails the build is not canceled.
+	if [ -f "/opt/ros/$(ROS_DISTRO)/setup.sh" ]; then . "/opt/ros/$(ROS_DISTRO)/setup.sh"; fi && \
+	dh_auto_test  --builddirectory=$(BUILD_DIR) -- || true  && \
+	if [ -f "/opt/intel/oneapi/setvars.sh" ]; then . "/opt/intel/oneapi/setvars.sh"; fi && \
+	dh_auto_test  --builddirectory=$(BUILD_ONEAPI_DIR) -- || true
+
+override_dh_shlibdeps:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/$(ROS_DISTRO)/setup.sh" ]; then . "/opt/ros/$(ROS_DISTRO)/setup.sh"; fi && \
+	if [ -f "/opt/intel/oneapi/setvars.sh" ]; then . "/opt/intel/oneapi/setvars.sh"; fi && \
+	dh_shlibdeps \
+		-l$(CURDIR)/debian/ros-$(ROS_DISTRO)-adbscan-ros2/opt/ros/$(ROS_DISTRO)/lib/ && \
+	dh_shlibdeps \
+		-l$(CURDIR)/debian/ros-$(ROS_DISTRO)-adbscan-oneapi/opt/ros/$(ROS_DISTRO)/lib/
+
+override_dh_auto_install:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/$(ROS_DISTRO)/setup.sh" ]; then . "/opt/ros/$(ROS_DISTRO)/setup.sh"; fi && \
+	dh_auto_install --builddirectory=$(BUILD_DIR) --
+	install -d $(CURDIR)/debian/ros-$(ROS_DISTRO)-adbscan-ros2/opt/ros/$(ROS_DISTRO) 
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/bin" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/bin $(CURDIR)/debian/ros-humble-adbscan-ros2/opt/ros/humble; fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/local" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/local $(CURDIR)/debian/ros-humble-adbscan-ros2/opt/ros/humble; fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/lib" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/lib $(CURDIR)/debian/ros-humble-adbscan-ros2/opt/ros/humble; fi  && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/include" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/include $(CURDIR)/debian/ros-humble-adbscan-ros2/opt/ros/humble; fi && \
+	cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/share $(CURDIR)/debian/ros-humble-adbscan-ros2/opt/ros/humble  
+	dh_auto_install --builddirectory=$(BUILD_ONEAPI_DIR) --
+	install -d $(CURDIR)/debian/ros-$(ROS_DISTRO)-adbscan-oneapi/opt/ros/$(ROS_DISTRO) 
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/bin" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/bin $(CURDIR)/debian/ros-humble-adbscan-oneapi/opt/ros/humble; fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/local" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/local $(CURDIR)/debian/ros-humble-adbscan-oneapi/opt/ros/humble; fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/lib" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/lib $(CURDIR)/debian/ros-humble-adbscan-oneapi/opt/ros/humble; fi  && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/include" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/include $(CURDIR)/debian/ros-humble-adbscan-oneapi/opt/ros/humble; fi && \
+	cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/share $(CURDIR)/debian/ros-humble-adbscan-oneapi/opt/ros/humble  

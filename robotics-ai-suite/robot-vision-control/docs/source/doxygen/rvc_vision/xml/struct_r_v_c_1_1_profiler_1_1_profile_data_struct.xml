@@ -1,0 +1,267 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct" kind="struct" language="C++" prot="private">
+    <compoundname>RVC::Profiler::ProfileDataStruct</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1af6d946c29258971e759933a99aada895" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::m_roi_count</definition>
+        <argsstring></argsstring>
+        <name>m_roi_count</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="75" column="23" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1aacb40d7361b86aeed7cca6d13599d61f" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::rs_pcl_count</definition>
+        <argsstring></argsstring>
+        <name>rs_pcl_count</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="75" column="35" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a1df4fc48502e479aeb3bd5729d61222d" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::object_poses_count</definition>
+        <argsstring></argsstring>
+        <name>object_poses_count</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="75" column="48" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a9379383aaf80ce5c9920345de1f484c1" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::inference_count</definition>
+        <argsstring></argsstring>
+        <name>inference_count</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="75" column="67" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a8ad75d3ca93db256ffe5b1947e0459a9" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::second_count</definition>
+        <argsstring></argsstring>
+        <name>second_count</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="75" column="83" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1ad77aea54ae65568e995cfb4bb2eee50a" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::rs_rgb</definition>
+        <argsstring></argsstring>
+        <name>rs_rgb</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="75" column="96" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1ab01cdb18f4f1f8116155dadeb8a61d32" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::m_roi_count_total</definition>
+        <argsstring></argsstring>
+        <name>m_roi_count_total</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="76" column="23" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="76" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a83b1cb3612505bfc7225be10e5492dda" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::rs_pcl_count_total</definition>
+        <argsstring></argsstring>
+        <name>rs_pcl_count_total</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="76" column="41" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="76" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a629afb2e956668bd9dfe87fff1187975" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::object_poses_count_total</definition>
+        <argsstring></argsstring>
+        <name>object_poses_count_total</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="76" column="60" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="76" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a35f21de1ed93d79ae556ca19d3fb804f" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::inference_count_total</definition>
+        <argsstring></argsstring>
+        <name>inference_count_total</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="76" column="85" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="76" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1ae7548c5b3fb9bf8336baa7de8ac82468" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::second_count_total</definition>
+        <argsstring></argsstring>
+        <name>second_count_total</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="76" column="107" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="76" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a9e69ab8a502fd21b6acf12c1d8e39972" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::rs_rgb_total</definition>
+        <argsstring></argsstring>
+        <name>rs_rgb_total</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="76" column="126" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="76" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a9171b5b6c2159c51ce526090071db68d" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::successful_object_detection_count</definition>
+        <argsstring></argsstring>
+        <name>successful_object_detection_count</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="77" column="23" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="77" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1ae4228816b5b9c6a4e7478f988a950f22" prot="public" static="no" mutable="no">
+        <type>unsigned long</type>
+        <definition>unsigned long RVC::Profiler::ProfileDataStruct::successful_object_detection_count_total</definition>
+        <argsstring></argsstring>
+        <name>successful_object_detection_count_total</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="77" column="57" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="77" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a381e68a93b89333d8384e9900b602973" prot="public" static="no" mutable="no">
+        <type>unsigned long long</type>
+        <definition>unsigned long long RVC::Profiler::ProfileDataStruct::inversekinematics_failed</definition>
+        <argsstring></argsstring>
+        <name>inversekinematics_failed</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="78" column="28" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="78" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a7cca64031a76fa8448b80c5830d95fa3" prot="public" static="no" mutable="no">
+        <type>unsigned long long</type>
+        <definition>unsigned long long RVC::Profiler::ProfileDataStruct::inversekinematics_total</definition>
+        <argsstring></argsstring>
+        <name>inversekinematics_total</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="78" column="53" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="78" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a6e09dd79b3ea184fc2698b778170d4f4" prot="public" static="no" mutable="no">
+        <type>unsigned long long</type>
+        <definition>unsigned long long RVC::Profiler::ProfileDataStruct::deadline_failed</definition>
+        <argsstring></argsstring>
+        <name>deadline_failed</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="79" column="28" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="79" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a48a92d3e09741e7ff0d9eb9209913019" prot="public" static="no" mutable="no">
+        <type>unsigned long long</type>
+        <definition>unsigned long long RVC::Profiler::ProfileDataStruct::deadline_total</definition>
+        <argsstring></argsstring>
+        <name>deadline_total</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="79" column="44" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="79" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_profiler/src/rvc_profiler.cpp" line="73" column="5" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="74" bodyend="80"/>
+    <listofallmembers>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a6e09dd79b3ea184fc2698b778170d4f4" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>deadline_failed</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a48a92d3e09741e7ff0d9eb9209913019" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>deadline_total</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a9379383aaf80ce5c9920345de1f484c1" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>inference_count</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a35f21de1ed93d79ae556ca19d3fb804f" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>inference_count_total</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a381e68a93b89333d8384e9900b602973" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>inversekinematics_failed</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a7cca64031a76fa8448b80c5830d95fa3" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>inversekinematics_total</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1af6d946c29258971e759933a99aada895" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>m_roi_count</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1ab01cdb18f4f1f8116155dadeb8a61d32" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>m_roi_count_total</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a1df4fc48502e479aeb3bd5729d61222d" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>object_poses_count</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a629afb2e956668bd9dfe87fff1187975" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>object_poses_count_total</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1aacb40d7361b86aeed7cca6d13599d61f" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>rs_pcl_count</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a83b1cb3612505bfc7225be10e5492dda" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>rs_pcl_count_total</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1ad77aea54ae65568e995cfb4bb2eee50a" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>rs_rgb</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a9e69ab8a502fd21b6acf12c1d8e39972" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>rs_rgb_total</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a8ad75d3ca93db256ffe5b1947e0459a9" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>second_count</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1ae7548c5b3fb9bf8336baa7de8ac82468" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>second_count_total</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1a9171b5b6c2159c51ce526090071db68d" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>successful_object_detection_count</name></member>
+      <member refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct_1ae4228816b5b9c6a4e7478f988a950f22" prot="public" virt="non-virtual"><scope>RVC::Profiler::ProfileDataStruct</scope><name>successful_object_detection_count_total</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

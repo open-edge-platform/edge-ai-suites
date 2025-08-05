@@ -3,8 +3,8 @@
 # Download artifacts for a specific sample application
 #   by calling respective app's setup.sh script
 SCRIPT_DIR=$(dirname $(readlink -f "$0"))
-MODEL_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/2d63ba48e2ac3c09339f27c32267bb026e146175/models/worker-safety-gear-detection.zip"
-VIDEO_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/2d63ba48e2ac3c09339f27c32267bb026e146175/videos/Safety_Full_Hat_and_Vest.avi"
+MODEL_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/758b7a1e2edd021f3e6e51c72eb785c53ffa37f6/models/worker-safety-gear-detection.zip"
+VIDEO_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/758b7a1e2edd021f3e6e51c72eb785c53ffa37f6/videos/Safety_Full_Hat_and_Vest.avi"
 
 err() {
     echo "ERROR: $1" >&2

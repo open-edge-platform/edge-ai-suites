@@ -1,0 +1,40 @@
+cmake_minimum_required(VERSION 3.5)
+project(adbscan_ros2_follow_me)
+
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(nav2_dynamic_msgs REQUIRED)
+find_package(PCL REQUIRED)
+
+set(dependencies "geometry_msgs" "rclcpp" "nav2_dynamic_msgs" "PCL" "sensor_msgs")
+add_executable(adbscan_pub src/adbscan_pub.cpp)
+ament_target_dependencies(adbscan_pub ${dependencies})
+
+include_directories(include)
+
+add_executable(adbscan_sub src/adbscan_sub.cpp src/print_info.cpp src/doDBSCAN.cpp src/Util.cpp src/dbscan_adaptiveK.cpp)
+ament_target_dependencies(adbscan_sub ${dependencies})
+
+install(TARGETS
+  adbscan_pub
+  adbscan_sub
+  DESTINATION lib/${PROJECT_NAME})
+
+ament_package()

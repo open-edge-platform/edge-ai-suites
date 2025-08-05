@@ -1,0 +1,190 @@
+From be94e67e036f7cf483edddca0a2636f69606871b Mon Sep 17 00:00:00 2001
+From: Jeremy Ouillette <jeremy.ouillette@intel.com>
+Date: Wed, 18 Jun 2025 20:15:18 -0700
+Subject: [PATCH 2/3] Create debian directory to enable building Debian package.
+
+---
+ debian/changelog                |  5 +++
+ debian/compat                   |  1 +
+ debian/control                  | 30 ++++++++++++++
+ debian/liborb-slam3-dev.install |  1 +
+ debian/liborb-slam3.install     |  1 +
+ debian/orb-slam3.install        |  1 +
+ debian/rules                    | 73 +++++++++++++++++++++++++++++++++
+ debian/source/format            |  1 +
+ 8 files changed, 113 insertions(+)
+ create mode 100644 debian/changelog
+ create mode 100644 debian/compat
+ create mode 100644 debian/control
+ create mode 100644 debian/liborb-slam3-dev.install
+ create mode 100644 debian/liborb-slam3.install
+ create mode 100644 debian/orb-slam3.install
+ create mode 100755 debian/rules
+ create mode 100644 debian/source/format
+
+diff --git a/debian/changelog b/debian/changelog
+new file mode 100644
+index 0000000..66899b3
+--- /dev/null
++++ b/debian/changelog
+@@ -0,0 +1,5 @@
++orb-slam3 (1.0-1) UNRELEASED; urgency=low
++
++  * Initial release
++
++ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 19 Feb 2025 00:00:00 +0000
+diff --git a/debian/compat b/debian/compat
+new file mode 100644
+index 0000000..9d60796
+--- /dev/null
++++ b/debian/compat
+@@ -0,0 +1 @@
++11
+\ No newline at end of file
+diff --git a/debian/control b/debian/control
+new file mode 100644
+index 0000000..9bd7b48
+--- /dev/null
++++ b/debian/control
+@@ -0,0 +1,30 @@
++Source: orb-slam3
++Section: utils
++Priority: optional
++Maintainer: ECI Maintainer <eci.maintainer@intel.com>
++Build-Depends: debhelper (>= 12), cmake (>= 3.10), g++ (>= 8), libpangolin-dev, libopencv-dev, libeigen3-dev, libboost-all-dev, libopengl-dev, libsdl2-dev, libssl-dev, libprotobuf-dev, librealsense2-dev, libepoxy-dev, python3-wheel
++Standards-Version: 4.1.4
++
++Package: orb-slam3
++Architecture: any
++Multi-Arch: foreign
++Depends: liborb-slam3 (= ${binary:Version}), ${misc:Depends}
++Description: ORB-SLAM3: A robust and efficient SLAM system
++ ORB-SLAM3 is a state-of-the-art Visual SLAM system for monocular, stereo, and RGB-D cameras, along with inertial 
++ measurement units (IMU). It builds and maintains a 3D map of the environment using various sensor inputs and performs 
++ real-time localization and mapping.
++
++Package: liborb-slam3
++Architecture: any
++Multi-Arch: foreign
++Depends: ${misc:Depends}, ${shlibs:Depends}, libpangolin
++Description: ORB-SLAM3: A robust and efficient SLAM system
++ ORB-SLAM3 is a state-of-the-art Visual SLAM system for monocular, stereo, and RGB-D cameras, along with inertial 
++ measurement units (IMU). It builds and maintains a 3D map of the environment using various sensor inputs and performs 
++ real-time localization and mapping.
++
++Package: liborb-slam3-dev
++Section: libdevel
++Architecture: any
++Depends: liborb-slam3 (= ${binary:Version}), ${misc:Depends}
++Description: ORB SLAM3 development headers
+diff --git a/debian/liborb-slam3-dev.install b/debian/liborb-slam3-dev.install
+new file mode 100644
+index 0000000..67d7936
+--- /dev/null
++++ b/debian/liborb-slam3-dev.install
+@@ -0,0 +1 @@
++/usr/include/*
+diff --git a/debian/liborb-slam3.install b/debian/liborb-slam3.install
+new file mode 100644
+index 0000000..f5b1d25
+--- /dev/null
++++ b/debian/liborb-slam3.install
+@@ -0,0 +1 @@
++/usr/lib/*
+diff --git a/debian/orb-slam3.install b/debian/orb-slam3.install
+new file mode 100644
+index 0000000..4d147b0
+--- /dev/null
++++ b/debian/orb-slam3.install
+@@ -0,0 +1 @@
++/opt/intel/orb-slam3/*
+diff --git a/debian/rules b/debian/rules
+new file mode 100755
+index 0000000..9b52513
+--- /dev/null
++++ b/debian/rules
+@@ -0,0 +1,73 @@
++#!/usr/bin/make -f
++
++export DH_VERBOSE = 1
++export DEB_BUILD_MAINT_OPTIONS = hardening=+all
++export DEB_HOST_MULTIARCH := $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
++export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
++
++BUILD_DIR_DBOW2=$(CURDIR)/build_dbow2
++BUILD_DIR_G2O=$(CURDIR)/build_g2o
++BUILD_DIR_SOPHUS=$(CURDIR)/build_sophus
++
++%:
++	dh $@ --parallel
++
++# Override the default configure step to include custom third-party library builds
++override_dh_auto_configure:
++# Building Thirdparty dependencies (DBoW2, g2o, Sophus) and run build script
++	dh_auto_configure \
++		-O--sourcedir=$(CURDIR)/Thirdparty/DBoW2/ \
++		--builddir=$(BUILD_DIR_DBOW2) -- \
++		-DBOW2_STATIC=1
++	dh_auto_configure \
++		-O--sourcedir=$(CURDIR)/Thirdparty/g2o/ \
++		--builddir=$(BUILD_DIR_G2O) -- \
++		-DG2O_STATIC=1
++	dh_auto_configure \
++		-O--sourcedir=$(CURDIR)/Thirdparty/Sophus/ \
++		--builddir=$(BUILD_DIR_SOPHUS)
++	dh_auto_configure -- -DLINK_LIBRARY_STATIC=1
++
++# Override the default build step to include custom third-party library builds
++override_dh_auto_build:
++	dh_auto_build \
++		-O--sourcedir=$(CURDIR)/Thirdparty/DBoW2/ \
++		--builddir=$(BUILD_DIR_DBOW2) -- && \
++	dh_auto_build \
++		-O--sourcedir=$(CURDIR)/Thirdparty/g2o/ \
++		--builddir=$(BUILD_DIR_G2O) -- && \
++	dh_auto_build \
++		-O--sourcedir=$(CURDIR)/Thirdparty/Sophus/ \
++		--builddir=$(BUILD_DIR_SOPHUS) -- && \
++	dh_auto_build
++
++override_dh_shlibdeps:
++	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
++
++# Override the default install step to handle custom installation paths and files
++override_dh_install:
++# Install libraries and headers
++	install -d $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)
++	install -d $(CURDIR)/debian/tmp/usr/include/orb-slam3
++	install -d $(CURDIR)/debian/tmp/opt/intel/orb-slam3/Vocabulary
++	install -d $(CURDIR)/debian/tmp/opt/intel/orb-slam3/Examples
++	install -m 0755 lib/libORB_SLAM3.so $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)
++	cp -r include/* $(CURDIR)/debian/tmp/usr/include/orb-slam3
++
++	tar xf Vocabulary/ORBvoc.txt.tar.gz -C Vocabulary
++	cp Vocabulary/ORBvoc.txt $(CURDIR)/debian/tmp/opt/intel/orb-slam3/Vocabulary
++	cp -r Examples/* $(CURDIR)/debian/tmp/opt/intel/orb-slam3/Examples
++	find $(CURDIR)/debian/tmp/opt/intel/orb-slam3 -name "*.cc" | xargs rm
++	find $(CURDIR)/debian/tmp/opt/intel/orb-slam3/Examples/ -name "TUM_TimeStamps" | xargs rm -rf
++	find $(CURDIR)/debian/tmp/opt/intel/orb-slam3/Examples/ -name "TUM_IMU" | xargs rm -rf
++	rm -r $(CURDIR)/debian/tmp/opt/intel/orb-slam3/Examples/Monocular-Inertial/EuRoC_TimeStamps
++	rm -r $(CURDIR)/debian/tmp/opt/intel/orb-slam3/Examples/Monocular-Inertial/EuRoC_IMU
++	dh_install --
++
++# Clean up any temporary files that were generated during the build
++override_dh_clean:
++# Perform cleanup after the build
++	dh_clean
++
++override_dh_auto_test:
++	true
+diff --git a/debian/source/format b/debian/source/format
+new file mode 100644
+index 0000000..9f8e9b6
+--- /dev/null
++++ b/debian/source/format
+@@ -0,0 +1 @@
++1.0
+\ No newline at end of file
+-- 
+2.30.2
+

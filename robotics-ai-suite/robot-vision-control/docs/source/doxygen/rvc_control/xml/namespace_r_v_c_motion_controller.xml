@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespace_r_v_c_motion_controller" kind="namespace" language="C++">
+    <compoundname>RVCMotionController</compoundname>
+    <innerclass refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller" prot="public">RVCMotionController::Moveit2ServoMotionController</innerclass>
+    <innerclass refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" prot="public">RVCMotionController::RVCMotionControllerInterface</innerclass>
+    <innerclass refid="class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller" prot="public">RVCMotionController::URPendantMotionController</innerclass>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespace_r_v_c_motion_controller_1af0eff8a4a3fe6d36434e81cd14e93ef4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>moveit_msgs::msg::CollisionObject</type>
+        <definition>moveit_msgs::msg::CollisionObject RVCMotionController::createCollisionBox</definition>
+        <argsstring>(std::string name, float dimx, float dimy, float dimz, float posx, float posy, float posz)</argsstring>
+        <name>createCollisionBox</name>
+        <param>
+          <type>std::string</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>float</type>
+          <declname>dimx</declname>
+        </param>
+        <param>
+          <type>float</type>
+          <declname>dimy</declname>
+        </param>
+        <param>
+          <type>float</type>
+          <declname>dimz</declname>
+        </param>
+        <param>
+          <type>float</type>
+          <declname>posx</declname>
+        </param>
+        <param>
+          <type>float</type>
+          <declname>posy</declname>
+        </param>
+        <param>
+          <type>float</type>
+          <declname>posz</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" line="47" column="35" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" bodystart="47" bodyend="73"/>
+      </memberdef>
+      <memberdef kind="function" id="namespace_r_v_c_motion_controller_1a485d87131704adeb6b79f4afeae0b773" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const std::string</type>
+        <definition>static const std::string RVCMotionController::SERVER_IP_REPLACE</definition>
+        <argsstring>(&quot;{{SERVER_IP_REPLACE}}&quot;)</argsstring>
+        <name>SERVER_IP_REPLACE</name>
+        <param>
+          <type>&quot;{{SERVER_IP_REPLACE}}&quot;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/ur_pendant_motion_controller.cpp" line="28" column="26" declfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/ur_pendant_motion_controller.cpp" declline="28" declcolumn="26"/>
+      </memberdef>
+      <memberdef kind="function" id="namespace_r_v_c_motion_controller_1af3ba943f7d939be83f329747463f2dcb" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const std::string</type>
+        <definition>static const std::string RVCMotionController::SERVER_PORT_REPLACE</definition>
+        <argsstring>(&quot;{{SERVER_PORT_REPLACE}}&quot;)</argsstring>
+        <name>SERVER_PORT_REPLACE</name>
+        <param>
+          <type>&quot;{{SERVER_PORT_REPLACE}}&quot;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/ur_pendant_motion_controller.cpp" line="29" column="26" declfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/ur_pendant_motion_controller.cpp" declline="29" declcolumn="26"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Any defined controllers have to inerit from this to be used in the StateMachine node. </para>
+    </briefdescription>
+    <detaileddescription>
+<para>Linear Goal Controller implementation of linear trajectory planning.</para>
+<para>This Goal Controller uses moveit2 servo</para>
+<para>This Goal Controller implements the simplest strategy: In space: from current position to destination, the trajectory are segmented in a linear way: if the goal is in TCP mode, the TCP (gripper) will travel from current to goal in a spacial linear trajectory In time, the trajectory segments become shorter the closer the TCP is to the goal with a arctan profile (so not linear) If the Goal Controller is in Joint Mode (as opposed to TCP Mode), the single joints angles will have the above behaviour: each joint increments/decrements the angle linearly towards the goal </para>
+    </detaileddescription>
+    <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="40" column="1"/>
+  </compounddef>
+</doxygen>

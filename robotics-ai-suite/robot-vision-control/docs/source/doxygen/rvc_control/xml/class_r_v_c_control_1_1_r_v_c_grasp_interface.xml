@@ -1,0 +1,382 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="class_r_v_c_control_1_1_r_v_c_grasp_interface" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>RVCControl::RVCGraspInterface</compoundname>
+    <derivedcompoundref refid="class_r_v_c_control_1_1_non_oriented_grasp" prot="public" virt="non-virtual">RVCControl::NonOrientedGrasp</derivedcompoundref>
+    <derivedcompoundref refid="class_r_v_c_control_1_1_oriented_grasp" prot="public" virt="non-virtual">RVCControl::OrientedGrasp</derivedcompoundref>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aac1e2f2c6d0bf9ef2d8a0f40899b0513" prot="protected" static="no" mutable="no">
+        <type>rclcpp::Node::SharedPtr</type>
+        <definition>rclcpp::Node::SharedPtr RVCControl::RVCGraspInterface::node_</definition>
+        <argsstring></argsstring>
+        <name>node_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="37" column="29" bodyfile="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aad74b21bf9a0eb2ef8ad748cb4ebdd8a" prot="private" static="no" mutable="no">
+        <type>rclcpp::Subscription&lt; rvc_messages::msg::PoseStampedList &gt;::SharedPtr</type>
+        <definition>rclcpp::Subscription&lt;rvc_messages::msg::PoseStampedList&gt;::SharedPtr RVCControl::RVCGraspInterface::RvcMessagesSubscriber</definition>
+        <argsstring></argsstring>
+        <name>RvcMessagesSubscriber</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="39" column="38" bodyfile="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aa8d0938a30e59b0ecf19b3e345b6cb5f" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void RVCControl::RVCGraspInterface::RvcMessagesCallback</definition>
+        <argsstring>(rvc_messages::msg::PoseStampedList::SharedPtr)</argsstring>
+        <name>RvcMessagesCallback</name>
+        <param>
+          <type>rvc_messages::msg::PoseStampedList::SharedPtr</type>
+          <defname>msgList</defname>
+        </param>
+        <briefdescription>
+<para>Callback upon receiving a new message from the AI node. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>Message</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>received, it brings object type and the pose (if not of type none) </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="42" column="10" bodyfile="rvc_grasp/rvc_grasp_interface/src/rvc_grasp_interface.cpp" bodystart="23" bodyend="26"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a37873750c6db0d3e1251074a8c8ac085" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>RVCControl::RVCGraspInterface::RVCGraspInterface</definition>
+        <argsstring>(const RVCGraspInterface &amp;)</argsstring>
+        <name>RVCGraspInterface</name>
+        <param>
+          <type>const <ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" kindref="compound">RVCGraspInterface</ref> &amp;</type>
+        </param>
+        <briefdescription>
+<para>Private copy constructor. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="44" column="5"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a54eac4c7a8b4b0419aca765b8c1a6472" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" kindref="compound">RVCGraspInterface</ref> &amp;</type>
+        <definition>RVCGraspInterface&amp; RVCControl::RVCGraspInterface::operator=</definition>
+        <argsstring>(const RVCGraspInterface &amp;)</argsstring>
+        <name>operator=</name>
+        <param>
+          <type>const <ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" kindref="compound">RVCGraspInterface</ref> &amp;</type>
+        </param>
+        <briefdescription>
+<para>Private copy assignment operator. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="47" column="23"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ac519ff48b07aa841270b90d2b1057d47" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void RVCControl::RVCGraspInterface::OnMessageReceive</definition>
+        <argsstring>(rvc_messages::msg::PoseStampedList::SharedPtr msg)=0</argsstring>
+        <name>OnMessageReceive</name>
+        <reimplementedby refid="class_r_v_c_control_1_1_non_oriented_grasp_1a944db041600951afdca9e9629018d551">OnMessageReceive</reimplementedby>
+        <reimplementedby refid="class_r_v_c_control_1_1_oriented_grasp_1aaaa993c990707fcb9f23ee2b1b6b62da">OnMessageReceive</reimplementedby>
+        <param>
+          <type>rvc_messages::msg::PoseStampedList::SharedPtr</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+<para>This function will be called upon receiving a new pose. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>msg</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the received message list </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="56" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab82b5755786cbc7b3255eedb3381f5c8" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>bool</type>
+        <definition>virtual bool RVCControl::RVCGraspInterface::getPreGrasp</definition>
+        <argsstring>(geometry_msgs::msg::Pose &amp;pose)=0</argsstring>
+        <name>getPreGrasp</name>
+        <reimplementedby refid="class_r_v_c_control_1_1_non_oriented_grasp_1a51f070f68c144f34c9359f655e1074b1">getPreGrasp</reimplementedby>
+        <reimplementedby refid="class_r_v_c_control_1_1_oriented_grasp_1ab65b5f210b133bb55f60d2330659409d">getPreGrasp</reimplementedby>
+        <param>
+          <type>geometry_msgs::msg::Pose &amp;</type>
+          <declname>pose</declname>
+        </param>
+        <briefdescription>
+<para>Get the Pre Grasp object pose. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>pose</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>pregrasp pose </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>true on success </para>
+</simplesect>
+<simplesect kind="return"><para>false on failure </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="64" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aed89327ba661ddf2be6c4c187bbf74e0" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>bool</type>
+        <definition>virtual bool RVCControl::RVCGraspInterface::getGrasp</definition>
+        <argsstring>(geometry_msgs::msg::Pose &amp;pose)=0</argsstring>
+        <name>getGrasp</name>
+        <reimplementedby refid="class_r_v_c_control_1_1_non_oriented_grasp_1aa970d9a2aeaaa29e7c54922b41cc4cd1">getGrasp</reimplementedby>
+        <reimplementedby refid="class_r_v_c_control_1_1_oriented_grasp_1acbd61f04a15708ca9e13d8b03f185b93">getGrasp</reimplementedby>
+        <param>
+          <type>geometry_msgs::msg::Pose &amp;</type>
+          <declname>pose</declname>
+        </param>
+        <briefdescription>
+<para>Get the Grasp object Pose. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>pose</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Grasp Pose </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>true on success </para>
+</simplesect>
+<simplesect kind="return"><para>false on failure </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="72" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a29d996087e338b75a5f1de2324380dcc" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>bool</type>
+        <definition>virtual bool RVCControl::RVCGraspInterface::isTargetAcquired</definition>
+        <argsstring>()=0</argsstring>
+        <name>isTargetAcquired</name>
+        <reimplementedby refid="class_r_v_c_control_1_1_non_oriented_grasp_1ad1fdf2664264a495fd3a70119a4a3e08">isTargetAcquired</reimplementedby>
+        <reimplementedby refid="class_r_v_c_control_1_1_oriented_grasp_1a80f0632d63518930168f4901dda6760c">isTargetAcquired</reimplementedby>
+        <briefdescription>
+<para>function to verify that the object is currently still valid and detected by the framework </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>true </para>
+</simplesect>
+<simplesect kind="return"><para>false </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="79" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aa6940e178dc6fc147282f7acd1f04f7b" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>std::string</type>
+        <definition>virtual std::string RVCControl::RVCGraspInterface::getCurrentObject</definition>
+        <argsstring>()=0</argsstring>
+        <name>getCurrentObject</name>
+        <reimplementedby refid="class_r_v_c_control_1_1_non_oriented_grasp_1a02b232913ff79c9eaca55ba70a7c0d13">getCurrentObject</reimplementedby>
+        <reimplementedby refid="class_r_v_c_control_1_1_oriented_grasp_1af09581b963b36d019965f82737c0024f">getCurrentObject</reimplementedby>
+        <briefdescription>
+<para>Get the Current detected Object string identifier. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>std::string object name identifier </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="85" column="25"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab0c2cdba038b08aff7dfd7b43211ce63" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool RVCControl::RVCGraspInterface::init</definition>
+        <argsstring>(rclcpp::Node::SharedPtr node)</argsstring>
+        <name>init</name>
+        <reimplementedby refid="class_r_v_c_control_1_1_non_oriented_grasp_1a6bf4217ff0bdc62b37465410e5729933">init</reimplementedby>
+        <reimplementedby refid="class_r_v_c_control_1_1_oriented_grasp_1acb2002ebb8d83fdd193f1e9638974461">init</reimplementedby>
+        <param>
+          <type>rclcpp::Node::SharedPtr</type>
+          <declname>node</declname>
+        </param>
+        <briefdescription>
+<para>API entry: plugin initialization. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>node</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Ros node </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>modelName</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input file name </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>true on success </para>
+</simplesect>
+<simplesect kind="return"><para>false otherwise </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="95" column="18" bodyfile="rvc_grasp/rvc_grasp_interface/src/rvc_grasp_interface.cpp" bodystart="28" bodyend="45"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a6ee193f0b77862c2a31be7b9df4600ac" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>bool</type>
+        <definition>virtual bool RVCControl::RVCGraspInterface::on_shutdown</definition>
+        <argsstring>()</argsstring>
+        <name>on_shutdown</name>
+        <briefdescription>
+<para>API entry: operation to clean up upon node shutdown. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>true </para>
+</simplesect>
+<simplesect kind="return"><para>false </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="102" column="18" bodyfile="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" bodystart="102" bodyend="106"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1afd56ca5c19e5cb3f79f5efcd0bfb6013" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual RVCControl::RVCGraspInterface::~RVCGraspInterface</definition>
+        <argsstring>()</argsstring>
+        <name>~RVCGraspInterface</name>
+        <briefdescription>
+<para>Destroy the <ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" kindref="compound">RVCGraspInterface</ref> object. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="112" column="13" bodyfile="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" bodystart="112" bodyend="112"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-func">
+      <memberdef kind="function" id="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a23575f212effaa07616d4bd6e561336a" prot="protected" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>RVCControl::RVCGraspInterface::RVCGraspInterface</definition>
+        <argsstring>()</argsstring>
+        <name>RVCGraspInterface</name>
+        <briefdescription>
+<para>Empty Constructor for pluginlib. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>node</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>a rclcpp node shared pointer </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="117" column="5" bodyfile="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" bodystart="117" bodyend="117"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3">
+        <label>RVCControl::OrientedGrasp</label>
+        <link refid="class_r_v_c_control_1_1_oriented_grasp"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>RVCControl::RVCGraspInterface</label>
+        <link refid="class_r_v_c_control_1_1_r_v_c_grasp_interface"/>
+      </node>
+      <node id="2">
+        <label>RVCControl::NonOrientedGrasp</label>
+        <link refid="class_r_v_c_control_1_1_non_oriented_grasp"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="34" column="1" bodyfile="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" bodystart="35" bodyend="118"/>
+    <listofallmembers>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aa6940e178dc6fc147282f7acd1f04f7b" prot="public" virt="pure-virtual"><scope>RVCControl::RVCGraspInterface</scope><name>getCurrentObject</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aed89327ba661ddf2be6c4c187bbf74e0" prot="public" virt="pure-virtual"><scope>RVCControl::RVCGraspInterface</scope><name>getGrasp</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab82b5755786cbc7b3255eedb3381f5c8" prot="public" virt="pure-virtual"><scope>RVCControl::RVCGraspInterface</scope><name>getPreGrasp</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab0c2cdba038b08aff7dfd7b43211ce63" prot="public" virt="virtual"><scope>RVCControl::RVCGraspInterface</scope><name>init</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a29d996087e338b75a5f1de2324380dcc" prot="public" virt="pure-virtual"><scope>RVCControl::RVCGraspInterface</scope><name>isTargetAcquired</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aac1e2f2c6d0bf9ef2d8a0f40899b0513" prot="protected" virt="non-virtual"><scope>RVCControl::RVCGraspInterface</scope><name>node_</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a6ee193f0b77862c2a31be7b9df4600ac" prot="public" virt="virtual"><scope>RVCControl::RVCGraspInterface</scope><name>on_shutdown</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ac519ff48b07aa841270b90d2b1057d47" prot="public" virt="pure-virtual"><scope>RVCControl::RVCGraspInterface</scope><name>OnMessageReceive</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a54eac4c7a8b4b0419aca765b8c1a6472" prot="private" virt="non-virtual"><scope>RVCControl::RVCGraspInterface</scope><name>operator=</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a37873750c6db0d3e1251074a8c8ac085" prot="private" virt="non-virtual"><scope>RVCControl::RVCGraspInterface</scope><name>RVCGraspInterface</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a23575f212effaa07616d4bd6e561336a" prot="protected" virt="non-virtual"><scope>RVCControl::RVCGraspInterface</scope><name>RVCGraspInterface</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aa8d0938a30e59b0ecf19b3e345b6cb5f" prot="private" virt="non-virtual"><scope>RVCControl::RVCGraspInterface</scope><name>RvcMessagesCallback</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aad74b21bf9a0eb2ef8ad748cb4ebdd8a" prot="private" virt="non-virtual"><scope>RVCControl::RVCGraspInterface</scope><name>RvcMessagesSubscriber</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1afd56ca5c19e5cb3f79f5efcd0bfb6013" prot="public" virt="virtual"><scope>RVCControl::RVCGraspInterface</scope><name>~RVCGraspInterface</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

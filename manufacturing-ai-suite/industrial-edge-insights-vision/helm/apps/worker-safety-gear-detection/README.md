@@ -179,4 +179,8 @@
      ```sh
      helm uninstall app-deploy -n apps
      ```
+
+
+## Troubleshooting
+- [Troubleshooting Guide](../../../apps/worker-safety-gear-detection/docs/user-guide/troubleshooting-guide.md)
     

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>wandering_jackal_tutorial</name>
+  <version>2.0.0</version>
+  <description>Wandering with Clearpath Robotics Jackal tutorial</description>
+  <maintainer email="eci.maintainer@intel.com">ECI Maintainer</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>imu_filter_madgwick</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>rtabmap_ros</exec_depend>
+  <exec_depend>realsense2_camera</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>wandering_app</exec_depend>
+  <exec_depend>clearpath_platform</exec_depend>
+  <exec_depend>clearpath_robot</exec_depend>
+  <exec_depend>clearpath_sensors</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

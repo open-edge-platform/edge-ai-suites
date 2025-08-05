@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>robotiq_controllers</name>
+  <version>2.0.0</version>
+  <description>Provides controllers for robotiq 2f gripper.</description>
+  <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
+  <license>Proprietary</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>control_msgs</depend>
+  <depend>controller_interface</depend>
+  <depend>geometry_msgs</depend>
+  <depend>joint_trajectory_controller</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp_lifecycle</depend>
+  <depend>rcutils</depend>
+  <depend>realtime_tools</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>forward_command_controller</depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

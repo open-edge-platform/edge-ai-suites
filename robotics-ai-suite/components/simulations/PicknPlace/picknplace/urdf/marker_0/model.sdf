@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="Marker_ID_1">
+    <static>false</static>
+    <link name="link">
+      <pose>0.0 0.0 0.01 0.0 0.0 0.0</pose>      
+      <collision name="collision">
+        <geometry>
+          <!-- Box or plane geometry is used -->
+        <box><size>0.05 0.05 0.05</size></box></geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>.5</mu>
+	      <mu2>.5</mu2>  
+	    <minDepth>0.003</minDepth>
+	    <maxVel>0</maxVel>
+	    <kp>1e+13</kp>
+	    <kd>1.0</kd>
+            </ode>   
+          </friction>                                  
+        </surface>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <!-- Box or plane geometry is used -->
+        <box><size>0.05 0.05 0.05</size></box></geometry>
+        <material>
+          <script>
+            <name>marker_id_0</name>
+          <uri>model://marker_0/materials/scripts/</uri><uri>model://marker_0/materials/textures/</uri></script>
+        </material>
+      </visual>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.45e-4</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>0.45e-4</iyy>
+          <iyz>0.0</iyz>
+          <izz>0.45e-4</izz>
+        </inertia>
+      </inertial>
+    </link>
+  </model>
+</sdf>

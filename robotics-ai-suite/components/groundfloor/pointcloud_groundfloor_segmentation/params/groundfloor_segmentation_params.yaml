@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+groundfloor_segmentation:
+  ros__parameters:
+    base_frame: base_link
+    use_best_effort_qos : False
+    sensor:
+      name: 'camera'
+      max_surface_height: 0.05    # Maxium expected height of groundfloor [m]
+      min_distance_to_ego: 0.4    # Minimum distance to robot [m]
+      max_incline: 15.0           # Maximum tolerated incline angle for ground surface [degrees]
+      robot_height: 2.0           # Height of robot [m]

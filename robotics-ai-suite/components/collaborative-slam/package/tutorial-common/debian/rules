@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+
+INSTALL_DIR=opt/ros/humble/share/collab-slam
+
+override_dh_fixperms:
+	dh_fixperms
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	install -d $(CURDIR)/debian/ros-humble-cslam-tutorial-common/$(INSTALL_DIR)
+	install -m 0755 scripts/pre.sh $(CURDIR)/debian/ros-humble-cslam-tutorial-common/$(INSTALL_DIR)
+	dh_auto_install --

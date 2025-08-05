@@ -1,0 +1,8 @@
+/* -- Extra CSS styles for Robotics content ----------------------- */
+
+/* Adjust tab colors */
+
+.sphinx-tabs-panel {
+    background: inherit !important;
+}
+

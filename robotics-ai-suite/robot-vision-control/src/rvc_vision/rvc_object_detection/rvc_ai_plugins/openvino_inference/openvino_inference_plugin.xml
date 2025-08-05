@@ -1,0 +1,5 @@
+<library path="openvino_inference_plugin">
+  <class type="RVC_AI::OIInference" base_class_type="RVC_AI::RVCAIInterface">
+    <description>This is a direct openvino yolo plugin.</description>
+  </class>
+</library>

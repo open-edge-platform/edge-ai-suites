@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_3496d5ec7390beed9fdf0f6e9183757e" kind="dir">
+    <compoundname>rvc_object_detection/rvc_ai_plugins</compoundname>
+    <innerdir refid="dir_faccfe360743e0afb249eec3f202d0d1">rvc_object_detection/rvc_ai_plugins/openvino_inference</innerdir>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_object_detection/rvc_ai_plugins/"/>
+  </compounddef>
+</doxygen>

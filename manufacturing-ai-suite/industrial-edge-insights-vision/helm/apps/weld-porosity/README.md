@@ -180,4 +180,8 @@
      ```sh
      helm uninstall app-deploy -n apps
      ```
+
+
+## Troubleshooting
+- [Troubleshooting Guide](../../../apps/weld-porosity/docs/user-guide/troubleshooting-guide.md)
     

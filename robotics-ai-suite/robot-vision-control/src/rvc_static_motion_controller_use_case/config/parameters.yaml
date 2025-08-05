@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+/**:
+        ros__parameters:
+                pregrasp_distance: 0.08
+                grasp_z_offset: 0.000
+                distance_threshold: 0.1
+                distance_threshold_tcp: 0.025
+                object_pose_topic: "object_poses"
+                base_link: "world"
+                ee_link: "world"
+                motion_controller: "RVCMotionController::URPendantMotionController"
+                grasp_plugin: "RVCControl::NonOrientedGrasp"
+                robot_program: "robot_program.txt"
+                server_ip: "10.11.12.98"
+                server_port: 50005
+                robot_port: 30002
+

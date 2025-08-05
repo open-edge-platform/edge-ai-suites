@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<robot name="table">
+  <link name="world">
+    <visual>
+      <origin rpy="0.00 0.0 1.57" xyz="-0.60 -0.35 0.20"/>
+      <geometry>
+	      <mesh filename="package://rvc_dynamic_motion_controller_tradeshows/meshes/conveyor.obj" scale="0.1 0.1 0.1"/>
+      </geometry>
+    </visual>
+  </link>
+</robot>

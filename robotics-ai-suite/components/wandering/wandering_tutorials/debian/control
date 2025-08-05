@@ -1,0 +1,12 @@
+Source: ros-humble-wandering-tutorials
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: debhelper (>=11~)
+Standards-Version: 4.1.4
+
+Package: ros-humble-wandering-tutorials
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, ros-humble-wandering-gazebo-tutorial, ros-humble-wandering-aaeon-tutorial, ros-humble-wandering-jackal-tutorial, ros-humble-robotics-sdk-license,
+Description: Metapackage for Intel Wandering application tutorials

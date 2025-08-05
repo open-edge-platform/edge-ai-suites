@@ -35,16 +35,14 @@ def process_video(camera_name, start_dt, duration_seconds, action, label=None):
         logger.info(f"Start time (local): {start_dt}")
         logger.info(f"Start time tzinfo: {getattr(start_dt, 'tzinfo', 'None')}")
 
-        # Optional: localize if tz is not set (assuming IST)
+        # Optional: warn if datetime is naive
         if start_dt.tzinfo is None:
-            IST = pytz.timezone("Asia/Kolkata")
-            start_dt = IST.localize(start_dt)
-            logger.info(f"Localized to IST: {start_dt}")
+            logger.warning("start_dt has no timezone info; assuming server's local time.")
 
         # Compute end time by adding duration
         end_dt = start_dt + timedelta(seconds=duration_seconds)
 
-        # Convert to timestamps
+        # Convert to timestamps (based on whatever timezone start_dt uses — could be naive/local or aware)
         start_time = int(start_dt.timestamp())
         end_time = int(end_dt.timestamp())
 

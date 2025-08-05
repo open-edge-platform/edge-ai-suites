@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>picknplace</name>
+  <version>1.0.0</version>
+  <description>This package demonstrate spawning multiple Robotic arms in Gazebo simulation environment separated by their own namespace</description>
+  <maintainer email="eci.maintainer@intel.com">ECI Maintainer</maintainer>
+   <license>Apache-2.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>moveit_msgs</exec_depend>  
+  <exec_depend>std_srvs</exec_depend>
+  <exec_depend>gazebo_ros_pkgs</exec_depend>  
+  <exec_depend>gazebo_ros2_control</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-setuptools</exec_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <exec_depend>moveit_ros_visualization</exec_depend>
+  <exec_depend>nav2_simple_commander</exec_depend>
+  <exec_depend>smach</exec_depend>
+  <exec_depend>rmw_cyclonedds_cpp</exec_depend>
+  <build_depend>builtin_interfaces</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

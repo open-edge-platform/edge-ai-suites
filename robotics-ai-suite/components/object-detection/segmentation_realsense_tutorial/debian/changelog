@@ -1,0 +1,12 @@
+ros-humble-segmentation-realsense-tutorial (2.2-1) UNRELEASED; urgency=low
+
+  * Convert openvino_segmentation_CPU_tutorial.sh to Python launch file
+  * Introduce generic launch config for semantic segmentation to let user choose the inference engine like GPU, NPU, CPU
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 21 July 2024 00:00:00 +0000
+
+ros-humble-segmentation-realsense-tutorial (2.1-1) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 28 Sep 2023 00:00:00 +0000

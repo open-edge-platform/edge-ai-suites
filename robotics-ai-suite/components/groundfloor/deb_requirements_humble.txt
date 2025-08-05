@@ -1,0 +1,1 @@
+ros-humble-ament-cmake-nose ros-humble-pcl-conversions ros-humble-nav2-bringup ros-humble-tf2-geometry-msgs ros-humble-depth-image-proc libopencv-dev libpcl-dev

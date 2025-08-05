@@ -1,0 +1,45 @@
+title = "Yolo ROS2 node"
+
+[main]
+pipelines = ["pipeline1"] # pipeline names will be used to name output topics
+models = ["model1"]
+trackers = ["tracker1"]
+
+[model1]
+model_path = "" # if empty, model will be downloaded from Ultralytics, otherwise provide path to .xml file or other format supported by OpenVINO
+model_path_bin = "" # use only if you want to provide your own model in OpenVINO format, and there you need to provide path to .bin file
+# following options are only used if model_path is empty
+task = "segmentation" # options: detection, segmentation, pose
+# w,h of internal resolution, input frames are resized
+# consider using smaller resolution for faster inference
+width = 480 
+height = 480
+model_size = "s" # options: n, s, m, l, x (refer to Ultralytics docs)
+precision = 0 # available are 0 = INT8, 1=FP16 2=FP32
+
+
+[pipeline1]
+model = "model1" # model name from [main] section
+device = "GPU"  # options CPU, GPU (this is directly passed to OpenVINO)
+performance_mode = 2 # Performance mode 1=Latency, 2=Throughput, 3=Cumulative throughput
+priority = 1 # 0=Low, 1=Normal, 2=High
+precision = 1 #  0 = FP32, 1 = FP16 , this is passed as hint to OpenVINO
+num_requests = 2 # Number of inference requests (hint for OpenVINO) recommended 1 per input stream
+map_frame = "map" # setting is ignored if single topic is used, otherwise it will be used to synchronize camera location
+queue_size = 10
+workers = 2 # Aim for 2 workers per input stream
+max_fps = -1 # -1 for unlimited
+publish_video = true # publish video with detections
+publish_detections = true # publish detections (special message type), can be used to generate video with detections
+# use this if you don't have or don't need synchronized depth data
+rgb_topic = ["/camera/camera/color/image_raw"]
+rgb_topic_max_fps = [-1] # same length as rgb_topic, -1 for unlimited will assume -1 for all topics if not provided
+# depth is not used by Yolov8, but if provided this node will synchronize rgb and depth, and transform to camera frame
+# this can be later used to place detections in 3D sSpace
+# topics need to be provided in pairs
+rgbd_topic_rgb = []
+rgbd_topic_depth = []
+rgbd_topic_max_fps = []
+
+[tracker1]
+detection_topics = ["/pipeline1/camera/camera/color/image_raw/yolo_frame"]

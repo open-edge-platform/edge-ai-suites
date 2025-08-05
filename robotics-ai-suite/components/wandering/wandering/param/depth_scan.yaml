@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+depthimage_to_laserscan:
+  ros__parameters:
+    scan_time: 0.033
+    range_min: 0.1
+    range_max: 2.5
+    output_frame: camera_depth_optical_frame1

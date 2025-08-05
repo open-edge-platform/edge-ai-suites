@@ -1,0 +1,824 @@
+<sdf version='1.7'>
+  <world name='default'>
+    <plugin name='gazebo_ros_state' filename='libgazebo_ros_state.so'/>
+    <model name='ground_plane'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <cast_shadows>0</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <light name='sun' type='directional'>
+      <cast_shadows>1</cast_shadows>
+      <pose>0 0 10 0 -0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+    <scene>
+      <shadows>1</shadows>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+    </scene>
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>5.7 7.9 4.0 0 0.34 -2.48</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+    <physics type='ode'>
+      <real_time_update_rate>1000</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>150</iters>
+          <precon_iters>0</precon_iters>
+          <sor>1.4</sor>
+          <use_dynamic_moi_rescaling>1</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>1e-05</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>2000</contact_max_correcting_vel>
+          <contact_surface_layer>0.01</contact_surface_layer>
+        </constraints>
+      </ode>
+    </physics>
+    <model name='workcell'>
+      <static>1</static>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://workcell/meshes/mesh.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='floor'>
+          <pose>0 0 -0.1 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>20.1026 20.1026 0.2</size>
+            </box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <max_vel>0</max_vel>
+                <min_depth>0.001</min_depth>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+        <collision name='wall1'>
+          <pose>4.13686 -10.0212 3.48855 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>12.0768 0.72902 6.97771</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='wall2'>
+          <pose>-6.58151 -8.924 3.48855 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>10.5921 5.00198 6.97771</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='wall3'>
+          <pose>-9.25721 0.6135 3.48855 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.72902 15.2908 6.97771</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='rack1'>
+          <pose>7.35056 1.7443 1.41643 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.84444 1.95581 2.83286</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='rack2'>
+          <pose>5.36795 1.7443 1.41643 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.84444 1.95581 2.83286</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='rack3'>
+          <pose>7.00142 -7.6467 1.41643 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.84444 3.91162 2.83286</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='rack4'>
+          <pose>4.97338 -7.6467 1.41643 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.84444 3.91162 2.83286</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='rack5'>
+          <pose>2.66949 -7.6467 1.41643 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.84444 3.91162 2.83286</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='large_pallet1'>
+          <pose>-3.33609 6.31883 1.04257 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>2.14726 1.79349 2.08514</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='large_pallet2'>
+          <pose>-5.74492 6.31883 1.04257 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>2.14726 1.79349 2.08514</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='large_pallet3'>
+          <pose>-7.55868 1.91644 1.04257 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>2.14726 1.79432 2.08514</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='empty_pallet1'>
+          <pose>-5.29667 1.91644 0.1636 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>2.14726 1.79349 0.3272</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='box_pallet1'>
+          <pose>-1.09806 6.31883 0.61958 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>2.14726 1.79349 1.23916</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='pole1'>
+          <pose>5.02174 -2.39478 3.02208 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.49161 0.49161 6.04415</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='pole2'>
+          <pose>0.47071 -2.39478 3.02208 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.49161 0.49161 6.04415</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='pole3'>
+          <pose>-3.93786 -2.39478 3.02208 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.49161 0.49161 6.04415</size>
+            </box>
+          </geometry>
+        </collision>
+        <collision name='control_panel'>
+          <pose>2.07015 1.16224 0.561315 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.86733 0.6001 1.12263</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_1'>
+          <pose>0 -1.21 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>10 0.05 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_1_collision'>
+          <pose>0 -1.21 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>10 0.05 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_2'>
+          <pose>0 -1.7 0.95 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>10 0.05 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_2_collision'>
+          <pose>0 -1.7 0.95 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>10 0.05 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_3'>
+          <pose>5 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_3_collision'>
+          <pose>5 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_4'>
+          <pose>5 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_4_collision'>
+          <pose>5 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_5'>
+          <pose>4 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_5_collision'>
+          <pose>4 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_6'>
+          <pose>4 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_6_collision'>
+          <pose>4 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_7'>
+          <pose>3 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_7_collision'>
+          <pose>3 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_8'>
+          <pose>3 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_8_collision'>
+          <pose>3 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_9'>
+          <pose>2 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_9_collision'>
+          <pose>2 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_10'>
+          <pose>2 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_10_collision'>
+          <pose>2 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_11'>
+          <pose>1 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_11_collision'>
+          <pose>1 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_12'>
+          <pose>1 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_12_collision'>
+          <pose>1 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_13'>
+          <pose>0 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_13_collision'>
+          <pose>0 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_14'>
+          <pose>0 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_14_collision'>
+          <pose>0 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_15'>
+          <pose>-1 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_15_collision'>
+          <pose>-1 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_16'>
+          <pose>-1 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_16_collision'>
+          <pose>-1 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_17'>
+          <pose>-2 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_17_collision'>
+          <pose>-2 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_18'>
+          <pose>-2 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_18_collision'>
+          <pose>-2 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_19'>
+          <pose>-3 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_19_collision'>
+          <pose>-3 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_20'>
+          <pose>-3 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_20_collision'>
+          <pose>-3 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_21'>
+          <pose>-4 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_21_collision'>
+          <pose>-4 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_22'>
+          <pose>-4 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_22_collision'>
+          <pose>-4 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_23'>
+          <pose>-5 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_23_collision'>
+          <pose>-5 -1.7 1.5 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.05 3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='conveyor_frame_24'>
+          <pose>-5 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.72549 0.517647 0 1</ambient>
+            <diffuse>0.72549 0.517647 0 1</diffuse>
+          </material>
+        </visual>
+        <collision name='conveyor_frame_24_collision'>
+          <pose>-5 -1.455 3 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.05 0.54 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name='IntelAriacWall'>
+      <pose>0.579306 0.061913 0 0 -0 0</pose>
+      <link name='BoundingWall_1'>
+        <collision name='BoundingWall_1_Collision'>
+          <geometry>
+            <box>
+              <size>20 0.15 2.5</size>
+            </box>
+          </geometry>
+          <pose>0 0 1.25 0 -0 0</pose>
+        </collision>
+        <visual name='BoundingWall_1_Visual'>
+          <pose>0 0 1.25 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>20 0.15 2.5</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/CeilingTiled</name>
+            </script>
+            <ambient>0.666667 0.666667 0.498039 1</ambient>
+          </material>
+          <meta>
+            <layer>0</layer>
+          </meta>
+        </visual>
+        <pose>9.22505 -0 0 0 -0 -1.5708</pose>
+      </link>
+      <link name='BoundingWall_4'>
+        <collision name='BoundingWall_4_Collision'>
+          <geometry>
+            <box>
+              <size>19 0.15 2.5</size>
+            </box>
+          </geometry>
+          <pose>0 0 1.25 0 -0 0</pose>
+        </collision>
+        <visual name='BoundingWall_4_Visual'>
+          <pose>0 0 1.25 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>19 0.15 2.5</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/CeilingTiled</name>
+            </script>
+            <ambient>0.666667 0.666667 0.498039 1</ambient>
+          </material>
+          <meta>
+            <layer>0</layer>
+          </meta>
+        </visual>
+        <pose>0.061877 9.91866 0 0 -0 3.14159</pose>
+      </link>
+      <link name='BoundingWall_5'>
+        <collision name='BoundingWall_5_Collision'>
+          <geometry>
+            <box>
+              <size>2.51365 0.15 2.5</size>
+            </box>
+          </geometry>
+          <pose>0 0 1.25 0 -0 0</pose>
+        </collision>
+        <visual name='BoundingWall_5_Visual'>
+          <pose>0 0 1.25 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>2.51365 0.15 2.5</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/CeilingTiled</name>
+            </script>
+            <ambient>0.666667 0.666667 0.498039 1</ambient>
+          </material>
+          <meta>
+            <layer>0</layer>
+          </meta>
+        </visual>
+        <pose>-9.48688 8.73683 0 0 -0 -1.5708</pose>
+      </link>
+      <static>1</static>
+    </model>
+    <gravity>0 0 -9.8</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type='adiabatic'/>
+  </world>
+</sdf>

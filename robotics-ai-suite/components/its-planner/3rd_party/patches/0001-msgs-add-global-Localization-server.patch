@@ -1,0 +1,38 @@
+From 58d816fdc1916ed0354b082cd79b361a8dbfbca7 Mon Sep 17 00:00:00 2001
+From: Jeremy Ouillette <jeremy.ouillette@intel.com>
+Date: Tue, 24 Jun 2025 21:42:10 -0700
+Subject: [PATCH 1/2] msgs: add global Localization server
+
+---
+ nav2_msgs/CMakeLists.txt             | 1 +
+ nav2_msgs/srv/GlobalLocalization.srv | 6 ++++++
+ 2 files changed, 7 insertions(+)
+ create mode 100644 nav2_msgs/srv/GlobalLocalization.srv
+
+diff --git a/nav2_msgs/CMakeLists.txt b/nav2_msgs/CMakeLists.txt
+index b9895f07..ba04c19f 100644
+--- a/nav2_msgs/CMakeLists.txt
++++ b/nav2_msgs/CMakeLists.txt
+@@ -32,6 +32,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
+   "srv/LoadMap.srv"
+   "srv/SaveMap.srv"
+   "srv/SetInitialPose.srv"
++  "srv/GlobalLocalization.srv"
+   "action/AssistedTeleop.action"
+   "action/BackUp.action"
+   "action/ComputePathToPose.action"
+diff --git a/nav2_msgs/srv/GlobalLocalization.srv b/nav2_msgs/srv/GlobalLocalization.srv
+new file mode 100644
+index 00000000..2a4dd0e9
+--- /dev/null
++++ b/nav2_msgs/srv/GlobalLocalization.srv
+@@ -0,0 +1,6 @@
++float64[] weights
++float64[] sigma
++float64[] center_x
++float64[] center_y
++---
++std_msgs/Empty response
+-- 
+2.30.2
+

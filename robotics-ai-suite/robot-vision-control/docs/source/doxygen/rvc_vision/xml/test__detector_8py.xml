@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="test__detector_8py" kind="file" language="Python">
+    <compoundname>test_detector.py</compoundname>
+    <innernamespace refid="namespacetest__detector">test_detector</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="keyword">import</highlight><highlight class="normal"><sp/>os</highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="keyword">import</highlight><highlight class="normal"><sp/>pytest</highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="keyword">from</highlight><highlight class="normal"><sp/>rclpy.impl<sp/></highlight><highlight class="keyword">import</highlight><highlight class="normal"><sp/>rcutils_logger</highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="keyword">import</highlight><highlight class="normal"><sp/>logging</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal">logging.basicConfig(level=logging.DEBUG)</highlight></codeline>
+<codeline lineno="9"><highlight class="normal">mylogger<sp/>=<sp/>logging.getLogger()</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="keyword">import</highlight><highlight class="normal"><sp/>cv2</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="keyword">from</highlight><highlight class="normal"><sp/><ref refid="namespacervc__rotated__object__detection_1_1object__detection" kindref="compound">rvc_rotated_object_detection.object_detection</ref><sp/></highlight><highlight class="keyword">import</highlight><highlight class="normal"><sp/>Detector</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="keyword">from</highlight><highlight class="normal"><sp/>rvc_vision_messages.msg<sp/></highlight><highlight class="keyword">import</highlight><highlight class="normal"><sp/>RotatedBB,<sp/>RotatedBBList</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight><highlight class="preprocessor">@pytest.fixture</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="keyword">def<sp/></highlight><highlight class="normal">resources_dir():</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>os.path.join(os.path.dirname(__file__),<sp/></highlight><highlight class="stringliteral">&apos;resources&apos;</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">@pytest.fixture</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="keyword">def<sp/></highlight><highlight class="normal">detector(resources_dir:<sp/>str):</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/>detector<sp/>=<sp/>Detector(0.75,<sp/>10,<sp/>rcutils_logger.RcutilsLogger(name=</highlight><highlight class="stringliteral">&quot;test_logger&quot;</highlight><highlight class="normal">))</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/>detector.initialize_object(</highlight><highlight class="stringliteral">&apos;robot&apos;</highlight><highlight class="normal">,<sp/>0,<sp/>os.path.join(resources_dir,<sp/></highlight><highlight class="stringliteral">&apos;robot.png&apos;</highlight><highlight class="normal">))</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>detector</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="keyword">def<sp/></highlight><highlight class="normal">test_image(detector:<sp/>Detector,<sp/>resources_dir:<sp/>str):</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/>mylogger.info(</highlight><highlight class="stringliteral">&quot;BBBBBBBBBBBBB&quot;</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/>print(</highlight><highlight class="stringliteral">&quot;AAAAAAAAAAA<sp/>YOU&quot;</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/>img<sp/>=<sp/>cv2.imread(os.path.join(resources_dir,<sp/></highlight><highlight class="stringliteral">&apos;test2.jpg&apos;</highlight><highlight class="normal">))</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/>detections<sp/>=<sp/>detector.detect(img)</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">assert</highlight><highlight class="normal"><sp/>len(detections.rotated_bb_list)<sp/>==<sp/>1</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/>detection<sp/>=<sp/>detections.rotated_bb_list[0]</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/>img<sp/>=<sp/>cv2.imread(os.path.join(resources_dir,<sp/></highlight><highlight class="stringliteral">&apos;test3.jpg&apos;</highlight><highlight class="normal">))</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/>detections<sp/>=<sp/>detector.detect(img)</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">assert</highlight><highlight class="normal"><sp/>len(detections.rotated_bb_list)<sp/>==<sp/>1</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/>detection<sp/>=<sp/>detections.rotated_bb_list[0]</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/>img<sp/>=<sp/>cv2.imread(os.path.join(resources_dir,<sp/></highlight><highlight class="stringliteral">&apos;test4.jpg&apos;</highlight><highlight class="normal">))</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/>detections<sp/>=<sp/>detector.detect(img)</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">assert</highlight><highlight class="normal"><sp/>len(detections.rotated_bb_list)<sp/>==<sp/>1</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>detection<sp/>=<sp/>detections.rotated_bb_list[0]</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/>img<sp/>=<sp/>cv2.imread(os.path.join(resources_dir,<sp/></highlight><highlight class="stringliteral">&apos;test5.jpg&apos;</highlight><highlight class="normal">))</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/>detections<sp/>=<sp/>detector.detect(img)</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">assert</highlight><highlight class="normal"><sp/>len(detections.rotated_bb_list)<sp/>==<sp/>1</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/>detection<sp/>=<sp/>detections.rotated_bb_list[0]</highlight></codeline>
+    </programlisting>
+    <location file="rvc_rotated_object_detection/test/test_detector.py"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,23 @@
+ros-humble-adbscan-ros2-follow-me (2.2-1) UNRELEASED; urgency=low
+
+  * Change the bash scripts to ros2 launch scripts for all the follow-me applications
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 22 Jul 2025 00:00:00 +0000
+
+ros-humble-adbscan-ros2-follow-me (2.1-2) UNRELEASED; urgency=low
+
+  * Minor change to the twist command publish logic when no target is found
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 13 Aug 2024 12:05:42 -0800
+
+ros-humble-adbscan-ros2-follow-me (2.1-1) UNRELEASED; urgency=low
+
+  * Added new feature for audio control
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 26 Jan 2024 12:05:42 -0800
+
+ros-humble-adbscan-ros2-follow-me (2.0-1) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 27 Sep 2023 00:00:42 +0000

@@ -4,3 +4,24 @@
 [submodule "retail-ai-suite/lose-prevention"]
 	path = retail-ai-suite/loss-prevention
 	url = https://github.com/intel-retail/loss-prevention.git
+[submodule "robotics-ai-suite/components/collaborative-slam/3rd/g2o"]
+	path = robotics-ai-suite/components/collaborative-slam/3rd/g2o
+	url = https://github.com/RainerKuemmerle/g2o.git
+[submodule "robotics-ai-suite/components/collaborative-slam/3rd/DBoW2"]
+	path = robotics-ai-suite/components/collaborative-slam/3rd/DBoW2
+	url = https://github.com/shinsumicco/DBoW2.git
+[submodule "robotics-ai-suite/components/collaborative-slam/3rd/spdlog"]
+	path = robotics-ai-suite/components/collaborative-slam/3rd/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "robotics-ai-suite/components/collaborative-slam/3rd/json"]
+	path = robotics-ai-suite/components/collaborative-slam/3rd/json
+	url = https://github.com/nlohmann/json.git
+[submodule "robotics-ai-suite/components/its-planner/3rd_party/navigation2"]
+	path = robotics-ai-suite/components/its-planner/3rd_party/navigation2
+	url = https://github.com/ros-navigation/navigation2
+[submodule "robotics-ai-suite/pipelines/act-sample/act"]
+	path = robotics-ai-suite/pipelines/act-sample/act
+	url = https://github.com/tonyzhaozh/act
+[submodule "robotics-ai-suite/pipelines/orb-slam3-sample/ORB_SLAM3"]
+	path = robotics-ai-suite/pipelines/orb-slam3-sample/ORB_SLAM3
+	url = https://github.com/UZ-SLAMLab/ORB_SLAM3.git

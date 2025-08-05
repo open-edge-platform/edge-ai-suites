@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+text_to_speech_node:
+  ros__parameters:
+    tbot_odom_topic_name: /tb3/odom
+    gbot_odom_topic_name: /guide_robot/odom
+    audio_command_topic_name: audio_command
+    gesture_topic_name: gesture
+    motor_state_topic_name: motor_state
+    target_loc_topic_name: target_loc
+    audio_play_frequency: 2
+    distance_calculation_frequency: 2
+    declare_target_loc: True
+    device_name: CPU
+

@@ -1,0 +1,141 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="rvc__motion__controller__interface_8cpp" kind="file" language="C++">
+    <compoundname>rvc_motion_controller_interface.cpp</compoundname>
+    <includes refid="rvc__motion__controller__interface_8hpp" local="yes">rvc_motion_controller_interface/rvc_motion_controller_interface.hpp</includes>
+    <incdepgraph>
+      <node id="5">
+        <label>geometry_msgs/msg/pose_stamped.hpp</label>
+      </node>
+      <node id="2">
+        <label>rvc_motion_controller_interface/rvc_motion_controller_interface.hpp</label>
+        <link refid="rvc__motion__controller__interface_8hpp_source"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>geometry_msgs/msg/pose.hpp</label>
+      </node>
+      <node id="10">
+        <label>geometry_msgs/msg/transform_stamped.hpp</label>
+      </node>
+      <node id="3">
+        <label>rclcpp/rclcpp.hpp</label>
+      </node>
+      <node id="1">
+        <label>rvc_motion_controller_interface/src/rvc_motion_controller_interface.cpp</label>
+        <link refid="rvc__motion__controller__interface_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="7">
+        <label>tf2/LinearMath/Vector3.h</label>
+      </node>
+      <node id="9">
+        <label>sensor_msgs/msg/joint_state.hpp</label>
+      </node>
+      <node id="11">
+        <label>tf2_geometry_msgs/tf2_geometry_msgs.hpp</label>
+      </node>
+      <node id="8">
+        <label>tf2_ros/transform_listener.h</label>
+      </node>
+      <node id="4">
+        <label>rclcpp/macros.hpp</label>
+      </node>
+      <node id="12">
+        <label>tf2_ros/buffer.h</label>
+      </node>
+    </incdepgraph>
+    <innernamespace refid="namespace_r_v_c_motion_controller">RVCMotionController</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"></highlight></codeline>
+<codeline lineno="3"><highlight class="comment">INTEL<sp/>CONFIDENTIAL</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"></highlight></codeline>
+<codeline lineno="5"><highlight class="comment">Copyright<sp/>(C)<sp/>2022<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"></highlight></codeline>
+<codeline lineno="7"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>Intel<sp/>copyrighted<sp/>materials,</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">and<sp/>your<sp/>use<sp/>of<sp/>them<sp/>is<sp/>governed<sp/>by<sp/>the<sp/>express<sp/>license<sp/>under<sp/>which<sp/>they</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">were<sp/>provided<sp/>to<sp/>you<sp/>(License).<sp/>Unless<sp/>the<sp/>License<sp/>provides<sp/>otherwise,</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">you<sp/>may<sp/>not<sp/>use,<sp/>modify,<sp/>copy,<sp/>publish,<sp/>distribute,<sp/>disclose<sp/>or<sp/>transmit</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">this<sp/>software<sp/>or<sp/>the<sp/>related<sp/>documents<sp/>without<sp/>Intel&apos;s<sp/>prior<sp/>written</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">permission.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment"></highlight></codeline>
+<codeline lineno="14"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>provided<sp/>as<sp/>is,<sp/>with<sp/>no</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">express<sp/>or<sp/>implied<sp/>warranties,<sp/>other<sp/>than<sp/>those<sp/>that<sp/>are<sp/>expressly<sp/>stated</highlight></codeline>
+<codeline lineno="16"><highlight class="comment">in<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="17"><highlight class="comment"></highlight></codeline>
+<codeline lineno="18"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;rvc_motion_controller_interface/rvc_motion_controller_interface.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespace_r_v_c_motion_controller" kindref="compound">RVCMotionController</ref><sp/>{</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac8f879e7d8652768338343eec731b5b0" kindref="member">RVCMotionControllerInterface::RVCMotionControllerInterface</ref>()</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/>:<sp/>current_control_mode(UNDEFINED),</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/>distance_threshold(0.0),</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/>distance_threshold_tcp(0.0),</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/>base_link(</highlight><highlight class="stringliteral">&quot;&quot;</highlight><highlight class="normal">),</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/>ee_link(</highlight><highlight class="stringliteral">&quot;&quot;</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="28"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="29"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>RVCMotionControllerInterface::init(rclcpp::Node::SharedPtr<sp/>node)</highlight></codeline>
+<codeline lineno="32"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/>node_<sp/>=<sp/>node;</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/>tfBuffer<sp/>=<sp/>std::make_shared&lt;tf2_ros::Buffer&gt;(node-&gt;get_clock(),<sp/>std::chrono::seconds(20));</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/>listener<sp/>=<sp/>std::make_shared&lt;tf2_ros::TransformListener&gt;(*tfBuffer);</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/>geometry_msgs::msg::TransformStamped<sp/>transform;</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/>tf2::Stamped&lt;tf2::Transform&gt;<sp/>tf2;</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/>node-&gt;declare_parameter&lt;</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&gt;(</highlight><highlight class="stringliteral">&quot;distance_threshold&quot;</highlight><highlight class="normal">,<sp/>0.1);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/>node-&gt;declare_parameter&lt;</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&gt;(</highlight><highlight class="stringliteral">&quot;distance_threshold_tcp&quot;</highlight><highlight class="normal">,<sp/>0.025);</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/>node-&gt;declare_parameter&lt;std::string&gt;(</highlight><highlight class="stringliteral">&quot;base_link&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;base_link&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/>node-&gt;declare_parameter&lt;std::string&gt;(</highlight><highlight class="stringliteral">&quot;ee_link&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;ee_link&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>distance_threshold<sp/>=<sp/>node-&gt;get_parameter(</highlight><highlight class="stringliteral">&quot;distance_threshold&quot;</highlight><highlight class="normal">).as_double();</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/>distance_threshold_tcp<sp/>=<sp/>node-&gt;get_parameter(</highlight><highlight class="stringliteral">&quot;distance_threshold_tcp&quot;</highlight><highlight class="normal">).as_double();</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/>base_link<sp/>=<sp/>node-&gt;get_parameter(</highlight><highlight class="stringliteral">&quot;base_link&quot;</highlight><highlight class="normal">).as_string();</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/>ee_link<sp/>=<sp/>node-&gt;get_parameter(</highlight><highlight class="stringliteral">&quot;ee_link&quot;</highlight><highlight class="normal">).as_string();</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>counter<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/>RCLCPP_INFO(node_-&gt;get_logger(),<sp/></highlight><highlight class="stringliteral">&quot;RVCMotionControllerInterface:<sp/>waiting<sp/>for<sp/>transform<sp/>server<sp/>to<sp/>resolve<sp/>%s<sp/>to<sp/>%s&quot;</highlight><highlight class="normal">,<sp/>base_link.c_str(),<sp/>ee_link.c_str());</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">while</highlight><highlight class="normal"><sp/>(!tfBuffer-&gt;canTransform(base_link,<sp/>ee_link,<sp/>rclcpp::Time()))</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>rclcpp::sleep_for(std::chrono::milliseconds(500));</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>counter++;</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(counter<sp/>&gt;<sp/>10)</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_INFO(node_-&gt;get_logger(),<sp/></highlight><highlight class="stringliteral">&quot;waiting<sp/>for<sp/>transform<sp/>server...<sp/>FAILED&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="62"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal">}<sp/></highlight><highlight class="comment">//namespace</highlight><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="rvc_motion_controller_interface/src/rvc_motion_controller_interface.cpp"/>
+  </compounddef>
+</doxygen>
