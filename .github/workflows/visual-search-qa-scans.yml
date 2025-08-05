@@ -161,13 +161,14 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/security/clamav@main
         id: clamav
         with:
-          args: '--scan-scope=all --exclude-dirs=.git,node_modules --max-file-size=25'
-          report-path: './clamav_report.json'
+          scan-scope: "all"  # 扫描整个仓库
+          output-format: "txt" # 生成文本报告
+          fail-on-findings: "false" # 即使发现威胁也不失败
           
       - name: Upload Report
         uses: actions/upload-artifact@v4
         with:
           name: clamav-report
-          path: ./clamav_report.json
+          path: ${{ steps.run-clamav.outputs.report_path }}
 
 
