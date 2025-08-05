@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Trivy Filesystem Scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: trivy-fs
         with:
           scan_type: "fs"  # 关键参数
@@ -44,7 +44,7 @@ jobs:
           docker build -t visual-search-qa-app:latest -f visual-search-question-and-answering/src/Dockerfile .
           
       - name: Run trivy Scan - dataprep-visualdata-milvus
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: dataprep-visualdata-milvus
         with:
           scan_type: "image"  # 关键参数
@@ -54,7 +54,7 @@ jobs:
           format: "json"  # 兼容GitHub安全面板
 
       - name: Run trivy Scan - retriever-milvus
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: retriever-milvus
         with:
           scan_type: "image"  # 关键参数
@@ -64,7 +64,7 @@ jobs:
           format: "json"  # 兼容GitHub安全面板
 
       - name: Run trivy Scan - vlm-openvino-serving
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id:  vlm-openvino-serving
         with:
           scan_type: "image"  # 关键参数
@@ -74,7 +74,7 @@ jobs:
           format: "json"  # 兼容GitHub安全面板
 
       - name: Run trivy Scan - visual-search-qa-app
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id:  visual-search-qa-app
         with:
           scan_type: "image"  # 关键参数
@@ -84,10 +84,10 @@ jobs:
           format: "json"  # 兼容GitHub安全面板
           
       - name: Upload Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
           name: trivy-report
-          path: security-results/*
+          path: security-results/trivy*
 
   bandit-scan:
     runs-on: ubuntu-latest
@@ -95,7 +95,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Run Bandit Scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@main
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@27276444a9bcf247a27369406686b689933bd1ff
         id: bandit
         with:
           scan-scope: "all"  # 扫描整个仓库
@@ -103,10 +103,10 @@ jobs:
           fail-on-findings: "false" # 即使发现威胁也不失败
           
       - name: Upload Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
           name: bandit-report
-          path: security-results/*
+          path: security-results/bandit*
         
 
   clamav-scan:
@@ -115,7 +115,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Run ClamAV Scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/clamav@main
+        uses: open-edge-platform/orch-ci/.github/actions/security/clamav@27276444a9bcf247a27369406686b689933bd1ff
         id: clamav
         with:
           scan-scope: "all"  # 扫描整个仓库
@@ -123,9 +123,9 @@ jobs:
           fail-on-findings: "false" # 即使发现威胁也不失败
           
       - name: Upload Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
           name: clamav-report
-          path: security-results/*
+          path: security-results/clamav*
 
 
