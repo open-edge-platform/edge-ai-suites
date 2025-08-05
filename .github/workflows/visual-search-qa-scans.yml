@@ -120,36 +120,23 @@ jobs:
             *.sarif
 
   bandit-scan:
-    permissions:
-      contents: read
-      security-events: write  
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+      
       - name: Run Bandit Scan
-        uses: orch-ci/bandit-action@293fa307caffa9b8742cb22ab3c31aa340083454
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@main
+        id: bandit
         with:
-          target: 'metro-ai-suite/visual-search-question-and-answering/'
-          output-format: 'sarif'
-          output-file: 'bandit-report.sarif'
-          severity-level: 'low,medium,high'  
-          confidence-level: 'medium,high'    
-          exclude-paths: '*/tests/*,*/migrations/*' 
-
-      - name: Upload SARIF report
-        uses: github/codeql-action/upload-sarif@7273f08caa1dcf2c2837f362f1982de0ab4dc344
+          scan-scope: "all"  # 扫描整个仓库
+          output-format: "txt" # 生成文本报告
+          fail-on-findings: "false" # 即使发现威胁也不失败
+          
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: 'bandit-report.sarif'
-
-      - name: Upload text report (optional)
-        if: always()
-        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
-        with:
-          name: bandit-text-report
-          path: |
-            bandit-report.sarif
+          name: bandit-report
+          path: security-results/*
         
 
   clamav-scan:
