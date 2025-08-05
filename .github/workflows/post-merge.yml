@@ -144,6 +144,7 @@ jobs:
     with:
       docs_directory: robotics-ai-suite
       simple_mode: false
+      branch_pattern: '^main$'  # Robotics AI Suite only exists on 'main' branch
 
   build_weld-porosity:
     permissions:
