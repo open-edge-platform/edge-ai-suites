@@ -166,6 +166,7 @@ jobs:
         with:
           scan_dir: metro-ai-suite/visual-search-question-and-answering/
           output_format: json
+          output_file: clamav-report.json
           db_update: true
           severity_threshold: medium
 
