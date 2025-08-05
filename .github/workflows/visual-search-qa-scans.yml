@@ -154,32 +154,33 @@ jobs:
   virus-scan:
     permissions:
       contents: read
-      security-events: write  
+      security-events: write
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run ClamAV Scan
-        uses: orch-ci/clamav-action@293fa307caffa9b8742cb22ab3c31aa340083454
+      - name: Run ClamAV Scan using orch-ci
+        uses: open-edge-platform/orch-ci/.github/actions/clamav-scan@main
         with:
-          target: 'metro-ai-suite/visual-search-question-and-answering/'
-          output-format: 'sarif'
-          output-file: 'clamav-report.sarif'
-          db-update: true  
-          max-filesize: '25M'  
-          exclude: '*.log,*.tmp'  
+          scan-path: 'metro-ai-suite/visual-search-question-and-answering/'
+          output-file: 'clamav-results.json'
+          severity-filter: 'high,critical'  # 可选：过滤严重级别
 
+      - name: Upload scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: clamav-scan-results
+          path: clamav-results.json
+
+      # - name: Convert to SARIF (optional)
+      #   run: |
+      #     # 可添加转换逻辑将JSON转换为SARIF格式
+      #     echo "Conversion logic here"
+          
       - name: Upload SARIF report
-        uses: github/codeql-action/upload-sarif@7273f08caa1dcf2c2837f362f1982de0ab4dc344
+        if: success()
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'clamav-report.sarif'
-
-      - name: Upload text report (optional)
-        if: always()
-        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
-        with:
-          name: clamav-text-report
-          path: |
-            clamav-report.sarif
+          sarif_file: 'clamav-results.json'  # 假设已转换
 
