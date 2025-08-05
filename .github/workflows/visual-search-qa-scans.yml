@@ -168,6 +168,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: clamav-report
-          path: ${{ steps.clamav.outputs.report_path }}
+          path: ./clamav_report.json
 
 
