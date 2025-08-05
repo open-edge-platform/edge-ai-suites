@@ -16,6 +16,7 @@ By following this guide, you will learn how to:
 ## Prerequisites
 
 - Verify that your metro vision AI application is running: [Setup Guide](./tutorial-1.md)
+- Verify that your Node Red flow setup is completed: [Node Red Flow](./tutorial-2.md)
 - Access to Grafana dashboard (typically at `http://localhost:3000`)
 - WebRTC streaming service configured and operational
 - MQTT broker running with object detection data feed
@@ -27,22 +28,26 @@ By following this guide, you will learn how to:
 1. **Access Grafana Interface**:
    - Open your web browser and navigate to `http://localhost:3000`
    - Log in with your Grafana credentials
+      - Username: admin
+      - Password: admin
 
 2. **Create New Dashboard**:
    - Click the "+" icon in the left sidebar
    - Select "Dashboard" from the dropdown menu
-   - Click "Add new panel"
+   - Select "New Dashboard" from the top right menu
+   - Click "Add Visualization"
 
 ### 2. **Add Real-Time Video Stream Panel**
 
 1. **Create HTML Panel**:
-   - In the panel editor, change the visualization type to "Text"
+   - In the panel editor, change the visualization type to "Text" (On Right side of Visualization Editor)
    - Switch to "HTML" mode
    - Add the following iframe code:
+   - In the below code update <HOST_IP> to your host IP address. If you are testing on localhost, update it to localhost.
 
    ```html
    <iframe 
-     src="${WEBRTC_URL}/object_detection_1" 
+     src="http://<HOST_IP>:8889/object_detection_1" 
      style="width:100%;height:500px;" 
      allow="autoplay; encrypted-media"
      frameborder="0">
@@ -51,69 +56,25 @@ By following this guide, you will learn how to:
 
 2. **Configure Panel Settings**:
    - Set panel title to "Live Object Detection Feed"
-   - Adjust panel size as needed
-   - Click "Apply" to save the panel
+   - Click "Save Dashboard" to save the panel
+   - Adjust panel size as needed.
 
-   <details>
-   <summary>
-   Understanding WebRTC URL Variables
-   </summary>
-   
-   The `${WEBRTC_URL}` variable should be configured in your Grafana environment variables or replaced with your actual WebRTC server URL (e.g., `http://localhost:8889`).
-   
-   | **Parameter** | **Description** |
-   |---------------|-----------------|
-   | `src` | WebRTC stream endpoint URL |
-   | `style` | CSS styling for responsive design |
-   | `allow` | Browser permissions for media playback |
-   
-   </details>
 
 ### 3. **Create MQTT Data Table**
 
 1. **Add New Panel**:
-   - Click "Add panel" to create another visualization
-   - Select "Table" as the visualization type
+   - Click "Add Visualization" to create another visualization
+   - Select "Table" as the visualization type (On Right side of Visualization Editor)
+   - Set panel title to "Real time Object Detection Data"
 
 2. **Configure Data Source**:
-   - Set your MQTT data source (InfluxDB, Prometheus, or direct MQTT connection)
-   - Configure query to fetch object detection metrics
+   - Set your MQTT data source as "grafana-mqtt-datasource"
+   - Configure topic to fetch object detection metrics
+   - Update Topic to "inference/enhanced"
 
-   ```bash
-   # Example InfluxDB query for object detection data
-   SELECT "object_type", "confidence", "timestamp", "coordinates" 
-   FROM "object_detection" 
-   WHERE $timeFilter
-   ```
+3. **Add Transformations** (Optional):
+   - You can add different types of transformations to this dashboard panel. 
 
-3. **Format Table Display**:
-   - Configure column headers: Object Type, Confidence Score, Detection Time, Location
-   - Set auto-refresh interval (e.g., 5 seconds)
-   - Apply appropriate data formatting
-
-   <details>
-   <summary>
-   Sample MQTT Data Structure
-   </summary>
-   
-   Your MQTT messages should follow this structure for optimal table display:
-   
-   ```json
-   {
-     "timestamp": "2025-07-25T10:30:00Z",
-     "object_type": "person",
-     "confidence": 0.92,
-     "coordinates": {
-       "x": 245,
-       "y": 180,
-       "width": 85,
-       "height": 120
-     },
-     "camera_id": "metro_cam_01"
-   }
-   ```
-   
-   </details>
 
 ### 4. **Configure Dashboard Layout**
 
@@ -128,6 +89,8 @@ By following this guide, you will learn how to:
    - Add appropriate tags for organization
 
 ## Expected Results
+
+![Grafana Visualization](_images/grafana-visualization.png)
 
 After completing this tutorial, you should have:
 
@@ -152,13 +115,6 @@ After completing this tutorial, you should have:
    - Reduce refresh intervals if system is slow
    - Limit data query time ranges
    - Consider using data aggregation for high-volume streams
-
-## Next Steps
-
-- **Advanced Analytics**: Add statistical panels for detection trends and patterns
-- **Alert Configuration**: Set up notifications for specific detection events
-- **Multi-Camera Support**: Extend dashboard to handle multiple camera feeds
-- **Custom Plugins**: Explore Grafana plugins for enhanced visualization options
 
 ## Supporting Resources
 

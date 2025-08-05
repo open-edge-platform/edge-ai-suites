@@ -27,10 +27,6 @@ By following this guide, you will learn how to:
 
 ## Node-RED Flow Architecture Overview
 
-<!--
-**Architecture Image Placeholder**: Add flow diagram showing MQTT input, function processing, and MQTT output nodes
--->
-*[Image placeholder: Node-RED Flow Architecture - showing MQTT subscriber → Function Node → Data Enhancement → MQTT Publisher workflow]*
 
 The custom Node-RED flow consists of:
 - **MQTT Input Node**: Subscribes to AI inference data topics
@@ -102,19 +98,6 @@ Set up an MQTT subscriber node to receive AI inference data:
    - **Name**: `AI Inference Input`
    - Click **Done** to save the configuration
 
-<details>
-<summary>
-Common MQTT Topics for Metro Vision AI
-</summary>
-
-| **Topic** | **Description** | **Data Format** |
-|-----------|-----------------|-----------------|
-| `inference/results` | Raw AI model inference results | JSON |
-| `vehicle/detection` | Vehicle detection events | JSON |
-| `person/count` | Person counting data | JSON |
-| `analytics/summary` | Aggregated analytics data | JSON |
-
-</details>
 
 ### 4. **Add Debug Output for Monitoring**
 
@@ -133,6 +116,37 @@ Create a debug node to monitor incoming data:
    - Click **Deploy**
    - Check the debug panel (bug icon in the right sidebar) for incoming messages
 
+4. **Restart the AI Pipeline** (if needed):
+   If you don't see data in the debug panel, execute the AI pipeline using this curl command:
+
+   ```bash
+   curl http://localhost:8080/pipelines/user_defined_pipelines/car_plate_recognition_1 -X POST -H 'Content-Type: application/json' -d '
+   {
+         "source": {
+            "uri": "file:///home/pipeline-server/videos/cars_extended.mp4",
+            "type": "uri"
+         },
+         "destination": {
+            "metadata": {
+               "type": "mqtt",
+               "host": "broker:1883",
+               "topic": "object_detection_1",
+               "timeout": 1000
+            },
+            "frame": {
+               "type": "webrtc",
+               "peer-id": "object_detection_1"
+            }
+         },
+         "parameters": {
+            "detection-device": "CPU"
+         }
+   }'
+   ```
+
+   After running this command, you should see AI inference data appearing in the Node-RED debug panel.
+
+
 ### 5. **Implement Custom Data Processing Function**
 
 Add a function node to enhance the AI inference data with custom metadata:
@@ -146,57 +160,46 @@ Add a function node to enhance the AI inference data with custom metadata:
    - **Function Code**:
 
 ```javascript
-// Parse incoming AI inference data
-let inferenceData = msg.payload;
+// Extract license, color, and type from msg.payload
+// Skip frames that don't have all required attributes
 
-// Handle string JSON data
-if (typeof inferenceData === 'string') {
-    try {
-        inferenceData = JSON.parse(inferenceData);
-    } catch (e) {
-        node.error("Invalid JSON data received", msg);
-        return null;
-    }
+// Check if payload exists and has objects array
+if (!msg.payload || !msg.payload.objects || !Array.isArray(msg.payload.objects)) {
+    return null; // Ignore this data frame
 }
 
-// Add custom metadata and enhancements
-const enhancedData = {
-    ...inferenceData,
-    processed_timestamp: new Date().toISOString(),
-    processing_node: "custom-node-red-flow",
-    location: {
-        site_name: "Metro Station Alpha",
-        camera_id: inferenceData.camera_id || "unknown",
-        zone: "entrance-01"
-    },
-    custom_attributes: {
-        confidence_threshold: 0.7,
-        alert_enabled: inferenceData.confidence > 0.8,
-        priority: inferenceData.confidence > 0.9 ? "high" : "normal"
-    }
-};
+let extractedData = [];
 
-// Add custom naming based on object type
-if (enhancedData.objects) {
-    enhancedData.objects = enhancedData.objects.map(obj => {
-        return {
-            ...obj,
-            display_name: `${obj.class_name}_${Date.now()}`,
-            tracking_id: `track_${Math.random().toString(36).substr(2, 9)}`
-        };
-    });
+// Process each object in the objects array
+for (let obj of msg.payload.objects) {
+    // Check if object has all required attributes
+    if (!obj.license_plate || !obj.color || !obj.type) {
+        continue; // Skip this object if missing any attribute
+    }
+    
+    // Extract the data
+    let extractedObj = {
+        license: obj.license_plate.label || null,
+        color: obj.color.label || null,
+        type: obj.type.label || null,
+        // Optional: include confidence scores
+        color_confidence: obj.color.confidence || null,
+        type_confidence: obj.type.confidence || null
+    };
+    
+    extractedData.push(extractedObj);
 }
 
-// Set the enhanced data as the new payload
-msg.payload = enhancedData;
-msg.topic = "inference/enhanced";
+// If no valid objects found, ignore this data frame
+if (extractedData.length === 0) {
+    return null;
+}
 
+// Return the extracted data
+msg.payload = extractedData;
 return msg;
 ```
 
-3. **Add Error Handling**:
-   - Click the **On Error** tab in the function node configuration
-   - Enable error handling for robust data processing
 
 ### 6. **Configure MQTT Output for Enhanced Data**
 
@@ -222,104 +225,17 @@ Set up an MQTT publisher to send the enhanced data:
 Test your custom Node-RED flow:
 
 1. **Deploy the Complete Flow**:
-   ```bash
-   # Click the Deploy button in Node-RED interface
-   ```
+   - Click the Deploy button on the Top Right side in Node-RED interface
 
 2. **Monitor Data Flow**:
    - Open the debug panel in Node-RED
    - Verify that both raw and enhanced data are flowing through the system
    - Check timestamps and custom metadata are being added correctly
 
-3. **Validate MQTT Output**:
-   ```bash
-   # Subscribe to the enhanced data topic to verify output
-   docker exec -it <mqtt-container> mosquitto_sub -h localhost -t "inference/enhanced"
-   ```
-
-<details>
-<summary>
-Verify Enhanced Data Structure
-</summary>
-
-Your enhanced data should include:
-- Original AI inference results
-- Added `processed_timestamp`
-- Custom `location` metadata
-- `custom_attributes` with confidence-based logic
-- Enhanced `objects` array with `display_name` and `tracking_id`
-
-Sample enhanced output:
-```json
-{
-  "original_inference_data": "...",
-  "processed_timestamp": "2025-07-25T10:30:00.000Z",
-  "processing_node": "custom-node-red-flow",
-  "location": {
-    "site_name": "Metro Station Alpha",
-    "camera_id": "cam_01",
-    "zone": "entrance-01"
-  },
-  "custom_attributes": {
-    "confidence_threshold": 0.7,
-    "alert_enabled": true,
-    "priority": "high"
-  }
-}
-```
-
-</details>
-
-## Running Advanced Customizations
-
-### **Adding Conditional Logic**
-
-Enhance your function node with conditional processing based on AI inference results:
-
-```javascript
-// Example: Alert generation based on person count
-if (enhancedData.person_count > 50) {
-    msg.alert = {
-        type: "crowding_detected",
-        severity: "high",
-        message: "High crowd density detected in entrance area",
-        timestamp: new Date().toISOString()
-    };
-    msg.topic = "alerts/crowding";
-} else {
-    msg.topic = "inference/enhanced";
-}
-```
-
-### **Data Aggregation and Filtering**
-
-Implement data aggregation for analytics:
-
-```javascript
-// Store in context for aggregation
-let hourlyCount = context.get('hourlyCount') || 0;
-let lastHour = context.get('lastHour') || new Date().getHours();
-let currentHour = new Date().getHours();
-
-if (currentHour !== lastHour) {
-    // Reset counter for new hour
-    context.set('hourlyCount', 0);
-    context.set('lastHour', currentHour);
-    hourlyCount = 0;
-}
-
-// Increment counter
-hourlyCount++;
-context.set('hourlyCount', hourlyCount);
-
-// Add aggregation data
-enhancedData.analytics = {
-    hourly_count: hourlyCount,
-    current_hour: currentHour
-};
-```
 
 ## Expected Results
+
+![Node Red Flow](_images/node-red-flow.png)
 
 After completing this tutorial, you should have:
 
@@ -330,11 +246,9 @@ After completing this tutorial, you should have:
 
 ## Next Steps
 
-- **Explore Advanced Nodes**: Integrate with external APIs, databases, or notification systems
-- **Implement Data Storage**: Add nodes to store enhanced data in databases or file systems
-- **Create Dashboards**: Use Node-RED Dashboard nodes to visualize real-time data
-- **Add Machine Learning**: Integrate additional ML models for further data enhancement
-- **Scale the Solution**: Deploy multiple Node-RED instances for distributed processing
+After successfully setting up the AI Tolling system with Node Red, consider these enhancements:
+
+[**Integration with Grafana for Visualization**](./tutorial-3.md)
 
 ## Troubleshooting
 
@@ -346,14 +260,6 @@ After completing this tutorial, you should have:
   docker ps | grep node-red
   # Restart the metro vision AI application if needed
   ./sample_stop.sh && ./sample_start.sh
-  ```
-
-### **MQTT Connection Issues**
-- **Problem**: MQTT nodes show "disconnected" status
-- **Solution**: Verify MQTT broker is running and accessible:
-  ```bash
-  # Test MQTT broker connectivity
-  docker exec -it <mqtt-container> mosquitto_pub -h localhost -t "test" -m "test message"
   ```
 
 ### **No Data in Debug Panel**
