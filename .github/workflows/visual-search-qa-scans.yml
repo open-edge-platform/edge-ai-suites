@@ -168,6 +168,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: clamav-report
-          path: ./clamav_report.json
+          path: ${{ github.workspace }}/clamav_report.json
 
 
