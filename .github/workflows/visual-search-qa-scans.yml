@@ -12,6 +12,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 on:
+  workflow_call:
   workflow_dispatch:
 
 jobs:   
@@ -151,7 +152,7 @@ jobs:
             bandit-report.sarif
         
 
-  virus-scan:
+  clamav-scan:
     permissions:
       contents: read
       security-events: write
@@ -160,27 +161,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run ClamAV Scan using orch-ci
-        uses: open-edge-platform/orch-ci/.github/actions/clamav-scan@main
+      - name: Run ClamAV Scan
+        uses: open-edge-platform/orch-ci/.github/actions/clamav@main
         with:
-          scan-path: 'metro-ai-suite/visual-search-question-and-answering/'
-          output-file: 'clamav-results.json'
-          severity-filter: 'high,critical'  # 可选：过滤严重级别
+          scan_dir: metro-ai-suite/visual-search-question-and-answering/
+          output_format: json
+          db_update: true
+          severity_threshold: medium
 
-      - name: Upload scan results
+      - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: clamav-scan-results
-          path: clamav-results.json
+          name: clamav-results
+          path: clamav-report.json
 
-      # - name: Convert to SARIF (optional)
-      #   run: |
-      #     # 可添加转换逻辑将JSON转换为SARIF格式
-      #     echo "Conversion logic here"
-          
-      - name: Upload SARIF report
-        if: success()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'clamav-results.json'  # 假设已转换
 
