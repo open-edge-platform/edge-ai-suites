@@ -153,27 +153,22 @@ jobs:
         
 
   clamav-scan:
-    permissions:
-      contents: read
-      security-events: write
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+      
       - name: Run ClamAV Scan
-        uses: open-edge-platform/orch-ci/.github/actions/clamav@main
+        uses: open-edge-platform/orch-ci@main
+        id: clamav
         with:
-          scan_dir: metro-ai-suite/visual-search-question-and-answering/
-          output_format: json
-          output_file: clamav-report.json
-          db_update: true
-          severity_threshold: medium
+          scan-scope: 'all'
+          exclude_dirs: '.git,node_modules'
+          max_file_size: '25'
 
-      - name: Upload results
-        uses: actions/upload-artifact@v4
+      - name: Upload Report
+        uses: actions/upload-artifact@v3
         with:
-          name: clamav-results
-          path: clamav-report.json
+          name: clamav-report
+          path: ${{ steps.clamav.outputs.report_path }}
 
 
