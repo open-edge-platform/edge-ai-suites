@@ -29,7 +29,7 @@ jobs:
           scan_type: "fs"  # 关键参数
           scan-scope: "all"  # 或 "changed" 仅扫描变更文件
           severity: "HIGH,CRITICAL"  # 只报告高危漏洞
-          format: "sarif"  # 兼容GitHub安全面板
+          format: "json"  # 兼容GitHub安全面板
       
       - name: Build Docker images
         run: |
@@ -51,6 +51,7 @@ jobs:
           scan-scope: all
           scan_target: "dataprep-visualdata-milvus:latest"  # 镜像名称
           severity: "HIGH,CRITICAL"  # 只报告高危漏洞
+          format: "json"  # 兼容GitHub安全面板
 
       - name: Run trivy Scan - retriever-milvus
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
@@ -60,6 +61,7 @@ jobs:
           scan-scope: all
           scan_target: "retriever-milvus:latest"  # 镜像名称
           severity: "HIGH,CRITICAL"  # 只报告高危漏洞
+          format: "json"  # 兼容GitHub安全面板
 
       - name: Run trivy Scan - vlm-openvino-serving
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
@@ -69,6 +71,7 @@ jobs:
           scan-scope: all
           scan_target: "vlm-openvino-serving:latest"  # 镜像名称
           severity: "HIGH,CRITICAL"  # 只报告高危漏洞
+          format: "json"  # 兼容GitHub安全面板
 
       - name: Run trivy Scan - visual-search-qa-app
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@main
@@ -78,6 +81,7 @@ jobs:
           scan-scope: all
           scan_target: "visual-search-qa-app:latest"  # 镜像名称
           severity: "HIGH,CRITICAL"  # 只报告高危漏洞
+          format: "json"  # 兼容GitHub安全面板
           
       - name: Upload Report
         uses: actions/upload-artifact@v4
