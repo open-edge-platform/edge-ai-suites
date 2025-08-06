@@ -50,17 +50,17 @@ You will see two panels side-by-side: `Gazebo` GUI on the left and |ros| rviz di
 
 -  The green square robot is a guide robot (namely, the target), which will follow a pre-defined trajectory.
 
--  Gray circular robot is a `TurtleBot3 <https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation>`__, which will follow the guide robot. |tb3| is equipped with a 2D Lidar and a |realsense| depth camera. In this demo, the 2D Lidar is used as the input topic.
+-  The gray circular robot is a `TurtleBot3 <https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation>`__ robot, which will follow the guide robot. |tb3| robot is equipped with a 2D Lidar and a |realsense| depth camera. In this demo, the 2D Lidar is used as the input topic.
 
-**Both** of the following conditions need to be fulfilled to start the |tb3|:
+**Both** of the following conditions need to be fulfilled to start the |tb3| robot:
 
--  The target (guide robot) will be within the tracking radius (a reconfigurable parameter in `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) of the |tb3|.
+-  The target (guide robot) will be within the tracking radius (a reconfigurable parameter in `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) of the |tb3| robot.
 
 -  The gesture (visualized in the ``/image`` topic in |ros| rviz2) of the target is ``thumbs up``.
 
-The stop condition for the |tb3| is fulfilled when **either one** of the following conditions are true:
+The stop condition for the |tb3| robot is fulfilled when **either one** of the following conditions are true:
 
--  The target (guide robot) moves to a distance of more than the tracking radius (a reconfigurable parameter in `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) from the |tb3|.
+-  The target (guide robot) moves to a distance of more than the tracking radius (a reconfigurable parameter in `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) from the |tb3| robot.
 
 -  The gesture (visualized in the ``/image`` topic in |ros| rviz2) of the target is ``thumbs down``.
 
@@ -90,8 +90,8 @@ Execute the following commands one by one in three separate terminals.
 
       ros2 run gesture_recognition_pkg traj_and_img_publisher_node.py --ros-args --params-file /opt/ros/humble/share/gesture_recognition_pkg/config/gesture_recognition.yaml
 
-In this demo, |realsense| camera of the |tb3| is selected as the input point cloud sensor. After running all of the above commands,
-you will observe similar behavior of the |tb3| and guide robot in the `Gazebo` GUI as in :ref:`followme-gesture-lidar` 
+In this demo, |realsense| camera of the |tb3| robot is selected as the input point cloud sensor. After running all of the above commands,
+you will observe similar behavior of the |tb3| robot and guide robot in the `Gazebo` GUI as in :ref:`followme-gesture-lidar` 
 
 .. note::
 

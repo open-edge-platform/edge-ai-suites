@@ -1,7 +1,7 @@
 Gazebo Pick & Place Demo
 ========================
 
-This Pick-n-Place demo is a simulation implemented using |ros| Humble and Gazebo Classic. The project showcases the interaction of a conveyor belt, a |tb3| Autonomous Mobile Robot (AMR), and two UR5 robotic arms (ARM) in a simulated environment.  The aim is to harness the capabilities of both the Nav2 and MoveIt2 stacks, presenting a comprehensive demonstration of multi-robot coordination in a simulation environment.
+This Pick-n-Place demo is a simulation implemented using |ros| Humble and |Gazebo| Classic simulation. The project showcases the interaction of a conveyor belt, a |tb3| Autonomous Mobile Robot (AMR), and two UR5 robotic arms (ARM) in a simulated environment.  The aim is to harness the capabilities of both the Nav2 and MoveIt2 stacks, presenting a comprehensive demonstration of multi-robot coordination in a simulation environment.
 
 
 .. image:: ../../../images/picknplace.png
@@ -42,7 +42,7 @@ Overview
 The setup consists of:
 
 * **Two robotic arms**: Based on the UR5 model.
-* **One Autonomous Mobile Robot (AMR)**: A customized version of the |tb3|.
+* **One Autonomous Mobile Robot (AMR)**: A customized version of the |tb3| robot.
 
 The robotic arms are controlled using the MoveIt2 stack, whereas the AMR is navigated using the Nav2 stack. Each robot operates within its own namespace, showcasing the seamless integration of multiple robots, each with its designated control stack, in a unified Gazebo environment.
 
@@ -51,7 +51,7 @@ The primary goal of this demo is to illustrate the combined and coordinated use 
 The demonstration workflow is as follows:
 
 * One of the robotic arms (ARM1) picks up an item from a moving conveyor belt.
-* The item is then placed onto the AMR, which is based on the |tb3| Waffle design.
+* The item is then placed onto the AMR, which is based on the |tb3| Waffle robot design.
 * Using Nav2, the AMR autonomously plans and traverses a path to the second robotic arm, referred to as ARM2.
 
 **Note**: This demo prioritizes the representation of combined stack usage over intricate details. Some assumptions have been made for simplicity. For instance, the item's location on the conveyor belt is sourced directly from Gazebo without integrating perception systems.

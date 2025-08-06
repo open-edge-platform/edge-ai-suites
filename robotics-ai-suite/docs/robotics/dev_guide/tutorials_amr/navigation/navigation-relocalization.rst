@@ -22,7 +22,7 @@ Install the ``ros-humble-its-relocalization-bringup`` |deb_pack| from the |intel
 Run the Re-localization
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Run the following script to set environment variables and bring up |ros| navigation, and |tb3| in Gazebo:
+Run the following script to set environment variables and bring up |ros| navigation, and |tb3| robot in |Gazebo| simulation:
 
     .. code-block:: bash
 
