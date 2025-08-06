@@ -85,6 +85,7 @@
 .. |l_openvino| replace:: Intel® Distribution of OpenVINO™ toolkit
 .. |l_ros| replace:: ROS 2 Humble
 .. |Linux| replace:: Linux
+.. |Moveit2| replace:: `MoveIt 2 <https://moveit.picknik.ai/main/index.html>`__
 .. |oneAPI| replace:: oneAPI™
 .. |oneapi| replace:: oneAPI™
 .. |opencl| replace:: OpenCL™
