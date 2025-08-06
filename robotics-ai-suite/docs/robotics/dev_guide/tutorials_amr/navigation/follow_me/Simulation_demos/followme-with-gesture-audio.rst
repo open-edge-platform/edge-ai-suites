@@ -115,7 +115,7 @@ This command will display the following information:
 As soon as the last command is executed, you will view that the guide robot starts moving towards |tb3| robot.
 To start the |tb3| robot, condition 1 and either one of the conditions 2 or 3 from the following list needs to be true:
 
-1.  The target (guide robot) is located within the tracking radius (a reconfigurable parameter in the parameter file: `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) of the |tb3 robot.
+1.  The target (guide robot) is located within the tracking radius (a reconfigurable parameter in the parameter file: `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) of the |tb3| robot.
 
 2.  The gesture (visualized in the ``/image`` topic in |ros| rviz2) of the target is ``thumbs up``.
 
