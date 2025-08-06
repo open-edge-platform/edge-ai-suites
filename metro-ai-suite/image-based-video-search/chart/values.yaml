@@ -52,7 +52,7 @@ dlstreamerpipelineserver:
     # key: dlstreamerpipelineserver.repository.image
     image: ghcr.io/open-edge-platform/edge-ai-libraries/intel/edge-ai-dlstreamer-pipeline-server
     # key: dlstreamerpipelineserver.repository.tag
-    tag: 20250731_EAL1.2_DLSPS_RC4-ubuntu24
+    tag: 20250805_EAL1.2-ubuntu22
   # key: dlstreamerpipelineserver.replicas
   replicas: 1
   # key: dlstreamerpipelineserver.nodeSelector
@@ -198,7 +198,7 @@ streaming:
     # key: streaming.repository.image
     image: docker.io/intel/streaming-pipeline
     # key: streaming.repository.tag
-    tag: v1.0.0
+    tag: v1.0.1
   # key: streaming.replicas
   replicas: 1
   # key: streaming.nodeSelector
@@ -234,7 +234,7 @@ app:
     # key: app.repository.image
     image: docker.io/intel/image-based-video-search
     # key: app.repository.tag
-    tag: v1.0.0
+    tag: v1.0.1
   # key: app.replicas
   replicas: 1
   # key: app.nodeSelector
@@ -270,7 +270,7 @@ featurematching:
     # key: featurematching.repository.image
     image: docker.io/intel/feature-matching
     # key: featurematching.repository.tag
-    tag: v1.0.0
+    tag: v1.0.1
   # key: featurematching.replicas
   replicas: 1
   # key: featurematching.nodeSelector
