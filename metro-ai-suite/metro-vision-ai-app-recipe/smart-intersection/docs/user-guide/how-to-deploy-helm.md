@@ -59,6 +59,34 @@ no_proxy: "localhost,127.0.0.1,.local,.cluster.local"
 
 Replace `your-proxy-server:port` with your actual proxy server details.
 
+> **Note**: The application uses weekly builds from GitHub Container Registry (ghcr.io/open-edge-platform/) by default.
+
+<details>
+<summary>
+Switch to Stable Build (Optional)
+</summary>
+
+To use stable releases from Docker Hub instead of weekly builds, update the values.yaml file with following information,
+
+```yaml
+scene:
+  repository: intel/scenescape-controller
+  tag: v1.3.0
+pgserver:
+  repository: intel/scenescape-manager
+  tag: v1.3.0
+web:
+  image:
+    repository: intel/scenescape-manager
+    tag: v1.3.0
+dlstreamerPipelineServer:
+  repository: intel/dlstreamer-pipeline-server
+  tag: 3.0.0
+```
+This updates the application to use stable images from [Docker Hub](https://hub.docker.com/u/intel/).
+
+</details>
+
 ### Deploy the application
 
 Now you're ready to deploy the Smart Intersection application:

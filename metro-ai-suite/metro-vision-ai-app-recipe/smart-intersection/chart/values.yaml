@@ -123,11 +123,11 @@ web:
 
 dlstreamerPipelineServer:
   # This is the image repository
-  repository: docker.io/intel/dlstreamer-pipeline-server
+  repository: ghcr.io/open-edge-platform/edge-ai-libraries/intel/edge-ai-dlstreamer-pipeline-server
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "3.0.0"
+  tag: 20250731_EAL1.2_DLSPS_RC4-ubuntu24
   # Overrides the storage class name
   storageClassName: "standard"
 
