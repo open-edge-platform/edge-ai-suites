@@ -65,6 +65,7 @@
 .. |ehl| replace:: Elkhart Lake platform
 .. |EII| replace:: Intel® Edge Insights for Industrial
 .. |esdq| replace:: Intel® Edge Software Device Qualification (Intel® ESDQ)
+.. |Gazebo| replace:: Gazebo
 .. |Grafana_Dashboard| replace:: Grafana Dashboard
 .. |gsc| replace:: Intel® Graphics System Controller (Intel® GSC)
 .. |GStreamer_Framework| replace:: GStreamer Open Source Multimedia Framework
@@ -107,7 +108,6 @@
 .. |Ubuntu_OS| replace:: Canonical Ubuntu OS
 .. |ubuntu| replace:: Canonical Ubuntu
 .. |vtune| replace:: VTune™ Profiler
-.. |Windows| replace:: Microsoft Windows
 .. |xe| replace:: Intel® Iris® X\ :sup:`e` Integrated Graphics
 .. |xeon| replace:: Intel® Xeon®
 
@@ -136,7 +136,6 @@
 
 .. |eci| replace:: Intel\ |reg| Edge Controls for Industrial
 .. |eci_getting_started| replace:: `Intel\ |reg| Edge Controls for Industrial Getting Started <https://eci.intel.com/docs/3.3/getstarted.html>`__
-
 .. |Moveit2| replace:: `MoveIt 2 <https://moveit.picknik.ai/main/index.html>`__
 .. |servo| replace:: `Servo <https://moveit.picknik.ai/humble/doc/examples/realtime_servo/realtime_servo_tutorial.html>`__
 .. |ros2_control| replace:: `ROS 2 Control <https://control.ros.org/master/index.html>`__

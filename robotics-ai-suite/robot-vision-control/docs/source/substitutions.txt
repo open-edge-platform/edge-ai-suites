@@ -35,10 +35,8 @@
 .. |Docker_Engine| replace:: Docker Engine
 .. |Docker| replace:: Docker
 .. |Podman| replace:: Podman
-.. |Windows| replace:: Microsoft Windows
 .. |Linux| replace:: Linux
 .. |ROS2| replace:: ROS2
-.. |Moveit2| replace:: `MoveIt 2 <https://moveit.picknik.ai/main/index.html>`__
 .. |servo| replace:: `Servo <https://moveit.picknik.ai/humble/doc/examples/realtime_servo/realtime_servo_tutorial.html>`__
 .. |ros2_control| replace:: `ROS 2 Control <https://control.ros.org/master/index.html>`__
 .. |RealSense| replace:: |intel| RealSense\ |TM|

@@ -80,9 +80,9 @@ You will see the `Gazebo` GUI with two simulated robots in an empty `Gazebo` wor
 
 -  The green square robot is a guide robot (namely, the target), which will follow a pre-defined trajectory.
 
--  Gray circular robot is a `TurtleBot3 <https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation>`__, which will follow the guide robot. |tb3| is equipped with a 2D Lidar and an |realsense| depth camera. In this demo, the 2D Lidar is selected as the point cloud input.
+-  The gray circular robot is a `TurtleBot3 <https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation>`__ robot, which will follow the guide robot. |tb3| robot is equipped with a 2D Lidar and an |realsense| depth camera. In this demo, the 2D Lidar is selected as the point cloud input.
 
-In this demo, we used a pre-defined trajectory for the guide robot and published gesture image as well as pre-recorded audio at different points of time to show `start`, `follow` and `stop` activities of the |tb3|.
+In this demo, we used a pre-defined trajectory for the guide robot and published gesture image as well as pre-recorded audio at different points of time to show `start`, `follow` and `stop` activities of the |tb3| robot.
 
 4. Terminal 4: This command will launch the ``adbscan`` node, which will publish `twist` msg to the ``tb3/cmd_vel`` topic:
 
@@ -112,25 +112,25 @@ This command will display the following information:
 
   .. image:: ../../../../../images/publisher_screenshot.png
 
-As soon as the last command is executed, you will view that the guide robot starts moving towards |tb3|.
-In order to start the |tb3|, condition 1 and either one of the conditions 2 or 3 from the following list need to be true:
+As soon as the last command is executed, you will view that the guide robot starts moving towards |tb3| robot.
+To start the |tb3| robot, condition 1 and either one of the conditions 2 or 3 from the following list needs to be true:
 
-1.  The target (guide robot) is located within the tracking radius (a reconfigurable parameter in the parameter file: `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) of the |tb3|.
+1.  The target (guide robot) is located within the tracking radius (a reconfigurable parameter in the parameter file: `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) of the |tb3| robot.
 
 2.  The gesture (visualized in the ``/image`` topic in |ros| rviz2) of the target is ``thumbs up``.
 
 3.  The detected audio from the recording is ``Start Following``.
 
 
-The stop condition for the |tb3| is fulfilled when any one of the following conditions holds true:
+The stop condition for the |tb3| robot is fulfilled when any one of the following conditions holds true:
 
-1.  The target (guide robot) moves to a distance of more than the tracking radius (a reconfigurable parameter in the parameter file: `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) from the |tb3|.
+1.  The target (guide robot) moves to a distance of more than the tracking radius (a reconfigurable parameter in the parameter file: `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) from the |tb3| robot.
 
 2.  The gesture (visualized in the ``/image`` topic in |ros| rviz2) of the target is ``thumbs down``.
 
 3.  The detected audio from the recording is ``Stop Following``.
 
-The demo will narrate the detected gesture, audio and target location during the `start` and `stop` activity of the |tb3|.
+The demo will narrate the detected gesture, audio and target location during the `start` and `stop` activity of the |tb3| robot.
 
   .. Note::
 
@@ -198,7 +198,7 @@ You will view the following information in the terminal.
 
       ros2 launch followme_turtlebot3_gazebo empty_world_followme_w_gesture_audio_2.launch.py soc:='rpl'
 
-After running all of the above commands, you will observe similar behavior of the |tb3| and guide robot in the `Gazebo` GUI as in :ref:`followme-gesture-audio-lidar`.
+After running all of the above commands, you will observe similar behavior of the |tb3| robot and guide robot in the `Gazebo` GUI as in :ref:`followme-gesture-audio-lidar`.
 
 .. note::
 

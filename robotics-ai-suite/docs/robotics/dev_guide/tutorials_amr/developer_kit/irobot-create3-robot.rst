@@ -24,7 +24,7 @@ following modifications have been applied to the robot:
  - |realsense| camera mounted on the front of the top layer and
    connected to a USB port on the |intel| board,
 
- - |slamtec_rplidar| 2D (|slamtec_rplidar_a3| or |slamtec_rplidar_a2m8|) on a mount in the center of the
+ - |slamtec_rplidar| 2D (|slamtec_rplidar_a3| or |slamtec_rplidar_a2m8|) sensor on a mount in the center of the
    top layer and connected to two USB ports on the |intel| board,
 
  - custom battery in the cargo bay to power the |intel| board and
@@ -144,10 +144,10 @@ launch file as argument ``irobot_ns``.
 
 This tutorial presents the Wandering application running on an
 |irobot_create3| mobile robotics platform extended with an |intel|
-compute board, an |realsense| camera and a |slamtec_rplidar| 2D lidar.
+compute board, an |realsense| camera and a |slamtec_rplidar| 2D lidar sensor.
 
 The tutorial uses the |realsense| camera and the |slamtec_rplidar| 2D
-lidar for both mapping with RTAB-Map and navigation with Nav2.
+lidar sensor for both mapping with RTAB-Map and navigation with Nav2.
 For navigation, |intel| :doc:`ground floor segmentation
 <../../../dev_guide/tutorials_amr/perception/pointcloud-groundfloor-segmentation>`
 is used for segmenting ground level and remove it from the |realsense|
