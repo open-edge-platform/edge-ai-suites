@@ -1,7 +1,7 @@
 # Copyright Intel Corporation
 
 namespace:
-DOCKER_REGISTRY: ''
+DOCKER_REGISTRY: 'ghcr.io/open-edge-platform/edge-ai-libraries/'
 DOCKER_USERNAME: ''
 DOCKER_PASSWORD: ''
 imagePullPolicy: Always
