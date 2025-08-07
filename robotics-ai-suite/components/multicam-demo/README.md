@@ -5,17 +5,17 @@ In this demo four instances of AI applications for object detection are run in p
 Here, the multicamera usecase is demonstrated using an Axiomtek Robox500 Industrial PC and 4x Intel® RealSense™ GMSL/FAKRA Stereo Camera D457. The Axiomtek Robox500 industrial PC consists of an 12th Gen Intel® Core™ i7-1270PE, 28W Alderlake P Processor and an Intel® Iris® Xe Graphics iGPU. However, this demo can be run on any Intel® platform which has a GPU and also with 4x USB Intel® RealSense™ cameras.
 
 The setup looks like as described in the table below.
-
+<!-- markdownlint-disable MD033 -->
 |Camera  |AI Model          |AI Workload                     |Device|
 |--------|------------------|--------------------------------|------|
-|Camera-1|YOLOv8n-seg:FP16  |Object detection<br>Segmentation|GPU   |
-|Camera-2|YOLOv8n-seg:FP16  |Object detection<br>Segmentation|CPU   |
+|Camera-1|YOLOv8n-seg:FP16  |<ul><li>Object detection</li><li>Segmentation|GPU   |
+|Camera-2|YOLOv8n-seg:FP16  |<ul><li>Object detection</li><li>Segmentation|CPU   |
 |Camera-3|YOLOv8n:FP16      |Object detection                |GPU   |
 |Camera-4|moblienet-ssd:FP16|Object detection                |GPU   |
 
 ## Component Documentation
 
-Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/dev_guide/tutorials_amr/perception/openvino/pyrealsense2_d457_multicam_object_detection_tutorial.html)
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/dev_guide/tutorials_amr/perception/openvino/pyrealsense2_d457_multicam_object_detection_tutorial.html)
 
 ## Dependencies
 
@@ -46,11 +46,11 @@ Press "Del" or "Esc" button at boot to go into the BIOS. Once in the BIOS, set t
 
 #### Prerequisites
 
-- [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
-- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
-- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
-- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install.html)
-- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
+* [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
+* [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
+* [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
+* [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install.html)
+* [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
 
 #### Install iGPU drivers on 12th Gen Intel® Core™ i7 processor
 
@@ -93,13 +93,13 @@ Follow the below steps only in case the above iGPU driver is not installed.
 3. Install the intel-ipu6-dkms.
 
    ```bash
-    $ sudo apt install intel-ipu6-dkms
+    sudo apt install intel-ipu6-dkms
    ```
 
 4. Run the following command for dkms to force install the intel-ipu6 driver.
 
    ```bash
-    $ dkms install --force ipu6-drivers/20230621+iotgipu6-0eci8
+     dkms install --force ipu6-drivers/20230621+iotgipu6-0eci8
    ```
 
 5. Check the dkms status by running the following command.
@@ -112,7 +112,7 @@ Follow the below steps only in case the above iGPU driver is not installed.
 6. Manually modprobe the installed intel-ipu6 driver.
 
    ```bash
-    $ sudo modprobe intel-ipu6-isys
+     sudo modprobe intel-ipu6-isys
    ```
 
 7. Once installed check the status of the intel-ipu6 driver using the below command. The file loaded must be: ***/lib/modules/5.15.0-1048-intel-iotg/updates/dkms/intel-ipu6-isys.ko*** as shown below.
@@ -137,8 +137,8 @@ sudo apt install ros-humble-librealsense2-tools
 Add the $USER to the video and render group using the following command.
 
 ```bash
-$ sudo usermod -a -G video $USER
-$ sudo usermod -a -G render $USER
+ sudo usermod -a -G video $USER
+ sudo usermod -a -G render $USER
 ```
 
 ## Build from sources
@@ -148,21 +148,21 @@ $ sudo usermod -a -G render $USER
 2. Clone the repository - [edge-ai-suites](https://github.com/open-edge-platform/edge-ai-suites)
 
    ```bash
-    $ git clone --recursive https://github.com/open-edge-platform/edge-ai-suites
+     git clone --recursive https://github.com/open-edge-platform/edge-ai-suites
    ```
 
 3. Update the dependencies.
 
    ```bash
-    $ sudo apt update
+     sudo apt update
    ```
 
 4. Build the package.
 
    ```bash
-    $ cd edge-ai-suites/robotics-ai-suite/components/multicam-demo
-    $ mk-build-deps -i --host-arch amd64 --build-arch amd64 -t "apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades" debian/control
-    $ dpkg-buildpackage
+     cd edge-ai-suites/robotics-ai-suite/components/multicam-demo
+     mk-build-deps -i --host-arch amd64 --build-arch amd64 -t "apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades" debian/control
+     dpkg-buildpackage
    ```
 
 ## Install
@@ -214,7 +214,7 @@ Use the config file
 
 ## Troubleshoot and workarounds
 
-1. <ins>iGPU driver not found even after installing the driver.</ins>
+1. ***iGPU driver not found even after installing the driver.***
 
    For example:
 
@@ -224,13 +224,13 @@ Use the config file
     Aborted
    ```
 
-   <ins>Solution</ins>: The issue is resolved by creating the following symbolic link.
+   **Solution**: The issue is resolved by creating the following symbolic link.
 
    ```bash
-    $ sudo ln -s /lib/firmware/i915/adlp_guc_70.1.1.bin /lib/firmware/i915/adlp_guc_70.0.3.bin
+     sudo ln -s /lib/firmware/i915/adlp_guc_70.1.1.bin /lib/firmware/i915/adlp_guc_70.0.3.bin
    ```
 
-2. <ins>Stability issue or GPU hang error.</ins>
+2. ***Stability issue or GPU hang error.***
 
 One of the windows get stuck and GPU hang error is observed 2 out 5 runs of the demo when it is run for more than 10-15mins with 3x or more instances of AI workload is run on iGPU.
 
@@ -248,7 +248,7 @@ One of the windows get stuck and GPU hang error is observed 2 out 5 runs of the 
     [ 1831.962254] i915 0000:00:02.0: [drm] GuC SLPC enabled
    ```
 
-<ins>Solution</ins>: The issue is resolved by adding the following kernel command line argument into the grub file. This will disable the dynamic power management of the GPU.
+**Solution**: The issue is resolved by adding the following kernel command line argument into the grub file. This will disable the dynamic power management of the GPU.
 Open the /etc/default/grub file. Add the following to the **GRUB_CMDLINE_LINUX**, save the file and update the grub.
 
    ```bash

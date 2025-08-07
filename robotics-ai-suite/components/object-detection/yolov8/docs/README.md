@@ -1,5 +1,6 @@
----
-title: OpenVINO™ Yolov8 Tutorial
+
+# OpenVINO™ Yolov8 Tutorial
+
 ---
 
 This tutorial serves as an example for understanding the utilization of
@@ -7,9 +8,9 @@ OpenVINO™ node. It outlines the steps for installing ROS 2 OpenVINO™
 node and executing the segmentation model on the CPU, using a Intel®
 RealSense™ camera image as the input.
 
-# Getting Started
+## Getting Started
 
-# Prerequisites
+## Prerequisites
 
 - [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
 - [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
@@ -27,24 +28,24 @@ Following Python packages are necessary to automatically download and
 convert the model to IR files. Also You can provide your own model files
 in the config, if you have them already.
 
-> ``` 
+> ```bash
 > pip3 install numpy pandas openvino-dev ultralytics nncf onnx
 > ```
 
 ## Install Deb package
 
-> ``` 
+> ```bash
 > sudo apt install ros-humble-openvino-yolov8 ros-humble-openvino-yolov8-msgs
 > ```
 
-# Run Demo with Intel® RealSense™ Topic Input
+## Run Demo with Intel® RealSense™ Topic Input
 
 First create a config file [pipeline.toml]{.title-ref}. If not present,
 sample content for this configuration file (including the comments) will
 be generated in the command output when executing the
 `ros2 run yolo yolo` command.
 
-> ``` 
+> ```bash
 > title = "Yolo Ros Node"
 >
 > [main]
@@ -88,7 +89,7 @@ be generated in the command output when executing the
 > rgbd_topic_max_fps = []
 > ```
 >
-> ``` 
+> ```bash
 > ros2 run yolo yolo --toml pipeline.toml &
 > ros2 run realsense2_camera realsense2_camera_node --ros-args \
 >             -p depth_module.profile:=640x480x60 \
@@ -103,14 +104,14 @@ be generated in the command output when executing the
 Once you start the node, you view the output video and detections using
 the following command:
 
-> ``` 
+> ```bash
 > rviz2 
 > ```
 
 Then you can subscribe to the `/pipeline1/color/image_raw/yolo_video`
 topic to view the result.
 
-# Advanced usage
+## Advanced usage
 
 Besides generating a video, this node is also capable of providing the
 number of post processed detections. Detections are published on a topic
@@ -119,7 +120,7 @@ configuration it would be `pipeline1/color/image_raw/yolo_frame`.
 
 The messages have following structure:
 
-> ``` 
+> ```bash
 > std_msgs/Header header # Header timestamp should be acquisition time of image
 >
 > sensor_msgs/Image rgb_image # Original image
@@ -134,7 +135,7 @@ The messages have following structure:
 
 Structure of the YoloDetection message object:
 
-> ``` 
+> ```bash
 > float32 confidence
 >
 > # Coordinates of bounding box
@@ -161,7 +162,7 @@ understanding the meaning of joints and how they are connected. ..
 Connected Joints (Research gate)
 <https://www.researchgate.net/figure/Key-points-for-human-poses-according-to-the-COCO-output-format-R-L-right-left_fig3_353746430>
 
-# Other considerations
+## Other considerations
 
 Yolov8 model requires a commercial license from Ultralytics. This
 package only provides an efficient way to run the model on OpenVINO™

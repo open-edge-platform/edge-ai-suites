@@ -1,5 +1,6 @@
----
-title: Wandering App
+
+# Wandering Application
+
 ---
 
 The Wandering mobile robot application is a Robot Operating System 2

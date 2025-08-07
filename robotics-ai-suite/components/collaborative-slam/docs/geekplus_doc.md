@@ -1,17 +1,16 @@
-### Background & Settings
+# Background & Settings
 
-Geekplus is a leading warehouse robotics company and we used to collaborate with them to improve localization accuracy and relocalization performance. During algorithm development, we are provided with ros bag files that captures the real-world warehouse environment. The bag files have two special settings of tf tree that are different from general datasets:
+Geekplus is a leading warehouse robotics company and we used to collaborate with them to improve localization accuracy and re-localization performance. During algorithm development, we are provided with ros bag files that captures the real-world warehouse environment. The bag files have two special settings of tf tree that are different from general datasets:
 
-1. For up-view fisheye camrea, the tf tree only contains a node for **camera_link**, but doesn't contain a node for **image_frame**. Therefore, an extra parameter **T_image_to_camera** (```T_ic```) should be added to make the system work properly when odometry data is used.
+1. For up-view fisheye camera, the tf tree only contains a node for **camera_link**, but doesn't contain a node for **image_frame**. Therefore, an extra parameter **T_image_to_camera** (```T_ic```) should be added to make the system work properly when odometry data is used.
 
 2. The bag file contains a node on the tf tree named *map* which happens to be the same default name for **map_frame**. This *map* frame is a fixed frame that comes from Lidar. It may cause the rviz to show inconsistent results between tf tree and published pose calculated from SLAM.
 
-
-### How to run geekplus dataset
+## How to run geekplus dataset
 
 For the up-view fisheye camera, the recommended commands are:
 
-1) Construct the map
+1. Construct the map
 
 ```shell
 # Mapping (tracker)
@@ -21,7 +20,7 @@ ros2 launch univloc_tracker tracker_geek_fisheye.launch.py use_odom:=true
 ros2 launch univloc_server server_geek.launch.py fix_scale:=true save_map_path:=/path_for_saving_map/xx.msg save_traj_folder:=/path_for_saving_mapping_traj/
 ```
 
-2) Load the map and run localization
+2.Load the map and run localization
 
 ```shell
 # Localization (tracker)
@@ -31,7 +30,6 @@ ros2 launch univloc_tracker tracker_geek_fisheye.launch.py slam_mode:=localizati
 ros2 launch univloc_server server_geek.launch.py server_mode:=localization fix_scale:=true load_map_path:=/path_for_saving_map/xx.msg
 ```
 
-
 ### Evaluation method for geekplus dataset
 
 Note that the ground truth files are not included in the repo. You can find them in shared documents (named gt_new.zip). We can send you if needed.
@@ -40,14 +38,14 @@ Note that the ground truth files are not included in the repo. You can find them
 
 - For the ground truth result, *kongkuang* data of sequence *gdata0730* is obtained using the transformation from frame ```odom``` to ```camera```, rather than from frame ```map``` to ```camera``` that is used in other data.
 
-1) Evaluate the accuracy of the constructed map and save the transformation matrix
+1.Evaluate the accuracy of the constructed map and save the transformation matrix
 
 ```shell
 # evo_ape tum ground_truth mapping_traj
 evo_ape tum ground_truth.txt /path_for_saving_mapping_traj/client0map0.txt -vap --save_results /path_for_saving_transformation/xx.zip
 ```
 
-2) Use the transformation matrix from 1) and avoid the use of alignment method in evo tool (*-a* in evo_ape) when evaluating the localization result
+2.Use the transformation matrix from 1) and avoid the use of alignment method in evo tool (*-a* in evo_ape) when evaluating the localization result
 
 ```shell
 # python3 align_pose.py ground_truth localization_traj transformation_matrix
