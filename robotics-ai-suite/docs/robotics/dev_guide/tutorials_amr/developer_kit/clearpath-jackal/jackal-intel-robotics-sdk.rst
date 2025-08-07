@@ -7,8 +7,8 @@ the onboard computer of the |jackal| robot.
 
 The |clearpath_robotics| |jackal| robot is equipped with an onboard
 computer that has a pre-installed |ubuntu| 22.04 LTS operating system,
-|ros| Humble, and the |clearpath_robotics| software packages. We
-recommend that you use the pre-installed software for the initial bring-up
+|ros| Humble, and the |clearpath_robotics| software packages. Intel
+recommends using the pre-installed software for the initial bring-up
 of your |jackal| robot. During the initial bring-up, you should also update
 the firmware of the MCU, as described on the
 `Robot Installation
@@ -73,7 +73,7 @@ Create Your Robot Configuration
 -------------------------------
 
 This section describes how you can create the ``robot.yaml`` configuration
-file for your |jackal| robot with an |realsense| D435i camera. Make sure
+file for your |jackal| robot with an |realsense| camera D435i. Make sure
 that you have completed the steps described in the previous section,
 :ref:`install-clearpath-software-packages`.
 
@@ -192,7 +192,7 @@ the |clearpath_robotics| services have started the |jackal|-specific |ros|
 nodes, so that the related |ros| topics are published.
 
 
-Add your |realsense| D435i Camera to the Robot YAML File
+Add your |realsense| Camera D435i to the Robot YAML File
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The robot configuration file, which you have created in the previous section,
@@ -200,7 +200,7 @@ still requires to define a camera in the ``sensors`` section.
 
 The `Sensors/Cameras <https://docs.clearpathrobotics.com/docs/ros/config/yaml/sensors/cameras>`__
 page of the |clearpath_robotics| documentation shows an example of the
-data structure that defines an |realsense| camera instance. We propose to
+data structure that defines an |realsense| camera instance. Intel proposes to
 add the following ``camera`` configuration as the first device in the
 ``sensors`` section. This configuration has been tested successfully with
 the |lp_amr|:

@@ -26,8 +26,8 @@ Install the following package with |ros| bag files in order to publish point clo
 
 
 
-Run the demo with |realsense|
---------------------------------
+Run the demo with |realsense| camera
+-------------------------------------
 
    .. code-block::
 
@@ -35,7 +35,7 @@ Run the demo with |realsense|
       /opt/ros/humble/share/adbscan_ros2/scripts/demo_RS.sh
 
    Expected result: |ros| rviz2 starts, and you will see how ADBSCAN interprets
-   |realsense| data coming from the |ros| bag:
+   |realsense| camera data coming from the |ros| bag:
 
 
       .. video:: ../../../../videos/adbscan_demo_RS.mp4

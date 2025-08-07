@@ -54,7 +54,7 @@ More detailed information is available at `Intel® Edge Software Device Qualific
 |      -  A simple C++ file can be compiled using the g++ compiler and the ``-lrealsense2``       |
 |         compilation flag.                                                                       |
 |                                                                                                 |
-|      -  |realsense| Topics are listed and published.                                            |
+|      -  |realsense| camera topics are listed and published.                                     |
 |                                                                                                 |
 |      -  The number of FPS (Frames Per Second) are as expected.                                  |
 +-------------------------------------------------------------------------------------------------+
@@ -348,8 +348,7 @@ Run the Self-Certification Application for Compute Systems
 
 #. Use the ``groups`` command to verify whether the current user belongs to
    the ``render``, ``video``, and ``dialout`` groups.
-   If the user does not belong to these groups, add the group membership
-   by means of:
+   If the user does not belong to these groups, add the group membership:
 
    .. code-block:: bash
 
@@ -405,9 +404,9 @@ Run the Self-Certification Application for Compute Systems
    .. note::
 
       All the tests are expected to pass.
-      The |vtune| test failure and the |realsense| test skip above
-      are shown for demonstration purposes only. For example, the execution of
-      the |realsense| test is skipped if no |realsense| camera is connected to
+      The |vtune| test failure and the |realsense| camera test skip above
+      are shown for demonstration purposes only. For example,
+      the |realsense| camera test is skipped if no |realsense| camera is connected to
       the target system.
 
       If individual test cases do not pass, you can check the detailed
@@ -427,8 +426,8 @@ topic.
 
 .. note::
 
-   The following steps use the |realsense| |ros| node as an example. You must
-   change the node to your actual camera |ros| node.
+   The following steps use the |realsense| camera's |ros| node as an example. You must
+   change the node to your actual camera's |ros| node.
 
 You can check your current configuration by:
 
@@ -471,8 +470,8 @@ If your camera |ros| node does not stream to that topic by default, use
 
 .. note::
 
-   The following steps use the |realsense| |ros| node as an example. You must
-   change the node to your actual camera |ros| node.
+   The following steps use the |realsense| camera's |ros| node as an example. You must
+   change the node to your actual camera's |ros| node.
 
 You can check your current configuration by:
 
