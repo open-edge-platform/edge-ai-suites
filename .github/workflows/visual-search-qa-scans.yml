@@ -20,8 +20,10 @@ jobs:
   trivy-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@82108645c8cd713c3c1026d56804cb1a26163b2f
-
+      - uses: actions/checkout@0a2a74d6d9a6c39911d7c4db94ec079ca3866869
+        with:
+          path: edge-ai-suites-repo
+          persist-credentials: false
       - name: Run Trivy Filesystem Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: trivy-fs
