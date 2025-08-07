@@ -4,7 +4,7 @@ Follow-me with ADBSCAN and Gesture-based Control on |clearpath_robotics| |jackal
 =========================================================================================
 
 This tutorial demonstrates the Follow-me algorithm along with a gesture recognition network, where the robot follows a target person in real time and responds to state commands through hand gestures. 
-This tutorial uses |clearpath_robotics| |jackal| robot and one |realsense| D400 series camera.
+This tutorial uses |clearpath_robotics| |jackal| robot and one |realsense| camera D400 series.
 This camera provides the point cloud data as input for the |intel|-patented object detection algorithm Adaptive DBSCAN to detect the position of the target person. This camera also provides RGB images to the object detection network responsible for detecting hand gestures for controlling the robot's start and stop states.
 This RGB image is passed through a deep learning-based gesture recognition pipeline, called `Mediapipe Hands Framework <https://mediapipe.readthedocs.io/en/latest/solutions/hands.html>`__, to detect the gesture category. 
 The motion commands for the robot are published to ``twist`` topic based on these two outputs: person's position and gesture category. 

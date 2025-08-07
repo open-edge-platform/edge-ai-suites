@@ -131,7 +131,7 @@ Expected Results
 
 
 #. On the server rviz, you will see how ADBSCAN interprets
-   the |realsense| data based on real objects around the robot:
+   the |realsense| camera data based on real objects around the robot:
 
    -  Green blocks indicate objects around.
            .. image:: ../../../../images/adbscan_aaeon_pic1.png
