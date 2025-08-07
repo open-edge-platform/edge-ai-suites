@@ -19,6 +19,7 @@ import ssl
 import socket
 import glob
 import paho.mqtt.client as mqtt
+import pandas as pd
 
 
 SERVICE = 'mqtt'
@@ -77,38 +78,34 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, filename):
     print(f"\nMQTT Topic - {topic}\nSubsample - {subsample}\nSampling Rate - \
           {sampling_rate}\nFilename - {filename}\n")
     jencoder = json.JSONEncoder()
+    csv_data = pd.read_csv(filename)
 
     while True:
         start_time = time.time()
         row_served = 0
 
+        tick = g_tick(float(subsample) / float(sampling_rate))
 
-        with open(filename, 'r') as fileobject:
-            tick = g_tick(float(subsample) / float(sampling_rate))
+        for i in range(csv_data.shape[0]):
+            row = csv_data.iloc[i]
 
-            for row in fileobject:
-                row = [x.strip() for x in row.split(',') if x.strip()]
-                if not row or not re.match(r'^-?\d+', row[0]):
-                    continue
-
-                if subsample > 1 and (row_served % subsample) != 0:
-                    row_served += 1
-                    continue
-
-                try:
-                    values = [float(x) for x in row]
-                    msg = jencoder.encode({'grid_active_power': values[0], 'wind_speed': values[1]})
-                    print("Publishing message", msg)
-                    mqttc.publish(topic, msg)
-                except (ValueError, IndexError):
-                    print(f"Skipping row {row_served}- {row} due to ValueError: {ValueError} \
-                           or IndexError: {IndexError}")
-                    continue
-
+            if subsample > 1 and (row_served % subsample) != 0:
                 row_served += 1
-                time.sleep(next(tick))
-                if row_served % max(1, int(sampling_rate) // max(1, int(subsample))) == 0:
-                    print(f'{row_served} rows served in {time.time() - start_time:.2f} seconds')
+                continue
+
+            try:
+                msg = jencoder.encode({col: csv_data.iloc[i][col] for col in csv_data.columns})
+                print("Publishing message", msg)
+                mqttc.publish(topic, msg)
+            except (ValueError, IndexError):
+                print(f"Skipping row {row_served}- {row} due to ValueError: {ValueError} \
+                      or IndexError: {IndexError}")
+                continue
+
+            row_served += 1
+            time.sleep(next(tick))
+            if row_served % max(1, int(sampling_rate) // max(1, int(subsample))) == 0:
+                print(f'{row_served} rows served in {time.time() - start_time:.2f} seconds')
 
         print(f'{filename} Done! {row_served} rows served in {time.time() - start_time:.2f} \
               seconds')
