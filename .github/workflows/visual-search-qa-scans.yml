@@ -41,9 +41,8 @@ jobs:
           # docker build -t retriever-milvus:latest -f vector-retriever/milvus/src/Dockerfile .
           cd vlm-openvino-serving
           # docker build -t vlm-openvino-serving:latest -f docker/Dockerfile .
-          cd ../../../..
+          cd ../../..
           ls
-          cd metro-ai-suite
           docker build -t visual-search-qa-app:latest -f visual-search-question-and-answering/src/Dockerfile .
           
       - name: Run trivy Scan - dataprep-visualdata-milvus
