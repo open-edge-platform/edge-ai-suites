@@ -1,0 +1,11 @@
+imutils
+protobuf==3.20.3
+Pillow
+psutil
+cython
+screeninfo
+dpnp
+onnx
+ultralytics==8.0.43
+pyrealsense2
+openvino-dev

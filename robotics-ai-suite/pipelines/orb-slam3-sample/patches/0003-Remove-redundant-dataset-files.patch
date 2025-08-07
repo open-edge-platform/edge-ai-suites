@@ -1,0 +1,106 @@
+From 500edd08f501853e12f8e9b934c51216fcc0f6b3 Mon Sep 17 00:00:00 2001
+From: Jeremy Ouillette <jeremy.ouillette@intel.com>
+Date: Wed, 18 Jun 2025 20:10:16 -0700
+Subject: [PATCH 3/3] Remove redundant dataset files. Enable displaying for
+ Examples and fix segment fault for stereo examples.
+
+---
+ Examples/Monocular/mono_euroc.cc                  |  2 +-
+ Examples/Stereo-Inertial/stereo_inertial_euroc.cc |  2 +-
+ include/LoopClosing.h                             |  2 +-
+ include/Settings.h                                |  2 +-
+ src/Optimizer.cc                                  |  3 ++-
+ src/Settings.cc                                   | 10 ++++++----
+ 6 files changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/Examples/Monocular/mono_euroc.cc b/Examples/Monocular/mono_euroc.cc
+index 3a23312..1ea8f95 100644
+--- a/Examples/Monocular/mono_euroc.cc
++++ b/Examples/Monocular/mono_euroc.cc
+@@ -80,7 +80,7 @@ int main(int argc, char **argv)
+     int fps = 20;
+     float dT = 1.f/fps;
+     // Create SLAM system. It initializes all system threads and gets ready to process frames.
+-    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR, false);
++    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR, true);
+     float imageScale = SLAM.GetImageScale();
+ 
+     double t_resize = 0.f;
+diff --git a/Examples/Stereo-Inertial/stereo_inertial_euroc.cc b/Examples/Stereo-Inertial/stereo_inertial_euroc.cc
+index bb52223..d1ab311 100644
+--- a/Examples/Stereo-Inertial/stereo_inertial_euroc.cc
++++ b/Examples/Stereo-Inertial/stereo_inertial_euroc.cc
+@@ -129,7 +129,7 @@ int main(int argc, char **argv)
+     cout.precision(17);
+ 
+     // Create SLAM system. It initializes all system threads and gets ready to process frames.
+-    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_STEREO, false);
++    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_STEREO, true);
+ 
+     cv::Mat imLeft, imRight;
+     for (seq = 0; seq<num_seq; seq++)
+diff --git a/include/LoopClosing.h b/include/LoopClosing.h
+index c9ccb26..7b6bfe0 100644
+--- a/include/LoopClosing.h
++++ b/include/LoopClosing.h
+@@ -223,7 +223,7 @@ protected:
+     bool mbFixScale;
+ 
+ 
+-    bool mnFullBAIdx;
++    int mnFullBAIdx;
+ 
+ 
+ 
+diff --git a/include/Settings.h b/include/Settings.h
+index beab7de..5816231 100644
+--- a/include/Settings.h
++++ b/include/Settings.h
+@@ -21,7 +21,7 @@
+ 
+ 
+ // Flag to activate the measurement of time in each process (track,localmap, place recognition).
+-//#define REGISTER_TIMES
++#define REGISTER_TIMES
+ 
+ #include "CameraModels/GeometricCamera.h"
+ 
+diff --git a/src/Optimizer.cc b/src/Optimizer.cc
+index b785be3..6b81220 100644
+--- a/src/Optimizer.cc
++++ b/src/Optimizer.cc
+@@ -2834,7 +2834,8 @@ void Optimizer::LocalInertialBA(KeyFrame *pKF, bool *pbStopFlag, Map *pMap, int&
+     //cout << "Total map points: " << lLocalMapPoints.size() << endl;
+     for(map<int,int>::iterator mit=mVisEdges.begin(), mend=mVisEdges.end(); mit!=mend; mit++)
+     {
+-        assert(mit->second>=3);
++        //fix-me: don't assert the size of observations. In stead, just skip if not matching.
++        //assert(mit->second>=3);
+     }
+ 
+     optimizer.initializeOptimization();
+diff --git a/src/Settings.cc b/src/Settings.cc
+index 93a50be..4733d6e 100644
+--- a/src/Settings.cc
++++ b/src/Settings.cc
+@@ -558,11 +558,13 @@ namespace ORB_SLAM3 {
+             else{
+                 output << "Kannala-Brandt";
+             }
+-            output << "" << ": [";
+-            for(size_t i = 0; i < settings.originalCalib2_->size(); i++){
+-                output << " " << settings.originalCalib2_->getParameter(i);
++           if (settings.cameraType_ != Settings::Rectified){
++                output << "" << ": [";
++                for(size_t i = 0; i < settings.originalCalib2_->size(); i++){
++                    output << " " << settings.originalCalib2_->getParameter(i);
++                }
++                output << " ]" << endl;
+             }
+-            output << " ]" << endl;
+ 
+             if(!settings.vPinHoleDistorsion2_.empty()){
+                 output << "\t-Camera 1 distortion parameters: [ ";
+-- 
+2.30.2
+

@@ -15,11 +15,13 @@ README.md          @xwu2intel
 /metro-ai-suite/                                          @rrajore @vagheshp @ArokiEdgard
 /metro-ai-suite/image-based-video-search/                 @rrajore @vagheshp @ArokiEdgard @rohitkatakol
 /metro-ai-suite/interactive-digital-avatar/               @senhui2intel @Junyu-B @wzq112358 @myqi
+/metro-ai-suite/sensor-fusion-for-traffic-management/     @lijiunderstand @chaofanchen-intel @thegreatchaos
 /metro-ai-suite/smart-parking/                            @vagheshp @tjanczak @xwu2intel
 /metro-ai-suite/smart-intersection/                       @saratpoluri @sarthakdeva-intel
 /metro-ai-suite/loitering-detection/                      @vagheshp @tjanczak @xwu2intel
 /metro-ai-suite/visual-search-question-and-answering/     @llin60 @Johere @zhangcong2019
 /metro-ai-suite/video-processing-for-nvr/                 @zhangcong2019 @llin60 @Johere
+/metro-ai-suite/smart-nvr/                                @bharagha @yogeshmpandey @bhardwaj-nakul
 
 # robotics-ai
 /robotics-ai-suite/        @jouillet @jb-balaji @pirouf @mohitmeh12
@@ -48,6 +50,8 @@ README.md          @xwu2intel
 /metro-ai-suite/loitering-detection/README.md                   @vagheshp @tjanczak @xwu2intel          @open-edge-platform/open-edge-platform-docs-write
 # /metro-ai-suite/metro-vision-ai-app-recipe/docs/              needs to be defined
 # /metro-ai-suite/metro-vision-ai-app-recipe/README.md          needs to be defined
+/metro-ai-suite/sensor-fusion-for-traffic-management/docs/      @lijiunderstand @chaofanchen-intel      @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/sensor-fusion-for-traffic-management/README.md  @lijiunderstand @chaofanchen-intel      @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/smart-intersection/docs/                        @saratpoluri @sarthakdeva-intel         @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/smart-intersection/README.md                    @saratpoluri @sarthakdeva-intel         @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/smart-parking/docs/                             @vagheshp @tjanczak @xwu2intel          @open-edge-platform/open-edge-platform-docs-write

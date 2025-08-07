@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rvc_pose_detector</name>
+  <version>2.0.0</version>
+  <description>AI pose alignment stage Package</description>
+  <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
+  <license>Rapid Prototype License</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>ament_index_cpp</build_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>rvc_messages</depend>
+  <depend>rvc_vision_messages</depend>
+  <depend>message_filters</depend>
+  <depend>pcl_conversions</depend>
+  <depend>tf2_eigen</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

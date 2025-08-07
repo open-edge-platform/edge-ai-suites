@@ -20,6 +20,12 @@ With the above configuration, the broker listens on port 1883.
         MQTT_HOST: <HOST_IP>
         MQTT_PORT: 1883
     ```
+    Once the changes are done, bring the services up. Restart them if already running.
+
+    ```sh
+    docker compose down # if already running
+    docker compose up -d
+    ```
 
 The below CURL command publishes metadata to a MQTT broker and sends frames over WebRTC for streaming.
 
@@ -29,7 +35,7 @@ WebRTC Stream will be accessible at `http://<HOST_IP>:8889/mqttstream`.
 ```sh
 curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/worker_safety_gear_detection_mqtt -X POST -H 'Content-Type: application/json' -d '{
     "source": {
-        "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4",
+        "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
         "type": "uri"
     },
     "destination": {
@@ -46,7 +52,7 @@ curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/worker_safety_gear_d
     },
     "parameters": {
         "detection-properties": {
-            "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml",
+            "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
             "device": "CPU"
         }
     }

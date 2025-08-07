@@ -26,7 +26,7 @@ By following this guide, you will learn how to:
 ## Set up and First Use
 
 <!--
-**User Story 1**: Setting Up the Application  
+**User Story 1**: Setting Up the Application
 - **As a developer**, I want to set up the application in my environment, so that I can start exploring its functionality.
 
 **Acceptance Criteria**:
@@ -49,7 +49,7 @@ By following this guide, you will learn how to:
      ```
 
    **Available Applications:**
-   
+
    | **Application** | **Command** | **Description** | **Models** | **Scenescape Components** |
    |------------|---------|-------------|-------------|-------------|
    | Smart Intersection Management | `smart-intersection` | Traffic flow optimization and intersection monitoring | Custom Intersection Model | Included |
@@ -63,6 +63,10 @@ By following this guide, you will learn how to:
    ./install.sh loitering-detection
    ```
 
+3. **Update DOCKER_REGISTRY variable in `.env` file**
+   - The recommended setting is: `DOCKER_REGISTRY=ghcr.io/open-edge-platform/edge-ai-libraries/`
+     Please remember to include `/` at the end.
+
 ## Run the Application
 
 1. **Start the Application**:
@@ -70,52 +74,52 @@ By following this guide, you will learn how to:
      ```bash
      docker compose up -d
      ```
-     
+
      <details>
      <summary>
      Check Status of Microservices
      </summary>
-     
+
      - The application starts the following microservices.
      - To check if all microservices are in Running state:
        ```bash
        docker ps
        ```
-       
+
      **Expected Services:**
      - Grafana Dashboard
-     - DL Streamer Pipeline Server  
+     - DL Streamer Pipeline Server
      - MQTT Broker
      - Node-RED (for applications without Scenescape)
      - Scenescape services (for Smart Intersection only)
-     
+
      </details>
 
 2. **Run Predefined Pipelines**:
    - Pipeline startup depends on your application type:
-   
+
    **For Applications WITHOUT Scenescape Components** *(Loitering Detection, Smart Parking, Smart Tolling)*:
    - Start video streams to run video inference pipelines:
      ```bash
      ./sample_start.sh
      ```
-     
+
      <details>
      <summary>
      Check Status and Stop pipelines
      </summary>
-     
+
      - To check the status:
        ```bash
        ./sample_status.sh
        ```
-     
+
      - To stop the pipelines without waiting for video streams to finish replay:
        ```bash
        ./sample_stop.sh
        ```
      </details>
-   
+
    **For Applications WITH Scenescape Components** *(Smart Intersection)*:
    - No action required! The inference pipeline starts automatically when the services launch.
 

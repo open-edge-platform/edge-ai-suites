@@ -7,7 +7,7 @@ help you set up and run the application efficiently.
 
 **Operating Systems**
 
-- Ubuntu 20.04 LTS
+- Ubuntu 22.04 LTS
 - Windows 10/11 with WSL 2
 
 <!--

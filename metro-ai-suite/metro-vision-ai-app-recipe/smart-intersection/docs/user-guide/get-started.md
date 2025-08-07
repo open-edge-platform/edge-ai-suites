@@ -25,7 +25,7 @@ By following this guide, you will learn how to:
 ## Set up and First Use
 
 <!--
-**User Story 1**: Setting Up the Application  
+**User Story 1**: Setting Up the Application
 - **As a developer**, I want to set up the application in my environment, so that I can start exploring its functionality.
 
 **Acceptance Criteria**:
@@ -47,6 +47,25 @@ By following this guide, you will learn how to:
      ./install.sh smart-intersection
      ```
 
+    > **Note**: The application uses weekly builds from GitHub Container Registry (ghcr.io/open-edge-platform/) by default.
+
+    <details>
+    <summary>
+    Switch to Stable Build (Optional)
+    </summary>
+
+    To use stable releases from Docker Hub instead of weekly builds, run the following commands:
+
+    ```bash
+    sed -i 's/^DOCKER_REGISTRY=.*/DOCKER_REGISTRY=/' .env
+    sed -i 's/intel\/edge-ai-dlstreamer-pipeline-server:.*/intel\/dlstreamer-pipeline-server:3.0.0/' docker-compose.yml
+    sed -i 's/intel\/scenescape-manager:.*/intel\/scenescape-manager:v1.3.0/' docker-compose.yml
+    sed -i 's/intel\/scenescape-controller:.*/intel\/scenescape-controller:v1.3.0/' docker-compose.yml
+    ```
+    This updates the application to use stable images from [Docker Hub](https://hub.docker.com/u/intel/).
+
+    </details>
+
 ## Run the Application
 
 1. **Start the Application**:
@@ -54,26 +73,26 @@ By following this guide, you will learn how to:
      ```bash
      docker compose up -d
      ```
-     
+
      <details>
      <summary>
      Check Status of Microservices
      </summary>
-     
+
      - The application starts the following microservices.
      - To check if all microservices are in Running state:
        ```bash
        docker ps
        ```
-       
+
      **Expected Services:**
      - Grafana Dashboard
-     - DL Streamer Pipeline Server  
+     - DL Streamer Pipeline Server
      - MQTT Broker
      - Node-RED (for applications without Scenescape)
      - Scenescape services (for Smart Intersection only)
-     
-     </details>   
+
+     </details>
 
 2. **View the Application Output**:
    - Open a browser and go to `http://localhost:3000` to access the Grafana dashboard.
@@ -101,7 +120,7 @@ Open a browser and go to the following endpoints to access the application. Use 
     - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
 
 > **Notes**:
-> - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface. Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, it is recommended to use **Google Chrome**.
+> - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface. Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, use **Google Chrome**.
 
 ### **Grafana UI** ###
 - **URL**: [http://localhost:3000](http://localhost:3000)

@@ -56,7 +56,7 @@ For compose based deployment, the entire resources directory is volume mounted a
             },
             "parameters": {
                 "detection-properties": {
-                    "model": "/home/pipeline-server/resources/models/pallet_defect_detection/deployment/Detection/model/model.xml",
+                    "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
                     "device": "CPU"
                 }
             }
@@ -127,7 +127,7 @@ You can bring your own model and run this sample application the same way as how
             },
             "parameters": {
                 "detection-properties": {
-                        "model": "/home/pipeline-server/resources/models/geti/pallet_defect_detection/deployment/Detection/model/model.xml",
+                        "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
                         "device": "CPU"
                 }
             }

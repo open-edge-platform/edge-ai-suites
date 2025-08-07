@@ -20,13 +20,13 @@ Before You Begin, ensure the following:
 
 ## Steps to Deploy
 
-To deploy the Smart Intersection Sample Application, copy and paste the entire block of commands below into your terminal and run them:
+To deploy the Smart Intersection Sample Application, copy and paste the entire block of following commands into your terminal and run them:
 
 ### Clone the Repository and Install Prerequisites
 
 **Note**: Skip this step if you have already followed the steps as part of the [Get Started guide](./get-started.md).
 
-Before you can deploy with Helm, you need to clone the repository and run the installation script:
+Before you can deploy with Helm, you must clone the repository and run the installation script:
 
 ```bash
 # Clone the repository
@@ -49,17 +49,43 @@ If you are deploying in a proxy environment, update the values.yml file with you
 nano ./smart-intersection/chart/values.yaml
 ```
 
-Add the following proxy configuration to your values.yml:
+Update the existing proxy configuration in your values.yaml with following values:
 
 ```yaml
-# Proxy configuration
-proxy:
-  http_proxy: "http://your-proxy-server:port"
-  https_proxy: "http://your-proxy-server:port"
-  no_proxy: "localhost,127.0.0.1,.local,.cluster.local"
+http_proxy: "http://your-proxy-server:port"
+https_proxy: "http://your-proxy-server:port"
+no_proxy: "localhost,127.0.0.1,.local,.cluster.local"
 ```
 
 Replace `your-proxy-server:port` with your actual proxy server details.
+
+> **Note**: The application uses weekly builds from GitHub Container Registry (ghcr.io/open-edge-platform/) by default.
+
+<details>
+<summary>
+Switch to Stable Build (Optional)
+</summary>
+
+To use stable releases from Docker Hub instead of weekly builds, update the values.yaml file with following information,
+
+```yaml
+scene:
+  repository: intel/scenescape-controller
+  tag: v1.3.0
+pgserver:
+  repository: intel/scenescape-manager
+  tag: v1.3.0
+web:
+  image:
+    repository: intel/scenescape-manager
+    tag: v1.3.0
+dlstreamerPipelineServer:
+  repository: intel/dlstreamer-pipeline-server
+  tag: 3.0.0
+```
+This updates the application to use stable images from [Docker Hub](https://hub.docker.com/u/intel/).
+
+</details>
 
 ### Deploy the application
 
@@ -147,7 +173,7 @@ kubectl -n smart-intersection port-forward $DLS_PS_POD 8080:8080
 kubectl -n smart-intersection port-forward $DLS_PS_POD 8555:8555
 ```
 
-## How to Uninstall the Application
+## Uninstall the Application
 
 To uninstall the application, run the following command:
 
@@ -155,7 +181,7 @@ To uninstall the application, run the following command:
 helm uninstall smart-intersection -n smart-intersection
 ```
 
-## How to Delete the Namespace
+## Delete the Namespace
 
 To delete the namespace and all resources within it, run the following command:
 

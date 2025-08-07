@@ -57,7 +57,7 @@ This page provides comprehensive support and troubleshooting information for the
    - Follow these steps to reset the application to the initial state
      ```bash
      ./setup.sh stop
-     docker volume ls | grep nvr-event-router | awk '{ print $2 }' | xargs docker volume rm
+     docker volume rm docker_mosquitto_data docker_mosquitto_log docker_redis_data
      ```
 <!--
 ## Support

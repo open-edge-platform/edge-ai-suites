@@ -1,0 +1,5 @@
+<library path="its_planner">
+	<class name="its_planner/ITSPlanner" type="its_planner::ITSPlanner" base_class_type="nav2_core::GlobalPlanner">
+	  <description>This is a plugin which utilizes ITS method to find global path.</description>
+	</class>
+</library>

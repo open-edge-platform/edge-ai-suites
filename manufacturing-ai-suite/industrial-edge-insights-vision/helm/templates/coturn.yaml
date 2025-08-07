@@ -42,6 +42,9 @@ spec:
       - name: registryauth
       {{- end }}
       # hostNetwork: true
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
       - name: coturn
         image: coturn/coturn
@@ -52,4 +55,15 @@ spec:
         - containerPort: {{ $.Values.config.coturn.int.coturn_udp_port }}
           protocol: UDP
         imagePullPolicy: {{ .Values.imagePullPolicy }}
+        # Added security context to improve container hardening
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - NET_BIND_SERVICE
       restartPolicy: Always

@@ -10,9 +10,9 @@ name: image-based-video-search
 apiVersion: v2
 
 # Version of the chart (required)
-version: 1.0.0
+version: 1.0.1
 
 # Version of the application (required).
 # This should be the main application version.
-appVersion: 1.0.0
+appVersion: 1.0.1
 description: A Helm chart for ibvs

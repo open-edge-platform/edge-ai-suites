@@ -38,6 +38,8 @@ using namespace hce::ai::inference;
 std::vector<std::size_t> g_total;
 std::vector<std::size_t> g_frameCnt;
 std::vector<double> g_latency;
+std::vector<double> g_inference_latency;
+std::vector<double> g_video_latency;
 std::mutex g_mutex;
 
 // system metrics
@@ -410,6 +412,14 @@ void parseReply(cv::Mat &frame,
         car_count = roi_info.size();
         latency = jsonTree.get<double>("latency");
         g_latency.push_back(latency);
+        if (jsonTree.count("inference_latency") > 0) {
+            latency = jsonTree.get<double>("inference_latency");
+            g_inference_latency.push_back(latency);
+        }
+        if (jsonTree.count("video_latency") > 0) {
+            latency = jsonTree.get<double>("video_latency");
+            g_video_latency.push_back(latency);
+        }
         for (auto roi_i = roi_info.begin(); roi_i != roi_info.end(); ++roi_i) {
             bool isAssociated = false;
             auto roi_item = roi_i->second;
@@ -1173,11 +1183,23 @@ int main(int argc, char **argv)
         float fps = (((float)totalFrames - pipeline_repeats) / totalStreamNum) / (mean / 1000.0);
         double latency_sum = std::accumulate(std::begin(g_latency), std::end(g_latency), 0.0);
         double latency_ave = latency_sum / g_latency.size();
+        double inference_latency_ave = 0.0;
+        double video_latency_ave = 0.0;
+        if (g_inference_latency.size() > 0) {
+            double inference_latency_sum = std::accumulate(std::begin(g_inference_latency), std::end(g_inference_latency), 0.0);
+            inference_latency_ave = inference_latency_sum / g_inference_latency.size();
+        }
+        if (g_video_latency.size() > 0) {
+            double video_latency_sum = std::accumulate(std::begin(g_video_latency), std::end(g_video_latency), 0.0);
+            video_latency_ave = video_latency_sum / g_video_latency.size();
+        }
 
         std::cout << "\n=================================================\n" << std::endl;
         std::cout << "WARMUP: " << std::to_string(warmupFlag) << std::endl;
         std::cout << "fps: " << fps << std::endl;
         std::cout << "average latency " << latency_ave << std::endl;
+        std::cout << "video pipeline average latency " << video_latency_ave << std::endl;
+        std::cout << "inference average latency " << inference_latency_ave << std::endl;
         std::cout << "For each repeat: " << all_threadNum << " threads have been processed, total-stream = " << totalStreamNum << ", each thread processed "
                   << crossStreamNum << " streams" << std::endl;
         std::cout << "fps per stream: " << fps << ", including " << totalFrames << " frames" << std::endl;

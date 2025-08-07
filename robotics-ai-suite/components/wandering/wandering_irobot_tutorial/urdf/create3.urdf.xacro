@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<robot name="create3-extended" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find irobot_create_description)/urdf/create3.urdf.xacro" />
+  <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro" />
+  <xacro:include filename="$(find wandering_irobot_tutorial)/urdf/layer.urdf.xacro" />
+
+  <!-- Dimensions from https://iroboteducation.github.io/create3_docs/hw/mechanical/ -->
+  <xacro:property name="robot_diameter" value="${341.9*mm2m}" />
+  <xacro:property name="robot_base_height" value="${93.4*mm2m}" />
+
+  <!-- Extensions -->
+  <xacro:property name="bottom_layer_z" value="${60*mm2m}" />
+  <xacro:property name="top_layer_z" value="${90*mm2m}" />
+
+  <xacro:property name="rear_caster_size" value="${56*mm2m}" />
+
+  <material name="blue">
+    <color rgba="0.2 0.2 1 1" />
+  </material>
+
+  <!-- extension layers -->
+  <xacro:layer name="bottom_layer" parent="base_link">
+    <origin xyz="0 0 ${robot_base_height + bottom_layer_z}" />
+  </xacro:layer>
+  <xacro:layer name="top_layer" parent="bottom_layer_link">
+    <origin xyz="0 0 ${top_layer_z}" />
+  </xacro:layer>
+
+  <!-- camera link -->
+  <xacro:sensor_d435i parent="top_layer_link">
+    <origin rpy="0 0 0" xyz="0.142 0.0 -0.033"/>
+  </xacro:sensor_d435i>
+
+  <!-- lidar link -->
+  <link name="lidar_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.04" length="0.035"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="top_layer_link"/>
+    <child link="lidar_link"/>
+    <origin rpy="${pi} ${pi} 0" xyz="0.01 0 0.06"/>
+  </joint>
+
+  <!-- rear caster link -->
+  <link name="rear_caster_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://wandering_irobot_tutorial/meshes/rear-caster.dae"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="rear_caster_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="rear_caster_link"/>
+    <origin rpy="0 0 0" xyz="-${body_radius} 0.0 ${cliff_z + base_link_z_offset - 0.01}"/>
+  </joint>
+
+</robot>

@@ -11,13 +11,13 @@ services:
     networks:
       scenescape:
         aliases:
-         - ntpserv
+          - ntpserv
     restart: on-failure:5
 
   broker:
     image: docker.io/library/eclipse-mosquitto:2.0.21
     ports:
-     - "1883:1883"
+      - "1883:1883"
     environment:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
@@ -26,22 +26,22 @@ services:
       HTTPS_PROXY: ${https_proxy}
       NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
     volumes:
-    - ./${SAMPLE_APP}/src/mosquitto/mosquitto-secure.conf:/mosquitto/config/mosquitto.conf
+      - ./${SAMPLE_APP}/src/mosquitto/mosquitto-secure.conf:/mosquitto/config/mosquitto.conf
     secrets:
       - root-cert
       - broker-cert
       - broker-key
     entrypoint: [
-      "/bin/sh",
-      "-e",
-      "-c",
-      "cp -r /run/secrets /mosquitto/secrets  && \
-      /docker-entrypoint.sh /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf"
-    ]
+        "/bin/sh",
+        "-e",
+        "-c",
+        "cp -r /run/secrets /mosquitto/secrets  && \
+        /docker-entrypoint.sh /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf",
+      ]
     networks:
       scenescape:
         aliases:
-         - broker.scenescape.intel.com
+          - broker.scenescape.intel.com
     user: "${UID}:${GID}"
     restart: on-failure:5
 
@@ -76,16 +76,16 @@ services:
       broker:
         condition: service_started
     entrypoint: [
-      "/bin/bash",
-      "-e",
-      "-c",
-      "cp /tmp/flows.json /data/flows.json && \
-      cp /tmp/settings.js /data/settings.js && \
-      cp /tmp/flows_cred.json /data/flows_cred.json && \
-      sed -i \"s/<influx-api-token>/$(cat /run/secrets/influxdb2-admin-token)/g\" /data/flows_cred.json && \
-      bash /tmp/install_package.sh && \
-      /usr/src/node-red/entrypoint.sh"
-    ]
+        "/bin/bash",
+        "-e",
+        "-c",
+        "cp /tmp/flows.json /data/flows.json && \
+        cp /tmp/settings.js /data/settings.js && \
+        cp /tmp/flows_cred.json /data/flows_cred.json && \
+        sed -i \"s/<influx-api-token>/$(cat /run/secrets/influxdb2-admin-token)/g\" /data/flows_cred.json && \
+        bash /tmp/install_package.sh && \
+        /usr/src/node-red/entrypoint.sh",
+      ]
     restart: on-failure:5
 
   influxdb2:
@@ -147,33 +147,33 @@ services:
       influxdb2:
         condition: service_started
     entrypoint: [
-      "/bin/bash",
-      "-e",
-      "-c",
-      "mkdir -p /var/lib/grafana/dashboards && \
-      cp /tmp/anthem-intersection.json /var/lib/grafana/dashboards/anthem-intersection.json && \
-      mkdir -p /etc/grafana/provisioning/dashboards && \
-      cp /tmp/dashboards.yml /etc/grafana/provisioning/dashboards/main.yml && \
-      mkdir -p /etc/grafana/provisioning/datasources && \
-      cp /tmp/datasources.yml /etc/grafana/provisioning/datasources/datasources.yml && \
-      sed -i \"s/<influx-api-token>/$(cat /run/secrets/influxdb2-admin-token)/g\" /etc/grafana/provisioning/datasources/datasources.yml && \
-      /run.sh"
-    ]
+        "/bin/bash",
+        "-e",
+        "-c",
+        "mkdir -p /var/lib/grafana/dashboards && \
+        cp /tmp/anthem-intersection.json /var/lib/grafana/dashboards/anthem-intersection.json && \
+        mkdir -p /etc/grafana/provisioning/dashboards && \
+        cp /tmp/dashboards.yml /etc/grafana/provisioning/dashboards/main.yml && \
+        mkdir -p /etc/grafana/provisioning/datasources && \
+        cp /tmp/datasources.yml /etc/grafana/provisioning/datasources/datasources.yml && \
+        sed -i \"s/<influx-api-token>/$(cat /run/secrets/influxdb2-admin-token)/g\" /etc/grafana/provisioning/datasources/datasources.yml && \
+        /run.sh",
+      ]
 
   dlstreamer-pipeline-server:
-    image: ${DOCKER_REGISTRY}intel/dlstreamer-pipeline-server:latest
+    image: ${DOCKER_REGISTRY}intel/edge-ai-dlstreamer-pipeline-server:20250731_EAL1.2_DLSPS_RC4-ubuntu24
     networks:
       - scenescape
     privileged: true
     entrypoint: ["./run.sh"]
     ports:
-      - '8080:8080'
-      - '8555:8555'
+      - "8080:8080"
+      - "8555:8555"
     devices:
       - "/dev/dri:/dev/dri"
     depends_on:
-    - broker
-    - ntpserver
+      - broker
+      - ntpserver
     environment:
       - ENABLE_RTSP=true
       - ENABLE_WEBRTC=true
@@ -206,7 +206,7 @@ services:
     restart: on-failure:5
 
   pgserver:
-    image: ${DOCKER_REGISTRY}intel/scenescape-manager:v1.3.0
+    image: ${DOCKER_REGISTRY}intel/scenescape-manager:v1.4.0-rc1
     init: true
     networks:
       - scenescape
@@ -220,14 +220,14 @@ services:
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
     entrypoint: [
-      "/bin/bash",
-      "-e",
-      "-c",
-      "cp /tmp/user_access_config.json /home/scenescape/SceneScape/user_access_config.json && \
-      cp /tmp/smart-intersection-ri.tar.bz2 /home/scenescape/SceneScape/smart-intersection-ri.tar.bz2 && \
-      chown -R scenescape:scenescape /workspace && \
-      SUPASS=$(cat /run/secrets/supass) /usr/local/bin/scenescape-init database --preloadexample"
-    ]
+        "/bin/bash",
+        "-e",
+        "-c",
+        "cp /tmp/user_access_config.json /home/scenescape/SceneScape/user_access_config.json && \
+        cp /tmp/smart-intersection-ri.tar.bz2 /home/scenescape/SceneScape/smart-intersection-ri.tar.bz2 && \
+        chown -R scenescape:scenescape /workspace && \
+        SUPASS=$(cat /run/secrets/supass) /usr/local/bin/scenescape-init database --preloadexample",
+      ]
     cap_add:
       - SYS_ADMIN
     devices:
@@ -248,24 +248,24 @@ services:
     restart: on-failure:5
 
   web:
-    image: ${DOCKER_REGISTRY}intel/scenescape-manager:v1.3.0
+    image: ${DOCKER_REGISTRY}intel/scenescape-manager:v1.4.0-rc1
     init: true
     networks:
       scenescape:
         aliases:
-         - web.scenescape.intel.com
+          - web.scenescape.intel.com
     depends_on:
-     - pgserver
+      - pgserver
     ports:
-     - "443:443"
+      - "443:443"
     environment:
-     - "DBROOT=/workspace"
-     - http_proxy=${http_proxy}
-     - https_proxy=${https_proxy}
-     - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
-     - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
-     - HTTP_PROXY=${http_proxy}
-     - HTTPS_PROXY=${https_proxy}
+      - "DBROOT=/workspace"
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
+      - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
+      - HTTP_PROXY=${http_proxy}
+      - HTTPS_PROXY=${https_proxy}
     command: >
       webserver
       --dbhost pgserver
@@ -279,35 +279,35 @@ services:
       retries: 10
       start_period: 10s
     cap_add:
-     - SYS_ADMIN
+      - SYS_ADMIN
     devices:
-     - /dev/fuse
+      - /dev/fuse
     security_opt:
-     - apparmor:unconfined
+      - apparmor:unconfined
     volumes:
-     - pgserver-media:/workspace/media
+      - pgserver-media:/workspace/media
     secrets:
-     - source: root-cert
-       target: certs/scenescape-ca.pem
-     - source: web-cert
-       target: certs/scenescape-web.crt
-     - source: web-key
-       target: certs/scenescape-web.key
-     - django
-     - browser.auth
-     - controller.auth
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+      - source: web-cert
+        target: certs/scenescape-web.crt
+      - source: web-key
+        target: certs/scenescape-web.key
+      - django
+      - browser.auth
+      - controller.auth
     restart: on-failure:5
 
   scene:
-    image: ${DOCKER_REGISTRY}intel/scenescape-controller:v1.3.0
+    image: ${DOCKER_REGISTRY}intel/scenescape-controller:v1.4.0-rc1
     init: true
     environment:
-     - http_proxy=${http_proxy}
-     - https_proxy=${https_proxy}
-     - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
-     - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
-     - HTTP_PROXY=${http_proxy}
-     - HTTPS_PROXY=${https_proxy}
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
+      - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
+      - HTTP_PROXY=${http_proxy}
+      - HTTPS_PROXY=${https_proxy}
     networks:
       scenescape:
     depends_on:
@@ -319,13 +319,13 @@ services:
         condition: service_started
     command: controller --broker broker.scenescape.intel.com --ntp ntpserv
     volumes:
-     - pgserver-media:/home/scenescape/SceneScape/media
-     - ./${SAMPLE_APP}/src/controller/tracker-config.json:/home/scenescape/SceneScape/tracker-config.json
+      - pgserver-media:/home/scenescape/SceneScape/media
+      - ./${SAMPLE_APP}/src/controller/tracker-config.json:/home/scenescape/SceneScape/tracker-config.json
     secrets:
-     - source: root-cert
-       target: certs/scenescape-ca.pem
-     - django
-     - controller.auth
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+      - django
+      - controller.auth
     restart: on-failure:5
 
 networks:

@@ -15,6 +15,7 @@ on:
         - pallet-defect-detection
         - weld-porosity
         - pcb-anomaly-detection
+        - robotics-ai-suite
         - worker-safety-gear-detection
         - wind-turbine-anomaly-detection
 
@@ -122,6 +123,22 @@ jobs:
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection
       branch_pattern: '^main$'  # PCB Anomaly Detection only exists on 'main' branch
+
+  build_robotics-ai-suite:
+    permissions:
+      contents: read          # needed for actions/checkout
+      pull-requests: read     # needed for gh pr list
+      issues: write           # needed to post PR comment
+    if: ${{ (github.event.inputs.target == 'robotics-ai-suite') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: robotics-ai-suite
+      simple_mode: false
+      branch_pattern: '^main$'  # Robotics AI Suite only exists on 'main' branch
 
   build_worker-safety-gear-detection:
     permissions:

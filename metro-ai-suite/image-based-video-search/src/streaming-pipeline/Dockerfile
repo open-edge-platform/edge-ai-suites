@@ -1,8 +1,8 @@
-FROM docker.io/intel/dlstreamer:2025.0.1.3-ubuntu24
+FROM ghcr.io/open-edge-platform/edge-ai-libraries/intel/edge-ai-dlstreamer:20250805_EAL1.2-ubuntu22
 
 USER root
 
-RUN apt-get update && apt-get install --yes gstreamer1.0-plugins-ugly
+RUN apt-get update && apt-get install --yes gstreamer1.0-plugins-ugly wget
 
 USER dlstreamer
 

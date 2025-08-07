@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<robot name="layer" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="layer" params="name parent *origin">
+    <joint name="${name}_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${name}_link"/>
+      <xacro:insert_block name="origin"/>
+    </joint>
+    <link name="${name}_link">
+      <visual>
+        <origin rpy="0 0 ${pi/2}"/>
+        <geometry>
+          <mesh filename="package://wandering_irobot_tutorial/meshes/layer.dae" scale="0.01 0.01 0.01"/>
+        </geometry>
+      </visual>
+    </link>
+  </xacro:macro>
+</robot>

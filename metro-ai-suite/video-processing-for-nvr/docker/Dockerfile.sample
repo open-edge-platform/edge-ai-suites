@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     cmake \
     sudo \
     wget \
+    lsb-release \
     unzip
 
 RUN useradd -m -s /bin/bash vpp && \
@@ -28,6 +29,7 @@ RUN bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
 RUN bash ./live555_install.sh
 
 RUN bash ./build.sh
+RUN chmod +x /home/vpp/vppsample/docker/svet.sh
 
 USER vpp 
 WORKDIR /home/vpp

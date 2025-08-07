@@ -22,7 +22,7 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 ## Set up and first use
 
 <!--
-**User Story 1**: Setting Up the Application  
+**User Story 1**: Setting Up the Application
 - **As a developer**, I want to set up the application in my environment, so that I can start exploring its functionality.
 
 **Acceptance Criteria**:
@@ -44,6 +44,25 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      ./install.sh loitering-detection
      ```
 
+    > **Note**: The application uses weekly builds from GitHub Container Registry (ghcr.io/open-edge-platform/) by default.
+
+    <details>
+    <summary>
+    Switch to Stable Build (Optional)
+    </summary>
+
+    To use stable releases from Docker Hub instead of weekly builds, run the following commands:
+
+    ```bash
+    sed -i 's/^DOCKER_REGISTRY=.*/DOCKER_REGISTRY=/' .env
+    sed -i 's/intel\/edge-ai-dlstreamer-pipeline-server:.*/intel\/dlstreamer-pipeline-server:3.0.0/' docker-compose.yml
+    sed -i 's/intel\/scenescape-manager:.*/intel\/scenescape-manager:v1.3.0/' docker-compose.yml
+    sed -i 's/intel\/scenescape-controller:.*/intel\/scenescape-controller:v1.3.0/' docker-compose.yml
+    ```
+    This updates the application to use stable images from [Docker Hub](https://hub.docker.com/u/intel/).
+
+    </details>
+
 ## Run the application
 
 1. **Start the Application**:
@@ -51,25 +70,25 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      ```bash
      docker compose up -d
      ```
-     
+
      <details>
      <summary>
      Check Status of Microservices
      </summary>
-     
+
      - The application starts the following microservices.
      - To check if all microservices are in Running state:
        ```bash
        docker ps
        ```
-       
+
      **Expected Services:**
      - Grafana Dashboard
-     - DL Streamer Pipeline Server  
+     - DL Streamer Pipeline Server
      - MQTT Broker
      - Node-RED (for applications without Scenescape)
      - Scenescape services (for Smart Intersection only)
-     
+
      </details>
 
 2. **Run Predefined Pipelines**:
@@ -78,23 +97,23 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      ```bash
      ./sample_start.sh
      ```
-     
+
      <details>
      <summary>
      Check Status and Stop pipelines
      </summary>
-     
+
      - To check the status:
        ```bash
        ./sample_status.sh
        ```
-     
+
      - To stop the pipelines without waiting for video streams to finish replay:
        ```bash
        ./sample_stop.sh
        ```
      </details>
-   
+
 3. **View the Application Output**:
    - Open a browser and go to `http://localhost:3000` to access the Grafana dashboard.
      - Change the localhost to your host IP if you are accessing it remotely.
@@ -185,10 +204,10 @@ Choose one of the following methods to deploy the Loitering Detection Sample App
 
 3. **No Video Streaming on Grafana Dashboard**
     - Go to the Grafana "Video Analytics Dashboard".
-    - Click on the Edit option (located on the right side) under the WebRTC Stream panel. 
+    - Click on the Edit option (located on the right side) under the WebRTC Stream panel.
     - Update the URL from `http://localhost:8083` to `http://host-ip:8083`.
 
-4. **Failed Grafana Deployment** 
+4. **Failed Grafana Deployment**
     - If unable to deploy grafana container successfully due to fail to GET "https://grafana.com/api/plugins/yesoreyeram-infinity-datasource/versions": context deadline exceeded, please ensure the proxy is configured in the ~/.docker/config.json as shown below:
 
       ```bash

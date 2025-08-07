@@ -1,17 +1,22 @@
-# Smart Intersection Sample Application
+# Overview
+
 Unified analytics of a traffic intersection
 
-## Overview
 <!--REQUIRED-->
-The **Smart Intersection Sample Application** demonstrates how edge AI technologies can address traffic management challenges using scene-based analytics. It combines analytics from multiple traffic cameras to provide a unified intersection view, enabling advanced use cases such as object tracking across multiple viewpoints, motion vector analysis (e.g., speed and heading), and understanding object interactions in three-dimensional space. This application highlights how existing camera infrastructure can be leveraged for real-time, multi-camera scene analytics, showcasing a shift from frame-based analysis to integrated, edge AI-driven solutions for smarter traffic management.
+The **Smart Intersection Sample Application** uses edge AI technologies to improve traffic management at intersections. Multiple traffic cameras work together to create a complete view of the intersection.
+
+The application tracks objects across different camera angles. It analyzes vehicle speed and direction and understands how objects interact in real space. Existing cameras can power this system without replacement. The solution provides real-time insights from multiple cameras simultaneously. This approach transforms individual camera feeds into smart, coordinated traffic monitoring.
 
 ### Example Use Cases
-- **Use Case 1**: Pedestrian Safety - Enhance safety for vulnerable road users (VRUs) at crosswalks.
-  - Example: Scene-based region of interest (ROI) analytics help identify VRUs actively using crosswalks and detect unsafe situations, such as pedestrians walking outside the designated crosswalk areas.
-- **Use Case 2**: Measure average vehicle count and average dwell time in each lane.
-  - Example: Vehicles spending too much time in a lane indicates anomalies such as stalled vehicles, accidents, and congestion.
+- **Pedestrian Safety**: Enhance safety for people crossing the street.
+  - The system tracks pedestrians at crosswalks. It alerts when people walk outside safe crossing areas.
+- **Traffic Flow Monitoring**: Count vehicles and measure dwell time in each lane.
+  - The system detects when vehicles stay too long in lanes. This identifies stalled cars, accidents, and traffic jams.
 
 ### Key Benefits
+
+The key benefits are as follows:
+
 - **Multi-camera multi-object tracking**: Enables tracking of objects across multiple camera views.
 - **Scene based analytics**: Regions of interest that span multiple views can be easily defined on the map rather than independently on each camera view. This greatly simplifies business logic, enables more flexibility in defining regions, and allows various types of sensors to be used to track vehicles and people such as lidar and radar in addition to cameras.
 - **Improved Urban Management**: Object tracks and analytics are available near-real-time on the MQTT broker to enable actionable insights for traffic monitoring and safety applications.
@@ -24,16 +29,16 @@ This section provides a high-level view of how the application integrates with a
 
 ### Example Content for Diagram Description
 - **Inputs**:
-  - **Video Files** - Four traffic intersection cameras captured simultaneously.
+  - **Video Files** - Four traffic intersection cameras that capture videos simultaneously.
   - **Scene Database** - Pre-configured intersection scene with satellite view of intersection, calibrated cameras, and regions of interest.
 
   The video recordings are used to simulate the live feed from cameras deployed at a traffic intersection. The application can be configured to work with live cameras.
 - **Processing**:
   - **Video Analytics** - Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server) utilizes a pre-trained object detection model to generate object detection metadata and and a local NTP server for synchronized timestamps. This metadata is published to the MQTT broker
-  - **Sensor Fusion** - Scene Controller Microservice fuses the metadata from video analytics utilizing scene data obtained via the Scene Management API. It uses the fused tracks and the configured analytics (regions of interest) to generate events that are published to the MQTT broker.
-  - **Aggregate Scene Analytics** - Region of interests analytics are read from the MQTT broker and stored in an InfluxDB bucket that enables time series analysis via Flux queries.
+  - **Sensor Fusion** - Scene Controller Microservice fuses the metadata from video analytics utilizing scene data obtained through the Scene Management API. It uses the fused tracks and the configured analytics (regions of interest) to generate events that are published to the MQTT broker.
+  - **Aggregate Scene Analytics** - Region of interests analytics are read from the MQTT broker and stored in an InfluxDB bucket that enables time series analysis through Flux queries.
 - **Outputs**:
-  - Fused object tracks are available on the MQTT broker and visualized via the Scene Management UI.
+  - Fused object tracks are available on the MQTT broker and visualized through the Scene Management UI.
   - Aggregate scene analytics are visualized through a Grafana dashboard.
 
 ### Key Features

@@ -18,7 +18,7 @@ By following this guide, you will learn how to:
 ## Set up and First Use
 
 <!--
-**User Story 1**: Setting Up the Application  
+**User Story 1**: Setting Up the Application
 - **As a developer**, I want to set up the application in my environment, so that I can start exploring its functionality.
 
 **Acceptance Criteria**:
@@ -39,6 +39,24 @@ By following this guide, you will learn how to:
      ```bash
      ./install.sh smart-parking
      ```
+    > **Note**: The application uses weekly builds from GitHub Container Registry (ghcr.io/open-edge-platform/) by default.
+
+    <details>
+    <summary>
+    Switch to Stable Build (Optional)
+    </summary>
+
+    To use stable releases from Docker Hub instead of weekly builds, run the following commands:
+
+    ```bash
+    sed -i 's/^DOCKER_REGISTRY=.*/DOCKER_REGISTRY=/' .env
+    sed -i 's/intel\/edge-ai-dlstreamer-pipeline-server:.*/intel\/dlstreamer-pipeline-server:3.0.0/' docker-compose.yml
+    sed -i 's/intel\/scenescape-manager:.*/intel\/scenescape-manager:v1.3.0/' docker-compose.yml
+    sed -i 's/intel\/scenescape-controller:.*/intel\/scenescape-controller:v1.3.0/' docker-compose.yml
+    ```
+    This updates the application to use stable images from [Docker Hub](https://hub.docker.com/u/intel/).
+
+    </details>
 
 ## Run the Application
 
@@ -47,44 +65,44 @@ By following this guide, you will learn how to:
      ```bash
      docker compose up -d
      ```
-     
+
      <details>
      <summary>
      Check Status of Microservices
      </summary>
-     
+
      - The application starts the following microservices.
      - To check if all microservices are in Running state:
        ```bash
        docker ps
        ```
-       
+
      **Expected Services:**
      - Grafana Dashboard
-     - DL Streamer Pipeline Server  
+     - DL Streamer Pipeline Server
      - MQTT Broker
      - Node-RED (for applications without Scenescape)
      - Scenescape services (for Smart Intersection only)
-     
+
      </details>
 
 2. **Run Predefined Pipelines**:
-   
+
    - Start video streams to run video inference pipelines:
      ```bash
      ./sample_start.sh
      ```
-     
+
      <details>
      <summary>
      Check Status and Stop pipelines
      </summary>
-     
+
      - To check the status:
        ```bash
        ./sample_status.sh
        ```
-     
+
      - To stop the pipelines without waiting for video streams to finish replay:
        ```bash
        ./sample_stop.sh
@@ -109,7 +127,7 @@ By following this guide, you will learn how to:
     - **Username**: `admin`
     - **Password**: `admin` (You will be prompted to change it on first login.)
 - In Grafana UI, the dashboard displays the detected cars in the parking lot.
-      ![Grafana Dashboard](_images/grafana.png)
+      ![Grafana Dashboard](_images/grafana-smart-parking.jpg)
 
 ### **NodeRED UI** ###
 - **URL**: [http://localhost:1880](http://localhost:1880)

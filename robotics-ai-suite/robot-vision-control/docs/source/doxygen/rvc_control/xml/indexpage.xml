@@ -1,0 +1,150 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="indexpage" kind="page">
+    <compoundname>index</compoundname>
+    <title>RVC Control</title>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para><anchor id="index_1md_README"/> This RVC Component focuses on the motion controller part of the RVC Framework. The workflow in high level detail is as follow:<itemizedlist>
+<listitem><para>API message output rvc_messages is received</para>
+</listitem><listitem><para>The active grasp plugin will compute pre-grasp and grasp pose for the gripper, also known as Tool Center Point, from now on just TCP.</para>
+</listitem><listitem><para>A State machine or equivalent programmatic approach will decide actions and if applicable move the robot to first pre-grasp and then to grasp, activating the gripper via the selected <ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionController::RVCMotionControllerInterface</ref> based plugin</para>
+</listitem></itemizedlist>
+</para>
+<sect1 id="index_1autotoc_md163">
+<title>State machine snippet</title>
+<para>The ROS2 node implementing the decisional process will need to load two plugins according to ROS2 parameters, to be loaded via launcher, command line or yaml file</para>
+<sect2 id="index_1autotoc_md164">
+<title>Example in c++</title>
+<para><programlisting><codeline><highlight class="normal">#include<sp/>&quot;rvc_dynamic_motion_controller_use_case/state_machine.hpp&quot;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;rvc_motion_controller_interface/rvc_motion_controller_interface.hpp&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;rvc_grasp_interface/rvc_grasp_interface.hpp&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&lt;pluginlib/class_loader.hpp&gt;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">int<sp/>main(int<sp/>argc,<sp/>char<sp/>**<sp/>argv)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>rclcpp::init(argc,<sp/>argv);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>auto<sp/>stateMachine<sp/>=<sp/>std::make_shared&lt;StateMachine&gt;();</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>stateMachine-&gt;declare_parameter&lt;std::string&gt;(&quot;motion_controller&quot;,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;RVCMotionController::Moveit2ServoMotionController&quot;);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>stateMachine-&gt;declare_parameter&lt;std::string&gt;(&quot;grasp_plugin&quot;,<sp/>&quot;RVCControl::NonOrientedGrasp&quot;);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>std::string<sp/>motionControllerName<sp/>=<sp/>stateMachine-&gt;get_parameter(&quot;motion_controller&quot;).as_string();</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>std::string<sp/>graspPluginName<sp/>=<sp/>stateMachine-&gt;get_parameter(&quot;grasp_plugin&quot;).as_string();</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>pluginlib::ClassLoader&lt;RVCMotionController::RVCMotionControllerInterface&gt;<sp/>motionControllerLoader(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;rvc_motion_controller_interface&quot;,<sp/>&quot;RVCMotionController::RVCMotionControllerInterface&quot;);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>std::shared_ptr&lt;RVCMotionController::RVCMotionControllerInterface&gt;<sp/>motionController;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>pluginlib::ClassLoader&lt;RVCControl::RVCGraspInterface&gt;<sp/>graspLoader(&quot;rvc_grasp_interface&quot;,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;RVCControl::RVCGraspInterface&quot;);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>std::shared_ptr&lt;RVCControl::RVCGraspInterface&gt;<sp/>graspPlugin;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>motionController<sp/>=<sp/>motionControllerLoader.createSharedInstance(motionControllerName);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>if<sp/>(!motionController-&gt;init(stateMachine))</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>return<sp/>1;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>graspPlugin<sp/>=<sp/>graspLoader.createSharedInstance(graspPluginName);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>if<sp/>(!graspPlugin-&gt;init(stateMachine))</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>return<sp/>1;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>bool<sp/>ret<sp/>=<sp/>stateMachine-&gt;init(motionController.get(),<sp/>graspPlugin.get());</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>if<sp/>(ret)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>rclcpp::spin(stateMachine);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>rclcpp::shutdown();</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>return<sp/>0;</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</sect2>
+<sect2 id="index_1autotoc_md165">
+<title>Example Configuration</title>
+<para>The main node plugin configuration can be provided by yaml file, as per following example:</para>
+<para><programlisting><codeline><highlight class="normal">/**:</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>ros__parameters:</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>motion_controller:<sp/>&quot;RVCMotionController::Moveit2ServoMotionController&quot;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>grasp_plugin:<sp/>&quot;RVCControl::NonOrientedGrasp&quot;</highlight></codeline>
+</programlisting></para>
+</sect2>
+</sect1>
+<sect1 id="index_1autotoc_md166">
+<title>Grasp Plugin</title>
+<para>The messages from the vision component are subscribed by the rvc_grasp_interface automatically when api <ulink url="doxygen.md#91">init grasp API</ulink> are called. Subscription of the rvc_message is inside the parent of every plugin and called esplicitely in the init function. Example:</para>
+<para><programlisting><codeline><highlight class="normal">bool<sp/>NonOrientedGrasp::init(rclcpp::Node::SharedPtr<sp/>node)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>auto<sp/>res<sp/>=<sp/>RVCGraspInterface::init(node);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>[...]</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+<para>Up a new message reception the interface will call the API function <ulink url="doxygen.md#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ac519ff48b07aa841270b90d2b1057d47">OnMessageReceive</ulink> to give the plugin the chance to add implementation</para>
+<para>The Pre-Grap and Grasp pose will be retrieved in the implementation of <ulink url="doxygen.md#31">getPreGrasp</ulink> and <ulink url="doxygen.md#42">getGrasp</ulink> APIs, where these poses could be computed there or on OnMessageReceive.</para>
+<para>APIs for the Grap plugin can be found at <ulink url="doxygen.md#23">Grasp API</ulink></para>
+<sect2 id="index_1autotoc_md167">
+<title>Grasp plugin config</title>
+<para>The interface init function will subscribe to the rvc_message topic, that by default is <computeroutput>object_poses</computeroutput> but can be override by:</para>
+<para><programlisting><codeline><highlight class="normal">/**:</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>ros__parameters:</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>object_pose_topic:<sp/>&quot;object_poses&quot;</highlight></codeline>
+</programlisting></para>
+<para>object_pose_topic</para>
+</sect2>
+</sect1>
+<sect1 id="index_1autotoc_md168">
+<title>MotionController Plugins</title>
+<para>MotionController interface based plugins are needed to implement a robot specific way to move the robot itself as long as the end effector or gripper</para>
+<sect2 id="index_1autotoc_md169">
+<title>Motion Controller interface API</title>
+<sect3 id="index_1autotoc_md170">
+<title>init</title>
+<para>bool init(rclcpp::Node::SharedPtr node);</para>
+<para>Called upon initialization of the plugin, with a valid rclcpp::node reference <linebreak/>
+</para>
+</sect3>
+<sect3 id="index_1autotoc_md171">
+<title>setControllerSpeed</title>
+<para>void setControllerSpeed(const double controllerSpeed); Change the controller speed, can be manipulator, gripper or both.</para>
+</sect3>
+<sect3 id="index_1autotoc_md172">
+<title>sendGoal cartesian space</title>
+<para>void sendGoal(const geometry_msgs::msg::Pose destPose);</para>
+<para>Set the target destination of the end effector, the controller decided trajectory, timings (taking controllerSpeed in considaration) and, ideally, collision maps.</para>
+</sect3>
+<sect3 id="index_1autotoc_md173">
+<title>sendGoal joint space</title>
+<para>void sendGoal(std::vector&lt;vector6d_t&gt; dest, const bool recomputeTraj);</para>
+<para>Deprecated API to send target directly in joint space</para>
+</sect3>
+</sect2>
+<sect2 id="index_1autotoc_md174">
+<title>autotoc_md174</title>
+<para>/// <simplesect kind="return"><para>true if the goal is close enough virtual void sendGripperPosition(double position) = 0; </para>
+</simplesect>
+</para>
+<sect3 id="index_1autotoc_md175">
+<title>isGoalNear</title>
+<para><verbatim>bool isGoalNear();
+</verbatim> Controller gives an indication if the target is close enough to the target</para>
+<para><verbatim>/// @brief returns current value of the gripper position.
+/// @return current value of the gripper position.
+virtual double getGripperPositionFeedback(void) = 0;
+</verbatim></para>
+<para>APIs for the Motion Controller plugin can be found at <ulink url="doxygen.md#31">MotionController API</ulink> </para>
+</sect3>
+</sect2>
+</sect1>
+    </detaileddescription>
+    <location file="README.md"/>
+  </compounddef>
+</doxygen>

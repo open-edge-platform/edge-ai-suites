@@ -85,7 +85,7 @@ a pre-step to prepare models may be needed
 
       docker pull openvino/ubuntu22_dev:2024.6.0
       $MODELS_PATH="$PWD\models"
- 
+
       docker run --rm `
           -e http_proxy -e https_proxy -e no_proxy \
           -v ${MODELS_PATH}:/output `
@@ -93,7 +93,7 @@ a pre-step to prepare models may be needed
           "omz_downloader --name resnet-50-pytorch --output_dir models && `
           omz_converter --name resnet-50-pytorch --download_dir models --output_dir models && `
           cp -r ./models/public/resnet-50-pytorch /output"
-      
+
       docker run --rm `
           -e http_proxy -e https_proxy -e no_proxy \
           -v ${MODELS_PATH}:/output `
@@ -105,20 +105,25 @@ a pre-step to prepare models may be needed
 
       </details>
 
-3. **Start the Application**:
+3. **[Optional] Update DOCKER_REGISTRY variable in `.env` file**
+   **Note: This step is required to deploy with the pre-release images**
+   - The recommended setting to use pre-release images is: `DOCKER_REGISTRY=ghcr.io/open-edge-platform/edge-ai-libraries/`
+     Please remember to include `/` at the end.
+
+4. **Start the Application**:
     - Go back to the folder of compose.yml and run the application using Docker Compose:
       ```bash
       cd ../..
       docker compose up -d
       ```
 
-4. **Verify the Application**:
+5. **Verify the Application**:
     - Check that the application is running:
       ```bash
       docker compose ps
       ```
 
-5. **Access the Application**:
+6. **Access the Application**:
     - Open a browser and go to the following endpoints to access the application:
       - Stream UI: `http://localhost:8889/stream`
       - App UI: `http://localhost:3000`
@@ -126,14 +131,14 @@ a pre-step to prepare models may be needed
       - MilvusDB UI: `http://localhost:8000/`
 
 
-6. **Run the Application**:
+7. **Run the Application**:
 
     - **Analyze Stream**: Use the predefined video and click **Analyze Stream** to start processing the video stream.
     - **Video Search**: Click the **Upload Image** button to upload your own images for search or click the **Capture Frame** button to capture and adjust frames from the video stream. Click the **Search Object** button.
 
     - **Expected Results**:
       - Matched search results, including metadata, timestamps, distance to show the confidence rate of the prediction, and frames that include detected objects (e.g., vehicles, pedestrians, bikes).
-    
+
    | ![image1](./_images/imagesearch1.png) | ![image2](./_images/imagesearch2.png) |
     |--------------------------------|--------------------------------|
 
@@ -143,7 +148,7 @@ a pre-step to prepare models may be needed
 **Modify Basic Parameters**: Explain configurable options and their impacts.
 
 ## Modify Application Parameters
-<!--**User Story 4**: Modifying Basic Configurations  
+<!--**User Story 4**: Modifying Basic Configurations
 - **As a developer**, I want to adjust simple configurations (e.g., sensor inputs or thresholds), so that I can explore the application’s flexibility.
 
 **Acceptance Criteria**:
@@ -194,7 +199,7 @@ a pre-step to prepare models may be needed
      ```json
      "detection_threshold": 0.7
      ```
---> 
+-->
 ## Make Changes
 
 1. **Change Object Detection and Object Classification Models**

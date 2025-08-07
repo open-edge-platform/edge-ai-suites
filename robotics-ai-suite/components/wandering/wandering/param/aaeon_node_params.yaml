@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+  
+aaeon_ros_node:
+  ros__parameters:
+    port_name: /dev/ttyUSB0
+    timeout_connection: 1000.0
+    try_reconnect: true
+    show_extra_verbose: false
+    frame_id: base_link
+    odom.frame_id: odom
+    publishTF: true

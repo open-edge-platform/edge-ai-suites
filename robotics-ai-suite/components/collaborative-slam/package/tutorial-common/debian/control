@@ -1,0 +1,10 @@
+Source: ros-humble-cslam-tutorial-common
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-humble-cslam-tutorial-common
+Architecture: any
+Depends: ros-humble-collab-slam, ros-humble-rviz2,
+Description: Intel Collaborative SLAM tutorial common files

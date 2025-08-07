@@ -1,0 +1,15 @@
+tar-ignore=.git
+tar-ignore=.gitignore
+tar-ignore=.github
+tar-ignore=.ci
+tar-ignore=ci
+tar-ignore=debian/*.tmpl
+tar-ignore=debian/slam-control
+tar-ignore=debian/slam-rules
+tar-ignore=debian/msgs-rules
+tar-ignore=debian/msgs-control
+tar-ignore=debian/conflict-control
+tar-ignore=.pc
+tar-ignore=*.deb
+tar-ignore=*.changes
+tar-ignore=*.buildinfo

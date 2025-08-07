@@ -1,0 +1,137 @@
+<?xml version="1.0" ?>
+
+<!--
+ Aaeon robot
+-->
+<robot name="aaeon" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find wandering_aaeon_tutorial)/urdf/common_properties.urdf.xacro"/>
+  <xacro:include filename="$(find wandering_aaeon_tutorial)/urdf/wheel.urdf.xacro" />
+  <xacro:include filename="$(find wandering_aaeon_tutorial)/urdf/layer.urdf.xacro" />
+  <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro" />
+
+  <!-- Gazebo version -->
+  <xacro:arg name="gazebo"                       default="classic" />
+
+  <!-- Namespace -->
+  <xacro:arg name="namespace"                    default=""/>
+
+  <!-- Robot_Type -->
+  <xacro:arg name="robot_type"                    default="original"/>
+
+  <!-- Mechanical properties -->
+  <xacro:property name="body_z_offset"           value="${-2.0*cm2m}" />
+  <xacro:property name="body_collision_z_offset" value="${1*cm2m}" />
+  <xacro:property name="body_mass"               value="1.300" />
+  <xacro:property name="body_radius"             value="${16.4*cm2m}" />
+  <xacro:property name="body_length"             value="${6*cm2m}" />
+
+  <xacro:if value="${'$(arg gazebo)' == 'ignition'}">
+    <xacro:property name="body_cog_x_offset"       value="${2.28*cm2m}" />
+  </xacro:if>
+  <xacro:if value="${'$(arg gazebo)' == 'classic'}">
+    <xacro:property name="body_cog_x_offset"       value="${0*cm2m}" />
+  </xacro:if>
+
+  <xacro:property name="wheel_radius"            value="${4.0*cm2m}" />
+  <xacro:property name="wheel_width"             value="${3.7*cm2m}" />
+  <xacro:property name="distance_between_wheels_x" value="${16.5*cm2m}" />
+  <xacro:property name="distance_between_wheels_y" value="${21.0*cm2m}" />
+  <xacro:property name="wheel_gap_y"               value="${1.15*cm2m}" />
+
+  <xacro:property name="base_link_z_offset"     value="${wheel_radius}"/>
+
+  <xacro:property name="bottom_layer_x_offset"       value="${0.75*cm2m}"/>
+  <!-- 2mm lower than the top of the wheels -->
+  <xacro:property name="bottom_layer_link_z_offset" value="${wheel_radius-2*mm2m}"/>
+  <xacro:property name="chassis_x_dim" value="${26*cm2m}"/>
+  <xacro:property name="chassis_y_dim" value="${15*cm2m}"/>
+  <xacro:property name="chassis_z_dim" value="${3*mm2m}"/>
+
+  <xacro:if value="${'$(arg robot_type)' == 'original'}">
+    <xacro:property name="top_layer_link_z_offset" value="${5*cm2m}"/>
+  </xacro:if>
+  <xacro:if value="${'$(arg robot_type)' == 'extended'}">
+    <xacro:property name="top_layer_link_z_offset" value="${12*cm2m}"/>
+  </xacro:if>
+
+  <!-- colors -->
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+  <material name="blue">
+    <color rgba="0.2 0.2 1 1"/>
+  </material>
+  <material name="red">
+    <color rgba="1 0.2 0.2 1"/>
+  </material>
+
+  <!-- base link -->
+  <!-- midpoint between wheels at wheel radius height from ground -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.0001" radius="0.01"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+  </link>
+
+  <!-- robot footprint on the ground -->
+  <link name="base_footprint">
+    <visual>
+      <geometry>
+        <cylinder length="0.0001" radius="0.01"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+  </link>
+  <joint name="base_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="base_footprint"/>
+    <origin rpy="0 0 0" xyz="0.0 0.0 -${base_link_z_offset}"/>
+  </joint>
+
+  <!-- bottom layer link -->
+  <xacro:layer name="bottom_layer" parent_link="base_link">
+    <origin xyz="${bottom_layer_x_offset} 0.0 ${bottom_layer_link_z_offset}"/>
+  </xacro:layer>
+
+  <!-- top layer link -->
+  <xacro:layer name="top_layer" parent_link="bottom_layer_link">
+    <origin xyz="0.0 0.0 ${top_layer_link_z_offset}"/>
+  </xacro:layer>
+
+  <!-- camera link -->
+  <xacro:sensor_d435i parent="top_layer_link">
+    <origin rpy="0 0 0" xyz="0.13 0.0 0.01"/>
+  </xacro:sensor_d435i>
+
+  <!-- motor control board w/ IMU -->
+  <xacro:if value="${'$(arg robot_type)' == 'original'}">
+  <!-- motor board is above the bottom layer -->
+  <xacro:arduino name="arduino" parent_link="bottom_layer_link">
+    <origin xyz="-0.03 0.01 0.01"/>
+  </xacro:arduino>
+  </xacro:if>
+  <xacro:if value="${'$(arg robot_type)' == 'extended'}">
+  <!-- motor board is below the bottom layer -->
+  <xacro:arduino name="arduino" parent_link="bottom_layer_link">
+    <origin xyz="-0.03 0.01 -0.01" rpy="${pi} 0 0"/>
+  </xacro:arduino>
+  </xacro:if>
+
+  <!-- wheels -->
+  <xacro:wheel name="front_left" parent_link="base_link" gazebo="$(arg gazebo)">
+    <origin rpy="0 0 0" xyz="${distance_between_wheels_x/2} ${distance_between_wheels_y/2+wheel_gap_y} 0"/>
+  </xacro:wheel>
+  <xacro:wheel name="front_right" parent_link="base_link" gazebo="$(arg gazebo)">
+    <origin rpy="0 0 0" xyz="${distance_between_wheels_x/2} -${distance_between_wheels_y/2+wheel_gap_y} 0"/>
+  </xacro:wheel>
+
+  <xacro:wheel name="rear_left" parent_link="base_link" gazebo="$(arg gazebo)">
+    <origin rpy="0 0 0" xyz="-${distance_between_wheels_x/2} ${distance_between_wheels_y/2+wheel_gap_y} 0"/>
+  </xacro:wheel>
+  <xacro:wheel name="rear_right" parent_link="base_link" gazebo="$(arg gazebo)">
+    <origin rpy="0 0 0" xyz="-${distance_between_wheels_x/2} -${distance_between_wheels_y/2+wheel_gap_y} 0"/>
+  </xacro:wheel>
+</robot>

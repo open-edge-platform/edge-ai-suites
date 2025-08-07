@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_45c44bcaf37b4342960deb8d3fc3bc09" kind="dir">
+    <compoundname>rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/src</compoundname>
+    <innerfile refid="non__oriented__grasp_8cpp">non_oriented_grasp.cpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/src/"/>
+  </compounddef>
+</doxygen>

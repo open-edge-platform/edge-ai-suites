@@ -1,0 +1,12 @@
+Source: ros-humble-rvc-panel-rviz2-plugin
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0), qtbase5-dev, ros-humble-ament-cmake, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-geometry-msgs, ros-humble-gui-settings, ros-humble-image-transport, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-rvc-messages, ros-humble-rviz-common, ros-humble-rviz-default-plugins, ros-humble-rviz-rendering, ros-humble-sensor-msgs, ros-humble-state-machine-msgs, ros-humble-std-msgs, ros-humble-std-srvs, ros-humble-tf2, ros-humble-tf2-geometry-msgs, ros-humble-tf2-ros
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-rvc-panel-rviz2-plugin
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libqt5core5a, libqt5gui5, libqt5widgets5, ros-humble-geometry-msgs, ros-humble-gui-settings, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-rviz-common, ros-humble-rviz-default-plugins, ros-humble-rviz-rendering, ros-humble-sensor-msgs, ros-humble-std-msgs, ros-humble-std-srvs, ros-humble-tf2, ros-humble-tf2-geometry-msgs, ros-humble-tf2-ros
+Description: RVC controls for RViz.

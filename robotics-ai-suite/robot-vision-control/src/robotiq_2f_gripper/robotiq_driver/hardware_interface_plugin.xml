@@ -1,0 +1,9 @@
+<library path="robotiq_driver_plugin">
+  <class name="robotiq_driver/RobotiqPositionHardwareInterface"
+         type="robotiq_driver::RobotiqPositionHardwareInterface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+		ROS2 Control System Driver for the robotic 2f 85 gripper
+    </description>
+  </class>
+</library>

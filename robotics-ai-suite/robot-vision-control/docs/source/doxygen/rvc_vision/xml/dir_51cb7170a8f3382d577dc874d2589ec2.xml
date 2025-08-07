@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_51cb7170a8f3382d577dc874d2589ec2" kind="dir">
+    <compoundname>rvc_object_detection/rvc_object_detection_engine/src</compoundname>
+    <innerfile refid="rvc__object__detection_8cpp">rvc_object_detection.cpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_object_detection/rvc_object_detection_engine/src/"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,625 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="class_t_c_p_server" kind="class" language="C++" prot="public">
+    <compoundname>TCPServer</compoundname>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_t_c_p_server_1a7959900e5f4c542c468a6a2241e0a303" prot="private" static="no" mutable="no">
+        <type>std::atomic&lt; bool &gt;</type>
+        <definition>std::atomic&lt;bool&gt; TCPServer::keep_running_</definition>
+        <argsstring></argsstring>
+        <name>keep_running_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="154" column="15" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="154" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1ace0678b8d5fdfc73de6e2b82ec1e4586" prot="private" static="no" mutable="no">
+        <type>std::thread</type>
+        <definition>std::thread TCPServer::worker_thread_</definition>
+        <argsstring></argsstring>
+        <name>worker_thread_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="155" column="15" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="155" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1a3ea0b4b2746c2ceee28adeacea1a2fe1" prot="private" static="no" mutable="no">
+        <type>std::atomic&lt; int &gt;</type>
+        <definition>std::atomic&lt;int&gt; TCPServer::listen_fd_</definition>
+        <argsstring></argsstring>
+        <name>listen_fd_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="157" column="15" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="157" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1a9c7ce13f4f27c31310646f549e4f9bfc" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int TCPServer::port_</definition>
+        <argsstring></argsstring>
+        <name>port_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="158" column="7" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="158" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1ada674bbf30c928c74803d7163a3a9911" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int TCPServer::maxfd_</definition>
+        <argsstring></argsstring>
+        <name>maxfd_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="160" column="7" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="160" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1a1d0b23c009660ec6182c80d6c146fdf3" prot="private" static="no" mutable="no">
+        <type>fd_set</type>
+        <definition>fd_set TCPServer::masterfds_</definition>
+        <argsstring></argsstring>
+        <name>masterfds_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="161" column="10" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="161" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1acf7ddfacfc0df9faa8e860cd875970ba" prot="private" static="no" mutable="no">
+        <type>fd_set</type>
+        <definition>fd_set TCPServer::tempfds_</definition>
+        <argsstring></argsstring>
+        <name>tempfds_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="162" column="10" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="162" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1a6ffdb30e03c7bfbd46964f24cb139f48" prot="private" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t TCPServer::max_clients_allowed_</definition>
+        <argsstring></argsstring>
+        <name>max_clients_allowed_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="164" column="12" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="164" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1a68ba2fcfd3aa2a8971d620115edcc723" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; int &gt;</type>
+        <definition>std::vector&lt;int&gt; TCPServer::client_fds_</definition>
+        <argsstring></argsstring>
+        <name>client_fds_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="165" column="15" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="165" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1a01cf123cf9b9fecbf4123889bc7e2c6a" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int TCPServer::self_pipe_[2]</definition>
+        <argsstring>[2]</argsstring>
+        <name>self_pipe_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="168" column="7" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="168" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1a4e658b9afe58ea38a1596bbc61c3f464" prot="private" static="no" mutable="no">
+        <type>char</type>
+        <definition>char TCPServer::input_buffer_[INPUT_BUFFER_SIZE]</definition>
+        <argsstring>[INPUT_BUFFER_SIZE]</argsstring>
+        <name>input_buffer_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="171" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="171" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1a33041ff6cba3295f80168489864cab3d" prot="private" static="no" mutable="no">
+        <type>std::function&lt; void(const int)&gt;</type>
+        <definition>std::function&lt;void(const int)&gt; TCPServer::new_connection_callback_</definition>
+        <argsstring></argsstring>
+        <name>new_connection_callback_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="173" column="17" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="173" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1af59d55d8da0c53372284f939479c6b09" prot="private" static="no" mutable="no">
+        <type>std::function&lt; void(const int)&gt;</type>
+        <definition>std::function&lt;void(const int)&gt; TCPServer::disconnect_callback_</definition>
+        <argsstring></argsstring>
+        <name>disconnect_callback_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="174" column="17" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="174" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_server_1a7d2f877eecaf7cebf5d11dcf4a978113" prot="private" static="no" mutable="no">
+        <type>std::function&lt; void(const int, char *buffer, int nbytesrecv)&gt;</type>
+        <definition>std::function&lt;void(const int, char* buffer, int nbytesrecv)&gt; TCPServer::message_callback_</definition>
+        <argsstring></argsstring>
+        <name>message_callback_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="175" column="17" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="175" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-static-attrib">
+      <memberdef kind="variable" id="class_t_c_p_server_1a906b06fe82ea08cc5ead53b20d32880d" prot="private" static="yes" mutable="no">
+        <type>const int</type>
+        <definition>const int TCPServer::INPUT_BUFFER_SIZE</definition>
+        <argsstring></argsstring>
+        <name>INPUT_BUFFER_SIZE</name>
+        <initializer>= 100</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="170" column="20" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="170" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_t_c_p_server_1a34530b6adcb6ecc2a41eafea64be376b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TCPServer::TCPServer</definition>
+        <argsstring>()=delete</argsstring>
+        <name>TCPServer</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="50" column="3"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1a6a46d69366b344b31c0844025f5ed6c5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TCPServer::TCPServer</definition>
+        <argsstring>(const int port)</argsstring>
+        <name>TCPServer</name>
+        <param>
+          <type>const int</type>
+          <declname>port</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="51" column="3" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="22" bodyend="31"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1abc497ac52355e53986a6a1bd1acb9581" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type></type>
+        <definition>TCPServer::~TCPServer</definition>
+        <argsstring>()</argsstring>
+        <name>~TCPServer</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="52" column="11" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="33" bodyend="38"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1ac4692eebb919065ff1e47c03b9f32236" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::setConnectCallback</definition>
+        <argsstring>(std::function&lt; void(const int)&gt; func)</argsstring>
+        <name>setConnectCallback</name>
+        <param>
+          <type>std::function&lt; void(const int)&gt;</type>
+          <declname>func</declname>
+        </param>
+        <briefdescription>
+<para>This callback will be triggered on clients connecting to the server. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>func</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Function handling the event information. The file descriptor created by the connection event will be passed to the function. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="60" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="60" bodyend="63"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1a876d2df45973514fce6c03166418cdf0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::setDisconnectCallback</definition>
+        <argsstring>(std::function&lt; void(const int)&gt; func)</argsstring>
+        <name>setDisconnectCallback</name>
+        <param>
+          <type>std::function&lt; void(const int)&gt;</type>
+          <declname>func</declname>
+        </param>
+        <briefdescription>
+<para>This callback will be triggered on clients disconnecting from the server. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>func</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Function handling the event information. The file descriptor created by the connection event will be passed to the function. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="71" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="71" bodyend="74"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1ac0d65df310bb5fb1a1485e51b8e3a247" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::setMessageCallback</definition>
+        <argsstring>(std::function&lt; void(const int, char *, int)&gt; func)</argsstring>
+        <name>setMessageCallback</name>
+        <param>
+          <type>std::function&lt; void(const int, char *, int)&gt;</type>
+          <declname>func</declname>
+        </param>
+        <briefdescription>
+<para>This callback will be triggered on messages received on the socket. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>func</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Function handling the event information. The file client&apos;s file_descriptor will be passed to the function as well as the actual message received from the client. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="82" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="82" bodyend="85"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1a02a481f18a96c41fda63f2caf97df239" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::start</definition>
+        <argsstring>()</argsstring>
+        <name>start</name>
+        <briefdescription>
+<para>Start event handling. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Without calling this function the socket will be advertised and bound to a tcp port, but no handling of connection requests will be performed. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="92" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="287" bodyend="292"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1ab39f6193cd657921f6cbb8185ba94341" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::shutdown</definition>
+        <argsstring>()</argsstring>
+        <name>shutdown</name>
+        <briefdescription>
+<para>Shut down the event listener thread. After calling this, no events will be handled anymore, but the socket will remain open and bound to the port. Call <ref refid="class_t_c_p_server_1a02a481f18a96c41fda63f2caf97df239" kindref="member">start()</ref> in order to restart event handling. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="99" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="101" bodyend="118"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1aa97ea739a82504a2e2aed5a1f4854f8a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool TCPServer::write</definition>
+        <argsstring>(const int fd, const uint8_t *buf, const size_t buf_len, size_t &amp;written)</argsstring>
+        <name>write</name>
+        <param>
+          <type>const int</type>
+          <declname>fd</declname>
+        </param>
+        <param>
+          <type>const uint8_t *</type>
+          <declname>buf</declname>
+        </param>
+        <param>
+          <type>const size_t</type>
+          <declname>buf_len</declname>
+        </param>
+        <param>
+          <type>size_t &amp;</type>
+          <declname>written</declname>
+        </param>
+        <briefdescription>
+<para>Writes to a client. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">fd</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>File descriptor belonging to the client the data should be sent to. The file descriptor will be given from the connection callback. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">buf</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Buffer of bytes to write </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">buf_len</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Number of bytes in the buffer </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="out">written</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Number of bytes actually written</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>True on success, false otherwise </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="112" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="294" bodyend="316"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1af09a1f9ade5d6f8a1eab80390685b513" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>uint32_t</type>
+        <definition>uint32_t TCPServer::getMaxClientsAllowed</definition>
+        <argsstring>() const</argsstring>
+        <name>getMaxClientsAllowed</name>
+        <briefdescription>
+<para>Get the maximum number of clients allowed to connect to this server. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The currently configured client limit. 0 means unlimited amount of clients allowed. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="119" column="12" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="119" bodyend="122"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1adf4db1a71bdd42642a8cc308e70dcd86" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::setMaxClientsAllowed</definition>
+        <argsstring>(const uint32_t &amp;max_clients_allowed)</argsstring>
+        <name>setMaxClientsAllowed</name>
+        <param>
+          <type>const uint32_t &amp;</type>
+          <declname>max_clients_allowed</declname>
+        </param>
+        <briefdescription>
+<para>Set the maximum number of clients allowed to connect to this server. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>0 means unlimited number of clients allowed. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="130" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="130" bodyend="133"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_t_c_p_server_1aed90edb2d1819867a70057a23b0c44ff" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::init</definition>
+        <argsstring>()</argsstring>
+        <name>init</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="136" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="40" bodyend="99"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1a500db598c69e4837dfddd67c9ff205b7" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::bind</definition>
+        <argsstring>()</argsstring>
+        <name>bind</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="137" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="120" bodyend="139"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1ab13fc3ed5ff4a7541627f094bb244cb3" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::startListen</definition>
+        <argsstring>()</argsstring>
+        <name>startListen</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="138" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="141" bodyend="151"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1a564e646ab9022ff23a2fd32617f11293" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::handleConnect</definition>
+        <argsstring>()</argsstring>
+        <name>handleConnect</name>
+        <briefdescription>
+<para>Handles connection events. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="141" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="153" bodyend="185"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1a99a850658ab186187e40d15dae46a6b6" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::handleDisconnect</definition>
+        <argsstring>(const int fd)</argsstring>
+        <name>handleDisconnect</name>
+        <param>
+          <type>const int</type>
+          <declname>fd</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="143" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="241" bodyend="259"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1ae2efaa9e91c5005afb519b94336a3f48" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::readData</definition>
+        <argsstring>(const int fd)</argsstring>
+        <name>readData</name>
+        <param>
+          <type>const int</type>
+          <declname>fd</declname>
+        </param>
+        <briefdescription>
+<para>read data from socket </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="146" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="261" bodyend="276"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1accfeb8f63829ffe3061fb2f77e3b7ee1" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::spin</definition>
+        <argsstring>()</argsstring>
+        <name>spin</name>
+        <briefdescription>
+<para>Event handler. Blocks until activity on any client or connection attempt. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="149" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="187" bodyend="239"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_server_1a8b7379afa5057bfba2fe0b0f5eb6f3fe" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPServer::worker</definition>
+        <argsstring>()</argsstring>
+        <name>worker</name>
+        <briefdescription>
+<para>Runs spin() as long as keep_running_ is set to true. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="152" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_server.cpp" bodystart="278" bodyend="285"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" line="47" column="1" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_server.hpp" bodystart="48" bodyend="176"/>
+    <listofallmembers>
+      <member refid="class_t_c_p_server_1a500db598c69e4837dfddd67c9ff205b7" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>bind</name></member>
+      <member refid="class_t_c_p_server_1a68ba2fcfd3aa2a8971d620115edcc723" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>client_fds_</name></member>
+      <member refid="class_t_c_p_server_1af59d55d8da0c53372284f939479c6b09" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>disconnect_callback_</name></member>
+      <member refid="class_t_c_p_server_1af09a1f9ade5d6f8a1eab80390685b513" prot="public" virt="non-virtual"><scope>TCPServer</scope><name>getMaxClientsAllowed</name></member>
+      <member refid="class_t_c_p_server_1a564e646ab9022ff23a2fd32617f11293" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>handleConnect</name></member>
+      <member refid="class_t_c_p_server_1a99a850658ab186187e40d15dae46a6b6" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>handleDisconnect</name></member>
+      <member refid="class_t_c_p_server_1aed90edb2d1819867a70057a23b0c44ff" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>init</name></member>
+      <member refid="class_t_c_p_server_1a4e658b9afe58ea38a1596bbc61c3f464" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>input_buffer_</name></member>
+      <member refid="class_t_c_p_server_1a906b06fe82ea08cc5ead53b20d32880d" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>INPUT_BUFFER_SIZE</name></member>
+      <member refid="class_t_c_p_server_1a7959900e5f4c542c468a6a2241e0a303" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>keep_running_</name></member>
+      <member refid="class_t_c_p_server_1a3ea0b4b2746c2ceee28adeacea1a2fe1" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>listen_fd_</name></member>
+      <member refid="class_t_c_p_server_1a1d0b23c009660ec6182c80d6c146fdf3" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>masterfds_</name></member>
+      <member refid="class_t_c_p_server_1a6ffdb30e03c7bfbd46964f24cb139f48" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>max_clients_allowed_</name></member>
+      <member refid="class_t_c_p_server_1ada674bbf30c928c74803d7163a3a9911" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>maxfd_</name></member>
+      <member refid="class_t_c_p_server_1a7d2f877eecaf7cebf5d11dcf4a978113" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>message_callback_</name></member>
+      <member refid="class_t_c_p_server_1a33041ff6cba3295f80168489864cab3d" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>new_connection_callback_</name></member>
+      <member refid="class_t_c_p_server_1a9c7ce13f4f27c31310646f549e4f9bfc" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>port_</name></member>
+      <member refid="class_t_c_p_server_1ae2efaa9e91c5005afb519b94336a3f48" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>readData</name></member>
+      <member refid="class_t_c_p_server_1a01cf123cf9b9fecbf4123889bc7e2c6a" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>self_pipe_</name></member>
+      <member refid="class_t_c_p_server_1ac4692eebb919065ff1e47c03b9f32236" prot="public" virt="non-virtual"><scope>TCPServer</scope><name>setConnectCallback</name></member>
+      <member refid="class_t_c_p_server_1a876d2df45973514fce6c03166418cdf0" prot="public" virt="non-virtual"><scope>TCPServer</scope><name>setDisconnectCallback</name></member>
+      <member refid="class_t_c_p_server_1adf4db1a71bdd42642a8cc308e70dcd86" prot="public" virt="non-virtual"><scope>TCPServer</scope><name>setMaxClientsAllowed</name></member>
+      <member refid="class_t_c_p_server_1ac0d65df310bb5fb1a1485e51b8e3a247" prot="public" virt="non-virtual"><scope>TCPServer</scope><name>setMessageCallback</name></member>
+      <member refid="class_t_c_p_server_1ab39f6193cd657921f6cbb8185ba94341" prot="public" virt="non-virtual"><scope>TCPServer</scope><name>shutdown</name></member>
+      <member refid="class_t_c_p_server_1accfeb8f63829ffe3061fb2f77e3b7ee1" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>spin</name></member>
+      <member refid="class_t_c_p_server_1a02a481f18a96c41fda63f2caf97df239" prot="public" virt="non-virtual"><scope>TCPServer</scope><name>start</name></member>
+      <member refid="class_t_c_p_server_1ab13fc3ed5ff4a7541627f094bb244cb3" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>startListen</name></member>
+      <member refid="class_t_c_p_server_1a34530b6adcb6ecc2a41eafea64be376b" prot="public" virt="non-virtual"><scope>TCPServer</scope><name>TCPServer</name></member>
+      <member refid="class_t_c_p_server_1a6a46d69366b344b31c0844025f5ed6c5" prot="public" virt="non-virtual"><scope>TCPServer</scope><name>TCPServer</name></member>
+      <member refid="class_t_c_p_server_1acf7ddfacfc0df9faa8e860cd875970ba" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>tempfds_</name></member>
+      <member refid="class_t_c_p_server_1a8b7379afa5057bfba2fe0b0f5eb6f3fe" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>worker</name></member>
+      <member refid="class_t_c_p_server_1ace0678b8d5fdfc73de6e2b82ec1e4586" prot="private" virt="non-virtual"><scope>TCPServer</scope><name>worker_thread_</name></member>
+      <member refid="class_t_c_p_server_1aa97ea739a82504a2e2aed5a1f4854f8a" prot="public" virt="non-virtual"><scope>TCPServer</scope><name>write</name></member>
+      <member refid="class_t_c_p_server_1abc497ac52355e53986a6a1bd1acb9581" prot="public" virt="virtual"><scope>TCPServer</scope><name>~TCPServer</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

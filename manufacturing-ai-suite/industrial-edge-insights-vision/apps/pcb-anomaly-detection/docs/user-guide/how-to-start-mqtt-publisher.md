@@ -20,6 +20,12 @@ With the above configuration, the broker listens on port 1883.
         MQTT_HOST: <HOST_IP>
         MQTT_PORT: 1883
     ```
+    Once the changes are done, bring the services up. Restart them if already running.
+
+    ```sh
+    docker compose down # if already running
+    docker compose up -d
+    ```
 
 The below CURL command publishes metadata to a MQTT broker and sends frames over WebRTC for streaming.
 

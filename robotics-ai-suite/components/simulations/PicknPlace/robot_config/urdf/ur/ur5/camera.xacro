@@ -1,0 +1,88 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model xmlns:xacro="http://www.ros.org/wiki/xacro" name="camera">
+        <xacro:arg name="name" default="camera"/>
+        <xacro:arg name="parent" default="world"/>
+        <xacro:arg name="xyz"  default="0 0 0" />
+        <xacro:arg name="rpy" default="0 0 0" />
+        <xacro:arg name="type"  default="camera" />
+        <xacro:arg name="rate"  default="30" />
+        <xacro:arg name="radius"  default="0.01" />
+        <xacro:arg name="length"  default="0.01" />
+
+    <pose>$(arg xyz) $(arg rpy)</pose>
+    <static>true</static>
+
+    <link name="link_$(arg name)">
+      <inertial>
+        <mass value="1e-5" />
+        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+      </inertial>
+
+      <collision name="collision_$(arg name)">
+        <geometry>
+        <cylinder>
+           <radius>$(arg radius)</radius>
+           <length>$(arg length)</length>
+        </cylinder>
+        </geometry>
+      </collision>
+
+      <visual name="visual_$(arg name)">
+        <geometry>
+        <cylinder>
+           <radius>$(arg radius)</radius>
+           <length>$(arg length)</length>
+        </cylinder>
+        </geometry>
+      </visual>
+
+      <sensor name="sensor_$(arg name)" type="camera">
+        <pose>0 0 0 0 1.5708 0 0</pose>
+        <camera name="$(arg name)">
+          <horizontal_fov>1.3962634</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>300</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <always_on>true</always_on>
+        <update_rate>$(arg rate)</update_rate>
+        <plugin name="camera_controller_$(arg name)" filename="libgazebo_ros_camera_sharedmem.so">
+          <ros>
+             
+          </ros>
+          <robotNamespace>/</robotNamespace>
+          <cameraName>$(arg name)</cameraName>
+          <imageTopicName>image_raw</imageTopicName>
+          <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+          <hackBaseline>0.07</hackBaseline>
+          <distortionK1>0.0</distortionK1>
+          <distortionK2>0.0</distortionK2>
+          <distortionK3>0.0</distortionK3>
+          <distortionT1>0.0</distortionT1>
+          <distortionT2>0.0</distortionT2>
+          <min_depth>0.001</min_depth>
+          <Cx>0.0</Cx>
+          <Cy>0.0</Cy>
+          <Fx>100.0</Fx>
+          <Fy>100.0</Fy>
+          <maxIntensity>1.0</maxIntensity>
+          <alwaysOn>true</alwaysOn>
+          <updateRate>$(arg rate)</updateRate>
+          <cameraInfoUpdateRate>$(arg rate)</cameraInfoUpdateRate>
+        </plugin>
+      </sensor>
+    </link>
+  </model>
+</sdf>

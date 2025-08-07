@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_f3b8134e20c4d7f227095b87a6a94b01" kind="dir">
+    <compoundname>rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src</compoundname>
+    <innerfile refid="tcp__server_8cpp">tcp_server.cpp</innerfile>
+    <innerfile refid="tcp__socket_8cpp">tcp_socket.cpp</innerfile>
+    <innerfile refid="ur__pendant__motion__controller_8cpp">ur_pendant_motion_controller.cpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/"/>
+  </compounddef>
+</doxygen>

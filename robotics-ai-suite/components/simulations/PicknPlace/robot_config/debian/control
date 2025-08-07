@@ -1,0 +1,12 @@
+Source: ros-humble-robot-config
+Section: misc
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: debhelper (>= 9.0.0), ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-builtin-interfaces, ros-humble-geometry-msgs, ros-humble-moveit-core, ros-humble-std-msgs, ros-humble-xacro
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-robot-config
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3-setuptools, ros-humble-action-msgs, ros-humble-control-msgs, ros-humble-controller-interface, ros-humble-controller-manager, ros-humble-controller-manager-msgs, ros-humble-gazebo-ros-pkgs, ros-humble-gazebo-ros2-control, ros-humble-geometry-msgs, ros-humble-hardware-interface, ros-humble-joint-state-broadcaster, ros-humble-joint-trajectory-controller, ros-humble-launch-ros, ros-humble-moveit-core, ros-humble-moveit-msgs, ros-humble-moveit-planners-ompl, ros-humble-moveit-ros-move-group, ros-humble-moveit-simple-controller-manager, ros-humble-nav2-common, ros-humble-nav2-controller, ros-humble-navigation2, ros-humble-rclpy, ros-humble-robot-controllers-interface, ros-humble-robot-controllers-msgs, ros-humble-robot-state-publisher, ros-humble-ros2controlcli, ros-humble-rosidl-default-runtime, ros-humble-slam-toolbox, ros-humble-std-srvs, ros-humble-trajectory-msgs, ros-humble-xacro
+Description: This package demonstrate spawning multiple Robotic arms in Gazebo simulation environment separated by their own namespace

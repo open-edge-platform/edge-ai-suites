@@ -1,0 +1,12 @@
+Source: ros-humble-robotiq-controllers
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0), ros-humble-ament-cmake, ros-humble-control-msgs, ros-humble-controller-interface, ros-humble-forward-command-controller, ros-humble-geometry-msgs, ros-humble-joint-trajectory-controller, ros-humble-pluginlib, ros-humble-rclcpp-lifecycle, ros-humble-rcutils, ros-humble-realtime-tools, ros-humble-sensor-msgs, ros-humble-std-msgs, ros-humble-std-srvs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-robotiq-controllers
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-humble-control-msgs, ros-humble-controller-interface, ros-humble-forward-command-controller, ros-humble-geometry-msgs, ros-humble-joint-trajectory-controller, ros-humble-pluginlib, ros-humble-rclcpp-lifecycle, ros-humble-rcutils, ros-humble-realtime-tools, ros-humble-sensor-msgs, ros-humble-std-msgs, ros-humble-std-srvs
+Description: Provides controllers for robotiq 2f gripper.

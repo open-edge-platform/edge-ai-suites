@@ -1,5 +1,5 @@
 DOCKER_IMAGE=${1-tfcc:latest}
-NPU_ON=${2-true}
+NPU_ON=${2-false}
  
 EXTRA_PARAMS=""
  

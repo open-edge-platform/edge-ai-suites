@@ -1,6 +1,3 @@
-> [!WARNING]
-> The sample is not functional as is. Work in progress to release the sample model files.
-
 # Get Started
 
 -   **Time to Complete:** 30 minutes
@@ -16,7 +13,7 @@
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
     ```sh
     git clone https://github.com/open-edge-platform/edge-ai-suites.git
-    cd manufacturing-ai-suite/industrial-edge-insights-vision
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
     ```
 2.  Set app specific environment variable file
     ```sh
@@ -26,6 +23,13 @@
 3.  Edit the HOST_IP and other environment variables in `.env` file as follows
     ```sh
     HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.
+
+    MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
+
+    MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
+    MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+
+    MR_URL= # Model registry url. Example http://<IP_address_of_model_registry_server>:32002
 
     MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
@@ -102,7 +106,7 @@
     Launching pipeline: worker_safety_gear_detection
     Extracting payload for pipeline: worker_safety_gear_detection
     Found 1 payload(s) for pipeline: worker_safety_gear_detection
-    Payload for pipeline 'worker_safety_gear_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"worker_safety"}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml","device":"CPU"}}}
+    Payload for pipeline 'worker_safety_gear_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"worker_safety"}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml","device":"CPU"}}}
     Posting payload to REST server at http://10.223.23.156:8080/pipelines/user_defined_pipelines/worker_safety_gear_detection
     Payload for pipeline 'worker_safety_gear_detection' posted successfully. Response: "784b87b45d1511f08ab0da88aa49c01e"
     ```
