@@ -50,7 +50,7 @@ You will see two panels side-by-side: `Gazebo` GUI on the left and |ros| rviz di
 
 -  The green square robot is a guide robot (namely, the target), which will follow a pre-defined trajectory.
 
--  The gray circular robot is a `TurtleBot3 <https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation>`__ robot, which will follow the guide robot. |tb3| robot is equipped with a 2D Lidar and a |realsense| depth camera. In this demo, the 2D Lidar is used as the input topic.
+-  The gray circular robot is a `TurtleBot3 <https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation>`__ robot, which will follow the guide robot. |tb3| robot is equipped with a 2D Lidar and a |realsense| Depth Camera. In this demo, the 2D Lidar is used as the input topic.
 
 **Both** of the following conditions need to be fulfilled to start the |tb3| robot:
 
