@@ -139,6 +139,8 @@ By following this guide, you will learn how to:
     curl http://localhost:8080/pipelines
     ```
 - **WebRTC**: [http://localhost:8889](http://localhost:8889)
+- **WebRTC**: [http://localhost:8889/object_detection_1](http://localhost:8889/object_detection_1)
+
 
 ## **Stop the Application**:
 
