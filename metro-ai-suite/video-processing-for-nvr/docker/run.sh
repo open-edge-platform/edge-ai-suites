@@ -35,7 +35,7 @@ if [[ "$NPU_ON" == "true" ]]; then
         -v /tmp/.X11-unix:/tmp/.X11-unix \
         -v $HOME/.Xauthority:/root/.Xauthority:rw \
         -w /home/vpp \
-        $DOCKER_IMAGE bash /home/vpp/vppsample/docker/svet.sh
+        $DOCKER_IMAGE
 else
     docker run -it --net=host \
         -e no_proxy=localhost,127.0.0.1 \

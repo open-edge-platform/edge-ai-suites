@@ -25,4 +25,5 @@ source /opt/intel/vppsdk/env.sh
 Make sure docker is corrently installed and configured. 
 
 ## Run docker container  
-1. Run a sample test in docker container : `bash run.sh`  
+1. Run `sudo init 3` switch to non-GUI mode
+2. Run a sample test in docker container : `bash run.sh`  
