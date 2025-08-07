@@ -42,7 +42,7 @@ jobs:
           cd vlm-openvino-serving
           # docker build -t vlm-openvino-serving:latest -f docker/Dockerfile .
           cd ../../..
-          ls
+          cd edge-ai-suites-repo
           docker build -t visual-search-qa-app:latest -f visual-search-question-and-answering/src/Dockerfile .
           
       - name: Run trivy Scan - dataprep-visualdata-milvus
