@@ -5,6 +5,7 @@ Kubernetes
 kubectl
 http
 localhost
+milvusdb
 scalable
 modularity
 Pinecone

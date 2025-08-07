@@ -1,0 +1,419 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="matcher_8cpp" kind="file" language="C++">
+    <compoundname>matcher.cpp</compoundname>
+    <includes refid="matcher_8hpp" local="yes">matcher.hpp</includes>
+    <incdepgraph>
+      <node id="20">
+        <label>pcl/point_types.h</label>
+      </node>
+      <node id="9">
+        <label>pcl/filters/passthrough.h</label>
+      </node>
+      <node id="19">
+        <label>pcl/point_cloud.h</label>
+      </node>
+      <node id="10">
+        <label>pcl/registration/sample_consensus_prerejective.h</label>
+      </node>
+      <node id="4">
+        <label>stdexcept</label>
+      </node>
+      <node id="3">
+        <label>string</label>
+      </node>
+      <node id="15">
+        <label>rclcpp/rclcpp.hpp</label>
+      </node>
+      <node id="18">
+        <label>omp.h</label>
+      </node>
+      <node id="12">
+        <label>pcl/registration/ia_ransac.h</label>
+      </node>
+      <node id="6">
+        <label>pcl/features/fpfh.h</label>
+      </node>
+      <node id="11">
+        <label>pcl/filters/statistical_outlier_removal.h</label>
+      </node>
+      <node id="17">
+        <label>pcl/features/fpfh_omp.h</label>
+      </node>
+      <node id="1">
+        <label>rvc_pose_detector/src/matcher.cpp</label>
+        <link refid="matcher_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>matcher.hpp</label>
+        <link refid="matcher_8hpp_source"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+      </node>
+      <node id="16">
+        <label>pcl/features/normal_3d_omp.h</label>
+      </node>
+      <node id="5">
+        <label>pcl/io/vtk_lib_io.h</label>
+      </node>
+      <node id="13">
+        <label>pcl/registration/icp.h</label>
+      </node>
+      <node id="7">
+        <label>pcl/features/normal_3d.h</label>
+      </node>
+      <node id="14">
+        <label>pcl/io/pcd_io.h</label>
+      </node>
+      <node id="8">
+        <label>pcl/filters/voxel_grid.h</label>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="matcher_8cpp_1a6926864424637458c7d1a91456639cf4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>pcl::PointCloud&lt; PointT &gt;::Ptr</type>
+        <definition>pcl::PointCloud&lt;PointT&gt;::Ptr load_pcd_file</definition>
+        <argsstring>(const std::string &amp;path)</argsstring>
+        <name>load_pcd_file</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>path</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/src/matcher.cpp" line="27" column="23" bodyfile="rvc_pose_detector/src/matcher.cpp" bodystart="27" bodyend="38"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"></highlight></codeline>
+<codeline lineno="3"><highlight class="comment">INTEL<sp/>CONFIDENTIAL</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"></highlight></codeline>
+<codeline lineno="5"><highlight class="comment">Copyright<sp/>(C)<sp/>2022<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"></highlight></codeline>
+<codeline lineno="7"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>Intel<sp/>copyrighted<sp/>materials,</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">and<sp/>your<sp/>use<sp/>of<sp/>them<sp/>is<sp/>governed<sp/>by<sp/>the<sp/>express<sp/>license<sp/>under<sp/>which<sp/>they</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">were<sp/>provided<sp/>to<sp/>you<sp/>(License).<sp/>Unless<sp/>the<sp/>License<sp/>provides<sp/>otherwise,</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">you<sp/>may<sp/>not<sp/>use,<sp/>modify,<sp/>copy,<sp/>publish,<sp/>distribute,<sp/>disclose<sp/>or<sp/>transmit</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">this<sp/>software<sp/>or<sp/>the<sp/>related<sp/>documents<sp/>without<sp/>Intel&apos;s<sp/>prior<sp/>written</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">permission.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment"></highlight></codeline>
+<codeline lineno="14"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>provided<sp/>as<sp/>is,<sp/>with<sp/>no</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">express<sp/>or<sp/>implied<sp/>warranties,<sp/>other<sp/>than<sp/>those<sp/>that<sp/>are<sp/>expressly<sp/>stated</highlight></codeline>
+<codeline lineno="16"><highlight class="comment">in<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="17"><highlight class="comment"></highlight></codeline>
+<codeline lineno="18"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;matcher.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">RVC;</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="comment">//<sp/>this<sp/>may<sp/>seem<sp/>like<sp/>unnecessary<sp/>indirection,<sp/>but<sp/>returning<sp/>the<sp/>cloud<sp/>by<sp/>value</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="comment">//<sp/>here<sp/>lets<sp/>us<sp/>implement<sp/>ObjectMatcher(filename)<sp/>using<sp/>C++11<sp/>ctor<sp/>delegation</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="comment">//<sp/>instead<sp/>of<sp/>replicating<sp/>matcher-initalization<sp/>logic</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal">pcl::PointCloud&lt;PointT&gt;::Ptr<sp/>load_pcd_file(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string<sp/>&amp;<sp/>path)</highlight></codeline>
+<codeline lineno="28"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/>pcl::PointCloud&lt;PointT&gt;::Ptr<sp/>cloud<sp/>=<sp/>std::make_shared&lt;pcl::PointCloud&lt;PointT&gt;&gt;();</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(pcl::io::loadPCDFile&lt;PointT&gt;(path,<sp/>*cloud)<sp/>!=<sp/>0)</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">new</highlight><highlight class="normal"><sp/>std::runtime_error(</highlight><highlight class="stringliteral">&quot;Failed<sp/>to<sp/>load<sp/>point-cloud<sp/>file&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/>RCLCPP_INFO(rclcpp::get_logger(</highlight><highlight class="stringliteral">&quot;PCL&quot;</highlight><highlight class="normal">),<sp/></highlight><highlight class="stringliteral">&quot;loading<sp/>%s&quot;</highlight><highlight class="normal">,<sp/>path.c_str());</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>cloud;</highlight></codeline>
+<codeline lineno="38"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight><highlight class="comment">//<sp/>TODO<sp/>this<sp/>entire<sp/>blocks<sp/>of<sp/>computing<sp/>normal<sp/>and<sp/>fast<sp/>point<sp/>feature</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight><highlight class="comment">//<sp/>histograms<sp/>is<sp/>part<sp/>of<sp/>ros-perception/perception_pcl</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"></highlight><highlight class="comment">//<sp/>At<sp/>the<sp/>moment,<sp/>keeping<sp/>here<sp/>as<sp/>it<sp/>is<sp/>but<sp/>it<sp/>makes<sp/>sense<sp/>to<sp/>change</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight><highlight class="comment">//<sp/>to<sp/>leverage<sp/>that<sp/>and<sp/>reduce<sp/>technical<sp/>debt</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_1_1_object_matcher_1adcdf9f2d7d819d4a7995f74bbb662a2e" kindref="member">ObjectMatcher::compute_fpfh_features</ref>(</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/>pcl::PointCloud&lt;PointT&gt;::ConstPtr<sp/>points,</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_r_v_c_1_1_match_settings" kindref="compound">MatchSettings</ref><sp/>&amp;<sp/>config,</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/>pcl::PointCloud&lt;pcl::FPFHSignature33&gt;<sp/>&amp;<sp/>out)</highlight></codeline>
+<codeline lineno="48"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>point_normals<sp/>=<sp/>std::make_shared&lt;pcl::PointCloud&lt;pcl::Normal&gt;&gt;();</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>tree<sp/>=<sp/>std::make_shared&lt;pcl::search::KdTree&lt;PointT&gt;&gt;();</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"></highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/>pcl::NormalEstimationOMP&lt;PointT,<sp/>pcl::Normal&gt;<sp/>est_normal;</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/>pcl::FPFHEstimationOMP&lt;PointT,<sp/>pcl::Normal,<sp/>pcl::FPFHSignature33&gt;<sp/>est_sig;</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"></highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>estimate<sp/>normals<sp/>at<sp/>each<sp/>point</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//est_normal.setNumberOfThreads(omp_get_num_procs());</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/>est_normal.setNumberOfThreads(4);</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"></highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/>est_normal.setSearchMethod(tree);</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/>est_normal.setRadiusSearch(config.normal_search_radius);</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/>est_normal.setInputCloud(points);</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/>est_normal.compute(*point_normals);</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>compute<sp/>shape<sp/>descriptor</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//est_sig.setNumberOfThreads(omp_get_num_procs());</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/>est_sig.setNumberOfThreads(4);</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/>est_sig.setInputCloud(points);</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/>est_sig.setInputNormals(point_normals);</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/>est_sig.setSearchMethod(tree);</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/>est_sig.setRadiusSearch(config.fpfh_search_radius);</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/>est_sig.compute(out);</highlight></codeline>
+<codeline lineno="72"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"></highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><ref refid="class_r_v_c_1_1_object_matcher_1a7384590c535fea91b38f4fd9a976f6ab" kindref="member">ObjectMatcher::ObjectMatcher</ref>(</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string<sp/>name,</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string<sp/>&amp;<sp/>load_path,</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="struct_r_v_c_1_1_match_settings" kindref="compound">MatchSettings</ref><sp/>settings</highlight></codeline>
+<codeline lineno="78"><highlight class="normal">)</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/>:<sp/><ref refid="class_r_v_c_1_1_object_matcher" kindref="compound">ObjectMatcher</ref>(name,<sp/>load_pcd_file(load_path),<sp/>std::move(settings))</highlight></codeline>
+<codeline lineno="80"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><sp/><sp/>RCLCPP_INFO(rclcpp::get_logger(</highlight><highlight class="stringliteral">&quot;matcher&quot;</highlight><highlight class="normal">),<sp/></highlight><highlight class="stringliteral">&quot;constructor<sp/>1&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="82"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"></highlight></codeline>
+<codeline lineno="84"><highlight class="normal">ObjectMatcher::ObjectMatcher(</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string<sp/>name,</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/>pcl::PointCloud&lt;PointT&gt;::Ptr<sp/>points,</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="struct_r_v_c_1_1_match_settings" kindref="compound">MatchSettings</ref><sp/>settings</highlight></codeline>
+<codeline lineno="88"><highlight class="normal">)</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/>:<sp/>m_name(name),</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/>m_config(settings),</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/>m_points(std::move(points)),</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/>m_signature(std::make_shared&lt;pcl::PointCloud&lt;pcl::FPFHSignature33&gt;&gt;())</highlight></codeline>
+<codeline lineno="93"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/>RCLCPP_INFO(rclcpp::get_logger(</highlight><highlight class="stringliteral">&quot;matcher&quot;</highlight><highlight class="normal">),<sp/></highlight><highlight class="stringliteral">&quot;constructor<sp/>2&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"></highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Compute<sp/>matching<sp/>features.<sp/>For<sp/>speed,<sp/>first<sp/>downsample<sp/>the<sp/>point<sp/>cloud</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>using<sp/>a<sp/>voxel<sp/>grid.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(m_config.downsampling<sp/>&gt;<sp/>0)</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>pcl::VoxelGrid&lt;PointT&gt;<sp/>voxels;</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>voxels.setInputCloud(m_points);</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>use<sp/>same<sp/>resolution<sp/>on<sp/>X,<sp/>Y,<sp/>Z</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>voxels.setLeafSize(</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_config.downsampling,</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_config.downsampling,</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_config.downsampling);</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>voxels.filter(*m_points);</highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"></highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/>RCLCPP_INFO(rclcpp::get_logger(</highlight><highlight class="stringliteral">&quot;matcher&quot;</highlight><highlight class="normal">),<sp/></highlight><highlight class="stringliteral">&quot;compute_fpfh_features&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>precompute<sp/>FPFH<sp/>features<sp/>for<sp/>later<sp/>matches</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/>compute_fpfh_features(m_points,<sp/>m_config,<sp/>*m_signature);</highlight></codeline>
+<codeline lineno="113"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"></highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><ref refid="struct_r_v_c_1_1_match_result" kindref="compound">MatchResult</ref><sp/>ObjectMatcher::match(pcl::PointCloud&lt;PointT&gt;::Ptr<sp/>input_rs_cloud)</highlight></codeline>
+<codeline lineno="116"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="struct_r_v_c_1_1_match_result" kindref="compound">MatchResult</ref><sp/>out<sp/>=<sp/>{};</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>downsampled_rs_cloud<sp/>=<sp/>std::make_shared&lt;pcl::PointCloud&lt;PointT&gt;&gt;();</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>filtered_rs_cloud<sp/>=<sp/>std::make_shared&lt;pcl::PointCloud&lt;PointT&gt;&gt;();</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>thresholded_rs_cloud<sp/>=<sp/>std::make_shared&lt;pcl::PointCloud&lt;PointT&gt;&gt;();</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"></highlight></codeline>
+<codeline lineno="122"><highlight class="normal"></highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>downsample<sp/>if<sp/>needed</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(m_config.downsample_clouds<sp/>&gt;<sp/>0)</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>pcl::VoxelGrid&lt;PointT&gt;<sp/>voxels;</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>voxels.setInputCloud(input_rs_cloud);</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>voxels.setLeafSize(</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_config.downsample_clouds,</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_config.downsample_clouds,</highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_config.downsample_clouds);</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>voxels.filter(*downsampled_rs_cloud);</highlight></codeline>
+<codeline lineno="133"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="134"><highlight class="normal"></highlight></codeline>
+<codeline lineno="135"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(downsampled_rs_cloud-&gt;size()<sp/>==<sp/>0)</highlight></codeline>
+<codeline lineno="136"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="137"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="struct_r_v_c_1_1_match_result" kindref="compound">MatchResult</ref><sp/>out<sp/>=<sp/>{};</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>out.position<sp/>&lt;&lt;<sp/>0.0,<sp/>0.0,<sp/>0.0;</highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>out.xform<sp/>&lt;&lt;<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0;</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>out.matched<sp/>=<sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_INFO(rclcpp::get_logger(</highlight><highlight class="stringliteral">&quot;matcher&quot;</highlight><highlight class="normal">),<sp/></highlight><highlight class="stringliteral">&quot;Downsample<sp/>filter<sp/>output<sp/>size<sp/>0<sp/>for<sp/>%s&quot;</highlight><highlight class="normal">,<sp/>m_name.c_str()<sp/>);</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>out;</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"></highlight></codeline>
+<codeline lineno="145"><highlight class="normal"></highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(m_config.stddev_mul_threshold<sp/>&gt;<sp/>0.0)</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>remove<sp/>statistical<sp/>outliers<sp/>in<sp/>input<sp/>cloud</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="149"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>pcl::StatisticalOutlierRemoval&lt;PointT&gt;<sp/>filter;</highlight></codeline>
+<codeline lineno="150"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>filter.setInputCloud(downsampled_rs_cloud);</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>filter.setMeanK(50);</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>filter.setStddevMulThresh(m_config.stddev_mul_threshold);</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>filter.filter(*filtered_rs_cloud);</highlight></codeline>
+<codeline lineno="154"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="155"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="157"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>filtered_rs_cloud<sp/>=<sp/>downsampled_rs_cloud;</highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//RCLCPP_INFO(rclcpp::get_logger(&quot;matcher&quot;),<sp/>&quot;stddev_mul_threshold<sp/>0<sp/>for<sp/>%s,<sp/>size<sp/>%ld&quot;,<sp/>m_name.c_str(),filtered_rs_cloud-&gt;size()<sp/>);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="159"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="160"><highlight class="normal"></highlight></codeline>
+<codeline lineno="161"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>remove<sp/>Z<sp/>outliers</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="162"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(m_config.z_threshold<sp/>&gt;<sp/>0.0)</highlight></codeline>
+<codeline lineno="163"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="164"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>pcl::PassThrough&lt;PointT&gt;<sp/>filter;</highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>filter.setInputCloud(filtered_rs_cloud);</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>filter.setFilterFieldName(</highlight><highlight class="stringliteral">&quot;z&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>filter.setFilterLimits(0.0,<sp/>m_config.z_threshold);</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>filter.filter(*thresholded_rs_cloud);</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="170"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="171"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>thresholded_rs_cloud<sp/>=<sp/>filtered_rs_cloud;</highlight></codeline>
+<codeline lineno="173"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//RCLCPP_INFO(rclcpp::get_logger(&quot;matcher&quot;),<sp/>&quot;z_threshold<sp/>0<sp/>for<sp/>%s,<sp/>size<sp/>%ld&quot;,<sp/>m_name.c_str(),<sp/>thresholded_rs_cloud-&gt;size()<sp/>);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="174"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="175"><highlight class="normal"></highlight></codeline>
+<codeline lineno="176"><highlight class="normal"></highlight></codeline>
+<codeline lineno="177"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(thresholded_rs_cloud-&gt;size()<sp/>==<sp/>0)</highlight></codeline>
+<codeline lineno="178"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="179"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="struct_r_v_c_1_1_match_result" kindref="compound">MatchResult</ref><sp/>out<sp/>=<sp/>{};</highlight></codeline>
+<codeline lineno="180"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>out.position<sp/>&lt;&lt;<sp/>0.0,<sp/>0.0,<sp/>0.0;</highlight></codeline>
+<codeline lineno="181"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>out.xform<sp/>&lt;&lt;<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0;</highlight></codeline>
+<codeline lineno="182"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>out.matched<sp/>=<sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="183"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_INFO(rclcpp::get_logger(</highlight><highlight class="stringliteral">&quot;matcher&quot;</highlight><highlight class="normal">),<sp/></highlight><highlight class="stringliteral">&quot;Z<sp/>filter<sp/>output<sp/>size<sp/>0<sp/><sp/>for<sp/>%s&quot;</highlight><highlight class="normal">,<sp/>m_name.c_str()<sp/>);</highlight></codeline>
+<codeline lineno="184"><highlight class="normal"></highlight></codeline>
+<codeline lineno="185"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>out;</highlight></codeline>
+<codeline lineno="186"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="187"><highlight class="normal"></highlight></codeline>
+<codeline lineno="188"><highlight class="normal"></highlight></codeline>
+<codeline lineno="189"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>compute<sp/>input&apos;s<sp/>features<sp/>and<sp/>try<sp/>to<sp/>do<sp/>the<sp/>initial<sp/>match</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="190"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>input_sig<sp/>=<sp/>std::make_shared&lt;pcl::PointCloud&lt;pcl::FPFHSignature33&gt;&gt;();</highlight></codeline>
+<codeline lineno="191"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_r_v_c_1_1_object_matcher_1adcdf9f2d7d819d4a7995f74bbb662a2e" kindref="member">compute_fpfh_features</ref>(thresholded_rs_cloud,<sp/>m_config,<sp/>*input_sig);</highlight></codeline>
+<codeline lineno="192"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//std::cout<sp/>&lt;&lt;<sp/>&quot;Source<sp/>points<sp/>after<sp/>fpfh<sp/>&quot;<sp/>&lt;&lt;<sp/>m_points-&gt;size()<sp/><sp/>&lt;&lt;<sp/>std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="193"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//std::cout<sp/>&lt;&lt;<sp/>&quot;Source<sp/>feature<sp/>points<sp/>after<sp/>fpfh<sp/>&quot;<sp/>&lt;&lt;<sp/>m_signature-&gt;size()<sp/><sp/>&lt;&lt;<sp/>std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="194"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//std::cout<sp/>&lt;&lt;<sp/>&quot;Target<sp/>points<sp/>after<sp/>fpfh<sp/>&quot;<sp/>&lt;&lt;<sp/>thresholded_rs_cloud-&gt;size()<sp/><sp/>&lt;&lt;<sp/>std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="195"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//std::cout<sp/>&lt;&lt;<sp/>&quot;Target<sp/>feature<sp/>points<sp/>after<sp/>fpfh<sp/>&quot;<sp/>&lt;&lt;<sp/>input_sig-&gt;size()<sp/><sp/>&lt;&lt;<sp/>std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="196"><highlight class="normal"></highlight></codeline>
+<codeline lineno="197"><highlight class="normal"></highlight></codeline>
+<codeline lineno="198"><highlight class="normal"><sp/><sp/><sp/><sp/>pcl::SampleConsensusPrerejective&lt;PointT,<sp/>PointT,<sp/>pcl::FPFHSignature33&gt;<sp/>sac_ia;</highlight></codeline>
+<codeline lineno="199"><highlight class="normal"><sp/><sp/><sp/><sp/>sac_ia.setInlierFraction(m_config.inlier_fraction);</highlight></codeline>
+<codeline lineno="200"><highlight class="normal"><sp/><sp/><sp/><sp/>sac_ia.setSimilarityThreshold(m_config.similarity_threshold);</highlight></codeline>
+<codeline lineno="201"><highlight class="normal"></highlight></codeline>
+<codeline lineno="202"><highlight class="normal"><sp/><sp/><sp/><sp/>sac_ia.setCorrespondenceRandomness(</highlight></codeline>
+<codeline lineno="203"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::min(</highlight></codeline>
+<codeline lineno="204"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_config.max_corresp_randomness,</highlight></codeline>
+<codeline lineno="205"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(</highlight><highlight class="keywordtype">float</highlight><highlight class="normal">)thresholded_rs_cloud-&gt;size()));</highlight></codeline>
+<codeline lineno="206"><highlight class="normal"><sp/><sp/><sp/><sp/>sac_ia.setMaximumIterations(m_config.max_iterations);</highlight></codeline>
+<codeline lineno="207"><highlight class="normal"><sp/><sp/><sp/><sp/>sac_ia.setNumberOfSamples(m_config.num_samples);</highlight></codeline>
+<codeline lineno="208"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//sac_ia.setMaxCorrespondenceDistance(m_config.max_corresp_distance);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="209"><highlight class="normal"><sp/><sp/><sp/><sp/>sac_ia.setMaxCorrespondenceDistance(2.5f<sp/>*<sp/>m_config.downsample_clouds);</highlight></codeline>
+<codeline lineno="210"><highlight class="normal"></highlight></codeline>
+<codeline lineno="211"><highlight class="normal"><sp/><sp/><sp/><sp/>sac_ia.setInputSource(m_points);</highlight></codeline>
+<codeline lineno="212"><highlight class="normal"><sp/><sp/><sp/><sp/>sac_ia.setSourceFeatures(m_signature);</highlight></codeline>
+<codeline lineno="213"><highlight class="normal"></highlight></codeline>
+<codeline lineno="214"><highlight class="normal"><sp/><sp/><sp/><sp/>sac_ia.setInputTarget(thresholded_rs_cloud);</highlight></codeline>
+<codeline lineno="215"><highlight class="normal"><sp/><sp/><sp/><sp/>sac_ia.setTargetFeatures(input_sig);</highlight></codeline>
+<codeline lineno="216"><highlight class="normal"></highlight></codeline>
+<codeline lineno="217"><highlight class="normal"></highlight></codeline>
+<codeline lineno="218"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>TODO:<sp/>provide<sp/>a<sp/>way<sp/>to<sp/>use<sp/>the<sp/>previous<sp/>transform</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="219"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>aligned_cloud<sp/>=<sp/>std::make_shared&lt;pcl::PointCloud&lt;PointT&gt;&gt;();</highlight></codeline>
+<codeline lineno="220"><highlight class="normal"><sp/><sp/><sp/><sp/>sac_ia.align(*aligned_cloud);</highlight></codeline>
+<codeline lineno="221"><highlight class="normal"></highlight></codeline>
+<codeline lineno="222"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>ransac_score<sp/>=<sp/>sac_ia.getFitnessScore();</highlight></codeline>
+<codeline lineno="223"><highlight class="normal"></highlight></codeline>
+<codeline lineno="224"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!sac_ia.hasConverged())</highlight></codeline>
+<codeline lineno="225"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="226"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="struct_r_v_c_1_1_match_result" kindref="compound">MatchResult</ref><sp/>out<sp/>=<sp/>{};</highlight></codeline>
+<codeline lineno="227"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>out.position<sp/>&lt;&lt;<sp/>0.0,<sp/>0.0,<sp/>0.0;</highlight></codeline>
+<codeline lineno="228"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>out.xform<sp/>&lt;&lt;<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0;</highlight></codeline>
+<codeline lineno="229"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>out.matched<sp/>=<sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="230"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_DEBUG_STREAM(</highlight></codeline>
+<codeline lineno="231"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>rclcpp::get_logger(</highlight><highlight class="stringliteral">&quot;matcher&quot;</highlight><highlight class="normal">),<sp/></highlight><highlight class="stringliteral">&quot;Using<sp/>RANSAC<sp/>not<sp/>converged<sp/>for<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>m_name</highlight></codeline>
+<codeline lineno="232"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/>__FUNCTION__<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;:&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>__LINE__);</highlight></codeline>
+<codeline lineno="233"><highlight class="normal"></highlight></codeline>
+<codeline lineno="234"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>out;</highlight></codeline>
+<codeline lineno="235"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="236"><highlight class="normal"></highlight></codeline>
+<codeline lineno="237"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>xform<sp/>=<sp/>sac_ia.getFinalTransformation();</highlight></codeline>
+<codeline lineno="238"><highlight class="normal"></highlight></codeline>
+<codeline lineno="239"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>refined_cloud<sp/>=<sp/>std::make_shared&lt;pcl::PointCloud&lt;PointT&gt;&gt;();</highlight></codeline>
+<codeline lineno="240"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>improve<sp/>RANSAC<sp/>guess<sp/>using<sp/>ICP<sp/>(Iterative<sp/>Closest<sp/>Point)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="241"><highlight class="normal"><sp/><sp/><sp/><sp/>pcl::IterativeClosestPoint&lt;PointT,<sp/>PointT&gt;<sp/>icp;</highlight></codeline>
+<codeline lineno="242"><highlight class="normal"><sp/><sp/><sp/><sp/>icp.setMaxCorrespondenceDistance(m_config.icp_max_corresp_distance);</highlight></codeline>
+<codeline lineno="243"><highlight class="normal"><sp/><sp/><sp/><sp/>icp.setMaximumIterations(m_config.icp_max_iterations);</highlight></codeline>
+<codeline lineno="244"><highlight class="normal"><sp/><sp/><sp/><sp/>icp.setTransformationEpsilon(m_config.icp_xform_epsilon);</highlight></codeline>
+<codeline lineno="245"><highlight class="normal"><sp/><sp/><sp/><sp/>icp.setEuclideanFitnessEpsilon(m_config.icp_fitness_epsilon);</highlight></codeline>
+<codeline lineno="246"><highlight class="normal"><sp/><sp/><sp/><sp/>icp.setInputSource(aligned_cloud);</highlight></codeline>
+<codeline lineno="247"><highlight class="normal"><sp/><sp/><sp/><sp/>icp.setInputTarget(thresholded_rs_cloud);</highlight></codeline>
+<codeline lineno="248"><highlight class="normal"><sp/><sp/><sp/><sp/>icp.align(*refined_cloud);</highlight></codeline>
+<codeline lineno="249"><highlight class="normal"></highlight></codeline>
+<codeline lineno="250"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>icp_score<sp/>=<sp/>icp.getFitnessScore();</highlight></codeline>
+<codeline lineno="251"><highlight class="normal"></highlight></codeline>
+<codeline lineno="252"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!icp.hasConverged())</highlight></codeline>
+<codeline lineno="253"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="254"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="struct_r_v_c_1_1_match_result" kindref="compound">MatchResult</ref><sp/>out<sp/>=<sp/>{};</highlight></codeline>
+<codeline lineno="255"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>out.position<sp/>&lt;&lt;<sp/>0.0,<sp/>0.0,<sp/>0.0;</highlight></codeline>
+<codeline lineno="256"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>out.xform<sp/>&lt;&lt;<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0,<sp/>0.0;</highlight></codeline>
+<codeline lineno="257"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>out.matched<sp/>=<sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="258"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_INFO_STREAM(</highlight></codeline>
+<codeline lineno="259"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>rclcpp::get_logger(</highlight><highlight class="stringliteral">&quot;matcher&quot;</highlight><highlight class="normal">),<sp/></highlight><highlight class="stringliteral">&quot;Using<sp/>ICP<sp/>not<sp/>converged<sp/>for<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>m_name<sp/>&lt;&lt;</highlight></codeline>
+<codeline lineno="260"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>__FUNCTION__<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;:&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>__LINE__);</highlight></codeline>
+<codeline lineno="261"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>out;</highlight></codeline>
+<codeline lineno="262"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="263"><highlight class="normal"></highlight></codeline>
+<codeline lineno="264"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>combine<sp/>the<sp/>previous<sp/>transform<sp/>matrix<sp/>with<sp/>the<sp/>one<sp/>ICP<sp/>worked<sp/>out</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="265"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="266"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>the<sp/>old<sp/>transform<sp/>happens<sp/>first,<sp/>then<sp/>the<sp/>ICP<sp/>transform<sp/>happens</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="267"><highlight class="normal"><sp/><sp/><sp/><sp/>xform<sp/>=<sp/>icp.getFinalTransformation()<sp/>*<sp/>xform;</highlight></codeline>
+<codeline lineno="268"><highlight class="normal"></highlight></codeline>
+<codeline lineno="269"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Compute<sp/>centroid<sp/>from<sp/>PCL</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="270"><highlight class="normal"><sp/><sp/><sp/><sp/>Eigen::Vector4f<sp/>centroid;</highlight></codeline>
+<codeline lineno="271"><highlight class="normal"><sp/><sp/><sp/><sp/>pcl::compute3DCentroid(*refined_cloud,<sp/>centroid);</highlight></codeline>
+<codeline lineno="272"><highlight class="normal"><sp/><sp/><sp/><sp/>out.position<sp/>=<sp/>centroid.block&lt;3,<sp/>1&gt;(0,<sp/>0);</highlight></codeline>
+<codeline lineno="273"><highlight class="normal"></highlight></codeline>
+<codeline lineno="274"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>format<sp/>result<sp/>and<sp/>return</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="275"><highlight class="normal"><sp/><sp/><sp/><sp/>out.matched<sp/>=<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="276"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//out.xform<sp/>=<sp/>xform.cast&lt;double&gt;();</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="277"><highlight class="normal"><sp/><sp/><sp/><sp/>out.xform<sp/>=<sp/>xform;</highlight></codeline>
+<codeline lineno="278"><highlight class="normal"><sp/><sp/><sp/><sp/>out.ransac_score<sp/>=<sp/>ransac_score;</highlight></codeline>
+<codeline lineno="279"><highlight class="normal"><sp/><sp/><sp/><sp/>out.icp_score<sp/>=<sp/>icp_score;</highlight></codeline>
+<codeline lineno="280"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//*reg_cloud<sp/>+=<sp/>*cloud;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="281"><highlight class="normal"><sp/><sp/><sp/><sp/>out.registered_cloud<sp/>=<sp/>refined_cloud;</highlight></codeline>
+<codeline lineno="282"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//out.registered_cloud<sp/>=<sp/>cloud;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="283"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>out;</highlight></codeline>
+<codeline lineno="284"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="rvc_pose_detector/src/matcher.cpp"/>
+  </compounddef>
+</doxygen>

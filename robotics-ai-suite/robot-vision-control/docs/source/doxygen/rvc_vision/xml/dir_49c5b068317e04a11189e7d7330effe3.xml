@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_49c5b068317e04a11189e7d7330effe3" kind="dir">
+    <compoundname>rvc_profiler/src</compoundname>
+    <innerfile refid="rvc__profiler_8cpp">rvc_profiler.cpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_profiler/src/"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro"
+	name="gripper" >
+
+
+	<xacro:include filename="$(find moveit_robot_demo)/urdf/robotiq_arg2f_85_model.xacro" />
+
+
+</robot>

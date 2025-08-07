@@ -79,7 +79,7 @@ export default defineComponent({
       pipeline: null, // To store the pipeline id
       imageData: [], // To store the image data
       fromDatetime: '1970-01-01T00:00', // To store the initial datetime to filter
-      toDatetime: new Date().toISOString().slice(0, 16), // To store the final datetime to filter
+      toDatetime: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), // To store the final datetime to filter
       sortBy: 'date' // To store the sort by option
     };
   },

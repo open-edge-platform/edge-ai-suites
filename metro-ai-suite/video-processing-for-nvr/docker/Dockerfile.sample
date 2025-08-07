@@ -1,0 +1,37 @@
+ARG BASE=ubuntu
+ARG BASE_VERSION=24.04
+FROM $BASE:${BASE_VERSION} AS base
+
+SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    sudo \
+    wget \
+    lsb-release \
+    unzip
+
+RUN useradd -m -s /bin/bash vpp && \
+echo "vpp ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+mkdir -p /home/vpp && \
+chown -R vpp /home/vpp
+
+COPY . /home/vpp/vppsample
+
+WORKDIR /home/vpp/vppsample
+
+RUN dpkg -i ./intel-vppsdk_2025.0.0_amd64.deb
+RUN bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
+
+RUN bash ./live555_install.sh
+
+RUN bash ./build.sh
+RUN chmod +x /home/vpp/vppsample/docker/svet.sh
+
+USER vpp 
+WORKDIR /home/vpp
+
+ENTRYPOINT ["/bin/bash", "-c", "source /opt/intel/vppsdk/env.sh && bash"]

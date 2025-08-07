@@ -133,6 +133,7 @@ void PostFusionOutputNodeWorker::process(std::size_t batchIdx)
         hce::ai::inference::FusionOutput fusionOutput;
         hce::ai::inference::TimeStamp_t timeMeta;
         hce::ai::inference::InferenceTimeStamp_t inferenceTimeMeta;
+        hce::ai::inference::VideoTimeStamp_t videoTimeMeta;
         std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
         std::chrono::time_point<std::chrono::high_resolution_clock> endTime;
 
@@ -143,9 +144,13 @@ void PostFusionOutputNodeWorker::process(std::size_t batchIdx)
         std::chrono::duration<double, std::milli> latencyDuration = endTime - startTime;
         double latency = latencyDuration.count();
         double inferenceLatency = 0.0;
+        double videoLatency = 0.0;
 
         if (inBlob->get(0)->getMeta(inferenceTimeMeta) == hva::hvaSuccess) {
             inferenceLatency = std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
+        }
+        if (inBlob->get(0)->getMeta(videoTimeMeta) == hva::hvaSuccess) {
+            videoLatency = std::chrono::duration<double, std::milli>(videoTimeMeta.endTime - videoTimeMeta.startTime).count();
         }
 
         if (hva::hvaSuccess == inBuf->getMeta(fusionOutput)) {
@@ -312,6 +317,7 @@ void PostFusionOutputNodeWorker::process(std::size_t batchIdx)
         }
         jsonTree.put("inference_latency", inferenceLatency);
         jsonTree.put("latency", latency);
+        jsonTree.put("video_latency", videoLatency);
         jsonTree.put("stream_id", inBlob->streamId);
 
         hce::ai::inference::TimeStampAll_t timeMetaAll;
@@ -343,6 +349,14 @@ void PostFusionOutputNodeWorker::process(std::size_t batchIdx)
             for (int i = 0; i < 4; i++) {
                 if (0.0 != inferenceTimeMetaAll.inferenceLatencies[i]) {
                     jsonTree.put("inference_latency" + std::to_string(i + 1), inferenceTimeMetaAll.inferenceLatencies[i]);
+                }
+            }
+        }
+        hce::ai::inference::VideoTimeAll_t videoTimeMetaAll;
+        if (inBlob->get(0)->getMeta(videoTimeMetaAll) == hva::hvaSuccess) {
+            for (int i = 0; i < 4; i++) {
+                if (0.0 != videoTimeMetaAll.videoLatencies[i]) {
+                    jsonTree.put("video_latency" + std::to_string(i + 1), videoTimeMetaAll.videoLatencies[i]);
                 }
             }
         }

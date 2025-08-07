@@ -44,7 +44,7 @@ spec:
       # hostNetwork: true
       containers:
       - name: coturn
-        image: coturn/coturn
+        image: {{ $.Values.coturn.image }}:{{ $.Values.coturn.imageTag }}
         args: ["-v"]  # Enable verbose logging
         ports:
         - containerPort: {{ $.Values.config.coturn.int.coturn_tcp_port }}

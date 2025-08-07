@@ -1,0 +1,340 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="class_r_v_c_1_1_profiler" kind="class" language="C++" prot="public">
+    <compoundname>RVC::Profiler</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">rclcpp::Node</basecompoundref>
+    <innerclass refid="struct_r_v_c_1_1_profiler_1_1_profile_data_struct" prot="private">RVC::Profiler::ProfileDataStruct</innerclass>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_r_v_c_1_1_profiler_1af37376a663f3fc96e52458996d22b629" prot="private" static="no" mutable="no">
+        <type>rclcpp::Subscription&lt; rvc_vision_messages::msg::RotatedBBList &gt;::SharedPtr</type>
+        <definition>rclcpp::Subscription&lt;rvc_vision_messages::msg::RotatedBBList&gt;::SharedPtr RVC::Profiler::m_rotated_bb_list_sub</definition>
+        <argsstring></argsstring>
+        <name>m_rotated_bb_list_sub</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="61" column="38" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_profiler_1a18c5d49a3acb5360db3869a3d8661e5b" prot="private" static="no" mutable="no">
+        <type>rclcpp::Subscription&lt; sensor_msgs::msg::PointCloud2 &gt;::SharedPtr</type>
+        <definition>rclcpp::Subscription&lt;sensor_msgs::msg::PointCloud2&gt;::SharedPtr RVC::Profiler::m_rs_pcl_sub</definition>
+        <argsstring></argsstring>
+        <name>m_rs_pcl_sub</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="62" column="38" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="62" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_profiler_1a6f97b2ac83c81da301ba1ad1b3865180" prot="private" static="no" mutable="no">
+        <type>rclcpp::Subscription&lt; rvc_messages::msg::PoseStampedList &gt;::SharedPtr</type>
+        <definition>rclcpp::Subscription&lt;rvc_messages::msg::PoseStampedList&gt;::SharedPtr RVC::Profiler::m_object_pose_stamped_list_msg</definition>
+        <argsstring></argsstring>
+        <name>m_object_pose_stamped_list_msg</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="63" column="38" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="63" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_profiler_1a9a1a082f95a44bebf071d29435a68176" prot="private" static="no" mutable="no">
+        <type>rclcpp::Subscription&lt; sensor_msgs::msg::Image &gt;::SharedPtr</type>
+        <definition>rclcpp::Subscription&lt;sensor_msgs::msg::Image&gt;::SharedPtr RVC::Profiler::m_image_raw_sub</definition>
+        <argsstring></argsstring>
+        <name>m_image_raw_sub</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="64" column="38" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="64" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_profiler_1afe65ada675ad9dd0bda558270fe11148" prot="private" static="no" mutable="no">
+        <type>rvc_vision_messages::msg::RotatedBBList::SharedPtr</type>
+        <definition>rvc_vision_messages::msg::RotatedBBList::SharedPtr RVC::Profiler::m_rotated_bb_list_msg</definition>
+        <argsstring></argsstring>
+        <name>m_rotated_bb_list_msg</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="66" column="56" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="66" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_profiler_1a802908a7f7e5cefd50a246ae396d4878" prot="private" static="no" mutable="no">
+        <type>sensor_msgs::msg::PointCloud2::UniquePtr</type>
+        <definition>sensor_msgs::msg::PointCloud2::UniquePtr RVC::Profiler::m_last_cloud</definition>
+        <argsstring></argsstring>
+        <name>m_last_cloud</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="68" column="46" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="68" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_profiler_1a6294dcd32f531f75da549f58a12f6bda" prot="private" static="no" mutable="no">
+        <type>rclcpp::TimerBase::SharedPtr</type>
+        <definition>rclcpp::TimerBase::SharedPtr RVC::Profiler::profile_timer</definition>
+        <argsstring></argsstring>
+        <name>profile_timer</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="69" column="34" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_profiler_1a31b9cd68cf7d676d42ff8083a3a8fb3f" prot="private" static="no" mutable="no">
+        <type>image_transport::Subscriber</type>
+        <definition>image_transport::Subscriber RVC::Profiler::m_image_sub</definition>
+        <argsstring></argsstring>
+        <name>m_image_sub</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="70" column="33" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_profiler_1a2512c60c89396f329b70f75a89f5227e" prot="private" static="no" mutable="no">
+        <type>rclcpp::Subscription&lt; std_msgs::msg::UInt64MultiArray &gt;::SharedPtr</type>
+        <definition>rclcpp::Subscription&lt;std_msgs::msg::UInt64MultiArray&gt;::SharedPtr RVC::Profiler::m_sub_rtloop</definition>
+        <argsstring></argsstring>
+        <name>m_sub_rtloop</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="71" column="38" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="71" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_profiler_1ada637b6952ee0a6ff5eceaefa0a49452" prot="private" static="no" mutable="no">
+        <type>struct ProfileDataStruct</type>
+        <definition>struct ProfileDataStruct RVC::Profiler::profileData</definition>
+        <argsstring></argsstring>
+        <name>profileData</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="71" column="38" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="82" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_profiler_1a229c6db3af88fbc193d9ddd395f3062a" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int RVC::Profiler::pipe_fd[2]</definition>
+        <argsstring>[2]</argsstring>
+        <name>pipe_fd</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="84" column="9" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="84" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_r_v_c_1_1_profiler_1af481b310a951930b1aada7f2a4c62a32" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void RVC::Profiler::handle_roi</definition>
+        <argsstring>(const rvc_vision_messages::msg::RotatedBBList::SharedPtr msg)</argsstring>
+        <name>handle_roi</name>
+        <param>
+          <type>const rvc_vision_messages::msg::RotatedBBList::SharedPtr</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="88" column="10" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="88" bodyend="92"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_1_1_profiler_1ad22643c2e5871b7118debd465075c5ed" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void RVC::Profiler::handle_rs_pointcloud</definition>
+        <argsstring>(sensor_msgs::msg::PointCloud2::UniquePtr msg)</argsstring>
+        <name>handle_rs_pointcloud</name>
+        <param>
+          <type>sensor_msgs::msg::PointCloud2::UniquePtr</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="94" column="10" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="94" bodyend="98"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_1_1_profiler_1a92d5d38f9019769159c009efb0b743cd" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void RVC::Profiler::handle_object_poses</definition>
+        <argsstring>(rvc_messages::msg::PoseStampedList::UniquePtr msg)</argsstring>
+        <name>handle_object_poses</name>
+        <param>
+          <type>rvc_messages::msg::PoseStampedList::UniquePtr</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="100" column="10" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="100" bodyend="109"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_1_1_profiler_1a3d865e10f6ea1ab8fc1ba983739a3b46" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void RVC::Profiler::handle_image_raw</definition>
+        <argsstring>(sensor_msgs::msg::Image::UniquePtr msg)</argsstring>
+        <name>handle_image_raw</name>
+        <param>
+          <type>sensor_msgs::msg::Image::UniquePtr</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="110" column="10" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="110" bodyend="114"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_1_1_profiler_1af5e4262c73077e9e88d8783a88c30452" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void RVC::Profiler::handle_inference</definition>
+        <argsstring>(const sensor_msgs::msg::Image::ConstSharedPtr msg)</argsstring>
+        <name>handle_inference</name>
+        <param>
+          <type>const sensor_msgs::msg::Image::ConstSharedPtr</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="116" column="10" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="116" bodyend="120"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_1_1_profiler_1a1758c773ca3d44fa72e969d15cd3ac86" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void RVC::Profiler::handle_rtloop</definition>
+        <argsstring>(const std_msgs::msg::UInt64MultiArray::UniquePtr msg)</argsstring>
+        <name>handle_rtloop</name>
+        <param>
+          <type>const std_msgs::msg::UInt64MultiArray::UniquePtr</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="122" column="10" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="122" bodyend="128"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_1_1_profiler_1a0436009f594017523c0975458c63dc25" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void RVC::Profiler::handleTimer</definition>
+        <argsstring>(void)</argsstring>
+        <name>handleTimer</name>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="130" column="10" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="130" bodyend="141"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_r_v_c_1_1_profiler_1a23f31bac80fc3cc415bf8d806e82d2bc" prot="public" static="no" const="no" explicit="yes" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>RVC::Profiler::Profiler</definition>
+        <argsstring>(const rclcpp::NodeOptions &amp;options)</argsstring>
+        <name>Profiler</name>
+        <param>
+          <type>const rclcpp::NodeOptions &amp;</type>
+          <declname>options</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_profiler/src/rvc_profiler.cpp" line="145" column="14" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="145" bodyend="199"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>RVC::Profiler</label>
+        <link refid="class_r_v_c_1_1_profiler"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>rclcpp::Node</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>RVC::Profiler</label>
+        <link refid="class_r_v_c_1_1_profiler"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>rclcpp::Node</label>
+      </node>
+    </collaborationgraph>
+    <location file="rvc_profiler/src/rvc_profiler.cpp" line="56" column="1" bodyfile="rvc_profiler/src/rvc_profiler.cpp" bodystart="57" bodyend="201"/>
+    <listofallmembers>
+      <member refid="class_r_v_c_1_1_profiler_1a3d865e10f6ea1ab8fc1ba983739a3b46" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>handle_image_raw</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1af5e4262c73077e9e88d8783a88c30452" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>handle_inference</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1a92d5d38f9019769159c009efb0b743cd" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>handle_object_poses</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1af481b310a951930b1aada7f2a4c62a32" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>handle_roi</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1ad22643c2e5871b7118debd465075c5ed" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>handle_rs_pointcloud</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1a1758c773ca3d44fa72e969d15cd3ac86" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>handle_rtloop</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1a0436009f594017523c0975458c63dc25" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>handleTimer</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1a9a1a082f95a44bebf071d29435a68176" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>m_image_raw_sub</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1a31b9cd68cf7d676d42ff8083a3a8fb3f" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>m_image_sub</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1a802908a7f7e5cefd50a246ae396d4878" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>m_last_cloud</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1a6f97b2ac83c81da301ba1ad1b3865180" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>m_object_pose_stamped_list_msg</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1afe65ada675ad9dd0bda558270fe11148" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>m_rotated_bb_list_msg</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1af37376a663f3fc96e52458996d22b629" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>m_rotated_bb_list_sub</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1a18c5d49a3acb5360db3869a3d8661e5b" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>m_rs_pcl_sub</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1a2512c60c89396f329b70f75a89f5227e" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>m_sub_rtloop</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1a229c6db3af88fbc193d9ddd395f3062a" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>pipe_fd</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1a6294dcd32f531f75da549f58a12f6bda" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>profile_timer</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1ada637b6952ee0a6ff5eceaefa0a49452" prot="private" virt="non-virtual"><scope>RVC::Profiler</scope><name>profileData</name></member>
+      <member refid="class_r_v_c_1_1_profiler_1a23f31bac80fc3cc415bf8d806e82d2bc" prot="public" virt="non-virtual"><scope>RVC::Profiler</scope><name>Profiler</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

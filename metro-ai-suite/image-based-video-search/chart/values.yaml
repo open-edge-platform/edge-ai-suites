@@ -22,7 +22,7 @@ broker:
   # key: broker.nodeSelector
   nodeSelector: {}
   # Resources allows you to specify the resource requests and limits for a service.
-  # Resources are used to specify the amount of CPU and memory that 
+  # Resources are used to specify the amount of CPU and memory that
   # a container needs.
   #
   # e.g.
@@ -50,9 +50,9 @@ dlstreamerpipelineserver:
   # key: dlstreamerpipelineserver.repository
   repository:
     # key: dlstreamerpipelineserver.repository.image
-    image: docker.io/intel/dlstreamer-pipeline-server
+    image: ghcr.io/open-edge-platform/edge-ai-libraries/intel/edge-ai-dlstreamer-pipeline-server
     # key: dlstreamerpipelineserver.repository.tag
-    tag: 3.0.0
+    tag: 20250805_EAL1.2-ubuntu22
   # key: dlstreamerpipelineserver.replicas
   replicas: 1
   # key: dlstreamerpipelineserver.nodeSelector
@@ -60,7 +60,7 @@ dlstreamerpipelineserver:
   # key: dlstreamerpipelineserver.pipeline
   pipeline: config.cpu.json
   # Resources allows you to specify the resource requests and limits for a service.
-  # Resources are used to specify the amount of CPU and memory that 
+  # Resources are used to specify the amount of CPU and memory that
   # a container needs.
   #
   # e.g.
@@ -96,7 +96,7 @@ mediamtx:
   # key: mediamtx.nodeSelector
   nodeSelector: {}
   # Resources allows you to specify the resource requests and limits for a service.
-  # Resources are used to specify the amount of CPU and memory that 
+  # Resources are used to specify the amount of CPU and memory that
   # a container needs.
   #
   # e.g.
@@ -132,7 +132,7 @@ milvusdb:
   # key: milvusdb.nodeSelector
   nodeSelector: {}
   # Resources allows you to specify the resource requests and limits for a service.
-  # Resources are used to specify the amount of CPU and memory that 
+  # Resources are used to specify the amount of CPU and memory that
   # a container needs.
   #
   # e.g.
@@ -168,7 +168,7 @@ milvusui:
   # key: milvusui.nodeSelector
   nodeSelector: {}
   # Resources allows you to specify the resource requests and limits for a service.
-  # Resources are used to specify the amount of CPU and memory that 
+  # Resources are used to specify the amount of CPU and memory that
   # a container needs.
   #
   # e.g.
@@ -198,13 +198,13 @@ streaming:
     # key: streaming.repository.image
     image: docker.io/intel/streaming-pipeline
     # key: streaming.repository.tag
-    tag: v1.0.0
+    tag: v1.0.1
   # key: streaming.replicas
   replicas: 1
   # key: streaming.nodeSelector
   nodeSelector: {}
   # Resources allows you to specify the resource requests and limits for a service.
-  # Resources are used to specify the amount of CPU and memory that 
+  # Resources are used to specify the amount of CPU and memory that
   # a container needs.
   #
   # e.g.
@@ -234,13 +234,13 @@ app:
     # key: app.repository.image
     image: docker.io/intel/image-based-video-search
     # key: app.repository.tag
-    tag: v1.0.0
+    tag: v1.0.1
   # key: app.replicas
   replicas: 1
   # key: app.nodeSelector
   nodeSelector: {}
   # Resources allows you to specify the resource requests and limits for a service.
-  # Resources are used to specify the amount of CPU and memory that 
+  # Resources are used to specify the amount of CPU and memory that
   # a container needs.
   #
   # e.g.
@@ -270,13 +270,13 @@ featurematching:
     # key: featurematching.repository.image
     image: docker.io/intel/feature-matching
     # key: featurematching.repository.tag
-    tag: v1.0.0
+    tag: v1.0.1
   # key: featurematching.replicas
   replicas: 1
   # key: featurematching.nodeSelector
   nodeSelector: {}
   # Resources allows you to specify the resource requests and limits for a service.
-  # Resources are used to specify the amount of CPU and memory that 
+  # Resources are used to specify the amount of CPU and memory that
   # a container needs.
   #
   # e.g.

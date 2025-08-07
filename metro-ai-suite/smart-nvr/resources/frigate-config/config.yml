@@ -1,0 +1,147 @@
+mqtt:
+  enabled: true
+  host: mqtt-broker
+  port: 1883
+  topic_prefix: frigate
+  client_id: frigate
+  user: '{FRIGATE_MQTT_USER}'
+  password: '{FRIGATE_MQTT_PASSWORD}'
+
+genai:
+  enabled: false
+  provider: openai
+  model: Qwen/Qwen2.5-VL-3B-Instruct
+
+logger:
+  default: info
+
+
+semantic_search:
+  enabled: true
+  reindex: false
+
+record:
+  enabled: true
+  retain:
+    days: 7
+    mode: all
+
+cameras:
+  backyard:
+    ffmpeg:
+      inputs:
+        - path: /videos/backyard.mp4
+          input_args: -re -stream_loop -1 -fflags +genpts
+          roles:
+            - detect
+            - record
+    detect:
+      enabled: true
+      max_disappeared: 30
+    objects:
+      track: [bicycle, car, motorcycle, person]
+      filters:
+        person:
+          min_score: 0.6
+          threshold: 0.80
+    record:
+      enabled: true
+      retain:
+        days: 1
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+    genai:
+      enabled: true
+      use_snapshot: true
+      objects:
+        - person
+        - car
+
+  livingroom:
+    ffmpeg:
+      inputs:
+        - path: /videos/livingroom.mp4
+          input_args: -re -stream_loop -1 -fflags +genpts
+          roles:
+            - detect
+            - record
+    detect:
+      enabled: true
+      max_disappeared: 30
+    record:
+      enabled: true
+      retain:
+        days: 1
+    objects:
+      filters:
+        person:
+          min_score: 0.6
+          threshold: 0.80
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+    genai:
+      enabled: true
+      use_snapshot: true
+      objects:
+        - person
+
+  # office:
+  #   ffmpeg:
+  #     inputs:
+  #       - path: /videos/office.mp4
+  #         input_args: -re -stream_loop -1 -fflags +genpts
+  #         roles:
+  #           - detect
+  #   record:
+  #     enabled: true
+  #     retain:
+  #       days: 1
+  #   objects:
+  #     filters:
+  #       person:
+  #         min_score: 0.6
+  #         threshold: 0.80        
+  #   snapshots:
+  #     enabled: true
+  #     retain:
+  #       default: 1
+  #   genai:
+  #     enabled: True
+  #     use_snapshot: True
+  #     objects:
+  #       - person
+
+  garage:
+    ffmpeg:
+      inputs:
+        - path: /videos/garage.mp4
+          input_args: -re -stream_loop -1 -fflags +genpts
+          roles:
+            - detect
+            - record
+    detect:
+      enabled: true
+      max_disappeared: 30
+    record:
+      enabled: true
+      retain:
+        days: 1
+    objects:
+      filters:
+        person:
+          min_score: 0.6
+          threshold: 0.80
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+    genai:
+      enabled: true
+      use_snapshot: true
+      objects:
+        - person
+version: 0.15-1

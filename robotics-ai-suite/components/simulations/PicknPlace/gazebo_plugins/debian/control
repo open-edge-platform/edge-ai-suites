@@ -1,0 +1,12 @@
+Source: ros-humble-robot-config-plugins
+Section: misc
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: debhelper (>= 9.0.0), ros-humble-ament-cmake, ros-humble-gazebo-dev, ros-humble-gazebo-plugins, ros-humble-rclcpp, ros-humble-rosidl-default-generators, ros-humble-std-srvs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-robot-config-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-humble-gazebo-dev, ros-humble-gazebo-plugins, ros-humble-rclcpp, ros-humble-rosidl-default-runtime, ros-humble-std-srvs
+Description: Clear ROS2 Namespace from Gazebo process

@@ -1,0 +1,662 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="doxygen_8md" kind="file" language="Markdown">
+    <compoundname>doxygen.md</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline><highlight class="normal">#<sp/>Summary</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Members<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">`namespace<sp/>`[`RVCControl`](#namespace_r_v_c_control)<sp/>|<sp/>Any<sp/>defined<sp/>controllers<sp/>have<sp/>to<sp/>inerit<sp/>from<sp/>this<sp/>to<sp/>be<sp/>used<sp/>in<sp/>the<sp/>StateMachine<sp/>node.</highlight></codeline>
+<codeline><highlight class="normal">`namespace<sp/>`[`RVCMotionController`](#namespace_r_v_c_motion_controller)<sp/>|<sp/>Any<sp/>defined<sp/>controllers<sp/>have<sp/>to<sp/>inerit<sp/>from<sp/>this<sp/>to<sp/>be<sp/>used<sp/>in<sp/>the<sp/>StateMachine<sp/>node.</highlight></codeline>
+<codeline><highlight class="normal">`class<sp/>`[`PoseTracking`](#class_pose_tracking)<sp/>|<sp/>Class<sp/>[PoseTracking](#class_pose_tracking)<sp/>-<sp/>subscribe<sp/>to<sp/>a<sp/>target<sp/>pose.<sp/>Servo<sp/>toward<sp/>the<sp/>target<sp/>pose.</highlight></codeline>
+<codeline><highlight class="normal">`class<sp/>`[`TCPServer`](#class_t_c_p_server)<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`class<sp/>`[`TCPSocket`](#class_t_c_p_socket)<sp/>|<sp/>Class<sp/>for<sp/>TCP<sp/>socket<sp/>abstraction.</highlight></codeline>
+<codeline><highlight class="normal">`struct<sp/>`[`RVCMotionController::URPendantMotionController::Command`](#struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command)<sp/>|<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>namespace<sp/>`RVCControl`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Any<sp/>defined<sp/>controllers<sp/>have<sp/>to<sp/>inerit<sp/>from<sp/>this<sp/>to<sp/>be<sp/>used<sp/>in<sp/>the<sp/>StateMachine<sp/>node.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Summary</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Members<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">`class<sp/>`[`RVCControl::RVCGraspInterface`](#class_r_v_c_control_1_1_r_v_c_grasp_interface)<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`class<sp/>`[`RVCControl::NonOrientedGrasp`](#class_r_v_c_control_1_1_non_oriented_grasp)<sp/>|<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>class<sp/>`RVCControl::RVCGraspInterface`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Summary</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Members<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>void<sp/>`[`OnMessageReceive`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ac519ff48b07aa841270b90d2b1057d47)`(rvc_messages::msg::PoseStampedList::SharedPtr<sp/>msg)`<sp/>|<sp/>This<sp/>function<sp/>will<sp/>be<sp/>called<sp/>upon<sp/>receiving<sp/>a<sp/>new<sp/>pose.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>bool<sp/>`[`getPreGrasp`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab82b5755786cbc7b3255eedb3381f5c8)`(geometry_msgs::msg::Pose<sp/>&amp;<sp/>pose)`<sp/>|<sp/>Get<sp/>the<sp/>Pre<sp/>Grasp<sp/>object<sp/>pose.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>bool<sp/>`[`getGrasp`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1aed89327ba661ddf2be6c4c187bbf74e0)`(geometry_msgs::msg::Pose<sp/>&amp;<sp/>pose)`<sp/>|<sp/>Get<sp/>the<sp/>Grasp<sp/>object<sp/>Pose.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>bool<sp/>`[`isTargetAcquired`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1a29d996087e338b75a5f1de2324380dcc)`()`<sp/>|<sp/>function<sp/>to<sp/>verify<sp/>that<sp/>the<sp/>object<sp/>is<sp/>currently<sp/>still<sp/>valid<sp/>and<sp/>detected<sp/>by<sp/>the<sp/>framework</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>std::string<sp/>`[`getCurrentObject`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1aa6940e178dc6fc147282f7acd1f04f7b)`()`<sp/>|<sp/>Get<sp/>the<sp/>Current<sp/>detected<sp/>Object<sp/>string<sp/>identifier.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>bool<sp/>`[`init`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab0c2cdba038b08aff7dfd7b43211ce63)`(rclcpp::Node::SharedPtr<sp/>node)`<sp/>|<sp/>API<sp/>entry:<sp/>plugin<sp/>initialization.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>inline<sp/>virtual<sp/>bool<sp/>`[`on_shutdown`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1a6ee193f0b77862c2a31be7b9df4600ac)`()`<sp/>|<sp/>API<sp/>entry:<sp/>operation<sp/>to<sp/>clean<sp/>up<sp/>upon<sp/>node<sp/>shutdown.</highlight></codeline>
+<codeline><highlight class="normal">`protected<sp/>rclcpp::Node::SharedPtr<sp/>`[`node_`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1aac1e2f2c6d0bf9ef2d8a0f40899b0513)<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`protected<sp/>inline<sp/><sp/>`[`RVCGraspInterface`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1a23575f212effaa07616d4bd6e561336a)`()`<sp/>|<sp/>Empty<sp/>Constructor<sp/>for<sp/>pluginlib.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Members</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>void<sp/>`[`OnMessageReceive`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ac519ff48b07aa841270b90d2b1057d47)`(rvc_messages::msg::PoseStampedList::SharedPtr<sp/>msg)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">This<sp/>function<sp/>will<sp/>be<sp/>called<sp/>upon<sp/>receiving<sp/>a<sp/>new<sp/>pose.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`msg`<sp/>the<sp/>received<sp/>message<sp/>list</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>bool<sp/>`[`getPreGrasp`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab82b5755786cbc7b3255eedb3381f5c8)`(geometry_msgs::msg::Pose<sp/>&amp;<sp/>pose)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Get<sp/>the<sp/>Pre<sp/>Grasp<sp/>object<sp/>pose.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`pose`<sp/>pregrasp<sp/>pose<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/>on<sp/>success<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">false<sp/>on<sp/>failure</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>bool<sp/>`[`getGrasp`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1aed89327ba661ddf2be6c4c187bbf74e0)`(geometry_msgs::msg::Pose<sp/>&amp;<sp/>pose)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Get<sp/>the<sp/>Grasp<sp/>object<sp/>Pose.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`pose`<sp/>Grasp<sp/>Pose<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/>on<sp/>success<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">false<sp/>on<sp/>failure</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>bool<sp/>`[`isTargetAcquired`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1a29d996087e338b75a5f1de2324380dcc)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">function<sp/>to<sp/>verify<sp/>that<sp/>the<sp/>object<sp/>is<sp/>currently<sp/>still<sp/>valid<sp/>and<sp/>detected<sp/>by<sp/>the<sp/>framework</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">false</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>std::string<sp/>`[`getCurrentObject`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1aa6940e178dc6fc147282f7acd1f04f7b)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Get<sp/>the<sp/>Current<sp/>detected<sp/>Object<sp/>string<sp/>identifier.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">std::string<sp/>object<sp/>name<sp/>identifier</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>bool<sp/>`[`init`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab0c2cdba038b08aff7dfd7b43211ce63)`(rclcpp::Node::SharedPtr<sp/>node)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">API<sp/>entry:<sp/>plugin<sp/>initialization.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`node`<sp/>Ros<sp/>node<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/>`modelName`<sp/>input<sp/>file<sp/>name<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/>on<sp/>success<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">false<sp/>otherwise</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>inline<sp/>virtual<sp/>bool<sp/>`[`on_shutdown`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1a6ee193f0b77862c2a31be7b9df4600ac)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">API<sp/>entry:<sp/>operation<sp/>to<sp/>clean<sp/>up<sp/>upon<sp/>node<sp/>shutdown.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">false</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`protected<sp/>rclcpp::Node::SharedPtr<sp/>`[`node_`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1aac1e2f2c6d0bf9ef2d8a0f40899b0513)<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`protected<sp/>inline<sp/><sp/>`[`RVCGraspInterface`](#class_r_v_c_control_1_1_r_v_c_grasp_interface_1a23575f212effaa07616d4bd6e561336a)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Empty<sp/>Constructor<sp/>for<sp/>pluginlib.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`node`<sp/>a<sp/>rclcpp<sp/>node<sp/>shared<sp/>pointer</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>class<sp/>`RVCControl::NonOrientedGrasp`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline><highlight class="normal">class<sp/>RVCControl::NonOrientedGrasp</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>:<sp/>public<sp/>RVCControl::RVCGraspInterface</highlight></codeline>
+<codeline><highlight class="normal">```<sp/><sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Summary</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Members<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/><sp/>`[`NonOrientedGrasp`](#class_r_v_c_control_1_1_non_oriented_grasp_1a54d592d88ad0cee37af78b002aba3d49)`()`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>bool<sp/>`[`init`](#class_r_v_c_control_1_1_non_oriented_grasp_1a6bf4217ff0bdc62b37465410e5729933)`(rclcpp::Node::SharedPtr<sp/>node)`<sp/>|<sp/>API<sp/>entry:<sp/>plugin<sp/>initialization.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>void<sp/>`[`OnMessageReceive`](#class_r_v_c_control_1_1_non_oriented_grasp_1a944db041600951afdca9e9629018d551)`(rvc_messages::msg::PoseStampedList::SharedPtr<sp/>msg)`<sp/>|<sp/>This<sp/>function<sp/>will<sp/>be<sp/>called<sp/>upon<sp/>receiving<sp/>a<sp/>new<sp/>pose.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>bool<sp/>`[`getPreGrasp`](#class_r_v_c_control_1_1_non_oriented_grasp_1a51f070f68c144f34c9359f655e1074b1)`(geometry_msgs::msg::Pose<sp/>&amp;<sp/>pose)`<sp/>|<sp/>Get<sp/>the<sp/>Pre<sp/>Grasp<sp/>object<sp/>pose.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>bool<sp/>`[`getGrasp`](#class_r_v_c_control_1_1_non_oriented_grasp_1aa970d9a2aeaaa29e7c54922b41cc4cd1)`(geometry_msgs::msg::Pose<sp/>&amp;<sp/>pose)`<sp/>|<sp/>Get<sp/>the<sp/>Grasp<sp/>object<sp/>Pose.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>inline<sp/>virtual<sp/>bool<sp/>`[`isTargetAcquired`](#class_r_v_c_control_1_1_non_oriented_grasp_1ad1fdf2664264a495fd3a70119a4a3e08)`()`<sp/>|<sp/>function<sp/>to<sp/>verify<sp/>that<sp/>the<sp/>object<sp/>is<sp/>currently<sp/>still<sp/>valid<sp/>and<sp/>detected<sp/>by<sp/>the<sp/>framework</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>inline<sp/>virtual<sp/>std::string<sp/>`[`getCurrentObject`](#class_r_v_c_control_1_1_non_oriented_grasp_1a02b232913ff79c9eaca55ba70a7c0d13)`()`<sp/>|<sp/>Get<sp/>the<sp/>Current<sp/>detected<sp/>Object<sp/>string<sp/>identifier.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Members</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/><sp/>`[`NonOrientedGrasp`](#class_r_v_c_control_1_1_non_oriented_grasp_1a54d592d88ad0cee37af78b002aba3d49)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>bool<sp/>`[`init`](#class_r_v_c_control_1_1_non_oriented_grasp_1a6bf4217ff0bdc62b37465410e5729933)`(rclcpp::Node::SharedPtr<sp/>node)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">API<sp/>entry:<sp/>plugin<sp/>initialization.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`node`<sp/>Ros<sp/>node<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/>`modelName`<sp/>input<sp/>file<sp/>name<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/>on<sp/>success<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">false<sp/>otherwise</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>void<sp/>`[`OnMessageReceive`](#class_r_v_c_control_1_1_non_oriented_grasp_1a944db041600951afdca9e9629018d551)`(rvc_messages::msg::PoseStampedList::SharedPtr<sp/>msg)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">This<sp/>function<sp/>will<sp/>be<sp/>called<sp/>upon<sp/>receiving<sp/>a<sp/>new<sp/>pose.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`msg`<sp/>the<sp/>received<sp/>message<sp/>list</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>bool<sp/>`[`getPreGrasp`](#class_r_v_c_control_1_1_non_oriented_grasp_1a51f070f68c144f34c9359f655e1074b1)`(geometry_msgs::msg::Pose<sp/>&amp;<sp/>pose)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Get<sp/>the<sp/>Pre<sp/>Grasp<sp/>object<sp/>pose.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`pose`<sp/>pregrasp<sp/>pose<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/>on<sp/>success<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">false<sp/>on<sp/>failure</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>bool<sp/>`[`getGrasp`](#class_r_v_c_control_1_1_non_oriented_grasp_1aa970d9a2aeaaa29e7c54922b41cc4cd1)`(geometry_msgs::msg::Pose<sp/>&amp;<sp/>pose)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Get<sp/>the<sp/>Grasp<sp/>object<sp/>Pose.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`pose`<sp/>Grasp<sp/>Pose<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/>on<sp/>success<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">false<sp/>on<sp/>failure</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>inline<sp/>virtual<sp/>bool<sp/>`[`isTargetAcquired`](#class_r_v_c_control_1_1_non_oriented_grasp_1ad1fdf2664264a495fd3a70119a4a3e08)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">function<sp/>to<sp/>verify<sp/>that<sp/>the<sp/>object<sp/>is<sp/>currently<sp/>still<sp/>valid<sp/>and<sp/>detected<sp/>by<sp/>the<sp/>framework</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">false</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>inline<sp/>virtual<sp/>std::string<sp/>`[`getCurrentObject`](#class_r_v_c_control_1_1_non_oriented_grasp_1a02b232913ff79c9eaca55ba70a7c0d13)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Get<sp/>the<sp/>Current<sp/>detected<sp/>Object<sp/>string<sp/>identifier.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">std::string<sp/>object<sp/>name<sp/>identifier</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>namespace<sp/>`RVCMotionController`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Any<sp/>defined<sp/>controllers<sp/>have<sp/>to<sp/>inerit<sp/>from<sp/>this<sp/>to<sp/>be<sp/>used<sp/>in<sp/>the<sp/>StateMachine<sp/>node.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Linear<sp/>Goal<sp/>Controller<sp/>implementation<sp/>of<sp/>linear<sp/>trajectory<sp/>planning.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">This<sp/>Goal<sp/>Controller<sp/>uses<sp/>moveit2<sp/>servo</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">This<sp/>Goal<sp/>Controller<sp/>implements<sp/>the<sp/>simplest<sp/>strategy:<sp/>In<sp/>space:<sp/>from<sp/>current<sp/>position<sp/>to<sp/>destination,<sp/>the<sp/>trajectory<sp/>are<sp/>segmented<sp/>in<sp/>a<sp/>linear<sp/>way:<sp/>if<sp/>the<sp/>goal<sp/>is<sp/>in<sp/>TCP<sp/>mode,<sp/>the<sp/>TCP<sp/>(gripper)<sp/>will<sp/>travel<sp/>from<sp/>current<sp/>to<sp/>goal<sp/>in<sp/>a<sp/>spacial<sp/>linear<sp/>trajectory<sp/>In<sp/>time,<sp/>the<sp/>trajectory<sp/>segments<sp/>become<sp/>shorter<sp/>the<sp/>closer<sp/>the<sp/>TCP<sp/>is<sp/>to<sp/>the<sp/>goal<sp/>with<sp/>a<sp/>arctan<sp/>profile<sp/>(so<sp/>not<sp/>linear)<sp/>If<sp/>the<sp/>Goal<sp/>Controller<sp/>is<sp/>in<sp/>Joint<sp/>Mode<sp/>(as<sp/>opposed<sp/>to<sp/>TCP<sp/>Mode),<sp/>the<sp/>single<sp/>joints<sp/>angles<sp/>will<sp/>have<sp/>the<sp/>above<sp/>behaviour:<sp/>each<sp/>joint<sp/>increments/decrements<sp/>the<sp/>angle<sp/>linearly<sp/>towards<sp/>the<sp/>goal</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Summary</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Members<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>static<sp/>const<sp/>std::string<sp/>`[`SERVER_IP_REPLACE`](#namespace_r_v_c_motion_controller_1a485d87131704adeb6b79f4afeae0b773)`(&quot;{{SERVER_IP_REPLACE}}&quot;)`<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>static<sp/>const<sp/>std::string<sp/>`[`SERVER_PORT_REPLACE`](#namespace_r_v_c_motion_controller_1af3ba943f7d939be83f329747463f2dcb)`(&quot;{{SERVER_PORT_REPLACE}}&quot;)`<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`class<sp/>`[`RVCMotionController::Moveit2ServoMotionController`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller)<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`class<sp/>`[`RVCMotionController::RVCMotionControllerInterface`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface)<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`class<sp/>`[`RVCMotionController::URPendantMotionController`](#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller)<sp/>|<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Members</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>static<sp/>const<sp/>std::string<sp/>`[`SERVER_IP_REPLACE`](#namespace_r_v_c_motion_controller_1a485d87131704adeb6b79f4afeae0b773)`(&quot;{{SERVER_IP_REPLACE}}&quot;)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>static<sp/>const<sp/>std::string<sp/>`[`SERVER_PORT_REPLACE`](#namespace_r_v_c_motion_controller_1af3ba943f7d939be83f329747463f2dcb)`(&quot;{{SERVER_PORT_REPLACE}}&quot;)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>class<sp/>`RVCMotionController::Moveit2ServoMotionController`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline><highlight class="normal">class<sp/>RVCMotionController::Moveit2ServoMotionController</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>:<sp/>public<sp/>RVCMotionController::RVCMotionControllerInterface</highlight></codeline>
+<codeline><highlight class="normal">```<sp/><sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Summary</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Members<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/><sp/>`[`Moveit2ServoMotionController`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ace3a0dfb12ab35bcae919676ae1b29e7)`()`<sp/>|<sp/>Constructor.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/><sp/>`[`~Moveit2ServoMotionController`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3f8495c71f5ef0a7b422b03a64b49a5c)`()`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>bool<sp/>`[`init`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a37df9d2b464a7563829e164291f8ef63)`(rclcpp::Node::SharedPtr<sp/>node)`<sp/>|<sp/>initialization<sp/>api</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>void<sp/>`[`setControllerSpeed`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3cea9779b1b4f41dade9674f48f810d7)`(const<sp/>double<sp/>controllerSpeed)`<sp/>|<sp/>Implementation<sp/>of<sp/>the<sp/>pure<sp/>virtual<sp/>function<sp/>for<sp/>a<sp/>linear<sp/>controller.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>void<sp/>`[`sendGoal`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a20b86cf9f2c710722ee94fd3cd267f02)`(const<sp/>geometry_msgs::msg::Pose<sp/>destPose)`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>void<sp/>`[`sendGoal`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a54c67ade6b09d153f429f791269881f2)`(const<sp/>std::vector&lt;<sp/>vector6d_t<sp/>&gt;<sp/>dest,const<sp/>bool<sp/>recomputeTraj)`<sp/>|<sp/>implementation<sp/>of<sp/>send<sp/>goal<sp/>with<sp/>vector6d_t<sp/>as<sp/>input</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>void<sp/>`[`sendGripperPosition`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ad2d7f8e6b49f9f325fbd311cc8ec1420)`(double<sp/>position)`<sp/>|<sp/>Controller<sp/>gives<sp/>an<sp/>indication<sp/>if<sp/>the<sp/>target<sp/>is<sp/>close<sp/>enough.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>inline<sp/>virtual<sp/>double<sp/>`[`getGripperPositionFeedback`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a1524873c6fac09410295f18988adaaf3)`(void)`<sp/>|<sp/>returns<sp/>current<sp/>value<sp/>of<sp/>the<sp/>gripper<sp/>position.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>bool<sp/>`[`isGoalNear`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a5ecf5b6f4e46bac90b2d0b8aa41de14d)`()`<sp/>|<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Members</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/><sp/>`[`Moveit2ServoMotionController`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ace3a0dfb12ab35bcae919676ae1b29e7)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Constructor.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`node`<sp/>ros<sp/>node</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/><sp/>`[`~Moveit2ServoMotionController`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3f8495c71f5ef0a7b422b03a64b49a5c)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>bool<sp/>`[`init`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a37df9d2b464a7563829e164291f8ef63)`(rclcpp::Node::SharedPtr<sp/>node)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">initialization<sp/>api</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`node`<sp/>the<sp/>rclcpp::Node<sp/>associated<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/>if<sp/>succeded<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">false<sp/>if<sp/>failed</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>void<sp/>`[`setControllerSpeed`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3cea9779b1b4f41dade9674f48f810d7)`(const<sp/>double<sp/>controllerSpeed)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Implementation<sp/>of<sp/>the<sp/>pure<sp/>virtual<sp/>function<sp/>for<sp/>a<sp/>linear<sp/>controller.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`destPose`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/>`controllerSpeed`</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>void<sp/>`[`sendGoal`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a20b86cf9f2c710722ee94fd3cd267f02)`(const<sp/>geometry_msgs::msg::Pose<sp/>destPose)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>void<sp/>`[`sendGoal`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a54c67ade6b09d153f429f791269881f2)`(const<sp/>std::vector&lt;<sp/>vector6d_t<sp/>&gt;<sp/>dest,const<sp/>bool<sp/>recomputeTraj)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">implementation<sp/>of<sp/>send<sp/>goal<sp/>with<sp/>vector6d_t<sp/>as<sp/>input</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`dest`<sp/>6<sp/>double<sp/>elements<sp/>vector<sp/>input<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/>`controllerSpeed`<sp/>speed<sp/>input</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>void<sp/>`[`sendGripperPosition`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ad2d7f8e6b49f9f325fbd311cc8ec1420)`(double<sp/>position)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Controller<sp/>gives<sp/>an<sp/>indication<sp/>if<sp/>the<sp/>target<sp/>is<sp/>close<sp/>enough.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/>if<sp/>the<sp/>goal<sp/>is<sp/>close<sp/>enough</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>inline<sp/>virtual<sp/>double<sp/>`[`getGripperPositionFeedback`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a1524873c6fac09410295f18988adaaf3)`(void)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">returns<sp/>current<sp/>value<sp/>of<sp/>the<sp/>gripper<sp/>position.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">current<sp/>value<sp/>of<sp/>the<sp/>gripper<sp/>position.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>bool<sp/>`[`isGoalNear`](#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a5ecf5b6f4e46bac90b2d0b8aa41de14d)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>class<sp/>`RVCMotionController::RVCMotionControllerInterface`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Summary</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Members<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>bool<sp/>`[`init`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ab207b1f50cc7b3bb726221e0b782f255)`(rclcpp::Node::SharedPtr<sp/>node)`<sp/>|<sp/>initialization<sp/>api</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>void<sp/>`[`setControllerSpeed`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a267aaac3902ac1bf47a870f9b02b4d58)`(const<sp/>double<sp/>controllerSpeed)`<sp/>|<sp/>Send<sp/>the<sp/>target<sp/>goal<sp/>Pose<sp/>to<sp/>the<sp/>controller.<sp/>Pure<sp/>virtual<sp/>function.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>void<sp/>`[`sendGoal`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a5a54d8631325fb402fcd1412960c4357)`(const<sp/>geometry_msgs::msg::Pose<sp/>destPose)`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>void<sp/>`[`sendGoal`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a0b35fed01e1e1018a831d2dfedafbe99)`(std::vector&lt;<sp/>vector6d_t<sp/>&gt;<sp/>dest,const<sp/>bool<sp/>recomputeTraj)`<sp/>|<sp/>Send<sp/>the<sp/>target<sp/>angles<sp/>to<sp/>the<sp/>controller.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>void<sp/>`[`sendGripperPosition`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aef5ea596277bb87030274d71a0add677)`(double<sp/>position)`<sp/>|<sp/>Controller<sp/>gives<sp/>an<sp/>indication<sp/>if<sp/>the<sp/>target<sp/>is<sp/>close<sp/>enough.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>bool<sp/>`[`isGoalNear`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a75decf28e1a228ebd57d730a5638017c)`()`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>double<sp/>`[`getGripperPositionFeedback`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aeb1c0f524dd83957f70d359e9a719df2)`(void)`<sp/>|<sp/>returns<sp/>current<sp/>value<sp/>of<sp/>the<sp/>gripper<sp/>position.</highlight></codeline>
+<codeline><highlight class="normal">`protected<sp/>rclcpp::Node::SharedPtr<sp/>`[`node_`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aac3f97e64f67377c59593a6b2853f1e9)<sp/>|<sp/>ros<sp/>node</highlight></codeline>
+<codeline><highlight class="normal">`protected<sp/>vector6d_t<sp/>`[`lastJointGoal`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1af579517cbf66e8ac5550a77c52dd1dce)<sp/>|<sp/>previous<sp/>configured<sp/>goal<sp/>in<sp/>Joint<sp/>Space</highlight></codeline>
+<codeline><highlight class="normal">`protected<sp/>geometry_msgs::msg::Pose<sp/>`[`lastTCPGoal`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac3a613c724464f9317665dbac0fe4c64)<sp/>|<sp/>previous<sp/>configured<sp/>goal<sp/>in<sp/>Cartesian<sp/>Space</highlight></codeline>
+<codeline><highlight class="normal">`protected<sp/>int<sp/>`[`current_control_mode`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a05b4cd37612329c645a4240864b45745)<sp/>|<sp/>internal<sp/>state<sp/>representing<sp/>if<sp/>controller<sp/>is<sp/>currently<sp/>in<sp/>Joint<sp/>or<sp/>Cartesian<sp/>space<sp/>control<sp/>mode</highlight></codeline>
+<codeline><highlight class="normal">`protected<sp/><sp/>`[`RVCMotionControllerInterface`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac8f879e7d8652768338343eec731b5b0)`()`<sp/>|<sp/>Empty<sp/>Constructor<sp/>for<sp/>pluginlib.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Members</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>bool<sp/>`[`init`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ab207b1f50cc7b3bb726221e0b782f255)`(rclcpp::Node::SharedPtr<sp/>node)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">initialization<sp/>api</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`node`<sp/>the<sp/>rclcpp::Node<sp/>associated<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/>if<sp/>succeded<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">false<sp/>if<sp/>failed</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>void<sp/>`[`setControllerSpeed`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a267aaac3902ac1bf47a870f9b02b4d58)`(const<sp/>double<sp/>controllerSpeed)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Send<sp/>the<sp/>target<sp/>goal<sp/>Pose<sp/>to<sp/>the<sp/>controller.<sp/>Pure<sp/>virtual<sp/>function.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`destPose`<sp/>target<sp/>Pose<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/>`controllerSpeed`<sp/>Speed<sp/>of<sp/>the<sp/>robot</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>void<sp/>`[`sendGoal`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a5a54d8631325fb402fcd1412960c4357)`(const<sp/>geometry_msgs::msg::Pose<sp/>destPose)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>void<sp/>`[`sendGoal`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a0b35fed01e1e1018a831d2dfedafbe99)`(std::vector&lt;<sp/>vector6d_t<sp/>&gt;<sp/>dest,const<sp/>bool<sp/>recomputeTraj)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Send<sp/>the<sp/>target<sp/>angles<sp/>to<sp/>the<sp/>controller.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`dest`<sp/>6<sp/>joint<sp/>angles<sp/>in<sp/>radians<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/>`controllerSpeed`<sp/>Speed<sp/>of<sp/>the<sp/>robot</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>void<sp/>`[`sendGripperPosition`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aef5ea596277bb87030274d71a0add677)`(double<sp/>position)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Controller<sp/>gives<sp/>an<sp/>indication<sp/>if<sp/>the<sp/>target<sp/>is<sp/>close<sp/>enough.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/>if<sp/>the<sp/>goal<sp/>is<sp/>close<sp/>enough</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>bool<sp/>`[`isGoalNear`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a75decf28e1a228ebd57d730a5638017c)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>double<sp/>`[`getGripperPositionFeedback`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aeb1c0f524dd83957f70d359e9a719df2)`(void)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">returns<sp/>current<sp/>value<sp/>of<sp/>the<sp/>gripper<sp/>position.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">current<sp/>value<sp/>of<sp/>the<sp/>gripper<sp/>position.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`protected<sp/>rclcpp::Node::SharedPtr<sp/>`[`node_`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aac3f97e64f67377c59593a6b2853f1e9)<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">ros<sp/>node</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`protected<sp/>vector6d_t<sp/>`[`lastJointGoal`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1af579517cbf66e8ac5550a77c52dd1dce)<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">previous<sp/>configured<sp/>goal<sp/>in<sp/>Joint<sp/>Space</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`protected<sp/>geometry_msgs::msg::Pose<sp/>`[`lastTCPGoal`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac3a613c724464f9317665dbac0fe4c64)<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">previous<sp/>configured<sp/>goal<sp/>in<sp/>Cartesian<sp/>Space</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`protected<sp/>int<sp/>`[`current_control_mode`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a05b4cd37612329c645a4240864b45745)<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">internal<sp/>state<sp/>representing<sp/>if<sp/>controller<sp/>is<sp/>currently<sp/>in<sp/>Joint<sp/>or<sp/>Cartesian<sp/>space<sp/>control<sp/>mode</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`protected<sp/><sp/>`[`RVCMotionControllerInterface`](#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac8f879e7d8652768338343eec731b5b0)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Empty<sp/>Constructor<sp/>for<sp/>pluginlib.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`node`<sp/>a<sp/>rclcpp<sp/>node<sp/>shared<sp/>pointer</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>class<sp/>`RVCMotionController::URPendantMotionController`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline><highlight class="normal">class<sp/>RVCMotionController::URPendantMotionController</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>:<sp/>public<sp/>RVCMotionController::RVCMotionControllerInterface</highlight></codeline>
+<codeline><highlight class="normal">```<sp/><sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Summary</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Members<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/><sp/>`[`URPendantMotionController`](#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1aea5fc0138868a3e04c7088128ddb1e98)`()`<sp/>|<sp/>Constructor.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>bool<sp/>`[`init`](#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a2269ddc71a4c2fa31ada8c9e0e7f292b)`(rclcpp::Node::SharedPtr<sp/>node)`<sp/>|<sp/>####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/>double<sp/>`[`getGripperPositionFeedback`](#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a41c541d0e9df5115831d43580a44bdb2)`(void)`<sp/>|<sp/>returns<sp/>current<sp/>value<sp/>of<sp/>the<sp/>gripper<sp/>position.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Members</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/><sp/>`[`URPendantMotionController`](#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1aea5fc0138868a3e04c7088128ddb1e98)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Constructor.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>bool<sp/>`[`init`](#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a2269ddc71a4c2fa31ada8c9e0e7f292b)`(rclcpp::Node::SharedPtr<sp/>node)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`node`<sp/>ros<sp/>node</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/>double<sp/>`[`getGripperPositionFeedback`](#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a41c541d0e9df5115831d43580a44bdb2)`(void)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">returns<sp/>current<sp/>value<sp/>of<sp/>the<sp/>gripper<sp/>position.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">current<sp/>value<sp/>of<sp/>the<sp/>gripper<sp/>position.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>class<sp/>`PoseTracking`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Class<sp/>[PoseTracking](#class_pose_tracking)<sp/>-<sp/>subscribe<sp/>to<sp/>a<sp/>target<sp/>pose.<sp/>Servo<sp/>toward<sp/>the<sp/>target<sp/>pose.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Summary</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Members<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>std::unique_ptr&lt;<sp/>moveit_servo::Servo<sp/>&gt;<sp/>`[`servo_`](#class_pose_tracking_1a4e01588503f3f4daa40f831672b3abac)<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/><sp/>`[`PoseTracking`](#class_pose_tracking_1a03044e3ae81a921cd3a1c99b7b3f51ca)`(const<sp/>rclcpp::Node::SharedPtr<sp/>&amp;<sp/>node,const<sp/>moveit_servo::ServoParameters::SharedConstPtr<sp/>&amp;<sp/>servo_parameters,const<sp/>planning_scene_monitor::PlanningSceneMonitorPtr<sp/>&amp;<sp/>planning_scene_monitor)`<sp/>|<sp/>Constructor.<sp/>Loads<sp/>ROS<sp/>parameters<sp/>under<sp/>the<sp/>given<sp/>namespace.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>PoseTrackingStatusCode<sp/>`[`moveToPose`](#class_pose_tracking_1a921d741b7c5d641d79a502822082d101)`()`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>inline<sp/>bool<sp/>`[`isGoalAchieved`](#class_pose_tracking_1a0a0fd0ffa2ce16e162000088622cefde)`()`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>void<sp/>`[`stopMotion`](#class_pose_tracking_1ad3cf9cbf97086a8b30da4ce3731cfe2c)`()`<sp/>|<sp/>A<sp/>method<sp/>for<sp/>a<sp/>different<sp/>thread<sp/>to<sp/>stop<sp/>motion<sp/>and<sp/>return<sp/>early<sp/>from<sp/>control<sp/>loop.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>bool<sp/>`[`getCommandFrameTransform`](#class_pose_tracking_1ac61ae07521fc52db7b3aa9c7d85a122b)`(Eigen::Isometry3d<sp/>&amp;<sp/>transform)`<sp/>|<sp/>Get<sp/>the<sp/>End<sp/>Effector<sp/>link<sp/>transform.<sp/>The<sp/>transform<sp/>from<sp/>the<sp/>MoveIt<sp/>planning<sp/>frame<sp/>to<sp/>EE<sp/>link</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>void<sp/>`[`resetTargetPose`](#class_pose_tracking_1aa0c00f7fe84a6916466ade74bf7266fe)`()`<sp/>|<sp/>Re-initialize<sp/>the<sp/>target<sp/>pose<sp/>to<sp/>an<sp/>empty<sp/>message.<sp/>Can<sp/>be<sp/>used<sp/>to<sp/>reset<sp/>motion<sp/>between<sp/>waypoints.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>void<sp/>`[`setTargetPose`](#class_pose_tracking_1a67f56b8baea910817c9c476466e4478a)`(const<sp/>geometry_msgs::msg::PoseStamped::ConstSharedPtr<sp/>&amp;<sp/>msg)`<sp/>|<sp/>Subscribe<sp/>to<sp/>the<sp/>target<sp/>pose<sp/>on<sp/>this<sp/>topic.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>void<sp/>`[`setSpeed`](#class_pose_tracking_1ad434d0ef30be2d54a18ad433359a973c)`(const<sp/>double<sp/>speed)`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>double<sp/>`[`getGripperPositionFeedback`](#class_pose_tracking_1a0d12ae2723fb806f9364bee0399dc497)`(void)`<sp/>|<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Members</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>std::unique_ptr&lt;<sp/>moveit_servo::Servo<sp/>&gt;<sp/>`[`servo_`](#class_pose_tracking_1a4e01588503f3f4daa40f831672b3abac)<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/><sp/>`[`PoseTracking`](#class_pose_tracking_1a03044e3ae81a921cd3a1c99b7b3f51ca)`(const<sp/>rclcpp::Node::SharedPtr<sp/>&amp;<sp/>node,const<sp/>moveit_servo::ServoParameters::SharedConstPtr<sp/>&amp;<sp/>servo_parameters,const<sp/>planning_scene_monitor::PlanningSceneMonitorPtr<sp/>&amp;<sp/>planning_scene_monitor)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Constructor.<sp/>Loads<sp/>ROS<sp/>parameters<sp/>under<sp/>the<sp/>given<sp/>namespace.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>PoseTrackingStatusCode<sp/>`[`moveToPose`](#class_pose_tracking_1a921d741b7c5d641d79a502822082d101)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>inline<sp/>bool<sp/>`[`isGoalAchieved`](#class_pose_tracking_1a0a0fd0ffa2ce16e162000088622cefde)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>void<sp/>`[`stopMotion`](#class_pose_tracking_1ad3cf9cbf97086a8b30da4ce3731cfe2c)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">A<sp/>method<sp/>for<sp/>a<sp/>different<sp/>thread<sp/>to<sp/>stop<sp/>motion<sp/>and<sp/>return<sp/>early<sp/>from<sp/>control<sp/>loop.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>bool<sp/>`[`getCommandFrameTransform`](#class_pose_tracking_1ac61ae07521fc52db7b3aa9c7d85a122b)`(Eigen::Isometry3d<sp/>&amp;<sp/>transform)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Get<sp/>the<sp/>End<sp/>Effector<sp/>link<sp/>transform.<sp/>The<sp/>transform<sp/>from<sp/>the<sp/>MoveIt<sp/>planning<sp/>frame<sp/>to<sp/>EE<sp/>link</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`transform`<sp/>the<sp/>transform<sp/>that<sp/>will<sp/>be<sp/>calculated<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">true<sp/>if<sp/>a<sp/>valid<sp/>transform<sp/>was<sp/>available</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>void<sp/>`[`resetTargetPose`](#class_pose_tracking_1aa0c00f7fe84a6916466ade74bf7266fe)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Re-initialize<sp/>the<sp/>target<sp/>pose<sp/>to<sp/>an<sp/>empty<sp/>message.<sp/>Can<sp/>be<sp/>used<sp/>to<sp/>reset<sp/>motion<sp/>between<sp/>waypoints.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>void<sp/>`[`setTargetPose`](#class_pose_tracking_1a67f56b8baea910817c9c476466e4478a)`(const<sp/>geometry_msgs::msg::PoseStamped::ConstSharedPtr<sp/>&amp;<sp/>msg)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Subscribe<sp/>to<sp/>the<sp/>target<sp/>pose<sp/>on<sp/>this<sp/>topic.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>void<sp/>`[`setSpeed`](#class_pose_tracking_1ad434d0ef30be2d54a18ad433359a973c)`(const<sp/>double<sp/>speed)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>double<sp/>`[`getGripperPositionFeedback`](#class_pose_tracking_1a0d12ae2723fb806f9364bee0399dc497)`(void)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>class<sp/>`TCPServer`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Summary</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Members<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/><sp/>`[`TCPServer`](#class_t_c_p_server_1a34530b6adcb6ecc2a41eafea64be376b)`()<sp/>=<sp/>delete`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/><sp/>`[`TCPServer`](#class_t_c_p_server_1a6a46d69366b344b31c0844025f5ed6c5)`(const<sp/>int<sp/>port)`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/><sp/>`[`~TCPServer`](#class_t_c_p_server_1abc497ac52355e53986a6a1bd1acb9581)`()`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>inline<sp/>void<sp/>`[`setConnectCallback`](#class_t_c_p_server_1ac4692eebb919065ff1e47c03b9f32236)`(std::function&lt;<sp/>void(const<sp/>int)&gt;<sp/>func)`<sp/>|<sp/>This<sp/>callback<sp/>will<sp/>be<sp/>triggered<sp/>on<sp/>clients<sp/>connecting<sp/>to<sp/>the<sp/>server.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>inline<sp/>void<sp/>`[`setDisconnectCallback`](#class_t_c_p_server_1a876d2df45973514fce6c03166418cdf0)`(std::function&lt;<sp/>void(const<sp/>int)&gt;<sp/>func)`<sp/>|<sp/>This<sp/>callback<sp/>will<sp/>be<sp/>triggered<sp/>on<sp/>clients<sp/>disconnecting<sp/>from<sp/>the<sp/>server.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>inline<sp/>void<sp/>`[`setMessageCallback`](#class_t_c_p_server_1ac0d65df310bb5fb1a1485e51b8e3a247)`(std::function&lt;<sp/>void(const<sp/>int,<sp/>char<sp/>*,<sp/>int)&gt;<sp/>func)`<sp/>|<sp/>This<sp/>callback<sp/>will<sp/>be<sp/>triggered<sp/>on<sp/>messages<sp/>received<sp/>on<sp/>the<sp/>socket.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>void<sp/>`[`start`](#class_t_c_p_server_1a02a481f18a96c41fda63f2caf97df239)`()`<sp/>|<sp/>Start<sp/>event<sp/>handling.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>void<sp/>`[`shutdown`](#class_t_c_p_server_1ab39f6193cd657921f6cbb8185ba94341)`()`<sp/>|<sp/>Shut<sp/>down<sp/>the<sp/>event<sp/>listener<sp/>thread.<sp/>After<sp/>calling<sp/>this,<sp/>no<sp/>events<sp/>will<sp/>be<sp/>handled<sp/>anymore,<sp/>but<sp/>the<sp/>socket<sp/>will<sp/>remain<sp/>open<sp/>and<sp/>bound<sp/>to<sp/>the<sp/>port.<sp/>Call<sp/>[start()](#class_t_c_p_server_1a02a481f18a96c41fda63f2caf97df239)<sp/>in<sp/>order<sp/>to<sp/>restart<sp/>event<sp/>handling.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>bool<sp/>`[`write`](#class_t_c_p_server_1aa97ea739a82504a2e2aed5a1f4854f8a)`(const<sp/>int<sp/>fd,const<sp/>uint8_t<sp/>*<sp/>buf,const<sp/>size_t<sp/>buf_len,size_t<sp/>&amp;<sp/>written)`<sp/>|<sp/>Writes<sp/>to<sp/>a<sp/>client.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>inline<sp/>uint32_t<sp/>`[`getMaxClientsAllowed`](#class_t_c_p_server_1af09a1f9ade5d6f8a1eab80390685b513)`()<sp/>const`<sp/>|<sp/>Get<sp/>the<sp/>maximum<sp/>number<sp/>of<sp/>clients<sp/>allowed<sp/>to<sp/>connect<sp/>to<sp/>this<sp/>server.</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>inline<sp/>void<sp/>`[`setMaxClientsAllowed`](#class_t_c_p_server_1adf4db1a71bdd42642a8cc308e70dcd86)`(const<sp/>uint32_t<sp/>&amp;<sp/>max_clients_allowed)`<sp/>|<sp/>Set<sp/>the<sp/>maximum<sp/>number<sp/>of<sp/>clients<sp/>allowed<sp/>to<sp/>connect<sp/>to<sp/>this<sp/>server.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Members</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/><sp/>`[`TCPServer`](#class_t_c_p_server_1a34530b6adcb6ecc2a41eafea64be376b)`()<sp/>=<sp/>delete`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/><sp/>`[`TCPServer`](#class_t_c_p_server_1a6a46d69366b344b31c0844025f5ed6c5)`(const<sp/>int<sp/>port)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/><sp/>`[`~TCPServer`](#class_t_c_p_server_1abc497ac52355e53986a6a1bd1acb9581)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>inline<sp/>void<sp/>`[`setConnectCallback`](#class_t_c_p_server_1ac4692eebb919065ff1e47c03b9f32236)`(std::function&lt;<sp/>void(const<sp/>int)&gt;<sp/>func)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">This<sp/>callback<sp/>will<sp/>be<sp/>triggered<sp/>on<sp/>clients<sp/>connecting<sp/>to<sp/>the<sp/>server.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`func`<sp/>Function<sp/>handling<sp/>the<sp/>event<sp/>information.<sp/>The<sp/>file<sp/>descriptor<sp/>created<sp/>by<sp/>the<sp/>connection<sp/>event<sp/>will<sp/>be<sp/>passed<sp/>to<sp/>the<sp/>function.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>inline<sp/>void<sp/>`[`setDisconnectCallback`](#class_t_c_p_server_1a876d2df45973514fce6c03166418cdf0)`(std::function&lt;<sp/>void(const<sp/>int)&gt;<sp/>func)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">This<sp/>callback<sp/>will<sp/>be<sp/>triggered<sp/>on<sp/>clients<sp/>disconnecting<sp/>from<sp/>the<sp/>server.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`func`<sp/>Function<sp/>handling<sp/>the<sp/>event<sp/>information.<sp/>The<sp/>file<sp/>descriptor<sp/>created<sp/>by<sp/>the<sp/>connection<sp/>event<sp/>will<sp/>be<sp/>passed<sp/>to<sp/>the<sp/>function.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>inline<sp/>void<sp/>`[`setMessageCallback`](#class_t_c_p_server_1ac0d65df310bb5fb1a1485e51b8e3a247)`(std::function&lt;<sp/>void(const<sp/>int,<sp/>char<sp/>*,<sp/>int)&gt;<sp/>func)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">This<sp/>callback<sp/>will<sp/>be<sp/>triggered<sp/>on<sp/>messages<sp/>received<sp/>on<sp/>the<sp/>socket.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`func`<sp/>Function<sp/>handling<sp/>the<sp/>event<sp/>information.<sp/>The<sp/>file<sp/>client&apos;s<sp/>file_descriptor<sp/>will<sp/>be<sp/>passed<sp/>to<sp/>the<sp/>function<sp/>as<sp/>well<sp/>as<sp/>the<sp/>actual<sp/>message<sp/>received<sp/>from<sp/>the<sp/>client.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>void<sp/>`[`start`](#class_t_c_p_server_1a02a481f18a96c41fda63f2caf97df239)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Start<sp/>event<sp/>handling.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Without<sp/>calling<sp/>this<sp/>function<sp/>the<sp/>socket<sp/>will<sp/>be<sp/>advertised<sp/>and<sp/>bound<sp/>to<sp/>a<sp/>tcp<sp/>port,<sp/>but<sp/>no<sp/>handling<sp/>of<sp/>connection<sp/>requests<sp/>will<sp/>be<sp/>performed.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>void<sp/>`[`shutdown`](#class_t_c_p_server_1ab39f6193cd657921f6cbb8185ba94341)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Shut<sp/>down<sp/>the<sp/>event<sp/>listener<sp/>thread.<sp/>After<sp/>calling<sp/>this,<sp/>no<sp/>events<sp/>will<sp/>be<sp/>handled<sp/>anymore,<sp/>but<sp/>the<sp/>socket<sp/>will<sp/>remain<sp/>open<sp/>and<sp/>bound<sp/>to<sp/>the<sp/>port.<sp/>Call<sp/>[start()](#class_t_c_p_server_1a02a481f18a96c41fda63f2caf97df239)<sp/>in<sp/>order<sp/>to<sp/>restart<sp/>event<sp/>handling.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>bool<sp/>`[`write`](#class_t_c_p_server_1aa97ea739a82504a2e2aed5a1f4854f8a)`(const<sp/>int<sp/>fd,const<sp/>uint8_t<sp/>*<sp/>buf,const<sp/>size_t<sp/>buf_len,size_t<sp/>&amp;<sp/>written)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Writes<sp/>to<sp/>a<sp/>client.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Parameters</highlight></codeline>
+<codeline><highlight class="normal">*<sp/>`fd`<sp/>File<sp/>descriptor<sp/>belonging<sp/>to<sp/>the<sp/>client<sp/>the<sp/>data<sp/>should<sp/>be<sp/>sent<sp/>to.<sp/>The<sp/>file<sp/>descriptor<sp/>will<sp/>be<sp/>given<sp/>from<sp/>the<sp/>connection<sp/>callback.<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/>`buf`<sp/>Buffer<sp/>of<sp/>bytes<sp/>to<sp/>write<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/>`buf_len`<sp/>Number<sp/>of<sp/>bytes<sp/>in<sp/>the<sp/>buffer<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/>`written`<sp/>Number<sp/>of<sp/>bytes<sp/>actually<sp/>written</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">True<sp/>on<sp/>success,<sp/>false<sp/>otherwise</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>inline<sp/>uint32_t<sp/>`[`getMaxClientsAllowed`](#class_t_c_p_server_1af09a1f9ade5d6f8a1eab80390685b513)`()<sp/>const`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Get<sp/>the<sp/>maximum<sp/>number<sp/>of<sp/>clients<sp/>allowed<sp/>to<sp/>connect<sp/>to<sp/>this<sp/>server.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>Returns</highlight></codeline>
+<codeline><highlight class="normal">The<sp/>currently<sp/>configured<sp/>client<sp/>limit.<sp/>0<sp/>means<sp/>unlimited<sp/>amount<sp/>of<sp/>clients<sp/>allowed.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>inline<sp/>void<sp/>`[`setMaxClientsAllowed`](#class_t_c_p_server_1adf4db1a71bdd42642a8cc308e70dcd86)`(const<sp/>uint32_t<sp/>&amp;<sp/>max_clients_allowed)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Set<sp/>the<sp/>maximum<sp/>number<sp/>of<sp/>clients<sp/>allowed<sp/>to<sp/>connect<sp/>to<sp/>this<sp/>server.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">0<sp/>means<sp/>unlimited<sp/>number<sp/>of<sp/>clients<sp/>allowed.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>class<sp/>`TCPSocket`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Class<sp/>for<sp/>TCP<sp/>socket<sp/>abstraction.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Summary</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Members<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>bool<sp/>`[`setup`](#class_t_c_p_socket_1a76c452c42f24a26bcdc2a19c9aaa1360)`(std::string<sp/>&amp;<sp/>host,int<sp/>port)`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/><sp/>`[`TCPSocket`](#class_t_c_p_socket_1a7a50427a401d1a6f3209d51818bad901)`()`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>virtual<sp/><sp/>`[`~TCPSocket`](#class_t_c_p_socket_1af357e6923a0f8adbbb8e46fab4523991)`()`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>std::string<sp/>`[`getIP`](#class_t_c_p_socket_1aab36a36e867e399afd78b1e91371ac1e)`()<sp/>const`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>bool<sp/>`[`read`](#class_t_c_p_socket_1a8d88a687df0513d1372cac8524f500e2)`(char<sp/>*<sp/>character)`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>bool<sp/>`[`read`](#class_t_c_p_socket_1a663293961feef12b08f0a31aeb5c49f8)`(uint8_t<sp/>*<sp/>buf,const<sp/>size_t<sp/>buf_len,size_t<sp/>&amp;<sp/>read)`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>bool<sp/>`[`write`](#class_t_c_p_socket_1a181378aa8cec7a0bd77d78366aade064)`(const<sp/>uint8_t<sp/>*<sp/>buf,const<sp/>size_t<sp/>buf_len,size_t<sp/>&amp;<sp/>written)`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`public<sp/>void<sp/>`[`close`](#class_t_c_p_socket_1ae64f7db5484a7f057446ac3c906629c0)`()`<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`protected<sp/>std::unique_ptr&lt;<sp/>timeval<sp/>&gt;<sp/>`[`recv_timeout_`](#class_t_c_p_socket_1ac77bc18be799c23458a777644c7e5d9a)<sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">`protected<sp/>virtual<sp/>void<sp/>`[`setOptions`](#class_t_c_p_socket_1acd1d92dd73f3ab0dc5537af9b9c3fcdf)`(int<sp/>socket_fd)`<sp/>|<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Members</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>bool<sp/>`[`setup`](#class_t_c_p_socket_1a76c452c42f24a26bcdc2a19c9aaa1360)`(std::string<sp/>&amp;<sp/>host,int<sp/>port)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/><sp/>`[`TCPSocket`](#class_t_c_p_socket_1a7a50427a401d1a6f3209d51818bad901)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>virtual<sp/><sp/>`[`~TCPSocket`](#class_t_c_p_socket_1af357e6923a0f8adbbb8e46fab4523991)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>std::string<sp/>`[`getIP`](#class_t_c_p_socket_1aab36a36e867e399afd78b1e91371ac1e)`()<sp/>const`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>bool<sp/>`[`read`](#class_t_c_p_socket_1a8d88a687df0513d1372cac8524f500e2)`(char<sp/>*<sp/>character)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>bool<sp/>`[`read`](#class_t_c_p_socket_1a663293961feef12b08f0a31aeb5c49f8)`(uint8_t<sp/>*<sp/>buf,const<sp/>size_t<sp/>buf_len,size_t<sp/>&amp;<sp/>read)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>bool<sp/>`[`write`](#class_t_c_p_socket_1a181378aa8cec7a0bd77d78366aade064)`(const<sp/>uint8_t<sp/>*<sp/>buf,const<sp/>size_t<sp/>buf_len,size_t<sp/>&amp;<sp/>written)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`public<sp/>void<sp/>`[`close`](#class_t_c_p_socket_1ae64f7db5484a7f057446ac3c906629c0)`()`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`protected<sp/>std::unique_ptr&lt;<sp/>timeval<sp/>&gt;<sp/>`[`recv_timeout_`](#class_t_c_p_socket_1ac77bc18be799c23458a777644c7e5d9a)<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`protected<sp/>virtual<sp/>void<sp/>`[`setOptions`](#class_t_c_p_socket_1acd1d92dd73f3ab0dc5537af9b9c3fcdf)`(int<sp/>socket_fd)`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>struct<sp/>`RVCMotionController::URPendantMotionController::Command`<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Summary</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Members<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">`enum<sp/>`[`type`](#struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54)<sp/>|<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Members</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">####<sp/>`enum<sp/>`[`type`](#struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54)<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/>Values<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/>Descriptions<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">--------------------------------|---------------------------------------------</highlight></codeline>
+<codeline><highlight class="normal">sendPose<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">receiveJoints<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">receiveIsNear<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/></highlight></codeline>
+<codeline><highlight class="normal">receiveGripperSensor<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>|<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Generated<sp/>by<sp/>[Moxygen](https://sourcey.com/moxygen)</highlight></codeline>
+    </programlisting>
+    <location file="doxygen.md"/>
+  </compounddef>
+</doxygen>

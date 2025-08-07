@@ -1,0 +1,13 @@
+newvl -i 0 -W 1920  -H 1080  --refresh=60  --format=nv12  --dispid=0
+dispch  --id=0 -W 960 -H 540 -x 0 -y 0 --videolayer=0
+newdec --id=0 --input=1080p.h265 --codec=h265    --sink=disp0 -f NV12
+dispch  --id=1 -W 960 -H 540 -x 960 -y 0 --videolayer=0
+newdec --id=1 --input=1080p.h265 --codec=h265    --sink=disp1 -f NV12
+ctrl --cmd=run  --time=0
+newvl -i 1 -W 3840  -H 2160  --refresh=30  --format=nv12  --dispid=1
+dispch  --id=0 -W 1920 -H 1080 -x 0 -y 0 --videolayer=1
+newdec --id=4 --input=1080p.h265 --codec=h265    --sink=disp0 -f NV12
+dispch  --id=1 -W 1920 -H 1080 -x 1920 -y 0 --videolayer=1
+newdec --id=5 --input=1080p.h265 --codec=h265    --sink=disp1 -f NV12
+ctrl --cmd=run  --time=8000
+ctrl --cmd=stop  --time=0

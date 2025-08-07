@@ -1,4 +1,5 @@
 # System Requirements
+
 This page provides detailed hardware, software, and platform requirements to help you set up and run the application efficiently.
 
 ## Supported Platforms
@@ -28,9 +29,9 @@ This page provides detailed hardware, software, and platform requirements to hel
 - Python 3.10+
 - Git
 
-## Compatibility Notes
+## Compatibility notes
 
-**Known Limitations**:
+**Known limitations**:
 - GPU optimizations require Intel® Integrated/Discrete graphics or compatible accelerators.
 
 ## Validation

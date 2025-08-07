@@ -8,7 +8,6 @@ The Metro Vision AI App Recipe suite provides an integrated AI-powered solution 
 - **Smart Intersection Management** (includes optional Scenescape components) - AI-driven traffic flow optimization and intersection monitoring
 - **Loitering Detection** - Real-time detection of loitering behavior in transportation hubs
 - **Smart Parking** - Automated parking space monitoring and management
-- **Smart Tolling** - Intelligent toll collection and vehicle classification
 
 ### Key Features
 
@@ -98,14 +97,7 @@ When deployed with the optional Scenescape components, the system provides enhan
 - Parking violation detection
 - Optimization of parking space utilization
 
-### Smart Tolling
-- Automated vehicle classification for toll calculation
-- License plate recognition for electronic toll collection
-- Traffic flow optimization at toll plazas
-- Integration with existing tolling infrastructure
-
 ## To Get Started
 - [Smart Intersection](smart-intersection/docs/user-guide/Overview.md)
-- [Smart Tolling](smart-intersection/docs/user-guide/Overview.md)
 - [Smart Parking](smart-parking/docs/user-guide/Overview.md)
 - [Loitering Detection](loitering-detection/docs/user-guide/Overview.md)

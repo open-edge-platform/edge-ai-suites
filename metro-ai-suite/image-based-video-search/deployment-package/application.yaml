@@ -6,12 +6,12 @@ schemaVersion: "0.1"
 $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 
 name: ibvs-app
-version: 1.0.0
+version: 1.0.1
 description: "Image-Based Video Search Sample Application"
 
 helmRegistry: "docker-hub"
 chartName: "intel/image-based-video-search"
-chartVersion: "1.0.0"
+chartVersion: "1.0.1"
 
 profiles:
   - name: "default"

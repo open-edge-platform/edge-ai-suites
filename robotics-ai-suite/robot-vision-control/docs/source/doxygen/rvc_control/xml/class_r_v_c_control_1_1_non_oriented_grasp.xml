@@ -1,0 +1,408 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="class_r_v_c_control_1_1_non_oriented_grasp" kind="class" language="C++" prot="public">
+    <compoundname>RVCControl::NonOrientedGrasp</compoundname>
+    <basecompoundref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" prot="public" virt="non-virtual">RVCControl::RVCGraspInterface</basecompoundref>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_non_oriented_grasp_1a490317eeebc2ed9f0b7b9b807798ac08" prot="private" static="no" mutable="no">
+        <type>geometry_msgs::msg::Pose</type>
+        <definition>geometry_msgs::msg::Pose RVCControl::NonOrientedGrasp::innerDestinationTCPPose</definition>
+        <argsstring></argsstring>
+        <name>innerDestinationTCPPose</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="42" column="30" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="40" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_non_oriented_grasp_1a0ef3ee5688c096288e50fe5728b823f9" prot="private" static="no" mutable="no">
+        <type>geometry_msgs::msg::Pose</type>
+        <definition>geometry_msgs::msg::Pose RVCControl::NonOrientedGrasp::outerDestinationTCPPose</definition>
+        <argsstring></argsstring>
+        <name>outerDestinationTCPPose</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="43" column="30" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="43" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_non_oriented_grasp_1aef5aa33c575068b2acd8d686ea2572e8" prot="private" static="no" mutable="no">
+        <type>std::unique_ptr&lt; tf2_ros::Buffer &gt;</type>
+        <definition>std::unique_ptr&lt;tf2_ros::Buffer&gt; RVCControl::NonOrientedGrasp::tfBuffer</definition>
+        <argsstring></argsstring>
+        <name>tfBuffer</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="44" column="21" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="44" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_non_oriented_grasp_1a766fd7901afe800ffbe82b262486b748" prot="private" static="no" mutable="no">
+        <type>std::shared_ptr&lt; tf2_ros::TransformListener &gt;</type>
+        <definition>std::shared_ptr&lt;tf2_ros::TransformListener&gt; RVCControl::NonOrientedGrasp::tfListener</definition>
+        <argsstring></argsstring>
+        <name>tfListener</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="45" column="21" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="45" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_non_oriented_grasp_1a2353aa04c86729806bc47648b732868d" prot="private" static="no" mutable="no">
+        <type>rclcpp::Publisher&lt; visualization_msgs::msg::Marker &gt;::SharedPtr</type>
+        <definition>rclcpp::Publisher&lt;visualization_msgs::msg::Marker&gt;::SharedPtr RVCControl::NonOrientedGrasp::marker_pub</definition>
+        <argsstring></argsstring>
+        <name>marker_pub</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="46" column="35" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="46" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_non_oriented_grasp_1a6e8a0a2fce11816f2a6a717e84eea835" prot="private" static="no" mutable="no">
+        <type>visualization_msgs::msg::Marker</type>
+        <definition>visualization_msgs::msg::Marker RVCControl::NonOrientedGrasp::marker</definition>
+        <argsstring></argsstring>
+        <name>marker</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="47" column="37" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="47" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_non_oriented_grasp_1a4b8005cb205116fc08e0bc921d1aebad" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double RVCControl::NonOrientedGrasp::pregrasp_distance</definition>
+        <argsstring></argsstring>
+        <name>pregrasp_distance</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="48" column="12" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="48" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_non_oriented_grasp_1ace54fa830c304e92dfc2b1046683cc5f" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double RVCControl::NonOrientedGrasp::grasp_z_offset</definition>
+        <argsstring></argsstring>
+        <name>grasp_z_offset</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="49" column="12" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="49" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_non_oriented_grasp_1a98195ae6ea8eb9e29a58cc2ec2d6bed1" prot="private" static="no" mutable="no">
+        <type>rclcpp::Publisher&lt; geometry_msgs::msg::PoseStamped &gt;::SharedPtr</type>
+        <definition>rclcpp::Publisher&lt;geometry_msgs::msg::PoseStamped&gt;::SharedPtr RVCControl::NonOrientedGrasp::debugPublisher</definition>
+        <argsstring></argsstring>
+        <name>debugPublisher</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="50" column="35" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="50" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_non_oriented_grasp_1adac6cede17533a977ca2176f0046fb90" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool RVCControl::NonOrientedGrasp::targetAcquired</definition>
+        <argsstring></argsstring>
+        <name>targetAcquired</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="51" column="10" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="51" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_non_oriented_grasp_1a0e0c6ae09142986c4ac7d6a6486e054f" prot="private" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string RVCControl::NonOrientedGrasp::classIdCurrent</definition>
+        <argsstring></argsstring>
+        <name>classIdCurrent</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="52" column="17" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="52" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_control_1_1_non_oriented_grasp_1a5693ec35c4c323f4e3a08c121092e75b" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool RVCControl::NonOrientedGrasp::canPerformTFTranform</definition>
+        <argsstring></argsstring>
+        <name>canPerformTFTranform</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="53" column="10" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_r_v_c_control_1_1_non_oriented_grasp_1a54d592d88ad0cee37af78b002aba3d49" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>RVCControl::NonOrientedGrasp::NonOrientedGrasp</definition>
+        <argsstring>()</argsstring>
+        <name>NonOrientedGrasp</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="34" column="5" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/src/non_oriented_grasp.cpp" bodystart="24" bodyend="31"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_non_oriented_grasp_1a6bf4217ff0bdc62b37465410e5729933" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool RVCControl::NonOrientedGrasp::init</definition>
+        <argsstring>(rclcpp::Node::SharedPtr node)</argsstring>
+        <name>init</name>
+        <reimplements refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab0c2cdba038b08aff7dfd7b43211ce63">init</reimplements>
+        <param>
+          <type>rclcpp::Node::SharedPtr</type>
+          <declname>node</declname>
+        </param>
+        <briefdescription>
+<para>API entry: plugin initialization. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>node</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Ros node </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>modelName</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input file name </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>true on success </para>
+</simplesect>
+<simplesect kind="return"><para>false otherwise </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="35" column="10" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/src/non_oriented_grasp.cpp" bodystart="33" bodyend="79"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_non_oriented_grasp_1a944db041600951afdca9e9629018d551" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void RVCControl::NonOrientedGrasp::OnMessageReceive</definition>
+        <argsstring>(rvc_messages::msg::PoseStampedList::SharedPtr msg)</argsstring>
+        <name>OnMessageReceive</name>
+        <reimplements refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ac519ff48b07aa841270b90d2b1057d47">OnMessageReceive</reimplements>
+        <param>
+          <type>rvc_messages::msg::PoseStampedList::SharedPtr</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+<para>This function will be called upon receiving a new pose. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>msg</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the received message list </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="36" column="10" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/src/non_oriented_grasp.cpp" bodystart="80" bodyend="176"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_non_oriented_grasp_1a51f070f68c144f34c9359f655e1074b1" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool RVCControl::NonOrientedGrasp::getPreGrasp</definition>
+        <argsstring>(geometry_msgs::msg::Pose &amp;pose)</argsstring>
+        <name>getPreGrasp</name>
+        <reimplements refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab82b5755786cbc7b3255eedb3381f5c8">getPreGrasp</reimplements>
+        <param>
+          <type>geometry_msgs::msg::Pose &amp;</type>
+          <declname>pose</declname>
+        </param>
+        <briefdescription>
+<para>Get the Pre Grasp object pose. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>pose</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>pregrasp pose </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>true on success </para>
+</simplesect>
+<simplesect kind="return"><para>false on failure </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="37" column="10" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/src/non_oriented_grasp.cpp" bodystart="178" bodyend="182"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_non_oriented_grasp_1aa970d9a2aeaaa29e7c54922b41cc4cd1" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool RVCControl::NonOrientedGrasp::getGrasp</definition>
+        <argsstring>(geometry_msgs::msg::Pose &amp;pose)</argsstring>
+        <name>getGrasp</name>
+        <reimplements refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aed89327ba661ddf2be6c4c187bbf74e0">getGrasp</reimplements>
+        <param>
+          <type>geometry_msgs::msg::Pose &amp;</type>
+          <declname>pose</declname>
+        </param>
+        <briefdescription>
+<para>Get the Grasp object Pose. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>pose</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Grasp Pose </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>true on success </para>
+</simplesect>
+<simplesect kind="return"><para>false on failure </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="38" column="10" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/src/non_oriented_grasp.cpp" bodystart="184" bodyend="188"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_non_oriented_grasp_1ad1fdf2664264a495fd3a70119a4a3e08" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>bool</type>
+        <definition>bool RVCControl::NonOrientedGrasp::isTargetAcquired</definition>
+        <argsstring>()</argsstring>
+        <name>isTargetAcquired</name>
+        <reimplements refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a29d996087e338b75a5f1de2324380dcc">isTargetAcquired</reimplements>
+        <briefdescription>
+<para>function to verify that the object is currently still valid and detected by the framework </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>true </para>
+</simplesect>
+<simplesect kind="return"><para>false </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="39" column="10" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="39" bodyend="39"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_control_1_1_non_oriented_grasp_1a02b232913ff79c9eaca55ba70a7c0d13" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>std::string</type>
+        <definition>std::string RVCControl::NonOrientedGrasp::getCurrentObject</definition>
+        <argsstring>()</argsstring>
+        <name>getCurrentObject</name>
+        <reimplements refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aa6940e178dc6fc147282f7acd1f04f7b">getCurrentObject</reimplements>
+        <briefdescription>
+<para>Get the Current detected Object string identifier. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>std::string object name identifier </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="40" column="17" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="40" bodyend="40"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>RVCControl::RVCGraspInterface</label>
+        <link refid="class_r_v_c_control_1_1_r_v_c_grasp_interface"/>
+      </node>
+      <node id="1">
+        <label>RVCControl::NonOrientedGrasp</label>
+        <link refid="class_r_v_c_control_1_1_non_oriented_grasp"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>RVCControl::RVCGraspInterface</label>
+        <link refid="class_r_v_c_control_1_1_r_v_c_grasp_interface"/>
+      </node>
+      <node id="1">
+        <label>RVCControl::NonOrientedGrasp</label>
+        <link refid="class_r_v_c_control_1_1_non_oriented_grasp"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" line="31" column="1" bodyfile="rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp" bodystart="32" bodyend="55"/>
+    <listofallmembers>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a5693ec35c4c323f4e3a08c121092e75b" prot="private" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>canPerformTFTranform</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a0e0c6ae09142986c4ac7d6a6486e054f" prot="private" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>classIdCurrent</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a98195ae6ea8eb9e29a58cc2ec2d6bed1" prot="private" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>debugPublisher</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a02b232913ff79c9eaca55ba70a7c0d13" prot="public" virt="virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>getCurrentObject</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1aa970d9a2aeaaa29e7c54922b41cc4cd1" prot="public" virt="virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>getGrasp</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a51f070f68c144f34c9359f655e1074b1" prot="public" virt="virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>getPreGrasp</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1ace54fa830c304e92dfc2b1046683cc5f" prot="private" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>grasp_z_offset</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a6bf4217ff0bdc62b37465410e5729933" prot="public" virt="virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>init</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a490317eeebc2ed9f0b7b9b807798ac08" prot="private" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>innerDestinationTCPPose</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1ad1fdf2664264a495fd3a70119a4a3e08" prot="public" virt="virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>isTargetAcquired</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a6e8a0a2fce11816f2a6a717e84eea835" prot="private" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>marker</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a2353aa04c86729806bc47648b732868d" prot="private" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>marker_pub</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aac1e2f2c6d0bf9ef2d8a0f40899b0513" prot="protected" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>node_</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a54d592d88ad0cee37af78b002aba3d49" prot="public" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>NonOrientedGrasp</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a6ee193f0b77862c2a31be7b9df4600ac" prot="public" virt="virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>on_shutdown</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a944db041600951afdca9e9629018d551" prot="public" virt="virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>OnMessageReceive</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a0ef3ee5688c096288e50fe5728b823f9" prot="private" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>outerDestinationTCPPose</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a4b8005cb205116fc08e0bc921d1aebad" prot="private" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>pregrasp_distance</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a23575f212effaa07616d4bd6e561336a" prot="protected" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>RVCGraspInterface</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1adac6cede17533a977ca2176f0046fb90" prot="private" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>targetAcquired</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1aef5aa33c575068b2acd8d686ea2572e8" prot="private" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>tfBuffer</name></member>
+      <member refid="class_r_v_c_control_1_1_non_oriented_grasp_1a766fd7901afe800ffbe82b262486b748" prot="private" virt="non-virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>tfListener</name></member>
+      <member refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1afd56ca5c19e5cb3f79f5efcd0bfb6013" prot="public" virt="virtual"><scope>RVCControl::NonOrientedGrasp</scope><name>~RVCGraspInterface</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

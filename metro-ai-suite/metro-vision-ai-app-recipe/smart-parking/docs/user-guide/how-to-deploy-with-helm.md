@@ -1,10 +1,12 @@
 # How to Deploy with Helm
 
--   **Time to Complete:** 30 minutes
+This section provides step-by-step instructions for deploying the Smart Parking sample application using Helm.
+
+The estimated time to complete this procedure is **30 minutes**.
 
 ## Get Started
 
-Complete this guide to confirm that your setup is working correctly and try out workflows in the sample application.
+Complete this section to confirm that your setup is working correctly and try out workflows in the sample application.
 
 ## Prerequisites
 
@@ -15,46 +17,69 @@ Complete this guide to confirm that your setup is working correctly and try out 
 - For helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
 
 > **Note**
-> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
+> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).The target system refers to the system where you are installing the application.
 
-## Download the helm chart
+## Step 1: Download the Helm chart
 
-Follow this procedure on the target system to install the package.
+Follow this procedure on the target system to download the package.
 
-1. Download helm chart with the following command
+**Note**: Skip this step if you have already followed the steps as part of the [Get Started guide](./get-started.md).
 
-    `helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.1.0`
+Before you can deploy with Helm, you must clone the repository and download the helm chart:
 
-2. unzip the package using the following command
+```bash
+# Clone the repository
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
 
-    `tar xvf smart-parking-1.1.0.tgz`
-    
-- Get into the helm directory
+# Navigate to the Metro AI Suite directory
+cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
-    `cd smart-parking`
+```
 
 
-## Configure and update the environment variables
+## Step 2: Configure and update the environment variables
 
-1. Update the below fields in `values.yaml` file in the helm chart
+1. Update the below fields in `values.yaml` file in the Helm chart
+
+    ```bash
+        # Edit the values.yml file to add proxy configuration
+        nano ./smart-parking/helm-chart/values.yaml
+    ```
 
     ``` sh
     HOST_IP: # replace localhost with system IP example: HOST_IP: 10.100.100.100
     http_proxy: # example: http_proxy: http://proxy.example.com:891
     https_proxy: # example: http_proxy: http://proxy.example.com:891
     webrtcturnserver:
-        username: # example: username: myuser 
+        username: # example: username: myuser
         password: # example: password: mypassword
     ```
+    > **Note**: The application uses weekly builds from GitHub Container Registry (ghcr.io/open-edge-platform/) by default.
 
-## Deploy the application and Run multiple AI pipelines
+    <details>
+    <summary>
+    Switch to Stable Build (Optional)
+    </summary>
+
+    To use stable releases from Docker Hub instead of weekly builds, update the values.yaml file with following information,
+
+    ```yaml
+    DOCKER_REGISTRY: ''
+    dlstreamer_pipeline_server:
+        image: intel/dlstreamer-pipeline-server
+        imageTag: 3.0.0
+    ```
+    This updates the application to use stable images from [Docker Hub](https://hub.docker.com/u/intel/).
+
+    </details>
+## Step 3: Deploy the application and Run multiple AI pipelines
 
 Follow this procedure to run the sample application. In a typical deployment, multiple cameras deliver video streams that are connected to AI pipelines to improve the classification and recognition accuracy. The following demonstrates running multiple AI pipelines and visualization in the Grafana.
 
-1. Deploy helm chart
+1. Deploy Helm chart
 
     ```sh
-    helm install smart-parking . -n sp  --create-namespace
+    helm install smart-parking ./smart-parking/helm-chart -n sp  --create-namespace
     ```
 
 2. Verify all the pods and services are running:
@@ -67,6 +92,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)
 
 ``` sh
+#!/bin/bash
 curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
@@ -76,9 +102,8 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30483",
             "topic": "object_detection_1",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",
@@ -99,9 +124,8 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30483",
             "topic": "object_detection_2",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",
@@ -122,9 +146,8 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30483",
             "topic": "object_detection_3",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",
@@ -145,9 +168,8 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "<HOST_IP>:30483",
             "topic": "object_detection_4",
-            "timeout": 1000
+            "publish_frame":false
         },
         "frame": {
             "type": "webrtc",
@@ -166,11 +188,11 @@ curl http://<HOST_IP>:30485/pipelines/user_defined_pipelines/yolov10_1_cpu -X PO
         - **Password:** `admin`
     - Check under the Dashboards section for the default dashboard named "Video Analytics Dashboard".
 
-   ![Example of Grafana and WebRTC streaming](_images/grafana.png)
+   ![Example of Grafana and WebRTC streaming](_images/grafana-smart-parking.jpg)
 
    Figure 1: Grafana and WebRTC streaming
 
-## End the demonstration
+## Step 4: End the demonstration
 
 Follow this procedure to stop the sample application and end this demonstration.
 
@@ -179,7 +201,7 @@ Follow this procedure to stop the sample application and end this demonstration.
     ```sh
     helm uninstall smart-parking -n sp
     ```
-    
+
 
 2. Confirm the pods are no longer running.
 
@@ -197,9 +219,9 @@ In this guide, you installed and validated Smart Parking sample application. You
 
 The following are options to help you resolve issues with the sample application.
 
-### Deploying with Intel GPU K8S Extension on ITEP
+### Deploy with Intel GPU K8S Extension on Intel® Tiber™ Edge Platform
 
-If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) with Intel GPU k8s Extension on ITEP, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
+If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) with Intel GPU k8s Extension on Intel® Tiber™ Edge Platform, ensure to set the following details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
 ```sh
 gpu:
   enabled: true
@@ -216,6 +238,6 @@ privileged_access_required: true
 
 ### Error Logs
 
-View the container logs using this command.
+View the container logs using the following command:
 
          kubectl logs -f <pod_name> -n sp

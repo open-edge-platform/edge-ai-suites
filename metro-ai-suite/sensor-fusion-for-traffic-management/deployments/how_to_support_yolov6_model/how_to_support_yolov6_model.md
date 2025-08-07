@@ -29,7 +29,7 @@ pip3 install -r requirements.txt
 git clone https://github.com/meituan/YOLOv6.git YOLOv6
 cd YOLOv6
 mkdir weights
-
+cd weights
 curl -k -o yolov6s.pt https://github.com/meituan/YOLOv6/releases/download/0.4.0/yolov6s.pt  -L
 cd ..
 ```

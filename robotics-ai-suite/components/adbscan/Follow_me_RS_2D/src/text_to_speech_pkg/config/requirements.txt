@@ -1,0 +1,5 @@
+tqdm
+numpy
+openvino==2023.2.0
+inflect
+simpleaudio

@@ -1,19 +1,7 @@
 services:
-  ntpserver:
-    image: docker.io/dockurr/chrony:4.6.1
-    environment:
-      - http_proxy=${http_proxy}
-      - https_proxy=${https_proxy}
-      - no_proxy=${no_proxy},${HOST_IP}
-      - NO_PROXY=${no_proxy},${HOST_IP}
-    networks:
-      app_network:
-        aliases:
-         - ntpserv
-    restart: on-failure:5
-
   broker:
     image: docker.io/library/eclipse-mosquitto:2.0.21
+    container_name: broker
     ports:
       - "1883:1883"
     environment:
@@ -28,7 +16,7 @@ services:
     restart: on-failure:5
 
   dlstreamer-pipeline-server:
-    image: intel/dlstreamer-pipeline-server:3.0.0
+    image: ${DOCKER_REGISTRY}intel/edge-ai-dlstreamer-pipeline-server:20250731_EAL1.2_DLSPS_RC4-ubuntu24
     container_name: dlstreamer-pipeline-server
     ports:
     - '8080:8080'
@@ -45,6 +33,8 @@ services:
       - EMIT_SOURCE_AND_DESTINATION=true
       - REST_SERVER_PORT=8080
       - SERVICE_NAME=dlstreamer-pipeline-server
+      - MQTT_HOST=broker
+      - MQTT_PORT=1883
     volumes:
       - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/models:/home/pipeline-server/models"
@@ -69,7 +59,7 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 5
-  
+
   mediamtx:
     image: bluenviron/mediamtx:1.11.3
     container_name: mediamtx-server
@@ -91,7 +81,7 @@ services:
     - app_network
 
   coturn:
-    image: coturn/coturn:latest
+    image: coturn/coturn:4.7
     container_name: coturn
     ports:
       - "3478:3478"
@@ -121,7 +111,7 @@ services:
       - NO_PROXY=${no_proxy},${HOST_IP}
 
   node-red:
-    image: nodered/node-red
+    image: nodered/node-red:3.1
     container_name: node-red
     environment:
       http_proxy: ${http_proxy}

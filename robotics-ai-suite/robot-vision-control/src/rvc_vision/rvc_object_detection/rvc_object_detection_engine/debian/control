@@ -1,0 +1,12 @@
+Source: ros-humble-rvc-object-detection-engine
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0), ros-humble-ament-cmake, ros-humble-ament-index-cpp, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-cv-bridge, ros-humble-image-transport, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-rclcpp-components, ros-humble-rvc-ai-interface, ros-humble-rvc-vision-messages, ros-humble-sensor-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-rvc-object-detection-engine
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-humble-cv-bridge, ros-humble-image-transport, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-rclcpp-components, ros-humble-rvc-ai-interface, ros-humble-rvc-vision-messages, ros-humble-sensor-msgs
+Description: AI inference pipeling Stage 1 object detection engine, plugin based to allow different AI models, and devices

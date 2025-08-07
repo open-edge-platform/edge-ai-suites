@@ -20,88 +20,113 @@ Before You Begin, ensure the following:
 
 ## Steps to Deploy
 
-To deploy the Smart Intersection Sample Application, copy and paste the entire block of commands below into your terminal and run them:
+To deploy the Smart Intersection Sample Application, copy and paste the entire block of following commands into your terminal and run them:
+
+### Clone the Repository and Install Prerequisites
+
+**Note**: Skip this step if you have already followed the steps as part of the [Get Started guide](./get-started.md).
+
+Before you can deploy with Helm, you must clone the repository and run the installation script:
 
 ```bash
-# change the permissions of the secrets folder
-sudo chown -R $USER:$USER chart/files/secrets
-sudo chown -R $USER:$USER src/secrets
+# Clone the repository
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
 
-# Create namespace
-kubectl create namespace smart-intersection
+# Navigate to the Metro AI Suite directory
+cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
-# ==========================
-# Apply PersistentVolumes
-# ==========================
-# Ensure the PersistentVolumes (PVs) are created before deploying the application.
+# Run the installation script for smart-intersection
+./install.sh smart-intersection
 
-kubectl apply -n smart-intersection -f ./chart/templates/grafana/pv.yaml  # PV for Grafana
-kubectl apply -n smart-intersection -f ./chart/templates/influxdb/pv.yaml  # PV for InfluxDB
-kubectl apply -n smart-intersection -f ./chart/templates/pgserver/pv.yaml  # PV for pgserver
+```
 
+### Configure Proxy Settings (If Behind a Proxy)
 
-# Install the chart with secrets injected via --set
-helm upgrade --install smart-intersection ./chart \
+If you are deploying in a proxy environment, update the values.yml file with your proxy settings before installation:
+
+```bash
+# Edit the values.yml file to add proxy configuration
+nano ./smart-intersection/chart/values.yaml
+```
+
+Update the existing proxy configuration in your values.yaml with following values:
+
+```yaml
+http_proxy: "http://your-proxy-server:port"
+https_proxy: "http://your-proxy-server:port"
+no_proxy: "localhost,127.0.0.1,.local,.cluster.local"
+```
+
+Replace `your-proxy-server:port` with your actual proxy server details.
+
+> **Note**: The application uses weekly builds from GitHub Container Registry (ghcr.io/open-edge-platform/) by default.
+
+<details>
+<summary>
+Switch to Stable Build (Optional)
+</summary>
+
+To use stable releases from Docker Hub instead of weekly builds, update the values.yaml file with following information,
+
+```yaml
+scene:
+  repository: intel/scenescape-controller
+  tag: v1.3.0
+pgserver:
+  repository: intel/scenescape-manager
+  tag: v1.3.0
+web:
+  image:
+    repository: intel/scenescape-manager
+    tag: v1.3.0
+dlstreamerPipelineServer:
+  repository: intel/dlstreamer-pipeline-server
+  tag: 3.0.0
+```
+This updates the application to use stable images from [Docker Hub](https://hub.docker.com/u/intel/).
+
+</details>
+
+### Deploy the application
+
+Now you're ready to deploy the Smart Intersection application:
+
+```bash
+
+# Install the chart 
+helm upgrade --install smart-intersection ./smart-intersection/chart \
   --create-namespace \
   --set grafana.service.type=NodePort \
   -n smart-intersection
 
-# Some containers in the deployment requires network access.
-# If you are in a proxy environment, pass the proxy environment variables as follows:
-# helm upgrade \
-#     --install  smart-intersection ./chart \
-#     --create-namespace \
-#     --set httpProxy="http://proxy.example.com:8080" \
-#     --set httpsProxy="http://proxy.example.com:8080" \
-#     --set noProxy="localhost\,127.0.0.1" \
-#     --set grafana.service.type=NodePort \
-#     -n smart-intersection
 ```
 
-Next, transfer the videos to DL Streamer Pipeline Server with the following commands:
+## Access Application Services using Node Port
 
+### Access the Application UI
+
+- Get the Node Port Number using following command and use it to access the Application UI
 ```bash
-# Get pod name
-DLS_PS_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-dlstreamer-pipeline-server -o jsonpath="{.items[0].metadata.name}")
-
-# Copy videos to the init container
-kubectl cp ./src/dlstreamer-pipeline-server/videos smart-intersection/${DLS_PS_POD}:/data/ -c init-dlstreamer-pipeline-server-videos
-
-# Create .done flag
-kubectl -n smart-intersection exec $DLS_PS_POD -c init-dlstreamer-pipeline-server-videos -- touch /data/videos/.done
+kubectl get service smart-intersection-web -n smart-intersection -o jsonpath='{.spec.ports[0].nodePort}'
 ```
+- Go to https://<HOST_IP>:<Node_PORT>
+- - **Log in with credentials**:
+    - **Username**: `admin`
+    - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
 
-Next, transfer the model to DL Streamer Pipeline Server with the following commands:
+### Access the Grafana UI
 
+- Get the Node Port Number using following command and use it to access the Grafana UI
 ```bash
-# Get pod name
-DLS_PS_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-dlstreamer-pipeline-server -o jsonpath="{.items[0].metadata.name}")
-
-# Copy model to the init container
-kubectl cp ./src/dlstreamer-pipeline-server/models/intersection smart-intersection/${DLS_PS_POD}:/data/models -c init-dlstreamer-pipeline-server-models
-
-# Create .done flag
-kubectl -n smart-intersection exec $DLS_PS_POD -c init-dlstreamer-pipeline-server-models -- touch /data/models/.done
+kubectl get service smart-intersection-grafana -n smart-intersection -o jsonpath='{.spec.ports[0].nodePort}'
 ```
+- Go to http://<HOST_IP>:<Node_PORT>
+- - **Log in with credentials**:
+    - **Username**: `admin`
+    - **Password**: `admin`
 
-Finally, transfer the data base archive to Scene DB with the following commands:
 
-```bash
-# Get pod name
-PGSERVER_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-pgserver -o jsonpath="{.items[0].metadata.name}")
-
-# Copy archive to the init container
-kubectl cp ./src/webserver/smart-intersection-ri.tar.bz2 smart-intersection/${PGSERVER_POD}:/data/ -c init-smart-intersection-ri
-
-# Create .done flag
-kubectl -n smart-intersection exec $PGSERVER_POD -c init-smart-intersection-ri -- touch /data/.done
-```
-
-## Access Application Services
-
-Use `kubectl port-forward` to access the application services on <protocol>://localhost:<service-port>
-For more available options, see [kubectl port-forward options](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_port-forward/#options)
-
+## Access Application Services using Port Forwarding (Optional)
 
 ### Access the Application UI
 
@@ -109,6 +134,11 @@ For more available options, see [kubectl port-forward options](https://kubernete
 WEB_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-web -o jsonpath="{.items[0].metadata.name}")
 sudo -E kubectl -n smart-intersection port-forward $WEB_POD 443:443
 ```
+- Go to https://<HOST_IP>
+- - **Log in with credentials**:
+    - **Username**: `admin`
+    - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
+
 
 ### Access the Grafana UI
 
@@ -116,6 +146,10 @@ sudo -E kubectl -n smart-intersection port-forward $WEB_POD 443:443
 GRAFANA_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-grafana -o jsonpath="{.items[0].metadata.name}")
 kubectl -n smart-intersection port-forward $GRAFANA_POD 3000:3000
 ```
+- Go to http://<HOST_IP>:<Node_PORT>
+- - **Log in with credentials**:
+    - **Username**: `admin`
+    - **Password**: `admin`
 
 ### Access the InfluxDB UI
 
@@ -139,7 +173,7 @@ kubectl -n smart-intersection port-forward $DLS_PS_POD 8080:8080
 kubectl -n smart-intersection port-forward $DLS_PS_POD 8555:8555
 ```
 
-## How to Uninstall the Application
+## Uninstall the Application
 
 To uninstall the application, run the following command:
 
@@ -147,7 +181,7 @@ To uninstall the application, run the following command:
 helm uninstall smart-intersection -n smart-intersection
 ```
 
-## How to Delete the Namespace
+## Delete the Namespace
 
 To delete the namespace and all resources within it, run the following command:
 
@@ -157,7 +191,6 @@ kubectl delete namespace smart-intersection
 
 ## What to Do Next
 
-- **[How to Use the Application](./how-to-use-application.md)**: Verify the application and access its features.
 - **[Troubleshooting Helm Deployments](./support.md#troubleshooting-helm-deployments)**: Consolidated troubleshooting steps for resolving issues during Helm deployments.
 - **[Get Started](./get-started.md)**: Ensure you have completed the initial setup steps before proceeding.
 

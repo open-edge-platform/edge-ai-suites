@@ -1,0 +1,553 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="class_r_v_c___a_i_1_1_o_i_inference" kind="class" language="C++" prot="public">
+    <compoundname>RVC_AI::OIInference</compoundname>
+    <basecompoundref refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface" prot="public" virt="non-virtual">RVC_AI::RVCAIInterface</basecompoundref>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1afdc5cd358e9f86c54313542fb7cb160c" prot="private" static="no" mutable="no">
+        <type>ov::Core</type>
+        <definition>ov::Core RVC_AI::OIInference::core</definition>
+        <argsstring></argsstring>
+        <name>core</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>OpenVINO core </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="36" column="14" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1abaa33d9fa665c79b08d2645aa9a6e0c7" prot="private" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ov::Model &gt;</type>
+        <definition>std::shared_ptr&lt;ov::Model&gt; RVC_AI::OIInference::model</definition>
+        <argsstring></argsstring>
+        <name>model</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Preloaded model </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="38" column="21" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1abe6eeac6c611defd0bc91c71b111cad1" prot="private" static="no" mutable="no">
+        <type>ov::CompiledModel</type>
+        <definition>ov::CompiledModel RVC_AI::OIInference::compiledModel</definition>
+        <argsstring></argsstring>
+        <name>compiledModel</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Compiled model, with pre and post processing </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="40" column="23" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="40" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1ab7b2512bdbdd71f32115d5390d738172" prot="private" static="no" mutable="no">
+        <type>std::queue&lt; ov::InferRequest &gt;</type>
+        <definition>std::queue&lt;ov::InferRequest&gt; RVC_AI::OIInference::idleRequests</definition>
+        <argsstring></argsstring>
+        <name>idleRequests</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Queue of inference requests, for parallelization where possible </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="43" column="16" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="43" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1af26745493d17b3a8c184b6ebee04d3e0" prot="private" static="no" mutable="no">
+        <type>std::mutex</type>
+        <definition>std::mutex RVC_AI::OIInference::idleRequestsMutex</definition>
+        <argsstring></argsstring>
+        <name>idleRequestsMutex</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Mutex protecting the inference queue </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="46" column="16" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="46" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1ac868919023c9392a97c83f3e32fca4b5" prot="private" static="no" mutable="no">
+        <type>std::condition_variable</type>
+        <definition>std::condition_variable RVC_AI::OIInference::idleRequestsCV</definition>
+        <argsstring></argsstring>
+        <name>idleRequestsCV</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Condition for protecting the inference queue </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="48" column="29" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="48" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1a7f7aba51a06378a91537e3e3904c6655" prot="private" static="no" mutable="no">
+        <type>std::chrono::high_resolution_clock::time_point</type>
+        <definition>std::chrono::high_resolution_clock::time_point RVC_AI::OIInference::startTime</definition>
+        <argsstring></argsstring>
+        <name>startTime</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>benchmarking variable </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="51" column="52" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="51" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1a9fef241d5fe901440db077d9d3bbb54e" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int RVC_AI::OIInference::frameRate</definition>
+        <argsstring></argsstring>
+        <name>frameRate</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>benchmarking framerate </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="53" column="9" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1ad6fe82d1a73198ab374c34e8b9e22318" prot="private" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC_AI::OIInference::m_ratio</definition>
+        <argsstring></argsstring>
+        <name>m_ratio</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>aspect ratio </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="55" column="11" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="55" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1ab9e1de98b39f152ddf962b279dbcb153" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int RVC_AI::OIInference::m_pad_width</definition>
+        <argsstring></argsstring>
+        <name>m_pad_width</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>rescaling padding width </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="57" column="9" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="57" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1af139334d8accb30f8fa9affb0590d845" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int RVC_AI::OIInference::m_pad_height</definition>
+        <argsstring></argsstring>
+        <name>m_pad_height</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>rescaling padding height </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="59" column="9" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="59" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1aac1de0e24680e525d3c81a5d97ddf76f" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int RVC_AI::OIInference::m_resX</definition>
+        <argsstring></argsstring>
+        <name>m_resX</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>resolution supporting variables </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="61" column="9" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1a8fe41c4395a447172a4c3e2c7b8bc648" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int RVC_AI::OIInference::m_resY</definition>
+        <argsstring></argsstring>
+        <name>m_resY</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="61" column="16" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1a80db6ed86db9f9252ad8039d55e5dcc8" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int RVC_AI::OIInference::m_input_shape_x</definition>
+        <argsstring></argsstring>
+        <name>m_input_shape_x</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>model input resx </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="64" column="9" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="64" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1a0876b94edc3051c00601675906b9c1d6" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int RVC_AI::OIInference::m_input_shape_y</definition>
+        <argsstring></argsstring>
+        <name>m_input_shape_y</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>model input resy </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="66" column="9" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="66" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1af83eb2c38a3f654162a5efa017aad1b9" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int RVC_AI::OIInference::model_version</definition>
+        <argsstring></argsstring>
+        <name>model_version</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>yolo model version: v5 v6 or v8 </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="69" column="9" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1aaa4d0a90815db13bdd84f0435b8eaf90" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double RVC_AI::OIInference::confidence_threshold</definition>
+        <argsstring></argsstring>
+        <name>confidence_threshold</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Confidence threshold, below this value objects are ignored </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="71" column="12" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="71" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1add81eb9a63c9e3343d3ff3ce92b23e36" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double RVC_AI::OIInference::nms_threshold</definition>
+        <argsstring></argsstring>
+        <name>nms_threshold</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Non maxima suppression threshold parameter </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="73" column="12" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="73" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c___a_i_1_1_o_i_inference_1aceb81f63ac9cab36f664a494f193025c" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; std::string &gt;</type>
+        <definition>std::vector&lt;std::string&gt; RVC_AI::OIInference::class_name_array_param</definition>
+        <argsstring></argsstring>
+        <name>class_name_array_param</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>config parameter containing list of object name strings </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="75" column="17" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_r_v_c___a_i_1_1_o_i_inference_1aa424734061f1813aac551bf6564efcaf" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool RVC_AI::OIInference::pre_process_image</definition>
+        <argsstring>(const cv::Mat inputImage, cv::Mat &amp;outputImage)</argsstring>
+        <name>pre_process_image</name>
+        <reimplements refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1a0a839a4ed106c72706cb6a38973de0d4">pre_process_image</reimplements>
+        <param>
+          <type>const cv::Mat</type>
+          <declname>inputImage</declname>
+        </param>
+        <param>
+          <type>cv::Mat &amp;</type>
+          <declname>outputImage</declname>
+        </param>
+        <briefdescription>
+<para>API entry point: define this plugin preprocessing operations. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>inputImage</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>cv::Mat input image to preprocess </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>outputImage</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>preprocessed output cv::Mat </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>true on success </para>
+</simplesect>
+<simplesect kind="return"><para>false otherwise </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="88" column="10" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/src/oi_inference.cpp" bodystart="154" bodyend="185"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c___a_i_1_1_o_i_inference_1ac9de2c3f5e06c2a1d970e2743652c1b1" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool RVC_AI::OIInference::run_inference_pipeline</definition>
+        <argsstring>(const cv::Mat image, cv::Mat &amp;output)</argsstring>
+        <name>run_inference_pipeline</name>
+        <reimplements refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1ad3e276f984317f998145b251b1acdba9">run_inference_pipeline</reimplements>
+        <param>
+          <type>const cv::Mat</type>
+          <declname>image</declname>
+        </param>
+        <param>
+          <type>cv::Mat &amp;</type>
+          <declname>output</declname>
+        </param>
+        <briefdescription>
+<para>API entry point: run the inference on input image. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>image</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input image </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>output</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>result output blob in cv::Mat format </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>true on success </para>
+</simplesect>
+<simplesect kind="return"><para>false otherwise </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="97" column="10" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/src/oi_inference.cpp" bodystart="187" bodyend="250"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c___a_i_1_1_o_i_inference_1a189c86fa5755e322bc73ab34d1463ab4" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool RVC_AI::OIInference::post_process_image</definition>
+        <argsstring>(const cv::Mat input, rvc_vision_messages::msg::RotatedBBList &amp;rotatedBBList)</argsstring>
+        <name>post_process_image</name>
+        <reimplements refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1aad50f1571455622adcbf11244b67b5fe">post_process_image</reimplements>
+        <param>
+          <type>const cv::Mat</type>
+          <declname>input</declname>
+        </param>
+        <param>
+          <type>rvc_vision_messages::msg::RotatedBBList &amp;</type>
+          <declname>rotatedBBList</declname>
+        </param>
+        <briefdescription>
+<para>API entry point: define the post processing to perform to retrieve the rotate bounding boxes. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>input</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input blob cv::Mat </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rotatedBBList</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output rotate Bounding box list </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>true on success </para>
+</simplesect>
+<simplesect kind="return"><para>false otherwise </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="106" column="10" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/src/oi_inference.cpp" bodystart="252" bodyend="329"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c___a_i_1_1_o_i_inference_1a7ed98def3e15c9d40d26dd3151d147d6" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool RVC_AI::OIInference::init</definition>
+        <argsstring>(rclcpp::Node *node, const std::string &amp;modelName)</argsstring>
+        <name>init</name>
+        <reimplements refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1a459a971143e9947a67ab4d16750f4304">init</reimplements>
+        <param>
+          <type>rclcpp::Node *</type>
+          <declname>node</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>modelName</declname>
+        </param>
+        <briefdescription>
+<para>API entry: plugin initialization. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>node</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Ros node </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>modelName</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input file name </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>bin</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>secondary file name, optional </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>inference_device</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>hardware device to run inferent on, std::string </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>model_version</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>version of the model, if applicable </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>true on success </para>
+</simplesect>
+<simplesect kind="return"><para>false otherwise </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="118" column="10" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/src/oi_inference.cpp" bodystart="43" bodyend="152"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c___a_i_1_1_o_i_inference_1a68d6f0ae8aa4c2e0094adffd07ca2d64" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>RVC_AI::OIInference::OIInference</definition>
+        <argsstring>()</argsstring>
+        <name>OIInference</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Constructor </para>
+        </detaileddescription>
+        <inbodydescription>
+<para>default values for 640x480 when model input is square. will be overwritten</para>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="120" column="5" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/src/oi_inference.cpp" bodystart="27" bodyend="40"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>RVC_AI::RVCAIInterface</label>
+        <link refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface"/>
+      </node>
+      <node id="1">
+        <label>RVC_AI::OIInference</label>
+        <link refid="class_r_v_c___a_i_1_1_o_i_inference"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>RVC_AI::RVCAIInterface</label>
+        <link refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface"/>
+      </node>
+      <node id="1">
+        <label>RVC_AI::OIInference</label>
+        <link refid="class_r_v_c___a_i_1_1_o_i_inference"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" line="31" column="1" bodyfile="rvc_object_detection/rvc_ai_plugins/openvino_inference/include/oi_inference.hpp" bodystart="32" bodyend="121"/>
+    <listofallmembers>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1aceb81f63ac9cab36f664a494f193025c" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>class_name_array_param</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1abe6eeac6c611defd0bc91c71b111cad1" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>compiledModel</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1aaa4d0a90815db13bdd84f0435b8eaf90" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>confidence_threshold</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1afdc5cd358e9f86c54313542fb7cb160c" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>core</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a9fef241d5fe901440db077d9d3bbb54e" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>frameRate</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1ab7b2512bdbdd71f32115d5390d738172" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>idleRequests</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1ac868919023c9392a97c83f3e32fca4b5" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>idleRequestsCV</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1af26745493d17b3a8c184b6ebee04d3e0" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>idleRequestsMutex</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a7ed98def3e15c9d40d26dd3151d147d6" prot="public" virt="virtual"><scope>RVC_AI::OIInference</scope><name>init</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a80db6ed86db9f9252ad8039d55e5dcc8" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>m_input_shape_x</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a0876b94edc3051c00601675906b9c1d6" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>m_input_shape_y</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1af139334d8accb30f8fa9affb0590d845" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>m_pad_height</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1ab9e1de98b39f152ddf962b279dbcb153" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>m_pad_width</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1ad6fe82d1a73198ab374c34e8b9e22318" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>m_ratio</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1aac1de0e24680e525d3c81a5d97ddf76f" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>m_resX</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a8fe41c4395a447172a4c3e2c7b8bc648" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>m_resY</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1abaa33d9fa665c79b08d2645aa9a6e0c7" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>model</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1af83eb2c38a3f654162a5efa017aad1b9" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>model_version</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1add81eb9a63c9e3343d3ff3ce92b23e36" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>nms_threshold</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a68d6f0ae8aa4c2e0094adffd07ca2d64" prot="public" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>OIInference</name></member>
+      <member refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1a07c5979b6c062d279fda2a75c46c8e7a" prot="public" virt="virtual"><scope>RVC_AI::OIInference</scope><name>on_shutdown</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a189c86fa5755e322bc73ab34d1463ab4" prot="public" virt="virtual"><scope>RVC_AI::OIInference</scope><name>post_process_image</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1aa424734061f1813aac551bf6564efcaf" prot="public" virt="virtual"><scope>RVC_AI::OIInference</scope><name>pre_process_image</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1ac9de2c3f5e06c2a1d970e2743652c1b1" prot="public" virt="virtual"><scope>RVC_AI::OIInference</scope><name>run_inference_pipeline</name></member>
+      <member refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1ad0bdc4b8803c28cdfe7990cf1dcae78f" prot="protected" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>RVCAIInterface</name></member>
+      <member refid="class_r_v_c___a_i_1_1_o_i_inference_1a7f7aba51a06378a91537e3e3904c6655" prot="private" virt="non-virtual"><scope>RVC_AI::OIInference</scope><name>startTime</name></member>
+      <member refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface_1a09c3ea974dba8c813444ef238b1e2065" prot="public" virt="virtual"><scope>RVC_AI::OIInference</scope><name>~RVCAIInterface</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

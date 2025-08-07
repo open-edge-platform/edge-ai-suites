@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rvc_profiler</name>
+  <version>2.0.0</version>
+  <description>Node to gather various statistics of RVC</description>
+  <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
+  <license>Rapid Prototype License</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>ament_index_cpp</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>rvc_messages</build_depend>
+  <build_depend>rvc_vision_messages</build_depend>
+  <build_depend>nlohmann-json-dev</build_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>image_transport</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -1,0 +1,222 @@
+<?xml version='1.0'?>
+<!-- https://answers.gazebosim.org/question/27450/modifying-a-conveyor-belt-and-using-it-in-a-different-simulation/ -->
+<sdf version='1.7'>
+  <model name='conveyor_belt_simplified'>
+    
+    <link name='belt_visual'>
+     
+      <pose>0 0 0.0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 0. 0 -0 0</pose>
+        <mass>100</mass>
+        <inertia>
+          <ixx>7.5972</ixx>  <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) -->
+          <ixy>0</ixy>       <!-- for a box: ixy = 0 -->
+          <ixz>0</ixz>       <!-- for a box: ixz = 0 -->
+          <iyy>0.996</iyy> <!-- for a box: iyy = 0.083 * mass * (x*x + z*z) -->
+          <iyz>0</iyz>       <!-- for a box: iyz = 0 -->
+          <izz>8.10</izz>  <!-- for a box: izz = 0.083 * mass * (x*x + y*y) -->
+        </inertia>
+      </inertial>
+      <self_collide>0</self_collide>
+      <enable_wind>0</enable_wind>
+      <kinematic>0</kinematic>
+      <gravity>0</gravity>
+      <visual name='belt_visual_visual'>
+        <pose>0 0 0.0 0 -0 0</pose>
+        <geometry>
+          <box>
+            <size>1 6 0.15</size>
+          </box>
+        </geometry>
+        <material>
+          <shader type='pixel'>
+            <normal_map>__default__</normal_map>
+          </shader>
+          <script>
+            <name>ModelPreview_1::belt_visual::belt_visual_visual_MATERIAL_</name>
+            <uri>__default__</uri>
+          </script>
+          <ambient>0 0 0 1</ambient>
+          <diffuse>0 0 0 1</diffuse>
+          <specular>0 0 0 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
+        <transparency>0</transparency>
+        <cast_shadows>1</cast_shadows>
+      </visual>
+      <collision name='belt_visual_collision'>
+        <laser_retro>0</laser_retro>
+        <max_contacts>10</max_contacts>
+        <pose>0 0 0.0 1.5708 -0 1.5708</pose>
+        <geometry>
+          <box>
+            <size>6 0.15 1</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+              <fdir1>0 0 0</fdir1>
+              <slip1>0</slip1>
+              <slip2>0</slip2>
+            </ode>
+            <torsional>
+              <coefficient>1</coefficient>
+              <patch_radius>0</patch_radius>
+              <surface_radius>0</surface_radius>
+              <use_patch_radius>1</use_patch_radius>
+              <ode>
+                <slip>0</slip>
+              </ode>
+            </torsional>
+          </friction>
+          <bounce>
+            <restitution_coefficient>0</restitution_coefficient>
+            <threshold>1e+06</threshold>
+          </bounce>
+          <contact>
+            <collide_without_contact>0</collide_without_contact>
+            <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
+            <collide_bitmask>1</collide_bitmask>
+            <ode>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+13</kp>
+              <kd>1</kd>
+              <max_vel>0.01</max_vel>
+              <min_depth>0</min_depth>
+            </ode>
+            <bullet>
+              <split_impulse>1</split_impulse>
+              <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+13</kp>
+              <kd>1</kd>
+            </bullet>
+          </contact>
+        </surface>
+      </collision>
+    </link>
+    <link name='belt_moving'>
+      <pose>0 0 0.08 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 0.01 0 -0 0</pose>
+        <mass>.1</mass>
+        <inertia>
+          <ixx>0</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0</iyy>
+          <iyz>0</iyz>
+          <izz>0</izz>
+        </inertia>
+      </inertial>
+      <self_collide>0</self_collide>
+      <enable_wind>0</enable_wind>
+      <kinematic>0</kinematic>
+      <gravity>0</gravity>
+      <collision name='belt_moving_collision'>
+        <laser_retro>0</laser_retro>
+        <max_contacts>10</max_contacts>
+        <pose>0 0 0.001 0 -0 0</pose>
+        <geometry>
+          <box>
+            <size>1 6 0.001</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+              <fdir1>0 0 0</fdir1>
+              <slip1>0</slip1>
+              <slip2>0</slip2>
+            </ode>
+            <torsional>
+              <coefficient>1</coefficient>
+              <patch_radius>0</patch_radius>
+              <surface_radius>0</surface_radius>
+              <use_patch_radius>1</use_patch_radius>
+              <ode>
+                <slip>0</slip>
+              </ode>
+            </torsional>
+          </friction>
+          <bounce>
+            <restitution_coefficient>0</restitution_coefficient>
+            <threshold>1e+06</threshold>
+          </bounce>
+          <contact>
+            <collide_without_contact>0</collide_without_contact>
+            <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
+            <collide_bitmask>1</collide_bitmask>
+            <ode>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+13</kp>
+              <kd>1</kd>
+              <max_vel>0.01</max_vel>
+              <min_depth>0</min_depth>
+            </ode>
+            <bullet>
+              <split_impulse>1</split_impulse>
+              <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+13</kp>
+              <kd>1</kd>
+            </bullet>
+          </contact>
+        </surface>
+      </collision>
+    </link>
+    <joint name='belt_joint' type='prismatic'>
+      <parent>belt_visual</parent>
+      <child>belt_moving</child>
+      <pose>0 0 .001 0 -0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>1</upper>
+          <effort>1000</effort>
+          <velocity>1000</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+          <damping>0</damping>
+          <friction>0</friction>
+        </dynamics>
+      </axis>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+          <suspension>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </suspension>
+        </ode>
+      </physics>
+    </joint>
+    <static>0</static>
+    <allow_auto_disable>1</allow_auto_disable>
+    
+    <plugin name='conveyor_belt_plugin' filename='libConveyorBeltPlugin.so'>
+      <robot_namespace>/</robot_namespace>
+      <link>belt_moving</link>
+      <power>90</power>
+      <max_velocity>1.0</max_velocity>
+      <robotNamespace>/</robotNamespace>
+    </plugin>
+    
+  </model>
+</sdf>

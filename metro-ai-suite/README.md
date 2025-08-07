@@ -11,11 +11,14 @@ The Suite includes the following tools and tookits:
 The Suite also provides a collection of visual analytics sample applications, using deep learning and large models (GenAI):
 - [Image Search by Text](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=metro-ai-suite-image-search-by-text): A reference implementation using multi-modal large language models to perform image search with text query
 - [Visual Q&A](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=metro-ai-suite-visual-question-answering): A reference implementation using multi-model large language models to perform Q&A on image data
-- [Loitering Detection](loitering-detection): Effortlessly monitor and manage areas with AI-driven video analytics for real-time insights and enhanced security
+- [Loitering Detection](metro-vision-ai-app-recipe/loitering-detection): Effortlessly monitor and manage areas with AI-driven video analytics for real-time insights and enhanced security
 - [Image Based Video Search](image-based-video-search): Performs near real-time analysis and image-based search to detect and retrieve objects of interest in large video datasets.
-- [Smart Intersection](smart-intersection): Unified analytics of a traffic intersection.
-- [Smart Parking](smart-parking): Effortlessly manage parking spaces with AI-driven video analytics for real-time insights and enhanced efficiency.
+- [Smart Intersection](metro-vision-ai-app-recipe/smart-intersection): Unified analytics of a traffic intersection.
+- [Smart NVR](smart-nvr): Integrates GenAI-powered vision analytics to a NVR and delivers intelligent, real-time insights from video streams.
+- [Smart Parking](metro-vision-ai-app-recipe/smart-parking/): Effortlessly manage parking spaces with AI-driven video analytics for real-time insights and enhanced efficiency.
+- [Video Processing for NVR](video-processing-for-nvr): A sample application based on Video Processing Platform SDK that allows users to evaluate and optimize video processing workflows for NVR.
 - [Visual Search Question and Answering](visual-search-question-and-answering): A unified application that integrates a multi-modal search engine with a visual Q&A assistant.
+
 
 
 See respective sample applications to learn more about using them in your application development as well as customizing them to meet your use case needs.
@@ -23,6 +26,6 @@ See respective sample applications to learn more about using them in your applic
 Other software ingredients and reference implementations of the Metro AI Suite:
 - Platform blueprints: System software, middleware, and applications bundled to provide a starting point for building 
 - [Video Processing Platform](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=metro-ai-suite-video-processing-software-development-kit): A platform blueprint for video security walls and similar applications utilizing video processing acceleration API
-- Traffic Fusion Control Computer([Sensor Fusion for Traffic Management](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=metro-ai-suite-sensor-fusion-for-traffic-management)): A platform blueprint that integrates AI inferencing with sensor fusion technology, utilizing multi-modal sensors such as cameras and radars to deliver unparalleled performance, guiding you with designing such sensor fusion capabilities in your application development
+- Traffic Fusion Control Computer([Sensor Fusion for Traffic Management](sensor-fusion-for-traffic-management)): A platform blueprint that integrates AI inferencing with sensor fusion technology, utilizing multi-modal sensors such as cameras and radars to deliver unparalleled performance, guiding you with designing such sensor fusion capabilities in your application development
 - [Video Analytics Server](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=metro-ai-suite-image-search-by-image-server): A platform blueprint for building an edge video analytics server, including example feature matching microservices and an image search application
 - [Interactive Digital Avatar](interactive-digital-avatar): Integrate 2D/3D avatars with a backend LLM server to provide real-time, intelligent responses to user queries through speech-based conversational interfaces.

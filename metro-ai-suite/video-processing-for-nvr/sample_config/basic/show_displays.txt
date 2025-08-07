@@ -1,0 +1,2 @@
+ctrl --cmd=listDisplay  --time=0
+ctrl --cmd=stop  --time=0

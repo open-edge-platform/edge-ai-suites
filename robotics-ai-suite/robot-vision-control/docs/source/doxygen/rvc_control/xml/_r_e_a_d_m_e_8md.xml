@@ -1,0 +1,167 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="_r_e_a_d_m_e_8md" kind="file" language="Markdown">
+    <compoundname>README.md</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>RVC<sp/>Control</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">This<sp/>RVC<sp/>Component<sp/>focuses<sp/>on<sp/>the<sp/>motion<sp/>controller<sp/>part<sp/>of<sp/>the<sp/>RVC<sp/>Framework.<sp/></highlight></codeline>
+<codeline><highlight class="normal">The<sp/>workflow<sp/>in<sp/>high<sp/>level<sp/>detail<sp/>is<sp/>as<sp/>follow:</highlight></codeline>
+<codeline><highlight class="normal">-<sp/>API<sp/>message<sp/>output<sp/>rvc_messages<sp/>is<sp/>received</highlight></codeline>
+<codeline><highlight class="normal">-<sp/>The<sp/>active<sp/>grasp<sp/>plugin<sp/>will<sp/>compute<sp/>pre-grasp<sp/>and<sp/>grasp<sp/>pose<sp/>for<sp/>the<sp/>gripper,<sp/>also<sp/>known<sp/>as<sp/>Tool<sp/>Center<sp/>Point,<sp/>from<sp/>now<sp/>on<sp/>just<sp/>TCP.</highlight></codeline>
+<codeline><highlight class="normal">-<sp/>A<sp/>State<sp/>machine<sp/>or<sp/>equivalent<sp/>programmatic<sp/>approach<sp/>will<sp/>decide<sp/>actions<sp/>and<sp/>if<sp/>applicable<sp/>move<sp/>the<sp/>robot<sp/>to<sp/>first<sp/>pre-grasp<sp/>and<sp/>then<sp/>to<sp/>grasp,<sp/>activating<sp/>the<sp/>gripper<sp/>via<sp/>the<sp/>selected<sp/>RVCMotionController::RVCMotionControllerInterface<sp/>based<sp/>plugin</highlight></codeline>
+<codeline></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>State<sp/>machine<sp/>snippet</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>ROS2<sp/>node<sp/>implementing<sp/>the<sp/>decisional<sp/>process<sp/>will<sp/>need<sp/>to<sp/>load<sp/>two<sp/>plugins<sp/>according<sp/>to<sp/>ROS2<sp/>parameters,<sp/>to<sp/>be<sp/>loaded<sp/>via<sp/>launcher,<sp/>command<sp/>line<sp/>or<sp/>yaml<sp/>file</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Example<sp/>in<sp/>c++</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;rvc_dynamic_motion_controller_use_case/state_machine.hpp&quot;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;rvc_motion_controller_interface/rvc_motion_controller_interface.hpp&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;rvc_grasp_interface/rvc_grasp_interface.hpp&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&lt;pluginlib/class_loader.hpp&gt;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">int<sp/>main(int<sp/>argc,<sp/>char<sp/>**<sp/>argv)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>rclcpp::init(argc,<sp/>argv);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>auto<sp/>stateMachine<sp/>=<sp/>std::make_shared&lt;StateMachine&gt;();</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>stateMachine-&gt;declare_parameter&lt;std::string&gt;(&quot;motion_controller&quot;,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;RVCMotionController::Moveit2ServoMotionController&quot;);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>stateMachine-&gt;declare_parameter&lt;std::string&gt;(&quot;grasp_plugin&quot;,<sp/>&quot;RVCControl::NonOrientedGrasp&quot;);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>std::string<sp/>motionControllerName<sp/>=<sp/>stateMachine-&gt;get_parameter(&quot;motion_controller&quot;).as_string();</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>std::string<sp/>graspPluginName<sp/>=<sp/>stateMachine-&gt;get_parameter(&quot;grasp_plugin&quot;).as_string();</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>pluginlib::ClassLoader&lt;RVCMotionController::RVCMotionControllerInterface&gt;<sp/>motionControllerLoader(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;rvc_motion_controller_interface&quot;,<sp/>&quot;RVCMotionController::RVCMotionControllerInterface&quot;);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>std::shared_ptr&lt;RVCMotionController::RVCMotionControllerInterface&gt;<sp/>motionController;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>pluginlib::ClassLoader&lt;RVCControl::RVCGraspInterface&gt;<sp/>graspLoader(&quot;rvc_grasp_interface&quot;,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;RVCControl::RVCGraspInterface&quot;);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>std::shared_ptr&lt;RVCControl::RVCGraspInterface&gt;<sp/>graspPlugin;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>motionController<sp/>=<sp/>motionControllerLoader.createSharedInstance(motionControllerName);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>if<sp/>(!motionController-&gt;init(stateMachine))</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>return<sp/>1;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>graspPlugin<sp/>=<sp/>graspLoader.createSharedInstance(graspPluginName);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>if<sp/>(!graspPlugin-&gt;init(stateMachine))</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>return<sp/>1;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>bool<sp/>ret<sp/>=<sp/>stateMachine-&gt;init(motionController.get(),<sp/>graspPlugin.get());</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>if<sp/>(ret)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>rclcpp::spin(stateMachine);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>rclcpp::shutdown();</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>return<sp/>0;</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Example<sp/>Configuration<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>main<sp/>node<sp/>plugin<sp/>configuration<sp/>can<sp/>be<sp/>provided<sp/>by<sp/>yaml<sp/>file,<sp/>as<sp/>per<sp/>following<sp/>example:</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline><highlight class="normal">/**:</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>ros__parameters:</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>motion_controller:<sp/>&quot;RVCMotionController::Moveit2ServoMotionController&quot;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>grasp_plugin:<sp/>&quot;RVCControl::NonOrientedGrasp&quot;</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>Grasp<sp/>Plugin</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>messages<sp/>from<sp/>the<sp/>vision<sp/>component<sp/>are<sp/>subscribed<sp/>by<sp/>the<sp/>rvc_grasp_interface<sp/>automatically<sp/>when<sp/>api<sp/>[init<sp/>grasp<sp/>API](doxygen.md#91)<sp/>are<sp/>called.<sp/>Subscription<sp/>of<sp/>the<sp/>rvc_message<sp/>is<sp/>inside<sp/>the<sp/>parent<sp/>of<sp/>every<sp/>plugin<sp/>and<sp/>called<sp/>esplicitely<sp/>in<sp/>the<sp/>init<sp/>function.<sp/>Example:</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline><highlight class="normal">bool<sp/>NonOrientedGrasp::init(rclcpp::Node::SharedPtr<sp/>node)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>auto<sp/>res<sp/>=<sp/>RVCGraspInterface::init(node);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>[...]</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Up<sp/>a<sp/>new<sp/>message<sp/>reception<sp/>the<sp/>interface<sp/>will<sp/>call<sp/>the<sp/>API<sp/>function</highlight></codeline>
+<codeline><highlight class="normal">[OnMessageReceive](doxygen.md#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ac519ff48b07aa841270b90d2b1057d47)<sp/>to<sp/>give<sp/>the<sp/>plugin<sp/>the<sp/>chance<sp/>to<sp/>add<sp/>implementation</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>Pre-Grap<sp/>and<sp/>Grasp<sp/>pose<sp/>will<sp/>be<sp/>retrieved<sp/>in<sp/>the<sp/>implementation<sp/>of<sp/>[getPreGrasp](doxygen.md#31)<sp/>and<sp/>[getGrasp](doxygen.md#42)<sp/>APIs,<sp/>where<sp/>these<sp/>poses<sp/>could<sp/>be<sp/>computed<sp/>there<sp/>or<sp/>on<sp/>OnMessageReceive.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">APIs<sp/>for<sp/>the<sp/>Grap<sp/>plugin<sp/>can<sp/>be<sp/>found<sp/>at<sp/>[Grasp<sp/>API](doxygen.md#23)<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Grasp<sp/>plugin<sp/>config</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>interface<sp/>init<sp/>function<sp/>will<sp/>subscribe<sp/>to<sp/>the<sp/>rvc_message<sp/>topic,<sp/>that<sp/>by<sp/>default<sp/>is<sp/>`object_poses`<sp/>but<sp/>can<sp/>be<sp/>override<sp/>by:</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline><highlight class="normal">/**:</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>ros__parameters:</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>object_pose_topic:<sp/>&quot;object_poses&quot;</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">object_pose_topic</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#<sp/>MotionController<sp/>Plugins</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">MotionController<sp/>interface<sp/>based<sp/>plugins<sp/>are<sp/>needed<sp/>to<sp/>implement<sp/>a<sp/>robot<sp/>specific<sp/>way<sp/>to<sp/>move<sp/>the<sp/>robot<sp/>itself<sp/>as<sp/>long<sp/>as<sp/>the<sp/>end<sp/>effector<sp/>or<sp/>gripper</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Motion<sp/>Controller<sp/>interface<sp/>API</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">###<sp/>init</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>bool<sp/>init(rclcpp::Node::SharedPtr<sp/>node);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Called<sp/>upon<sp/>initialization<sp/>of<sp/>the<sp/>plugin,<sp/>with<sp/>a<sp/>valid<sp/>rclcpp::node<sp/>reference<sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">###<sp/>setControllerSpeed</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>void<sp/>setControllerSpeed(const<sp/>double<sp/>controllerSpeed);</highlight></codeline>
+<codeline><highlight class="normal">Change<sp/>the<sp/>controller<sp/>speed,<sp/>can<sp/>be<sp/>manipulator,<sp/>gripper<sp/>or<sp/>both.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">###<sp/>sendGoal<sp/>cartesian<sp/>space</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>void<sp/>sendGoal(const<sp/>geometry_msgs::msg::Pose<sp/>destPose);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Set<sp/>the<sp/>target<sp/>destination<sp/>of<sp/>the<sp/>end<sp/>effector,<sp/>the<sp/>controller<sp/>decided<sp/>trajectory,<sp/>timings<sp/>(taking<sp/>controllerSpeed<sp/>in<sp/>considaration)<sp/>and,<sp/>ideally,<sp/>collision<sp/>maps.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">###<sp/>sendGoal<sp/>joint<sp/>space</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>void<sp/>sendGoal(std::vector&lt;vector6d_t&gt;<sp/>dest,<sp/>const<sp/>bool<sp/>recomputeTraj);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Deprecated<sp/>API<sp/>to<sp/>send<sp/>target<sp/>directly<sp/>in<sp/>joint<sp/>space</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>///<sp/>@return<sp/>true<sp/>if<sp/>the<sp/>goal<sp/>is<sp/>close<sp/>enough</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>virtual<sp/>void<sp/>sendGripperPosition(double<sp/>position)<sp/>=<sp/>0;</highlight></codeline>
+<codeline><highlight class="normal">###<sp/>isGoalNear</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>bool<sp/>isGoalNear();</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Controller<sp/>gives<sp/>an<sp/>indication<sp/>if<sp/>the<sp/>target<sp/>is<sp/>close<sp/>enough<sp/>to<sp/>the<sp/>target</highlight></codeline>
+<codeline></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>///<sp/>@brief<sp/>returns<sp/>current<sp/>value<sp/>of<sp/>the<sp/>gripper<sp/>position.</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>///<sp/>@return<sp/>current<sp/>value<sp/>of<sp/>the<sp/>gripper<sp/>position.</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>virtual<sp/>double<sp/>getGripperPositionFeedback(void)<sp/>=<sp/>0;</highlight></codeline>
+<codeline></codeline>
+<codeline></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">APIs<sp/>for<sp/>the<sp/>Motion<sp/>Controller<sp/>plugin<sp/>can<sp/>be<sp/>found<sp/>at<sp/>[MotionController<sp/>API](doxygen.md#31)<sp/></highlight></codeline>
+    </programlisting>
+    <location file="README.md"/>
+  </compounddef>
+</doxygen>

@@ -88,6 +88,6 @@ spec:
           value: "no"
         - name: MTX_WEBRTCTRACKGATHERTIMEOUT
           value: "10s"
-        image: bluenviron/mediamtx:1.11.3
+        image: {{ $.Values.mediamtx.image }}:{{ $.Values.mediamtx.imageTag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
       restartPolicy: Always

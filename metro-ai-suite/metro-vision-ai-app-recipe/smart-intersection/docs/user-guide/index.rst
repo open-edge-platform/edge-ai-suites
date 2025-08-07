@@ -1,4 +1,4 @@
-Smart Intersection Sample Application
+Smart Intersection
 ========================================
 
 Demonstrates the use of edge AI technologies for traffic management through scene analytics by combining data from multiple traffic cameras to create a unified intersection view.

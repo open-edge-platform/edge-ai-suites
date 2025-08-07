@@ -1,0 +1,276 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="matcher_8hpp" kind="file" language="C++">
+    <compoundname>matcher.hpp</compoundname>
+    <includes local="no">string</includes>
+    <includes local="no">stdexcept</includes>
+    <includes local="no">pcl/io/vtk_lib_io.h</includes>
+    <includes local="no">pcl/features/fpfh.h</includes>
+    <includes local="no">pcl/features/normal_3d.h</includes>
+    <includes local="no">pcl/filters/voxel_grid.h</includes>
+    <includes local="no">pcl/filters/passthrough.h</includes>
+    <includes local="no">pcl/registration/sample_consensus_prerejective.h</includes>
+    <includes local="no">pcl/filters/statistical_outlier_removal.h</includes>
+    <includes local="no">pcl/registration/ia_ransac.h</includes>
+    <includes local="no">pcl/registration/icp.h</includes>
+    <includes local="no">pcl/io/pcd_io.h</includes>
+    <includes local="no">rclcpp/rclcpp.hpp</includes>
+    <includes local="no">pcl/features/normal_3d_omp.h</includes>
+    <includes local="no">pcl/features/fpfh_omp.h</includes>
+    <includes local="no">omp.h</includes>
+    <includes local="no">pcl/point_cloud.h</includes>
+    <includes local="no">pcl/point_types.h</includes>
+    <includedby refid="rvc__pose__detector_8hpp" local="yes">rvc_pose_detector/include/rvc_pose_detector.hpp</includedby>
+    <includedby refid="matcher_8cpp" local="yes">rvc_pose_detector/src/matcher.cpp</includedby>
+    <incdepgraph>
+      <node id="19">
+        <label>pcl/point_types.h</label>
+      </node>
+      <node id="8">
+        <label>pcl/filters/passthrough.h</label>
+      </node>
+      <node id="18">
+        <label>pcl/point_cloud.h</label>
+      </node>
+      <node id="9">
+        <label>pcl/registration/sample_consensus_prerejective.h</label>
+      </node>
+      <node id="3">
+        <label>stdexcept</label>
+      </node>
+      <node id="2">
+        <label>string</label>
+      </node>
+      <node id="14">
+        <label>rclcpp/rclcpp.hpp</label>
+      </node>
+      <node id="17">
+        <label>omp.h</label>
+      </node>
+      <node id="11">
+        <label>pcl/registration/ia_ransac.h</label>
+      </node>
+      <node id="5">
+        <label>pcl/features/fpfh.h</label>
+      </node>
+      <node id="10">
+        <label>pcl/filters/statistical_outlier_removal.h</label>
+      </node>
+      <node id="16">
+        <label>pcl/features/fpfh_omp.h</label>
+      </node>
+      <node id="1">
+        <label>rvc_pose_detector/include/matcher.hpp</label>
+        <link refid="matcher_8hpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+      </node>
+      <node id="15">
+        <label>pcl/features/normal_3d_omp.h</label>
+      </node>
+      <node id="4">
+        <label>pcl/io/vtk_lib_io.h</label>
+      </node>
+      <node id="12">
+        <label>pcl/registration/icp.h</label>
+      </node>
+      <node id="6">
+        <label>pcl/features/normal_3d.h</label>
+      </node>
+      <node id="13">
+        <label>pcl/io/pcd_io.h</label>
+      </node>
+      <node id="7">
+        <label>pcl/filters/voxel_grid.h</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="1">
+        <label>rvc_pose_detector/include/matcher.hpp</label>
+        <link refid="matcher_8hpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>rvc_pose_detector/include/rvc_pose_detector.hpp</label>
+        <link refid="rvc__pose__detector_8hpp_source"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="struct_r_v_c_1_1_match_settings" prot="public">RVC::MatchSettings</innerclass>
+    <innerclass refid="struct_r_v_c_1_1_match_result" prot="public">RVC::MatchResult</innerclass>
+    <innerclass refid="class_r_v_c_1_1_object_matcher" prot="public">RVC::ObjectMatcher</innerclass>
+    <innernamespace refid="namespace_r_v_c">RVC</innernamespace>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="matcher_8hpp_1abd10555a534258e2739a38c928ef5db1" prot="public" static="no">
+        <type>pcl::PointXYZ</type>
+        <definition>typedef pcl::PointXYZ PointT</definition>
+        <argsstring></argsstring>
+        <name>PointT</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="46" column="23" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="46" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"></highlight></codeline>
+<codeline lineno="3"><highlight class="comment">INTEL<sp/>CONFIDENTIAL</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"></highlight></codeline>
+<codeline lineno="5"><highlight class="comment">Copyright<sp/>(C)<sp/>2022<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"></highlight></codeline>
+<codeline lineno="7"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>Intel<sp/>copyrighted<sp/>materials,</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">and<sp/>your<sp/>use<sp/>of<sp/>them<sp/>is<sp/>governed<sp/>by<sp/>the<sp/>express<sp/>license<sp/>under<sp/>which<sp/>they</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">were<sp/>provided<sp/>to<sp/>you<sp/>(License).<sp/>Unless<sp/>the<sp/>License<sp/>provides<sp/>otherwise,</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">you<sp/>may<sp/>not<sp/>use,<sp/>modify,<sp/>copy,<sp/>publish,<sp/>distribute,<sp/>disclose<sp/>or<sp/>transmit</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">this<sp/>software<sp/>or<sp/>the<sp/>related<sp/>documents<sp/>without<sp/>Intel&apos;s<sp/>prior<sp/>written</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">permission.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment"></highlight></codeline>
+<codeline lineno="14"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>provided<sp/>as<sp/>is,<sp/>with<sp/>no</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">express<sp/>or<sp/>implied<sp/>warranties,<sp/>other<sp/>than<sp/>those<sp/>that<sp/>are<sp/>expressly<sp/>stated</highlight></codeline>
+<codeline lineno="16"><highlight class="comment">in<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="17"><highlight class="comment"></highlight></codeline>
+<codeline lineno="18"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;string&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdexcept&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/io/vtk_lib_io.h&gt;</highlight><highlight class="normal"><sp/></highlight><highlight class="comment">//<sp/>for<sp/>loadPCDFile</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/features/fpfh.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/features/normal_3d.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/filters/voxel_grid.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/filters/passthrough.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/registration/sample_consensus_prerejective.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/filters/statistical_outlier_removal.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/registration/ia_ransac.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/registration/icp.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/io/pcd_io.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;rclcpp/rclcpp.hpp&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/features/normal_3d_omp.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/features/fpfh_omp.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;omp.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"></highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/point_cloud.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcl/point_types.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/>pcl::PointXYZ<sp/>PointT;</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight><highlight class="comment">//typedef<sp/>pcl::PointXYZRGB<sp/>PointT;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"></highlight><highlight class="comment">//typedef<sp/>pcl::PointXYZRGBNormal<sp/>PointT;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="49"><highlight class="normal"></highlight><highlight class="comment">//typedef<sp/>pcl::PointNormal<sp/>PointT;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">RVC<sp/></highlight></codeline>
+<codeline lineno="52"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="53" refid="struct_r_v_c_1_1_match_settings" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal"><ref refid="struct_r_v_c_1_1_match_settings" kindref="compound">MatchSettings</ref></highlight></codeline>
+<codeline lineno="54"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>downsampling<sp/>=<sp/>0.004f;</highlight><highlight class="comment">//0.005f;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>downsample_clouds<sp/>=<sp/>0.004f;</highlight><highlight class="comment">//0.006f;//0.005f;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="57"><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>normal_search_radius<sp/>=<sp/>0.04f;</highlight><highlight class="comment">//0.07808f;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>fpfh_search_radius<sp/>=<sp/>0.025f;</highlight><highlight class="comment">//0.009f;//0.008020f;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>stddev_mul_threshold<sp/>=<sp/>4.0f;</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>z_threshold<sp/>=<sp/>0.5f;</highlight><highlight class="comment">//CH<sp/>0.8f;//KA<sp/>0.667491f;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="62"><highlight class="normal"></highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>inlier_fraction<sp/>=<sp/>0.4f;</highlight><highlight class="comment">//0.627f;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>similarity_threshold<sp/>=<sp/>0.9f;</highlight><highlight class="comment">//0.8f;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>max_corresp_randomness<sp/>=<sp/>8.0f;</highlight><highlight class="comment">//5.0f;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>max<sp/>corr<sp/>distance<sp/>is<sp/>recommended<sp/>to<sp/>be<sp/>2.5<sp/>multiple<sp/>of<sp/>downsample</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>max_corresp_distance<sp/>=<sp/>0.01f;</highlight><highlight class="comment">//0.015f;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>max_iterations<sp/>=<sp/>30000;</highlight><highlight class="comment">//50000;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>num_samples<sp/>=<sp/>3;</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"></highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>icp_max_corresp_distance<sp/>=<sp/>0.1f;</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>icp_xform_epsilon<sp/>=<sp/>1e-9f;</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>icp_fitness_epsilon<sp/>=<sp/>6e-6f;</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>icp_max_iterations<sp/>=<sp/>50;</highlight></codeline>
+<codeline lineno="75"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"></highlight></codeline>
+<codeline lineno="77" refid="struct_r_v_c_1_1_match_result" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal"><ref refid="struct_r_v_c_1_1_match_result" kindref="compound">MatchResult</ref></highlight></codeline>
+<codeline lineno="78"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Whether<sp/>a<sp/>match<sp/>was<sp/>successful</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>If<sp/>false,<sp/>none<sp/>of<sp/>the<sp/>other<sp/>members<sp/>are<sp/>valid.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>matched;</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"></highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>ransac_score;</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>icp_score;</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"></highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/>Eigen::Vector3f<sp/>position;</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/>Eigen::Matrix4f<sp/>xform;</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><sp/><sp/>pcl::PointCloud&lt;PointT&gt;::Ptr<sp/>registered_cloud;</highlight></codeline>
+<codeline lineno="90"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"></highlight></codeline>
+<codeline lineno="92" refid="class_r_v_c_1_1_object_matcher" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_r_v_c_1_1_object_matcher" kindref="compound">ObjectMatcher</ref></highlight></codeline>
+<codeline lineno="93"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/>std::string<sp/>m_name;</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="struct_r_v_c_1_1_match_settings" kindref="compound">MatchSettings</ref><sp/>m_config;</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/>pcl::PointCloud&lt;PointT&gt;::Ptr<sp/>m_points;</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/><sp/><sp/>pcl::PointCloud&lt;pcl::FPFHSignature33&gt;::Ptr<sp/>m_signature;</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"></highlight></codeline>
+<codeline lineno="100"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_r_v_c_1_1_object_matcher_1a7384590c535fea91b38f4fd9a976f6ab" kindref="member">ObjectMatcher</ref>(</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string<sp/>name,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string<sp/>&amp;<sp/>load_path,</highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="struct_r_v_c_1_1_match_settings" kindref="compound">MatchSettings</ref><sp/>settings);</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"></highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_r_v_c_1_1_object_matcher_1a7384590c535fea91b38f4fd9a976f6ab" kindref="member">ObjectMatcher</ref>(</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string<sp/>name,<sp/>pcl::PointCloud&lt;PointT&gt;::Ptr<sp/>points,</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="struct_r_v_c_1_1_match_settings" kindref="compound">MatchSettings</ref><sp/>settings);</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"></highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="struct_r_v_c_1_1_match_result" kindref="compound">MatchResult</ref><sp/><ref refid="class_r_v_c_1_1_object_matcher_1a5a2d2a559d02ddff9b22af804ff4d33d" kindref="member">match</ref>(pcl::PointCloud&lt;PointT&gt;::Ptr<sp/>cloud);</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_1_1_object_matcher_1adcdf9f2d7d819d4a7995f74bbb662a2e" kindref="member">compute_fpfh_features</ref>(</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>pcl::PointCloud&lt;PointT&gt;::ConstPtr<sp/>points,</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_r_v_c_1_1_match_settings" kindref="compound">MatchSettings</ref><sp/>&amp;<sp/>config,</highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>pcl::PointCloud&lt;pcl::FPFHSignature33&gt;<sp/>&amp;<sp/>out);</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"></highlight></codeline>
+<codeline lineno="133"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="134"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="rvc_pose_detector/include/matcher.hpp"/>
+  </compounddef>
+</doxygen>

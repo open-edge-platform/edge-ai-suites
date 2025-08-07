@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: mqtt
-        image: eclipse-mosquitto:latest
+        image: {{ $.Values.mqtt_broker.image }}:{{ $.Values.mqtt_broker.imageTag }}
         ports:
         - containerPort: {{ $.Values.config.mqtt_broker.int.mqtt_port }}
           name: mqtt

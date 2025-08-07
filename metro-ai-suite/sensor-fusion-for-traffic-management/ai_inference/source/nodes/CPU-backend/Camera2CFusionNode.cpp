@@ -436,6 +436,16 @@ void Camera2CFusionNodeWorker::Impl::process(std::size_t batchIdx)
             inferenceTimeMetaAll.inferenceLatencies[1] = std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
         }
         ptrFrameBuf1->setMeta<InferenceTimeAll_t>(inferenceTimeMetaAll);
+
+        VideoTimeStamp_t videoTimeMeta;
+        VideoTimeAll_t videoTimeMetaAll;
+        if (ptrFrameBuf1->getMeta(videoTimeMeta) == hva::hvaSuccess) {
+            videoTimeMetaAll.videoLatencies[0] = std::chrono::duration<double, std::milli>(videoTimeMeta.endTime - videoTimeMeta.startTime).count();
+        }
+        if (ptrFrameBuf2->getMeta(videoTimeMeta) == hva::hvaSuccess) {
+            videoTimeMetaAll.videoLatencies[1] = std::chrono::duration<double, std::milli>(videoTimeMeta.endTime - videoTimeMeta.startTime).count();
+        }
+        ptrFrameBuf1->setMeta<VideoTimeAll_t>(videoTimeMetaAll);
         
         ptrFrameBuf1->setMeta<FusionOutput>(fusionOutput);
         HVA_DEBUG("Camera2CFusionNode sending blob with frameid %u and streamid %u", cameraBlob1->frameId, cameraBlob1->streamId);

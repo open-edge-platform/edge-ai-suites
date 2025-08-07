@@ -1,0 +1,29 @@
+<package format="3">
+    <name>univloc_slam</name>
+    <version>0.0.1</version>
+    <description>
+
+        A SLAM front-end.
+
+    </description>
+    <author> ECI Maintainer </author>
+    <maintainer email="eci.maintainer@intel.com"> ECI Maintainer </maintainer>
+    <license>Apache-2.0</license>
+    <buildtool_depend>ament_cmake_core</buildtool_depend>
+
+    <build_depend>rclcpp</build_depend>
+    <build_depend>cv_bridge</build_depend>
+    <build_depend>eigen</build_depend>
+    <build_depend>univloc_dependencies</build_depend>
+
+
+    <exec_depend>rclcpp</exec_depend>
+    <exec_depend>cv_bridge</exec_depend>
+    <exec_depend>eigen</exec_depend>
+    <exec_depend>univloc_dependencies</exec_depend>
+
+    <export>
+       <build_type>ament_cmake</build_type>
+    </export>
+
+</package>

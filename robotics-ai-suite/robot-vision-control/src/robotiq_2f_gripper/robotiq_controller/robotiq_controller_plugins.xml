@@ -1,0 +1,12 @@
+<library path="robotiq_controllers">
+  <class name="robotiq_controllers/RobotiqSensorBroadcaster" type="robotiq_controllers::RobotiqSensorBroadcaster" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      object detection and position state controller broadcaster
+    </description>
+  </class>
+  <class name="robotiq_controllers/RobotiqFingerController" type="robotiq_controllers::RobotiqFingerController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      control finger position, speed and force
+    </description>
+  </class>
+</library>

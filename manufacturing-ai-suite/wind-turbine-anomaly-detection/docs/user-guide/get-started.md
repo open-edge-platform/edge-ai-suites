@@ -49,7 +49,7 @@ cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
 ```
 ## Data flow explanation
 
-The data flow remains same as that explained in the [High-Level Architecture](./how-it-works.md#high-level-architecture).
+The data flow remains same as that explained in the [High-Level Architecture](./how-it-works.md).
 Let's specifically talk about the wind turbine anomaly detection use case here by ingesting the data using the
 OPC-UA simulator and publishing the anomaly alerts to MQTT broker.
 

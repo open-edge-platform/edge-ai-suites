@@ -1,11 +1,29 @@
 # Copyright Intel Corporation
 
 namespace:
-DOCKER_REGISTRY: ''
+DOCKER_REGISTRY: 'ghcr.io/open-edge-platform/edge-ai-libraries/'
 DOCKER_USERNAME: ''
 DOCKER_PASSWORD: ''
 imagePullPolicy: Always
 storageClassName: manual
+mqtt_broker:
+  image: eclipse-mosquitto
+  imageTag: 2.0.21
+coturn:
+  image: coturn/coturn
+  imageTag: 4.7
+mediamtx:
+  image: bluenviron/mediamtx
+  imageTag: 1.11.3
+dlstreamer_pipeline_server:
+  image: intel/edge-ai-dlstreamer-pipeline-server
+  imageTag: 20250731_EAL1.2_DLSPS_RC4-ubuntu24
+grafana:
+  image: grafana/grafana
+  imageTag: 11.5.4
+node_red:
+  image: nodered/node-red
+  imageTag: 3.1
 env:
   ENABLE_WEBRTC: "true"
   ENABLE_RTSP: "true"
@@ -15,7 +33,6 @@ env:
   http_proxy:
   https_proxy:
   no_proxy:
-  NO_PROXY:
 privileged_access_required: false
 gpu:
   enabled: false

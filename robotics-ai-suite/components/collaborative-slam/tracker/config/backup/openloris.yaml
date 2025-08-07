@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+%YAML:1.0
+# TUM RGBD monocular model for 01
+#==============#
+# Camera Model #
+#==============#
+
+Camera.name: "Realsense 435i"
+Camera.setup: "RGBD"
+Camera.model: "perspective"
+
+Camera.fx: 611.45
+Camera.fy: 611.48
+Camera.cx: 433.20
+Camera.cy: 249.47
+
+Camera.k1: 0
+Camera.k2: 0
+Camera.p1: 0
+Camera.p2: 0
+Camera.k3: 0
+
+Camera.fps: 30.0
+Camera.cols: 848
+Camera.rows: 480
+
+Camera.focal_x_baseline: 40.0
+depthmap_factor: 1000.0
+depth_threshold: 20.0
+Camera.color_order: "RGB"
+Initializer.num_min_triangulated_pts: 400
+#================#
+# ORB Parameters #
+#================#
+
+Feature.max_num_keypoints: 1000
+Feature.scale_factor: 1.2
+Feature.num_levels: 8
+Feature.ini_fast_threshold: 20
+Feature.min_fast_threshold: 7
+
+#===========================#
+# PangolinViewer Parameters #
+#===========================#
+
+PangolinViewer.keyframe_size: 0.05
+PangolinViewer.keyframe_line_width: 1
+PangolinViewer.graph_line_width: 1
+PangolinViewer.point_size: 2
+PangolinViewer.camera_size: 0.08
+PangolinViewer.camera_line_width: 3
+PangolinViewer.viewpoint_x: 0
+PangolinViewer.viewpoint_y: -0.9
+PangolinViewer.viewpoint_z: -1.9
+PangolinViewer.viewpoint_f: 400
+
+#Body-camera extrinsic parameter
+T_bc: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: d
+  data: [0.06139704357754487,  -0.1404571801587916,   0.9881815290537928,  0.3983640000000000,
+         -0.998109773995481, -0.0114555331358535,  0.06038563378200751, 0.02911699999999999,
+          0.002838527633488592,-0.9900199864311956,    -0.1408947493579412, 1.1985100000000004,
+          0.0,        0.0,       0.0,       1.0]
+
+#client name
+ID: 1

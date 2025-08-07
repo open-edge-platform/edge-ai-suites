@@ -1,0 +1,12 @@
+Source: ros-humble-rvc-motion-controller-interface
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0), ros-humble-ament-cmake, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-controller-manager, ros-humble-geometry-msgs, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-sensor-msgs, ros-humble-tf2-eigen, ros-humble-tf2-geometry-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-rvc-motion-controller-interface
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-humble-controller-manager, ros-humble-geometry-msgs, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-sensor-msgs, ros-humble-tf2-eigen, ros-humble-tf2-geometry-msgs
+Description: interface defining how motion controller plugins shall be implemented

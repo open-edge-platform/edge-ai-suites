@@ -1,0 +1,14 @@
+Source: ros-humble-openvino-yolov8
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-rclcpp, ros-humble-geometry-msgs, ros-humble-std-msgs, libopencv-dev, ros-humble-openvino-node, openvino, ros-humble-tf2, ros-humble-tf2-msgs, ros-humble-sensor-msgs, ros-humble-visualization-msgs, ros-humble-tf2-ros, ros-humble-openvino-yolov8-msgs, libpython3.10-dev
+Standards-Version: 4.1.4
+
+Package: ros-humble-openvino-yolov8
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, ros-humble-rclcpp, ros-humble-geometry-msgs, ros-humble-std-msgs, ros-humble-tf2 ,ros-humble-tf2-msgs,ros-humble-sensor-msgs, ros-humble-openvino-node, openvino, ros-humble-visualization-msgs, ros-humble-tf2-ros, ros-humble-openvino-yolov8-msgs
+Description: Yolov8 Openvino ROS2 Harness 
+
+

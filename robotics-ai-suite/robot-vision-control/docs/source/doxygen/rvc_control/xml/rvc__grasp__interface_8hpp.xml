@@ -1,0 +1,159 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="rvc__grasp__interface_8hpp" kind="file" language="C++">
+    <compoundname>rvc_grasp_interface.hpp</compoundname>
+    <includes local="yes">rclcpp/rclcpp.hpp</includes>
+    <includes local="yes">rclcpp/macros.hpp</includes>
+    <includes local="yes">rvc_messages/msg/pose_stamped_list.hpp</includes>
+    <includes local="yes">rvc_messages/msg/pose_stamped.hpp</includes>
+    <includedby refid="rvc__grasp__interface_8cpp" local="yes">rvc_grasp/rvc_grasp_interface/src/rvc_grasp_interface.cpp</includedby>
+    <includedby refid="non__oriented__grasp_8hpp" local="yes">rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp</includedby>
+    <includedby refid="oriented__grasp_8hpp" local="yes">rvc_grasp/rvc_grasp_plugins/oriented_grasp/include/oriented_grasp/oriented_grasp.hpp</includedby>
+    <incdepgraph>
+      <node id="4">
+        <label>rvc_messages/msg/pose_stamped_list.hpp</label>
+      </node>
+      <node id="2">
+        <label>rclcpp/rclcpp.hpp</label>
+      </node>
+      <node id="1">
+        <label>rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp</label>
+        <link refid="rvc__grasp__interface_8hpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>rvc_messages/msg/pose_stamped.hpp</label>
+      </node>
+      <node id="3">
+        <label>rclcpp/macros.hpp</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="1">
+        <label>rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp</label>
+        <link refid="rvc__grasp__interface_8hpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>rvc_grasp/rvc_grasp_plugins/non_oriented_grasp/include/non_oriented_grasp/non_oriented_grasp.hpp</label>
+        <link refid="non__oriented__grasp_8hpp_source"/>
+      </node>
+      <node id="3">
+        <label>rvc_grasp/rvc_grasp_plugins/oriented_grasp/include/oriented_grasp/oriented_grasp.hpp</label>
+        <link refid="oriented__grasp_8hpp_source"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" prot="public">RVCControl::RVCGraspInterface</innerclass>
+    <innernamespace refid="namespace_r_v_c_control">RVCControl</innernamespace>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="rvc__grasp__interface_8hpp_1a5833630421113e00042e51409a835ce4" prot="public" static="no">
+        <name>__RVC_GRASP_INTERFACE_HPP__</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="23" column="9" bodyfile="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="rvc__grasp__interface_8hpp_1a983a73aa86f38f90930a4d20d42f3804" prot="public" static="no">
+        <type>std::array&lt; double, 6 &gt;</type>
+        <definition>using vector6d_t =  std::array&lt;double, 6&gt;</definition>
+        <argsstring></argsstring>
+        <name>vector6d_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="30" column="1" bodyfile="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" bodystart="30" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"></highlight></codeline>
+<codeline lineno="3"><highlight class="comment">INTEL<sp/>CONFIDENTIAL</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"></highlight></codeline>
+<codeline lineno="5"><highlight class="comment">Copyright<sp/>(C)<sp/>2022<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"></highlight></codeline>
+<codeline lineno="7"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>Intel<sp/>copyrighted<sp/>materials,</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">and<sp/>your<sp/>use<sp/>of<sp/>them<sp/>is<sp/>governed<sp/>by<sp/>the<sp/>express<sp/>license<sp/>under<sp/>which<sp/>they</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">were<sp/>provided<sp/>to<sp/>you<sp/>(License).<sp/>Unless<sp/>the<sp/>License<sp/>provides<sp/>otherwise,</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">you<sp/>may<sp/>not<sp/>use,<sp/>modify,<sp/>copy,<sp/>publish,<sp/>distribute,<sp/>disclose<sp/>or<sp/>transmit</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">this<sp/>software<sp/>or<sp/>the<sp/>related<sp/>documents<sp/>without<sp/>Intel&apos;s<sp/>prior<sp/>written</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">permission.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment"></highlight></codeline>
+<codeline lineno="14"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>provided<sp/>as<sp/>is,<sp/>with<sp/>no</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">express<sp/>or<sp/>implied<sp/>warranties,<sp/>other<sp/>than<sp/>those<sp/>that<sp/>are<sp/>expressly<sp/>stated</highlight></codeline>
+<codeline lineno="16"><highlight class="comment">in<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="17"><highlight class="comment"></highlight></codeline>
+<codeline lineno="18"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>__RVC_GRASP_INTERFACE_HPP__</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>__RVC_GRASP_INTERFACE_HPP__</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;rclcpp/rclcpp.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;rclcpp/macros.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;rvc_messages/msg/pose_stamped_list.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;rvc_messages/msg/pose_stamped.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="keyword">using</highlight><highlight class="normal"><sp/>vector6d_t<sp/>=<sp/>std::array&lt;double,<sp/>6&gt;;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33" refid="namespace_r_v_c_control" refkind="compound"><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespace_r_v_c_control" kindref="compound">RVCControl</ref><sp/>{</highlight></codeline>
+<codeline lineno="34" refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" kindref="compound">RVCGraspInterface</ref></highlight></codeline>
+<codeline lineno="35"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/>rclcpp::Node::SharedPtr<sp/>node_;</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight><highlight class="keyword">private</highlight><highlight class="normal">:<sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/>rclcpp::Subscription&lt;rvc_messages::msg::PoseStampedList&gt;::SharedPtr<sp/>RvcMessagesSubscriber;</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>RvcMessagesCallback(rvc_messages::msg::PoseStampedList::SharedPtr);</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a23575f212effaa07616d4bd6e561336a" kindref="member">RVCGraspInterface</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" kindref="compound">RVCGraspInterface</ref>&amp;);</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" kindref="compound">RVCGraspInterface</ref>&amp;<sp/>operator=(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" kindref="compound">RVCGraspInterface</ref>&amp;);</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/>RCLCPP_SMART_PTR_ALIASES_ONLY(<ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" kindref="compound">RVCGraspInterface</ref>)</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="56" refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ac519ff48b07aa841270b90d2b1057d47" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>virtual<sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ac519ff48b07aa841270b90d2b1057d47" kindref="member">OnMessageReceive</ref>(rvc_messages::msg::PoseStampedList::SharedPtr<sp/>msg)<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="64" refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab82b5755786cbc7b3255eedb3381f5c8" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>virtual<sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab82b5755786cbc7b3255eedb3381f5c8" kindref="member">getPreGrasp</ref>(geometry_msgs::msg::Pose<sp/>&amp;<sp/>pose)<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="72" refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aed89327ba661ddf2be6c4c187bbf74e0" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>virtual<sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aed89327ba661ddf2be6c4c187bbf74e0" kindref="member">getGrasp</ref>(geometry_msgs::msg::Pose<sp/>&amp;<sp/>pose)<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="79" refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a29d996087e338b75a5f1de2324380dcc" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>virtual<sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a29d996087e338b75a5f1de2324380dcc" kindref="member">isTargetAcquired</ref>()<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="85" refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aa6940e178dc6fc147282f7acd1f04f7b" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>virtual<sp/>std::</highlight><highlight class="keywordtype">string</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1aa6940e178dc6fc147282f7acd1f04f7b" kindref="member">getCurrentObject</ref>()<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/>virtual<sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab0c2cdba038b08aff7dfd7b43211ce63" kindref="member">init</ref>(rclcpp::Node::SharedPtr<sp/>node);</highlight></codeline>
+<codeline lineno="102" refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a6ee193f0b77862c2a31be7b9df4600ac" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>virtual<sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a6ee193f0b77862c2a31be7b9df4600ac" kindref="member">on_shutdown</ref>()</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_INFO(rclcpp::get_logger(</highlight><highlight class="stringliteral">&quot;OD&quot;</highlight><highlight class="normal">),<sp/></highlight><highlight class="stringliteral">&quot;ai_interface:<sp/>on_shutdown...&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"></highlight></codeline>
+<codeline lineno="112" refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1afd56ca5c19e5cb3f79f5efcd0bfb6013" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1afd56ca5c19e5cb3f79f5efcd0bfb6013" kindref="member">~RVCGraspInterface</ref>()<sp/>{};</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"></highlight></codeline>
+<codeline lineno="114"><highlight class="normal"></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="117" refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a23575f212effaa07616d4bd6e561336a" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_r_v_c_control_1_1_r_v_c_grasp_interface_1a23575f212effaa07616d4bd6e561336a" kindref="member">RVCGraspInterface</ref>()<sp/>{}</highlight></codeline>
+<codeline lineno="118"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="119"><highlight class="normal">}<sp/></highlight><highlight class="comment">//namespace<sp/>RVCControl</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="120"><highlight class="normal"></highlight></codeline>
+<codeline lineno="121"><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">//__RVC_GRASP_INTERFACE_HPP__</highlight><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp"/>
+  </compounddef>
+</doxygen>

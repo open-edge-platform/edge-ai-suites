@@ -12,11 +12,11 @@ The `HMI Augmented Worker` sample application show cases how RAG pipelines can b
   - [Architecture](./docs/user-guide/overview.md#high-level-architecture): High-level architecture.
 
 - **Getting Started**
-  - [Get Started](./docs/user-guide/get-started.md): Setup guides to getting started with the sample appplication.
+  - [Get Started](./docs/user-guide/get-started.md): Setup guides to getting started with the sample application.
   - [System Requirements](./docs/user-guide/system-requirements.md): Requirements include hardware and software to deploy the sample application.
 
 - **Advanced**
   - [Build From Source](./docs/user-guide/how-to-build-from-source.md): Guide to build the file watcher service on Windows® OS and how it can be interfaced with RAG pipeline that executes on the Ubuntu or EMT side.
 
 - **Release Notes**
-  - [Release Notes](./docs/user-guide/release_notes/overview.md): Notes on the latest releases, updates, improvements, and bug fixes.
+  - [Release Notes](./docs/user-guide/release-notes.md): Notes on the latest releases, updates, improvements, and bug fixes.

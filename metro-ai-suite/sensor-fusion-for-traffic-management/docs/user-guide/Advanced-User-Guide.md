@@ -1,6 +1,6 @@
 # Advanced User Guide
 
-## 1. Introduction
+## 1. Overview
 
 In this document we present an Intel® software reference implementation (hereinafter abbreviated as ***SW RI***) of Metro AI Suite Sensor Fusion for Traffic Management, which is integrated sensor fusion of camera and mmWave radar (a.k.a. ISF "C+R" or AIO "C+R"). The detailed steps of running this SW RI on NEPRA base platform are also described.
 
@@ -24,27 +24,55 @@ All the above workloads of this SW RI can run on single Intel SoC processor whic
 <center>(1) Use case#1: 1C+1R</center>
 
 ![Case2-4C4R](./_images/Case2-4C4R.png)
-<center>(1) Use case#2: 4C+4R </center>
+<center>(2) Use case#2: 4C+4R </center>
 
-<center> Figure 1. E2E SW pipelines of 2 use cases of sensor fusion C+R(Camera+Radar).</center>
+![Case3-2C1R](./_images/Case3-2C1R.png)
+<center>(3) Use case#3: 2C+1R </center>
+
+![Case4-16C4R](./_images/Case4-16C4R.png)
+<center>(4) Use case#4: 16C+4R </center>
+
+<center> Figure 1. E2E SW pipelines of 4 use cases of sensor fusion C+R(Camera+Radar).</center>
 
 ### 1.1 Prerequisites
 
--   Intel® Distribution of OpenVINO™ Toolkit
+- Operating System: [Ubuntu 22.04.1 Desktop LTS](https://old-releases.ubuntu.com/releases/22.04.1/ubuntu-22.04.1-desktop-amd64.iso) (fresh installation) on target system
 
-    -   Version: 2024.6
+- Platform
 
--   RADDet dataset
+    - Intel® Celeron® Processor 7305E (1C+1R/2C+1R usecase)
+    - Intel® Core™ Ultra 7 Processor 165H (4C+4R usecase)
+    - Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics (16C+4R usecase)
 
-    -   <https://github.com/ZhangAoCanada/RADDet#Dataset>
+- Intel® OpenVINO™ Toolkit
 
--   Platform
+    - Version Type: 2024.6
 
-    -   Intel® Celeron® Processor 7305E (1C+1R/2C+1R usecase)
+- RADDet Dataset
 
-    -   Intel® Core™ Ultra 7 Processor 165H (4C+4R usecase)
+    - https://github.com/ZhangAoCanada/RADDet#Dataset
 
-    -   13th Gen Intel(R) Core(TM) i7-13700 (16C+4R usecase)
+    - For how to get RADDet dataset, please refer to this guide: [how_to_get_RADDet_datasets.md](How-To-Get-RADDET-Dataset.md)
+
+        Upon success, bin files will be extracted, save to $RADDET_DATASET_ROOT/bin_files_{VERSION}:
+
+        > NOTE: latest converted dataset version should be: v1.0
+
+- Ensure that proxy settings are configured if target system is within proxy environment
+
+    ```bash
+    export http_proxy=<Your-Proxy>
+    export https_proxy=<Your-Proxy>
+    ```
+
+    ```bash
+    sudo vim /etc/environment
+    # set proxy in /etc/environment
+    # http_proxy=<Your-Proxy>
+    # https_proxy=<Your-Proxy>
+    ```
+
+
 
 ### 1.2 Modules
 
@@ -84,38 +112,58 @@ gRPCPort=50052
 Currently we support four display types: media, radar, media_radar, media_fusion. 
 
 
-## 2. Prerequisites
 
-1. Perform a fresh installation of Ubuntu* Desktop 24.04 on the target system.
-2. Configure your proxy
-    ```bash
-    export http_proxy=<Your-Proxy>
-    export https_proxy=<Your-Proxy>
-    ```
+
+
+##	2. System Requirements
+
+### 2.1 Hardware requirements
+
+- Platform
+
+    - Intel® Celeron® Processor 7305E (1C+1R/2C+1R usecase)
+    - Intel® Core™ Ultra 7 Processor 165H (4C+4R usecase)
+
+    - Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics (16C+4R usecase)
+
+- BIOS setting
+
+    - MTL
+
+        | Setting                                          | Step                                                         |
+        | ------------------------------------------------ | ------------------------------------------------------------ |
+        | Enable the Hidden BIOS Setting in Seavo Platform | "Right Shift+F7" Then Change Enabled Debug Setup Menu from [Enabled] to [Disable] |
+        | Disable VT-d in BIOS                             | Intel Advanced Menu → System Agent (SA) Configuration → VT-d setup menu → VT-d<Disabled>    <br>Note: If VT-d can’t be disabled, please disable Intel Advanced Menu → CPU Configuration → X2APIC |
+        | Disable SAGV in BIOS                             | Intel Advanced Menu → [System Agent (SA) Configuration]  →  Memory configuration →  SAGV <Disabled> |
+        | Enable NPU Device                                | Intel Advanced Menu → CPU Configuration → Active SOC-North Efficient-cores <ALL>   <br>Intel Advanced Menu → System Agent (SA) Configuration → NPU Device <Enabled> |
+        | TDP Configuration                                | SOC TDP configuration is very important for performance. Suggestion: TDP = 45W. For extreme heavy workload, TDP = 64W <br>---TDP = 45W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations → Power Limit 1 <45000> <br>---TDP = 64W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations →  Configurable TDP Boot Mode [Level2] |
+
+    - RPL-S+A770
+
+        | Setting                  | Step                                                         |
+        | ------------------------ | ------------------------------------------------------------ |
+        | Enable ResizeBar in BIOS | Intel Advanced Menu -> System Agent (SA) Configuration -> PCI Express Configuration -> PCIE Resizable BAR Support <Enabled> |
+
+
+
+### 2.2 Software requirements
+
+| Software           | Version                |
+| ------------------ | ---------------------- |
+| Intel  OpenVINO    | 2024.6.0               |
+| Intel  oneMKL      | 2025.1.0               |
+| NEO OpenCL         | Release/23.22.26516.25 |
+| cmake              | 3.21.2                 |
+| boost              | 1.83.0                 |
+| spdlog             | 1.8.2                  |
+| thrift             | 0.18.1                 |
+| gRPC               | 1.58.1                 |
+| zlib               | 1.3.1                 |
+| oneAPI Level  Zero | 1.17.19                |
+
+
 
 ## 3. Install Dependencies and Build Project
-
-### 3.1 BIOS setting
-
-#### 3.1.1 MTL
-
-| Setting                                          | Step                                                         |
-| ------------------------------------------------ | ------------------------------------------------------------ |
-| Enable the Hidden BIOS Setting in Seavo Platform | "Right Shift+F7" Then Change Enabled Debug Setup Menu from [Enabled] to [Disable] |
-| Disable VT-d in BIOS                             | Intel Advanced Menu → System Agent (SA) Configuration → VT-d setup menu → VT-d<Disabled>    <br>Note: If VT-d can’t be disabled, please disable Intel Advanced Menu → CPU Configuration → X2APIC |
-| Disable SAGV in BIOS                             | Intel Advanced Menu → [System Agent (SA) Configuration]  →  Memory configuration →  SAGV <Disabled> |
-| Enable NPU Device                                | Intel Advanced Menu → CPU Configuration → Active SOC-North Efficient-cores <ALL>   <br>Intel Advanced Menu → System Agent (SA) Configuration → NPU Device <Enabled> |
-| TDP Configuration                                | SOC TDP configuration is very important for performance. Suggestion: TDP = 45W. For extreme heavy workload, TDP = 64W <br>---TDP = 45W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations → Power Limit 1 <45000> <br>---TDP = 64W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations →  Configurable TDP Boot Mode [Level2] |
-
-
-
-#### 3.1.2 RPL-S+A770
-
-| Setting                  | Step                                                         |
-| ------------------------ | ------------------------------------------------------------ |
-| Enable ResizeBar in BIOS | Intel Advanced Menu -> System Agent (SA) Configuration -> PCI Express Configuration -> PCIE Resizable BAR Support <Enabled> |
-
-### 3.2 Install Dependencies
 
 * install driver related libs
 
@@ -137,7 +185,7 @@ Currently we support four display types: media, radar, media_radar, media_fusion
 
 - set $PROJ_DIR
   ```bash
-  cd Metro_AI_Suite_Sensor_Fusion_for_Traffic_Management_metro/sensor_fusion_service
+  cd applications.iot.video-edge-device.holographic-sensor-fusion
   export PROJ_DIR=$PWD
   ```
 - prepare global radar configs in folder: /opt/datasets
@@ -158,26 +206,20 @@ Currently we support four display types: media, radar, media_radar, media_fusion
     bash -x build.sh
     ```
 
-## 4. Download and Convert Dataset
-For how to get RADDet dataset, please refer to this guide: [How To Get RADDET Dataset section](./How-To-Get-RADDET-Dataset.md)
-
-Upon success, bin files will be extracted, save to $DATASET_ROOT/bin_files_{VERSION}:
-> NOTE: latest converted dataset version should be: v1.0
-
-## 5. Run Sensor Fusion Application
+## 4. How it works
 
 In this section, we describe how to run Intel® Metro AI Suite Sensor Fusion for Traffic Management application.
 
-Intel® Metro AI Suite Sensor Fusion for Traffic Management application can support different pipeline using topology JSON files to describe the pipeline topology. The defined pipeline topology can be found at [sec 5.1 Resources Summary](#51-resources-summary)
+Intel® Metro AI Suite Sensor Fusion for Traffic Management application can support different pipeline using topology JSON files to describe the pipeline topology. The defined pipeline topology can be found at [sec 4.1 Resources Summary](#41-resources-summary)
 
 There are two steps required for running the sensor fusion application:
-- Start AI Inference service, more details can be found at [sec 5.2 Start Service](#52-start-service)
-- Run the application entry program, more details can be found at [sec 5.3 Run Entry Program](#53-run-entry-program)
+- Start AI Inference service, more details can be found at [sec 4.2 Start Service](#42-start-service)
+- Run the application entry program, more details can be found at [sec 4.3 Run Entry Program](#43-run-entry-program)
 
-Besides, users can test each component (without display) following the guides at [sec 5.3.2 1C1R Unit Tests](#532-1c+1r-unit-tests), [sec 5.3.4 4C4R Unit Tests](#534-4c+4r-unit-tests), [sec 5.3.6 2C1R Unit Tests](#536-2c+1r-unit-tests), [sec 5.3.8 16C4R Unit Tests](#538-16c+4r-unit-tests)
+Besides, users can test each component (without display) following the guides at [sec 4.3.2 1C1R Unit Tests](#432-1c+1r-unit-tests), [sec 4.3.4 4C4R Unit Tests](#434-4c+4r-unit-tests), [sec 4.3.6 2C1R Unit Tests](#436-2c+1r-unit-tests), [sec 4.3.8 16C4R Unit Tests](#438-16c+4r-unit-tests)
 
 
-### 5.1 Resources Summary
+### 4.1 Resources Summary
 - Local File Pipeline for Media pipeline
   - Json File: localMediaPipeline.json
     `File location: ai_inference/test/configs/raddet/1C1R/localMediaPipeline.json`
@@ -263,7 +305,7 @@ Besides, users can test each component (without display) following the guides at
                |              -> radarOfflineResults ->                           |                                    |
         ```
 
-### 5.2 Start Service
+### 4.2 Start Service
 Open a terminal, run the following commands:
 
 ```bash
@@ -297,8 +339,10 @@ sudo pkill Hce
 ```
 
 
-### 5.3 Run Entry Program
-#### 5.3.1 1C+1R
+### 4.3 Run Entry Program
+#### 4.3.1 1C+1R
+
+**The target platform is Intel® Celeron® Processor 7305E.**
 
 All executable files are located at: $PROJ_DIR/build/bin
 
@@ -339,7 +383,10 @@ sudo -E ./build/bin/CRSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/conf
 ```
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 
-#### 5.3.2 1C+1R Unit Tests
+#### 4.3.2 1C+1R Unit Tests
+
+**The target platform is Intel® Celeron® Processor 7305E.**
+
 In this section, the unit tests of four major components will be described: media processing, radar processing, fusion pipeline without display and other tools for intermediate results.
 
 Usage:
@@ -360,14 +407,14 @@ Environment requirement:
 * **pipeline_repeats**: the pipeline repeats number.
 * **cross_stream_num**: the stream number that run in a single pipeline.
 
-##### 5.3.2.1 Unit Test: Media Processing
+##### 4.3.2.1 Unit Test: Media Processing
 Open another terminal, run the following commands:
 ```bash
 # media test-case
 ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/localMediaPipeline.json 1 1 /path-to-dataset multisensor
 ```
 
-##### 5.3.2.2 Unit Test: Radar Processing
+##### 4.3.2.2 Unit Test: Radar Processing
 
 Open another terminal, run the following commands:
 ```bash
@@ -375,37 +422,37 @@ Open another terminal, run the following commands:
 ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localRadarPipeline_libradar.json 1 1 /path-to-dataset multisensor
 ```
 
-##### 5.3.2.3 Unit Test: Fusion pipeline without display
+##### 4.3.2.3 Unit Test: Fusion pipeline without display
 Open another terminal, run the following commands:
 ```bash
 # fusion test-case
 ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localFusionPipeline_libradar.json 1 1 /path-to-dataset multisensor
 ```
-##### 5.3.2.4 GPU VPLDecode test
+##### 4.3.2.4 GPU VPLDecode test
 ```bash
 ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/configs/gpuLocalVPLDecodeImagePipeline.json 1 1000 $PROJ_DIR/_images/images image
 ```
-##### 5.3.2.5 Media model inference visualization
+##### 4.3.2.5 Media model inference visualization
 ```bash
 ./build/bin/MediaDisplay 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/localMediaPipeline.json 1 1 /path-to-dataset multisensor
 ```
-##### 5.3.2.6 Radar pipeline with radar pcl as output
+##### 4.3.2.6 Radar pipeline with radar pcl as output
 ```bash
 ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localRadarPipeline_pcl_libradar.json 1 1 /path-to-dataset multisensor
 ```
-##### 5.3.2.7 Save radar pipeline tracking results
+##### 4.3.2.7 Save radar pipeline tracking results
 ```bash
 ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localRadarPipeline_saveResult_libradar.json 1 1 /path-to-dataset multisensor
 ```
-##### 5.3.2.8 Save radar pipeline pcl results
+##### 4.3.2.8 Save radar pipeline pcl results
 ```bash
 ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localRadarPipeline_savepcl_libradar.json 1 1 /path-to-dataset multisensor
 ```
-##### 5.3.2.9 Save radar pipeline clustering results
+##### 4.3.2.9 Save radar pipeline clustering results
 ```bash
 ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localRadarPipeline_saveClustering_libradar.json 1 1 /path-to-dataset multisensor
 ```
-##### 5.3.2.10 Test radar pipeline performance
+##### 4.3.2.10 Test radar pipeline performance
 ```bash
 ## no need to run the service
 export HVA_NODE_DIR=$PWD/build/lib
@@ -413,20 +460,22 @@ source /opt/intel/openvino_2024/setupvars.sh
 source /opt/intel/oneapi/setvars.sh
 ./build/bin/testRadarPerformance ai_inference/test/configs/raddet/1C1R/libradar/localRadarPipeline_libradar.json /path-to-dataset 1
 ```
-##### 5.3.2.11 Radar pcl results visualization
+##### 4.3.2.11 Radar pcl results visualization
 ```bash
 ./build/bin/CRSensorFusionRadarDisplay 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localRadarPipeline_savepcl_libradar.json 1 1 /path-to-dataset pcl
 ```
-##### 5.3.2.12 Radar clustering results visualization
+##### 4.3.2.12 Radar clustering results visualization
 ```bash
 ./build/bin/CRSensorFusionRadarDisplay 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localRadarPipeline_saveClustering_libradar.json 1 1 /path-to-dataset clustering
 ```
-##### 5.3.2.13 Radar tracking results visualization
+##### 4.3.2.13 Radar tracking results visualization
 ```bash
 ./build/bin/CRSensorFusionRadarDisplay 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localRadarPipeline_libradar.json 1 1 /path-to-dataset tracking
 ```
 
-#### 5.3.3 4C+4R
+#### 4.3.3 4C+4R
+
+**The target platform is Intel® Core™ Ultra 7 Processor 165H.**
 
 All executable files are located at: $PROJ_DIR/build/bin
 
@@ -479,7 +528,10 @@ For the command above, if you encounter problems with opencv due to remote conne
 sudo -E ./build/bin/CRSensorFusion4C4RDisplayCrossStream 127.0.0.1 50052 ai_inference/test/configs/raddet/4C4R/cross-stream/localFusionPipeline.json ai_inference/test/configs/raddet/4C4R/cross-stream/localFusionPipeline_npu.json 4 1 /path-to-dataset media_fusion 2 1 3
 ```
 
-#### 5.3.4 4C+4R Unit Tests
+#### 4.3.4 4C+4R Unit Tests
+
+**The target platform is Intel® Core™ Ultra 7 Processor 165H.**
+
 In this section, the unit tests of two major components will be described: fusion pipeline without display and media processing.
 
 Usage:
@@ -513,21 +565,21 @@ The method for generating offline radar files is described in [5.3.2.7 Save rada
 ```bash
 sudo cp $PROJ_DIR/ai_inference/deployment/datasets/radarResults.csv /opt
 ```
-##### 5.3.4.1 Unit Test: Fusion Pipeline without display
+##### 4.3.4.1 Unit Test: Fusion Pipeline without display
 Open another terminal, run the following commands:
 ```bash
 # fusion test-case
 sudo -E ./build/bin/testGRPC4C4RPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/4C4R/localFusionPipeline.json ai_inference/test/configs/raddet/4C4R/localFusionPipeline_npu.json 4 1 /path-to-dataset
 ```
 
-##### 5.3.4.2 Unit Test: Fusion Pipeline with cross-stream without display
+##### 4.3.4.2 Unit Test: Fusion Pipeline with cross-stream without display
 Open another terminal, run the following commands:
 ```bash
 # fusion test-case
 sudo -E ./build/bin/testGRPC4C4RPipelineCrossStream 127.0.0.1 50052 ai_inference/test/configs/raddet/4C4R/cross-stream/localFusionPipeline.json ai_inference/test/configs/raddet/4C4R/cross-stream/localFusionPipeline_npu.json 4 1 /path-to-dataset 1 3 
 ```
 
-##### 5.3.4.3 Unit Test: Media Processing
+##### 4.3.4.3 Unit Test: Media Processing
 Open another terminal, run the following commands:
 ```bash
 # media test-case
@@ -547,7 +599,9 @@ sudo -E ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/conf
 sudo -E ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/UTNPUDetection-yoloxs.json 1 1 /path-to-dataset multisensor
 ```
 
-#### 5.3.5 2C+1R
+#### 4.3.5 2C+1R
+
+**The target platform is Intel® Celeron® Processor 7305E.**
 
 All executable files are located at: $PROJ_DIR/build/bin
 
@@ -591,7 +645,9 @@ sudo -E ./build/bin/CRSensorFusion2C1RDisplay 127.0.0.1 50052 ai_inference/test/
 
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 
-#### 5.3.6 2C+1R Unit Tests
+#### 4.3.6 2C+1R Unit Tests
+
+**The target platform is Intel® Celeron® Processor 7305E.**
 
 In this section, the unit tests of three major components will be described: media processing, radar processing, fusion pipeline without display.
 
@@ -617,34 +673,36 @@ Environment requirement:
 
 
 
-##### 5.3.6.1 Unit Test: Media Processing
+##### 4.3.6.1 Unit Test: Media Processing
 
 Open another terminal, run the following commands:
 
 ```bash
 # media test-case
-./build/bin/testGRPC2C1RPipeline 127.0.0.1 50052 ./ai_inference/test/configs/raddet/2C1R/localMediaPipeline.json 1 1 /path-to-dataset multisensor
+./build/bin/testGRPC2C1RPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/2C1R/localMediaPipeline.json 1 1 /path-to-dataset multisensor
 ```
 
-##### 5.3.6.2 Unit Test: Radar Processing
+##### 4.3.6.2 Unit Test: Radar Processing
 
 Open another terminal, run the following commands:
 
 ```bash
 # radar test-case
-./build/bin/testGRPC2C1RPipeline 127.0.0.1 50052 ./ai_inference/test/configs/raddet/2C1R/localRadarPipeline_libradar.json 1 1 /path-to-dataset multisensor
+./build/bin/testGRPC2C1RPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/2C1R/localRadarPipeline_libradar.json 1 1 /path-to-dataset multisensor
 ```
 
-##### 5.3.6.3 Unit Test: Fusion pipeline without display
+##### 4.3.6.3 Unit Test: Fusion pipeline without display
 
 Open another terminal, run the following commands:
 
 ```bash
 # fusion test-case
-./build/bin/testGRPC2C1RPipeline 127.0.0.1 50052 ./ai_inference/test/configs/raddet/2C1R/localFusionPipeline_libradar.json 1 1 /path-to-dataset multisensor
+./build/bin/testGRPC2C1RPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/2C1R/localFusionPipeline_libradar.json 1 1 /path-to-dataset multisensor
 ```
 
-#### 5.3.7 16C+4R
+#### 4.3.7 16C+4R
+
+**The target platform is Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics.**
 
 All executable files are located at: $PROJ_DIR/build/bin
 
@@ -682,12 +740,14 @@ More specifically, open another terminal, run the following commands:
 
 ```bash
 # multi-sensor inputs test-case
-sudo -E ./build/bin/CRSensorFusion16C4RDisplay 127.0.0.1 50052 ./ai_inference/test/configs/raddet/16C4R/localFusionPipeline.json 4 1 /path-to-dataset media_fusion
+sudo -E ./build/bin/CRSensorFusion16C4RDisplay 127.0.0.1 50052 ai_inference/test/configs/raddet/16C4R/localFusionPipeline.json 4 1 /path-to-dataset media_fusion
 ```
 
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 
-#### 5.3.8 16C+4R Unit Tests
+#### 4.3.8 16C+4R Unit Tests
+
+**The target platform is Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics.**
 
 In this section, the unit tests of two major components will be described: fusion pipeline without display and media processing.
 
@@ -727,7 +787,7 @@ The method for generating offline radar files is described in [5.3.2.7 Save rada
 sudo cp $PROJ_DIR/ai_inference/deployment/datasets/radarResults.csv /opt
 ```
 
-##### 5.3.8.1 Unit Test: Fusion Pipeline without display
+##### 4.3.8.1 Unit Test: Fusion Pipeline without display
 
 Open another terminal, run the following commands:
 
@@ -736,7 +796,7 @@ Open another terminal, run the following commands:
 sudo -E ./build/bin/testGRPC16C4RPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/16C4R/localFusionPipeline.json 4 1 /path-to-dataset
 ```
 
-##### 5.3.8.2 Unit Test: Media Processing
+##### 4.3.8.2 Unit Test: Media Processing
 
 Open another terminal, run the following commands:
 
@@ -744,9 +804,9 @@ Open another terminal, run the following commands:
 # media test-case
 sudo -E ./build/bin/testGRPC16C4RPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/16C4R/localMediaPipeline.json 4 1 /path-to-dataset
 ```
-### 5.4 KPI test
+### 4.4 KPI test
 
-#### 5.4.1 1C+1R
+#### 4.4.1 1C+1R
 ```bash
 # Run service with the following command:
 sudo bash run_service_bare_log.sh
@@ -754,7 +814,7 @@ sudo bash run_service_bare_log.sh
 sudo -E ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localFusionPipeline_libradar.json 1 10 /path-to-dataset multisensor
 ```
 Fps and average latency will be calculated.
-#### 5.4.2 4C+4R
+#### 4.4.2 4C+4R
 ```bash
 # Run service with the following command:
 sudo bash run_service_bare_log.sh
@@ -763,18 +823,18 @@ sudo -E ./build/bin/testGRPC4C4RPipeline 127.0.0.1 50052 ai_inference/test/confi
 ```
 Fps and average latency will be calculated.
 
-#### 5.4.3 2C+1R
+#### 4.4.3 2C+1R
 
 ```bash
 # Run service with the following command:
 sudo bash run_service_bare_log.sh
 # Open another terminal, run the command below:
-sudo -E ./build/bin/testGRPC2C1RPipeline 127.0.0.1 50052 ./ai_inference/test/configs/raddet/2C1R/localFusionPipeline_libradar.json 1 10 /path-to-dataset multisensor
+sudo -E ./build/bin/testGRPC2C1RPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/2C1R/localFusionPipeline_libradar.json 1 10 /path-to-dataset multisensor
 ```
 
 Fps and average latency will be calculated.
 
-#### 5.4.4 16C+4R
+#### 4.4.4 16C+4R
 
 ```bash
 # Run service with the following command:
@@ -785,9 +845,9 @@ sudo -E ./build/bin/testGRPC16C4RPipeline 127.0.0.1 50052 ai_inference/test/conf
 
 Fps and average latency will be calculated.
 
-### 5.5 Stability test
+### 4.5 Stability test
 
-#### 5.5.1 1C+1R stability test
+#### 4.5.1 1C+1R stability test
 
 
 > NOTE : change workload configuration to 1 in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
@@ -801,7 +861,7 @@ Run the service first, and open another terminal, run the command below:
 # 1C1R without display
 sudo -E ./build/bin/testGRPCLocalPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localFusionPipeline_libradar.json 1 100 /path-to-dataset multisensor 100
 ```
-#### 5.5.2 4C+4R stability test
+#### 4.5.2 4C+4R stability test
 
 
 > NOTE : change workload configuration to 4 in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
@@ -816,7 +876,7 @@ Run the service first, and open another terminal, run the command below:
 sudo -E ./build/bin/testGRPC4C4RPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/4C4R/localFusionPipeline.json ai_inference/test/configs/raddet/4C4R/localFusionPipeline_npu.json 4 100 /path-to-dataset 100
 ```
 
-#### 5.5.3 2C+1R stability test
+#### 4.5.3 2C+1R stability test
 
 
 > NOTE : change workload configuration to 1 in file: $PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config
@@ -831,10 +891,10 @@ Run the service first, and open another terminal, run the command below:
 
 ```bash
 # 2C1R without display
-sudo -E ./build/bin/testGRPC2C1RPipeline 127.0.0.1 50052 ./ai_inference/test/configs/raddet/2C1R/localFusionPipeline_libradar.json 1 100 /path-to-dataset multisensor 100
+sudo -E ./build/bin/testGRPC2C1RPipeline 127.0.0.1 50052 ai_inference/test/configs/raddet/2C1R/localFusionPipeline_libradar.json 1 100 /path-to-dataset multisensor 100
 ```
 
-#### 5.5.4 16C+4R stability test
+#### 4.5.4 16C+4R stability test
 
 
 > NOTE : change workload configuration to 4 in file: $PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config
@@ -854,9 +914,9 @@ sudo -E ./build/bin/testGRPC16C4RPipeline 127.0.0.1 50052 ai_inference/test/conf
 
 
 
-## 6. Build Docker image
+## 5. Build Docker image
 
-### Install Docker Engine and Docker Compose on Ubuntu
+### 5.1 Install Docker Engine and Docker Compose on Ubuntu
 
 Install [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) and [Docker Compose](https://docs.docker.com/compose/) according to the guide on the official website.
 
@@ -890,7 +950,33 @@ sudo -E apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plug
 
 
 
-3. Verify that the installation is successful by running the `hello-world` image:
+33. Set proxy(Optional).
+
+Note you may need to set proxy for docker.
+
+```bash
+sudo mkdir -p /etc/systemd/system/docker.service.d
+sudo vim /etc/systemd/system/docker.service.d/http-proxy.conf
+
+# Modify the file contents as follows
+[Service]
+Environment="HTTP_PROXY=http://proxy.example.com:8080"
+Environment="HTTPS_PROXY=http://proxy.example.com:8080"
+Environment="NO_PROXY=localhost,127.0.0.1"
+```
+
+
+
+Then restart docker:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+
+
+4. Verify that the installation is successful by running the `hello-world` image:
 
 ```bash
 sudo docker run hello-world
@@ -898,7 +984,7 @@ sudo docker run hello-world
 
 This command downloads a test image and runs it in a container. When the container runs, it prints a confirmation message and exits.
 
-4. Add user to group
+5. Add user to group
 
 ```bash
 sudo usermod -aG docker $USER
@@ -907,7 +993,7 @@ newgrp docker
 
 
 
-5. Then pull base image
+6. Then pull base image
 
 ```bash
 docker pull ubuntu:22.04
@@ -915,7 +1001,7 @@ docker pull ubuntu:22.04
 
 
 
-### Install the corresponding driver on the host
+### 5.2 Install the corresponding driver on the host
 
 ```bash
 bash install_driver_related_libs.sh
@@ -923,17 +1009,17 @@ bash install_driver_related_libs.sh
 
 
 
-**Note that above driver is the BKC(best known configuration) version, which can get the best performance but with many restrictions when installing the driver and building the docker image.**
-
-**If BKC is not needed and other versions of the driver are already installed on the machine, you don't need to do this step.**
+**If driver are already installed on the machine, you don't need to do this step.**
 
 
 
-### Build and run docker image through scripts
+### 5.3 Build and run docker image through scripts
 
 > **Note that the default username is `openvino` and password is `intel` in docker image.**
 
 ##### Build and run docker image
+
+Usage:
 
 ```bash
 bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 22.04> 
@@ -941,9 +1027,10 @@ bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Docke
 
 
 ```
-bash run_docker.sh <DOCKER_IMAGE, default tfcc:latest> <NPU_ON, default true>
+bash run_docker.sh <DOCKER_IMAGE, default tfcc:latest> <NPU_ON, default false>
 ```
 
+Example:
 
 ```bash
 cd $PROJ_DIR/docker
@@ -954,21 +1041,31 @@ bash run_docker.sh tfcc:latest false
 
 ##### Enter docker
 
+Get the container id by command bellow:
+
+```bash
+docker ps -a
+```
+
+And then enter docker by command bellow:
+
 ```bash
 docker exec -it <container id> /bin/bash
 ```
 
 ##### Copy dataset
 
-```
+If you want to copy dataset or other files to docker, you can refer the command bellow:
+
+```bash
 docker cp /path/to/dataset <container id>:/path/to/dataset
 ```
 
-### Build and run docker image through docker compose
+### 5.4 Build and run docker image through docker compose
 
 > **Note that the default username is `openvino` and password is `intel` in docker image.**
 
-Modify `proxy`, `VIDEO_GROUP_ID` and `RENDER_GROUP_ID` in tfcc.env.
+Modify `proxy`, `VIDEO_GROUP_ID` and `RENDER_GROUP_ID` in `.env` file.
 
 ```bash
 # proxy settings
@@ -994,14 +1091,32 @@ echo $(getent group render | awk -F: '{printf "%s\n", $3}')
 ```
 
 ##### Build and run docker image
+Uasge:
+```bash
+cd $PROJ_DIR/docker
+docker compose up <services-name> -d # tfcc and tfcc-npu. tfcc-npu means with NPU support
+```
+
+Example:
 
 ```bash
 cd $PROJ_DIR/docker
 docker compose up tfcc -d
 ```
 
-##### Enter docker
+Note if you need NPU support, for example, on MTL platform please run the command bellow:
 
+```bash
+cd $PROJ_DIR/docker
+docker compose up tfcc-npu -d
+```
+
+##### Enter docker
+Usage:
+```bash
+docker compose exec <services-name> /bin/bash
+```
+Example:
 ```bash
 docker compose exec tfcc /bin/bash
 ```
@@ -1027,11 +1142,11 @@ copy dataset
 docker cp /path/to/dataset docker-tfcc-1:/path/to/dataset
 ```
 
-### Running inside docker
+### 5.5 Running inside docker
 
-Enter the project directory `/home/openvino/metro-2.0` then run `bash -x build.sh` to build the project. Then following the guides [sec 5. Run Sensor Fusion Application](#5-run-sensor-fusion-application) to run sensor fusion application.
+Enter the project directory `/home/openvino/metro-2.0` then run `bash -x build.sh` to build the project. Then following the guides [sec 4. How it works](#4-how-it-works) to run sensor fusion application.
 
-## 7. Code Reference
+## 6. Code Reference
 
 Some of the code is referenced from the following projects:
 - [IGT GPU Tools](https://gitlab.freedesktop.org/drm/igt-gpu-tools) (MIT License)

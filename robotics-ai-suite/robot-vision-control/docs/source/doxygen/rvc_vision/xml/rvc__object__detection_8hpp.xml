@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="rvc__object__detection_8hpp" kind="file" language="C++">
+    <compoundname>rvc_object_detection.hpp</compoundname>
+    <includedby refid="rvc__object__detection_8cpp" local="yes">rvc_object_detection/rvc_object_detection_engine/src/rvc_object_detection.cpp</includedby>
+    <innerclass refid="class_r_v_c_1_1_object_detection" prot="public">RVC::ObjectDetection</innerclass>
+    <innernamespace refid="namespace_r_v_c">RVC</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"></highlight></codeline>
+<codeline lineno="3"><highlight class="comment">INTEL<sp/>CONFIDENTIAL</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"></highlight></codeline>
+<codeline lineno="5"><highlight class="comment">Copyright<sp/>(C)<sp/>2022<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"></highlight></codeline>
+<codeline lineno="7"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>Intel<sp/>copyrighted<sp/>materials,</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">and<sp/>your<sp/>use<sp/>of<sp/>them<sp/>is<sp/>governed<sp/>by<sp/>the<sp/>express<sp/>license<sp/>under<sp/>which<sp/>they</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">were<sp/>provided<sp/>to<sp/>you<sp/>(License).<sp/>Unless<sp/>the<sp/>License<sp/>provides<sp/>otherwise,</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">you<sp/>may<sp/>not<sp/>use,<sp/>modify,<sp/>copy,<sp/>publish,<sp/>distribute,<sp/>disclose<sp/>or<sp/>transmit</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">this<sp/>software<sp/>or<sp/>the<sp/>related<sp/>documents<sp/>without<sp/>Intel&apos;s<sp/>prior<sp/>written</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">permission.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment"></highlight></codeline>
+<codeline lineno="14"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>provided<sp/>as<sp/>is,<sp/>with<sp/>no</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">express<sp/>or<sp/>implied<sp/>warranties,<sp/>other<sp/>than<sp/>those<sp/>that<sp/>are<sp/>expressly<sp/>stated</highlight></codeline>
+<codeline lineno="16"><highlight class="comment">in<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="17"><highlight class="comment"></highlight></codeline>
+<codeline lineno="18"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">RVC<sp/>{</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25" refid="class_r_v_c_1_1_object_detection" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_r_v_c_1_1_object_detection" kindref="compound">ObjectDetection</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/>rclcpp::Node</highlight></codeline>
+<codeline lineno="26"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/>std::shared_ptr&lt;RVC_AI::RVCAIInterface&gt;<sp/>ai;</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/>rclcpp::Subscription&lt;sensor_msgs::msg::Image&gt;::SharedPtr<sp/>m_image_sub;</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/>rclcpp::Publisher&lt;rvc_vision_messages::msg::RotatedBBList&gt;::SharedPtr<sp/>m_rotated_bb_list_msg;</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>publish_inference_images_param;</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/>std::string<sp/>model_name_param;</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/>image_transport::Publisher<sp/>m_inference_image_pub_;</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>m_image_callback(sensor_msgs::msg::Image::UniquePtr<sp/>msg);</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"></highlight></codeline>
+<codeline lineno="49"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_r_v_c_1_1_object_detection_1ad5d9d344ab55095927725733590f0da5" kindref="member">~ObjectDetection</ref>();</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">explicit</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_1_1_object_detection_1ad6eafb0b6623457e048b2baa3c163f49" kindref="member">ObjectDetection</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>rclcpp::NodeOptions<sp/>&amp;<sp/>options);</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="57"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp"/>
+  </compounddef>
+</doxygen>

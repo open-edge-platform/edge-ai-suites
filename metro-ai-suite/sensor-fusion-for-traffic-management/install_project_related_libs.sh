@@ -242,6 +242,28 @@ _install_onevpl()
   popd
 }
 
+#[9] libradar
+_install_libradar()
+{
+  pushd ${THIRD_PARTY_BUILD_DIR}
+  
+  # Add the Intel SED repository key
+  sudo -E wget -O- https://eci.intel.com/sed-repos/gpg-keys/GPG-PUB-KEY-INTEL-SED.gpg | sudo tee /usr/share/keyrings/sed-archive-keyring.gpg > /dev/null
+
+  # Add the repository to the sources list
+  echo "deb [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee /etc/apt/sources.list.d/sed.list
+  echo "deb-src [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee -a /etc/apt/sources.list.d/sed.list
+
+  # Set package pinning preferences
+  sudo bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
+
+  # Update package list and install libradar
+  sudo apt update
+  sudo apt-get install libradar
+
+  popd
+}
+
 install_3rd_libs(){
   sudo rm -rf ${THIRD_PARTY_BUILD_DIR} && mkdir -p ${THIRD_PARTY_BUILD_DIR}
   _install_base_libs
@@ -254,6 +276,7 @@ install_3rd_libs(){
   _install_grpc
   _install_level_zero
   _install_onevpl
+  _install_libradar
 }
 
 install_3rd_libs

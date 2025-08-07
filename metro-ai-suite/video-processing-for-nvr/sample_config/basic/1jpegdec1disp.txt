@@ -1,0 +1,5 @@
+newvl -i 0 -W 1920 -H 1080 --refresh=60 --fps=30 --format=nv12 --dispid=0
+dispch --id=0 -W 1920 -H 1080 -x 0 -y 0 --videolayer 0
+newdec --id=0 --input=1080p.jpg --codec=jpeg  --sink=disp0 -f NV12
+ctrl --cmd=run  --time=8000
+ctrl --cmd=stop  --time=0

@@ -61,6 +61,12 @@ struct InferenceTimeStamp_t {
     InferenceTimeStamp_t() = default;
 };
 
+struct VideoTimeStamp_t {
+    std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
+    std::chrono::time_point<std::chrono::high_resolution_clock> endTime;
+    VideoTimeStamp_t() = default;
+};
+
 struct TimeStampAll_t {
     std::chrono::time_point<std::chrono::high_resolution_clock> timeStamp1;
     std::chrono::time_point<std::chrono::high_resolution_clock> timeStamp2;
@@ -72,6 +78,11 @@ struct TimeStampAll_t {
 struct InferenceTimeAll_t {
     double inferenceLatencies[4];
     InferenceTimeAll_t() = default;
+};
+
+struct VideoTimeAll_t {
+    double videoLatencies[4];
+    VideoTimeAll_t() = default;
 };
 
 // mapping: ("roi_id", "attributes")

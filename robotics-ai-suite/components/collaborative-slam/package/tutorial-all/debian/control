@@ -1,0 +1,10 @@
+Source: ros-humble-cslam-tutorial-all
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-humble-cslam-tutorial-all
+Architecture: any
+Depends: ros-humble-cslam-tutorial-2d-lidar, ros-humble-cslam-tutorial-fastmapping, ros-humble-cslam-tutorial-multi-camera, ros-humble-cslam-tutorial-region-remap, ros-humble-cslam-tutorial-two-robot,
+Description: Intel Collaborative SLAM all tutorials

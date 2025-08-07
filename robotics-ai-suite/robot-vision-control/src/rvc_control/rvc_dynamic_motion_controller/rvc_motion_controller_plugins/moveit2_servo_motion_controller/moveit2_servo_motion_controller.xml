@@ -1,0 +1,5 @@
+<library path="moveit2_servo_motion_controller">
+  <class type="RVCMotionController::Moveit2ServoMotionController" base_class_type="RVCMotionController::RVCMotionControllerInterface">
+    <description>This is a moveit2 servo plugin for RVC dynamic use cases.</description>
+  </class>
+</library>

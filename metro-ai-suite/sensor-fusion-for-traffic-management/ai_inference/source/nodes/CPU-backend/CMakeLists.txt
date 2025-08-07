@@ -693,4 +693,4 @@ target_include_directories(RadarSignalProcessingNode PUBLIC ${Boost_INCLUDE_DIRS
 target_compile_options(RadarSignalProcessingNode PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_COMPILE_OPTIONS>)
 # target_link_libraries(RadarPreProcessingNode media_storage utility)
 target_link_libraries(RadarSignalProcessingNode $<LINK_ONLY:MKL::MKL>)
-target_link_libraries(RadarSignalProcessingNode Threads::Threads dl ${PROJECT_SOURCE_DIR}/build/lib/libradar.so)
+target_link_libraries(RadarSignalProcessingNode Threads::Threads dl radar)
