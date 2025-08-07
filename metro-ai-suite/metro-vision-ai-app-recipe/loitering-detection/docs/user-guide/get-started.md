@@ -143,7 +143,7 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
     ```bash
     curl http://localhost:8080/pipelines
     ```
-- **WebRTC**: [http://localhost:8889](http://localhost:8889)
+- **WebRTC**: [http://localhost:8889/object_tracking_1](http://localhost:8889/object_tracking_1)
 
 ## **Stop the Application**:
 
