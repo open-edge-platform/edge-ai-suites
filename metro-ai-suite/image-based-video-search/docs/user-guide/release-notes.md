@@ -32,18 +32,16 @@
 Details about the changes, improvements, and known issues in this release of the
 application.
 
-## Current Release: [Version 1.0.1]
+## Version 1.0.1 (Current Release)
 
 **Release Date**: [2025-08-20]
 
-### New Features
 - Bug  fixes 
 - Component upgrade.
 
+## Version 1.0.0
+
 **Release Date**: [2025-03-31]
-
-### New Features
-
 <!--
 **Guidelines for New Features**:
 1. **What to Include**:
