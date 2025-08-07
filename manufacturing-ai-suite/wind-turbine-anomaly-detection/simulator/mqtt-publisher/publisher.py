@@ -78,33 +78,35 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, filename):
     print(f"\nMQTT Topic - {topic}\nSubsample - {subsample}\nSampling Rate - \
           {sampling_rate}\nFilename - {filename}\n")
     jencoder = json.JSONEncoder()
-    csv_data = pd.read_csv(filename)
-
+    csv_data = pd.read_csv(filename, nrows=0)
+    columns = csv_data.columns.tolist()
+    chunk_size = 1000
     while True:
         start_time = time.time()
         row_served = 0
 
         tick = g_tick(float(subsample) / float(sampling_rate))
 
-        for _, row in csv_data.iterrows():
+        for chunk in pd.read_csv(filename, chunksize=chunk_size):
+            for _, row in chunk.iterrows():
 
-            if subsample > 1 and (row_served % subsample) != 0:
+                if subsample > 1 and (row_served % subsample) != 0:
+                    row_served += 1
+                    continue
+
+                try:
+                    msg = jencoder.encode({col: row[col] for col in columns})
+                    print("Publishing message", msg)
+                    mqttc.publish(topic, msg)
+                except (ValueError, IndexError):
+                    print(f"Skipping row {row_served}- {row} due to ValueError: {ValueError} \
+                          or IndexError: {IndexError}")
+                    continue
+
                 row_served += 1
-                continue
-
-            try:
-                msg = jencoder.encode({col: row[col] for col in csv_data.columns})
-                print("Publishing message", msg)
-                mqttc.publish(topic, msg)
-            except (ValueError, IndexError):
-                print(f"Skipping row {row_served}- {row} due to ValueError: {ValueError} \
-                      or IndexError: {IndexError}")
-                continue
-
-            row_served += 1
-            time.sleep(next(tick))
-            if row_served % max(1, int(sampling_rate) // max(1, int(subsample))) == 0:
-                print(f'{row_served} rows served in {time.time() - start_time:.2f} seconds')
+                time.sleep(next(tick))
+                if row_served % max(1, int(sampling_rate) // max(1, int(subsample))) == 0:
+                    print(f'{row_served} rows served in {time.time() - start_time:.2f} seconds')
 
         print(f'{filename} Done! {row_served} rows served in {time.time() - start_time:.2f} \
               seconds')
