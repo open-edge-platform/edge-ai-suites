@@ -28,10 +28,10 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: trivy-fs
         with:
-          scan_type: "fs"  # 关键参数
-          scan-scope: "all"  # 或 "changed" 仅扫描变更文件
-          severity: "HIGH,CRITICAL"  # 只报告高危漏洞
-          format: "json"  # 兼容GitHub安全面板
+          scan_type: "fs"  
+          scan-scope: "all"  
+          severity: "HIGH,CRITICAL" 
+          format: "json"  
       
       - name: Build Docker images
         run: |
@@ -51,41 +51,41 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: dataprep-visualdata-milvus
         with:
-          scan_type: "image"  # 关键参数
+          scan_type: "image"  
           scan-scope: all
-          scan_target: "dataprep-visualdata-milvus:latest"  # 镜像名称
-          severity: "HIGH,CRITICAL"  # 只报告高危漏洞
-          format: "json"  # 兼容GitHub安全面板
+          scan_target: "dataprep-visualdata-milvus:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"  
 
       - name: Run trivy Scan - retriever-milvus
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: retriever-milvus
         with:
-          scan_type: "image"  # 关键参数
+          scan_type: "image"  
           scan-scope: all
-          scan_target: "retriever-milvus:latest"  # 镜像名称
-          severity: "HIGH,CRITICAL"  # 只报告高危漏洞
-          format: "json"  # 兼容GitHub安全面板
+          scan_target: "retriever-milvus:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"  
 
       - name: Run trivy Scan - vlm-openvino-serving
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id:  vlm-openvino-serving
         with:
-          scan_type: "image"  # 关键参数
+          scan_type: "image"  
           scan-scope: all
-          scan_target: "vlm-openvino-serving:latest"  # 镜像名称
-          severity: "HIGH,CRITICAL"  # 只报告高危漏洞
-          format: "json"  # 兼容GitHub安全面板
+          scan_target: "vlm-openvino-serving:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"  
 
       - name: Run trivy Scan - visual-search-qa-app
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id:  visual-search-qa-app
         with:
-          scan_type: "image"  # 关键参数
+          scan_type: "image"  
           scan-scope: all
-          scan_target: "visual-search-qa-app:latest"  # 镜像名称
-          severity: "HIGH,CRITICAL"  # 只报告高危漏洞
-          format: "json"  # 兼容GitHub安全面板
+          scan_target: "visual-search-qa-app:latest" 
+          severity: "HIGH,CRITICAL"  
+          format: "json"  
           
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
@@ -102,9 +102,9 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/security/bandit@27276444a9bcf247a27369406686b689933bd1ff
         id: bandit
         with:
-          scan-scope: "all"  # 扫描整个仓库
-          output-format: "txt" # 生成文本报告
-          fail-on-findings: "false" # 即使发现威胁也不失败
+          scan-scope: "all"  
+          output-format: "txt" 
+          fail-on-findings: "false" 
           
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
@@ -122,9 +122,9 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/security/clamav@27276444a9bcf247a27369406686b689933bd1ff
         id: clamav
         with:
-          scan-scope: "all"  # 扫描整个仓库
-          output-format: "txt" # 生成文本报告
-          fail-on-findings: "false" # 即使发现威胁也不失败
+          scan-scope: "all"  
+          output-format: "txt" 
+          fail-on-findings: "false" 
           
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
