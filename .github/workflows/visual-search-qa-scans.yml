@@ -20,7 +20,7 @@ jobs:
   trivy-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@0a2a74d6d9a6c39911d7c4db94ec079ca3866869
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
           path: edge-ai-suites-repo
           persist-credentials: false
@@ -94,7 +94,7 @@ jobs:
   bandit-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
       
       - name: Run Bandit Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/bandit@27276444a9bcf247a27369406686b689933bd1ff
@@ -114,7 +114,7 @@ jobs:
   clamav-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
       
       - name: Run ClamAV Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/clamav@27276444a9bcf247a27369406686b689933bd1ff
