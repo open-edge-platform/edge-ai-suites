@@ -36,9 +36,9 @@ Supported Robots & Actuators
 Tier 1 Actuators
 ----------------
 
-Preferred robot/actuator, utilized for use-case examples, tested & validated 
+Preferred robot or actuator, utilized for use-case examples, and tested and validated :
 
-* |UR5e| (|ROS2| controls driver)
+* |UR5e| cobot (|ros2_control| driver)
 
 
 Tier 2 Actuators

@@ -9,8 +9,13 @@ This documentation serves as a guide for users to understand the features, insta
    :caption: Get Started
 
    Overview
-   get-started
-   release-notes
+
+.. toctree::
+   :caption: Get Started
+
+   tutorial-1
+   tutorial-2
+   tutorial-3
 
 .. toctree::
    :caption: Source Code

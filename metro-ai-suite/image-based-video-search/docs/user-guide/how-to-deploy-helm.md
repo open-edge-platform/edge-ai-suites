@@ -21,13 +21,31 @@ Before You Begin, ensure the following:
   - Kubernetes CLI (kubectl)
   - Helm 3 or later
 
+## Pull the helm chart (Optional)
+
+- Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/image-based-video-search/chart`
+
+- Download helm chart with the following command
+
+    `helm pull oci://ghcr.io/open-edge-platform/edge-ai-suites/metro-ai-suites/image-based-video-search --version 20250806-EAS1.2`
+- unzip the package using the following command
+
+    `tar -xvf image-based-video-search-20250806-EAS1.2.tgz`
+- Get into the helm directory
+
+    `cd image-based-video-search`
+
 ## Steps to Deploy
 
+Clone the repo and go to helm directory
 ```bash
-helm upgrade \
-    --install ibvs oci://registry-1.docker.io/intel/image-based-video-search \
-    --create-namespace \
-    -n ibvs
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites/metro-ai-suite/image-based-video-search/chart
+```
+
+```bash
+# Install the Image-Based Video Search chart in the ibvs namespace
+helm install ibvs . --create-namespace -n ibvs 
 ```
 
 Some containers in the deployment requires network access. If you are in a proxy
@@ -36,13 +54,10 @@ environment, pass the proxy environment variables as follows:
 ```bash
 # Install the Image-Based Video Search chart in the ibvs namespace
 # Replace the proxy values with the specific ones for your environment:
-helm upgrade \
-    --install ibvs oci://registry-1.docker.io/intel/image-based-video-search \
-    --create-namespace \
+helm install ibvs . --create-namespace -n ibvs \
     --set httpProxy="http://proxy.example.com:8080" \
     --set httpsProxy="http://proxy.example.com:8080" \
-    --set noProxy="localhost\,127.0.0.1" \
-    -n ibvs
+    --set noProxy="localhost\,127.0.0.1"
 ```
 
 To get the port where the application is serving, run the following command:

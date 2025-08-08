@@ -80,7 +80,7 @@ You will see the `Gazebo` GUI with two simulated robots in an empty `Gazebo` wor
 
 -  The green square robot is a guide robot (namely, the target), which will follow a pre-defined trajectory.
 
--  The gray circular robot is a `TurtleBot3 <https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation>`__ robot, which will follow the guide robot. |tb3| robot is equipped with a 2D Lidar and an |realsense| depth camera. In this demo, the 2D Lidar is selected as the point cloud input.
+-  The gray circular robot is a `TurtleBot3 <https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation>`__ robot, which will follow the guide robot. |tb3| robot is equipped with a 2D Lidar and an |realsense| Depth Camera. In this demo, the 2D Lidar is selected as the point cloud input.
 
 In this demo, we used a pre-defined trajectory for the guide robot and published gesture image as well as pre-recorded audio at different points of time to show `start`, `follow` and `stop` activities of the |tb3| robot.
 
