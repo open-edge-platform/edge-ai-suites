@@ -72,7 +72,7 @@ be generated in the command output when executing the
 > priority = 1 # 0=Low, 1=Normal, 2=High
 > precision = 1 #  0 = FP32, 1 = FP16 , this is passed as hint to openvino
 > num_requests = 1 # Number of inference requests (hint for openvino) recommended 1 per input stream
-> map_frame = "map" # setting is ignored if single topic is used, otherwise it will be used to synchronize camera location
+> map_frame = "" # setting is ignored if single topic is used, otherwise it will be used to synchronize camera location
 > queue_size = 10
 > workers = 2 # Aim for 2 workers per input stream
 > max_fps = -1 # -1 for unlimited
