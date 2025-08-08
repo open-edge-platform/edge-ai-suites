@@ -53,6 +53,8 @@ def parse_args():
                      help='MQTT publication interval')
     a_p.add_argument('--csv', default=None, type=str,
                      help='CSV file to publish to MQTT broker')
+    a_p.add_argument('--topic', default=None, type=str, required=True,
+                     help='MQTT topic name to publish to')
     a_p.add_argument('--json', default=None, type=str,
                      help='folder containing json file(s) to publish'
                      'to MQTT broker')
@@ -211,7 +213,7 @@ def main():
     args.port = os.getenv('PORT', '1883')
     args.port = int(args.port)
     updated_topics = {}
-    topic = "wind_turbine_data"
+    topic = args.topic
     client = None
     if int(args.streams) == 1:
         client = mqtt.Client(client_id = '', clean_session = True, userdata = None,

@@ -257,7 +257,7 @@ services:
       CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
     networks:
     - timeseries_network
-    command: ["--csv", "/windturbine_data.csv"]
+    command: ["--csv", "/windturbine_data.csv", "--topic", "wind_turbine_data"]
     volumes:
     - ./simulator/simulation_data/windturbine_data.csv:/windturbine_data.csv
 
