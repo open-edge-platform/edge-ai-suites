@@ -1,6 +1,6 @@
 # Enable Collaborative Visual SLAM Framework on ROS2 Navigation
 
-The Collaborative Visual SLAM Framework can be obtained from [here](https://github.com/open-edge-platform/edge-ai-suites)
+The Collaborative Visual SLAM Framework can be obtained from [CSLAM link](https://github.com/open-edge-platform/edge-ai-suites)
 
 Here are the instructions on how to enable Collaborative Visual SLAM Framework on ROS2 Navigation package
 
@@ -13,7 +13,7 @@ Here are the instructions on how to enable Collaborative Visual SLAM Framework o
     `source /opt/ros/humble/setup.bash`
 
     `colcon build`
-    
+
     `source install/setup.bash`
 
 3. Run the Collab SLAM ROS2 Navigation

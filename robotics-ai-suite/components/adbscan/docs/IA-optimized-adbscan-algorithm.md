@@ -1,5 +1,6 @@
----
-title: Intel-optimized ADBSCAN Algorithm
+
+# Intel-optimized ADBSCAN Algorithm
+
 ---
 
 In this version of ADBSCAN, the algorithm has been optimized for Intel®
@@ -13,7 +14,7 @@ X^e^ Integrated Graphics. This tutorial describes how to run this
 Intel-optimized ADBSCAN algorithm and compare the execution time with
 the unoptimized version.
 
-# Getting Started
+## Getting Started
 
 The Intel-optimized and unoptimized versions of the algorithm are
 distributed as `ros-humble-adbscan-oneapi` and
@@ -23,7 +24,7 @@ RealSense™ camera. The amount of gain is prominent when the input is
 dense or the number of input points is large. In case of a 2D LIDAR, the
 point cloud is comparatively sparse and hence, not showed here.
 
-# Prerequisites
+## Prerequisites
 
 - [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
 - [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
@@ -31,7 +32,7 @@ point cloud is comparatively sparse and hence, not showed here.
 - [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install.html)
 - [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
 
-# Install and run the ROS 2 bag file Deb package
+## Install and run the ROS 2 bag file Deb package
 
 Install the following package with ROS 2 bag files in order to publish
 point cloud data from LIDAR and Intel® RealSense™ camera:
@@ -58,7 +59,7 @@ include `/scan` (point cloud from 2D LIDAR) and
 `/camera/depth/color/points` (point cloud from Intel® RealSense™
 camera).
 
-# Install and run optimized Deb package
+## Install and run optimized Deb package
 
 Install `ros-humble-adbscan-oneapi` Deb package from Intel® Robotics AI
 Dev Kit APT repository:
@@ -83,7 +84,7 @@ The table shows a breakdown between pre-processing, ADBSCAN execution
 and post-processing time. The caption at the bottom of the table will
 print which PCL library is being used.
 
-# Install and run standard (unoptimized) Deb package
+## Install and run standard (unoptimized) Deb package
 
 Install `ros-humble-adbscan-ros2` Deb package from Intel® Robotics AI
 Dev Kit APT repository
@@ -116,7 +117,7 @@ Iris® X^e^ Integrated Graphics and 11th Generation Intel® Core™
 processors with Intel® Iris® X^e^ Integrated Graphics for this specific
 ROS 2 bag file.
 
-# Re-configurable parameters
+## Re-configurable parameters
 
 The optimized ADBSCAN has a user-defined parameter called
 `oneapi_library` to choose from a set of PCL libraries: `oneapi_kdtree`,
@@ -135,57 +136,22 @@ library and display the benchmarking data for an average of 5 frames:
 
 A complete list of the reconfigurable parameters is given below:
 
-> ------------------------------ --------------------------------------------------------
->   `Lidar_type`                   Type of the point cloud sensor. For Intel® RealSense™
->                                  camera and LIDAR inputs, the default value is set to
->                                  `RS` and `2D`, respectively.
->
->   `Lidar_topic`                  Name of the topic publishing point cloud data.
->
->   `Verbose`                      If this flag is set to `True`, the locations of the
->                                  detected target objects will be printed as the screen
->                                  log.
->
->   `subsample_ratio`              This is the downsampling rate of the original point
->                                  cloud data. Default value = 15 (i.e., every 15-th data
->                                  in the original point cloud is sampled and passed to the
->                                  core ADBSCAN algorithm).
->
->   `x_filter_back`                Point cloud data with x-coordinate \> `x_filter_back`
->                                  are filtered out (positive x direction lies in front of
->                                  the robot).
->
->   `y_filter_left`,               Point cloud data with y-coordinate \> `y_filter_left`
->   `y_filter_right`               and y-coordinate \< `y_filter_right` are filtered out
->                                  (positive y-direction is to the left of robot and vice
->                                  versa)\`\`
->
->   `z_filter`                     Point cloud data with z-coordinate \< `z_filter` will be
->                                  filtered out. This option will be ignored in case of 2D
->                                  Lidar.
->
->   `Z_based_ground_removal`       Filtering in the z-direction will be applied only if
->                                  this value is non-zero. This option will be ignored in
->                                  case of 2D Lidar.
->
->   `base`, `coeff_1`, `coeff_2`,  These are the coefficients used to calculate the
->   `scale_factor`                 adaptive parameters of the ADBSCAN algorithm. These
->                                  values are pre-computed and recommended to keep
->                                  unchanged.
->
->   `oneapi_library`               Available options are: `oneapi_kdtree`, `oneapi_octree`,
->                                  `pcl_kdtree`. `oneapi_kdtree` and `oneapi_octree` allow
->                                  the algorithm to use optimized oneAPI™ KdTree or octree
->                                  library and offload the neighbor point search method to
->                                  GPU. `pcl_kdtree` option uses the standard PCL KdTree
->                                  library, not optimized for Intel® SOC.
->
->   `benchmark_number_of_frames`   Any integer greater or equal to 1. This is the number of
->                                  frames over which the average execution time is executed
->                                  and printed in the benchmarking table.
->   ------------------------------ --------------------------------------------------------
+| Parameter                        | Description                                                                                                                                                                                                                                   |
+|---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Lidar_type`                    | Type of the point cloud sensor. For Intel® RealSense™ camera and LIDAR inputs, the default value is set to `RS` and `2D`, respectively.                                                                                                       |
+| `Lidar_topic`                   | Name of the topic publishing point cloud data.                                                                                                                                                                                              |
+| `Verbose`                      | If this flag is set to `True`, the locations of the detected target objects will be printed as the screen log.                                                                                                                               |
+| `subsample_ratio`              | This is the downsampling rate of the original point cloud data. Default value = 15 (i.e., every 15-th data in the original point cloud is sampled and passed to the core ADBSCAN algorithm).                                                    |
+| `x_filter_back`                | Point cloud data with x-coordinate > `x_filter_back` are filtered out (positive x direction lies in front of the robot).                                                                                                                     |
+| `y_filter_left`, `y_filter_right` | Point cloud data with y-coordinate > `y_filter_left` and y-coordinate < `y_filter_right` are filtered out (positive y-direction is to the left of robot and vice versa).                                                                     |
+| `z_filter`                     | Point cloud data with z-coordinate < `z_filter` will be filtered out. This option will be ignored in case of 2D Lidar.                                                                                                                        |
+| `Z_based_ground_removal`       | Filtering in the z-direction will be applied only if this value is non-zero. This option will be ignored in case of 2D Lidar.                                                                                                                 |
+| `base`, `coeff_1`, `coeff_2`, `scale_factor` | These are the coefficients used to calculate the adaptive parameters of the ADBSCAN algorithm. These values are pre-computed and recommended to keep unchanged.                                                                          |
+| `oneapi_library`               | Available options are: `oneapi_kdtree`, `oneapi_octree`, `pcl_kdtree`. `oneapi_kdtree` and `oneapi_octree` allow the algorithm to use optimized oneAPI™ KdTree or octree library and offload the neighbor point search method to GPU.          |
+|                               | `pcl_kdtree` option uses the standard PCL KdTree library, not optimized for Intel® SOC.                                                                                                                                                       |
+| `benchmark_number_of_frames`   | Any integer greater or equal to 1. This is the number of frames over which the average execution time is executed and printed in the benchmarking table.                                                                                       |
 
-# Troubleshooting
+## Troubleshooting
 
 - Failed to install Deb package: Please make sure to run
   `sudo apt update` before installing the necessary Deb packages.

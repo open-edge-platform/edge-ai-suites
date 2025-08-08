@@ -22,13 +22,13 @@ Install the `ros-humble-wandering-irobot-tutorial` package.
 
 Start the discovery server in a new terminal:
 
-```
+```bash
 fastdds discovery --server-id 0
 ```
 
 or use the `systemd service` file provided by the tutorial package:
 
-```
+```bash
 # One time setup
 mkdir -p ~/.config/systemd/user
 ln -s /opt/ros/humble/share/wandering_irobot_tutorial/systemd/fastdd-discovery.service ~/.config/systemd/user
@@ -40,7 +40,7 @@ systemctl --user start fastdds-discovery.service
 
 Set the environment variables for ROS2 to use the discovery server:
 
-```
+```bash
 export ROS_DISCOVERY_SERVER=127.0.0.1:11811
 export ROS_SUPER_CLIENT=true
 unset ROS_DOMAIN_ID
@@ -48,7 +48,7 @@ unset ROS_DOMAIN_ID
 
 Start the launch file using the namespace set on the robot:
 
-```
+```bash
 ros2 launch wandering_irobot_tutorial wandering_irobot.launch.py irobot_ns:=/robot2
 ```
 

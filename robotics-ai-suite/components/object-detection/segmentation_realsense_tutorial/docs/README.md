@@ -1,5 +1,6 @@
----
-title: OpenVINO™ Tutorial with Segmentation
+
+# OpenVINO™ Tutorial with Segmentation
+
 ---
 
 This tutorial serves as an example for understanding the utilization of
@@ -8,7 +9,7 @@ executing the semantic segmentation model using the ROS 2 OpenVINO™
 toolkit. This tutorial uses the Intel® RealSense™ camera image as input
 and performs inference on CPU, GPU devices.
 
-# Prerequisites
+## Prerequisites
 
 - [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
 - [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
@@ -16,26 +17,26 @@ and performs inference on CPU, GPU devices.
 - [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install.html)
 - [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
 
-# Install OpenVINO™ tutorial packages
+## Install OpenVINO™ tutorial packages
 
 ``` bash
 sudo apt install ros-humble-segmentation-realsense-tutorial
 ```
 
-# Run Demo with Intel® RealSense™ Topic Input
+## Run Demo with Intel® RealSense™ Topic Input
 
 Run one of the following commands to launch the segmentation tutorial
 with a specific inference engine:
 
 - GPU inference engine
 
-  ``` 
+  ```bash
   ros2 launch segmentation_realsense_tutorial openvino_segmentation.launch.py device:=GPU
   ```
 
 - CPU inference engine
 
-  ``` 
+  ```bash
   ros2 launch segmentation_realsense_tutorial openvino_segmentation.launch.py device:=CPU
   ```
 

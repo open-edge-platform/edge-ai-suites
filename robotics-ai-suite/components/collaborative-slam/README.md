@@ -2,13 +2,14 @@
 
 ## Component Documentation
 
-Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/dev_guide/tutorials_amr/navigation/collaborative-slam.html)
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/dev_guide/tutorials_amr/navigation/collaborative-slam.html)
 
 ## Overview
 
 This is a collaborative SLAM system. The main input should come from a camera, either monocular, or stereo, or RGB-D. It also supports wheel odometry, IMU and 2D LiDAR data as auxiliary input. The output include the estimated pose of the camera and visualization of the internal map. All inputs and outputs are in standard ROS formats.
 
 There are four components:
+
 - The tracker is a visual SLAM system with support for odometry, inertial and 2D LiDAR input. It estimates the camera pose in real-time, and maintains a local map. It can work as a standalone node. But if the server is online, it will communicate with the server to query and update the map.
 - The server maintains the maps and communicates with all trackers. For each new keyframe from a tracker, it detects possible loops, both intra-map and inter-map. Once detected, the server will perform map optimization or map merging, and distribute the updated map to corresponding trackers.
 - The msgs package defines the message between server and tracker.
@@ -66,10 +67,11 @@ and [server.launch.py](server/launch/server.launch.py) for all available paramet
 For ROS2, parameters and launch file are separated and parameters are stored in [tracker.yaml](tracker/config/tracker.yaml).  
 There are ready-to-use configurations for RealSense D400-Series RGBD camera or the OpenLORIS-Scene dataset (`tracker.launch.py`), the TUM RGBD dataset (`tum_rgbd.launch.py`), the EuRoC dataset (`euroc_mono.launch.py` or `euroc_stereo.launch.py`), the KITTI dataset (`kitti_mono.launch.py` or `kitti_stereo.launch.py`).
 
-Collaborative SLAM currently supports total 4 operating modes, including mapping, localization, remapping and relocalization modes. We provide `slam_mode` option for the tracker and `server_mode` option for the server to configure.
-The default values of these two options are "mapping" and a mismatch of the tracker and server modes may lead to unpredictable result. Currently, the relocalization mode is more for a developer or debugging use-case.
+Collaborative SLAM currently supports total 4 operating modes, including mapping, localization, remapping and re-localization modes. We provide `slam_mode` option for the tracker and `server_mode` option for the server to configure.
+The default values of these two options are "mapping" and a mismatch of the tracker and server modes may lead to unpredictable result. Currently, the re-localization mode is more for a developer or debugging use-case.
 
 **To support multi-robot or multi-camera or loop closure or map saving, launch univloc_server first; otherwise, only launching univloc_tracker is enough.**
+
 ```bash
 # For stereo/rgbd/visual-inertial cases
 ros2 launch univloc_server server.launch.py
@@ -77,16 +79,18 @@ ros2 launch univloc_server server.launch.py
 # For monocular case
 ros2 launch univloc_server server.launch.py fix_scale:=false
 ```
+
 On each robot run the tracker node with unique ID:
+
 ```bash
 # remember to replace <if_specific> and <unique_id> with your own setup
 ros2 launch univloc_tracker tracker.launch.py camera:=<if_specific> publish_tf:=false queue_size:=0 ID:=<unique_id> rviz:=false gui:=false camera_fps:=30.0
 ```
 
-If the server is on another machine, choose a domain ID between 0 and 101 (inclusive) and set `ROS_DOMAIN_ID` for both machines; remember to source environment setup file afterwards. See [ros2 offical doc](https://docs.ros.org/en/humble/Concepts/About-Domain-ID.html) for a reference.
+If the server is on another machine, choose a domain ID between 0 and 101 (inclusive) and set `ROS_DOMAIN_ID` for both machines; remember to source environment setup file afterwards. See [ros2 official doc](https://docs.ros.org/en/humble/Concepts/About-Domain-ID.html) for a reference.
 The server will publish map elements on the topics of /univloc_server/{keypoints,keyframes}, which can be visualized in RViz.
 
-**ROS 2 example with a RealSense D400-Series camera**
+### ROS 2 example with a RealSense D400-Series camera
 
 ```bash
 # Terminal A - run the server
@@ -105,7 +109,7 @@ ros2 launch univloc_tracker tracker.launch.py camera_setup:=Monocular camera:=ca
 ros2 launch realsense2_camera rs_launch.py align_depth:=true align_depth.enable:=true init_reset:=true
 ```
 
-**ROS 2 example with the market1-1 data sequence from the OpenLORIS-Scene dataset**
+### ROS 2 example with the market1-1 data sequence from the OpenLORIS-Scene dataset
 
 Collaborative SLAM supports the [OpenLORIS-Scene Dataset](https://lifelong-robotic-vision.github.io/dataset/scene.html). The ROS bag files for the sequences can be downloaded after filling the form. In order to run the OpenLORIS-Scene dataset in RGBD or monocular case, do the following:
 
@@ -129,7 +133,7 @@ source /opt/ros/humble/setup.bash
 ros2 bag play -s rosbag_v2 OPENLORIS/market1-1.bag
 ```
 
-**ROS 2 example with the rgbd_dataset_freiburg1_floor data sequence from the TUM RGB-D dataset**
+### ROS 2 example with the rgbd_dataset_freiburg1_floor data sequence from the TUM RGB-D dataset
 
 Collaborative SLAM supports the [TUM RGB-D Dataset](https://vision.in.tum.de/data/datasets/rgbd-dataset/download). The ROS bag files for the sequences can be downloaded in the detailed description of sequences. Note that the downloaded ROS bag files are compressed,
 it can be decompressed using command like ```rosbag decompress xxx.bag```. In order to run the TUM RGB-D dataset in RGBD or monocular case, do the following:
@@ -154,7 +158,7 @@ ros2 bag play -s rosbag_v2 TUM/rgbd_dataset_freiburg1_floor.bag
 
 Supported sequence group: `fr1`, `fr2`, `fr3`.
 
-**ROS 2 example with the V2_01_easy data sequence from the EuRoC dataset**
+### ROS 2 example with the V2_01_easy data sequence from the EuRoC dataset
 
 Collaborative SLAM supports the [EuRoC MAV Dataset](https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets). The ROS bag files for the sequences can be downloaded in the "ROS bag" section. In order to run the EuRoC dataset in stereo(+imu) or monocular(+imu) case, do the following:
 
@@ -182,7 +186,7 @@ source /opt/ros/humble/setup.bash
 ros2 bag play -s rosbag_v2 EuRoC/V2_01_easy.bag
 ```
 
-**ROS 2 example with the KITTI odometry grayscale sequences**
+### ROS 2 example with the KITTI odometry grayscale sequences
 
 Collaborative SLAM supports the [KITTI odometry grayscale dataset](http://www.cvlibs.net/datasets/kitti/eval_odometry.php).
 In order to run the KITTI dataset in stereo or monocular case, do the following:
@@ -207,7 +211,8 @@ ros2 bag play -s rosbag_v2 kitti_data_odometry_gray_sequence_<sequence_number>.b
 
 Supported sequence group: `s00_02`, `s03`, `s04_12`.
 
-**ROS 2 example with namespace**
+### ROS 2 example with namespace
+
 ```bash
 source YOUR_COLCON_WS/install/setup.bash
 ros2 launch univloc_tracker tracker.launch.py camera:=d400 publish_tf:=false queue_size:=0 ID:=0 namespace:=robot1 camera_fps:=30.0
@@ -219,8 +224,8 @@ source /opt/ros/humble/setup.bash
 ros2 bag play -s rosbag_v2 market1-1-multi.bag --remap /d400/aligned_depth_to_color/image_raw:=/robot1/d400/aligned_depth_to_color/image_raw /d400/color/camera_info:=/robot1/d400/color/camera_info /d400/color/image_raw:=/robot1/d400/color/image_raw
 ```
 
-
 **To enable/disable resetting the system if consecutively lost for a specified number of frames.**
+
 ```bash
 # Disable resetting (default option)
 ros2 launch univloc_tracker tracker.launch.py camera_fps:=30.0
@@ -232,13 +237,14 @@ ros2 launch univloc_tracker tracker.launch.py camera_fps:=30.0 num_lost_frames_t
 
 - Enabling resetting the system is useful for large-scale scenarios where the robot constantly explores new environments and it is difficult to relocalize using the local map.
 
-**Relocalization mode**
+### Relocalization mode
 
 Collaborative SLAM, besides mapping, localization and remapping, has a relocalization mode which is used only for
 debugging. The map already needs to be created and one can use relocalization mode for a short
 sequence to verify if a robot can be relocalized in a specific place on the map. Relocalization mode does
 not support publishing tf. Therefore `publish_tf` parameter needs to be set to `false`.
 Command example can be found below (command used after the area has been mapped):
+
 ```bash
 #Server
 ros2 launch univloc_server server.launch.py server_mode:=relocalization fix_scale:=true load_map_path:=/path/to/saved/map/map.msg
@@ -247,7 +253,7 @@ ros2 launch univloc_server server.launch.py server_mode:=relocalization fix_scal
 ros2 launch univloc_tracker tracker.launch.py publish_tf:=false queue_size:=0 rviz:=false gui:=true slam_mode:=relocalization traj_store_path:=/path/to/saved/map/ map_frame:=map-0 camera_fps:=30.0
 ```
 
-**Enabling Fast Mapping support**
+### Enabling Fast Mapping support
 
 Collaborative SLAM can generate both a 3D Volumetric Map and a 2D Occupancy Grid (used for navigation) by enabling
 Fast Mapping support. By default, Fast Mapping support is disabled, but setting `enable_fast_mapping` parameter to `true`
