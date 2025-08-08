@@ -65,14 +65,14 @@ spec:
         - name: videos-volume
           mountPath: /tmp/videos
       - name: model-downloader
-        image: intel/dlstreamer:2025.0.1.3-ubuntu24
+        image: intel/dlstreamer:EAL1.2.RC2_2025.1.RC2-ubuntu24
         command:
         - /bin/sh
         - -c
         - |
           mkdir -p /tmp/models
           cd /tmp/
-          wget -O /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/v1.0.0.tar.gz && \
+          curl -L -o /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/v1.0.0.tar.gz && \          
           tar -xzf /tmp/main.tar.gz -C /tmp && \
           cp -r /tmp/edge-ai-suites-1.0.0/metro-ai-suite/smart-parking/dlsps/models/* /tmp/models/ && \
           rm -rf /tmp/main.tar.gz /tmp/edge-ai-suites-1.0.0
