@@ -51,7 +51,7 @@ for hand gesture recognition. Install the following modules as a prerequisite fo
 Identify serial number of Realsense Camera
 -------------------------------------------
 
-Install the |realsense| utilities package to easily read the correct serial number:
+Install the |realsense| camera utilities package to easily read the correct serial number:
     
 .. code-block:: bash
 

@@ -31,9 +31,11 @@ The component of this container are:
 The above :ref:`high level diagram <vision_container_high_level_diagram>` shows how the vision
 components interact each other:
 
-- The |realsense| node capture and publish RGB and PointCloud streams from the physical camera
-- Object Detection node will run AI inference on RGB stream and publish result for Pose Detector
-- Pose detector subscribe PointCloud stream and Object detection to align a storage mesh of corresponding class in the subscribed bounding box to the |realsense| PointCloud stream and publish the results in :ref:`RVC Messages <rvc_api_messages>` API format.
+- The |realsense| camera node captures and publishes RGB and Point Cloud streams from the physical camera.
+
+- The Object Detection node runs AI inference on the RGB stream and publishes the result for the Pose Detector.
+
+- The Pose Detector subscribes to the Point Cloud stream and aligns the 3D data from the stream, with the storage mesh of corresponding classes in the subscribed bounding box. The Pose Detector then publishes the results in the :ref:`RVC Messages' <rvc_api_messages>` API format.
 
 .. toctree::
    :maxdepth: 1
