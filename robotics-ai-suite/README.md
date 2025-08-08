@@ -31,9 +31,10 @@ The Intel® Robotics AI Suite provides a collection of robotics applications spa
 | [Wandering](components/wandering) | [Wandering](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/dev_guide/tutorials_amr/navigation/wandering_app/index.html) | The Wandering mobile robot application is a Robot Operating System 2 (ROS 2) sample application. It can be used with different SLAM algorithms in combination with the ROS2 navigation stack, to move the robot around in an unknown environment. The goal is to create a navigation map of the environment. |
 
 **Stationary Robot Vision & Control:**
+
 | Application | Documentation | Description |
 | ------------| ------------- | ----------- |
-| [Stationary Robot Vision & Control](robot-vision-control) | [Stationary Robot Vision & Control](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/rvc/index.html) | Robot Vision and Control is a robotic software framework aimed at tackling Pick and place, Track and place industrial problems. |
+| [Stationary Robot Vision & Control](robot-vision-control) | [Stationary Robot Vision & Control](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/rvc/index.html) | Robot Vision and Control is a robotic software framework aimed at tackling Pick and place, Track and place industrial problems. Under active development, hence released in *pre-release* quality |
 
 **Intel® OpenVINO™ optimized model algorithms:**
 
