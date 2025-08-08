@@ -79,7 +79,7 @@
       Meta Package for pick n place simulation deb files.
 
    **ros-humble-realsense2-tutorial-demo**
-      |realsense| tutorial with sample application.
+      |realsense| camera tutorial with sample application.
 
    **ros-humble-wandering**
       Wandering application.
