@@ -25,7 +25,7 @@ This node accept following parameters:
 -  rvc_use_case_binaries: package name providing the needed binaries as per previous parameters
 
 The following parameters fine tune the internal pointcloud ransac algorithm aligning the mesh loaded
-from storage to the |realsense| camera point cloud output. 
+from storage to the |realsense| camera's point cloud output. 
 For further information, refer to `SampleConsensusPrerejective <https://pointclouds.org/documentation/classpcl_1_1_sample_consensus_prerejective.html>`_.
 For a sample explanation, refers to `PCL Alignment Prerejective <https://pcl.readthedocs.io/projects/tutorials/en/latest/alignment_prerejective.html>`_
 
