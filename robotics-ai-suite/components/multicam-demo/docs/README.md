@@ -199,7 +199,7 @@ shown in the below picture.
 1. GPU driver not found even after the GPU driver is installed.
 
     ```bash
-    $ sudo intel_gpu_top
+    sudo intel_gpu_top
     intel_gpu_top: ../tools/intel_gpu_top.c:1909: init_engine_classes: Assertion `max >=0' failed.
     Aborted
     ```
