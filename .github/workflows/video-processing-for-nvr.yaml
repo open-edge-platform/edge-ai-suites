@@ -48,7 +48,7 @@ jobs:
           source /opt/intel/vppsdk/env.sh
           cd edge-ai-suites-repo
           ls
-          cd video-processiong-for-nvr/docker
+          cd metro-ai-suite/video-processiong-for-nvr/docker
           bash build_sample.sh
           docker images
           
