@@ -1,5 +1,6 @@
----
-title: Gazebo Pick & Place Demo
+
+# Gazebo Pick & Place Demo
+
 ---
 
 This Pick-n-Place demo is a simulation implemented using ROS 2 Humble
@@ -12,7 +13,7 @@ environment.
 
 ![image](images/picknplace.png)
 
-# Getting Started
+## Getting Started
 
 ## Prerequisites
 
@@ -27,12 +28,12 @@ environment.
 Install `ros-humble-picknplace-simulation` Debian package from Intel®
 Robotics AI Dev Kit APT repository.
 
-> ``` 
+> ```bash
 > sudo apt update
 > sudo apt install ros-humble-picknplace-simulation
 > ```
 
-# Run Demo
+## Run Demo
 
 > ``` bash
 > source /opt/ros/humble/setup.bash
@@ -46,7 +47,7 @@ run with cyclone DDS.
 > RMW_IMPLEMENTATION=rmw_cyclonedds_cpp ros2 launch  picknplace warehouse.launch.py
 > ```
 
-# Overview
+## Overview
 
 The setup consists of:
 
@@ -76,7 +77,7 @@ usage over intricate details. Some assumptions have been made for
 simplicity. For instance, the item\'s location on the conveyor belt is
 sourced directly from Gazebo without integrating perception systems.
 
-# Other Details
+## Other Details
 
 **State Machine Implementation**: The demo employs Smach library to
 design the state machine that acts as the controller for both ARMs in
@@ -85,7 +86,7 @@ hierarchical state machines for robotic operations.
 
 **Moveit wrapper**: The `moveit` commands are send using a modified
 version of `pymoveit2` library which originally maintained at
-[link](https://github.com/AndrejOrsula/pymoveit2) . The modified version
+[Github link](https://github.com/AndrejOrsula/pymoveit2) . The modified version
 introduces several enhancements and rectifies existing bugs. However,
 with the recent availability of Python bindings in the latest Moveit2
 stack, it\'s advisable to use that instead.
@@ -124,13 +125,13 @@ apt install command issued earlier will ensure Cyclone DDS is installed.
 > export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 > ```
 
-# Launch Sequence
+## Launch Sequence
 
 Robots are spawned in Gazebo, as illustrated in the diagram.
 
 ![image](images/picknplace_sequence.png)
 
-# Sending Nav2 Pose to AMR
+## Sending Nav2 Pose to AMR
 
 Use the following command to set a new goal for the AMR:
 
@@ -138,14 +139,14 @@ Use the following command to set a new goal for the AMR:
 > ros2 action send_goal  /amr1/navigate_to_pose nav2_msgs/action/NavigateToPose "pose: {header: {frame_id: map}, pose: {position: {x: -3.2, y: -0.50, z: 0.0}, orientation:{x: 0.0, y: 0.0, z: 0, w: 1.0000000}}}"
 > ```
 
-# Reusing ARM and AMR modules
+### Reusing ARM and AMR modules
 
 The robot_config package offers a straightforward way to instantiate
 both AMR (Autonomous Mobile Robot) and UR5 ARM robotic configurations.
 You can effortlessly integrate these configurations into any ROS 2
 launch file to visualize and simulate them in Gazebo.
 
-**Spawning AMR in Gazebo**
+#### Spawning AMR in Gazebo
 
 ``` python
 amr_launch_cmd = IncludeLaunchDescription(
@@ -165,7 +166,7 @@ amr_launch_cmd = IncludeLaunchDescription(
 ld.add_action(amr_launch_cmd)
 ```
 
-**Spawning ARM in Gazebo**
+#### Spawning ARM in Gazebo**
 
 ``` python
 arm1_launch_cmd = IncludeLaunchDescription(
@@ -189,6 +190,6 @@ This simulation has been tested on Gazebo Classic with ROS 2 Humble.
 This project provides an example of a simple multi-robot system. It can
 serve as a resource for anyone interested in robotic simulations.
 
-# Troubleshooting
+## Troubleshooting
 
 For general robot issues, go to: [Troubleshooting for Robotics AI Dev Kit Tutorials](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/dev_guide/tutorials_amr/robot-tutorials-troubleshooting.html)

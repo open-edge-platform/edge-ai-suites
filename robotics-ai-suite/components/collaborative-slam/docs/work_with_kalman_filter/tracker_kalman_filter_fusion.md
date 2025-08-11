@@ -1,23 +1,23 @@
-### Tracker Frame-Level Pose Trajectory Fusion using Kalman Filter
+# Tracker Frame-Level Pose Trajectory Fusion using Kalman Filter
 
+## Overall logic
 
-**Overall logic**
-This doc illustrates part of the multi-camera feature in Collaborative SLAM. As shown in the left part of the figure below, we use Kalman Filter to fuse SLAM poses from different trackers in a loosely-coupled manner, and we treat each individual camera as a separate tracker (ROS2 node). For other parts of the multi-camera feature, they are not yet ready and will be integrated later. 
+This doc illustrates part of the multi-camera feature in Collaborative SLAM. As shown in the left part of the figure below, we use Kalman Filter to fuse SLAM poses from different trackers in a loosely-coupled manner, and we treat each individual camera as a separate tracker (ROS2 node). For other parts of the multi-camera feature, they are not yet ready and will be integrated later.
 
 ![multi-camera feature framework](./multi-camera-feature-framework.png)
 
+## Expected Behavior
 
-**Expected Behavior**
 For the current implementation, we used two cameras (i.e. front and rear cameras) in a single robot and one Kalman Filter ROS2 node (robot_localization package) to generate the final fused pose trajectory. Since we haven't finished developing multi-camera feature, the performance is not optimal, for example, if one tracker loses tracking, it is difficult to get back to normal tracking and produce pose output for Kalman Filter unless it relocalizes itself in the local map. This will be improved after finishing the complete version of multi-camera feature.
-
 
 ### Prerequisite
 
 First, clone and build robot localization package. Since I used bag files while developing feature, the default version of robot localization package has issue (maybe live test doesn't have this issue, need to confirm). So I choose to manually build it from source. You could find the patch file inside the current folder [robot_localization.patch](robot_localization.patch).
-```
+
+```sh
 git clone https://github.com/cra-ros-pkg/robot_localization
 cd robot_localization
-# commid id is a9c96ebc245575adc06cea4dad5578a3ca3bdb02
+# commit id is a9c96ebc245575adc06cea4dad5578a3ca3bdb02
 git checkout foxy-devel
 git apply robot_localization.patch
 ```

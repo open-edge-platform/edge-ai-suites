@@ -27,3 +27,7 @@ To execute the demos, run respectively:
 
 - ros2 launch rvc_dynamic_motion_controller_use_case dynamic_demo_launch.py robot_ip:=<robot_ip>
 - ros2 launch rvc_static_motion_controller_use_case static_demo_launch.py robot_ip:=<robot_ip>
+
+### **Note:**
+
+This source code is currently in pre-release stage and may be unstable or incomplete. Use with caution in production environments. Feedback and contributions are welcome as the component continues to evolve.

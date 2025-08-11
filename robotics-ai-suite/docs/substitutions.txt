@@ -8,8 +8,8 @@
 .. |Dev Guide Robot Tutorials| replace::  :doc:`/robotics/dev_guide/tutorials_amr/index`
 .. |EDSQ| replace:: :doc:`/robotics/dev_guide/system_integrator/esdq`
 
-.. |ros_install_instructions| replace:: `ROS2 setup guide <https://docs.ros.org/en/humble/Installation.html>`__
-.. |ros_install_instructions_debian| replace:: `ROS2 setup with Ubuntu Deb Packages <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages>`__
+.. |ros_install_instructions| replace:: `ROS 2 setup guide <https://docs.ros.org/en/humble/Installation.html>`__
+.. |ros_install_instructions_debian| replace:: `ROS 2 setup with Ubuntu Deb Packages <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages>`__
 
 .. |ubuntu_iot_iso_download| replace:: `Download Ubuntu image for Intel® IoT platforms <https://ubuntu.com/download/iot/intel-iot>`__
 .. |ubuntu_iso_download| replace:: `Ubuntu OS version 22.04 LTS (Jammy Jellyfish) <https://releases.ubuntu.com/22.04>`__
@@ -25,7 +25,7 @@
 .. |vtune_analyze_microarchitecture_usage| replace:: `Analyze Microarchitecture Usage <https://www.intel.com/content/www/us/en/docs/vtune-profiler/tutorial-common-bottlenecks-linux/2020/analyze-microarchitecture-usage.html>`__
 .. |vtune_run_and_interrupt_hotspots_analysis| replace:: `Run and Interpret Hotspots Analysis <https://www.intel.com/content/www/us/en/docs/vtune-profiler/tutorial-common-bottlenecks-linux/2020/run-and-interpret-hotspots-analysis.html>`__
 
-.. |axiomtek_robox500_ros2_amr_controller| replace:: `Axiomtek Robox500 ROS2 AMR Controller <https://www.axiomtek.com/Default.aspx?MenuId=Products&FunctionId=ProductView&ItemId=27392&C=ROBOX500&upcat=408>`__
+.. |axiomtek_robox500_ros2_amr_controller| replace:: `Axiomtek Robox500 ROS 2 AMR Controller <https://www.axiomtek.com/Default.aspx?MenuId=Products&FunctionId=ProductView&ItemId=27392&C=ROBOX500&upcat=408>`__
 .. |intel_realsense_depth_camera_d457| replace:: `Intel® RealSense™ Depth Camera D457 <https://www.intelrealsense.com/depth-camera-d457/>`__
 .. |ultralytics_yolov8| replace:: `Ultralytics YOLOv8 object detection model. <https://docs.ultralytics.com/>`__
 .. |mobilenet_ssd| replace:: `mobilenet-ssd <https://docs.openvino.ai/2023.3/omz_models_model_mobilenet_ssd.html>`__
@@ -47,7 +47,7 @@
 .. |asrockind_platform| replace:: ASRock Industrial intelligent edge platform
 .. |Atom| replace:: Intel Atom®
 .. |atom| replace:: Intel Atom®
-.. |axiomtek| replace:: Axiomtek Robox500 ROS2 AMR Controller
+.. |axiomtek| replace:: Axiomtek Robox500 ROS 2 AMR Controller
 .. |Core| replace:: Intel® Core™
 .. |core| replace:: Intel® Core™
 .. |clearpath_robotics| replace:: Clearpath Robotics
@@ -96,7 +96,7 @@
 .. |Prometheus_Server| replace:: Prometheus Server
 .. |PyTorch| replace:: PyTorch
 .. |realsense| replace:: Intel® RealSense™
-.. |ROS2| replace:: ROS2
+.. |ROS2| replace:: ROS 2
 .. |ros| replace:: ROS 2
 .. |seo| replace:: Intel® Smart Edge Open
 .. |serDes| replace:: Intel® GMSL Serializer-Deserializer ACPI devices

@@ -3,7 +3,7 @@
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "$(dirname "$(readlink -f "$0")"):/opt/project" \
-  intel/dlstreamer:2025.0.1.3-ubuntu24 bash -c "$(cat <<EOF
+  intel/dlstreamer:EAL1.2.RC2_2025.1.RC2-ubuntu24 bash -c "$(cat <<EOF
 
 cd /opt/project
 export HOST_IP="${1:-$(hostname -I | cut -f1 -d' ')}"
@@ -13,18 +13,18 @@ echo "Configuring application to use \$HOST_IP"
 . ./update_dashboard.sh \$HOST_IP
 
 ##############################################################################
-# Process OMZ models
+# Download OMZ models
 ##############################################################################
 mkdir -p src/dlstreamer-pipeline-server/models/intel
 OMZ_MODELS=(pedestrian-and-vehicle-detector-adas-0001)
 for model in "\${OMZ_MODELS[@]}"; do
   if [ ! -e "src/dlstreamer-pipeline-server/models/intel/\$model/\$model.json" ]; then
-    python3 -m pip install openvino-dev[onnx]
     echo "Download \$model..." && \
-    omz_downloader --name "\$model" --output_dir src/dlstreamer-pipeline-server/models && \
-
+    mkdir -p src/dlstreamer-pipeline-server/models/intel/\${model}/FP32/ && \
+    curl -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/FP32/\${model}.xml" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/\${model}/FP32/\${model}.xml?raw=true" && \
+    curl -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/FP32/\${model}.bin" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/\${model}/FP32/\${model}.bin?raw=true" && \
     echo "Download \$model proc file..." && \
-    wget -O "src/dlstreamer-pipeline-server/models/intel/\${model}/\${model}.json" "https://github.com/dlstreamer/dlstreamer/blob/master/samples/gstreamer/model_proc/intel/\${model}.json?raw=true"
+    curl -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/\${model}.json" "https://github.com/dlstreamer/dlstreamer/blob/master/samples/gstreamer/model_proc/intel/\${model}.json?raw=true"
 
   fi
 done
@@ -42,7 +42,7 @@ declare -A video_urls=(
 for video_name in "\${!video_urls[@]}"; do
     if [ ! -f src/dlstreamer-pipeline-server/videos/\${video_name} ]; then
         echo "Download \${video_name}..."
-        wget -O "src/dlstreamer-pipeline-server/videos/\${video_name}" "\${video_urls[\$video_name]}"
+        curl -L -o "src/dlstreamer-pipeline-server/videos/\${video_name}" "\${video_urls[\$video_name]}"
     fi
 done
 
@@ -51,4 +51,3 @@ chown -R "$(id -u):$(id -g)" src/dlstreamer-pipeline-server/models src/dlstreame
 EOF
 
 )"
-

@@ -18,7 +18,7 @@ Refer to [this paper](https://arxiv.org/abs/2102.03228) for more explanation of 
 
 The tracker and server are ROS programs. All the configurations are passed with ROS parameters. Check `tracker.launch.py` and `server.launch.py` for all available parameters and comments. For ROS2, parameters and launch file are separated and parameters are stored in `tracker.yaml`. There are ready-to-use configurations for RealSense D400-Series RGBD camera or the OpenLORIS-Scene dataset (`tracker.launch.py`), the TUM RGBD dataset (`tum_rgbd.launch.py`), the EuRoC dataset (`euroc_mono.launch.py` or `euroc_stereo.launch.py`), the KITTI dataset (`kitti_mono.launch.py` or `kitti_stereo.launch.py`).
 
-Collaborative SLAM currently supports total 4 operating modes, including mapping, localization, remapping and relocalization modes. We provide `slam_mode` option for the tracker and `server_mode` option for the server to configure. The default values of these two options are "mapping" and a mismatch of the tracker and server modes may lead to unpredictable result. Currently, the relocalization mode is more for a developer or debugging use-case.
+Collaborative SLAM currently supports total 4 operating modes, including mapping, localization, remapping and re-localization modes. We provide `slam_mode` option for the tracker and `server_mode` option for the server to configure. The default values of these two options are "mapping" and a mismatch of the tracker and server modes may lead to unpredictable result. Currently, the re-localization mode is more for a developer or debugging use-case.
 
 To run in the docker environment, you need to specify the path of the ORB vocabulary for both tracker and server node by adding the following line to the end of the commands used below.
 

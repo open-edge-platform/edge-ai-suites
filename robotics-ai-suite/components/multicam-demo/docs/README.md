@@ -1,6 +1,6 @@
----
-title: OpenVINO™ Tutorial on Multi-camera Object Detection using Intel®
-  RealSense™ Depth Camera D457
+
+# OpenVINO™ Tutorial on Multi-camera Object Detection using Intel® RealSense™ Depth Camera D457
+
 ---
 
 In this tutorial, the multi-camera use case is demonstrated using an
@@ -26,31 +26,25 @@ Graphics Processing Unit.
 The setup looks like as described in the table below.
 
   | Camera    | AI model          | AI Workload                     | Device |
-
   | --------- | ----------------- | ------------------------------- | -------|
-
   | Camera-1  | YOLOv8n-seg:FP16  | Object detection & segmentation | GPU    |
-
   | Camera-2  | YOLOv8n-seg:FP16  | Object detection & segmentation | CPU    |
-
   | Camera-3  | YOLOv8n:FP16      | Object detection                | GPU    |
-
   | Camera-4  | YOLOv8n-seg:FP16  | Object detection & segmentation | GPU    |
 
-  
-# Intel® RealSense™ Depth Camera D457 Multi-camera Object detection setup
+## Intel® RealSense™ Depth Camera D457 Multi-camera Object detection setup
 
 The following steps are required in order to setup the Axiomtek Robox500
 ROS2 AMR Controller to support four Intel® RealSense™ Depth Camera D457.
 
-# Source Code
+## Source Code
 
 The source code of this component can be found here:
 [Multicamera-Demo](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/multicam-demo)
 
-# Axiomtek Robox500 ROS2 AMR Controller Setup
+## Axiomtek Robox500 ROS2 AMR Controller Setup
 
-## Prerequisites
+### Prerequisites
 
 - [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
 - [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
@@ -101,7 +95,6 @@ If no GPU device is listed, then the GPU driver is not installed.
 > Runtime](https://eci.intel.com/docs/3.3/development/tutorials/enable-graphics.html#enable-intel-level-zero-and-opencl-graphics-compute-runtime)
 > (excluding the **step#2** to install the `linux-intel-rt`, which is not
 > required for this tutorial) to install the same.
-
 > Verify that the GPU driver is installed using the previous `clinfo`
 > command.
 
@@ -111,25 +104,25 @@ If no GPU device is listed, then the GPU driver is not installed.
 sudo apt install -y ros-humble-librealsense2-tools
 ```
 
-## Configure the [\|SerDes\|](##SUBST##|SerDes|) and install `intel-ipu6-dkms` Dynamic Kernel Module Support package
+## Configure the SerDes and install `intel-ipu6-dkms` Dynamic Kernel Module Support package
 
 The following steps describe how to configure the
-[\|SerDes\|](##SUBST##|SerDes|) and further to install and load the
+SerDes and further to install and load the
 `intel-ipu6-dkms` Dynamic Kernel Module Support package.
 
-1.  The design approach of the GMSL Add-in-Card present in the Axiomtek
+1. The design approach of the GMSL Add-in-Card present in the Axiomtek
     Robox500 ROS2 AMR Controller is called `Standalone-mode`. i.e., a
     single GMSL Serializer and Camera Sensor device is connected per
-    Deserializer. In order to configure the
-    [\|SerDes\|](##SUBST##|SerDes|) in `Standalone-mode`, follow the
+    Deserializer. In order to configure the SerDes
+    in `Standalone-mode`, follow the
     steps described in the documentation [Configure Intel® GMSL SerDes
     ACPI
     devices](https://eci.intel.com/docs/3.3/development/tutorials/enable-gmsl.html#configure-intel-gmsl-serdes-acpi-devices).
-2.  To download and install the `intel-ipu6-dkms` Dynamic Kernel Module
+2. To download and install the `intel-ipu6-dkms` Dynamic Kernel Module
     Support package, follow the steps described in the documentation
     [Intel® GMSL intel-ipu6 Debian kernel modules
     (DKMS)](https://eci.intel.com/docs/3.3/development/tutorials/enable-gmsl.html#intel-gmsl-intel-ipu6-debian-kernel-modules-dkms).
-3.  To load the `intel-ipu6` kernel modules after installation and to
+3. To load the `intel-ipu6` kernel modules after installation and to
     enable the Intel® RealSense™ Depth Camera D457, follow the steps
     described in the documentation [Enable ROS2 Intel® RealSense™ Depth
     Camera D457
@@ -140,9 +133,9 @@ The following steps describe how to configure the
 > be configured to be relevant to the `Standalone-mode` of the Add-in-Card
 > for Axiomtek Robox500 ROS2 AMR Controller.
 
-# Install and run multi-camera object detection tutorial using the Intel® RealSense™ Depth Camera D457
+## Install and run multi-camera object detection tutorial using the Intel® RealSense™ Depth Camera D457
 
-## Prerequisites
+## Pre-requisites
 
 - [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
 - [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
@@ -201,12 +194,12 @@ shown in the below picture.
 > - `config_ros2_v4l2_rs-color-0_3.js` config file to run the tutorial
 >   with four cameras
 
-# Troubleshooting and workarounds
+## Troubleshooting and workarounds
 
-1.  GPU driver not found even after the GPU driver is installed.
+1. GPU driver not found even after the GPU driver is installed.
 
-    ``` 
-    $ sudo intel_gpu_top
+    ```bash
+    sudo intel_gpu_top
     intel_gpu_top: ../tools/intel_gpu_top.c:1909: init_engine_classes: Assertion `max >=0' failed.
     Aborted
     ```
@@ -218,7 +211,7 @@ shown in the below picture.
     sudo ln -s /lib/firmware/i915/adlp_guc_70.1.1.bin /lib/firmware/i915/adlp_guc_70.0.3.bin
     ```
 
-2.  Stability issue or GPU hang error. GPU Hang error is observed in the
+2. Stability issue or GPU hang error. GPU Hang error is observed in the
     `dmesg` and the application hangs when run for more than 10-15
     minutes with three or more instances of AI workload is offloaded to
     GPU.

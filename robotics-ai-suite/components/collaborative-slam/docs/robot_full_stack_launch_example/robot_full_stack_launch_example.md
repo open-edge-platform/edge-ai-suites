@@ -1,4 +1,5 @@
-### Robot setup
+# Robot setup
+
 Use Segway Robot as an example:
 
 - Startup: Make sure the wire connections for power and communication are correct. Meanwhile fully charge the robot before using.
@@ -7,12 +8,11 @@ Use Segway Robot as an example:
 
 - RealSense Placement: Manually stick on the robot or use a bracket to place the camera. **Avoid any conductive surface on the robot to get in touch with the camera.**
 
+## How to Build
 
-### How to Build
+### Segway robot
 
-#### Segway robot
-
-```
+```sh
 cd YOUR_COLCON_WORKSPACE/src
 # place repos under the src folder
 cd ..
@@ -23,40 +23,39 @@ colcon build --packages-select segway_msg
 colcon build --packages-select segwayrmp
 ```
 
-
 #### RealSense
 
 Follow the [instructions for ros-realsense setup](https://github.com/IntelRealSense/realsense-ros/tree/ros2) and we choose the method 2 to build.
 
 To test the connection, you can use commands like ```dmesg``` or ```lsusb```. You may further verify using ```realsense-viewer```. If you encounter unstable RealSense connection, you can try to use a different connection line.
 
-
 #### FastMapping
 
 Follow the [Readme](../../fast-mapping/) to build. Note that Fast mapping does not have all needed parameters exposed. Following parameters should be changed in the code and re-compiled:
-```
+
+```sh
 "depth_noise_factor": "0.08",
 # Change the below number according to your robot
 robot_radius_around_camera": "0.3"
 ```
 
-
 #### Navigation
-Follow the [github readme](https://github.com/ros-planning/navigation2/tree/main/nav2_bringup) and [installation guide](https://navigation.ros.org/getting_started/index.html#installation) to build. 
 
-The default navigation param file is located [here](https://github.com/ros-planning/navigation2/tree/main/nav2_bringup/params) for reference. We also include ours in the doc folder. **Note that ```robot_radius``` parameter should be changed to the setting of your robot.**
+Follow the [github readme](https://github.com/ros-planning/navigation2/tree/main/nav2_bringup) and [installation guide](https://navigation.ros.org/getting_started/index.html#installation) to build.
 
-
+The default navigation param file is located [param file](https://github.com/ros-planning/navigation2/tree/main/nav2_bringup/params) for reference. We also include ours in the doc folder. **Note that ```robot_radius``` parameter should be changed to the setting of your robot.**
 
 ### How to Run
 
 First, start the robot, we use Segway Robot as an example:
-```
+
+```sh
 # in the first terminal
 ros2 run segwayrmp SmartCar
 # in the second terminal
 ros2 run segwayrmp drive_segway_sample
 ```
+
 In the second terminal, press ```c``` to clear emergency stop state, then press ```e``` for chassis enable switch. Now the robot is ready to move, just press ```ctrl-c``` to stop the above two ros2 nodes.
 
 Then, launch the full-stack launch file to start the system. Here are some explanations for the launch file:
@@ -68,10 +67,9 @@ Then, launch the full-stack launch file to start the system. Here are some expla
 - fix_scale: it should set to true when using RGBD camera_setup and the scale will not be optimized during optimization.
 - nav_params_file: For Segway robot, we use the same navigation param file as Pengo robot (pengo_nav.param.yaml).
 
-
 To run the system, here are the recommended commands:
 
-```
+```sh
 # Copy the launch file to the install folder of a package, for example to the univloc_tracker package
 cp collab_slam.launch.py YOUR_COLCON_WORKSPACE/install/univloc_tracker/share/univloc_tracker/launch/
 

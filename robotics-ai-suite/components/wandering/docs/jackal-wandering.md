@@ -1,5 +1,6 @@
----
-title: Execute the Wandering Application on the Jackal™ Robot
+
+# Execute the Wandering Application on the Jackal™ Robot
+
 ---
 
 This tutorial details the steps to install and run the Wandering
@@ -8,7 +9,7 @@ Jackal™ robot. The Wandering Application will use the Nav2 navigation
 stack and the RTAB-Map SLAM application to let the Jackal™ robot move
 around and create a map of the environment.
 
-# Prerequisites
+## Prerequisites
 
 - [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
 - [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
@@ -16,7 +17,7 @@ around and create a map of the environment.
 - [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install.html)
 - [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
 
-# Installation and Execution
+## Installation and Execution
 
 Make sure that you have set up your Jackal™ robot as described on the
 `./jackal-intel-robotics-sdk`{.interpreted-text role="doc"} page. In
@@ -42,15 +43,11 @@ application will create the map.
 /opt/ros/humble/share/wandering_jackal_tutorial/scripts/wandering_jackal.sh
 ```
 
-<figure class="align-center">
-<img src="../../../../images/wandering-jackal-rviz2.png"
-alt="../../../../images/wandering-jackal-rviz2.png" />
-<figcaption>Wandering Application running on the Jackal™ robot: the
-rviz2 tool shows the robot with the identified map and the image of the
-Intel® RealSense™ camera.</figcaption>
-</figure>
+![Wandering Application running on the Jackal™ robot: the rviz2 tool shows the robot with the identified map and the image of the Intel® RealSense™ camera.](images/wandering-jackal-rviz2.png)
 
-# Jackal™-Specific Adaptations
+*Figure: Wandering Application running on the Jackal™ robot. The rviz2 tool shows the robot with the identified map and the image of the Intel® RealSense™ camera.*
+
+## Jackal™-Specific Adaptations
 
 The shell script and the launch file of the Wandering tutorial have been
 adapted to the ecosystem of the Jackal™ robot. In particular, they
@@ -90,23 +87,17 @@ of the Jackal™ robot:
 
 - if `ros-humble-realsense2-camera` version is 4.55:
 
-    -----------------------------------------------------------------------------------------------------
-    Topic name expected by the node                    True topic name on the Jackal™ robot
-    -------------------------------------------------- --------------------------------------------------
-    `depth`                                            `/sensors/camera_0/camera/depth/image_rect_raw`
-
-    `depth_camera_info`                                `/sensors/camera_0/camera/depth/camera_info`
-    -----------------------------------------------------------------------------------------------------
+| Topic name expected by the node | True topic name on the Jackal robot                          |
+|----------------------------------|--------------------------------------------------------------|
+| `depth`                          | `/sensors/camera_0/camera/depth/image_rect_raw`             |
+| `depth_camera_info`              | `/sensors/camera_0/camera/depth/camera_info`                |
 
 - if `ros-humble-realsense2-camera` version is 4.54:
 
-    -----------------------------------------------------------------------------------------------------
-    Topic name expected by the node                    True topic name on the Jackal™ robot
-    -------------------------------------------------- --------------------------------------------------
-    `depth`                                            `/sensors/camera_0/depth/image_rect_raw`
-
-    `depth_camera_info`                                `/sensors/camera_0/depth/camera_info`
-    -----------------------------------------------------------------------------------------------------
+| Topic name expected by the node | True topic name on the Jackal robot                          |
+|----------------------------------|--------------------------------------------------------------|
+| `depth`                          | `/sensors/camera_0/depth/image_rect_raw`             |
+| `depth_camera_info`              | `/sensors/camera_0/depth/camera_info`                |
 
 The script
 `/opt/ros/humble/share/wandering_jackal_tutorial/scripts/wandering_jackal.sh`
@@ -141,12 +132,9 @@ subscribe to the topic `/imu/data_raw`. The topic `/imu/data_raw` is a
 remapped representation of the topic `/sensors/imu_0/data_raw`, which is
 published by the `jackal_mcu` node of the Jackal™ robot:
 
-  -----------------------------------------------------------------------------------------------------
-  Topic name expected by the node                    True topic name on the Jackal™ robot
-  -------------------------------------------------- --------------------------------------------------
-  `/imu/data_raw`                                    `/sensors/imu_0/data_raw`
-
-  -----------------------------------------------------------------------------------------------------
+| Topic name expected by the node | True topic name on the Jackal™ robot                          |
+|----------------------------------|--------------------------------------------------------------|
+| `/imu/data_raw`                          | `/sensors/imu_0/data_raw`             |
 
 The script
 `/opt/ros/humble/share/wandering_jackal_tutorial/scripts/wandering_jackal.sh`
@@ -169,27 +157,19 @@ fulfilled by remapping the following topics, which are published by the
 
 - if `ros-humble-realsense2-camera` version is 4.55:
 
-    ----------------------------------------------------------------------------------------------------------------
-    Topic name expected by the node                    True topic name on the Jackal™ robot
-    -------------------------------------------------- -------------------------------------------------------------
-    `rgb/image`                                        `/sensors/camera_0/camera/color/image_raw`
-
-    `rgb/camera_info`                                  `/sensors/camera_0/camera/color/camera_info`
-
-    `depth/image`                                      `/sensors/camera_0/camera/aligned_depth_to_color/image_raw`
-    ----------------------------------------------------------------------------------------------------------------
+    | Topic name expected by the node        |           True topic name on the Jackal™ robot |
+    |----------------------------------------|-------------------------------------------------------------|
+    |`rgb/image`                             |           `/sensors/camera_0/camera/color/image_raw` |
+    |`rgb/camera_info`                       |           `/sensors/camera_0/camera/color/camera_info` |
+    |`depth/image`                           |           `/sensors/camera_0/camera/aligned_depth_to_color/image_raw` |
 
 - if `ros-humble-realsense2-camera` version is 4.54:
 
-    ---------------------------------------------------------------------------------------------------------
-    Topic name expected by the node                    True topic name on the Jackal™ robot
-    -------------------------------------------------- ------------------------------------------------------
-    `rgb/image`                                        `/sensors/camera_0/color/image_raw`
-
-    `rgb/camera_info`                                  `/sensors/camera_0/color/camera_info`
-
-    `depth/image`                                      `/sensors/camera_0/aligned_depth_to_color/image_raw`
-    ---------------------------------------------------------------------------------------------------------
+    | Topic name expected by the node        |           True topic name on the Jackal™ robot |
+    |----------------------------------------|---------------------------------------|
+    |`rgb/image`                             |           `/sensors/camera_0/color/image_raw` |
+    |`rgb/camera_info`                       |           `/sensors/camera_0/color/camera_info` |
+    |`depth/image`                           |           `/sensors/camera_0/aligned_depth_to_color/image_raw` |
 
 The node publishes the topic `rgbd_image`, which is remapped to
 

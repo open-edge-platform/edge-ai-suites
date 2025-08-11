@@ -1,5 +1,6 @@
----
-title: FastMapping Algorithm
+
+# FastMapping Algorithm
+
 ---
 
 FastMapping application is the Intel® optimized version of octomap.
