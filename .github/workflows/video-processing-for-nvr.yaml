@@ -98,10 +98,11 @@ jobs:
             -O coverity_tool.tgz
           mkdir cov-analysis
           tar xzf coverity_tool.tgz --strip-components=1 -C cov-analysis
-          source $GITHUB_ENV
-          cov-build --version
+          # 设置完整路径变量
+          COV_PATH="$(pwd)/cov-analysis/bin"  
           cd metro-ai-suite/video-processing-for-nvr
-          cov-build --dir cov-int ./build_sample.sh  # 捕获脚本中的构建过程
+          # 使用完整路径执行命令
+          $COV_PATH/cov-build --dir cov-int ./build_sample.sh
 
           
       - name: Create tarball for upload
