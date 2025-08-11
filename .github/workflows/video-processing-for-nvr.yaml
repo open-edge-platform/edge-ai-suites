@@ -98,7 +98,8 @@ jobs:
             -O coverity_tool.tgz
           mkdir cov-analysis
           tar xzf coverity_tool.tgz --strip-components=1 -C cov-analysis
-          echo "$(pwd)/cov-analysis/bin" >> $GITHUB_PATH
+          source $GITHUB_ENV
+          cov-build --version
           cd metro-ai-suite/video-processing-for-nvr
           cov-build --dir cov-int ./build_sample.sh  # 捕获脚本中的构建过程
 
