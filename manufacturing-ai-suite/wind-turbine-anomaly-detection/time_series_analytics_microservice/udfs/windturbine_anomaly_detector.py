@@ -15,8 +15,6 @@ import math
 from collections import deque
 from kapacitor.udf.agent import Agent, Handler
 from kapacitor.udf import udf_pb2
-# import paho.mqtt.client as mqtt
-import modin.pandas as pd
 import numpy as np
 import requests
 from sklearnex import patch_sklearn, config_context
@@ -152,10 +150,6 @@ class AnomalyDetectorHandler(Handler):
             else:
                 continue
         # logger.info(f"Asset: {point.name}, x: {x}, y:{y}, cc:{self.enable_gcp_client}")
-
-        # check if there is an active alarm for timestamp of the current point
-        ns = point.time # in nanoseconds
-        ts = pd.Timestamp(ns)
 
         if x is not None and y is not None:
             # check if the current point is an anomalous point
