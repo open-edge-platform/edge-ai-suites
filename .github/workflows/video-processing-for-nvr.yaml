@@ -46,8 +46,9 @@ jobs:
           
           sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
           source /opt/intel/vppsdk/env.sh
+          cd edge-ai-suites-repo
           ls
-          cd metro-ai-suite/video-processiong-for-nvr/docker
+          cd video-processiong-for-nvr/docker
           bash build_sample.sh
           docker images
           
