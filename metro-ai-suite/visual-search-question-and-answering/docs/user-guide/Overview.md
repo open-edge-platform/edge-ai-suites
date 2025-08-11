@@ -68,3 +68,4 @@ The UI, built with `streamlit`, allows users to:
 ## Learn More
 -    Check the [System requirements](./system-requirements.md)
 -    Start with the [Get Started](./get-started.md).
+-    Deploy with [Helm chart](./deploy-with-helm.md)
