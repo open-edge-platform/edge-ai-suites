@@ -107,8 +107,9 @@ jobs:
           
       - name: Create tarball for upload
         run: |
-          ls
+
           cd metro-ai-suite/video-processing-for-nvr
+          ls
           tar czf coverity-output.tgz -C build cov-int
 
       - name: Upload to Coverity Scan
