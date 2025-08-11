@@ -53,7 +53,10 @@ mkdir -p $HOME/models
 mkdir -p $HOME/data
 ```
 
-Make sure to put all your data (images and video) in the created data directory (`$HOME/data` in the example commands) BEFORE deploying the services.
+If you would like to test the application with a demo dataset, please continue and follow the instructions in the [Try with a demo dataset](#try-with-a-demo-dataset) section later in this guide.
+
+Otherwise, if you would like to use your own data (images and video), make sure to put them all in the created data directory (`$HOME/data` in the example commands above) BEFORE deploying the services.
+
 
 Note: supported media types: jpg, png, mp4
 
