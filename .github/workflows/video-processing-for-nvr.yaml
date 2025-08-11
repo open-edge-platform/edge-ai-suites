@@ -52,43 +52,13 @@ jobs:
           bash build_sample.sh
           docker images
           
-      - name: Run trivy Scan - dataprep-visualdata-milvus
+      - name: Run trivy Scan - vppsample
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: dataprep-visualdata-milvus
+        id: vppsample
         with:
           scan_type: "image"  
           scan-scope: all
-          scan_target: "dataprep-visualdata-milvus:latest"  
-          severity: "HIGH,CRITICAL"  
-          format: "json"  
-
-      - name: Run trivy Scan - retriever-milvus
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: retriever-milvus
-        with:
-          scan_type: "image"  
-          scan-scope: all
-          scan_target: "retriever-milvus:latest"  
-          severity: "HIGH,CRITICAL"  
-          format: "json"  
-
-      - name: Run trivy Scan - vlm-openvino-serving
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id:  vlm-openvino-serving
-        with:
-          scan_type: "image"  
-          scan-scope: all
-          scan_target: "vlm-openvino-serving:latest"  
-          severity: "HIGH,CRITICAL"  
-          format: "json"  
-
-      - name: Run trivy Scan - visual-search-qa-app
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id:  visual-search-qa-app
-        with:
-          scan_type: "image"  
-          scan-scope: all
-          scan_target: "visual-search-qa-app:latest" 
+          scan_target: "vppsample:latest"  
           severity: "HIGH,CRITICAL"  
           format: "json"  
           
