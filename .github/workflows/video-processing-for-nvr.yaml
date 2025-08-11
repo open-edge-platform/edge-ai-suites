@@ -112,7 +112,6 @@ jobs:
         run: |
 
           cd metro-ai-suite/video-processing-for-nvr
-          cd cov-int
           ls -R
           tar czvf "$(pwd)/coverity_results.tgz" "$(pwd)/cov-int"
 
