@@ -102,7 +102,7 @@ jobs:
           COV_PATH="$(pwd)/cov-analysis/bin"  
           cd metro-ai-suite/video-processing-for-nvr
           # 使用完整路径执行命令
-          $COV_PATH/cov-build --dir cov-int build_sample.sh
+          $COV_PATH/cov-build --dir cov-int build.sh
 
           
       - name: Create tarball for upload
