@@ -11,7 +11,7 @@
            - Intel's |Linux| LTS real-time kernel (preempt-rt) and generic kernel, kernel version is 6.12.8
          * - `Linux Runtime Optimization <https://eci.intel.com/docs/3.3/appendix.html#eci-kernel-boot-optimizations>`__
            - customizations-grub
-           - |Linux| ECI and IOTG GRUB Customization
+           - |Linux| ECI and Intel's GRUB Customization
          * - `Linux firmware <https://eci.intel.com/docs/3.3/development/tutorials/enable-graphics.html>`__
            - linux-firmware
            - |Linux| firmware with Ultra iGPU firmware
