@@ -112,7 +112,7 @@ jobs:
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
-          name: trivy-report
+          name: coverity-report
           path: edge-ai-suites-repo/metro-ai-suite/video-processing-for-nvr/coverity*
 
 
