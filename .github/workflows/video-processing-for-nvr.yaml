@@ -46,6 +46,8 @@ jobs:
           
           sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
           source /opt/intel/vppsdk/env.sh
+          ls
+          cd metro-ai-suite/video-processiong-for-nvr/docker
           bash build_sample.sh
           docker images
           
