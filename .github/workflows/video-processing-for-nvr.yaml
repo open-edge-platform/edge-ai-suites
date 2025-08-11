@@ -109,8 +109,9 @@ jobs:
         run: |
 
           cd metro-ai-suite/video-processing-for-nvr
+          cd cov-int
           ls
-          tar czvf "$(pwd)/coverity_results.tgz" "$(pwd)/cov-int"
+          # tar czvf "$(pwd)/coverity_results.tgz" "$(pwd)/cov-int"
 
       - name: Upload to Coverity Scan
         run: |
