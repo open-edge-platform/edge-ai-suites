@@ -90,18 +90,14 @@ jobs:
           sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
           source /opt/intel/vppsdk/env.sh
           
-      - name: Download Coverity Scan Tool
+
+      - name: Build with Coverity Analysis
         run: |
           wget --quiet https://scan.coverity.com/download/linux64 \
             --post-data "token=${{ secrets.VPP_COVERITY_TOKEN }}&project=${{ secrets.VPP_COVERITY_PROJECT }}" \
             -O coverity_tool.tgz
           mkdir cov-analysis
           tar xzf coverity_tool.tgz --strip-components=1 -C cov-analysis
-
-
-      - name: Build with Coverity Analysis
-        run: |
-          ls
           cd metro-ai-suite/video-processing-for-nvr
           cov-build --dir cov-int ./build_sample.sh  # 捕获脚本中的构建过程
 
