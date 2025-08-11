@@ -66,4 +66,59 @@ jobs:
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
           name: trivy-report
-          path: security-results/trivy*
+          path: security-results/trivy
+
+  coverity-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out edge-ai-libraries repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Build code manually for dl-streamer
+        run: |
+          sudo -E wget -O- https://eci.intel.com/sed-repos/gpg-keys/GPG-PUB-KEY-INTEL-SED.gpg | sudo tee /usr/share/keyrings/sed-archive-keyring.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee /etc/apt/sources.list.d/sed.list
+          echo "deb-src [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee -a /etc/apt/sources.list.d/sed.list
+          sudo bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
+          sudo apt update
+          sudo apt install intel-vppsdk
+          
+          sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
+          source /opt/intel/vppsdk/env.sh
+          
+      - name: Download Coverity Scan Tool
+        run: |
+          wget --quiet https://scan.coverity.com/download/linux64 \
+            --post-data "token=${{ secrets.DLS_COVERITY_TOKEN }}&project=${{ secrets.DLS_COVERITY_PROJECT }}" \
+            -O coverity_tool.tgz
+          mkdir cov-analysis
+          tar xzf coverity_tool.tgz --strip-components=1 -C cov-analysis
+
+
+      - name: Build with Coverity Analysis
+        run: |
+          cd edge-ai-suites-repo/metro-ai-suite/video-processing-for-nvr
+          cov-build --dir cov-int ./build_sample.sh  # 捕获脚本中的构建过程
+
+      - name: Create tarball for upload
+        run: |
+          cd edge-ai-suites-repo/metro-ai-suite/video-processing-for-nvr
+          tar czf coverity-output.tgz -C build cov-int
+
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: trivy-report
+          path: edge-ai-suites-repo/metro-ai-suite/video-processing-for-nvr/coverity*
+
+
+
+
+
+
+
+          
