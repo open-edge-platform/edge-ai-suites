@@ -101,11 +101,13 @@ jobs:
 
       - name: Build with Coverity Analysis
         run: |
+          ls
           cd edge-ai-suites-repo/metro-ai-suite/video-processing-for-nvr
           cov-build --dir cov-int ./build_sample.sh  # 捕获脚本中的构建过程
 
       - name: Create tarball for upload
         run: |
+          ls
           cd edge-ai-suites-repo/metro-ai-suite/video-processing-for-nvr
           tar czf coverity-output.tgz -C build cov-int
 
