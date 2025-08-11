@@ -1,0 +1,6 @@
+apiVersion: v2
+name: metro-ai-suite-vsqa-chart
+description: Helm chart for Visual Search and QA
+version: 0.1.0
+appVersion: "1.0"
+
