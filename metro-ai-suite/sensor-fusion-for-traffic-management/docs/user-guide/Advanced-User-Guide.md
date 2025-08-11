@@ -52,7 +52,9 @@ All the above workloads of this SW RI can run on single Intel SoC processor whic
 
     - https://github.com/ZhangAoCanada/RADDet#Dataset
 
-    - For how to get RADDet dataset, please refer to this guide: [how_to_get_RADDet_datasets.md](How-To-Get-RADDET-Dataset.md)
+    - A processed data snippet is provided in [demo](../../ai_inference/test/demo/raddet_bin_files)
+
+    - If you want to generate the data independently, please refer to this guide: [how_to_get_RADDet_datasets.md](How-To-Get-RADDET-Dataset.md)
 
         Upon success, bin files will be extracted, save to $RADDET_DATASET_ROOT/bin_files_{VERSION}:
 
@@ -382,6 +384,7 @@ More specifically, open another terminal, run the following commands:
 sudo -E ./build/bin/CRSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localFusionPipeline_libradar.json 1 1 /path-to-dataset media_fusion
 ```
 > Note: Run with `root` if users want to get the GPU utilization profiling.
+> change /path-to-dataset to your data path if you generate demo data independently, or simply change it to $PROJ_DIR/ai_inference/test/demo/raddet_bin_files to use the demo data.
 
 #### 4.3.2 1C+1R Unit Tests
 
