@@ -93,7 +93,7 @@ jobs:
       - name: Download Coverity Scan Tool
         run: |
           wget --quiet https://scan.coverity.com/download/linux64 \
-            --post-data "token=${{ secrets.DLS_COVERITY_TOKEN }}&project=${{ secrets.DLS_COVERITY_PROJECT }}" \
+            --post-data "token=${{ secrets.VPP_COVERITY_TOKEN }}&project=${{ secrets.VPP_COVERITY_PROJECT }}" \
             -O coverity_tool.tgz
           mkdir cov-analysis
           tar xzf coverity_tool.tgz --strip-components=1 -C cov-analysis
@@ -109,11 +109,15 @@ jobs:
           cd edge-ai-suites-repo/metro-ai-suite/video-processing-for-nvr
           tar czf coverity-output.tgz -C build cov-int
 
-      - name: Upload Report
-        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
-        with:
-          name: coverity-report
-          path: edge-ai-suites-repo/metro-ai-suite/video-processing-for-nvr/coverity*
+      - name: Upload to Coverity Scan
+        run: |
+          cd edge-ai-suites-repo/metro-ai-suite/video-processing-for-nvr
+          curl --form token=${{ secrets.VPP_COVERITY_TOKEN }} \
+               --form email=${{ secrets.VPP_COVERITY_EMAIL }} \
+               --form file=@coverity-output.tgz \
+               --form version="`date +%Y%m%d%H%M%S`" \
+               --form description="GitHub Action upload" \
+               https://scan.coverity.com/builds?project=${{ secrets.VPP_COVERITY_PROJECT }}
 
 
 
