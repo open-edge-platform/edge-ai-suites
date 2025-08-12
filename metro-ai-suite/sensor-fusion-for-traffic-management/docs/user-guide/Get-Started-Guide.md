@@ -1,4 +1,5 @@
 # Get Started Guide
+Get started guide for running on bare metal.
 
 ## 1. Overview
 ### 1.1 Prerequisites
