@@ -81,7 +81,7 @@ jobs:
           cd metro-ai-suite/video-processing-for-nvr
           bash live555_install.sh
           
-      - name: Build code manually for dl-streamer
+      - name: Build code manually for VPP
         run: |
           sudo -E wget -O- https://eci.intel.com/sed-repos/gpg-keys/GPG-PUB-KEY-INTEL-SED.gpg | sudo tee /usr/share/keyrings/sed-archive-keyring.gpg > /dev/null
           echo "deb [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee /etc/apt/sources.list.d/sed.list
@@ -104,6 +104,7 @@ jobs:
           # 设置完整路径变量
           COV_PATH="$(pwd)/cov-analysis/bin"  
           cd metro-ai-suite/video-processing-for-nvr
+          cov-build --version
           # 使用完整路径执行命令
           $COV_PATH/cov-build --dir cov-int bash build.sh
 
@@ -113,14 +114,16 @@ jobs:
 
           cd metro-ai-suite/video-processing-for-nvr
           ls -R
-          tar czvf coverity_results.tgz -C cov-int .
-
+          tar czvf coverity_output.tgz -C cov-int .
+          # Verify tarball contents
+          echo "=== Tarball Contents ==="
+          tar tzvf coverity_output.tgz | head -20
       - name: Upload to Coverity Scan
         run: |
           cd metro-ai-suite/video-processing-for-nvr
           curl --form token=${{ secrets.VPP_COVERITY_TOKEN }} \
                --form email=${{ secrets.VPP_COVERITY_EMAIL }} \
-               --form file=@coverity_results.tgz \
+               --form file=@coverity_output.tgz \
                --form version="`date +%Y%m%d%H%M%S`" \
                --form description="GitHub Action upload" \
                https://scan.coverity.com/builds?project=${{ secrets.VPP_COVERITY_PROJECT }}
