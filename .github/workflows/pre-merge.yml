@@ -38,7 +38,7 @@ jobs:
         uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
         with:
           filters: |
-u           loitering-detection:
+            loitering-detection:
               - 'metro-ai-suite/loitering-detection/docs/**'
             image-based-video-search:
               - 'metro-ai-suite/image-based-video-search/docs/**'
