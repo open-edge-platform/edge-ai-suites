@@ -61,13 +61,13 @@ jobs:
           bash build_docker.sh
           docker images
           
-      - name: Run trivy Scan - vppsample
+      - name: Run trivy Scan - tfcc
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: vppsample
+        id: tfccsample
         with:
           scan_type: "image"  
           scan-scope: all
-          scan_target: "vppsample:latest"  
+          scan_target: "tfcc:latest"  
           severity: "HIGH,CRITICAL"  
           format: "json"  
           
@@ -86,59 +86,54 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
         with:
           persist-credentials: false
+        
           
-      - name: install live555
+      - name: Build code manually for TFCC
         run: |
-          cd metro-ai-suite/video-processing-for-nvr
-          bash live555_install.sh
-          
-      - name: Build code manually for VPP
-        run: |
-          sudo -E wget -O- https://eci.intel.com/sed-repos/gpg-keys/GPG-PUB-KEY-INTEL-SED.gpg | sudo tee /usr/share/keyrings/sed-archive-keyring.gpg > /dev/null
-          echo "deb [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee /etc/apt/sources.list.d/sed.list
-          echo "deb-src [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee -a /etc/apt/sources.list.d/sed.list
-          sudo bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
-          sudo apt update
-          sudo apt install intel-vppsdk
-          
-          sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
-          source /opt/intel/vppsdk/env.sh
-          
+          ls
+          cd metro-ai-suite/sensor-fusion-for-traffic-management
+          export PROJ_DIR=$PWD
+          sudo ln -s $PROJ_DIR/ai_inference/deployment/datasets /opt/datasets
+          sudo ln -s $PROJ_DIR/ai_inference/deployment/models /opt/models
+          sudo cp $PROJ_DIR/ai_inference/deployment/datasets/radarResults.csv /opt
+
 
       - name: Build with Coverity Analysis
         run: |
           wget --quiet https://scan.coverity.com/download/linux64 \
-            --post-data "token=${{ secrets.VPP_COVERITY_TOKEN }}&project=${{ secrets.VPP_COVERITY_PROJECT }}" \
+            --post-data "token=${{ secrets.TFCC_COVERITY_TOKEN }}&project=${{ secrets.TFCC_COVERITY_PROJECT }}" \
             -O coverity_tool.tgz
           mkdir cov-analysis
           tar xzf coverity_tool.tgz --strip-components=1 -C cov-analysis
           # 设置完整路径变量
           COV_PATH="$(pwd)/cov-analysis/bin"  
-          cd metro-ai-suite/video-processing-for-nvr
+          ls
+          cd metro-ai-suite/sensor-fusion-for-traffic-management
 
           # 使用完整路径执行命令
-          $COV_PATH/cov-build --dir cov-int bash build.sh
+          $COV_PATH/cov-build --dir cov-int bash -x build.sh
 
           
       - name: Create tarball for upload
         run: |
 
-          cd metro-ai-suite/video-processing-for-nvr
+          cd metro-ai-suite/sensor-fusion-for-traffic-management
           tar -czvf coverity_output.tgz -C . cov-int
           # Verify tarball contents
           echo "=== Tarball Contents ==="
           tar tzvf coverity_output.tgz
           echo "=== head ==="
           tar -tzvf coverity_output.tgz | head
+          
       - name: Upload to Coverity Scan
         run: |
-          cd metro-ai-suite/video-processing-for-nvr
-          curl --form token=${{ secrets.VPP_COVERITY_TOKEN }} \
-               --form email=${{ secrets.VPP_COVERITY_EMAIL }} \
+          cd metro-ai-suite/sensor-fusion-for-traffic-management
+          curl --form token=${{ secrets.TFCC_COVERITY_TOKEN }} \
+               --form email=${{ secrets.TFCC_COVERITY_EMAIL }} \
                --form file=@coverity_output.tgz \
                --form version="`date +%Y%m%d%H%M%S`" \
                --form description="GitHub Action upload" \
-               https://scan.coverity.com/builds?project=${{ secrets.VPP_COVERITY_PROJECT }}
+               https://scan.coverity.com/builds?project=${{ secrets.TFCC_COVERITY_PROJECT }}
 
 
 
