@@ -104,7 +104,7 @@ jobs:
           # 设置完整路径变量
           COV_PATH="$(pwd)/cov-analysis/bin"  
           cd metro-ai-suite/video-processing-for-nvr
-          $COV_PATH/cov-build --version
+          $COV_PATH/cov-build --version --verbose
           # 使用完整路径执行命令
           $COV_PATH/cov-build --dir cov-int bash build.sh
 
