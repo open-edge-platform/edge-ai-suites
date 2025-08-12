@@ -91,6 +91,7 @@ jobs:
       - name: Build code manually for TFCC
         run: |
           ls
+          sudo apt update
           cd metro-ai-suite/sensor-fusion-for-traffic-management
           bash install_project_related_libs.sh
           export PROJ_DIR=$PWD
