@@ -103,7 +103,7 @@ jobs:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.pcb-anomaly-detection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -182,7 +182,7 @@ jobs:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.worker-safety-gear-detection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
