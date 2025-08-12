@@ -58,6 +58,20 @@ By following this guide, you will learn how to:
 
     </details>
 
+    <details>
+    <summary>
+    Specify Custom Host IP Address (Advanced Configuration)
+    </summary>
+
+    For environments requiring a specific host IP address (such as when using Edge Manageability Toolkit or deploying across different network interfaces), you can explicitly specify the IP address:
+
+    ```bash
+    ./install.sh smart-parking <HOST_IP>
+    ```
+    Replace `<HOST_IP>` with your target IP address.
+
+    </details>
+
 ## Run the Application
 
 1. **Start the Application**:
