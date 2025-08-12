@@ -37,7 +37,7 @@ jobs:
           path: security-results/bandit*
           
   trivy-scan:
-    runs-on: ubuntu-22.04.01
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
     steps:
@@ -78,7 +78,7 @@ jobs:
           path: security-results/trivy
 
   coverity-scan:
-    runs-on: ubuntu-22.04.01
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
     steps:
