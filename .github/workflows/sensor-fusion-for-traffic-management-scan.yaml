@@ -78,7 +78,7 @@ jobs:
           path: security-results/trivy
 
   coverity-scan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04.01
     permissions:
       contents: read
     steps:
