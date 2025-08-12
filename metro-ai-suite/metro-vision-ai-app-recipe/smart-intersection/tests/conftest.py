@@ -39,7 +39,7 @@ INFLUX_DB_ADMIN_PASSWORD = os.getenv("INFLUX_DB_ADMIN_PASSWORD", get_password_fr
 NODE_RED_URL = os.getenv("NODE_RED_URL", "http://localhost:1880")
 NODE_RED_REMOTE_URL = os.getenv("NODE_RED_REMOTE_URL")
 
-PROJECT_GITHUB_URL = os.getenv("PROJECT_GITHUB_URL", "https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-intersection")
+PROJECT_GITHUB_URL = os.getenv("PROJECT_GITHUB_URL", "https://github.com/open-edge-platform/edge-ai-suites/blob/release-1.2.0/metro-ai-suite/smart-intersection")
 
 def wait_for_services_readiness(services_urls, timeout=120, interval=2):
   """

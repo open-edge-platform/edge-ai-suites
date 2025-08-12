@@ -7,7 +7,7 @@ FastMapping application is the Intel® optimized version of octomap.
 ## Source Code
 
 The source code of this component can be found here:
-[FastMapping](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/fast-mapping)
+[FastMapping](https://github.com/open-edge-platform/edge-ai-suites/tree/release-1.2.0/robotics-ai-suite/components/fast-mapping)
 
 ## Prerequisites
 
@@ -23,7 +23,7 @@ The source code of this component can be found here:
     application run the command below:
 
     ``` bash
-    sudo apt-get install ros-humble-fast-mapping    
+    sudo apt-get install ros-humble-fast-mapping
     ```
 
     > [!NOTE]
@@ -34,7 +34,7 @@ The source code of this component can be found here:
 2. Set up your ROS 2 environment
 
     ``` bash
-    source /opt/ros/humble/setup.bash 
+    source /opt/ros/humble/setup.bash
     ```
 
 3. Run the FastMapping sample application using a ROS 2 bag of a robot

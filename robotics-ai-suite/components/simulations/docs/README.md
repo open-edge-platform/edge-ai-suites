@@ -9,7 +9,7 @@ these simulated environments.
 # Source Code
 
 The source code of this component can be found here:
-- [Simulations](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/simulations)
+- [Simulations](https://github.com/open-edge-platform/edge-ai-suites/tree/release-1.2.0/robotics-ai-suite/components/simulations)
 
 # See the following documentation for sample applications:
 

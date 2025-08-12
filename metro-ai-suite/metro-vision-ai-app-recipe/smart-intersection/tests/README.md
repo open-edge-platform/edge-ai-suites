@@ -21,7 +21,7 @@
   - `GRAFANA_REMOTE_URL`
   - `INFLUX_REMOTE_DB_URL`
   - `NODE_RED_REMOTE_URL`
-  
+
   These should contain the external IP address of the machine running the Docker containers and the corresponding service ports. For example:
   ```
   SCENESCAPE_REMOTE_URL="https://YOUR_MACHINE_IP"
@@ -29,11 +29,11 @@
   INFLUX_REMOTE_DB_URL="http://YOUR_MACHINE_IP:8086"
   NODE_RED_REMOTE_URL="http://YOUR_MACHINE_IP:1880"
   ```
-  
+
   Replace `YOUR_MACHINE_IP` with the actual IP address of your machine. If you do not set those URLs, remote endpoint tests will be skipped.
 
 - Prepare your environment according to the following guides:
-  - [Get Started Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md)
+  - [Get Started Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-1.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md)
 
 ## Installation
 
@@ -61,7 +61,7 @@
    python3 -m pip install -r requirements.txt
    ```
 
-Now you are ready to run tests on your system. 
+Now you are ready to run tests on your system.
 
 ## Running tests
 

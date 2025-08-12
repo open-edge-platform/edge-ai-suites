@@ -37,7 +37,7 @@ The setup looks like as described in the table below.
 
   | Camera-4  | YOLOv8n-seg:FP16  | Object detection & segmentation | GPU    |
 
-  
+
 # Intel® RealSense™ Depth Camera D457 Multi-camera Object detection setup
 
 The following steps are required in order to setup the Axiomtek Robox500
@@ -46,7 +46,7 @@ ROS2 AMR Controller to support four Intel® RealSense™ Depth Camera D457.
 # Source Code
 
 The source code of this component can be found here:
-[Multicamera-Demo](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/multicam-demo)
+[Multicamera-Demo](https://github.com/open-edge-platform/edge-ai-suites/tree/release-1.2.0/robotics-ai-suite/components/multicam-demo)
 
 # Axiomtek Robox500 ROS2 AMR Controller Setup
 
@@ -205,7 +205,7 @@ shown in the below picture.
 
 1.  GPU driver not found even after the GPU driver is installed.
 
-    ``` 
+    ```
     $ sudo intel_gpu_top
     intel_gpu_top: ../tools/intel_gpu_top.c:1909: init_engine_classes: Assertion `max >=0' failed.
     Aborted

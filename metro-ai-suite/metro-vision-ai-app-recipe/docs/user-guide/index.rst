@@ -20,9 +20,9 @@ This documentation serves as a guide for users to understand the features, insta
 .. toctree::
    :caption: Source Code
 
-   GitHub <https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite>
+   GitHub <https://github.com/open-edge-platform/edge-ai-suites/tree/release-1.2.0/metro-ai-suite>
 
 .. toctree::
    :caption: Community and Support
-   
+
    support
