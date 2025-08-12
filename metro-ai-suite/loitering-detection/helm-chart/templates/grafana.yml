@@ -24,14 +24,14 @@ spec:
         - |
           mkdir -p /tmp/test_plugin
           mkdir -p /tmp/dashboards
-          curl -L https://github.com/open-edge-platform/edge-ai-suites/archive/main.zip -o /tmp/main.zip && \
+          curl -L https://github.com/open-edge-platform/edge-ai-suites/archive/hotfix/release-1.0.0/emf-metro-apps.zip -o /tmp/main.zip && \
           unzip -q /tmp/main.zip -d /tmp && \
-          cp -r /tmp/edge-ai-suites-main/metro-ai-suite/loitering-detection/grafana/test_plugin/* /tmp/test_plugin/ && \
-          cp -r /tmp/edge-ai-suites-main/metro-ai-suite/loitering-detection/grafana/dashboards/* /tmp/dashboards/ && \
+          cp -r /tmp/edge-ai-suites-hotfix-release-1.0.0-emf-metro-apps/metro-ai-suite/loitering-detection/grafana/test_plugin/* /tmp/test_plugin/ && \
+          cp -r /tmp/edge-ai-suites-hotfix-release-1.0.0-emf-metro-apps/metro-ai-suite/loitering-detection/grafana/dashboards/* /tmp/dashboards/ && \
           for file in $(find /tmp/dashboards -name "*.json"); do
             sed -i "s|0.0.0.0:8889|$HOST_IP:$WEBRTC_PORT|g" $file
           done && \
-          rm -rf /tmp/main.zip /tmp/edge-ai-suites-main
+          rm -rf /tmp/main.zip /tmp/edge-ai-suites-hotfix-release-1.0.0-emf-metro-apps
         env:
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
