@@ -21,12 +21,14 @@ jobs:
     outputs:
       loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
       image-based-video-search_changed: ${{ steps.filter.outputs.image-based-video-search }}
-      smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
-      smart-intersection_changed: ${{ steps.filter.outputs.smart-intersection }}
       pallet-defect-detection_changed: ${{ steps.filter.outputs.pallet-defect-detection }}
+      pcb-anomaly-detection_changed: ${{ steps.filter.outputs.pcb-anomaly-detection }}
       robotics-ai-suite_changed: ${{ steps.filter.outputs.robotics-ai-suite }}
+      smart-intersection_changed: ${{ steps.filter.outputs.smart-intersection }}
+      smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
       weld-porosity_changed: ${{ steps.filter.outputs.weld-porosity }}
-      wind-turbine-anomaly-detection-docs: ${{ steps.filter.outputs.wind-turbine-anomaly-detection-docs }}
+      wind-turbine-anomaly-detection_changed: ${{ steps.filter.outputs.wind-turbine-anomaly-detection }}
+      worker-safety-gear-detection_changed: ${{ steps.filter.outputs.worker-safety-gear-detection }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,12 +48,16 @@ jobs:
               - 'metro-ai-suite/smart-intersection/docs/**'
             pallet-defect-detection:
               - 'manufacturing-ai-suite/pallet-defect-detection/docs/**'
+            pcb-anomaly-detection:
+              - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection/docs/**'
             robotics-ai-suite:
               - 'robotics-ai-suite/docs/**'
             weld-porosity:
               - 'manufacturing-ai-suite/weld-porosity/docs/**'
-            wind-turbine-anomaly-detection-docs:
+            wind-turbine-anomaly-detection:
               - 'manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/**'
+            worker-safety-gear-detection:
+              - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection/docs/**'
 
   build_image-based-video-search:
     permissions:
@@ -67,37 +73,6 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: metro-ai-suite/image-based-video-search
-
-  build_smart-parking:
-    permissions:
-      contents: read          # needed for actions/checkout
-      pull-requests: read     # needed for gh pr list
-      issues: write           # needed to post PR comment
-    needs: filter
-    if: ${{ needs.filter.outputs.smart-parking_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
-    secrets:
-      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
-      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
-      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
-    with:
-      docs_directory: metro-ai-suite/smart-parking
-
-  build_smart-intersection:
-    permissions:
-      contents: read          # needed for actions/checkout
-      pull-requests: read     # needed for gh pr list
-      issues: write           # needed to post PR comment
-    needs: filter
-    if: ${{ needs.filter.outputs.smart-intersection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
-    secrets:
-      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
-      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
-      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
-    with:
-      docs_directory: metro-ai-suite/smart-intersection
-      branch_pattern: '^main$'  # Smart Intersection only exists on 'main' branch
 
   build_loitering-detection:
     permissions:
@@ -129,6 +104,22 @@ jobs:
     with:
       docs_directory: manufacturing-ai-suite/pallet-defect-detection
 
+  build_pcb-anomaly-detection:
+    permissions:
+      contents: read          # needed for actions/checkout
+      pull-requests: read     # needed for gh pr list
+      issues: write           # needed to post PR comment
+    needs: filter
+    if: ${{ needs.filter.outputs.pcb-anomaly-detection_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection
+      branch_pattern: '(?!release-1\.0\.0)(^(main|release-.*)$)'  # Does not exist on release-1.0.0 branch - Exclude it
+
   build_robotics-ai-suite:
     permissions:
       contents: read          # needed for actions/checkout
@@ -144,7 +135,38 @@ jobs:
     with:
       docs_directory: robotics-ai-suite
       simple_mode: false
-      branch_pattern: '^main$'  # Robotics AI Suite only exists on 'main' branch
+      branch_pattern: '(?!release-1\.0\.0)(^(main|release-.*)$)'  # Does not exist on release-1.0.0 branch - Exclude it
+
+  build_smart-intersection:
+    permissions:
+      contents: read          # needed for actions/checkout
+      pull-requests: read     # needed for gh pr list
+      issues: write           # needed to post PR comment
+    needs: filter
+    if: ${{ needs.filter.outputs.smart-intersection_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: metro-ai-suite/smart-intersection
+      branch_pattern: '(?!release-1\.0\.0)(^(main|release-.*)$)'  # Does not exist on release-1.0.0 branch - Exclude it
+
+  build_smart-parking:
+    permissions:
+      contents: read          # needed for actions/checkout
+      pull-requests: read     # needed for gh pr list
+      issues: write           # needed to post PR comment
+    needs: filter
+    if: ${{ needs.filter.outputs.smart-parking_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: metro-ai-suite/smart-parking
 
   build_weld-porosity:
     permissions:
@@ -161,13 +183,13 @@ jobs:
     with:
       docs_directory: manufacturing-ai-suite/weld-porosity
   
-  build_docs_wind_turbine_anomaly_detection:
+  build_wind_turbine_anomaly_detection:
     permissions:
       contents: read          # needed for actions/checkout
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
     needs: filter
-    if: ${{ needs.filter.outputs.wind-turbine-anomaly-detection-docs == 'true' }}
+    if: ${{ needs.filter.outputs.wind-turbine-anomaly-detection_changed == 'true' }}
     uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
@@ -175,4 +197,20 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/wind-turbine-anomaly-detection
-      branch_pattern: '^main$'  # Wind Turbine Anomaly Detection only exists on 'main' branch
+      branch_pattern: '(?!release-1\.0\.0)(^(main|release-.*)$)'  # Does not exist on release-1.0.0 branch - Exclude it
+
+  build_worker-safety-gear-detection:
+    permissions:
+      contents: read          # needed for actions/checkout
+      pull-requests: read     # needed for gh pr list
+      issues: write           # needed to post PR comment
+    needs: filter
+    if: ${{ needs.filter.outputs.worker-safety-gear-detection_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection
+      branch_pattern: '(?!release-1\.0\.0)(^(main|release-.*)$)'  # Does not exist on release-1.0.0 branch - Exclude it
