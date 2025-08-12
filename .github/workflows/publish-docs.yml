@@ -28,7 +28,7 @@ jobs:
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
     if: ${{ (github.event.inputs.target == 'image-based-video-search') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -42,7 +42,7 @@ jobs:
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
     if: ${{ (github.event.inputs.target == 'smart-parking') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -56,7 +56,7 @@ jobs:
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
     if: ${{ (github.event.inputs.target == 'smart-intersection') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -71,7 +71,7 @@ jobs:
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
     if: ${{ (github.event.inputs.target == 'loitering-detection') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -85,7 +85,7 @@ jobs:
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
     if: ${{ (github.event.inputs.target == 'pallet-defect-detection') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -100,7 +100,7 @@ jobs:
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
     if: ${{ (github.event.inputs.target == 'weld-porosity') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -115,7 +115,7 @@ jobs:
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
     if: ${{ (github.event.inputs.target == 'pcb-anomaly-detection') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -130,7 +130,7 @@ jobs:
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
     if: ${{ (github.event.inputs.target == 'robotics-ai-suite') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -146,7 +146,7 @@ jobs:
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
     if: ${{ (github.event.inputs.target == 'worker-safety-gear-detection') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -161,7 +161,7 @@ jobs:
       pull-requests: read     # needed for gh pr list
       issues: write           # needed to post PR comment
     if: ${{ (github.event.inputs.target == 'wind-turbine-anomaly-detection') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@32469fcb74db17f617e237012104e3b2f1c2da2e
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
