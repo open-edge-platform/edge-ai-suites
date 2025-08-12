@@ -113,14 +113,14 @@ jobs:
 
           cd metro-ai-suite/video-processing-for-nvr
           ls -R
-          tar czvf "$(pwd)/coverity_results.tgz" "$(pwd)/cov-int"
+          tar czvf coverity_results.tgz -C cov-int .
 
       - name: Upload to Coverity Scan
         run: |
           cd metro-ai-suite/video-processing-for-nvr
           curl --form token=${{ secrets.VPP_COVERITY_TOKEN }} \
                --form email=${{ secrets.VPP_COVERITY_EMAIL }} \
-               --form file=@$(pwd)/coverity_results.tgz \
+               --form file=@coverity_results.tgz \
                --form version="`date +%Y%m%d%H%M%S`" \
                --form description="GitHub Action upload" \
                https://scan.coverity.com/builds?project=${{ secrets.VPP_COVERITY_PROJECT }}
