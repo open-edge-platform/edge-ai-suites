@@ -113,11 +113,10 @@ jobs:
         run: |
 
           cd metro-ai-suite/video-processing-for-nvr
-          ls -R
-          tar czvf coverity_output.tgz -C cov-int .
+          tar czvf coverity_output.tgz cov-int
           # Verify tarball contents
           echo "=== Tarball Contents ==="
-          tar tzvf coverity_output.tgz | head -20
+          tar tzvf coverity_output.tgz
       - name: Upload to Coverity Scan
         run: |
           cd metro-ai-suite/video-processing-for-nvr
