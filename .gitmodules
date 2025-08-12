@@ -25,3 +25,6 @@
 [submodule "robotics-ai-suite/pipelines/orb-slam3-sample/ORB_SLAM3"]
 	path = robotics-ai-suite/pipelines/orb-slam3-sample/ORB_SLAM3
 	url = https://github.com/UZ-SLAMLab/ORB_SLAM3.git
+[submodule "retail-ai-suite/order-accuracy"]
+	path = retail-ai-suite/order-accuracy
+	url = https://github.com/intel-retail/order-accuracy
