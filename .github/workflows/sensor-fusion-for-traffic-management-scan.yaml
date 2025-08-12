@@ -92,6 +92,7 @@ jobs:
         run: |
           ls
           cd metro-ai-suite/sensor-fusion-for-traffic-management
+          bash install_project_related_libs.sh
           export PROJ_DIR=$PWD
           sudo ln -s $PROJ_DIR/ai_inference/deployment/datasets /opt/datasets
           sudo ln -s $PROJ_DIR/ai_inference/deployment/models /opt/models
