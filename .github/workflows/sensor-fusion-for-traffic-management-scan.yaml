@@ -58,7 +58,6 @@ jobs:
         run: |
           ls
           cd edge-ai-suites-repo/metro-ai-suite/sensor-fusion-for-traffic-management
-          bash install_driver_related_libs.sh
           bash build_docker.sh
           docker images
           
