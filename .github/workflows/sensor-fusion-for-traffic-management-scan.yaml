@@ -16,7 +16,7 @@ on:
   workflow_call:
   workflow_dispatch:
 
-jobs:   
+jobs:
   bandit-scan:
     runs-on: ubuntu-latest
     steps:
@@ -37,7 +37,7 @@ jobs:
           path: security-results/bandit*
           
   trivy-scan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04.01
     permissions:
       contents: read
     steps:
