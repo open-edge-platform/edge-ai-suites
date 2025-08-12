@@ -21,7 +21,7 @@ object classification, occupancy grid generation etc.
 ## Source Code
 
 The source code of this component can be found here:
-[ADBScan](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/adbscan)
+[ADBScan](https://github.com/open-edge-platform/edge-ai-suites/tree/release-1.2.0/robotics-ai-suite/components/adbscan)
 
 ## ADBSCAN Tutorials
 

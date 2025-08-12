@@ -27,7 +27,7 @@ obstacles.
 ## Source Code
 
 The source code of this component can be found here:
-[Groundfloor](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/groundfloor)
+[Groundfloor](https://github.com/open-edge-platform/edge-ai-suites/tree/release-1.2.0/robotics-ai-suite/components/groundfloor)
 
 ## Getting Started
 
