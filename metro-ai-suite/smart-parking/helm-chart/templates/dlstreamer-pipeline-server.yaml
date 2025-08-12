@@ -76,7 +76,7 @@ spec:
           export MODELS_PATH=/tmp/models/ 
           ./download_public_models.sh yolov10s
           cd /tmp/
-          git clone --depth=1 https://github.com/open-edge-platform/edge-ai-suites
+          git clone --depth=1 --branch hotfix/release-1.0.0/emf-metro-apps https://github.com/open-edge-platform/edge-ai-suites
           cp -r /tmp/edge-ai-suites/metro-ai-suite/smart-parking/dlsps/models/* /tmp/models/
           rm -rf /tmp/edge-ai-suites
         env:
