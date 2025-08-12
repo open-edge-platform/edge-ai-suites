@@ -3,7 +3,7 @@
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "$(dirname "$(readlink -f "$0")"):/opt/project" \
-  intel/dlstreamer:EAL1.2.RC2_2025.1.RC2-ubuntu24 bash -c "$(cat <<EOF
+  intel/dlstreamer:2025.1.2-ubuntu24 bash -c "$(cat <<EOF
 
 cd /opt/project
 export HOST_IP="${1:-$(hostname -I | cut -f1 -d' ')}"
@@ -41,7 +41,7 @@ declare -A video_urls=(
 for video_name in "\${!video_urls[@]}"; do
     if [ ! -f src/dlstreamer-pipeline-server/videos/\${video_name} ]; then
         echo "Download \${video_name}..."
-        curl -L -o "src/dlstreamer-pipeline-server/videos/\${video_name}" "\${video_urls[\$video_name]}" 
+        curl -L -o "src/dlstreamer-pipeline-server/videos/\${video_name}" "\${video_urls[\$video_name]}"
     fi
 done
 
