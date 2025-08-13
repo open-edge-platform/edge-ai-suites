@@ -59,6 +59,7 @@ jobs:
           ls
           cd edge-ai-suites-repo/metro-ai-suite/sensor-fusion-for-traffic-management/docker
           bash build_docker.sh
+          docker system prune -a -f --volumes
           docker images
           
       - name: Run trivy Scan - tfcc
