@@ -1,3 +1,4 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,16 +22,33 @@ spec:
         {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
         katenary.v3/component: streaming
     spec:
+      securityContext: # added pod-level defaults
+        runAsNonRoot: true
+        runAsUser: 1000
+      
       containers:
       - image: '{{ tpl .Values.streaming.repository.image $ }}:{{ tpl .Values.streaming.repository.tag $ | default "latest" }}'
         imagePullPolicy: {{ .Values.streaming.imagePullPolicy }}
         name: streaming
+        securityContext: # added container-level hardening
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
         command: ["/bin/bash", "-c"]
         args:
           - |
-            wget -O file.mp4 https://github.com/intel-iot-devkit/sample-videos/raw/master/person-bicycle-car-detection.mp4 && \
-            gst-launch-1.0 filesrc location=file.mp4 ! qtdemux name=mdemux ! h264parse ! video/x-h264,stream-format=byte-stream ! mpegtsmux name=mux ! filesink location=file.ts && \
-            gst-launch-1.0 multifilesrc location=file.ts loop=true ! tsdemux ! h264parse ! rtspclientsink protocols=tcp location=rtsp://{{ include "image_based_video_search.fullname" . }}-mediamtx:8554/stream
+            wget -O /resources/file.mp4 https://github.com/intel-iot-devkit/sample-videos/raw/master/person-bicycle-car-detection.mp4 && \
+            gst-launch-1.0 filesrc location=/resources/file.mp4 ! qtdemux name=mdemux ! h264parse ! video/x-h264,stream-format=byte-stream ! mpegtsmux name=mux ! filesink location=/resources/file.ts && \
+            gst-launch-1.0 multifilesrc location=/resources/file.ts loop=true ! tsdemux ! h264parse ! rtspclientsink protocols=tcp location=rtsp://{{ include "image_based_video_search.fullname" . }}-mediamtx:8554/stream
+        volumeMounts:
+          - name: resources
+            mountPath: /resources
         env:
           {{- if .Values.httpProxy }}
           - name: http_proxy
@@ -65,3 +83,6 @@ spec:
       {{- if ne .Values.streaming.serviceAccount "" }}
       serviceAccountName: {{ .Values.streaming.serviceAccount | quote }}
       {{- end }}
+      volumes:
+      - name: resources
+        emptyDir: {}
