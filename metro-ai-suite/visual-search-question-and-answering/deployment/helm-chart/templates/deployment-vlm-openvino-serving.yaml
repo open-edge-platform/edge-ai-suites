@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vlmOpenvinoServing.fullname" . }}
+  labels:
+    app: {{ include "vlmOpenvinoServing.name" . }}
+spec:
+  replicas: {{ .Values.vlmOpenvinoServing.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.vlmOpenvinoServing.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.vlmOpenvinoServing.name }}
+    spec:
+      hostIPC: true
+      nodeSelector:
+        intel.feature.node.kubernetes.io/gpu: "true"
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        supplementalGroups:
+        - {{ .Values.vlmOpenvinoServing.userGroupId }}
+        - {{ .Values.vlmOpenvinoServing.videoGroupId }}
+        - {{ .Values.vlmOpenvinoServing.renderGroupId }}
+      containers:
+        - name: {{ .Values.vlmOpenvinoServing.name }}
+          image: "{{ .Values.vlmOpenvinoServing.image.repository }}:{{ .Values.vlmOpenvinoServing.image.tag }}"
+          imagePullPolicy: {{ .Values.vlmOpenvinoServing.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.vlmOpenvinoServing.service.targetPort }}
+          env:
+            - name: VLM_MODEL_NAME
+              value: {{ required "Value for `global.VLM_MODEL_NAME` is required!" .Values.global.VLM_MODEL_NAME | quote }}
+            - name: VLM_COMPRESSION_WEIGHT_FORMAT
+              value: {{ .Values.vlmOpenvinoServing.env.VLM_COMPRESSION_WEIGHT_FORMAT | quote }}
+            - name: VLM_DEVICE
+              value: {{ .Values.vlmOpenvinoServing.env.VLM_DEVICE | quote }}
+            - name: VLM_SEED
+              value: {{ .Values.vlmOpenvinoServing.env.VLM_SEED | quote }}
+            - name: http_proxy
+              value: {{ .Values.global.proxy.http_proxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.proxy.https_proxy | quote }}
+            - name: no_proxy
+              value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
+            - name: NO_PROXY
+              value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
+            - name: no_proxy_env
+              value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
+            - name: HF_ENDPOINT
+              value: {{ .Values.vlmOpenvinoServing.env.HF_ENDPOINT | quote }}
+          volumeMounts:
+          - name: workspace
+            mountPath: /app/ov-model
+          - name: workspace
+            mountPath: /home/appuser/.cache/huggingface
+          securityContext:
+            readOnlyRootFilesystem: false
+          resources:
+            limits:
+              gpu.intel.com/i915: 1
+            requests:
+              gpu.intel.com/i915: 1
+      volumes:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: {{ .Values.vlmOpenvinoServing.volumeMounts.pvcName }}

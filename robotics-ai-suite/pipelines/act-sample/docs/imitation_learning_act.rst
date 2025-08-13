@@ -19,7 +19,7 @@ The source code of this component can be found here: `ACT-Sample <https://github
 Prerequisites
 =============
 
-Please make sure you have finished setup steps in :doc:`../installation_setup` and followed refer to :ref:`oneAPI doc <oneapi_install_label>` to setup |oneAPI| packages.
+Ensure you have completed the setup steps in :doc:`../installation_setup` and have followed the instructions in :ref:`oneAPI doc <oneapi_install_label>` to install |oneapi_full|.
 
 Installation
 =============
