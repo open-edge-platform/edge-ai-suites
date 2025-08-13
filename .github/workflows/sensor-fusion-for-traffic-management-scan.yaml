@@ -41,8 +41,6 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Free disk space
-        run: curl -fsSL https://raw.githubusercontent.com/kou/arrow/e49d8ae15583ceff03237571569099a6ad62be32/ci/scripts/util_free_space.sh | bash
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
           path: edge-ai-suites-repo
@@ -67,6 +65,7 @@ jobs:
           docker images --format '{{.ID}} {{.Repository}}' | \
             awk -v keep="$TFCC_IMAGE_ID" '$1 != keep {print $1}' | \
             xargs --no-run-if-empty docker rmi -f
+          curl -fsSL https://raw.githubusercontent.com/kou/arrow/e49d8ae15583ceff03237571569099a6ad62be32/ci/scripts/util_free_space.sh | bash
           docker images
           
       - name: Run trivy Scan - tfcc
