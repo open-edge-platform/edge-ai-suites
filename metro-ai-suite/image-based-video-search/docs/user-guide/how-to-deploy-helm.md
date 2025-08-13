@@ -74,6 +74,7 @@ ibvs-app   NodePort   10.109.118.49   <none>        3000:31998/TCP   14m
 ```
 
 Now frontend should be accessible at http://localhost:31998/.
+> Note: To access the above url remotely, replace the `localhost` with your system IP address. 
 
 Finally, the app can be uninstalled using the following command:
 
