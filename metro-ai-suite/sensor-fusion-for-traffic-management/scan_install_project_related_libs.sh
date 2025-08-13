@@ -77,7 +77,7 @@ _install_thrift()
 
   curl -k -o thrift_v0.21.0.tar.gz https://github.com/apache/thrift/archive/refs/tags/v0.21.0.tar.gz -L
   tar -zxf thrift_v0.21.0.tar.gz && cd thrift-0.21.0
-  ./bootstrap.sh && ./configure --with-qt4=no --with-qt5=no --with-python=no
+  ./bootstrap.sh && ./configure --with-qt4=no --with-qt5=no --with-python=no --disable-dependency-tracking
   make -j8 && sudo make install
   popd
 }
