@@ -4,12 +4,12 @@ This application enables real-time anomaly detection monitoring in printed circu
 
 ## Deploy using Docker Compose
 ---
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/pcb-anomaly-detection/main/user-guide/get-started.html).
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/pcb-anomaly-detection/1.2.0/user-guide/get-started.html).
  
 ## Deploy using Kubernetes Charts
 
 ---
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/pcb-anomaly-detection/main/user-guide/how-to-deploy-with-helm.html).
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/pcb-anomaly-detection/1.2.0/user-guide/how-to-deploy-with-helm.html).
 
 ## Supported versions
 

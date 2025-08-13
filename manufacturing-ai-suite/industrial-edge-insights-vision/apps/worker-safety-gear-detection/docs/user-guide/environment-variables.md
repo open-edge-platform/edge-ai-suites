@@ -11,7 +11,7 @@ This reference application's configuration has the following environment variabl
 In addtion to the ones above, the application also uses environment variables of following two Microservices:
 
 1. DL Streamer Pipeline Server
-    - DL Streamer Pipeline Server reference document on environment variables is present [here](https://docs.openedgeplatform.intel.com/edge-ai-libraries/dlstreamer-pipeline-server/main/user-guide/environment-variables.html)
+    - DL Streamer Pipeline Server reference document on environment variables is present [here](https://docs.openedgeplatform.intel.com/edge-ai-libraries/dlstreamer-pipeline-server/1.2.0/user-guide/environment-variables.html)
 
 2. Model Registry Microservice
-    - Model Registry Microservice's reference document on environment variables is present [here](https://docs.openedgeplatform.intel.com/edge-ai-libraries/model-registry/main/user-guide/environment-variables.html)
+    - Model Registry Microservice's reference document on environment variables is present [here](https://docs.openedgeplatform.intel.com/edge-ai-libraries/model-registry/1.2.0/user-guide/environment-variables.html)

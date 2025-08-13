@@ -87,3 +87,36 @@ If you're deploying a GPU based pipeline (example: with VA-API elements like `va
 ```sh
 privileged_access_required: true
 ```
+
+---
+
+## Inferencing on NPU
+
+To perform inferencing on an NPU device (for platforms with NPU accelerators such as Ultra Core processors), ensure you have completed the required pre-requisites. Refer to the instructions [here](https://dlstreamer.github.io/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#prerequisite-2-install-intel-npu-drivers) to install Intel NPU drivers.
+
+---
+
+## Unable to parse JSON payload due to missing `jq` package
+
+While running `sample_start.sh` script, you may get an error-
+`ERROR: jq is not installed. Cannot parse JSON payload.` This is due to mising `jq` package that is need to parse the payload JSON. Please follow the steps to install it.
+
+```sh
+sudo apt update
+sudo apt install jq
+```
+
+---
+
+## Unable to run GPU inference on some Arrow Lake machines with `resource allocation failed` errors
+
+For example:
+
+`ERROR vafilter gstvafilter.c:390:gst_va_filter_open:<vafilter0> vaCreateContext: resource allocation failed`
+
+This issue has been observed on systems with the Ultra Core 7 265K processor running Ubuntu 22.04.
+There are few options to fix this. 
+
+One is updating the kernel to `6.11.11-061111-generic` in the host system.
+
+Alternately, install OpenCL runtime packages in the host system. Refer to the instructions from OpenVINO documentation [here](https://docs.openvino.ai/2025/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
