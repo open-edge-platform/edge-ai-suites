@@ -27,10 +27,10 @@ Before You Begin, ensure the following:
 
 - Download helm chart with the following command
 
-    `helm pull oci://ghcr.io/open-edge-platform/edge-ai-suites/metro-ai-suites/image-based-video-search --version 20250806-EAS1.2`
+    `helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.0.1`
 - unzip the package using the following command
 
-    `tar -xvf image-based-video-search-20250806-EAS1.2.tgz`
+    `tar -xvf image-based-video-search-1.0.1.tgz`
 - Get into the helm directory
 
     `cd image-based-video-search`
