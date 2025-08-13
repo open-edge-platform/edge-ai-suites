@@ -41,10 +41,14 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Free disk space
+        run: curl -fsSL https://raw.githubusercontent.com/kou/arrow/e49d8ae15583ceff03237571569099a6ad62be32/ci/scripts/util_free_space.sh | bash
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
           path: edge-ai-suites-repo
           persist-credentials: false
+
+
       - name: Run Trivy Filesystem Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: trivy-fs
@@ -86,6 +90,9 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Free disk space
+        run: curl -fsSL https://raw.githubusercontent.com/kou/arrow/e49d8ae15583ceff03237571569099a6ad62be32/ci/scripts/util_free_space.sh | bash
+        
       - name: Check out edge-ai-libraries repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
         with:
