@@ -39,21 +39,21 @@ jobs:
         with:
           filters: |
             loitering-detection:
-              - 'metro-ai-suite/loitering-detection/docs/**'
+              - 'metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/docs/**'
             image-based-video-search:
               - 'metro-ai-suite/image-based-video-search/docs/**'
             smart-parking:
-              - 'metro-ai-suite/smart-parking/docs/**'
+              - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/**'
             smart-intersection:
-              - 'metro-ai-suite/smart-intersection/docs/**'
+              - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/**'
             pallet-defect-detection:
-              - 'manufacturing-ai-suite/pallet-defect-detection/docs/**'
+              - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection/docs/**'
             pcb-anomaly-detection:
               - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection/docs/**'
             robotics-ai-suite:
               - 'robotics-ai-suite/docs/**'
             weld-porosity:
-              - 'manufacturing-ai-suite/weld-porosity/docs/**'
+              - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity/docs/**'
             wind-turbine-anomaly-detection:
               - 'manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/**'
             worker-safety-gear-detection:

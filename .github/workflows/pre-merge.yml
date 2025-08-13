@@ -47,7 +47,7 @@ jobs:
             smart-intersection:
               - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/**'
             pallet-defect-detection:
-              - 'manufacturing-ai-suite/pallet-defect-detection/docs/**'
+              - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection/docs/**'
             pcb-anomaly-detection:
               - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection/docs/**'
             robotics-ai-suite:
