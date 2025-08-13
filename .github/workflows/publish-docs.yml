@@ -92,7 +92,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection
-      branch_pattern: '^main$'  # Pallet defect detection only exists on 'main' branch
+      branch_pattern: '(?!release-1\.0\.0)(^(main|release-.*)$)'  # Does not exist on release-1.0.0 branch - Exclude it
 
   build_weld-porosity:
     permissions:
@@ -107,7 +107,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity
-      branch_pattern: '^main$'  # Weld porosity classification only exists on 'main' branch
+      branch_pattern: '(?!release-1\.0\.0)(^(main|release-.*)$)'  # Does not exist on release-1.0.0 branch - Exclude it
 
   build_pcb-anomaly-detection:
     permissions:
@@ -122,7 +122,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection
-      branch_pattern: '^main$'  # PCB Anomaly Detection only exists on 'main' branch
+      branch_pattern: '(?!release-1\.0\.0)(^(main|release-.*)$)'  # Does not exist on release-1.0.0 branch - Exclude it
 
   build_robotics-ai-suite:
     permissions:
@@ -153,7 +153,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection
-      branch_pattern: '^main$'  # Worker safety detection only exists on 'main' branch
+      branch_pattern: '(?!release-1\.0\.0)(^(main|release-.*)$)'  # Does not exist on release-1.0.0 branch - Exclude it
 
   build_wind-turbine-anomaly-detection:
     permissions:
