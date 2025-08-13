@@ -94,7 +94,7 @@ jobs:
           ls
           sudo apt update
           sudo apt install -y libunwind-dev
-          sudo apt-get install -y make
+          sudo apt-get install -y make automake libtool flex bison g++
           cd metro-ai-suite/sensor-fusion-for-traffic-management
           bash scan_install_project_related_libs.sh
           export PROJ_DIR=$PWD
