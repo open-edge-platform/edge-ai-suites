@@ -67,7 +67,6 @@ jobs:
             xargs --no-run-if-empty docker rmi -f
           docker system prune -f
           curl -fsSL https://raw.githubusercontent.com/kou/arrow/e49d8ae15583ceff03237571569099a6ad62be32/ci/scripts/util_free_space.sh | bash
-          docker images
 
       - name: Free disk space
         uses: jlumbroso/free-disk-space@main
@@ -78,8 +77,13 @@ jobs:
           dotnet: true         # 清理.NET(2GB)
           haskell: true        # 清理Haskell(1GB)
           large-packages: true # 清理大包(5GB)
+          docker-images: false
           swap-storage: true   # 清理交换分区(1GB)
           
+      - name: Check resources
+        run: |
+          df -h
+          docker images
       - name: Run trivy Scan - tfcc
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: tfccsample
