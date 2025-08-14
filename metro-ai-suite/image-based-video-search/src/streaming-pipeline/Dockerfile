@@ -2,7 +2,7 @@ FROM ghcr.io/open-edge-platform/edge-ai-libraries/intel/edge-ai-dlstreamer:20250
 
 USER root
 
-RUN apt-get update && apt-get install --yes gstreamer1.0-plugins-ugly wget
+RUN apt-get update && apt-get install --yes --no-install-recommends gstreamer1.0-plugins-ugly wget && rm -rf /var/lib/apt/lists/*
 
 USER dlstreamer
 

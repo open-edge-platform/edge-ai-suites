@@ -17,12 +17,12 @@ Also, IPEX-LLM provides seamless integration with llama.cpp, Ollama, HuggingFace
          :width: 100%
          :align: center
 
-For robotics software developers, IPEX-LLM offers the opportunity to empower the development of new applications that combine robotics with LLMs, helping LLMs achieve better performance on Intel platforms.
+For robotics software developers, IPEX-LLM offers the opportunity to empower the development of new applications that combine robotics with LLMs, helping LLMs achieve better performance on Intel® platforms.
 
-| Please see more details on github repository: https://github.com/intel/ipex-llm/.
+| For details, see: https://github.com/intel/ipex-llm/.
 
-| Before installing |IPEX-LLM|, please make sure you have complete the environment setup in :doc:`../installation_setup` and have |oneAPI| installed.
-| Then install |IPEX-LLM| in your python environment by running the following command:
+| Before installing |IPEX-LLM|, ensure to complete the environment setup in :doc:`../installation_setup` and have |oneapi_full| installed.
+| Then, install |IPEX-LLM| in your Python environment:
 
 .. code-block:: bash
 

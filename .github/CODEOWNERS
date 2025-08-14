@@ -24,7 +24,7 @@ README.md          @xwu2intel
 /metro-ai-suite/smart-nvr/                                @bharagha @yogeshmpandey @bhardwaj-nakul
 
 # robotics-ai
-/robotics-ai-suite/        @jouillet @jb-balaji @pirouf @mohitmeh12
+/robotics-ai-suite/        @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz
 
 
 # documentation content - manufacturing-ai
@@ -60,8 +60,8 @@ README.md          @xwu2intel
 /metro-ai-suite/visual-search-question-and-answering/README.md  @llin60 @Johere @zhangcong2019          @open-edge-platform/open-edge-platform-docs-write
 
 # documentation content - robotics-ai
-/robotics-ai-suite/docs/                                       @jouillet @jb-balaji @pirouf @mohitmeh12 @kblaszczak-intel @swpng @achamuah @open-edge-platform/open-edge-platform-docs-write
-/robotics-ai-suite/README.md                                   @jouillet @jb-balaji @pirouf @mohitmeh12 @kblaszczak-intel @swpng @achamuah @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/docs/                                       @jouillet @jb-balaji @pirouf @mohitmeh12 @kblaszczak-intel @pperycz @swpng @achamuah @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/README.md                                   @jouillet @jb-balaji @pirouf @mohitmeh12 @kblaszczak-intel @pperycz @swpng @achamuah @open-edge-platform/open-edge-platform-docs-write
 
 # documentation content - retail-ai
 # /retail-ai-suite/  - needs to be defined once content appears

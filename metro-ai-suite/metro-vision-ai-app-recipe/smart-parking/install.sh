@@ -19,14 +19,16 @@ mkdir -p src/dlstreamer-pipeline-server/models/public
 
 export MODELS_PATH=src/dlstreamer-pipeline-server/models
 chmod +x /home/dlstreamer/dlstreamer/samples/download_public_models.sh
-for attempt in {1..3}; do
-    if /home/dlstreamer/dlstreamer/samples/download_public_models.sh yolov10s; then
-        break
-    else
-        echo "Download attempt $attempt failed. Retrying..."
-        sleep 2
-    fi
-done
+if [ ! -e "src/dlstreamer-pipeline-server/models/public/yolov10s/FP32/yolov10s.xml" ]; then
+    for attempt in {1..3}; do
+        if /home/dlstreamer/dlstreamer/samples/download_public_models.sh yolov10s; then
+            break
+        else
+            echo "Download attempt $attempt failed. Retrying..."
+            sleep 2
+        fi
+    done
+fi
 
 ##############################################################################
 # Download and setup videos

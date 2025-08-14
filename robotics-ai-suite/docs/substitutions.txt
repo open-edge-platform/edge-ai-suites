@@ -85,8 +85,11 @@
 .. |l_openvino| replace:: Intel® Distribution of OpenVINO™ toolkit
 .. |l_ros| replace:: ROS 2 Humble
 .. |Linux| replace:: Linux
-.. |oneAPI| replace:: oneAPI™
-.. |oneapi| replace:: oneAPI™
+.. |oneapi| replace:: oneAPI
+.. |intel_oneapi_toolkit| replace:: Intel® oneAPI Toolkit
+.. |intel_oneapi_hpc_toolkit| replace:: Intel® oneAPI HPC Toolkit
+.. |intel_oneapi_dpcc_compiler| replace:: Intel® oneAPI DPC++/C++ Compiler
+.. |intel_oneapi_dpc_libary| replace:: Intel® oneAPI DPC++ Library (oneDPL)
 .. |opencl| replace:: OpenCL™
 .. |OpenVINO| replace:: OpenVINO™
 .. |openvino| replace:: OpenVINO™
@@ -99,7 +102,7 @@
 .. |ROS2| replace:: ROS 2
 .. |ros| replace:: ROS 2
 .. |seo| replace:: Intel® Smart Edge Open
-.. |serDes| replace:: Intel® GMSL Serializer-Deserializer ACPI devices
+.. |serDes| replace:: Intel's GMSL Serializer-Deserializer ACPI devices
 .. |slamtec_rplidar| replace:: Slamtec RPLIDAR
 .. |tgl| replace:: Tiger Lake platform
 .. |tb3| replace:: TurtleBot3
