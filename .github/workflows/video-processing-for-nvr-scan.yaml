@@ -32,7 +32,7 @@ jobs:
         with:
           scan_type: "fs"  
           scan-scope: "all"
-          scan_target: "metro-ai-suite/video-processing-for-nvr"
+          scan_target: "edge-ai-suites-repo/metro-ai-suite/video-processing-for-nvr"
           severity: "HIGH,CRITICAL" 
           format: "json"  
 
