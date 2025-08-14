@@ -59,8 +59,6 @@ no_proxy: "localhost,127.0.0.1,.local,.cluster.local"
 
 Replace `your-proxy-server:port` with your actual proxy server details.
 
-> **Note**: The application uses weekly builds from GitHub Container Registry (ghcr.io/open-edge-platform/) by default.
-
 <details>
 <summary>
 Switch to Stable Build (Optional)
@@ -81,7 +79,7 @@ web:
     tag: v1.3.0
 dlstreamerPipelineServer:
   repository: intel/dlstreamer-pipeline-server
-  tag: 3.0.0
+  tag: 3.1.0-ubuntu24
 ```
 This updates the application to use stable images from [Docker Hub](https://hub.docker.com/u/intel/).
 
@@ -93,7 +91,7 @@ Now you're ready to deploy the Smart Intersection application:
 
 ```bash
 
-# Install the chart 
+# Install the chart
 helm upgrade --install smart-intersection ./smart-intersection/chart \
   --create-namespace \
   --set grafana.service.type=NodePort \

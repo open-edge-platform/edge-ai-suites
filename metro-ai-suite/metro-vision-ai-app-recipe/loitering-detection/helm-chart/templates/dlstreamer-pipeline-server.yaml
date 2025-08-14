@@ -65,7 +65,7 @@ spec:
         - name: videos-volume
           mountPath: /tmp/videos
       - name: model-downloader
-        image: intel/dlstreamer:EAL1.2.RC2_2025.1.RC2-ubuntu24
+        image: intel/dlstreamer:2025.1.2-ubuntu24
         command:
         - /bin/sh
         - -c
@@ -87,7 +87,7 @@ spec:
           mountPath: /tmp/models
       containers:
       - name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
-        image: {{ $.Values.DOCKER_REGISTRY }}{{ $.Values.dlstreamer_pipeline_server.image }}:{{ $.Values.dlstreamer_pipeline_server.imageTag }}
+        image: {{ $.Values.dlstreamer_pipeline_server.image }}:{{ $.Values.dlstreamer_pipeline_server.imageTag }}
         imagePullPolicy: {{ $.Values.imagePullPolicy }}
         {{- if $.Values.privileged_access_required }}
         securityContext:
