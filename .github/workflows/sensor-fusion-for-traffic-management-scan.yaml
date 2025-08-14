@@ -53,6 +53,7 @@ jobs:
         with:
           scan_type: "fs"  
           scan-scope: "all"  
+          scan-target: "edge-ai-suites-repo/metro-ai-suite/sensor-fusion-for-traffic-management"
           severity: "HIGH,CRITICAL" 
           format: "json"  
 
