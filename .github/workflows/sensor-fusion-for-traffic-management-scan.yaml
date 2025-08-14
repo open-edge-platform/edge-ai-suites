@@ -66,7 +66,7 @@ jobs:
             awk -v keep="$TFCC_IMAGE_ID" '$1 != keep {print $1}' | \
             xargs --no-run-if-empty docker rmi -f
           docker system prune -f
-          # curl -fsSL https://raw.githubusercontent.com/kou/arrow/e49d8ae15583ceff03237571569099a6ad62be32/ci/scripts/util_free_space.sh | bash
+          curl -fsSL https://raw.githubusercontent.com/kou/arrow/e49d8ae15583ceff03237571569099a6ad62be32/ci/scripts/util_free_space.sh | bash
 
       - name: Free disk space
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
