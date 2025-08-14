@@ -3,8 +3,8 @@
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-name: "[TFCC] SDLe Scans - Scan Trivy"
-run-name: "[TFCC] SDLe Scans - Scan Trivy"
+name: "[TFCC] SDLe Scans - Scan Trivy Bandit Coverity"
+run-name: "[TFCC] SDLe Scans - SScan Trivy Bandit Coverity"
 
 
 # Only run at most 1 workflow concurrently per PR, unlimited for branches
@@ -66,19 +66,18 @@ jobs:
             awk -v keep="$TFCC_IMAGE_ID" '$1 != keep {print $1}' | \
             xargs --no-run-if-empty docker rmi -f
           docker system prune -f
-          curl -fsSL https://raw.githubusercontent.com/kou/arrow/e49d8ae15583ceff03237571569099a6ad62be32/ci/scripts/util_free_space.sh | bash
+          # curl -fsSL https://raw.githubusercontent.com/kou/arrow/e49d8ae15583ceff03237571569099a6ad62be32/ci/scripts/util_free_space.sh | bash
 
       - name: Free disk space
-        uses: jlumbroso/free-disk-space@main
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
         with:
-          # 选择性清理项目（默认清理约31GB空间）
-          tool-cache: true     # 清理工具缓存(6GB)
-          android: true        # 清理Android SDK(7GB)
-          dotnet: true         # 清理.NET(2GB)
-          haskell: true        # 清理Haskell(1GB)
-          large-packages: true # 清理大包(5GB)
+          tool-cache: true  
+          android: true      
+          dotnet: true  
+          haskell: true  
+          large-packages: true 
           docker-images: false
-          swap-storage: true   # 清理交换分区(1GB)
+          swap-storage: true 
           
       - name: Check resources
         run: |
@@ -135,12 +134,9 @@ jobs:
             -O coverity_tool.tgz
           mkdir cov-analysis
           tar xzf coverity_tool.tgz --strip-components=1 -C cov-analysis
-          # 设置完整路径变量
           COV_PATH="$(pwd)/cov-analysis/bin"  
           ls
           cd metro-ai-suite/sensor-fusion-for-traffic-management
-
-          # 使用完整路径执行命令
           $COV_PATH/cov-build --dir cov-int bash -x build.sh
 
           
