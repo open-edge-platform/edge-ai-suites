@@ -31,7 +31,8 @@ jobs:
         id: trivy-fs
         with:
           scan_type: "fs"  
-          scan-scope: "all"  
+          scan-scope: "all"
+          scan_target: "metro-ai-suite/video-processing-for-nvr"
           severity: "HIGH,CRITICAL" 
           format: "json"  
 
