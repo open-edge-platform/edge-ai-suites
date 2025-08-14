@@ -11,7 +11,7 @@ ADBSCAN increases detection range by 30%-40% and detects 20%-30% more objects, c
 Source Code
 -----------
 
-The source code of this component can be found here: `ADBScan <https://github.com/open-edge-platform/edge-ai-suites/robotics-ai-suite/components/adbscan>`_
+The source code of this component can be found here: `ADBScan <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/adbscan>`_
 
 
 ADBSCAN Tutorials
@@ -42,4 +42,3 @@ Troubleshooting
 - You can stop the demo anytime by pressing ``ctrl-C``.
 
 - For general robot issues, go to: :doc:`../../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting`.
-

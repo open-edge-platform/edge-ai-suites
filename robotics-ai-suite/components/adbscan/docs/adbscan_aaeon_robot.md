@@ -18,10 +18,10 @@ around.
 - Assemble your robotic kit following the instructions provided by
   AAEON.
 - [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
-- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
-- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
-- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install.html)
-- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
+- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
+- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
+- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install.html)
+- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
 - To control the robot remotely, you may need a Logitech\* F710 gamepad
   (to be purchased separately).
 
@@ -57,7 +57,7 @@ around.
 
     ``` bash
     source /opt/ros/humble/setup.bash
-    /opt/ros/humble/share/aaeon_adbscan/tutorial-aaeon-adbscan/aaeon_robot_with_adbscan_realsense_gamepad.sh
+    ros2 launch tutorial_aaeon_adbscan aaeon_adbscan_gamepad_launch.py
     ```
 
 2. Move the robot around using the gamepad:
@@ -77,7 +77,7 @@ around.
 
     ``` bash
     source /opt/ros/humble/setup.bash
-    /opt/ros/humble/share/aaeon_adbscan/tutorial-aaeon-adbscan/aaeon_robot_with_adbscan_realsense_keyboard.sh
+    ros2 launch tutorial_aaeon_adbscan aaeon_adbscan_keyboard_launch.py
     ```
 
 2. In a separate Terminal window launch keyboard control handler:
