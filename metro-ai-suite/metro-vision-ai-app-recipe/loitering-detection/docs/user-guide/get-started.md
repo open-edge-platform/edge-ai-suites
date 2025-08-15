@@ -154,31 +154,6 @@ Choose one of the following methods to deploy the Loitering Detection Sample App
 
 - **[Deploy Using Helm](./how-to-deploy-with-helm.md)**: Use Helm to deploy the application to a Kubernetes cluster for scalable and production-ready deployments.
 
-## Supporting Resources
-- [Troubleshooting Guide](./support.md): Find detailed steps to resolve common issues during deployments.
-- [DL Streamer Pipeline Server](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/Overview.html)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Next Steps
 - [How to Customize the Application](how-to-customize-application.md)
 
@@ -226,3 +201,4 @@ Choose one of the following methods to deploy the Loitering Detection Sample App
 ## Supporting Resources
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [DL Streamer Pipeline Server](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/Overview.html)
+
