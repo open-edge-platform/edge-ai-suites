@@ -8,7 +8,7 @@ This solution also records the status of occupied parking spaces, enabling effic
 
 By leveraging cutting-edge technologies and pre-trained deep learning models, this application enables real-time processing and analysis of video streams, making it an ideal solution. Built on a modular architecture and integration capabilities ensure that users can easily customize and extend its functionalities to meet their specific needs.
 
-### Key Features
+## Key Features
 
 The key features are as follows:
 
