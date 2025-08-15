@@ -13,7 +13,7 @@ The application tracks objects across different camera angles. It analyzes vehic
 - **Traffic Flow Monitoring**: Count vehicles and measure dwell time in each lane.
   - The system detects when vehicles stay too long in lanes. This identifies stalled cars, accidents, and traffic jams.
 
-### Key Benefits
+## Key Benefits
 
 The key benefits are as follows:
 
