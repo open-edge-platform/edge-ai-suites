@@ -101,7 +101,7 @@ helm upgrade --install smart-intersection ./smart-intersection/chart \
 
 ## Access Application Services using Node Port
 
-### Access the Application UI
+### Access the Application UI using Node Port
 
 - Get the Node Port Number using following command and use it to access the Application UI
 ```bash
@@ -112,7 +112,7 @@ kubectl get service smart-intersection-web -n smart-intersection -o jsonpath='{.
     - **Username**: `admin`
     - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
 
-### Access the Grafana UI
+### Access the Grafana UI using Node Port
 
 - Get the Node Port Number using following command and use it to access the Grafana UI
 ```bash

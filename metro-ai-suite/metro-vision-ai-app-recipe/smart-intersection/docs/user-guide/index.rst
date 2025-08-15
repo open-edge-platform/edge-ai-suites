@@ -16,9 +16,7 @@ This guide is designed to help developers understand the architecture, setup, an
 .. toctree::
    :caption: How to
 
-   how-to-deploy-docker
    how-to-deploy-helm
-   how-to-use-application
 
 .. toctree::
    :caption: Support and Community
