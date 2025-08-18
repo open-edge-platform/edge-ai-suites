@@ -26,6 +26,7 @@ resolve common issues.
 ### 3. ibvs-milvusdb container is unhealthy
 
 - **Issue**: ibvs-milvusdb container fails to start 
+
 - **Solution**:
 
   Currently, milvusdb does not work with proxy servers. Make sure that the proxies `http_proxy`, `https_proxy` and `no_proxy` are set to empty string in `compose.yml` file
@@ -33,6 +34,7 @@ resolve common issues.
 ### 4. Empty search results after clicking on `Search Object`
 
 - **Issue**: Search results are empty after clicking on `Search Object` button
+
 - **Solution**:
 
   - Make sure the models are able to detect the objects in the stream correctly
