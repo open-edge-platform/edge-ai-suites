@@ -17,9 +17,12 @@ services:
     environment:
       AppName: "DLStreamerPipelineServer"
       ENABLE_WEBRTC: true
-      WEBRTC_SIGNALING_SERVER: http://${HOST_IP}:${WHIP_SERVER_PORT}
+      WEBRTC_SIGNALING_SERVER: http://mediamtx-server:${WHIP_SERVER_PORT}
       ENABLE_RTSP: false
-      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server
+      NO_PROXY: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server
       GST_DEBUG: "1"
       REST_SERVER_PORT: ${REST_SERVER_PORT}
       S3_STORAGE_HOST: ${HOST_IP}

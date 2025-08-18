@@ -10,7 +10,6 @@ num_video_instances: 1
 env:
   ENABLE_WEBRTC: "true"
   ENABLE_RTSP: "true"
-  # WEBRTC_SIGNALING_SERVER: "http://{{ $.Values.env.HOST_IP }}:31111"
   HOST_IP: localhost
   REST_SERVER_PORT: 30107
   RTSP_CAMERA_IP: 
