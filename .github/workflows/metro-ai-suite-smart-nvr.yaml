@@ -73,6 +73,8 @@ jobs:
 
   bandit-scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
       
@@ -95,6 +97,8 @@ jobs:
 
   clamav-scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
       
@@ -154,6 +158,8 @@ jobs:
 # Python linting with pylint
   pylint-scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
       
@@ -204,6 +210,8 @@ jobs:
 # ShellCheck scanning job
   shellcheck-scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
       
