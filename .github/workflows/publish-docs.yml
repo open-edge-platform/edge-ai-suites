@@ -35,6 +35,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: metro-ai-suite/image-based-video-search
+      branch_pattern: '(^(main|release-.*)$)|(^hotfix\/release-1\.0\.0\/emf-metro-apps$)'
 
   build_loitering-detection:
     permissions:
