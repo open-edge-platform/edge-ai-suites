@@ -15,7 +15,10 @@ concurrency:
 on:
   workflow_call:
   workflow_dispatch:
-
+  
+permissions:
+  contents: read
+  
 jobs:
   bandit-scan:
     runs-on: ubuntu-latest
@@ -111,8 +114,7 @@ jobs:
       - name: Check out edge-ai-libraries repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
         with:
-          persist-credentials: false
-        
+          persist-credentials: false   
           
       - name: Build code manually for TFCC
         run: |
@@ -127,7 +129,6 @@ jobs:
           sudo ln -s $PROJ_DIR/ai_inference/deployment/models /opt/models
           sudo cp $PROJ_DIR/ai_inference/deployment/datasets/radarResults.csv /opt
 
-
       - name: Build with Coverity Analysis
         run: |
           wget --quiet https://scan.coverity.com/download/linux64 \
@@ -140,10 +141,8 @@ jobs:
           cd metro-ai-suite/sensor-fusion-for-traffic-management
           $COV_PATH/cov-build --dir cov-int bash -x build.sh
 
-          
       - name: Create tarball for upload
         run: |
-
           cd metro-ai-suite/sensor-fusion-for-traffic-management
           tar -czvf coverity_output.tgz -C . cov-int
           # Verify tarball contents
@@ -161,11 +160,3 @@ jobs:
                --form version="`date +%Y%m%d%H%M%S`" \
                --form description="GitHub Action upload" \
                https://scan.coverity.com/builds?project=${{ secrets.TFCC_COVERITY_PROJECT }}
-
-
-
-
-
-
-
-          
