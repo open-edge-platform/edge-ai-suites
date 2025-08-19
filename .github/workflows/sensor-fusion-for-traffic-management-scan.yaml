@@ -49,7 +49,6 @@ jobs:
           path: edge-ai-suites-repo
           persist-credentials: false
 
-
       - name: Run Trivy Filesystem Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: trivy-fs
