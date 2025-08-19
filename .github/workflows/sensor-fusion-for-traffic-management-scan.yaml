@@ -44,10 +44,6 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
-        with:
-          path: edge-ai-suites-repo
-          persist-credentials: false
       - name: Before freeing up disk space
         run: |
           echo "Before freeing up disk space"
@@ -86,7 +82,7 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
           remove-docker-images: 'true'
-  
+
       - name: Free up disk space complete
         run: |
           echo "Free up disk space complete"
@@ -94,6 +90,11 @@ jobs:
           df -hT
           echo "=============================================================================="
 
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          path: edge-ai-suites-repo
+          persist-credentials: false
+          
       - name: Run Trivy Filesystem Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: trivy-fs
