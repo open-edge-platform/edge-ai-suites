@@ -15,9 +15,8 @@ This guide will help you run the tests for the File Watcher service using the py
 
 Before running the tests, ensure you have the following installed:
 
-- For backend
-   - Python (Visit [Python Official Website](https://www.python.org/downloads/))
-   - `pip` (Python package installer)
+- Python (Visit [Python Official Website](https://www.python.org/downloads/))
+- `pip` (Python package installer)
 
 ## Running Unit Test
 
@@ -36,6 +35,10 @@ If you prefer to run the tests in a virtual environment, please follow these ste
    Navigate to your project directory and create a virtual environment using `venv`:
 
    ```bash
+   # Install venv for python virtual environment creation
+   # Replace `3.10` with the your python version installed on your system
+   sudo apt-get install python3.10-venv
+
    # Replace `<venv_name>` with your preferred name.
    python -m venv <venv_name>
    ```
@@ -68,7 +71,7 @@ If you prefer to run the tests in a virtual environment, please follow these ste
       pip install -r requirements_dev.txt --no-cache-dir
       ```
 
-      If you system is behind a proxy, do as follows:
+      If your system is behind a proxy, do as follows:
 
       ```bash
       # Replace <your_proxy> and <port> to your network proxy and port number
@@ -90,6 +93,37 @@ If you prefer to run the tests in a virtual environment, please follow these ste
 
    ```bash
    pytest
+
+   # Expected output
+   ============================================================================================== test session starts ==============================================================================================
+   platform linux -- Python 3.10.12, pytest-8.1.1, pluggy-1.6.0
+   rootdir: /home/user/edge-ai-suites/edge-ai-suites/manufacturing-ai-suite/hmi-augmented-worker/tests
+   collected 5 items
+
+   test_file_watcher.py .....                                                                                                                                                                                [100%]
+
+   =============================================================================================== 5 passed in 0.17s ===============================================================================================
+   ```
+
+   This will run all tests and show a summary of the results. For more detailed output—including the names of individual tests and their statuses—you can use the `--verbose` flag:
+
+   ```bash
+   pytest --verbose
+
+   # Expected output with --verbose:
+   ============================================================================================== test session starts ==============================================================================================
+    platform linux -- Python 3.10.12, pytest-8.1.1, pluggy-1.6.0 -- /home/user/edge-ai-suites/edge-ai-suites/manufacturing-ai-suite/hmi-augmented-worker/tests/venv/bin/python
+    cachedir: .pytest_cache
+    rootdir: /home/user/edge-ai-suites/edge-ai-suites/manufacturing-ai-suite/hmi-augmented-worker/tests
+    collected 5 items
+
+    test_file_watcher.py::test_send_file_to_api_success PASSED                                                                                                                                                [ 20%]
+    test_file_watcher.py::test_delete_file_to_api_success PASSED                                                                                                                                              [ 40%]
+    test_file_watcher.py::test_should_ignore PASSED                                                                                                                                                           [ 60%]
+    test_file_watcher.py::test_on_modified_event PASSED                                                                                                                                                       [ 80%]
+    test_file_watcher.py::test_on_deleted_event PASSED                                                                                                                                                        [100%]
+
+    =============================================================================================== 5 passed in 0.17s ===============================================================================================
    ```
 
    This will discover and run all the test cases defined in the `tests` directory.
@@ -107,6 +141,7 @@ If you prefer to run the tests in a virtual environment, please follow these ste
     If you no longer need the virtual environment, you can delete it:
 
     ```bash
-    # Navigate to the directory where venv is created in Step 1
-    rm -rf venv
+    # Navigate to the directory where venv is created in Step 2
+    # Replace `<venv_name>` with your venv name created.
+    rm -rf <venv_name>
     ```
