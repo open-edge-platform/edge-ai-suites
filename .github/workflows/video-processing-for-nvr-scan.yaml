@@ -6,7 +6,7 @@ name: "[VPP] SDLe Scans - Scan Trivy Coverity"
 run-name: "[VPP] SDLe Scans - Scan Trivy Coverity"
 
 
-# Only run at most 1 workflow concurrently per PR, unlimited for branches
+#Only run at most 1 workflow concurrently per PR, unlimited for branches
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -16,7 +16,6 @@ on:
   workflow_dispatch:
 
 jobs:   
-
   trivy-scan:
     runs-on: ubuntu-latest
     permissions:
@@ -44,7 +43,6 @@ jobs:
           sudo bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
           sudo apt update
           sudo apt install intel-vppsdk
-          
           sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
           source /opt/intel/vppsdk/env.sh
           cd edge-ai-suites-repo/metro-ai-suite
@@ -94,7 +92,6 @@ jobs:
           sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
           source /opt/intel/vppsdk/env.sh
           
-
       - name: Build with Coverity Analysis
         run: |
           wget --quiet https://scan.coverity.com/download/linux64 \
@@ -104,13 +101,10 @@ jobs:
           tar xzf coverity_tool.tgz --strip-components=1 -C cov-analysis
           COV_PATH="$(pwd)/cov-analysis/bin"  
           cd metro-ai-suite/video-processing-for-nvr
-
           $COV_PATH/cov-build --dir cov-int bash build.sh
-
-          
+   
       - name: Create tarball for upload
         run: |
-
           cd metro-ai-suite/video-processing-for-nvr
           tar -czvf coverity_output.tgz -C . cov-int
           # Verify tarball contents
@@ -118,6 +112,7 @@ jobs:
           tar tzvf coverity_output.tgz
           echo "=== head ==="
           tar -tzvf coverity_output.tgz | head
+          
       - name: Upload to Coverity Scan
         run: |
           cd metro-ai-suite/video-processing-for-nvr
@@ -127,11 +122,3 @@ jobs:
                --form version="`date +%Y%m%d%H%M%S`" \
                --form description="GitHub Action upload" \
                https://scan.coverity.com/builds?project=${{ secrets.VPP_COVERITY_PROJECT }}
-
-
-
-
-
-
-
-          
