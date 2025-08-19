@@ -1,6 +1,6 @@
 # Smart NVR: GenAI-Enabled Network Video Recorder
 
-The Smart NVR is a next-generation network video recorder that integrates GenAI-powered vision analytics to deliver intelligent, real-time insights from video streams. By processing and analyzing video data directly at the edge, it enables advanced event detection, summarization, and automation while reducing bandwidth and storage requirements. This transformation empowers organizations to extract greater value from their existing video infrastructure and respond rapidly to critical situations.
+The Smart NVR is a next-generation network video recorder that integrates GenAI-powered vision analytics to deliver intelligent, real-time insights from video streams. By processing and analyzing video data directly at the edge, it enables advanced event detection, summarization, and automation while reducing bandwidth and storage requirements. This transformation empowers organizations to extract greater value from their existing video infrastructure and respond rapidly to critical situations..
 
 ## Documentation
 
