@@ -44,17 +44,6 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Free disk space
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
-        with:
-          tool-cache: true  
-          android: true      
-          dotnet: true  
-          haskell: true  
-          large-packages: true 
-          docker-images: ture
-          swap-storage: true 
-
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
           path: edge-ai-suites-repo
@@ -82,16 +71,16 @@ jobs:
           docker system prune -f
           curl -fsSL https://raw.githubusercontent.com/kou/arrow/e49d8ae15583ceff03237571569099a6ad62be32/ci/scripts/util_free_space.sh | bash
 
-      # - name: Free disk space
-      #   uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
-      #   with:
-      #     tool-cache: true  
-      #     android: true      
-      #     dotnet: true  
-      #     haskell: true  
-      #     large-packages: true 
-      #     docker-images: false
-      #     swap-storage: true 
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+        with:
+          tool-cache: true  
+          android: true      
+          dotnet: true  
+          haskell: true  
+          large-packages: true 
+          docker-images: false
+          swap-storage: true 
           
       - name: Check resources
         run: |
