@@ -12,6 +12,7 @@ import logging
 import pickle
 import time
 import math
+import warnings
 from collections import deque
 from kapacitor.udf.agent import Agent, Handler
 from kapacitor.udf import udf_pb2
@@ -21,6 +22,10 @@ from sklearnex import patch_sklearn, config_context
 patch_sklearn()
 from sklearn.linear_model import LinearRegression
 
+warnings.filterwarnings(
+    "ignore",
+    message=".*Threading.*parallel backend is not supported by Extension for Scikit-learn.*"
+)
 
 # from gcp_mqtt_client import get_client
 
