@@ -78,3 +78,4 @@ breathe_projects = {
 
 def setup(app):
    app.add_css_file("robotics-custom.css")
+   app.add_js_file("robotics-custom.js")
