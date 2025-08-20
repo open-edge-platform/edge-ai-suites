@@ -1,4 +1,4 @@
-FROM ghcr.io/open-edge-platform/edge-ai-libraries/intel/edge-ai-dlstreamer:20250805_EAL1.2-ubuntu22
+FROM docker.io/intel/dlstreamer:2025.1.2-ubuntu22
 
 USER root
 
