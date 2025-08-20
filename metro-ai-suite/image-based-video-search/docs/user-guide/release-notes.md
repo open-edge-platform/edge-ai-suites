@@ -37,8 +37,8 @@ application.
 **Release Date**: [2025-08-20]
 
 - Bug  fixes 
-- Dl Streamer version upgraded from 20250805_EAL1.2 to 2025.1.2
-- Dl Streamer Pipeline Server version upgraded from 20250805_EAL1.2 to 3.1.0
+- DL Streamer version upgraded from 20250805_EAL1.2 to 2025.1.2
+- DL Streamer Pipeline Server version upgraded from 20250805_EAL1.2 to 3.1.0
 
 ## Version 1.0.0
 
