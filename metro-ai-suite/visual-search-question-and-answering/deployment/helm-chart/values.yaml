@@ -1,0 +1,139 @@
+# Global image settings
+global:
+  proxy:
+    no_proxy: "localhost,127.0.0.1,192.168.0.0/16,172.16.0.0/12,127.0.0.0/8,10.0.0.0/8,.svc.cluster.local"
+    http_proxy: 
+    https_proxy: 
+
+  LOCAL_EMBED_MODEL_ID:    # Ensure this is configured
+  VLM_MODEL_NAME:          # Ensure this is configured
+
+  env:
+    keeppvc: true # Set to true to keep PVCs after uninstalling the chart
+
+# Shared volumes
+volumes:
+  huggingfaceCache:
+    hostPath: "/home/user/.cache/huggingface"  # Ensure this path exists on the host
+  modelDir:
+    hostPath: "/home/user/models"  # Ensure this path exists on the host
+  hostDataPath:
+    hostPath: "/home/user/data"  # Ensure this path exists on the host
+
+# Service ports
+servicePorts:
+  vlm: 8000
+  dataprep: 9990
+  retriever: 7770
+  visualSearch: 17580
+
+vlmOpenvinoServing:
+  name: vlm-openvino-serving
+  image:
+    repository: "vlm-openvino-serving"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+  env:
+    VLM_COMPRESSION_WEIGHT_FORMAT: "int8"
+    VLM_DEVICE: "GPU"
+    VLM_SEED: "42"
+    WORKERS: "1"
+    HF_ENDPOINT: "https://hf-mirror.com"
+  livenessProbe:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 40
+    httpGet:
+      path: /health
+      port: 8000
+  readinessProbe:
+    sameAsLiveness: true
+  userGroupId: 1000
+  videoGroupId: 44
+  renderGroupId: 110
+  volumeMounts:
+    pvcName: vlm-pvc
+    egai_vlm_pvc:
+      size: 40Gi
+      accessMode: ReadWriteMany
+
+dataprepVisualdataMilvus:
+  replicaCount: 1
+  name: dataprep-visualdata-milvus
+  image:
+    repository: "dataprep-visualdata-milvus"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+  service:
+    type: ClusterIP
+    port: 9990
+    targetPort: 9990
+  env:
+    DEVICE: "CPU"
+    MILVUS_HOST: my-milvus.milvus.svc.cluster.local
+    MILVUS_PORT: 19530
+    HF_ENDPOINT: "https://hf-mirror.com"
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 30
+    failureThreshold: 120
+    httpGet:
+      path: /v1/dataprep/health
+      port: 9990
+  readinessProbe:
+    sameAsLiveness: true
+
+retrieverMilvus:
+  replicaCount: 1
+  name: retriever-milvus
+  image:
+    repository: "retriever-milvus"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+  service:
+    type: ClusterIP
+    port: 7770
+    targetPort: 7770
+  env:
+    DEVICE: "CPU"
+    MILVUS_HOST: my-milvus.milvus.svc.cluster.local
+    MILVUS_PORT: 19530
+    HF_ENDPOINT: "https://hf-mirror.com"
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 30
+    failureThreshold: 120
+    httpGet:
+      path: /v1/retrieval/health 
+      port: 7770
+  readinessProbe:
+    sameAsLiveness: true
+
+visualSearchQaApp:
+  replicaCount: 1
+  name: visual-search-qa-app
+  image:
+    repository: "visual-search-qa-app"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+  service:
+    type: NodePort
+    port: 17580
+    targetPort: 17580
+  env:
+    BACKEND_VQA_BASE_URL: "http://vlm-openvino-serving.vsqa.svc.cluster.local:8000"
+    BACKEND_SEARCH_BASE_URL: "http://retriever-milvus.vsqa.svc.cluster.local:7770"
+    BACKEND_DATAPREP_BASE_URL: "http://dataprep-visualdata-milvus.vsqa.svc.cluster.local:9990"
+    DATA_INGEST_WITH_DETECT: true
+    VISUAL_SEARCH_QA_UI_PORT: 17580
+    MAX_MAX_NUM_SEARCH_RESULTS: 200
+    DEFAULT_NUM_SEARCH_RESULTS: 10
+    SHOW_RESULT_PER_ROW: 5

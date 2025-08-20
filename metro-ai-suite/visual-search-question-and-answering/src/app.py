@@ -68,6 +68,36 @@ def encode_base64_content_from_url(content_url: str) -> str:
 
     return result
 
+def video_url_to_base64(video_url):
+    """
+    Convert a video from a URL to a Base64-encoded string.
+
+    Args:
+        video_url (str): The URL of the video.
+
+    Returns:
+        str: The Base64-encoded video content with the MIME type.
+    """
+    try:
+        # Download the video from the URL
+        response = requests.get(video_url, stream=True)
+        response.raise_for_status()  # Raise an error for bad responses (4xx, 5xx)
+
+        # Read the video content
+        video_content = response.content
+
+        # Encode the video content in Base64
+        base64_video = base64.b64encode(video_content).decode('utf-8')
+
+        # Format the Base64 string with the MIME type
+        base64_video_with_mime = f"data:video/mp4;base64,{base64_video}"
+
+        return base64_video_with_mime
+
+    except Exception as e:
+        print(f"Error converting video to Base64: {e}")
+        return None
+
 def compose_media_url(id, type):
     return f"http://{HOST_IP_IDDRESS}:{VISUAL_SEARCH_QA_UI_PORT}/media/{id}{type}"
 
@@ -205,9 +235,10 @@ def get_vqa_msg(prompt):
             with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp:
                    file_id, mimetype = video_to_url(st.session_state.uploaded_file.getvalue(), "mp4")
                    video_url = compose_media_url(file_id, ".mp4")
+                   video_url_b64 = video_url_to_base64(video_url)
                    user_msg["content"].append({
                         "type": "video_url",
-                        "video_url": {"url": video_url},
+                        "video_url": {"url": video_url_b64},
                         "max_pixels": DEFAULT_MAX_PIXELS_TO_VLM,
                         "fps": 1
                    })
@@ -240,10 +271,11 @@ def get_vqa_msg(prompt):
                 video_bytes = video_file.read()
                 file_id, mimetype = video_to_url(video_bytes, "mp4")
                 video_url = compose_media_url(file_id, ".mp4")
+                video_url_b64 = video_url_to_base64(video_url)
                 user_msg["content"].append({
                     "type": "video_url",
                     "video_url": {
-                        "url": video_url
+                        "url": video_url_b64
                     },
                     "max_pixels": DEFAULT_MAX_PIXELS_TO_VLM,
                     "fps": 1
@@ -253,10 +285,12 @@ def get_vqa_msg(prompt):
                 file_id, mimetype  = image_to_url(image, "auto", width=480)
                 _, extension = os.path.splitext(file_path)
                 image_url = compose_media_url(file_id, extension)
+                img_b64_str = encode_base64_content_from_url(image_url)
+                image_url_b64 = f"data:image/jpeg;base64,{img_b64_str}"
                 user_msg["content"].append({
                     "type": "image_url",
                     "image_url": {
-                        "url": image_url
+                        "url": image_url_b64
                     }
                 })
         

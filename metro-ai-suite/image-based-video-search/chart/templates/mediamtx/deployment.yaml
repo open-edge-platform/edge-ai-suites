@@ -21,6 +21,9 @@ spec:
         {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
         katenary.v3/component: mediamtx
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
       - envFrom:
         - configMapRef:
@@ -28,6 +31,14 @@ spec:
         image: '{{ tpl .Values.mediamtx.repository.image $ }}:{{ tpl .Values.mediamtx.repository.tag $ | default "latest" }}'
         imagePullPolicy: {{ .Values.mediamtx.imagePullPolicy }}
         name: mediamtx
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
         ports:
         - containerPort: 8554
           name: port-8554

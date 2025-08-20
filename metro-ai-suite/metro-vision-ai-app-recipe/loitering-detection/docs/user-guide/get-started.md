@@ -44,24 +44,20 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      ./install.sh loitering-detection
      ```
 
-    > **Note**: The application uses weekly builds from GitHub Container Registry (ghcr.io/open-edge-platform/) by default.
-
     <details>
     <summary>
-    Switch to Stable Build (Optional)
+    Specify Custom Host IP Address (Advanced Configuration)
     </summary>
 
-    To use stable releases from Docker Hub instead of weekly builds, run the following commands:
+    For environments requiring a specific host IP address (such as when using Edge Manageability Toolkit or deploying across different network interfaces), you can explicitly specify the IP address:
 
     ```bash
-    sed -i 's/^DOCKER_REGISTRY=.*/DOCKER_REGISTRY=/' .env
-    sed -i 's/intel\/edge-ai-dlstreamer-pipeline-server:.*/intel\/dlstreamer-pipeline-server:3.0.0/' docker-compose.yml
-    sed -i 's/intel\/scenescape-manager:.*/intel\/scenescape-manager:v1.3.0/' docker-compose.yml
-    sed -i 's/intel\/scenescape-controller:.*/intel\/scenescape-controller:v1.3.0/' docker-compose.yml
+    ./install.sh loitering-detection <HOST_IP>
     ```
-    This updates the application to use stable images from [Docker Hub](https://hub.docker.com/u/intel/).
+    Replace `<HOST_IP>` with your target IP address.
 
     </details>
+
 
 ## Run the application
 
@@ -158,31 +154,6 @@ Choose one of the following methods to deploy the Loitering Detection Sample App
 
 - **[Deploy Using Helm](./how-to-deploy-with-helm.md)**: Use Helm to deploy the application to a Kubernetes cluster for scalable and production-ready deployments.
 
-## Supporting Resources
-- [Troubleshooting Guide](./support.md): Find detailed steps to resolve common issues during deployments.
-- [DL Streamer Pipeline Server](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/Overview.html)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Next Steps
 - [How to Customize the Application](how-to-customize-application.md)
 
@@ -230,3 +201,4 @@ Choose one of the following methods to deploy the Loitering Detection Sample App
 ## Supporting Resources
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [DL Streamer Pipeline Server](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/Overview.html)
+

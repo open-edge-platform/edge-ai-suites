@@ -54,25 +54,6 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
         password: # example: password: mypassword
     ```
 
-    > **Note**: The application uses weekly builds from GitHub Container Registry (ghcr.io/open-edge-platform/) by default.
-
-    <details>
-    <summary>
-    Switch to Stable Build (Optional)
-    </summary>
-
-    To use stable releases from Docker Hub instead of weekly builds, update the values.yaml file with following information,
-
-    ```yaml
-    DOCKER_REGISTRY: ''
-    dlstreamer_pipeline_server:
-        image: intel/dlstreamer-pipeline-server
-        imageTag: 3.0.0
-    ```
-    This updates the application to use stable images from [Docker Hub](https://hub.docker.com/u/intel/).
-
-    </details>
-
 ## Step 3: Deploy the application and Run multiple AI pipelines
 
 Follow this procedure to run the sample application. In a typical deployment, multiple cameras deliver video streams that are connected to AI pipelines to improve the classification and recognition accuracy. The following demonstrates running multiple AI pipelines and visualization in the Grafana.
