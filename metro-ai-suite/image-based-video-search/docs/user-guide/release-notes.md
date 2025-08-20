@@ -32,12 +32,13 @@
 Details about the changes, improvements, and known issues in this release of the
 application.
 
-## Version 1.0.1 (Current Release)
+## Version 1.0.1 
 
 **Release Date**: [2025-08-20]
 
 - Bug  fixes 
-- Component upgrade.
+- Dl Streamer version upgraded from 20250805_EAL1.2 to 2025.1.2
+- Dl Streamer Pipeline Server version upgraded from 20250805_EAL1.2 to 3.1.0
 
 ## Version 1.0.0
 
