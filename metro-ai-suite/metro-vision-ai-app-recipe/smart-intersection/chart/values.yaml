@@ -91,8 +91,8 @@ grafana:
     size: 1Gi
 
 scene:
-  repository: ghcr.io/open-edge-platform/edge-ai-libraries/intel/scenescape-controller
-  tag: v1.4.0-rc3
+  repository: docker.io/intel/scenescape-controller
+  tag: v1.4.0
   pullPolicy: IfNotPresent
 
   service:
@@ -100,8 +100,8 @@ scene:
     port: 80
 
 pgserver:
-  repository: ghcr.io/open-edge-platform/edge-ai-libraries/intel/scenescape-manager
-  tag: v1.4.0-rc3
+  repository: docker.io/intel/scenescape-manager
+  tag: v1.4.0
   pullPolicy: IfNotPresent
 
   storageClassName: "hostpath"
@@ -113,8 +113,8 @@ pgserver:
 web:
   replicas: 1
   image:
-    repository: ghcr.io/open-edge-platform/edge-ai-libraries/intel/scenescape-manager
-    tag: v1.4.0-rc3
+    repository: docker.io/intel/scenescape-manager
+    tag: v1.4.0
     pullPolicy: IfNotPresent
   dbhost: pgserver
   broker: broker.scenescape.intel.com
