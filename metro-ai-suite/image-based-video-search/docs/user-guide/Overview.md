@@ -61,11 +61,3 @@ continuously and appears in the UI as soon as the application starts.
   frames
 
 ![Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results](_images/imagesearch2.png)
-
-### Learn More
-
-- [System Requirements](system-requirements.md)
-- [Get Started](get-started.md)
-- [Architecture Overview](overview-architecture.md)
-- [How to Deploy with Helm](how-to-deploy-helm.md)
-- [Release Notes](release-notes.md)
