@@ -8,6 +8,7 @@ on:
         type: choice
         options:
         - all-documentation
+        - hmi-augmented-worker
         - image-based-video-search
         - loitering-detection
         - pallet-defect-detection
@@ -22,6 +23,21 @@ on:
 permissions: {}
 
 jobs:
+  build_hmi-augmented-worker:
+    permissions:
+      contents: read          # needed for actions/checkout
+      pull-requests: read     # needed for gh pr list
+      issues: write           # needed to post PR comment
+    if: ${{ (github.event.inputs.target == 'hmi-augmented-worker') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/hmi-augmented-worker
+      branch_pattern: '(?!release-1\.0\.0)(^(main|release-.*)$)'  # Does not exist on release-1.0.0 branch - Exclude it
+
   build_image-based-video-search:
     permissions:
       contents: read          # needed for actions/checkout
