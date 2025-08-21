@@ -31,7 +31,7 @@ By following this guide, you will learn how to:
       ```
     
     > Note: The below step is required for deployment with certain pre-release images
-    - Update `DOCKER_REGISTRY` variable in `.env` file present at `edge-ai-suites/metro-ai-suite/image-based-video-search`. The recommended setting to use pre-release images is: `DOCKER_REGISTRY=docker.io/`
+    - Update `DOCKER_REGISTRY` variable in `.env` file present at `edge-ai-suites/metro-ai-suite/image-based-video-search/`. The recommended setting to use pre-release images is: `DOCKER_REGISTRY=docker.io/`
       Please remember to include `/` at the end.
 <!--
 a pre-step to prepare models may be needed
