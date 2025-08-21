@@ -47,10 +47,10 @@ Press "Del" or "Esc" button at boot to go into the BIOS. Once in the BIOS, set t
 #### Prerequisites
 
 * [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
-* [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
-* [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
-* [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install.html)
-* [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
+* [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
+* [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
+* [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install.html)
+* [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
 
 #### Install iGPU drivers on 12th Gen Intel® Core™ i7 processor
 
@@ -59,7 +59,7 @@ Run the below command to check for the iGPU driver on 12th Gen Intel® Core™ i
 ```bash
 # Install clinfo
 $ sudo apt install -y clinfo
- 
+
 # clinfo command to check GPU device
 $ clinfo | grep -i "Device Name"
 $ clinfo | grep -i "Device Name"
@@ -254,7 +254,7 @@ Open the /etc/default/grub file. Add the following to the **GRUB_CMDLINE_LINUX**
    ```bash
     # Add the following line to the /etc/default/grub file
     GRUB_CMDLINE_LINUX="i915.enable_dc=0"
- 
+
     # Save the file and do update grub
     $ sudo update-grub
    ```
