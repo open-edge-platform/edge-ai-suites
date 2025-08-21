@@ -1,12 +1,10 @@
 # Robotics AI Suite
 
-The [Robotics AI Suite](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/index.html) 
-
 ## Description
-
-The Intel® Robotics AI Suite provides a collection of robotics applications spanning AI, libraries, samples, benchmarking, and more to help developers quickly build solutions.
+Intel® Robotics AI Suite is a preview collection of robotics applications, libraries, samples, and benchmarking tools to help developers build solutions faster. It includes models and pipelines optimized with the OpenVINO™ Toolkit for accelerated performance on Intel® CPUs, integrated GPUs, and NPUs. Detailed user guide and documentation can be found here: [Robotics AI Suite](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/index.html).
 
 ## Collection
+Collections organize workflows and capabilities for three robot categories—stationary robots, autonomous mobile robots (AMRs), and humanoids. Each collection brings together libraries for core robotics workloads, robotics control recipes, and virtualization/application management, with ROS 2 integration points, supported sensor profiles, and repeatable benchmarking. They also include OpenVINO™ Toolkit–optimized models across computer vision, large language models (LLMs), and vision-language-action (VLA) to accelerate inference on Intel® CPUs, integrated GPUs, and NPUs, helping teams evaluate, assemble, and scale solutions faster.
 
 **Humanoid - Imitation Learning:**
 
