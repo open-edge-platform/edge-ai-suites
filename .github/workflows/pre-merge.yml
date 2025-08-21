@@ -19,8 +19,9 @@ jobs:
       contents: read          # needed for actions/checkout
     runs-on: ubuntu-latest
     outputs:
-      loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
+      hmi-augmented-worker_changed: ${{ steps.filter.outputs.hmi-augmented-worker }}
       image-based-video-search_changed: ${{ steps.filter.outputs.image-based-video-search }}
+      loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
       pallet-defect-detection_changed: ${{ steps.filter.outputs.pallet-defect-detection }}
       pcb-anomaly-detection_changed: ${{ steps.filter.outputs.pcb-anomaly-detection }}
       robotics-ai-suite_changed: ${{ steps.filter.outputs.robotics-ai-suite }}
@@ -38,10 +39,12 @@ jobs:
         uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
         with:
           filters: |
-            loitering-detection:
-              - 'metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/docs/**'
+            hmi-augmented-worker:
+              - 'manufacturing-ai-suite/hmi-augmented-worker/docs/**'
             image-based-video-search:
               - 'metro-ai-suite/image-based-video-search/docs/**'
+            loitering-detection:
+              - 'metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/docs/**'
             pallet-defect-detection:
               - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection/docs/**'
             pcb-anomaly-detection:
@@ -58,6 +61,19 @@ jobs:
               - 'manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/**'
             worker-safety-gear-detection:
               - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection/docs/**'
+
+  build_hmi-augmented-worker:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.hmi-augmented-worker_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/hmi-augmented-worker
 
   build_image-based-video-search:
     permissions:
