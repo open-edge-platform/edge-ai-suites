@@ -19,14 +19,17 @@ jobs:
       contents: read          # needed for actions/checkout
     runs-on: ubuntu-latest
     outputs:
-      loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
+      hmi-augmented-worker_changed: ${{ steps.filter.outputs.hmi-augmented-worker }}
       image-based-video-search_changed: ${{ steps.filter.outputs.image-based-video-search }}
-      smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
-      smart-intersection_changed: ${{ steps.filter.outputs.smart-intersection }}
+      loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
       pallet-defect-detection_changed: ${{ steps.filter.outputs.pallet-defect-detection }}
+      pcb-anomaly-detection_changed: ${{ steps.filter.outputs.pcb-anomaly-detection }}
       robotics-ai-suite_changed: ${{ steps.filter.outputs.robotics-ai-suite }}
+      smart-intersection_changed: ${{ steps.filter.outputs.smart-intersection }}
+      smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
       weld-porosity_changed: ${{ steps.filter.outputs.weld-porosity }}
-      wind-turbine-anomaly-detection-docs: ${{ steps.filter.outputs.wind-turbine-anomaly-detection-docs }}
+      wind-turbine-anomaly-detection_changed: ${{ steps.filter.outputs.wind-turbine-anomaly-detection }}
+      worker-safety-gear-detection_changed: ${{ steps.filter.outputs.worker-safety-gear-detection }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,29 +39,48 @@ jobs:
         uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
         with:
           filters: |
-            loitering-detection:
-              - 'metro-ai-suite/loitering-detection/docs/**'
+            hmi-augmented-worker:
+              - 'manufacturing-ai-suite/hmi-augmented-worker/docs/**'
             image-based-video-search:
               - 'metro-ai-suite/image-based-video-search/docs/**'
-            smart-parking:
-              - 'metro-ai-suite/smart-parking/docs/**'
-            smart-intersection:
-              - 'metro-ai-suite/smart-intersection/docs/**'
+            loitering-detection:
+              - 'metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/docs/**'
             pallet-defect-detection:
-              - 'manufacturing-ai-suite/pallet-defect-detection/docs/**'
+              - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection/docs/**'
+            pcb-anomaly-detection:
+              - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection/docs/**'
             robotics-ai-suite:
               - 'robotics-ai-suite/docs/**'
+            smart-intersection:
+              - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/**'
+            smart-parking:
+              - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/**'
             weld-porosity:
-              - 'manufacturing-ai-suite/weld-porosity/docs/**'
-            wind-turbine-anomaly-detection-docs:
+              - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity/docs/**'
+            wind-turbine-anomaly-detection:
               - 'manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/**'
+            worker-safety-gear-detection:
+              - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection/docs/**'
+
+  build_hmi-augmented-worker:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.hmi-augmented-worker_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/hmi-augmented-worker
 
   build_image-based-video-search:
     permissions:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.image-based-video-search_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -66,64 +88,51 @@ jobs:
     with:
       docs_directory: metro-ai-suite/image-based-video-search
 
-  build_smart-parking:
-    permissions:
-      contents: read          # needed for actions/checkout
-    needs: filter
-    if: ${{ needs.filter.outputs.smart-parking_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
-    secrets:
-      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
-      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
-      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
-    with:
-      docs_directory: metro-ai-suite/smart-parking
-
-  build_smart-intersection:
-    permissions:
-      contents: read          # needed for actions/checkout
-    needs: filter
-    if: ${{ needs.filter.outputs.smart-intersection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
-    secrets:
-      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
-      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
-      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
-    with:
-      docs_directory: metro-ai-suite/smart-intersection
-
   build_loitering-detection:
     permissions:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.loitering-detection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
-      docs_directory: metro-ai-suite/loitering-detection
+      docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection
 
   build_pallet-defect-detection:
     permissions:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.pallet-defect-detection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
-      docs_directory: manufacturing-ai-suite/pallet-defect-detection
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection
+
+  build_pcb-anomaly-detection:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.pcb-anomaly-detection_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection
 
   build_robotics-ai-suite:
     permissions:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.robotics-ai-suite_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -132,28 +141,67 @@ jobs:
       docs_directory: robotics-ai-suite
       simple_mode: false
 
-  build_weld-porosity:
+  build_smart-intersection:
     permissions:
       contents: read          # needed for actions/checkout
     needs: filter
-    if: ${{ needs.filter.outputs.weld-porosity_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    if: ${{ needs.filter.outputs.smart-intersection_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
-      docs_directory: manufacturing-ai-suite/weld-porosity
+      docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection
 
-  build_docs_wind_turbine_anomaly_detection:
+  build_smart-parking:
     permissions:
       contents: read          # needed for actions/checkout
     needs: filter
-    if: ${{ needs.filter.outputs.wind-turbine-anomaly-detection-docs == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@734970a73e3d6e8d7cd160e2cad6366770f52403
+    if: ${{ needs.filter.outputs.smart-parking_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/smart-parking
+
+  build_weld-porosity:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.weld-porosity_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity
+
+  build_wind_turbine_anomaly_detection:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.wind-turbine-anomaly-detection_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/wind-turbine-anomaly-detection
+
+  build_worker-safety-gear-detection:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.worker-safety-gear-detection_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection
