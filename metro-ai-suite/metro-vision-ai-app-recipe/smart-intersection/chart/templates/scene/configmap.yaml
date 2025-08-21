@@ -5,4 +5,4 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   tracker-config.json: |
-{{ .Files.Get "files/controller/tracker-config.json" | indent 4 }}
+{{ include "requiredFile" (list . "files/controller/tracker-config.json") | indent 4 }}

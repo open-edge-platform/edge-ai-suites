@@ -5,8 +5,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   dashboards.yml: |
-{{ .Files.Get "files/grafana/dashboards.yml" | indent 4 }}
+{{ include "requiredFile" (list . "files/grafana/dashboards.yml") | indent 4 }}
   datasources.yml: |
-{{ .Files.Get "files/grafana/datasources.yml" | indent 4 }}
+{{ include "requiredFile" (list . "files/grafana/datasources.yml") | indent 4 }}
   anthem-intersection.json: |
-{{ .Files.Get "files/grafana/data/dashboards/anthem-intersection.json" | indent 4 }}
+{{ include "requiredFile" (list . "files/grafana/data/dashboards/anthem-intersection.json") | indent 4 }}
