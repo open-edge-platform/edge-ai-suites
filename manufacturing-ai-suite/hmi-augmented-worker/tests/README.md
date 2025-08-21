@@ -98,11 +98,11 @@ If you prefer to run the tests in a virtual environment, please follow these ste
    ============================================================================================== test session starts ==============================================================================================
    platform linux -- Python 3.10.12, pytest-8.1.1, pluggy-1.6.0
    rootdir: /home/user/edge-ai-suites/edge-ai-suites/manufacturing-ai-suite/hmi-augmented-worker/tests
-   collected 5 items
+   collected 12 items
 
-   test_file_watcher.py .....                                                                                                                                                                                [100%]
+   test_file_watcher.py ............                                                                                                                                                                         [100%]
 
-   =============================================================================================== 5 passed in 0.17s ===============================================================================================
+   ============================================================================================== 12 passed in 0.19s ===============================================================================================
    ```
 
    This will run all tests and show a summary of the results. For more detailed output—including the names of individual tests and their statuses—you can use the `--verbose` flag:
@@ -112,18 +112,25 @@ If you prefer to run the tests in a virtual environment, please follow these ste
 
    # Expected output with --verbose:
    ============================================================================================== test session starts ==============================================================================================
-    platform linux -- Python 3.10.12, pytest-8.1.1, pluggy-1.6.0 -- /home/user/edge-ai-suites/edge-ai-suites/manufacturing-ai-suite/hmi-augmented-worker/tests/venv/bin/python
-    cachedir: .pytest_cache
-    rootdir: /home/user/edge-ai-suites/edge-ai-suites/manufacturing-ai-suite/hmi-augmented-worker/tests
-    collected 5 items
+   platform linux -- Python 3.10.12, pytest-8.1.1, pluggy-1.6.0 -- /home/user/edge-ai-suites/edge-ai-suites/manufacturing-ai-suite/hmi-augmented-worker/tests/venv/bin/python
+   cachedir: .pytest_cache
+   rootdir: /home/user/edge-ai-suites/edge-ai-suites/manufacturing-ai-suite/hmi-augmented-worker/tests
+   collected 12 items
 
-    test_file_watcher.py::test_send_file_to_api_success PASSED                                                                                                                                                [ 20%]
-    test_file_watcher.py::test_delete_file_to_api_success PASSED                                                                                                                                              [ 40%]
-    test_file_watcher.py::test_should_ignore PASSED                                                                                                                                                           [ 60%]
-    test_file_watcher.py::test_on_modified_event PASSED                                                                                                                                                       [ 80%]
-    test_file_watcher.py::test_on_deleted_event PASSED                                                                                                                                                        [100%]
+   test_file_watcher.py::test_send_file_to_api_success PASSED                                                                                                                                                [  8%]
+   test_file_watcher.py::test_delete_file_to_api_success PASSED                                                                                                                                              [ 16%]
+   test_file_watcher.py::test_should_ignore PASSED                                                                                                                                                           [ 25%]
+   test_file_watcher.py::test_on_modified_event PASSED                                                                                                                                                       [ 33%]
+   test_file_watcher.py::test_on_deleted_event PASSED                                                                                                                                                        [ 41%]
+   test_file_watcher.py::test_send_file_to_api_failure PASSED                                                                                                                                                [ 50%]
+   test_file_watcher.py::test_delete_file_to_api_failure PASSED                                                                                                                                              [ 58%]
+   test_file_watcher.py::test_on_modified_event_empty_file PASSED                                                                                                                                            [ 66%]
+   test_file_watcher.py::test_on_any_event_ignored_file PASSED                                                                                                                                               [ 75%]
+   test_file_watcher.py::test_on_any_event_ignores_directory PASSED                                                                                                                                          [ 83%]
+   test_file_watcher.py::test_send_file_to_api_connection_error PASSED                                                                                                                                       [ 91%]
+   test_file_watcher.py::test_delete_file_to_api_connection_error PASSED                                                                                                                                     [100%]
 
-    =============================================================================================== 5 passed in 0.17s ===============================================================================================
+   ============================================================================================== 12 passed in 0.19s ===============================================================================================
    ```
 
    This will discover and run all the test cases defined in the `tests` directory.
