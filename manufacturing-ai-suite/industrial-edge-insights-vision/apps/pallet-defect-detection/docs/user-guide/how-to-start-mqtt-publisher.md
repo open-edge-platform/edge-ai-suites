@@ -7,7 +7,7 @@ Start the MQTT broker [eclipse mosquitto](https://mosquitto.org/) using configur
 
   ```sh
   cd <WORKDIR>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection
-  docker run -d --name=mqtt_broker -p 1883:1883 -v $PWD/configs/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
+  docker run -d --name=mqtt-broker -p 1883:1883 -v $PWD/configs/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
   ```
 
 With the above configuration, the broker listens on port 1883.
@@ -17,7 +17,7 @@ With the above configuration, the broker listens on port 1883.
     ```yaml
     dlstreamer-pipeline-server:
       environment:
-        MQTT_HOST: <HOST_IP>
+        MQTT_HOST: mqtt-broker    # broker hostname or HOST_IP
         MQTT_PORT: 1883
     ```
     Once the changes are done, bring the services up. Restart them if already running.
@@ -63,5 +63,5 @@ In the above curl command set `publish_frame` to false if you don't want frames 
 Output can be viewed on MQTT subscriber as shown below.
 
 ```sh
-docker run -it --entrypoint mosquitto_sub eclipse-mosquitto:latest --topic pallet_defect_detection -p 1883 -h <HOST_IP>
+docker run -it --entrypoint mosquitto_sub eclipse-mosquitto:latest --topic pallet_defect_detection -p 1883 -h mqtt-broker
 ```

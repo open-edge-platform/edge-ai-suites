@@ -3,7 +3,7 @@ services:
     depends_on:
       model_registry:
         condition: service_healthy
-    image: ghcr.io/open-edge-platform/edge-ai-libraries/intel/edge-ai-dlstreamer-pipeline-server:20250805_EAL1.2-ubuntu22
+    image: intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
     container_name: dlstreamer-pipeline-server
     hostname: dlstreamer-pipeline-server
     networks:
@@ -17,12 +17,15 @@ services:
     environment:
       AppName: "DLStreamerPipelineServer"
       ENABLE_WEBRTC: true
-      WEBRTC_SIGNALING_SERVER: http://${HOST_IP}:${WHIP_SERVER_PORT}
+      WEBRTC_SIGNALING_SERVER: http://mediamtx-server:${WHIP_SERVER_PORT}
       ENABLE_RTSP: false
-      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,model_registry,${MR_MINIO_HOSTNAME}
+      NO_PROXY: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,model_registry,${MR_MINIO_HOSTNAME}
       GST_DEBUG: "1"
       REST_SERVER_PORT: ${REST_SERVER_PORT}
-      S3_STORAGE_HOST: ${HOST_IP}
+      S3_STORAGE_HOST: ${MR_MINIO_HOSTNAME}
       S3_STORAGE_PORT: ${MR_MINIO_SERVER_PORT}
       S3_STORAGE_USER: ${MR_MINIO_ACCESS_KEY}
       S3_STORAGE_PASS: ${MR_MINIO_SECRET_KEY}
@@ -142,8 +145,8 @@ services:
       SERVER_CERT: /run/secrets/ModelRegistry_Server/public.crt
       CA_CERT: /run/secrets/ModelRegistry_Server/server-ca.crt
       SERVER_PRIVATE_KEY: /run/secrets/ModelRegistry_Server/private.key
-      no_proxy: mraas_minio
-      NO_PROXY: mraas_minio
+      no_proxy: ${MR_MINIO_HOSTNAME}
+      NO_PROXY: ${MR_MINIO_HOSTNAME}
     volumes:
       - ./Certificates/ssl/:/run/secrets/ModelRegistry_Server:ro
     extra_hosts:
@@ -169,10 +172,10 @@ services:
       - ${MR_PSQL_PORT}
     networks:
       - mraas
-  mraas_minio:
+  mraas-minio:
     image: minio/minio:RELEASE.2020-12-12T08-39-07Z
-    container_name: mraas_minio
-    hostname: mraas_minio
+    container_name: ${MR_MINIO_HOSTNAME}
+    hostname: ${MR_MINIO_HOSTNAME}
     ipc: "none"
     expose:
       - ${MR_MINIO_SERVER_PORT}

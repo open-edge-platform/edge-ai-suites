@@ -22,8 +22,6 @@ With this feature, during runtime, you can download a new model from the registr
     MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
     MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
 
-    MR_URL= # Model registry url. Example http://<IP_address_of_model_registry_server>:32002
-
     MTX_WEBRTCICESERVERS2_0_USERNAME=  # Webrtc-mediamtx username. e.g intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=  # Webrtc-mediamtx password. e.g intel1234
     ```
