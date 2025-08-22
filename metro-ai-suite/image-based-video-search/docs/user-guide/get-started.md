@@ -42,7 +42,7 @@ a pre-step to prepare models may be needed
       ```bash
         docker compose build
       ```
-    > Note: You can skip this step as the later steps will automatically pull the required images
+    > Note: You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
 
 3. **Download the Models**:
     - Download the models
