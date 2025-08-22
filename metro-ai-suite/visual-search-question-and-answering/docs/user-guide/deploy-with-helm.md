@@ -95,35 +95,6 @@ my-milvus-standalone-<some-id>          1/1     Running   14 (12h ago)   3d
 ```
 Note that RESTARTS are possible, as long as the 3 pods are stablized after a while, the deployment is successful.
 
-#### Troubleshooting Milvus
-If the Milvus pods fail to deploy due to PVC related errors, you can try manually create a local storage class.
-
-```
-kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.32/deploy/local-path-storage.yaml
-kubectl create -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/examples/pvc/pvc.yaml
-kubectl create -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/examples/pod/pod.yaml
-```
-
-Then install Milvus with specific PV settings:
-```
-# uninstall first if necessary
-# helm uninstall my-milvus -n milvus
-
-helm install my-milvus milvus/milvus -n milvus \
-  --set image.all.tag=v2.6.0 \
-  --set cluster.enabled=false \
-  --set etcd.replicaCount=1 \
-  --set minio.mode=standalone \
-  --set pulsar.enabled=false \
-  --set pulsarv3.enabled=false \
-  --set persistence.storageClass=local-path \
-  --set persistence.size=20Gi \
-  --set etcd.persistence.storageClass=local-path \
-  --set etcd.persistence.size=10Gi \
-  --set minio.persistence.storageClass=local-path \
-  --set minio.persistence.size=50Gi
-```
-
 
 ### Step 6: Deploy [intel-device-plugins-for-kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes)
 
