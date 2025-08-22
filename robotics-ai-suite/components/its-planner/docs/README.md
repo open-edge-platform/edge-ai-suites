@@ -57,10 +57,10 @@ supported by the following platform:
 ## Prerequisites
 
 - [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
-- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
-- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
-- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install.html)
-- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
+- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
+- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
+- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install.html)
+- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
 
 ## Install Deb package
 
@@ -101,25 +101,25 @@ ITS planner run:
 > background, but you can bring them into the foreground, side-by-side,
 > for a better visual.
 
-a.  Set the robot **2D Pose Estimate** in rviz2:  
+a.  Set the robot **2D Pose Estimate** in rviz2:
     1.  Set the initial robot pose by pressing **2D Pose Estimate** in
-        rviz2.  
+        rviz2.
     2.  At the robot estimated location, down-click inside the 2D map.
-        For reference, use the robot pose as it appears in Gazebo\*.  
+        For reference, use the robot pose as it appears in Gazebo\*.
     3.  Set the orientation by dragging forward from the down-click.
-        This also enables ROS 2 navigation.  
+        This also enables ROS 2 navigation.
     ![image](images/2d_pose_estimate.png)
 
 b.  In rviz2, press **Navigation2 Goal**, and choose a destination for
     the robot. This calls the behavioral tree navigator to go to that
-    goal through an action server.  
-    ![image](images/set_navigation_goal.png)  
-    ![image](images/path_created.png)  
+    goal through an action server.
+    ![image](images/set_navigation_goal.png)
+    ![image](images/path_created.png)
     **Expected result:** The robot moves along the path generated to its
     new destination.
 
-c.  Set new destinations for the robot, one at a time.  
+c.  Set new destinations for the robot, one at a time.
     ![image](images/goal_achived_gazebo_rviz.png)
 
-d.  To close this, do the following:  
+d.  To close this, do the following:
     - Type `Ctrl-c` in the terminal where you did the up command.

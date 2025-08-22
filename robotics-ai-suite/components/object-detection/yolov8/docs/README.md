@@ -13,10 +13,10 @@ RealSense™ camera image as the input.
 ## Prerequisites
 
 - [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
-- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
-- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
-- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install.html)
-- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
+- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
+- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
+- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install.html)
+- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
 
 ## Install OpenVINO™ package
 
@@ -59,7 +59,7 @@ be generated in the command output when executing the
 > task = "segmentation" # options: detection, segmentation, pose
 > # w,h of internal resolution, input frames are resized
 > # consider using smaller resolution for faster inference
-> width = 640 
+> width = 640
 > height = 480
 > model_size = "n" # options: n, s, m, l, x (refer to ultralytics docs)
 > half = true # use half precision
@@ -98,14 +98,14 @@ be generated in the command output when executing the
 >             -r /camera/camera/color/image_raw:=/camera/color/image_raw \
 >             -r /camera/camera/color/camera_info:=/camera/color/camera_info \
 >             -r /camera/camera/aligned_depth_to_color/image_raw:=/camera/depth/image_raw \
->             -r /camera/camera/aligned_depth_to_color/camera_info:=/camera/depth/camera_info 
+>             -r /camera/camera/aligned_depth_to_color/camera_info:=/camera/depth/camera_info
 > ```
 
 Once you start the node, you view the output video and detections using
 the following command:
 
 > ```bash
-> rviz2 
+> rviz2
 > ```
 
 Then you can subscribe to the `/pipeline1/color/image_raw/yolo_video`
@@ -126,7 +126,7 @@ The messages have following structure:
 > sensor_msgs/Image rgb_image # Original image
 > sensor_msgs/Image depth_image # only if topic depth is provided
 >
-> string task # "Detection" "Segmentation "Pose" 
+> string task # "Detection" "Segmentation "Pose"
 >
 > geometry_msgs/TransformStamped camera_transform # Camera transform captured at the time of image arrival
 >
