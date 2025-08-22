@@ -1,0 +1,124 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: "[VPP] SDLe Scans - Scan Trivy Coverity"
+run-name: "[VPP] SDLe Scans - Scan Trivy Coverity"
+
+
+#Only run at most 1 workflow concurrently per PR, unlimited for branches
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:   
+  trivy-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          path: edge-ai-suites-repo
+          persist-credentials: false
+      - name: Run Trivy Filesystem Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-fs
+        with:
+          scan_type: "fs"  
+          scan-scope: "all"
+          scan_target: "edge-ai-suites-repo/metro-ai-suite/video-processing-for-nvr"
+          severity: "HIGH,CRITICAL" 
+          format: "json"  
+
+      - name: Build Docker images
+        run: |
+          sudo -E wget -O- https://eci.intel.com/sed-repos/gpg-keys/GPG-PUB-KEY-INTEL-SED.gpg | sudo tee /usr/share/keyrings/sed-archive-keyring.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee /etc/apt/sources.list.d/sed.list
+          echo "deb-src [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee -a /etc/apt/sources.list.d/sed.list
+          sudo bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
+          sudo apt update
+          sudo apt install intel-vppsdk
+          sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
+          source /opt/intel/vppsdk/env.sh
+          cd edge-ai-suites-repo/metro-ai-suite
+          cd video-processing-for-nvr/docker
+          bash build_sample.sh
+          
+      - name: Run trivy Scan - vppsample
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: vppsample
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "vppsample:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"  
+          
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: trivy-report
+          path: security-results/trivy
+
+  coverity-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out edge-ai-libraries repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+        with:
+          persist-credentials: false
+          
+      - name: install live555
+        run: |
+          cd metro-ai-suite/video-processing-for-nvr
+          bash live555_install.sh
+          
+      - name: Build code manually for VPP
+        run: |
+          sudo -E wget -O- https://eci.intel.com/sed-repos/gpg-keys/GPG-PUB-KEY-INTEL-SED.gpg | sudo tee /usr/share/keyrings/sed-archive-keyring.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee /etc/apt/sources.list.d/sed.list
+          echo "deb-src [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee -a /etc/apt/sources.list.d/sed.list
+          sudo bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
+          sudo apt update
+          sudo apt install intel-vppsdk
+          
+          sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
+          source /opt/intel/vppsdk/env.sh
+          
+      - name: Build with Coverity Analysis
+        run: |
+          wget --quiet https://scan.coverity.com/download/linux64 \
+            --post-data "token=${{ secrets.VPP_COVERITY_TOKEN }}&project=${{ secrets.VPP_COVERITY_PROJECT }}" \
+            -O coverity_tool.tgz
+          mkdir cov-analysis
+          tar xzf coverity_tool.tgz --strip-components=1 -C cov-analysis
+          COV_PATH="$(pwd)/cov-analysis/bin"  
+          cd metro-ai-suite/video-processing-for-nvr
+          $COV_PATH/cov-build --dir cov-int bash build.sh
+   
+      - name: Create tarball for upload
+        run: |
+          cd metro-ai-suite/video-processing-for-nvr
+          tar -czvf coverity_output.tgz -C . cov-int
+          # Verify tarball contents
+          echo "=== Tarball Contents ==="
+          tar tzvf coverity_output.tgz
+          echo "=== head ==="
+          tar -tzvf coverity_output.tgz | head
+          
+      - name: Upload to Coverity Scan
+        run: |
+          cd metro-ai-suite/video-processing-for-nvr
+          curl --form token=${{ secrets.VPP_COVERITY_TOKEN }} \
+               --form email=${{ secrets.VPP_COVERITY_EMAIL }} \
+               --form file=@coverity_output.tgz \
+               --form version="`date +%Y%m%d%H%M%S`" \
+               --form description="GitHub Action upload" \
+               https://scan.coverity.com/builds?project=${{ secrets.VPP_COVERITY_PROJECT }}

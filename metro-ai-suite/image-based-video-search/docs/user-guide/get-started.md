@@ -23,13 +23,16 @@ By following this guide, you will learn how to:
 
 ## Set up and First Use
 
-1. **Clone the Repository and Build Containers**:
+1. **Clone the Repository and update `.env` file**:
     - Create and navigate to directory:
       ```bash
         git clone https://github.com/open-edge-platform/edge-ai-suites.git
         cd edge-ai-suites/metro-ai-suite/image-based-video-search
-        docker compose build
       ```
+    
+    > Note: The below step is required for deployment with certain pre-release images
+    - Update `DOCKER_REGISTRY` variable in `.env` file present at `edge-ai-suites/metro-ai-suite/image-based-video-search/`. The recommended setting to use pre-release images is: `DOCKER_REGISTRY=docker.io/`
+      Please remember to include `/` at the end.
 <!--
 a pre-step to prepare models may be needed
 -->
@@ -105,25 +108,20 @@ a pre-step to prepare models may be needed
 
       </details>
 
-3. **Update DOCKER_REGISTRY variable in `.env` file**
-   **Note: This step is required to deploy with the pre-release images**
-   - The recommended setting to use pre-release images is: `DOCKER_REGISTRY=ghcr.io/open-edge-platform/edge-ai-libraries/`
-     Please remember to include `/` at the end.
-
-4. **Start the Application**:
+3. **Start the Application**:
     - Go back to the folder of compose.yml and run the application using Docker Compose:
       ```bash
       cd ../..
       docker compose up -d
       ```
 
-5. **Verify the Application**:
+4. **Verify the Application**:
     - Check that the application is running:
       ```bash
       docker compose ps
       ```
 
-6. **Access the Application**:
+5. **Access the Application**:
     - Open a browser and go to the following endpoints to access the application:
       - App UI: `http://localhost:3000`
       - Search UI: `http://localhost:9000/docs`
@@ -132,7 +130,7 @@ a pre-step to prepare models may be needed
     > Note: To access `App UI`, `Search UI` and `MilvusDB UI` urls remotely, replace the `localhost` with your system IP address. 
 
 
-7. **Run the Application**:
+6. **Run the Application**:
 
     - **Analyze Stream**: Use the predefined video and click **Analyze Stream** to start processing the video stream.
     - **Video Search**: Click the **Upload Image** button to upload your own images for search or click the **Capture Frame** button to capture and adjust frames from the video stream. Click the **Search Object** button.
@@ -207,7 +205,7 @@ a pre-step to prepare models may be needed
 
     - To use your own models instead of the default models, follow these steps:
 
-      - Open the `config.json` file.
+      - Open the `config.cpu.json` file present at the path `edge-ai-suites/metro-ai-suite/image-based-video-search/src/dlstreamer-pipeline-server/configs/filter-pipeline/`.
 
       - Change the paths in the `pipeline` section to point to your own models. Replace the paths for `gvadetect` and `gvaclassify` with the paths to your models:
         ```json

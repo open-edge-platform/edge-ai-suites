@@ -13,42 +13,38 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     ros_distro = 'humble'
-    install_dir = f'/opt/ros/{ros_distro}/share/aaeon_adbscan'
+    install_dir = f'/opt/ros/{ros_distro}/share/tutorial_aaeon_adbscan'
     aaeon_node_config_file = (
-        f'/opt/ros/{ros_distro}/share/ros2_amr_interface/params/'
-        'aaeon_node_params.yaml'
+        f'/opt/ros/{ros_distro}/share/ros2_amr_interface/params/aaeon_node_params.yaml'
     )
     twist_mux_config_file = (
-        f'{install_dir}/tutorial-aaeon-adbscan/twist_mux_topics.yaml'
+        f'{install_dir}/config/twist_mux_topics.yaml'
     )
     teleop_joy_config_file = (
-        f'{install_dir}/tutorial-aaeon-adbscan/joy.config.yaml'
+        f'{install_dir}/config/joy.config.yaml'
     )
     localization_config_file = (
-        f'{install_dir}/tutorial-aaeon-adbscan/ukf_config.yaml'
+        f'{install_dir}/config/ukf_config.yaml'
     )
     adbscan_config_file = (
-        f'{install_dir}/tutorial-aaeon-adbscan/adbscan_RS_params.yaml'
+        f'{install_dir}/params/adbscan_RS_params.yaml'
     )
     rviz_config_file = (
-        f'{install_dir}/tutorial-aaeon-adbscan/adbscan_aaeon.rviz'
+        f'{install_dir}/config/adbscan_aaeon.rviz'
     )
 
     # RealSense launch
     realsense_launch_dir = os.path.join(
-        FindPackageShare('realsense2_camera').find('realsense2_camera'),
-        'launch'
+        FindPackageShare('realsense2_camera').find('realsense2_camera'), 'launch'
     )
     realsense_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(
-            realsense_launch_dir, 'rs_launch.py')
-        ),
+        PythonLaunchDescriptionSource(os.path.join(realsense_launch_dir, 'rs_launch.py')),
         launch_arguments={
             'align_depth.enable': 'true',
             'enable_sync': 'true',
             'init_reset': 'true',
             'pointcloud.enable': 'true',
-            'camera_namespace': '/'
+            'camera_namespace': '/',
         }.items(),
     )
 
@@ -86,9 +82,7 @@ def generate_launch_description():
     imu_static_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        arguments=[
-            '-0.07', '0', '0', '0', '0', '3.14', 'base_link', 'imu_link'
-        ],
+        arguments=['-0.07', '0', '0', '0', '0', '3.14', 'base_link', 'imu_link'],
         parameters=[{'use_sim_time': False}],
         output='screen',
     )
@@ -96,13 +90,7 @@ def generate_launch_description():
     imu_filter_node = Node(
         package='imu_filter_madgwick',
         executable='imu_filter_madgwick_node',
-        parameters=[
-            {
-                'remove_gravity_vector': True,
-                'use_mag': False,
-                'publish_tf': False
-            }
-        ],
+        parameters=[{'remove_gravity_vector': True, 'use_mag': False, 'publish_tf': False}],
         remappings=[('/imu/data_raw', '/amr/imu/raw')],
         output='screen',
     )
@@ -117,9 +105,7 @@ def generate_launch_description():
     camera_static_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        arguments=[
-            '0.09', '0', '0.16', '0', '0', '0', 'base_link', 'camera_link'
-        ],
+        arguments=['0.09', '0', '0.16', '0', '0', '0', 'base_link', 'camera_link'],
         parameters=[{'use_sim_time': False}],
         output='screen',
     )
@@ -142,10 +128,7 @@ def generate_launch_description():
     fast_mapping_node = Node(
         package='fast_mapping',
         executable='fast_mapping_node',
-        remappings=[
-            ('/world/map_updates', '/map_updates'),
-            ('/world/map', '/map')
-        ],
+        remappings=[('/world/map_updates', '/map_updates'), ('/world/map', '/map')],
         output='screen',
     )
 
@@ -167,26 +150,28 @@ def generate_launch_description():
     on_shutdown_handler = RegisterEventHandler(
         event_handler=OnShutdown(
             on_shutdown=[
-                LogInfo(msg="ADBSCAN App is shutting down..."),
+                LogInfo(msg='ADBSCAN App is shutting down...'),
             ]
         )
     )
 
     # Return all nodes and launch inclusions in one list (flat)
-    return LaunchDescription([
-        aaeon_node,
-        joy_node,
-        twist_mux_node,
-        teleop_twist_joy_node,
-        imu_static_tf,
-        imu_filter_node,
-        ukf_node,
-        realsense_launch,
-        camera_static_tf,
-        adbscan_node,
-        adbscan_static_tf,
-        fast_mapping_node,
-        map_static_tf,
-        rviz_node,
-        on_shutdown_handler,
-    ])
+    return LaunchDescription(
+        [
+            aaeon_node,
+            joy_node,
+            twist_mux_node,
+            teleop_twist_joy_node,
+            imu_static_tf,
+            imu_filter_node,
+            ukf_node,
+            realsense_launch,
+            camera_static_tf,
+            adbscan_node,
+            adbscan_static_tf,
+            fast_mapping_node,
+            map_static_tf,
+            rviz_node,
+            on_shutdown_handler,
+        ]
+    )

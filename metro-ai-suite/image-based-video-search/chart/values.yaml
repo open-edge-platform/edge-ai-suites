@@ -50,9 +50,9 @@ dlstreamerpipelineserver:
   # key: dlstreamerpipelineserver.repository
   repository:
     # key: dlstreamerpipelineserver.repository.image
-    image: ghcr.io/open-edge-platform/edge-ai-libraries/intel/edge-ai-dlstreamer-pipeline-server
+    image: docker.io/intel/dlstreamer-pipeline-server
     # key: dlstreamerpipelineserver.repository.tag
-    tag: 20250805_EAL1.2-ubuntu22
+    tag: 3.1.0-ubuntu22
   # key: dlstreamerpipelineserver.replicas
   replicas: 1
   # key: dlstreamerpipelineserver.nodeSelector
