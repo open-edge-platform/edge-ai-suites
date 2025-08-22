@@ -8,6 +8,8 @@ Before you begin, ensure that you have the following:
 - The cluster must support **dynamic provisioning of Persistent Volumes (PV)**. Refer to the [Kubernetes Dynamic Provisioning Guide](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) for more details.
 - Install `kubectl` on your system. See the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster. 
 - Helm chart installed on your system. See the [Installation Guide](https://helm.sh/docs/intro/install/).
+- PVC storage class is required to support `RWMany` mode. In case the default storage class used does not support it, consider using storage solution like [LongHorn](https://longhorn.io/docs/) that provides this support.
+
 
 ## Steps to deploy with Helm
 Do the following to deploy VSQA using Helm chart. 
@@ -21,7 +23,7 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-1.
 #### Step 2: Change to the Chart Directory
 
 ```bash
-cd cd edge-ai-suites/metro-ai-suite/visual-search-question-and-answering/deployment/helm-chart
+cd edge-ai-suites/metro-ai-suite/visual-search-question-and-answering/deployment/helm-chart
 ```
 
 #### Step 3: Configure the `values.yaml` File
@@ -79,12 +81,12 @@ helm repo update
 Deploy Milvus in a simplified standalone mode
 
 ```bash
-helm install my-milvus milvus/milvus -n milvus --set image.all.tag=v2.6.0-rc1   --set cluster.enabled=false --set etcd.replicaCount=1 --set minio.mode=standalone --set pulsar.enabled=false
+helm install my-milvus milvus/milvus -n milvus --set image.all.tag=v2.6.0   --set cluster.enabled=false --set etcd.replicaCount=1 --set minio.mode=standalone --set pulsar.enabled=false --set pulsarv3.enabled=false
 ```
 
 Note: if you need customized settings for Milvus, please refer to [the official guide](https://milvus.io/docs/v2.5.x/install_cluster-helm.md).
 
-There should be 3 pods under namesspace `milvus` after the deployment:
+There should be these 3 pods under namesspace `milvus` after the deployment:
 ```
 NAME                                    READY   STATUS    RESTARTS       AGE
 my-milvus-etcd-0                        1/1     Running   1 (3d ago)     3d
@@ -92,6 +94,35 @@ my-milvus-minio-<some-id>               1/1     Running   0              3d
 my-milvus-standalone-<some-id>          1/1     Running   14 (12h ago)   3d
 ```
 Note that RESTARTS are possible, as long as the 3 pods are stablized after a while, the deployment is successful.
+
+#### Troubleshooting Milvus
+If the Milvus pods fail to deploy due to PVC related errors, you can try manually create a local storage class.
+
+```
+kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.32/deploy/local-path-storage.yaml
+kubectl create -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/examples/pvc/pvc.yaml
+kubectl create -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/examples/pod/pod.yaml
+```
+
+Then install Milvus with specific PV settings:
+```
+# uninstall first if necessary
+# helm uninstall my-milvus -n milvus
+
+helm install my-milvus milvus/milvus -n milvus \
+  --set image.all.tag=v2.6.0 \
+  --set cluster.enabled=false \
+  --set etcd.replicaCount=1 \
+  --set minio.mode=standalone \
+  --set pulsar.enabled=false \
+  --set pulsarv3.enabled=false \
+  --set persistence.storageClass=local-path \
+  --set persistence.size=20Gi \
+  --set etcd.persistence.storageClass=local-path \
+  --set etcd.persistence.size=10Gi \
+  --set minio.persistence.storageClass=local-path \
+  --set minio.persistence.size=50Gi
+```
 
 
 ### Step 6: Deploy [intel-device-plugins-for-kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes)
@@ -114,7 +145,7 @@ mkdir -p $HOME/models
 mkdir -p $HOME/data
 ```
 
-Make sure the host directories are available to the cluster. If you intend to set directories different from commands above, remember to configure the `volumes` section in the `values.yaml` file to reflect the correct directories.
+Make sure all these host directories are available to the cluster, and the host-paths under the `volumes` section in the `values.yaml` file match the correct directories.
 
 Note: supported media types: jpg, png, mp4
 
