@@ -38,7 +38,7 @@ a pre-step to prepare models may be needed
 -->
 
 2. **Build from Source (Optional)**:
-    - Run the below command to build the containers
+    - Run the below command to build the images from source
       ```bash
         docker compose build
       ```
