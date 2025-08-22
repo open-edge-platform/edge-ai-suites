@@ -242,7 +242,7 @@ _install_onevpl()
   popd
 }
 
-#[9] libradar
+#[10] libradar
 _install_libradar()
 {
   pushd ${THIRD_PARTY_BUILD_DIR}
@@ -258,8 +258,8 @@ _install_libradar()
   sudo bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
 
   # Update package list and install libradar
-  sudo apt update
-  sudo apt-get install libradar
+  sudo -E apt update
+  sudo -E apt-get install libradar
 
   popd
 }
