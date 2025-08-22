@@ -91,7 +91,8 @@ my-milvus-etcd-0                        1/1     Running   1 (3d ago)     3d
 my-milvus-minio-<some-id>               1/1     Running   0              3d
 my-milvus-standalone-<some-id>          1/1     Running   14 (12h ago)   3d
 ```
-Note that RESTARTS are possible, as long as the 3 pods stablized after a while, the deployment is successful.
+Note that RESTARTS are possible, as long as the 3 pods are stablized after a while, the deployment is successful.
+
 
 ### Step 6: Deploy [intel-device-plugins-for-kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes)
 
