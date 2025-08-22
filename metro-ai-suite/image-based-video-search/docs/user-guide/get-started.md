@@ -37,7 +37,14 @@ By following this guide, you will learn how to:
 a pre-step to prepare models may be needed
 -->
 
-2. **Download the Models**:
+2. **Build from Source (Optional)**:
+    - Run the below command to build the images from source
+      ```bash
+        docker compose build
+      ```
+    > Note: You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
+
+3. **Download the Models**:
     - Download the models
       <details open>
       <summary>
@@ -108,20 +115,20 @@ a pre-step to prepare models may be needed
 
       </details>
 
-3. **Start the Application**:
+4. **Start the Application**:
     - Go back to the folder of compose.yml and run the application using Docker Compose:
       ```bash
       cd ../..
       docker compose up -d
       ```
 
-4. **Verify the Application**:
+5. **Verify the Application**:
     - Check that the application is running:
       ```bash
       docker compose ps
       ```
 
-5. **Access the Application**:
+6. **Access the Application**:
     - Open a browser and go to the following endpoints to access the application:
       - App UI: `http://localhost:3000`
       - Search UI: `http://localhost:9000/docs`
@@ -130,7 +137,7 @@ a pre-step to prepare models may be needed
     > Note: To access `App UI`, `Search UI` and `MilvusDB UI` urls remotely, replace the `localhost` with your system IP address. 
 
 
-6. **Run the Application**:
+7. **Run the Application**:
 
     - **Analyze Stream**: Use the predefined video and click **Analyze Stream** to start processing the video stream.
     - **Video Search**: Click the **Upload Image** button to upload your own images for search or click the **Capture Frame** button to capture and adjust frames from the video stream. Click the **Search Object** button.
