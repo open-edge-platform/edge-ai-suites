@@ -8,7 +8,7 @@ README.md          @xwu2intel
 /manufacturing-ai-suite/pallet-defect-detection/          @ajagadi1 @sugnanprabhu @rrajore @xwu2intel
 /manufacturing-ai-suite/weld-porosity/                    @ajagadi1 @sugnanprabhu @rrajore @xwu2intel
 /manufacturing-ai-suite/industrial-edge-insights-vision/  @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel
-/manufacturing-ai-suite/wind-turbine-anomaly-detection/   @vkb1 @sathyendranv @pooja-intel @xwu2intel
+/manufacturing-ai-suite/wind-turbine-anomaly-detection/   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe
 /manufacturing-ai-suite/hmi-augmented-worker/             @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel
 
 # metro-ai
@@ -33,8 +33,8 @@ README.md          @xwu2intel
 
 /manufacturing-ai-suite/industrial-edge-insights-vision/docs/         @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 /manufacturing-ai-suite/industrial-edge-insights-vision/README.md     @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/          @vkb1 @sathyendranv @pooja-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/wind-turbine-anomaly-detection/README.md      @vkb1 @sathyendranv @pooja-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/          @vkb1 @sathyendranv @pooja-intel  @SudarshanaPanda @rashmihe @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/wind-turbine-anomaly-detection/README.md      @vkb1 @sathyendranv @pooja-intel  @SudarshanaPanda @rashmihe @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 
 # documentation content - media-and-entertainment-ai
 # /media-and-entertainment-ai-suite - needs to be defined once content appears
