@@ -15,7 +15,6 @@ import math
 from collections import deque
 from kapacitor.udf.agent import Agent, Handler
 from kapacitor.udf import udf_pb2
-import modin.pandas as pd
 import numpy as np
 import requests
 from sklearnex import patch_sklearn, config_context
