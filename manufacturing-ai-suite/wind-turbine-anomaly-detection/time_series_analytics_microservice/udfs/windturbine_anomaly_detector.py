@@ -12,10 +12,10 @@ import logging
 import pickle
 import time
 import math
+
 from collections import deque
 from kapacitor.udf.agent import Agent, Handler
 from kapacitor.udf import udf_pb2
-# import paho.mqtt.client as mqtt
 import modin.pandas as pd
 import numpy as np
 import requests
@@ -23,8 +23,6 @@ from sklearnex import patch_sklearn, config_context
 patch_sklearn()
 from sklearn.linear_model import LinearRegression
 
-
-# from gcp_mqtt_client import get_client
 
 log_level = os.getenv('KAPACITOR_LOGGING_LEVEL', 'INFO').upper()
 enable_benchmarking = os.getenv('ENABLE_BENCHMARKING', 'false').upper() == 'TRUE'

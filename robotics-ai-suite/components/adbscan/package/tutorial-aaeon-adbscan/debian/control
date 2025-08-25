@@ -1,0 +1,10 @@
+Source: ros-humble-aaeon-adbscan-tutorial
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Standards-Version: 4.1.4
+
+Package: ros-humble-aaeon-adbscan-tutorial
+Architecture: any
+Depends: ros-humble-aaeon-ros2-amr-interface, ros-humble-realsense2-camera, ros-humble-rviz2, ros-humble-joy-linux, ros-humble-twist-mux, ros-humble-imu-filter-madgwick, ros-humble-robot-localization, ros-humble-fast-mapping, ros-humble-adbscan-oneapi | ros-humble-adbscan-ros2, ros-humble-rviz2, ros-humble-teleop-twist-keyboard
+Description: AAEON Robot ADBSCAN mapping with FastMapping algorithm using Realsense camera  

@@ -1,0 +1,12 @@
+Source: ros-humble-fast-mapping
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),  ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-ament-lint-auto, ros-humble-ament-cmake-gtest, ros-humble-rclcpp, ros-humble-geometry-msgs, ros-humble-sensor-msgs, ros-humble-visualization-msgs, ros-humble-nav-msgs, ros-humble-cv-bridge, ros-humble-rosbag2-cpp, ros-humble-rosbag2-transport, ros-humble-rosbag2-storage, ros-humble-tf2, ros-humble-tf2-ros, ros-humble-tf2-geometry-msgs, ros-humble-tf2-eigen, ros-humble-message-filters, ros-humble-std-srvs, libboost-dev, libopencv-dev, libeigen3-dev, libsafestring-dev, ros-humble-robotics-sdk-license,
+Standards-Version: 4.1.4
+
+Package: ros-humble-fast-mapping
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, ros-humble-rviz2, ros-humble-rclcpp, ros-humble-bagfile-spinning, ros-humble-geometry-msgs, ros-humble-sensor-msgs, ros-humble-visualization-msgs, ros-humble-nav-msgs, ros-humble-tf2, ros-humble-tf2-ros, ros-humble-tf2-geometry-msgs, ros-humble-cv-bridge, ros-humble-tf2-eigen, ros-humble-message-filters, ros-humble-rcutils, ros-humble-libstatistics-collector, ros-humble-rcl, ros-humble-statistics-msgs, ros-humble-tracetools, ros-humble-rclcpp-action,  ros-humble-rclcpp-lifecycle, ros-humble-std-msgs, ros-humble-std-srvs, ros-humble-robotics-sdk-license,
+Description: Allen FastMapping, a ROS package for real-time scene modeling from sequential depth images from prerecorded ROS2 bag.

@@ -14,18 +14,22 @@
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
     ```sh
     git clone https://github.com/open-edge-platform/edge-ai-suites.git
-    cd manufacturing-ai-suite/industrial-edge-insights-vision
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
     ```
 2. Set app specific values.yaml file.
     ```sh
     cp helm/values_weld_porosity_classification.yaml helm/values.yaml
     ```
-3.  Edit the HOST_IP, proxy and other environment variables in `values.yaml` as follows
+3.  Edit the HOST_IP, proxy and other environment variables in `helm/values.yaml` as follows
     ```yaml
     env:        
         HOST_IP: <HOST_IP>   # host IP address
+        MINIO_ACCESS_KEY: <DATABASE USERNAME> #  example: minioadmin
+        MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
         http_proxy: <http proxy> # proxy details if behind proxy
         https_proxy: <https proxy>
+        POSTGRES_PASSWORD: <POSTGRES PASSWORD> #  example: intel1234
+        MR_URL: <PROTOCOL>://<HOST_IP>:32002 # example: http://<ip-addr>:32002
         SAMPLE_APP: weld-porosity # application directory
     webrtcturnserver:
         username: <username>  # WebRTC credentials e.g. intel1234
@@ -43,6 +47,15 @@
     ```sh
     helm install app-deploy helm -n apps --create-namespace
     ```
+    After installation, check the status of the running pods:
+    ```sh
+    kubectl get pods -n apps
+    ```
+    To view logs of a specific pod, replace `<pod_name>` with the actual pod name from the output above:
+    ```sh
+    kubectl logs -n apps -f <pod_name>
+    ```
+
 6.  Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
     ```sh
     # Below is an example for Weld Porosity Classification. Please adjust the source path of models and videos appropriately for other sample applications.
@@ -171,4 +184,8 @@
      ```sh
      helm uninstall app-deploy -n apps
      ```
+
+
+## Troubleshooting
+- [Troubleshooting Guide](../../../apps/weld-porosity/docs/user-guide/troubleshooting-guide.md)
     

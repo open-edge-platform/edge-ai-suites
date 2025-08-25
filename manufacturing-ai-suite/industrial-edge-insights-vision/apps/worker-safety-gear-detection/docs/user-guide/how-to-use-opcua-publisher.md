@@ -1,6 +1,6 @@
 # How to use OPC UA publisher
 
-Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing using the docker or helm.
+Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing using the docker.
 
 1. Configure and start the OPC UA Server
    If you already have a functioning OPC UA server, you can skip this step. Otherwise, this section provides instructions for using the OPC UA server provided by [Unified Automation](https://www.unified-automation.com).
@@ -10,7 +10,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
       * Open the Start menu on your Windows machine and search for **UaCPPServer**.
       * Launch the application to start the server.
 
-2. Update the following variables related to the OPC UA server in `.env` for docker or `helm/values.yml` for helm.
+2. Update the following variables related to the OPC UA server in `.env`.
     ``` sh
     OPCUA_SERVER_IP= # <IP-Adress of the OPCUA server>
     OPCUA_SERVER_PORT= # example: 48010
@@ -18,7 +18,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
     OPCUA_SERVER_PASSWORD= # example: secret
     ```
 
-3. Update the OPC UA `variable` to appropriate value for the pipeline `worker_safety_gear_detection_opcua` in `configs/config.json` for docker or `helm/config.json` for helm.
+3. Update the OPC UA `variable` to appropriate value for the pipeline `worker_safety_gear_detection_opcua` in `apps/worker-safety-gear-detection/configs/pipeline-server-config.json`.
 
     ```shell
         "opcua_publisher": {
@@ -27,16 +27,16 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
         },
     ```
 
-4. Bring up the containers for docker or deploy helm chart.
+4. To use an AI model of your own please follow the steps as mentioned in this [document](./how-to-use-an-ai-model-and-video-file-of-your-own.md)
 
-5. Start the pipeline with the following cURL command. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
+5. Setup the application to use the docker based deployment following this [document](./get-started.md#setup-the-application).
 
-   **Note: Update the port to `30107` for helm or `8080` if you are using docker environment**
+6. Start the pipeline using the following cURL command. Update the `HOST_IP` and ensure the correct path to the model is provided as shown below. This example starts an AI pipeline.
 
    ```sh
-    curl http://<HOST_IP>:<port>/pipelines/user_defined_pipelines/worker_safety_gear_detection_opcua -X POST -H 'Content-Type: application/json' -d '{
+    curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/worker_safety_gear_detection_opcua -X POST -H 'Content-Type: application/json' -d '{
         "source": {
-            "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4",
+            "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
             "type": "uri"
         },
         "destination": {
@@ -55,14 +55,14 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
         },
         "parameters": {
             "detection-properties": {
-                "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml",
+                "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
                 "device": "CPU"
             }
         }
     }'
    ```
 
-6. Run the following sample OPC UA subscriber on the different machine by updating the `<IP-Address of OPCUA Server>` to read the meta-data written to server variable from DL Streamer Pipeline Server.
+7. Run the following sample OPC UA subscriber on the different machine by updating the `<IP-Address of OPCUA Server>` to read the meta-data written to server variable from DL Streamer Pipeline Server.
    ```python
    import asyncio
    from asyncua import Client, Node
@@ -83,4 +83,8 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
          await asyncio.sleep(1)
    if __name__ == "__main__":
       asyncio.run(main())
+   ```
+   Install asyncua before running the above script (if not already installed):
+   ```sh
+   pip3 install asyncua
    ```

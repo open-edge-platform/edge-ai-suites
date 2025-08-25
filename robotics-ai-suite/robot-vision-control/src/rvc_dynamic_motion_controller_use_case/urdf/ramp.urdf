@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<robot name="table">
+  <link name="world">
+    <visual>
+      <origin rpy="0.0 0 1.57" xyz="-0.48 0.78 0.0"/>
+      <geometry>
+	  <mesh filename="package://rvc_dynamic_motion_controller_tradeshows/meshes/ramp.dae" scale="0.1 0.1 0.1"/>
+      </geometry>
+    </visual>
+  </link>
+</robot>

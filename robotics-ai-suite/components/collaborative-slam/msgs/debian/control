@@ -1,0 +1,12 @@
+Source: ros-humble-univloc-msgs
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-ament-lint-auto, ros-humble-rclcpp, ros-humble-std-msgs, ros-humble-geometry-msgs, ros-humble-sensor-msgs, ros-humble-rosidl-default-generators, 
+Standards-Version: 4.1.4
+
+Package: ros-humble-univloc-msgs
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-humble-rclcpp, ros-humble-geometry-msgs, ros-humble-sensor-msgs, ros-humble-std-msgs, ros-humble-rosidl-default-runtime, ros-humble-robotics-sdk-license
+Description: Message(s) for Collaborative SLAM package

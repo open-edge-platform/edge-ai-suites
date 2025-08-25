@@ -1,0 +1,20 @@
+diff --git a/src/ros_filter.cpp b/src/ros_filter.cpp
+index 5fa10d1..556d05e 100644
+--- a/src/ros_filter.cpp
++++ b/src/ros_filter.cpp
+@@ -694,6 +694,7 @@ void RosFilter<T>::integrateMeasurements(const rclcpp::Time & current_time)
+     RF_DEBUG("Filter not yet initialized.\n");
+   }
+ 
++  /*
+   if (filter_.getInitializedStatus() && predict_to_current_time) {
+     rclcpp::Duration last_update_delta =
+       current_time - filter_.getLastMeasurementTime();
+@@ -706,6 +707,7 @@ void RosFilter<T>::integrateMeasurements(const rclcpp::Time & current_time)
+       filter_.getLastMeasurementTime() +
+       last_update_delta);
+   }
++  */
+ 
+   RF_DEBUG("\n----- /RosFilter<T>::integrateMeasurements ------\n");
+ }

@@ -1,0 +1,23 @@
+ros-humble-wandering-tutorials (2.1.1-1) UNRELEASED; urgency=low
+
+  * Minor code cleanup and static code analysis fixes
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 05 Feb 2025 00:00:00 +0000
+
+ros-humble-wandering-tutorials (2.1-1) UNRELEASED; urgency=low
+
+  * Add wandering tutorial for Jackal robots to metapackage
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri,  1 Mar 2024 00:00:00 +0000
+
+ros-humble-wandering-tutorials (2.0.1-1) UNRELEASED; urgency=low
+
+  * Add license package dependency
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 26 Feb 2024 00:00:00 +0000
+
+ros-humble-wandering-tutorials (2.0-1) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 28 Sep 2023 00:00:00 +0000

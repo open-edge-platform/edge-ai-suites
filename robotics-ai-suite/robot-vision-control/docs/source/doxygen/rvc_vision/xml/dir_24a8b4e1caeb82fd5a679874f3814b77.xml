@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_24a8b4e1caeb82fd5a679874f3814b77" kind="dir">
+    <compoundname>rvc_pose_detector</compoundname>
+    <innerdir refid="dir_9678588e389913bd4671673c8d12c440">rvc_pose_detector/include</innerdir>
+    <innerdir refid="dir_dd35f5f1d59983efa0a188cccd5c6ecf">rvc_pose_detector/src</innerdir>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_pose_detector/"/>
+  </compounddef>
+</doxygen>

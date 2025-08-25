@@ -1,0 +1,54 @@
+From 2db75b6d0e03ef261e69dd783e260be2f4b23447 Mon Sep 17 00:00:00 2001
+From: baiheliu <baihe.liu@intel.com>
+Date: Mon, 10 Mar 2025 16:45:02 +0800
+Subject: [PATCH 3/3] changes for real robot
+
+---
+ constants.py        | 8 ++++++++
+ imitate_episodes.py | 4 ++--
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/constants.py b/constants.py
+index 61926a2..16316f6 100644
+--- a/constants.py
++++ b/constants.py
+@@ -33,6 +33,14 @@ SIM_TASK_CONFIGS = {
+     },
+ }
+ 
++TASK_CONFIGS = {
++    'insertion': {
++        'dataset_dir': DATA_DIR + '/insertion',
++        'num_episodes': 50,
++        'episode_len': 1000,
++        'camera_names': ['cam_high', 'cam_low', 'cam_left_wrist', 'cam_right_wrist']
++    },
++}
+ ### Simulation envs fixed constants
+ DT = 0.02
+ JOINT_NAMES = ["waist", "shoulder", "elbow", "forearm_roll", "wrist_angle", "wrist_rotate"]
+diff --git a/imitate_episodes.py b/imitate_episodes.py
+index 3fcc29b..a695204 100644
+--- a/imitate_episodes.py
++++ b/imitate_episodes.py
+@@ -43,7 +43,7 @@ def main(args):
+         from constants import SIM_TASK_CONFIGS
+         task_config = SIM_TASK_CONFIGS[task_name]
+     else:
+-        from aloha_scripts.constants import TASK_CONFIGS
++        from constants import TASK_CONFIGS
+         task_config = TASK_CONFIGS[task_name]
+     dataset_dir = task_config['dataset_dir']
+     num_episodes = task_config['num_episodes']
+@@ -344,7 +344,7 @@ def eval_bc(config, ckpt_name, save_episode=True):
+                     screen render:{average_latency[0]:.9f}s, process image:{average_latency[1]:.9f}s, model inference:{average_latency[2]:.9f}, query policy:{average_latency[3]:.9f}s, post process:{average_latency[4]:.9f}, env:{average_latency[5]:.9f}')
+             plt.close()
+         if real_robot:
+-            move_grippers([env.puppet_bot_left, env.puppet_bot_right], [PUPPET_GRIPPER_JOINT_OPEN] * 2, moving_time=0.5)  # open
++            move_grippers([env.follower_bot_left, env.follower_bot_right], [PUPPET_GRIPPER_JOINT_OPEN] * 2, moving_time=0.5)  # open
+             pass
+ 
+         rewards = np.array(rewards)
+-- 
+2.34.1
+

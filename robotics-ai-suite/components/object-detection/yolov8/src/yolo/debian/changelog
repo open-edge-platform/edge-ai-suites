@@ -1,0 +1,11 @@
+ros-humble-openvino-yolov8 (2.2-1) UNRELEASED; urgency=low
+
+  * Use the ONNX model to prevent the Ultralytics code from causing export failures and unexpected terminations in previous version.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 24 July 2024 00:00:00 +0000
+
+ros-humble-openvino-yolov8 (2.1-1) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 29 Feb 2024 00:00:00 +0000

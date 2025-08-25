@@ -165,7 +165,7 @@ _install_mtl_gpu_driver()
 
   # Install all packages as root
   sudo dpkg -i *deb
-  sudo -E apt install libigdgmm12=22.6.0-1097~22.04
+  sudo -E apt install libigdgmm12=22.7.1-1120~22.04
 
   popd
 }
@@ -229,7 +229,7 @@ install_3rd_libs(){
     _install_arc770_gpu_driver
     _upgrade_i915_driver
   fi
-  if lscpu | grep "Model name" | grep -q 165H; then
+  if lscpu | grep "Model name" | grep -q Ultra; then
     echo "Install Ultra driver"
     _install_mtl_gpu_driver
     _install_npu_driver

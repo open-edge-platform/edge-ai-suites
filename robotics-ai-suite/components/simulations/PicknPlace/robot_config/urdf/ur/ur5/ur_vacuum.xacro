@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+  <!--
+    NOTE the macro defined in this file is NOT part of the public API of this
+          package. Users CANNOT rely on this file being available, or stored in
+          this location. Nor can they rely on the existence of the macro.
+  -->
+
+ <xacro:macro name="ur_vacuum_gripper" params="
+    prefix
+    namespace
+    index 
+    base_link
+    xyz">
+
+    <link name="${prefix}vacuum_gripper${index}">
+      <gravity>0</gravity>
+      <visual name="vacuum_visual_${index}">
+        <origin rpy="0 0 0" xyz="0 0 0.0025" />
+        <geometry>
+          <cylinder radius="0.01" length="0.005"/>
+        </geometry>
+        <material name="transparent">
+          <color rgba="0 0 0 0"/>
+        </material>
+      </visual>
+      <collision name="vacuum_collision_${index}">
+        <origin rpy="0 0 0" xyz="0 0 0.0025"/>
+        <geometry>
+          <cylinder radius="0.01" length="0.005"/>
+        </geometry>
+      </collision>
+      <inertial name="vacuum_inertial_${index}">
+        <origin rpy="0 0 0" xyz="0.000000 0.000000 0.0025"/>
+        <mass value="0.1"/> 
+        <inertia ixx="0.049443313556" ixy="0" ixz="0" iyy="0.049443313556" iyz="0" izz="0.049443313556"/> 
+      </inertial>
+    </link>
+    <joint name="${prefix}gripper_joint${index}" type="revolute">
+      <axis xyz="1 0 0" />
+      <parent link="${base_link}" />
+      <child link="${prefix}vacuum_gripper${index}" />
+      <origin rpy="0 0.0 0" xyz="${xyz}"/>
+      <limit effort="50.0" velocity="50.0" lower="0" upper="0" />
+      <dynamics damping="0.0" friction="10"/>
+    </joint>
+
+    <gazebo reference="${prefix}vacuum_gripper${index}">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <minDepth>0.003</minDepth>
+      <maxVel>0</maxVel>
+      <kp>1e+13</kp>
+      <kd>1.0</kd>
+      <material>Gazebo/Grey</material>
+    </gazebo>
+  
+    <gazebo>
+    <plugin name="${prefix}gazebo_ros_vacuum_gripper${index}" filename="libgazebo_ros_vacuum_gripper.so">
+      <ros>
+          <namespace>${namespace}</namespace>
+      </ros>
+      <link_name>${prefix}vacuum_gripper${index}</link_name>
+      <topicName>grasping</topicName>
+      <maxForce>10</maxForce>
+      <max_distance>0.08</max_distance>
+      <minDistance>0.01</minDistance>
+      <fixed>ground_plane</fixed>
+      <fixed>belt_visual</fixed>
+      <fixed>belt_moving</fixed>
+    </plugin>
+    </gazebo>
+   
+
+  </xacro:macro>
+  
+   <link name="vacuum_gripper_base">
+      <gravity>0</gravity>
+      <visual name="vacuum_visual_base">
+        <origin rpy="0 0 0" xyz="0 0 0.00" />
+        <geometry>
+          <cylinder radius="0.03" length="0.005"/>
+        </geometry>
+      </visual>
+      <inertial name="vacuum_inertial_base">
+        <origin rpy="0 0 0" xyz="0.0 0.0 0.00"/>
+        <mass value="0.005"/>
+        <inertia ixx="0.049443313556" ixy="0" ixz="0" iyy="0.049443313556" iyz="0" izz="0.049443313556"/>
+      </inertial>
+      <collision name="vacuum_collision_base">
+        <origin rpy="0 0 0" xyz="0 0 0.00"/>
+        <geometry>
+          <cylinder radius="0.03" length="0.005"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="vacuum_gripper_base_joint" type="fixed">
+      <parent link="ee_link" />
+      <child link="vacuum_gripper_base" />
+      <origin rpy="0.0 0.0 0.0" xyz="0.0025 0.0 0.0"/>
+      <limit effort="0.0" velocity="0.0" lower="0" upper="0" />
+      <dynamics damping="0.0" friction="10"/>
+    </joint>
+ 
+  <xacro:ur_vacuum_gripper prefix="$(arg prefix)" namespace="$(arg namespace)" index="1" base_link="vacuum_gripper_base" xyz="0.0 0.0125 0.002"/>
+ 
+  <xacro:ur_vacuum_gripper prefix="$(arg prefix)" namespace="$(arg namespace)" index="2" base_link="vacuum_gripper_base" xyz="0.0 -0.0125 0.002"/>
+
+</robot>

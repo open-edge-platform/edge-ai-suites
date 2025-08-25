@@ -450,6 +450,14 @@ void TrackerNodeWorker_CPU::Impl::process(std::size_t batchIdx){
                         lock.unlock();
                     }
                 }
+
+                VideoTimeStamp_t videoTimeMeta;
+                if(blob->get(0)->getMeta(videoTimeMeta) == hva::hvaSuccess) {
+                    std::chrono::time_point<std::chrono::high_resolution_clock> currentTime = std::chrono::high_resolution_clock::now();
+                    videoTimeMeta.endTime = currentTime;
+                    blob->get(0)->setMeta(videoTimeMeta);
+                }
+
                 HVA_DEBUG("No ROI is provided on frameid %u at TrackerNode. And no tracklets exist, skipping...", blob->frameId);
                 // sendOutput called at ~_TrackerResultCollector()
                 return;
@@ -564,6 +572,13 @@ void TrackerNodeWorker_CPU::Impl::process(std::size_t batchIdx){
                     }
                     lock.unlock();
                 }
+            }
+
+            VideoTimeStamp_t videoTimeMeta;
+            if(blob->get(0)->getMeta(videoTimeMeta) == hva::hvaSuccess) {
+                std::chrono::time_point<std::chrono::high_resolution_clock> currentTime = std::chrono::high_resolution_clock::now();
+                videoTimeMeta.endTime = currentTime;
+                blob->get(0)->setMeta(videoTimeMeta);
             }
 
             HVA_DEBUG("Submiting tracker node on frameid %u with rois: %d", blob->frameId, ptrVideoBuf->rois.size());

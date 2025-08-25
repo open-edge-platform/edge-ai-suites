@@ -32,12 +32,17 @@
 Details about the changes, improvements, and known issues in this release of the
 application.
 
-## Current Release: [Version 1.0.0]
+## Version 1.0.1
+
+**Release Date**: [2025-08-20]
+
+- DL Streamer version upgraded to 2025.1.2
+- DL Streamer Pipeline Server version upgraded to 3.1.0
+- Bug fixes
+
+## Version 1.0.0
 
 **Release Date**: [2025-03-31]
-
-### New Features
-
 <!--
 **Guidelines for New Features**:
 1. **What to Include**:

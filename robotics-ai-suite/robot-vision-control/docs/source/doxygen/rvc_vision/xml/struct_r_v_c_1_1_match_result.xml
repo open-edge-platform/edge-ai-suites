@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="struct_r_v_c_1_1_match_result" kind="struct" language="C++" prot="public">
+    <compoundname>RVC::MatchResult</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_result_1a37c1d01b3c3c1be0f414d244d2e2f331" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool RVC::MatchResult::matched</definition>
+        <argsstring></argsstring>
+        <name>matched</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="82" column="10" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="82" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_result_1a57ac58ddf2780f99f50f05ea7719168a" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchResult::ransac_score</definition>
+        <argsstring></argsstring>
+        <name>ransac_score</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="84" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="84" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_result_1a3114f1c76d70b486e595e1fb73ab868d" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchResult::icp_score</definition>
+        <argsstring></argsstring>
+        <name>icp_score</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="85" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="85" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_result_1ae715a51ac1ae44d28fe66124bc5e3463" prot="public" static="no" mutable="no">
+        <type>Eigen::Vector3f</type>
+        <definition>Eigen::Vector3f RVC::MatchResult::position</definition>
+        <argsstring></argsstring>
+        <name>position</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="87" column="21" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="87" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_result_1a50eb9ebe0dd6d60b08cad2f2cd3e8a52" prot="public" static="no" mutable="no">
+        <type>Eigen::Matrix4f</type>
+        <definition>Eigen::Matrix4f RVC::MatchResult::xform</definition>
+        <argsstring></argsstring>
+        <name>xform</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="88" column="21" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="88" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_result_1a6e51cb912e0515e075664f7a1b32e713" prot="public" static="no" mutable="no">
+        <type>pcl::PointCloud&lt; PointT &gt;::Ptr</type>
+        <definition>pcl::PointCloud&lt;PointT&gt;::Ptr RVC::MatchResult::registered_cloud</definition>
+        <argsstring></argsstring>
+        <name>registered_cloud</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="89" column="27" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="89" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_pose_detector/include/matcher.hpp" line="77" column="1" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="78" bodyend="90"/>
+    <listofallmembers>
+      <member refid="struct_r_v_c_1_1_match_result_1a3114f1c76d70b486e595e1fb73ab868d" prot="public" virt="non-virtual"><scope>RVC::MatchResult</scope><name>icp_score</name></member>
+      <member refid="struct_r_v_c_1_1_match_result_1a37c1d01b3c3c1be0f414d244d2e2f331" prot="public" virt="non-virtual"><scope>RVC::MatchResult</scope><name>matched</name></member>
+      <member refid="struct_r_v_c_1_1_match_result_1ae715a51ac1ae44d28fe66124bc5e3463" prot="public" virt="non-virtual"><scope>RVC::MatchResult</scope><name>position</name></member>
+      <member refid="struct_r_v_c_1_1_match_result_1a57ac58ddf2780f99f50f05ea7719168a" prot="public" virt="non-virtual"><scope>RVC::MatchResult</scope><name>ransac_score</name></member>
+      <member refid="struct_r_v_c_1_1_match_result_1a6e51cb912e0515e075664f7a1b32e713" prot="public" virt="non-virtual"><scope>RVC::MatchResult</scope><name>registered_cloud</name></member>
+      <member refid="struct_r_v_c_1_1_match_result_1a50eb9ebe0dd6d60b08cad2f2cd3e8a52" prot="public" virt="non-virtual"><scope>RVC::MatchResult</scope><name>xform</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

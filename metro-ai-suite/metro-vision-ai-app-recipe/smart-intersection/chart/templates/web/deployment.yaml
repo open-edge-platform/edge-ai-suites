@@ -79,8 +79,8 @@ spec:
           cp /tmp/secrets/scenescape-ca.pem /run/secrets/certs/scenescape-ca.pem &&
           cp /tmp/secrets/scenescape-web.crt /run/secrets/certs/scenescape-web.crt &&
           cp /tmp/secrets/scenescape-web.key /run/secrets/certs/scenescape-web.key &&
-          cp /tmp/secrets/secrets.py /home/scenescape/SceneScape/sscape/secrets.py &&
-          sed -i "s/'HOST': 'localhost'/'HOST':'smart-intersection-pgserver'/g" /home/scenescape/SceneScape/sscape/settings.py &&
+          cp /tmp/secrets/secrets.py /home/scenescape/SceneScape/manager/secrets.py &&
+          sed -i "s/'HOST': 'localhost'/'HOST':'smart-intersection-pgserver'/g" /home/scenescape/SceneScape/manager/settings.py &&
           chown -R scenescape:scenescape /workspace &&
           /usr/local/bin/scenescape-init webserver --dbhost smart-intersection-pgserver --broker broker.scenescape.intel.com --brokerauth /run/secrets/browser.auth --brokerrootcert /run/secrets/certs/scenescape-ca.pem
       volumes:

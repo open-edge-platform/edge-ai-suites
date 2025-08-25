@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespace_r_v_c_control" kind="namespace" language="C++">
+    <compoundname>RVCControl</compoundname>
+    <innerclass refid="class_r_v_c_control_1_1_r_v_c_grasp_interface" prot="public">RVCControl::RVCGraspInterface</innerclass>
+    <innerclass refid="class_r_v_c_control_1_1_non_oriented_grasp" prot="public">RVCControl::NonOrientedGrasp</innerclass>
+    <innerclass refid="class_r_v_c_control_1_1_oriented_grasp" prot="public">RVCControl::OrientedGrasp</innerclass>
+    <briefdescription>
+<para>Any defined controllers have to inerit from this to be used in the StateMachine node. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_grasp/rvc_grasp_interface/include/rvc_grasp_interface/rvc_grasp_interface.hpp" line="33" column="1"/>
+  </compounddef>
+</doxygen>

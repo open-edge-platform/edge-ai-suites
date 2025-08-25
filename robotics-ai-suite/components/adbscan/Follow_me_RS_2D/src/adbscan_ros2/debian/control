@@ -1,0 +1,12 @@
+Source: ros-humble-adbscan-ros2-follow-me
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), python3-ament-package, ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-nav2-dynamic-msgs, ros-humble-builtin-interfaces, ros-humble-geometry-msgs, ros-humble-visualization-msgs, ros-humble-sensor-msgs, ros-humble-pcl-conversions, ros-humble-rclcpp, ros-humble-follow-me-interfaces, ros-humble-robotics-sdk-license
+Standards-Version: 4.1.4
+
+Package: ros-humble-adbscan-ros2-follow-me
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-humble-nav2-dynamic-msgs, ros-humble-builtin-interfaces, ros-humble-geometry-msgs, ros-humble-visualization-msgs, ros-humble-sensor-msgs, ros-humble-rclcpp, ros-humble-follow-me-interfaces, ros-humble-rviz2, ros-humble-robotics-sdk-license
+Description: An AMR application developed by Intel to enable a robot to follow a specific person or target based on Adaptive DBScan clustering, gesture and audio command based motion control

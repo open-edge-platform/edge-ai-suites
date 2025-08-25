@@ -1,0 +1,215 @@
+From 5176774a49ae37254735b291a3d6762e4ec966dd Mon Sep 17 00:00:00 2001
+From: "Liu, Baihe" <baihe.liu@intel.com>
+Date: Fri, 28 Feb 2025 02:15:55 +0800
+Subject: [PATCH 2/2] add model conversion script
+
+---
+ ov_convert.py | 196 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 196 insertions(+)
+ create mode 100644 ov_convert.py
+
+diff --git a/ov_convert.py b/ov_convert.py
+new file mode 100644
+index 0000000..c6335a0
+--- /dev/null
++++ b/ov_convert.py
+@@ -0,0 +1,196 @@
++import argparse
++# from policy import ACTPolicy
++from detr.models import build_ACT_model
++import openvino as ov
++import torch
++from torchvision import transforms
++import numpy as np
++
++
++# inference model (exclude training part)
++class ACTPolicy(torch.nn.Module):
++    def __init__(self, args_override):
++        super().__init__()
++        self.model = build_ACT_model(args_override)
++        self.kl_weight = args_override.kl_weight
++        self.vq = args_override.vq
++        # print(f'KL Weight {self.kl_weight}')
++        # print(f'Chunk Size {args_override.chunk_size}')
++
++    def __call__(self, qpos, image):
++        env_state = None
++        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
++                                         std=[0.229, 0.224, 0.225])
++        image = normalize(image)
++        a_hat, _, (_, _) = self.model(qpos, image, None) # no action, sample from prior
++        return a_hat
++
++    @torch.no_grad()
++    def vq_encode(self, qpos, actions, is_pad):
++        actions = actions[:, :self.model.num_queries]
++        is_pad = is_pad[:, :self.model.num_queries]
++
++        _, _, binaries, _, _ = self.model.encode(qpos, actions, is_pad)
++
++        return binaries
++        
++    def serialize(self):
++        return self.state_dict()
++
++    def deserialize(self, model_dict):
++        return self.load_state_dict(model_dict)
++
++
++def check_weights(init_state, loaded_state):
++    equal_count = 0
++    not_equal_count = 0
++    for k, v in init_state.items():
++        if not torch.equal(v, loaded_state[k]):
++            print(f'Weight {k} is not equal')
++            not_equal_count += 1
++        else:
++            print(f'Weight {k} is equal')
++            equal_count += 1
++    print(f"{not_equal_count} weights are not equal, {equal_count} weights are equal")
++
++
++def get_ov_model(model_path, device='CPU'):
++    core = ov.Core()
++    ov_model = core.read_model(model_path)
++    compiled_model = ov.compile_model(ov_model, device)
++    return compiled_model
++
++
++def ov_inference(model_path, input):
++    compiled_model = get_ov_model(model_path)
++    result = compiled_model(input)
++    return result
++
++
++def export(args):
++    # config is dumped from imitate_episodes.py
++    config = {
++        'lr': 0.0,
++        'lr_backbone': 0,
++        'batch_size': 12,
++        'weight_decay': 0.0001,
++        'epochs': 300,
++        'lr_drop': 200,
++        'clip_max_norm': 0.1,
++        'backbone': 'resnet18',
++        'dilation': False,
++        'position_embedding': 'sine',
++        'camera_names': ['cam_high', 'cam_low', 'cam_left_wrist', 'cam_right_wrist'],
++        'enc_layers': 4,
++        'dec_layers': 7,
++        'dim_feedforward': 3200,
++        'hidden_dim': 512,
++        'dropout': 0.1,
++        'nheads': 8,
++        'num_queries': 100,  # chunk_size
++        'pre_norm': False,
++        'masks': False,
++        'eval': True,
++        'onscreen_render': False,
++        'policy_class': 'ACT',
++        'seed': 0,
++        'num_steps': 1000,
++        'kl_weight': 10,
++        'temporal_agg': False,
++        'use_vq': False,
++        'vq_class': None,
++        'vq_dim': None,
++        'load_pretrain': False,
++        'action_dim': 16,
++        'eval_every': 2000,
++        'validate_every': 2000,
++        'save_every': 2000,
++        'resume_ckpt_path': None,
++        'no_encoder': True,
++        'skip_mirrored_data': False,
++        'actuator_network_dir': None,
++        'history_len': None,
++        'future_len': None,
++        'prediction_len': None,
++        'device': 'CPU',
++        'vq': False
++    }
++    if args.kl_weight is not None:
++        config['kl_weight'] = args.kl_weight
++    if args.chunk_size is not None:
++        config['num_queries'] = args.chunk_size
++    if args.hidden_dim is not None:
++        config['hidden_dim'] = args.hidden_dim
++    if args.dim_feedforward is not None:
++        config['dim_feedforward'] = args.dim_feedforward
++    if args.camera_num is not None:
++        if args.camera_num == 1:
++            config['camera_names'] = ['top']
++        elif args.camera_num == 3:
++            config['camera_names'] = ['top', 'left_wrist', 'right_wrist']
++        elif args.camera_num == 4:
++            config['camera_names'] = ['cam_high', 'cam_low', 'cam_left_wrist', 'cam_right_wrist']
++        else:
++            raise NotImplementedError
++
++
++    ACT_args = argparse.Namespace(**config)
++    # Create model
++    policy = ACTPolicy(ACT_args)  
++    policy.eval()
++
++    # Define variables
++    H = args.height
++    W = args.weight
++    CAMERA = len(ACT_args.camera_names)
++    qpos = torch.rand((1, 14))
++    image = torch.rand((1, CAMERA, 3, H, W))
++    print("image shape: ", image.shape)
++
++    # Load checkpoint
++    state_dict = torch.load(args.ckpt_path, weights_only=True, map_location=torch.device('cpu'))  
++    policy.deserialize(state_dict)
++    traced_policy = torch.jit.trace(policy, example_inputs=(qpos, image))
++
++    # Get input tensor names
++    graph = traced_policy.graph
++    input_names = [inp.debugName() for inp in graph.inputs() if inp.debugName() != 'self.1']
++    print("Input tensor names:", input_names)
++
++    # Save converted model (input tensor names are required)
++    ov_policy = ov.convert_model(traced_policy, input={'qpos':(1,14), 'tensor.1':(1,CAMERA,3,H,W)})  # specify input shape to get better performance
++    if args.output_name is None:
++        args.output_name = args.ckpt_path.replace('.ckpt', '.xml')
++    ov.save_model(ov_policy, args.output_name)
++    print("model converted successfully")
++
++    if args.compare_diff:
++        # Compare outputs of original and traced functions
++        original_output = policy(qpos, image).detach().numpy()
++        input = {
++            'qpos': qpos.numpy(),
++            'tensor.1': image.numpy()
++        }
++        # Run inference and compare outputs
++        result_0 = ov_inference(args.output_name, input)
++        diff_ov = np.abs(original_output - result_0[0])
++        print(f"torch to ov -> Max diff:{np.max(diff_ov)}, Mean diff:{np.mean(diff_ov)}")
++
++
++if __name__ == '__main__':
++    parser = argparse.ArgumentParser(description='OV Convert Script')
++    parser.add_argument('--ckpt_path', type=str, default='', help='ckpt path', required=True)
++    parser.add_argument('--output_name', type=str, help='output model name')
++    parser.add_argument('--compare_diff', action='store_true', help='compare output tensor difference between torch and ov')
++    # for ACT model structure, please keep same to training config
++    parser.add_argument('--kl_weight', action='store', type=int, help='KL Weight', required=False)
++    parser.add_argument('--chunk_size', action='store', type=int, help='chunk_size', required=False)
++    parser.add_argument('--hidden_dim', action='store', type=int, help='hidden_dim', required=False)
++    parser.add_argument('--dim_feedforward', action='store', type=int, help='dim_feedforward', required=False)
++    # for runtime
++    parser.add_argument('--height', action='store', type=int, help='camera image height', default=480,  required=False)
++    parser.add_argument('--weight', action='store', type=int, help='camera image weight', default=640,  required=False)
++    parser.add_argument('--camera_num', action='store', type=int, help='camera nums, 4 by default',  required=False)
++    
++    args = parser.parse_args()
++    export(args)
+-- 
+2.34.1
+

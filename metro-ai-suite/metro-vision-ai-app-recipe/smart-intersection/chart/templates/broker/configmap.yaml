@@ -5,4 +5,4 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   mosquitto-secure.conf: |
-{{ .Files.Get "files/mosquitto/mosquitto-secure.conf" | indent 4 }}
+{{ include "requiredFile" (list . "files/mosquitto/mosquitto-secure.conf") | indent 4 }}

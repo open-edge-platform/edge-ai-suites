@@ -1,0 +1,294 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+univloc_tracker:
+  # ID of this tracker
+  ID: 0
+
+  # The name of world coodinate in tf tree. Default is map
+  map_frame: 'map'
+
+  # Whether to get camera info from topic
+  get_camera_info_from_topic: true
+
+  # Monocular, Stereo, RGBD, Monocular_Inertial, Stereo_Inertial or RGBD_Inertial
+  camera_setup: 'RGBD'
+
+  # Default prefix of all the input topics
+  camera: 'camera'
+
+  # Camera intrinsics, necessary if get_camera_info_from_topic equals false
+  camera_intrinsics: [0.0]
+
+  # Camera distortion, necessary if get_camera_info_from_topic equals false
+  camera_distortion: [0.0]
+
+  # FPS of input camera images, please change the value to align with the camera
+  camera_fps: 30.0
+
+  # Camera color order, options: "Gray", "RGB", "RGBA", "BGR", "BGRA"
+  camera_color_order: 'RGB'
+
+  # Topic of the color image; leave blank to use "$(arg camera)/color/image_raw"
+  image_topic: ''
+
+  # Topic of the image input of right channel for stereo image input
+  right_image_topic: ''
+
+  # Topic of the color image; leave blank to use "$(arg camera)/aligned_depth_to_color/image_raw"
+  depth_topic: ''
+
+  # Topic of camera info; leave blank to use (right_)image_topic with last substring replaced by "camera_info"
+  camera_info_topic: ''
+
+  # Topic of camera info of right channel in stereo image input;
+  right_camera_info_topic: ''
+
+  # If using raw transport when enabling image transport feature.
+  raw_transport: true
+
+  # mapping, localization or relocalization
+  slam_mode: 'mapping'
+
+  # The usage model of the camera, Perspective or Fisheye
+  model_type: 'Perspective'
+
+  # Size of the input data queue; set 1 in real-time usage to always process the latest image
+  # Set 0 to specify an unlimited size to ensure every image be processed sequentially (with lag)
+  queue_size: 1
+
+  # Reset the system if consecutively lost for a specified number of frames; set 0 to never reset
+  num_lost_frames_to_reset: 0
+
+  # Vocabulary file, either filename under the config folder or an absolute path
+  vocabulary: 'orb_vocab.dbow2'
+
+  # Whether to publish the estimated pose onto /tf
+  publish_tf: true
+
+  # Child frame for publishing poses to /tf; usually "base_link" or "camera_link"
+  # Leave blank to use image_frame
+  pub_tf_child_frame: ''
+
+  # Parent frame for publishing poses to /tf; usually "map"
+  pub_tf_parent_frame: ''
+
+  # The pose of the camera in the tf2 message
+  image_frame: ''
+
+  # The frame ID in tf tree that does not change over time
+  tf_fix_frame: ''
+
+  # Whether to get camera extrinsics (w.r.t. robot base) from /tf
+  get_camera_extrin_from_tf: true
+
+  # Timeout to query camera extrinsics from /tf
+  camera_extrin_query_timeout: 10.0
+
+  # Used only if get_camera_extrin_from_tf is true
+  baselink_frame: 'base_link'
+
+  # Whether to clean redundant keyframe
+  clean_keyframe: true
+
+  # Whether to fuse odom data
+  use_odom: false
+
+  # Frame name of odom, if use_odom is true
+  odom_frame: 'odom'
+
+  # Timeout in millisecond for querying odom pose
+  # Will block image callback, should consider the frequency of image and odom
+  odom_tf_query_timeout: 0.0
+
+  # Will block tracking module, should consider the frequency of image and odom
+  odom_buffer_query_timeout: 0.0
+
+  ### ORB feature extraction parameters
+  # Maximal number of keypoints
+  max_num_keypoints: 1000
+
+  # Image scaling factor of the pyramid
+  orb_scale_factor: 1.2
+
+  # Number of levels in the pyramid
+  orb_num_levels: 8
+
+  # Initial FAST threshold
+  orb_ini_fast_threshold: 20
+
+  # Minimum FAST threshold
+  orb_min_fast_threshold: 7
+
+  # Mask rectangle
+  # Must provide 4 rectangles and each rectangle param is xmin, xmax, ymin, ymax;  Leave blank if no mask require
+  # orb_mask_rectangles : [0.0, 1.0, 0.0, 0.1, 0.0, 1.0, 0.90, 1.0, 0.0, 0.2, 0.7, 1.0, 0.8, 1.0, 0.7, 1.0]
+  orb_mask_rectangles: [0.0]
+
+  # Mask Image
+  # Provide mask image in PNG or JPEG file with region in black and white. Keypoints inside black region will be drop
+  # Mask image width and height must match camera width and height
+  orb_mask_image: ''
+
+  ### More options
+  # Whether to visualize keypoints in a window
+  gui: true
+
+  # Whether to launch rviz
+  rviz: true
+
+  # Whether to launch the tracker node with gdb for debugging
+  gdb: false
+
+  # The path to save the trajectory of tracker node
+  traj_store_path: ''
+
+  # Set spdlog log level: [trace, debug, info, warning, error, critical, off]
+  log_level: 'info'
+
+  # The transformation matrix between camera coordinate and image frame (T_ic)
+  T_image_to_camera: [0.0]
+
+  # For stereo cameras, it is the value of the baseline between the left and right cameras multiplied by the focal length fx.
+  # If set as default value (0.0), it will automatically be set using camera_baseline and focal length fx.
+  focal_x_baseline: 0.0
+
+  # The distance between lenses of a stereo camera (unit in meter)
+  # reference data for RealSense cameras: 50mm for D435, 55mm for D415, 95ms for D455
+  camera_baseline: 0.05
+
+  # Depth threshold factor for RGBD and stereo input
+  # For stereo/RGBD input, it will be multiplied with camera_baseline to obtain the true depth threshold
+  depth_threshold: 40.0
+
+  # Scale factor of the depth values (in inverse meter; 1000 means 0.001 m)
+  depthmap_factor: 1000.0
+
+  # Whether to enable rectifier for stereo camera
+  enable_rectifier: true
+
+  # Whether stereo rectification parameters are provided
+  # For public datasets, the recitifier params are given.
+  # For self-recorded datasets, typically we need to obtain the recitifier params on our own.
+  # Our system provides a way to obtain the params but currently the performance is not guaranteed.
+  # Will need further investigation to verify.
+  rectifier_params_given: true
+
+  ### Stereo rectification parameters
+  # Original intrinsic parameters for left camera
+  K_left: [0.0]
+
+  # Original distortion parameters for left camera
+  D_left: [0.0]
+
+  # Rotation matrix for left camera after stereo recitification
+  R_left: [0.0]
+
+  # Original intrinsic parameters for right camera
+  K_right: [0.0]
+
+  # Original distortion parameters for right camera
+  D_right: [0.0]
+
+  # Rotation matrix for right camera after stereo recitification
+  R_right: [0.0]
+
+  # The frame ID of right camera in tf tree for stereo camera
+  tf_right_camera_frame: ''
+
+  # The left camera to right camera coordinate when using stereo input
+  left_to_right_transform: [0.0]
+
+  # Frame name of imu, if camera_setup is Monocular_Inertial, Stereo_Inertial or RGBD_Inertial
+  imu_frame: 'd400_imu'
+
+  # Whether to get imu extrinsics (w.r.t. image frame) from /tf
+  get_imu_extrin_from_tf: false
+
+  # The transformation matrix between camera and imu, i.e. translation, quaternion (x, y, z, w, x, y, z)
+  # if get_imu_extrin_from_tf is false
+  tf_camera_imu: [0.020096886903, -0.00507855368778, -0.0115051260218, 0.999987, -0.000504782, 0.00444093, -0.00264019]
+
+  # Either set imu_topic only, or set both accel_topic and gyro_topic
+  # The topic of imu input, if accel_topic and gyro_topic are empty
+  imu_topic: ''
+
+  # The topic of the accelarator, if imu_topic is empty
+  accel_topic: ''
+
+  # The topic of the gyroscope, if imu_topic is empty
+  gyro_topic: ''
+
+  # The frequency parameter used to process the imu input
+  # Referenced from RealSense_D435i.yaml in Examples/RGB-D-Inertial at ORBSLAM3 repo
+  imu_frequency: 200.0
+
+  # The bias parameter used to process the imu input, only used for initialization
+  imu_bias: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+  # The noise parameter used to process the imu input, i.e. ngx, ngy, ngz, nax, nay, naz
+  # Referenced from RealSense_D435i.yaml in Examples/RGB-D-Inertial at ORBSLAM3 repo
+  imu_noise: [1.0e-02, 1.0e-02, 1.0e-02, 1.0e-01, 1.0e-01, 1.0e-01]
+
+  # The bias_walker parameter used to process the imu input, i.e. wgx, wgy, wgz, wax, way, waz
+  # Referenced from RealSense_D435i.yaml in Examples/RGB-D-Inertial at ORBSLAM3 repo
+  # The real numbers should be 1.0e-06, 1.0e-06, 1.0e-06, 1.0e-04, 1.0e-04, 1.0e-04
+  # But the launch file cannot read those float numbers properly, thus using the below numbers
+  imu_bias_walker: [1.0001e-06, 1.0001e-06, 1.0001e-06, 1.0e-04, 1.0e-04, 1.0e-04]
+
+  # whether to force best effort QoS for ROS service
+  force_best_effort: false
+
+  # whether to use lidar or not
+  use_lidar: false
+
+  # Whether to get lidar extrinsics (w.r.t. robot base) from /tf
+  get_lidar_extrin_from_tf: false
+
+  # The transformation matrix between base_link to Lidar, i.e. translation, quaternion (x, y, z, w, x, y, z)
+  # use tf_base_lidar if get_lidar_extrin_from_tf is false
+  tf_base_lidar: [0.0, 0.0, 0.16, 0.0, 0.0, 0.0, 0.0]
+
+  # Lidar displacement from the ground
+  lidar_height: 0.22
+
+  # Frame name of lidar
+  lidar_frame: ''
+
+  # namespace under which topics are created
+  namespace: ''
+
+  # Fast Mapping settings
+  enable_fast_mapping: false
+
+  # depth threshold for fastmapping, should be smaller than true depth threshold (camera_baseline * depth_threshold)
+  depth_max_range: 3.3
+
+  # Voxel size in meters
+  voxel_size: 0.04
+
+  # Minimum and maximum height, in meters, from which the camera input will be processed and integrated into the octree
+  # If left empty, the entire camera input will be processed therefore the 3D map will contain floors and ceilings
+  zmin: 0.30
+  zmax: 0.60
+
+  # Size of the volumetric map in voxels
+  map_size: 256
+
+  # Scaling factor of the depth image
+  depth_scaling_factor: 2
+
+  # The path to store octree map of tracker node
+  octree_store_path: ''
+
+  # The path to load pre-constructed octree map
+  octree_load_path: ''
+
+  # The four vertexes of remapping region, [P1.x, P1.y, ... , P4.x, P4.y], must be in clockwise or anti-clockwise
+  # order
+  remapping_region: [0.0]
+
+  # Divisor to trigger relocalization in localization mode
+  reloc_trig_divisor: 1
+
+  # Compute and publish covariance matrix of pose in mapping mode, will further enable in localization and remapping mode
+  need_covariance: false

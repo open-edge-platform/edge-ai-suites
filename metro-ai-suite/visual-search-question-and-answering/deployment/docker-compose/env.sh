@@ -10,7 +10,7 @@ export VIDEO_GROUP_ID
 export RENDER_GROUP_ID
 
 # Append the value of the public IP address to the no_proxy list 
-export no_proxy="localhost, 127.0.0.1, ::1" 
+export no_proxy="localhost,127.0.0.1,::1,${host_ip}" 
 export http_proxy=${http_proxy}
 export https_proxy=${https_proxy}
 export no_proxy_env=${no_proxy}
@@ -30,7 +30,7 @@ export MODEL_DIR="$HOME/models"
 # export LOCAL_EMBED_MODEL_ID="CLIP-ViT-H-14"
 # export VLM_MODEL_NAME="Qwen/Qwen2.5-VL-7B-Instruct"
 
-export VLM_COMPRESSION_WEIGHT_FORMAT=int4
+export VLM_COMPRESSION_WEIGHT_FORMAT=int8
 export WORKERS=1
 
 export VLM_SEED=42

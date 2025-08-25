@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_bfed9713bde9aba8a6db095ae4e6b3b5" kind="dir">
+    <compoundname>rvc_vision_main</compoundname>
+    <innerdir refid="dir_4ca55adbf6dcf3598cbefa949f849e5e">rvc_vision_main/launch</innerdir>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_vision_main/"/>
+  </compounddef>
+</doxygen>

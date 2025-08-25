@@ -1,0 +1,6 @@
+subsample_ratio = 5
+x_filter_back = 4
+y_filter_left = 10
+y_filter_right = -20
+z_filter = -1.3
+Z_based_ground_removal = 1

@@ -1,4 +1,4 @@
-# Overview 
+# Overview
 
 Loitering Detection monitors and manages areas with AI-driven video analytics for real-time insights and enhanced security.
 
@@ -18,7 +18,7 @@ The key features are as follows:
 
 The architecture is designed to facilitate seamless integration and operation of various components involved in AI-driven video analytics.
 
-![Architecture Diagram](_images/arch.png)
+![Architecture Diagram](./_images/loitering-detection-architecture.drawio.svg)
 
 ### Components
 

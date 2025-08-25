@@ -1,0 +1,25 @@
+Source: ros-humble-adbscan-ros2
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), python3-ament-package, ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-ament-lint-auto, ros-humble-ament-cmake-gtest, ros-humble-nav2-dynamic-msgs, ros-humble-builtin-interfaces, ros-humble-geometry-msgs, ros-humble-visualization-msgs, ros-humble-sensor-msgs, ros-humble-pcl-conversions, ros-humble-rclcpp, libpcl-dev ( >= 1.12 ), intel-oneapi-dpcpp-cpp-2024.0, intel-oneapi-compiler-dpcpp-cpp-2024.0, intel-oneapi-dpcpp-ct-2024.0, ros-humble-robotics-sdk-license
+Standards-Version: 4.1.4
+
+Package: ros-humble-adbscan-ros2
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-humble-nav2-dynamic-msgs, ros-humble-builtin-interfaces, ros-humble-geometry-msgs, ros-humble-visualization-msgs, ros-humble-sensor-msgs, ros-humble-rclcpp, ros-humble-rviz2, ros-humble-robotics-sdk-license, ros-humble-bagfile-laser-pointcloud
+Description: Standard Adaptive Density-based Spatial Clustering of Applications with Noise (ADBSCAN) for ROS2 
+Provides: ros-humble-adbscan-ros2
+Conflicts: ros-humble-adbscan-oneapi
+Replaces: ros-humble-adbscan-oneapi
+
+Package: ros-humble-adbscan-oneapi
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-humble-nav2-dynamic-msgs, ros-humble-builtin-interfaces, ros-humble-geometry-msgs, ros-humble-visualization-msgs, ros-humble-sensor-msgs, ros-humble-rclcpp, ros-humble-rviz2, ros-humble-robotics-sdk-license
+Description: Intel OneAPI optimized Adaptive Density-based Spatial Clustering of Applications with Noise (ADBSCAN) for ROS2 
+Provides: ros-humble-adbscan-oneapi
+Conflicts: ros-humble-adbscan-ros2
+Replaces: ros-humble-adbscan-ros2
+

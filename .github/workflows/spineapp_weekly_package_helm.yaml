@@ -1,0 +1,87 @@
+
+name: "[industrial-edge-insights-vision] Package helm charts weekly "
+run-name: "[industrial-edge-insights-vision] Package helm charts weekly"
+on:
+  workflow_dispatch:
+    inputs:
+      helm-chart-tag:
+        description: 'Helm chart tag'
+        required: true
+        type: string
+      
+permissions: {}
+jobs:
+  publish-helm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    strategy:
+      fail-fast: false
+    steps:
+    - name: Check out edge-ai-suites repository
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+      with:
+        path: edge-ai-suites-repo
+        persist-credentials: false
+    - name: Install Helm
+      uses: azure/setup-helm@v4
+      with:
+        version: v3.15.2  
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 #3.4.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Package Helm Chart
+      run: |
+        cd edge-ai-suites-repo/manufacturing-ai-suite/industrial-edge-insights-vision
+        # Packaging PCB
+        cp helm/Chart-pcb-anomaly-detection.yaml helm/Chart.yaml
+        cp helm/values_pcb_anomaly_detection.yaml helm/values.yaml
+        helm package helm --version ${{ inputs.helm-chart-tag }} --app-version ${{ inputs.helm-chart-tag }}
+
+        # Packaging Weld Porosity
+        cp helm/Chart-weld-porosity.yaml helm/Chart.yaml
+        cp helm/values_weld_porosity_classification.yaml helm/values.yaml
+        helm package helm --version ${{ inputs.helm-chart-tag }} --app-version ${{ inputs.helm-chart-tag }}
+
+        # Packaging PDD
+        cp helm/Chart-pallet-defect-detection.yaml helm/Chart.yaml
+        cp helm/values_pallet_defect_detection.yaml helm/values.yaml
+        helm package helm --version ${{ inputs.helm-chart-tag }} --app-version ${{ inputs.helm-chart-tag }}
+
+        # Packaging Worker Safty
+        cp helm/Chart-worker-safety-gear-detection.yaml helm/Chart.yaml
+        cp helm/values_worker_safety_gear_detection.yaml helm/values.yaml
+        helm package helm --version ${{ inputs.helm-chart-tag }} --app-version ${{ inputs.helm-chart-tag }}
+    - name: Push to GHCR
+      run: |
+        
+        for CHART_PACKAGE in edge-ai-suites-repo/manufacturing-ai-suite/industrial-edge-insights-vision/*-${{ inputs.helm-chart-tag }}.tgz; do
+            helm push "$CHART_PACKAGE" oci://ghcr.io/${{ github.repository }}/manufacturing-ai-suite-vision-helm-chart
+
+        done
+        
+    - name: Update Github Summary
+      run: |
+        echo "### ✅ manufacturing-ai-suite-vision-helm-chart published to github container registry" >> $GITHUB_STEP_SUMMARY
+        echo "- Registry: \`oci://ghcr.io/${{ github.repository }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- Version: \`${{ inputs.helm-chart-tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "### Helm Pull Commands" >> $GITHUB_STEP_SUMMARY
+        for CHART_PACKAGE in edge-ai-suites-repo/manufacturing-ai-suite/industrial-edge-insights-vision/*-${{ inputs.helm-chart-tag }}.tgz; do
+            # Extract the chart name from the .tgz file
+            CHART_NAME=$(basename "$CHART_PACKAGE" -${{ inputs.helm-chart-tag }}.tgz)
+            # Append the pull command to GitHub summary
+            echo '```bash' >> $GITHUB_STEP_SUMMARY
+            echo " \`helm pull oci://ghcr.io/${{ github.repository }}/manufacturing-ai-suite-vision-helm-chart/$CHART_NAME --version ${{ inputs.helm-chart-tag }}\`" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+        done
+        
+    - name: Clean up
+      if: always()
+      run: |
+        rm -rf edge-ai-suites-repo

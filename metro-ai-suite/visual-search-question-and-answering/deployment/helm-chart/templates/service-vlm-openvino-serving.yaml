@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.vlmOpenvinoServing.name }}
+spec:
+  type: {{ .Values.vlmOpenvinoServing.service.type }}
+  ports:
+    - port: {{ .Values.vlmOpenvinoServing.service.port }}
+      targetPort: {{ .Values.vlmOpenvinoServing.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Values.vlmOpenvinoServing.name }}
+

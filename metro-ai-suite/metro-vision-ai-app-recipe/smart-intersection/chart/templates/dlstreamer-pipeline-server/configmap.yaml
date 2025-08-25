@@ -34,7 +34,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   config.json: |
-{{ .Files.Get "files/dlstreamer-pipeline-server/config.json" | indent 4 }}
+{{ include "requiredFile" (list . "files/dlstreamer-pipeline-server/config.json") | indent 4 }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -43,4 +43,4 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   config.json: |
-{{ .Files.Get "files/dlstreamer-pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py" | indent 4 }}
+{{ include "requiredFile" (list . "files/dlstreamer-pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py") | indent 4 }}

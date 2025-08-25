@@ -1,0 +1,7 @@
+<launch>
+    <arg name="mode" default=""/>
+    <node pkg="pose_checker" exec="pose_checker">
+        <param name="mode" value="$(var mode)"/>
+    </node>
+    <node pkg="send_localization" exec="send_localization" />
+</launch>

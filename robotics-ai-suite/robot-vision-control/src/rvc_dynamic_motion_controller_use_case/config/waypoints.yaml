@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+/**:
+        ros__parameters:
+          #                    -x         -y          z          # -y          x         w        -z
+            safe_point_pose: [-0.463098, 0.401034, 0.444935, -0.254744, 0.672562, 0.648287, -0.249979]
+            drop_point_pose: [-0.340000, 0.540000, 0.248000,-0.1045351, 0.7831495, 0.6033964, -0.1079908]

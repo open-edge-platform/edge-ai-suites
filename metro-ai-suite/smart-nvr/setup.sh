@@ -159,6 +159,7 @@ stop_services() {
     print_header "Stopping NVR Event Router Services"
     print_info "Stopping NVR Event Router services..."
     docker compose -f docker/compose.yaml down
+
     print_success "All services stopped."
 }
 
@@ -174,9 +175,9 @@ show_help() {
     echo -e "  ${BLUE}help${NC}     - Display this help message"
     echo ""
     echo -e "${WHITE}Examples:${NC}"
-    echo -e "  ${CYAN}$0 start${NC}     # Start the services"
-    echo -e "  ${CYAN}$0 stop${NC}      # Stop the services"
-    echo -e "  ${CYAN}$0 restart${NC}   # Restart the services"
+    echo -e "  ${CYAN}source setup.sh start${NC}     # Start the services"
+    echo -e "  ${CYAN}source setup.sh stop${NC}      # Stop the services"
+    echo -e "  ${CYAN}source setup.sh restart${NC}   # Restart the services"
     echo ""
 }
 

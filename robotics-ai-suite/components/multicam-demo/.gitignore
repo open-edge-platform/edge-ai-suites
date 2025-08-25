@@ -1,0 +1,8 @@
+build/
+*.so
+*.swp
+*.log
+tmp/
+src/__pycache__/
+tests/unittest/__pycache__/
+tests/fuzzing/__pycache__/

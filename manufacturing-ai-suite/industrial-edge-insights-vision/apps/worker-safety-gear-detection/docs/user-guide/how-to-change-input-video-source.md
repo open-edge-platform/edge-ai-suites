@@ -4,12 +4,12 @@ Typically, a pipeline is started with a cURL request with JSON payload containin
 
          curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/<pipeline_name> -X POST -H 'Content-Type: application/json' -d '{
             "source": {
-               "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4",
+               "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
                "type": "uri"
             },
             "parameters": {
                "detection-properties": {
-                  "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml",
+                  "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
                   "device": "CPU"
                }
             }

@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="struct_r_v_c_1_1_match_operation" kind="struct" language="C++" prot="public">
+    <compoundname>RVC::MatchOperation</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_operation_1a8ffd2ec99ed9d2f23184d97996b38597" prot="public" static="no" mutable="no">
+        <type>rvc_vision_messages::msg::RotatedBBList::SharedPtr</type>
+        <definition>rvc_vision_messages::msg::RotatedBBList::SharedPtr RVC::MatchOperation::rotated_bb_list</definition>
+        <argsstring></argsstring>
+        <name>rotated_bb_list</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/rvc_pose_detector.hpp" line="50" column="56" bodyfile="rvc_pose_detector/include/rvc_pose_detector.hpp" bodystart="50" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_operation_1a7c631ed0a4b33f7e2474638f499b99cf" prot="public" static="no" mutable="no">
+        <type>sensor_msgs::msg::PointCloud2::UniquePtr</type>
+        <definition>sensor_msgs::msg::PointCloud2::UniquePtr RVC::MatchOperation::cloud</definition>
+        <argsstring></argsstring>
+        <name>cloud</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/rvc_pose_detector.hpp" line="51" column="46" bodyfile="rvc_pose_detector/include/rvc_pose_detector.hpp" bodystart="51" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_pose_detector/include/rvc_pose_detector.hpp" line="48" column="1" bodyfile="rvc_pose_detector/include/rvc_pose_detector.hpp" bodystart="49" bodyend="52"/>
+    <listofallmembers>
+      <member refid="struct_r_v_c_1_1_match_operation_1a7c631ed0a4b33f7e2474638f499b99cf" prot="public" virt="non-virtual"><scope>RVC::MatchOperation</scope><name>cloud</name></member>
+      <member refid="struct_r_v_c_1_1_match_operation_1a8ffd2ec99ed9d2f23184d97996b38597" prot="public" virt="non-virtual"><scope>RVC::MatchOperation</scope><name>rotated_bb_list</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

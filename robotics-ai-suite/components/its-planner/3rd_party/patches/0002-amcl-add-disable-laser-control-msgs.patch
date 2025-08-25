@@ -1,0 +1,398 @@
+From 72c4c94307ce4652e584e7d9ccdf322489de41b4 Mon Sep 17 00:00:00 2001
+From: Jeremy Ouillette <jeremy.ouillette@intel.com>
+Date: Tue, 24 Jun 2025 21:42:42 -0700
+Subject: [PATCH 2/2] amcl: add disable laser control msgs
+
+---
+ nav2_amcl/include/nav2_amcl/amcl_node.hpp  |  38 +++++-
+ nav2_amcl/include/nav2_amcl/angleutils.hpp |  16 ---
+ nav2_amcl/src/amcl_node.cpp                | 149 ++++++++++++++++++++-
+ 3 files changed, 180 insertions(+), 23 deletions(-)
+
+diff --git a/nav2_amcl/include/nav2_amcl/amcl_node.hpp b/nav2_amcl/include/nav2_amcl/amcl_node.hpp
+index 030a85f3..ff3b2614 100644
+--- a/nav2_amcl/include/nav2_amcl/amcl_node.hpp
++++ b/nav2_amcl/include/nav2_amcl/amcl_node.hpp
+@@ -28,6 +28,7 @@
+ #include <utility>
+ #include <vector>
+ 
++#include "geometry_msgs/msg/pose_array.hpp"
+ #include "geometry_msgs/msg/pose_stamped.hpp"
+ #include "message_filters/subscriber.h"
+ #include "nav2_util/lifecycle_node.hpp"
+@@ -43,6 +44,9 @@
+ #include "tf2_ros/transform_listener.h"
+ #include "pluginlib/class_loader.hpp"
+ 
++#include "nav2_msgs/srv/global_localization.hpp"
++#include "nav2_msgs/srv/clear_entire_costmap.hpp"
++
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wunused-parameter"
+ #pragma GCC diagnostic ignored "-Wreorder"
+@@ -106,12 +110,16 @@ protected:
+   // respond until we're in the active state
+   std::atomic<bool> active_{false};
+ 
++
+   // Dedicated callback group and executor for services and subscriptions in AmclNode,
+   // in order to isolate TF timer used in message filter.
+   rclcpp::CallbackGroup::SharedPtr callback_group_;
+   rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
+   std::unique_ptr<nav2_util::NodeThread> executor_thread_;
+ 
++  bool force_publication = false;
++  bool sensor_disabled_ = false;
++  
+   // Pose hypothesis
+   typedef struct
+   {
+@@ -203,6 +211,11 @@ protected:
+    */
+   void initServices();
+   rclcpp::Service<std_srvs::srv::Empty>::SharedPtr global_loc_srv_;
++  rclcpp::Service<nav2_msgs::srv::GlobalLocalization>::SharedPtr fast_global_loc_srv_;
++  rclcpp::Client<nav2_msgs::srv::ClearEntireCostmap>::SharedPtr clear_entire_costmap_;
++  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr disable_laser_;
++  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr enable_laser_;
++
+   /*
+    * @brief Service callback for a global relocalization request
+    */
+@@ -210,6 +223,20 @@ protected:
+     const std::shared_ptr<rmw_request_id_t> request_header,
+     const std::shared_ptr<std_srvs::srv::Empty::Request> request,
+     std::shared_ptr<std_srvs::srv::Empty::Response> response);
++  void fastGlobalLocalizationCallback(
++    const std::shared_ptr<rmw_request_id_t> request_header,
++    const std::shared_ptr<nav2_msgs::srv::GlobalLocalization::Request>& request,
++    std::shared_ptr<nav2_msgs::srv::GlobalLocalization::Response> response);
++
++  void disableLaserCallback(
++    const std::shared_ptr<rmw_request_id_t> request_header,
++    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
++    std::shared_ptr<std_srvs::srv::Empty::Response> response);
++
++  void enableLaserCallback(
++    const std::shared_ptr<rmw_request_id_t> request_header,
++    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
++    std::shared_ptr<std_srvs::srv::Empty::Response> response);
+ 
+   // service server for providing an initial pose guess
+   rclcpp::Service<nav2_msgs::srv::SetInitialPose>::SharedPtr initial_guess_srv_;
+@@ -233,11 +260,9 @@ protected:
+ 
+   // Nomotion update control. Used to temporarily let amcl update samples even when no motion occurs
+   std::atomic<bool> force_update_{false};
++  std::atomic<bool> force_update_ON{false};
+ 
+   // Odometry
+-  /*
+-   * @brief Initialize odometry
+-   */
+   void initOdometry();
+   std::shared_ptr<nav2_amcl::MotionModel> motion_model_;
+   geometry_msgs::msg::PoseStamped latest_odom_pose_;
+@@ -265,6 +290,11 @@ protected:
+    * @brief Pose-generating function used to uniformly distribute particles over the map
+    */
+   static pf_vector_t uniformPoseGenerator(void * arg);
++  static pf_vector_t fastUniformPoseGenerator(void * arg);
++  static std::vector<double> centerX_;
++  static std::vector<double> centerY_;
++  static std::vector<double> sigma_;
++  static std::vector<double> weight_;
+   pf_t * pf_{nullptr};
+   bool pf_init_;
+   pf_vector_t pf_odom_pose_;
+@@ -395,4 +425,4 @@ protected:
+ 
+ }  // namespace nav2_amcl
+ 
+-#endif  // NAV2_AMCL__AMCL_NODE_HPP_
++#endif  // NAV2_AMCL__AMCL_NODE_HPP_
+\ No newline at end of file
+diff --git a/nav2_amcl/include/nav2_amcl/angleutils.hpp b/nav2_amcl/include/nav2_amcl/angleutils.hpp
+index 84de30f7..d3f8332c 100644
+--- a/nav2_amcl/include/nav2_amcl/angleutils.hpp
++++ b/nav2_amcl/include/nav2_amcl/angleutils.hpp
+@@ -27,26 +27,10 @@
+ namespace nav2_amcl
+ {
+ 
+-/*
+- * @class angleutils
+- * @brief Some utilities for working with angles
+- */
+ class angleutils
+ {
+ public:
+-  /*
+-   * @brief Normalize angles
+-   * @brief z Angle to normalize
+-   * @return normalized angle
+-   */
+   static double normalize(double z);
+-
+-  /*
+-   * @brief Find minimum distance between 2 angles
+-   * @brief a Angle 1
+-   * @brief b Angle 2
+-   * @return normalized angle difference
+-   */
+   static double angle_diff(double a, double b);
+ };
+ 
+diff --git a/nav2_amcl/src/amcl_node.cpp b/nav2_amcl/src/amcl_node.cpp
+index 0fa2f94c..cc772949 100644
+--- a/nav2_amcl/src/amcl_node.cpp
++++ b/nav2_amcl/src/amcl_node.cpp
+@@ -54,6 +54,12 @@
+ using namespace std::placeholders;
+ using rcl_interfaces::msg::ParameterType;
+ using namespace std::chrono_literals;
++using namespace std;
++
++std::vector<double> nav2_amcl::AmclNode::centerX_;
++std::vector<double> nav2_amcl::AmclNode::centerY_;
++std::vector<double> nav2_amcl::AmclNode::sigma_;
++std::vector<double> nav2_amcl::AmclNode::weight_;
+ 
+ namespace nav2_amcl
+ {
+@@ -223,7 +229,6 @@ AmclNode::AmclNode(const rclcpp::NodeOptions & options)
+   add_parameter(
+     "map_topic", rclcpp::ParameterValue("map"),
+     "Topic to subscribe to in order to receive the map to localize on");
+-
+   add_parameter(
+     "first_map_only", rclcpp::ParameterValue(false),
+     "Set this to true, when you want to load a new map published from the map_server");
+@@ -231,6 +236,7 @@ AmclNode::AmclNode(const rclcpp::NodeOptions & options)
+ 
+ AmclNode::~AmclNode()
+ {
++
+ }
+ 
+ nav2_util::CallbackReturn
+@@ -326,8 +332,11 @@ AmclNode::on_cleanup(const rclcpp_lifecycle::State & /*state*/)
+   // Get rid of the inputs first (services and message filter input), so we
+   // don't continue to process incoming messages
+   global_loc_srv_.reset();
++  fast_global_loc_srv_.reset();
+   initial_guess_srv_.reset();
+   nomotion_update_srv_.reset();
++  disable_laser_.reset();
++  enable_laser_.reset();
+   executor_thread_.reset();  //  to make sure initial_pose_sub_ completely exit
+   initial_pose_sub_.reset();
+   laser_scan_connection_.disconnect();
+@@ -440,6 +449,35 @@ AmclNode::getOdomPose(
+   return true;
+ }
+ 
++double randomNum(double min, double max)
++{
++	return min + (max - min) * ((double)rand() / RAND_MAX);
++}
++
++void generateRandomGaussian(const std::vector<double> &centerX,
++                            const std::vector<double> &centerY,
++                            const std::vector<double> &sigma,
++                            const std::vector<double> &weight,
++                            double &x,
++                            double &y)
++{
++  int numCenter = centerX.size();
++  double u = randomNum(0.0, 1.0);
++  double cumWeight = 0.0;
++  for (int i = 0; i < numCenter; i++)
++  {
++    cumWeight += weight[i];
++    if (u < cumWeight)
++    {
++      double r = sqrt(-2.0 * log(randomNum(0.0, 1.0))) * sigma[i];
++      double theta = 2.0 * M_PI * randomNum(0.0, 1.0);
++      x = centerX[i] + r * cos(theta);
++      y = centerY[i] + r * sin(theta);
++      break;
++    }
++  }
++}
++
+ pf_vector_t
+ AmclNode::uniformPoseGenerator(void * arg)
+ {
+@@ -479,6 +517,44 @@ AmclNode::uniformPoseGenerator(void * arg)
+   return p;
+ }
+ 
++pf_vector_t
++AmclNode::fastUniformPoseGenerator(void * arg)
++{
++  map_t * map = reinterpret_cast<map_t *>(arg);
++
++  unsigned int rand_index = drand48() * free_space_indices.size();
++  std::pair<int, int> free_point = free_space_indices[rand_index];
++  pf_vector_t p;
++  p.v[0] = MAP_WXGX(map, free_point.first);
++  p.v[1] = MAP_WYGY(map, free_point.second);
++  p.v[2] = drand48() * 2 * M_PI - M_PI;
++  double x, y;
++  generateRandomGaussian(centerX_, centerY_, sigma_, weight_, x, y);
++  p.v[0] = x;
++  p.v[1] = y;
++  return p;
++ }
++
++void
++AmclNode::disableLaserCallback(
++  const std::shared_ptr<rmw_request_id_t>/*request_header*/,
++  const std::shared_ptr<std_srvs::srv::Empty::Request>/*req*/,
++  std::shared_ptr<std_srvs::srv::Empty::Response>/*res*/)
++{
++  sensor_disabled_ = true;
++  return;
++}
++
++void
++AmclNode::enableLaserCallback(
++  const std::shared_ptr<rmw_request_id_t>/*request_header*/,
++  const std::shared_ptr<std_srvs::srv::Empty::Request>/*req*/,
++  std::shared_ptr<std_srvs::srv::Empty::Response>/*res*/)
++{
++  sensor_disabled_ = false;
++  return;
++}
++
+ void
+ AmclNode::globalLocalizationCallback(
+   const std::shared_ptr<rmw_request_id_t>/*request_header*/,
+@@ -497,6 +573,30 @@ AmclNode::globalLocalizationCallback(
+   pf_init_ = false;
+ }
+ 
++void
++AmclNode::fastGlobalLocalizationCallback(
++  const std::shared_ptr<rmw_request_id_t>/*request_header*/,
++  const std::shared_ptr<nav2_msgs::srv::GlobalLocalization::Request>& request,
++  std::shared_ptr<nav2_msgs::srv::GlobalLocalization::Response>/*response*/)
++{
++  std::lock_guard<std::recursive_mutex> cfl(mutex_);
++
++  RCLCPP_INFO(get_logger(), "Initializing with uniform distribution");
++  centerX_ = request->center_x;
++  centerY_ = request->center_y;
++  sigma_ = request->sigma;
++  weight_ = request->weights;
++
++  pf_init_model(
++    pf_, (pf_init_model_fn_t)AmclNode::fastUniformPoseGenerator,
++    reinterpret_cast<void *>(map_));
++  RCLCPP_INFO(get_logger(), "Global initialisation done!");
++  initial_pose_is_known_ = true;
++  pf_init_ = false;
++  force_update_ON = true;
++  // force_publication = true;
++}
++
+ void
+ AmclNode::initialPoseReceivedSrv(
+   const std::shared_ptr<rmw_request_id_t>/*request_header*/,
+@@ -619,6 +719,8 @@ AmclNode::laserReceived(sensor_msgs::msg::LaserScan::ConstSharedPtr laser_scan)
+ {
+   std::lock_guard<std::recursive_mutex> cfl(mutex_);
+ 
++  if (sensor_disabled_) {return;}
++
+   // Since the sensor data is continually being published by the simulator or robot,
+   // we don't want our callbacks to fire until we're in the active state
+   if (!active_) {return;}
+@@ -656,7 +758,7 @@ AmclNode::laserReceived(sensor_msgs::msg::LaserScan::ConstSharedPtr laser_scan)
+   }
+ 
+   pf_vector_t delta = pf_vector_zero();
+-  bool force_publication = false;
++  // bool force_publication = false;
+   if (!pf_init_) {
+     // Pose at last filter update
+     pf_odom_pose_ = pose;
+@@ -688,6 +790,7 @@ AmclNode::laserReceived(sensor_msgs::msg::LaserScan::ConstSharedPtr laser_scan)
+     updateFilter(laser_index, laser_scan, pose);
+ 
+     // Resample the particles
++    // resample_interval_ = 20;
+     if (!(++resample_count_ % resample_interval_)) {
+       pf_update_resample(pf_, reinterpret_cast<void *>(map_));
+       resampled = true;
+@@ -775,7 +878,29 @@ bool AmclNode::shouldUpdateFilter(const pf_vector_t pose, pf_vector_t & delta)
+   bool update = fabs(delta.v[0]) > d_thresh_ ||
+     fabs(delta.v[1]) > d_thresh_ ||
+     fabs(delta.v[2]) > a_thresh_;
+-  update = update || force_update_;
++  // Re-localized successfully
++  if (force_update_ON &&
++      pf_->sets->cov.m[0][0] < 0.1 &&
++      pf_->sets->cov.m[1][1]  < 0.1 &&
++      pf_->sets->cov.m[2][2] < M_PI / 8)
++    {
++      force_update_ON = false;
++      // force_publication = false;
++      force_publication = true;
++      // clear costmap
++      auto request = std::make_shared<nav2_msgs::srv::ClearEntireCostmap::Request>();
++      while (!clear_entire_costmap_->wait_for_service(1s))
++      {
++        if (!rclcpp::ok())
++        {
++          RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
++        }
++          RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
++      }
++      auto result = clear_entire_costmap_->async_send_request(request);
++    }
++
++  update = update || force_update_ || force_update_ON;
+   return update;
+ }
+ 
+@@ -921,6 +1046,7 @@ AmclNode::publishAmclPose(
+   const std::vector<amcl_hyp_t> & hyps, const int & max_weight_hyp)
+ {
+   // If initial pose is not known, AMCL does not know the current pose
++  force_publication = false;
+   if (!initial_pose_is_known_) {
+     if (checkElapsedTime(2s, last_time_printed_msg_)) {
+       RCLCPP_WARN(
+@@ -1552,9 +1678,26 @@ AmclNode::initServices()
+     "set_initial_pose",
+     std::bind(&AmclNode::initialPoseReceivedSrv, this, _1, _2, _3));
+ 
++  std::function<void(const std::shared_ptr<rmw_request_id_t>,
++  const std::shared_ptr<nav2_msgs::srv::GlobalLocalization::Request>,
++  std::shared_ptr<nav2_msgs::srv::GlobalLocalization::Response>)> fcn2;
++    fcn2 = std::bind(&AmclNode::fastGlobalLocalizationCallback, this, _1, _2, _3);
++    fast_global_loc_srv_ = this->create_service<nav2_msgs::srv::GlobalLocalization>(
++    "fast_global_localization", fcn2);
++  clear_entire_costmap_ = this->create_client<nav2_msgs::srv::ClearEntireCostmap>(
++    "global_costmap/clear_entirely_global_costmap");
+   nomotion_update_srv_ = create_service<std_srvs::srv::Empty>(
+     "request_nomotion_update",
+     std::bind(&AmclNode::nomotionUpdateCallback, this, _1, _2, _3));
++
++  disable_laser_ = create_service<std_srvs::srv::Empty>(
++    "disable_laser",
++    std::bind(&AmclNode::disableLaserCallback, this, _1, _2, _3));
++
++  enable_laser_ = create_service<std_srvs::srv::Empty>(
++    "enable_laser",
++    std::bind(&AmclNode::enableLaserCallback, this, _1, _2, _3));
++
+ }
+ 
+ void
+-- 
+2.30.2
+

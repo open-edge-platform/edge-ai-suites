@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_6ad5aed89ef22bf4172598b40b478a11" kind="dir">
+    <compoundname>rvc_rotated_object_detection/test</compoundname>
+    <innerfile refid="test__detector_8py">test_detector.py</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_rotated_object_detection/test/"/>
+  </compounddef>
+</doxygen>

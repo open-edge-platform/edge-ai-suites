@@ -22,7 +22,7 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 ## Set up and first use
 
 <!--
-**User Story 1**: Setting Up the Application  
+**User Story 1**: Setting Up the Application
 - **As a developer**, I want to set up the application in my environment, so that I can start exploring its functionality.
 
 **Acceptance Criteria**:
@@ -44,6 +44,21 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      ./install.sh loitering-detection
      ```
 
+    <details>
+    <summary>
+    Specify Custom Host IP Address (Advanced Configuration)
+    </summary>
+
+    For environments requiring a specific host IP address (such as when using Edge Manageability Toolkit or deploying across different network interfaces), you can explicitly specify the IP address:
+
+    ```bash
+    ./install.sh loitering-detection <HOST_IP>
+    ```
+    Replace `<HOST_IP>` with your target IP address.
+
+    </details>
+
+
 ## Run the application
 
 1. **Start the Application**:
@@ -51,25 +66,25 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      ```bash
      docker compose up -d
      ```
-     
+
      <details>
      <summary>
      Check Status of Microservices
      </summary>
-     
+
      - The application starts the following microservices.
      - To check if all microservices are in Running state:
        ```bash
        docker ps
        ```
-       
+
      **Expected Services:**
      - Grafana Dashboard
-     - DL Streamer Pipeline Server  
+     - DL Streamer Pipeline Server
      - MQTT Broker
      - Node-RED (for applications without Scenescape)
      - Scenescape services (for Smart Intersection only)
-     
+
      </details>
 
 2. **Run Predefined Pipelines**:
@@ -78,23 +93,23 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      ```bash
      ./sample_start.sh
      ```
-     
+
      <details>
      <summary>
      Check Status and Stop pipelines
      </summary>
-     
+
      - To check the status:
        ```bash
        ./sample_status.sh
        ```
-     
+
      - To stop the pipelines without waiting for video streams to finish replay:
        ```bash
        ./sample_stop.sh
        ```
      </details>
-   
+
 3. **View the Application Output**:
    - Open a browser and go to `http://localhost:3000` to access the Grafana dashboard.
      - Change the localhost to your host IP if you are accessing it remotely.
@@ -124,7 +139,7 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
     ```bash
     curl http://localhost:8080/pipelines
     ```
-- **WebRTC**: [http://localhost:8889](http://localhost:8889)
+- **WebRTC**: [http://localhost:8889/object_tracking_1](http://localhost:8889/object_tracking_1)
 
 ## **Stop the Application**:
 
@@ -138,31 +153,6 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 Choose one of the following methods to deploy the Loitering Detection Sample Application:
 
 - **[Deploy Using Helm](./how-to-deploy-with-helm.md)**: Use Helm to deploy the application to a Kubernetes cluster for scalable and production-ready deployments.
-
-## Supporting Resources
-- [Troubleshooting Guide](./support.md): Find detailed steps to resolve common issues during deployments.
-- [DL Streamer Pipeline Server](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/Overview.html)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ## Next Steps
 - [How to Customize the Application](how-to-customize-application.md)
@@ -185,10 +175,10 @@ Choose one of the following methods to deploy the Loitering Detection Sample App
 
 3. **No Video Streaming on Grafana Dashboard**
     - Go to the Grafana "Video Analytics Dashboard".
-    - Click on the Edit option (located on the right side) under the WebRTC Stream panel. 
+    - Click on the Edit option (located on the right side) under the WebRTC Stream panel.
     - Update the URL from `http://localhost:8083` to `http://host-ip:8083`.
 
-4. **Failed Grafana Deployment** 
+4. **Failed Grafana Deployment**
     - If unable to deploy grafana container successfully due to fail to GET "https://grafana.com/api/plugins/yesoreyeram-infinity-datasource/versions": context deadline exceeded, please ensure the proxy is configured in the ~/.docker/config.json as shown below:
 
       ```bash
@@ -211,3 +201,4 @@ Choose one of the following methods to deploy the Loitering Detection Sample App
 ## Supporting Resources
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [DL Streamer Pipeline Server](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/Overview.html)
+

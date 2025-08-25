@@ -3,9 +3,9 @@ pymilvus==2.5.0
 Pillow==11.0.0
 httpx==0.28.1
 paho-mqtt==2.1.0
-fastapi==0.115.6
+fastapi==0.116.1
 uvicorn==0.32.1
 numpy==2.2.1 
 python-multipart==0.0.19
 certifi==2024.8.30
-requests==2.32.3
+requests==2.32.4

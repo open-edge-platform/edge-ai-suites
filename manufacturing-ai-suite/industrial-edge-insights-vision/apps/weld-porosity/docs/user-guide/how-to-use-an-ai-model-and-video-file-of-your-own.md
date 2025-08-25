@@ -127,7 +127,7 @@ You can bring your own model and run this sample application the same way as how
             },
             "parameters": {
                 "classification-properties": {
-                        "model": "/home/pipeline-server/resources/models/geti/weld_porosity_classification/deployment/Classification/model/model.xml",
+                        "model": "/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml",
                         "device": "CPU"
                 }
             }

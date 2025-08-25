@@ -16,7 +16,7 @@ services:
     restart: on-failure:5
 
   dlstreamer-pipeline-server:
-    image: ${DOCKER_REGISTRY}intel/dlstreamer-pipeline-server:latest
+    image: intel/dlstreamer-pipeline-server:3.1.0-ubuntu24
     container_name: dlstreamer-pipeline-server
     ports:
     - '8080:8080'
@@ -24,10 +24,10 @@ services:
     environment:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
-      - no_proxy=${no_proxy},${HOST_IP}
-      - NO_PROXY=${no_proxy},${HOST_IP}
+      - no_proxy=${no_proxy},${HOST_IP},mediamtx-server
+      - NO_PROXY=${no_proxy},${HOST_IP},mediamtx-server
       - ENABLE_WEBRTC=true
-      - WEBRTC_SIGNALING_SERVER=http://${HOST_IP}:8889
+      - WEBRTC_SIGNALING_SERVER=http://mediamtx-server:8889
       - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true
       - RUN_MODE=EVA
       - EMIT_SOURCE_AND_DESTINATION=true
@@ -59,7 +59,7 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 5
-  
+
   mediamtx:
     image: bluenviron/mediamtx:1.11.3
     container_name: mediamtx-server

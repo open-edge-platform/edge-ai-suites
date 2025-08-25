@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespacervc__rotated__object__detection_1_1object__detection" kind="namespace" language="Python">
+    <compoundname>rvc_rotated_object_detection::object_detection</compoundname>
+    <innerclass refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object" prot="public">rvc_rotated_object_detection::object_detection::Object</innerclass>
+    <innerclass refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector" prot="public">rvc_rotated_object_detection::object_detection::Detector</innerclass>
+    <innerclass refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection" prot="public">rvc_rotated_object_detection::object_detection::ObjectDetection</innerclass>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="object__detection_8py_1a1ceab1907020b622516e2bc285eb9129" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def rvc_rotated_object_detection.object_detection.main</definition>
+        <argsstring>(args=None)</argsstring>
+        <name>main</name>
+        <param>
+          <type>args</type>
+          <defname>args</defname>
+          <defval>None</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="192" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="192" bodyend="205"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="1" column="1"/>
+  </compounddef>
+</doxygen>

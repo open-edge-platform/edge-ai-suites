@@ -126,6 +126,18 @@ init_helm() {
         err "No helm/values.yml file found in $SCRIPT_DIR"
         exit 1
     fi
+
+    # Copy Chart_<app>.yaml as Chart.yaml
+    CHART_SRC_FILE="$SCRIPT_DIR/helm/Chart-${SAMPLE_APP}.yaml"
+    CHART_DEST_FILE="$SCRIPT_DIR/helm/Chart.yaml"
+
+    if [[ -f "$CHART_SRC_FILE" ]]; then
+        cp "$CHART_SRC_FILE" "$CHART_DEST_FILE"
+        echo "Copied $CHART_SRC_FILE to $CHART_DEST_FILE"
+    else
+        err "Chart file $CHART_SRC_FILE not found."
+        exit 1
+    fi
 }
 
 main() {

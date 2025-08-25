@@ -1,0 +1,168 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+object_detection:
+  cam_prefix: {
+    type: string,
+    default_value: "/camera/color",
+    description: "camera prefix",
+    read_only: True,
+  }
+  cam_image_suffix: {
+    type: string,
+    default_value: "image_raw",
+    description: "camera image topic suffix",
+    read_only: True,
+  }
+  cam_info_suffix: {
+    type: string,
+    default_value: "camera_info",
+    description: "camera info topic suffix",
+    read_only: True,
+  }
+  log_level: {
+    type: string,
+    default_value: "INFO",
+    description: "debug log level [DEBUG|INFO|WARN|ERROR|FATAL]",
+    read_only: True,
+    validation: {
+      one_of<>: [ [ "DEBUG", "INFO", "WARN", "ERROR", "FATAL" ] ],
+    }
+  }
+  roi:
+    crop_top: {
+      type: int,
+      default_value: 0,
+      description: "Pixels to crop top of the image",
+    }
+    crop_bottom: {
+      type: int,
+      default_value: 0,
+      description: "Pixels to crop bottom of the image",
+    }
+    crop_left: {
+      type: int,
+      default_value: 0,
+      description: "Pixels to crop left of the image",
+    }
+    crop_right: {
+      type: int,
+      default_value: 0,
+      description: "Pixels to crop right of the image",
+    }
+  orb:
+    nfeatures: {
+      type: int,
+      default_value: 500,
+      description: "Maximum number of features",
+      read_only: True,
+    }
+    nlevels: {
+      type: int,
+      default_value: 8,
+      description: "Number of pyramid features",
+      read_only: True,
+    }
+    edge_threshold: {
+      type: int,
+      default_value: 5,
+      description: "Size of the border where no features are detected",
+      read_only: True,
+    }
+    patch_size: {
+      type: int,
+      default_value: 16,
+      description: "Size of the patch",
+      read_only: True,
+    }
+    reproj_threshold: {
+      type: double,
+      default_value: 5.0,
+      description: "RANSAC reprojection threshold",
+    }
+    min_matches: {
+      type: int,
+      default_value: 20,
+      description: "Minimum number of matches for detection",
+      validation: {
+        bounds<>: [10, 1000]
+      }
+    }
+    matches_limit: {
+      type: int,
+      default_value: 20,
+      description: "Number of matches limit for homography calculation",
+      validation: {
+        bounds<>: [10, 1000]
+      }
+    }
+    min_inliers: {
+      type: int,
+      default_value: 10,
+      description: "Minimum number of inliers for homography calculation",
+      validation: {
+        bounds<>: [5, 50]
+      }
+    }
+    min_inliers_factor: {
+      type: double,
+      default_value: 0.33,
+      description: "Minimum factor of inliers vs all matches for homography calculation",
+      validation: {
+        bounds<>: [0.0, 1.0]
+      }
+    }
+  annotate: {
+    type: bool,
+    default_value: True,
+    description: "provide annotated images output",
+    read_only: True,
+  }
+  publish_rotateBB_detection: {
+    type: bool,
+    default_value: True,
+    description: "publish rotated BB detection output",
+    read_only: True,
+  }
+  publish_object_poses: {
+    type: bool,
+    default_value: True,
+    description: "publish object_poses rvc_messages API message output",
+    read_only: True,
+  }  
+  objects: {
+    type: string_array,
+    default_value: [''],
+    description: "list of object names for detection",
+    read_only: True,
+  }
+  object:
+    __map_objects:  # create a map with joints as keys
+      image_path: {
+        type: string,
+        description: "object image file path",
+        read_only: True,
+      }
+      nfeatures: {
+        type: int,
+        default_value: 100,
+        description: "Maximum number of features",
+        read_only: True,
+      }
+      thickness: {
+        type: double,
+        default_value: 0.05,
+        description: "object thickness / size parallel to optical axis",
+        read_only: True,
+      }
+  project: {
+    type: bool,
+    default_value: True,
+    description: "project objects onto plane",
+    read_only: True,
+  }
+  projection_distance: {
+      type: double,
+      default_value: 0.5,
+      description: "distance from camera to projection plane",
+      read_only: True,
+  }

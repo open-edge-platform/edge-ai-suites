@@ -1,0 +1,13 @@
+Source: ros-humble-trac-ik-lib
+Section: misc
+Priority: optional
+Maintainer: Abrar Rahman Protyasha <aprotyas@u.rochester.edu>
+Build-Depends: debhelper (>= 9.0.0), libeigen3-dev, libnlopt-cxx-dev, ros-humble-ament-cmake, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-eigen3-cmake-module, ros-humble-kdl-parser, ros-humble-rclcpp, ros-humble-urdf
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-trac-ik-lib
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnlopt-cxx-dev, libnlopt0, ros-humble-kdl-parser, ros-humble-rclcpp, ros-humble-urdf
+Description: TRAC-IK is a faster, significantly more reliable drop-in replacement for KDL's pseudoinverse Jacobian solver.
+ The TRAC-IK library has a very similar API to KDL's IK solver calls, except that the user passes a maximum time instead of a maximum number of search iterations. Additionally, TRAC-IK allows for error tolerances to be set independently for each Cartesian dimension (x,y,z,roll,pitch.yaw).

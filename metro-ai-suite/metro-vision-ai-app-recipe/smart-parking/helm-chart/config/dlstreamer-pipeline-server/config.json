@@ -12,7 +12,7 @@
                 "name": "yolov10_1_cpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! gvadetect model=/home/pipeline-server/models/public/yolov10s/FP32/yolov10s.xml pre-process-backend=opencv threshold=0.7 inference-interval=4 model-instance-id=inst0 name=detection ! queue ! gvaclassify model=/home/pipeline-server/models/colorcls2/colorcls2.xml model_proc=/home/pipeline-server/models/colorcls2/colorcls2.json pre-process-backend=opencv model-instance-id=inst1 name=classification ! queue ! gvapython module=/home/pipeline-server/models/colorcls2/process class=Process function=process_frame ! queue ! gvawatermark ! gvametaconvert add-empty-results=true name=metaconvert ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin ! gvadetect model=/home/pipeline-server/models/public/yolov10s/FP32/yolov10s.xml pre-process-backend=opencv threshold=0.7 model-instance-id=inst0 name=detection ! queue ! gvaclassify model=/home/pipeline-server/models/colorcls2/colorcls2.xml model_proc=/home/pipeline-server/models/colorcls2/colorcls2.json pre-process-backend=opencv model-instance-id=inst1 name=classification ! queue ! gvapython module=/home/pipeline-server/models/colorcls2/process class=Process function=process_frame ! queue ! gvawatermark ! gvametaconvert add-empty-results=true name=metaconvert ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {

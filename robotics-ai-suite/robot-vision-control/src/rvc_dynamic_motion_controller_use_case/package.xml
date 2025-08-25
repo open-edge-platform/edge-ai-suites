@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rvc_dynamic_motion_controller_use_case</name>
+  <version>2.1.0</version>
+  <description>Main package for RVC motion controller</description>
+  <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
+  <license>Proprietary</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>std_srvs</build_depend>
+  <build_depend>gui_settings</build_depend>
+  <build_depend>rvc_messages</build_depend>
+  <build_depend>state_machine_msgs</build_depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>pluginlib</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>rvc_motion_controller_interface</depend>
+  <depend>rvc_grasp_interface</depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

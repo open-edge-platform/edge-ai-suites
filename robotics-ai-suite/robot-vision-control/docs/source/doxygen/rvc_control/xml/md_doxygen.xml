@@ -1,0 +1,802 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="md_doxygen" kind="page">
+    <compoundname>md_doxygen</compoundname>
+    <title>Summary</title>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para><table rows="4" cols="2"><row>
+<entry thead="yes"><para>Members   </para>
+</entry><entry thead="yes"><para>Descriptions    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>namespace</computeroutput><ulink url="#namespace_r_v_c_control"><computeroutput>RVCControl</computeroutput></ulink>   </para>
+</entry><entry thead="no"><para>Any defined controllers have to inerit from this to be used in the StateMachine node.    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>namespace</computeroutput><ulink url="#namespace_r_v_c_motion_controller"><computeroutput>RVCMotionController</computeroutput></ulink>   </para>
+</entry><entry thead="no"><para>Any defined controllers have to inerit from this to be used in the StateMachine node.    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>class</computeroutput><ulink url="#class_pose_tracking"><computeroutput>PoseTracking</computeroutput></ulink>   </para>
+</entry><entry thead="no"><para>Class <ulink url="#class_pose_tracking">PoseTracking</ulink> - subscribe to a target pose. Servo toward the target pose.   </para>
+</entry></row>
+</table>
+<computeroutput>class</computeroutput><ulink url="#class_t_c_p_server"><computeroutput>TCPServer</computeroutput></ulink> | <computeroutput>class</computeroutput><ulink url="#class_t_c_p_socket"><computeroutput>TCPSocket</computeroutput></ulink> | Class for TCP socket abstraction. <computeroutput>struct</computeroutput><ulink url="#struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command"><computeroutput>RVCMotionController::URPendantMotionController::Command</computeroutput></ulink> |</para>
+<sect1 id="md_doxygen_1autotoc_md1">
+<title>namespace &lt;tt&gt;RVCControl&lt;/tt&gt;</title>
+<para>Any defined controllers have to inerit from this to be used in the StateMachine node.</para>
+<sect2 id="md_doxygen_1autotoc_md2">
+<title>Summary</title>
+<para>Members | Descriptions <linebreak/>
+ -----------------------------<mdash/>|------------------------------------------<mdash/> <computeroutput>class</computeroutput><ulink url="#class_r_v_c_control_1_1_r_v_c_grasp_interface"><computeroutput>RVCControl::RVCGraspInterface</computeroutput></ulink> | <computeroutput>class</computeroutput><ulink url="#class_r_v_c_control_1_1_non_oriented_grasp"><computeroutput>RVCControl::NonOrientedGrasp</computeroutput></ulink> |</para>
+</sect2>
+</sect1>
+<sect1 id="md_doxygen_1autotoc_md3">
+<title>class &lt;tt&gt;RVCControl::RVCGraspInterface&lt;/tt&gt;</title>
+<sect2 id="md_doxygen_1autotoc_md4">
+<title>Summary</title>
+<para><table rows="8" cols="2"><row>
+<entry thead="yes"><para>Members   </para>
+</entry><entry thead="yes"><para>Descriptions    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public void</computeroutput><ulink url="#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ac519ff48b07aa841270b90d2b1057d47"><computeroutput>OnMessageReceive</computeroutput></ulink><computeroutput>(rvc_messages::msg::PoseStampedList::SharedPtr msg)</computeroutput>   </para>
+</entry><entry thead="no"><para>This function will be called upon receiving a new pose.    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public bool</computeroutput><ulink url="#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab82b5755786cbc7b3255eedb3381f5c8"><computeroutput>getPreGrasp</computeroutput></ulink><computeroutput>(geometry_msgs::msg::Pose &amp; pose)</computeroutput>   </para>
+</entry><entry thead="no"><para>Get the Pre Grasp object pose.    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public bool</computeroutput><ulink url="#class_r_v_c_control_1_1_r_v_c_grasp_interface_1aed89327ba661ddf2be6c4c187bbf74e0"><computeroutput>getGrasp</computeroutput></ulink><computeroutput>(geometry_msgs::msg::Pose &amp; pose)</computeroutput>   </para>
+</entry><entry thead="no"><para>Get the Grasp object Pose.    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public bool</computeroutput><ulink url="#class_r_v_c_control_1_1_r_v_c_grasp_interface_1a29d996087e338b75a5f1de2324380dcc"><computeroutput>isTargetAcquired</computeroutput></ulink><computeroutput>()</computeroutput>   </para>
+</entry><entry thead="no"><para>function to verify that the object is currently still valid and detected by the framework    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public std::string</computeroutput><ulink url="#class_r_v_c_control_1_1_r_v_c_grasp_interface_1aa6940e178dc6fc147282f7acd1f04f7b"><computeroutput>getCurrentObject</computeroutput></ulink><computeroutput>()</computeroutput>   </para>
+</entry><entry thead="no"><para>Get the Current detected Object string identifier.    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public virtual bool</computeroutput><ulink url="#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab0c2cdba038b08aff7dfd7b43211ce63"><computeroutput>init</computeroutput></ulink><computeroutput>(rclcpp::Node::SharedPtr node)</computeroutput>   </para>
+</entry><entry thead="no"><para>API entry: plugin initialization.    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public inline virtual bool</computeroutput><ulink url="#class_r_v_c_control_1_1_r_v_c_grasp_interface_1a6ee193f0b77862c2a31be7b9df4600ac"><computeroutput>on_shutdown</computeroutput></ulink><computeroutput>()</computeroutput>   </para>
+</entry><entry thead="no"><para>API entry: operation to clean up upon node shutdown.   </para>
+</entry></row>
+</table>
+<computeroutput>protected rclcpp::Node::SharedPtr</computeroutput><ulink url="#class_r_v_c_control_1_1_r_v_c_grasp_interface_1aac1e2f2c6d0bf9ef2d8a0f40899b0513"><computeroutput>node_</computeroutput></ulink> | <computeroutput>protected inline</computeroutput><ulink url="#class_r_v_c_control_1_1_r_v_c_grasp_interface_1a23575f212effaa07616d4bd6e561336a"><computeroutput>RVCGraspInterface</computeroutput></ulink><computeroutput>()</computeroutput> | Empty Constructor for pluginlib.</para>
+</sect2>
+<sect2 id="md_doxygen_1autotoc_md5">
+<title>Members</title>
+<sect4 id="md_doxygen_1autotoc_md6">
+<title>&lt;tt&gt;public void&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ac519ff48b07aa841270b90d2b1057d47&quot;&gt;&lt;tt&gt;OnMessageReceive&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(rvc_messages::msg::PoseStampedList::SharedPtr msg)&lt;/tt&gt;</title>
+<para>This function will be called upon receiving a new pose.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md7">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>msg</computeroutput> the received message list</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md8">
+<title>&lt;tt&gt;public bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab82b5755786cbc7b3255eedb3381f5c8&quot;&gt;&lt;tt&gt;getPreGrasp&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(geometry_msgs::msg::Pose &amp; pose)&lt;/tt&gt;</title>
+<para>Get the Pre Grasp object pose.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md9">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>pose</computeroutput> pregrasp pose</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md10">
+<title>Returns</title>
+<para>true on success</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md11">
+<title>Returns</title>
+<para>false on failure</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md12">
+<title>&lt;tt&gt;public bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_r_v_c_grasp_interface_1aed89327ba661ddf2be6c4c187bbf74e0&quot;&gt;&lt;tt&gt;getGrasp&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(geometry_msgs::msg::Pose &amp; pose)&lt;/tt&gt;</title>
+<para>Get the Grasp object Pose.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md13">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>pose</computeroutput> Grasp Pose</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md14">
+<title>Returns</title>
+<para>true on success</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md15">
+<title>Returns</title>
+<para>false on failure</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md16">
+<title>&lt;tt&gt;public bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_r_v_c_grasp_interface_1a29d996087e338b75a5f1de2324380dcc&quot;&gt;&lt;tt&gt;isTargetAcquired&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>function to verify that the object is currently still valid and detected by the framework</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md17">
+<title>Returns</title>
+<para>true</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md18">
+<title>Returns</title>
+<para>false</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md19">
+<title>&lt;tt&gt;public std::string&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_r_v_c_grasp_interface_1aa6940e178dc6fc147282f7acd1f04f7b&quot;&gt;&lt;tt&gt;getCurrentObject&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>Get the Current detected Object string identifier.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md20">
+<title>Returns</title>
+<para>std::string object name identifier</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md21">
+<title>&lt;tt&gt;public virtual bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_r_v_c_grasp_interface_1ab0c2cdba038b08aff7dfd7b43211ce63&quot;&gt;&lt;tt&gt;init&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(rclcpp::Node::SharedPtr node)&lt;/tt&gt;</title>
+<para>API entry: plugin initialization.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md22">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>node</computeroutput> Ros node</para>
+</listitem><listitem><para><computeroutput>modelName</computeroutput> input file name</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md23">
+<title>Returns</title>
+<para>true on success</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md24">
+<title>Returns</title>
+<para>false otherwise</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md25">
+<title>&lt;tt&gt;public inline virtual bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_r_v_c_grasp_interface_1a6ee193f0b77862c2a31be7b9df4600ac&quot;&gt;&lt;tt&gt;on_shutdown&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>API entry: operation to clean up upon node shutdown.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md26">
+<title>Returns</title>
+<para>true</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md27">
+<title>Returns</title>
+<para>false</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md28">
+<title>&lt;tt&gt;protected rclcpp::Node::SharedPtr&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_r_v_c_grasp_interface_1aac1e2f2c6d0bf9ef2d8a0f40899b0513&quot;&gt;&lt;tt&gt;node_&lt;/tt&gt;&lt;/a&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md29">
+<title>&lt;tt&gt;protected inline&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_r_v_c_grasp_interface_1a23575f212effaa07616d4bd6e561336a&quot;&gt;&lt;tt&gt;RVCGraspInterface&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>Empty Constructor for pluginlib.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md30">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>node</computeroutput> a rclcpp node shared pointer</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+</sect2>
+</sect1>
+<sect1 id="md_doxygen_1autotoc_md31">
+<title>class &lt;tt&gt;RVCControl::NonOrientedGrasp&lt;/tt&gt;</title>
+<para><programlisting><codeline><highlight class="normal">class<sp/>RVCControl::NonOrientedGrasp</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>:<sp/>public<sp/>RVCControl::RVCGraspInterface</highlight></codeline>
+</programlisting></para>
+<sect2 id="md_doxygen_1autotoc_md32">
+<title>Summary</title>
+<para>Members | Descriptions <linebreak/>
+ -----------------------------<mdash/>|------------------------------------------<mdash/> <computeroutput>public</computeroutput><ulink url="#class_r_v_c_control_1_1_non_oriented_grasp_1a54d592d88ad0cee37af78b002aba3d49"><computeroutput>NonOrientedGrasp</computeroutput></ulink><computeroutput>()</computeroutput> | <computeroutput>public virtual bool</computeroutput><ulink url="#class_r_v_c_control_1_1_non_oriented_grasp_1a6bf4217ff0bdc62b37465410e5729933"><computeroutput>init</computeroutput></ulink><computeroutput>(rclcpp::Node::SharedPtr node)</computeroutput> | API entry: plugin initialization. <computeroutput>public virtual void</computeroutput><ulink url="#class_r_v_c_control_1_1_non_oriented_grasp_1a944db041600951afdca9e9629018d551"><computeroutput>OnMessageReceive</computeroutput></ulink><computeroutput>(rvc_messages::msg::PoseStampedList::SharedPtr msg)</computeroutput> | This function will be called upon receiving a new pose. <computeroutput>public virtual bool</computeroutput><ulink url="#class_r_v_c_control_1_1_non_oriented_grasp_1a51f070f68c144f34c9359f655e1074b1"><computeroutput>getPreGrasp</computeroutput></ulink><computeroutput>(geometry_msgs::msg::Pose &amp; pose)</computeroutput> | Get the Pre Grasp object pose. <computeroutput>public virtual bool</computeroutput><ulink url="#class_r_v_c_control_1_1_non_oriented_grasp_1aa970d9a2aeaaa29e7c54922b41cc4cd1"><computeroutput>getGrasp</computeroutput></ulink><computeroutput>(geometry_msgs::msg::Pose &amp; pose)</computeroutput> | Get the Grasp object Pose. <computeroutput>public inline virtual bool</computeroutput><ulink url="#class_r_v_c_control_1_1_non_oriented_grasp_1ad1fdf2664264a495fd3a70119a4a3e08"><computeroutput>isTargetAcquired</computeroutput></ulink><computeroutput>()</computeroutput> | function to verify that the object is currently still valid and detected by the framework <computeroutput>public inline virtual std::string</computeroutput><ulink url="#class_r_v_c_control_1_1_non_oriented_grasp_1a02b232913ff79c9eaca55ba70a7c0d13"><computeroutput>getCurrentObject</computeroutput></ulink><computeroutput>()</computeroutput> | Get the Current detected Object string identifier.</para>
+</sect2>
+<sect2 id="md_doxygen_1autotoc_md33">
+<title>Members</title>
+<sect4 id="md_doxygen_1autotoc_md34">
+<title>&lt;tt&gt;public&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_non_oriented_grasp_1a54d592d88ad0cee37af78b002aba3d49&quot;&gt;&lt;tt&gt;NonOrientedGrasp&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md35">
+<title>&lt;tt&gt;public virtual bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_non_oriented_grasp_1a6bf4217ff0bdc62b37465410e5729933&quot;&gt;&lt;tt&gt;init&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(rclcpp::Node::SharedPtr node)&lt;/tt&gt;</title>
+<para>API entry: plugin initialization.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md36">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>node</computeroutput> Ros node</para>
+</listitem><listitem><para><computeroutput>modelName</computeroutput> input file name</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md37">
+<title>Returns</title>
+<para>true on success</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md38">
+<title>Returns</title>
+<para>false otherwise</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md39">
+<title>&lt;tt&gt;public virtual void&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_non_oriented_grasp_1a944db041600951afdca9e9629018d551&quot;&gt;&lt;tt&gt;OnMessageReceive&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(rvc_messages::msg::PoseStampedList::SharedPtr msg)&lt;/tt&gt;</title>
+<para>This function will be called upon receiving a new pose.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md40">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>msg</computeroutput> the received message list</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md41">
+<title>&lt;tt&gt;public virtual bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_non_oriented_grasp_1a51f070f68c144f34c9359f655e1074b1&quot;&gt;&lt;tt&gt;getPreGrasp&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(geometry_msgs::msg::Pose &amp; pose)&lt;/tt&gt;</title>
+<para>Get the Pre Grasp object pose.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md42">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>pose</computeroutput> pregrasp pose</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md43">
+<title>Returns</title>
+<para>true on success</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md44">
+<title>Returns</title>
+<para>false on failure</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md45">
+<title>&lt;tt&gt;public virtual bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_non_oriented_grasp_1aa970d9a2aeaaa29e7c54922b41cc4cd1&quot;&gt;&lt;tt&gt;getGrasp&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(geometry_msgs::msg::Pose &amp; pose)&lt;/tt&gt;</title>
+<para>Get the Grasp object Pose.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md46">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>pose</computeroutput> Grasp Pose</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md47">
+<title>Returns</title>
+<para>true on success</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md48">
+<title>Returns</title>
+<para>false on failure</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md49">
+<title>&lt;tt&gt;public inline virtual bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_non_oriented_grasp_1ad1fdf2664264a495fd3a70119a4a3e08&quot;&gt;&lt;tt&gt;isTargetAcquired&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>function to verify that the object is currently still valid and detected by the framework</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md50">
+<title>Returns</title>
+<para>true</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md51">
+<title>Returns</title>
+<para>false</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md52">
+<title>&lt;tt&gt;public inline virtual std::string&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_control_1_1_non_oriented_grasp_1a02b232913ff79c9eaca55ba70a7c0d13&quot;&gt;&lt;tt&gt;getCurrentObject&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>Get the Current detected Object string identifier.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md53">
+<title>Returns</title>
+<para>std::string object name identifier</para>
+</sect4>
+</sect2>
+</sect1>
+<sect1 id="md_doxygen_1autotoc_md54">
+<title>namespace &lt;tt&gt;RVCMotionController&lt;/tt&gt;</title>
+<para>Any defined controllers have to inerit from this to be used in the StateMachine node.</para>
+<para>Linear Goal Controller implementation of linear trajectory planning.</para>
+<para>This Goal Controller uses moveit2 servo</para>
+<para>This Goal Controller implements the simplest strategy: In space: from current position to destination, the trajectory are segmented in a linear way: if the goal is in TCP mode, the TCP (gripper) will travel from current to goal in a spacial linear trajectory In time, the trajectory segments become shorter the closer the TCP is to the goal with a arctan profile (so not linear) If the Goal Controller is in Joint Mode (as opposed to TCP Mode), the single joints angles will have the above behaviour: each joint increments/decrements the angle linearly towards the goal</para>
+<sect2 id="md_doxygen_1autotoc_md55">
+<title>Summary</title>
+<para>Members | Descriptions <linebreak/>
+ -----------------------------<mdash/>|------------------------------------------<mdash/> <computeroutput>public static const std::string</computeroutput><ulink url="#namespace_r_v_c_motion_controller_1a485d87131704adeb6b79f4afeae0b773"><computeroutput>SERVER_IP_REPLACE</computeroutput></ulink><computeroutput>(&quot;{{SERVER_IP_REPLACE}}&quot;)</computeroutput> | <computeroutput>public static const std::string</computeroutput><ulink url="#namespace_r_v_c_motion_controller_1af3ba943f7d939be83f329747463f2dcb"><computeroutput>SERVER_PORT_REPLACE</computeroutput></ulink><computeroutput>(&quot;{{SERVER_PORT_REPLACE}}&quot;)</computeroutput> | <computeroutput>class</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller"><computeroutput>RVCMotionController::Moveit2ServoMotionController</computeroutput></ulink> | <computeroutput>class</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface"><computeroutput>RVCMotionController::RVCMotionControllerInterface</computeroutput></ulink> | <computeroutput>class</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller"><computeroutput>RVCMotionController::URPendantMotionController</computeroutput></ulink> |</para>
+</sect2>
+<sect2 id="md_doxygen_1autotoc_md56">
+<title>Members</title>
+<sect4 id="md_doxygen_1autotoc_md57">
+<title>&lt;tt&gt;public static const std::string&lt;/tt&gt;&lt;a href=&quot;#namespace_r_v_c_motion_controller_1a485d87131704adeb6b79f4afeae0b773&quot;&gt;&lt;tt&gt;SERVER_IP_REPLACE&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(&quot;{{SERVER_IP_REPLACE}}&quot;)&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md58">
+<title>&lt;tt&gt;public static const std::string&lt;/tt&gt;&lt;a href=&quot;#namespace_r_v_c_motion_controller_1af3ba943f7d939be83f329747463f2dcb&quot;&gt;&lt;tt&gt;SERVER_PORT_REPLACE&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(&quot;{{SERVER_PORT_REPLACE}}&quot;)&lt;/tt&gt;</title>
+</sect4>
+</sect2>
+</sect1>
+<sect1 id="md_doxygen_1autotoc_md59">
+<title>class &lt;tt&gt;RVCMotionController::Moveit2ServoMotionController&lt;/tt&gt;</title>
+<para><programlisting><codeline><highlight class="normal">class<sp/>RVCMotionController::Moveit2ServoMotionController</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>:<sp/>public<sp/>RVCMotionController::RVCMotionControllerInterface</highlight></codeline>
+</programlisting></para>
+<sect2 id="md_doxygen_1autotoc_md60">
+<title>Summary</title>
+<para><table rows="2" cols="2"><row>
+<entry thead="yes"><para>Members   </para>
+</entry><entry thead="yes"><para>Descriptions    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ace3a0dfb12ab35bcae919676ae1b29e7"><computeroutput>Moveit2ServoMotionController</computeroutput></ulink><computeroutput>()</computeroutput>   </para>
+</entry><entry thead="no"><para>Constructor.   </para>
+</entry></row>
+</table>
+<computeroutput>public virtual</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3f8495c71f5ef0a7b422b03a64b49a5c"><computeroutput>~Moveit2ServoMotionController</computeroutput></ulink><computeroutput>()</computeroutput> | <computeroutput>public virtual bool</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a37df9d2b464a7563829e164291f8ef63"><computeroutput>init</computeroutput></ulink><computeroutput>(rclcpp::Node::SharedPtr node)</computeroutput> | initialization api <computeroutput>public virtual void</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3cea9779b1b4f41dade9674f48f810d7"><computeroutput>setControllerSpeed</computeroutput></ulink><computeroutput>(const double controllerSpeed)</computeroutput> | Implementation of the pure virtual function for a linear controller. <computeroutput>public virtual void</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a20b86cf9f2c710722ee94fd3cd267f02"><computeroutput>sendGoal</computeroutput></ulink><computeroutput>(const geometry_msgs::msg::Pose destPose)</computeroutput> | <computeroutput>public virtual void</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a54c67ade6b09d153f429f791269881f2"><computeroutput>sendGoal</computeroutput></ulink><computeroutput>(const std::vector&lt; vector6d_t &gt; dest,const bool recomputeTraj)</computeroutput> | implementation of send goal with vector6d_t as input <computeroutput>public virtual void</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ad2d7f8e6b49f9f325fbd311cc8ec1420"><computeroutput>sendGripperPosition</computeroutput></ulink><computeroutput>(double position)</computeroutput> | Controller gives an indication if the target is close enough. <computeroutput>public inline virtual double</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a1524873c6fac09410295f18988adaaf3"><computeroutput>getGripperPositionFeedback</computeroutput></ulink><computeroutput>(void)</computeroutput> | returns current value of the gripper position. <computeroutput>public virtual bool</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a5ecf5b6f4e46bac90b2d0b8aa41de14d"><computeroutput>isGoalNear</computeroutput></ulink><computeroutput>()</computeroutput> |</para>
+</sect2>
+<sect2 id="md_doxygen_1autotoc_md61">
+<title>Members</title>
+<sect4 id="md_doxygen_1autotoc_md62">
+<title>&lt;tt&gt;public&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ace3a0dfb12ab35bcae919676ae1b29e7&quot;&gt;&lt;tt&gt;Moveit2ServoMotionController&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>Constructor.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md63">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>node</computeroutput> ros node</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md64">
+<title>&lt;tt&gt;public virtual&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3f8495c71f5ef0a7b422b03a64b49a5c&quot;&gt;&lt;tt&gt;~Moveit2ServoMotionController&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md65">
+<title>&lt;tt&gt;public virtual bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a37df9d2b464a7563829e164291f8ef63&quot;&gt;&lt;tt&gt;init&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(rclcpp::Node::SharedPtr node)&lt;/tt&gt;</title>
+<para>initialization api</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md66">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>node</computeroutput> the rclcpp::Node associated</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md67">
+<title>Returns</title>
+<para>true if succeded</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md68">
+<title>Returns</title>
+<para>false if failed</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md69">
+<title>&lt;tt&gt;public virtual void&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3cea9779b1b4f41dade9674f48f810d7&quot;&gt;&lt;tt&gt;setControllerSpeed&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(const double controllerSpeed)&lt;/tt&gt;</title>
+<para>Implementation of the pure virtual function for a linear controller.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md70">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>destPose</computeroutput></para>
+</listitem><listitem><para><computeroutput>controllerSpeed</computeroutput></para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md71">
+<title>&lt;tt&gt;public virtual void&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a20b86cf9f2c710722ee94fd3cd267f02&quot;&gt;&lt;tt&gt;sendGoal&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(const geometry_msgs::msg::Pose destPose)&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md72">
+<title>&lt;tt&gt;public virtual void&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a54c67ade6b09d153f429f791269881f2&quot;&gt;&lt;tt&gt;sendGoal&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(const std::vector&lt; vector6d_t &gt; dest,const bool recomputeTraj)&lt;/tt&gt;</title>
+<para>implementation of send goal with vector6d_t as input</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md73">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>dest</computeroutput> 6 double elements vector input</para>
+</listitem><listitem><para><computeroutput>controllerSpeed</computeroutput> speed input</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md74">
+<title>&lt;tt&gt;public virtual void&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ad2d7f8e6b49f9f325fbd311cc8ec1420&quot;&gt;&lt;tt&gt;sendGripperPosition&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(double position)&lt;/tt&gt;</title>
+<para>Controller gives an indication if the target is close enough.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md75">
+<title>Returns</title>
+<para>true if the goal is close enough</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md76">
+<title>&lt;tt&gt;public inline virtual double&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a1524873c6fac09410295f18988adaaf3&quot;&gt;&lt;tt&gt;getGripperPositionFeedback&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(void)&lt;/tt&gt;</title>
+<para>returns current value of the gripper position.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md77">
+<title>Returns</title>
+<para>current value of the gripper position.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md78">
+<title>&lt;tt&gt;public virtual bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a5ecf5b6f4e46bac90b2d0b8aa41de14d&quot;&gt;&lt;tt&gt;isGoalNear&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+</sect4>
+</sect2>
+</sect1>
+<sect1 id="md_doxygen_1autotoc_md79">
+<title>class &lt;tt&gt;RVCMotionController::RVCMotionControllerInterface&lt;/tt&gt;</title>
+<sect2 id="md_doxygen_1autotoc_md80">
+<title>Summary</title>
+<para><table rows="3" cols="2"><row>
+<entry thead="yes"><para>Members   </para>
+</entry><entry thead="yes"><para>Descriptions    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public virtual bool</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ab207b1f50cc7b3bb726221e0b782f255"><computeroutput>init</computeroutput></ulink><computeroutput>(rclcpp::Node::SharedPtr node)</computeroutput>   </para>
+</entry><entry thead="no"><para>initialization api    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public void</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a267aaac3902ac1bf47a870f9b02b4d58"><computeroutput>setControllerSpeed</computeroutput></ulink><computeroutput>(const double controllerSpeed)</computeroutput>   </para>
+</entry><entry thead="no"><para>Send the target goal Pose to the controller. Pure virtual function.   </para>
+</entry></row>
+</table>
+<computeroutput>public void</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a5a54d8631325fb402fcd1412960c4357"><computeroutput>sendGoal</computeroutput></ulink><computeroutput>(const geometry_msgs::msg::Pose destPose)</computeroutput> | <computeroutput>public void</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a0b35fed01e1e1018a831d2dfedafbe99"><computeroutput>sendGoal</computeroutput></ulink><computeroutput>(std::vector&lt; vector6d_t &gt; dest,const bool recomputeTraj)</computeroutput> | Send the target angles to the controller. <computeroutput>public void</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aef5ea596277bb87030274d71a0add677"><computeroutput>sendGripperPosition</computeroutput></ulink><computeroutput>(double position)</computeroutput> | Controller gives an indication if the target is close enough. <computeroutput>public bool</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a75decf28e1a228ebd57d730a5638017c"><computeroutput>isGoalNear</computeroutput></ulink><computeroutput>()</computeroutput> | <computeroutput>public double</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aeb1c0f524dd83957f70d359e9a719df2"><computeroutput>getGripperPositionFeedback</computeroutput></ulink><computeroutput>(void)</computeroutput> | returns current value of the gripper position. <computeroutput>protected rclcpp::Node::SharedPtr</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aac3f97e64f67377c59593a6b2853f1e9"><computeroutput>node_</computeroutput></ulink> | ros node <computeroutput>protected vector6d_t</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1af579517cbf66e8ac5550a77c52dd1dce"><computeroutput>lastJointGoal</computeroutput></ulink> | previous configured goal in Joint Space <computeroutput>protected geometry_msgs::msg::Pose</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac3a613c724464f9317665dbac0fe4c64"><computeroutput>lastTCPGoal</computeroutput></ulink> | previous configured goal in Cartesian Space <computeroutput>protected int</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a05b4cd37612329c645a4240864b45745"><computeroutput>current_control_mode</computeroutput></ulink> | internal state representing if controller is currently in Joint or Cartesian space control mode <computeroutput>protected</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac8f879e7d8652768338343eec731b5b0"><computeroutput>RVCMotionControllerInterface</computeroutput></ulink><computeroutput>()</computeroutput> | Empty Constructor for pluginlib.</para>
+</sect2>
+<sect2 id="md_doxygen_1autotoc_md81">
+<title>Members</title>
+<sect4 id="md_doxygen_1autotoc_md82">
+<title>&lt;tt&gt;public virtual bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ab207b1f50cc7b3bb726221e0b782f255&quot;&gt;&lt;tt&gt;init&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(rclcpp::Node::SharedPtr node)&lt;/tt&gt;</title>
+<para>initialization api</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md83">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>node</computeroutput> the rclcpp::Node associated</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md84">
+<title>Returns</title>
+<para>true if succeded</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md85">
+<title>Returns</title>
+<para>false if failed</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md86">
+<title>&lt;tt&gt;public void&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a267aaac3902ac1bf47a870f9b02b4d58&quot;&gt;&lt;tt&gt;setControllerSpeed&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(const double controllerSpeed)&lt;/tt&gt;</title>
+<para>Send the target goal Pose to the controller. Pure virtual function.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md87">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>destPose</computeroutput> target Pose</para>
+</listitem><listitem><para><computeroutput>controllerSpeed</computeroutput> Speed of the robot</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md88">
+<title>&lt;tt&gt;public void&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a5a54d8631325fb402fcd1412960c4357&quot;&gt;&lt;tt&gt;sendGoal&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(const geometry_msgs::msg::Pose destPose)&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md89">
+<title>&lt;tt&gt;public void&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a0b35fed01e1e1018a831d2dfedafbe99&quot;&gt;&lt;tt&gt;sendGoal&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(std::vector&lt; vector6d_t &gt; dest,const bool recomputeTraj)&lt;/tt&gt;</title>
+<para>Send the target angles to the controller.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md90">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>dest</computeroutput> 6 joint angles in radians</para>
+</listitem><listitem><para><computeroutput>controllerSpeed</computeroutput> Speed of the robot</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md91">
+<title>&lt;tt&gt;public void&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aef5ea596277bb87030274d71a0add677&quot;&gt;&lt;tt&gt;sendGripperPosition&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(double position)&lt;/tt&gt;</title>
+<para>Controller gives an indication if the target is close enough.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md92">
+<title>Returns</title>
+<para>true if the goal is close enough</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md93">
+<title>&lt;tt&gt;public bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a75decf28e1a228ebd57d730a5638017c&quot;&gt;&lt;tt&gt;isGoalNear&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md94">
+<title>&lt;tt&gt;public double&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aeb1c0f524dd83957f70d359e9a719df2&quot;&gt;&lt;tt&gt;getGripperPositionFeedback&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(void)&lt;/tt&gt;</title>
+<para>returns current value of the gripper position.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md95">
+<title>Returns</title>
+<para>current value of the gripper position.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md96">
+<title>&lt;tt&gt;protected rclcpp::Node::SharedPtr&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aac3f97e64f67377c59593a6b2853f1e9&quot;&gt;&lt;tt&gt;node_&lt;/tt&gt;&lt;/a&gt;</title>
+<para>ros node</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md97">
+<title>&lt;tt&gt;protected vector6d_t&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1af579517cbf66e8ac5550a77c52dd1dce&quot;&gt;&lt;tt&gt;lastJointGoal&lt;/tt&gt;&lt;/a&gt;</title>
+<para>previous configured goal in Joint Space</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md98">
+<title>&lt;tt&gt;protected geometry_msgs::msg::Pose&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac3a613c724464f9317665dbac0fe4c64&quot;&gt;&lt;tt&gt;lastTCPGoal&lt;/tt&gt;&lt;/a&gt;</title>
+<para>previous configured goal in Cartesian Space</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md99">
+<title>&lt;tt&gt;protected int&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a05b4cd37612329c645a4240864b45745&quot;&gt;&lt;tt&gt;current_control_mode&lt;/tt&gt;&lt;/a&gt;</title>
+<para>internal state representing if controller is currently in Joint or Cartesian space control mode</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md100">
+<title>&lt;tt&gt;protected&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac8f879e7d8652768338343eec731b5b0&quot;&gt;&lt;tt&gt;RVCMotionControllerInterface&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>Empty Constructor for pluginlib.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md101">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>node</computeroutput> a rclcpp node shared pointer</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+</sect2>
+</sect1>
+<sect1 id="md_doxygen_1autotoc_md102">
+<title>class &lt;tt&gt;RVCMotionController::URPendantMotionController&lt;/tt&gt;</title>
+<para><programlisting><codeline><highlight class="normal">class<sp/>RVCMotionController::URPendantMotionController</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/>:<sp/>public<sp/>RVCMotionController::RVCMotionControllerInterface</highlight></codeline>
+</programlisting></para>
+<sect2 id="md_doxygen_1autotoc_md103">
+<title>Summary</title>
+<para><table rows="4" cols="2"><row>
+<entry thead="yes"><para>Members   </para>
+</entry><entry thead="yes"><para>Descriptions    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1aea5fc0138868a3e04c7088128ddb1e98"><computeroutput>URPendantMotionController</computeroutput></ulink><computeroutput>()</computeroutput>   </para>
+</entry><entry thead="no"><para>Constructor.    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public virtual bool</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a2269ddc71a4c2fa31ada8c9e0e7f292b"><computeroutput>init</computeroutput></ulink><computeroutput>(rclcpp::Node::SharedPtr node)</computeroutput>   </para>
+</entry><entry thead="no"><para>#### Parameters    </para>
+</entry></row>
+<row>
+<entry thead="no"><para><computeroutput>public virtual double</computeroutput><ulink url="#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a41c541d0e9df5115831d43580a44bdb2"><computeroutput>getGripperPositionFeedback</computeroutput></ulink><computeroutput>(void)</computeroutput>   </para>
+</entry><entry thead="no"><para>returns current value of the gripper position.   </para>
+</entry></row>
+</table>
+</para>
+</sect2>
+<sect2 id="md_doxygen_1autotoc_md104">
+<title>Members</title>
+<sect4 id="md_doxygen_1autotoc_md105">
+<title>&lt;tt&gt;public&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1aea5fc0138868a3e04c7088128ddb1e98&quot;&gt;&lt;tt&gt;URPendantMotionController&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>Constructor.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md106">
+<title>&lt;tt&gt;public virtual bool&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a2269ddc71a4c2fa31ada8c9e0e7f292b&quot;&gt;&lt;tt&gt;init&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(rclcpp::Node::SharedPtr node)&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md107">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>node</computeroutput> ros node</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md108">
+<title>&lt;tt&gt;public virtual double&lt;/tt&gt;&lt;a href=&quot;#class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a41c541d0e9df5115831d43580a44bdb2&quot;&gt;&lt;tt&gt;getGripperPositionFeedback&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(void)&lt;/tt&gt;</title>
+<para>returns current value of the gripper position.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md109">
+<title>Returns</title>
+<para>current value of the gripper position.</para>
+</sect4>
+</sect2>
+</sect1>
+<sect1 id="md_doxygen_1autotoc_md110">
+<title>class &lt;tt&gt;PoseTracking&lt;/tt&gt;</title>
+<para>Class <ulink url="#class_pose_tracking">PoseTracking</ulink> - subscribe to a target pose. Servo toward the target pose.</para>
+<sect2 id="md_doxygen_1autotoc_md111">
+<title>Summary</title>
+<para>Members | Descriptions <linebreak/>
+ -----------------------------<mdash/>|------------------------------------------<mdash/> <computeroutput>public std::unique_ptr&lt; moveit_servo::Servo &gt;</computeroutput><ulink url="#class_pose_tracking_1a4e01588503f3f4daa40f831672b3abac"><computeroutput>servo_</computeroutput></ulink> | <computeroutput>public</computeroutput><ulink url="#class_pose_tracking_1a03044e3ae81a921cd3a1c99b7b3f51ca"><computeroutput>PoseTracking</computeroutput></ulink><computeroutput>(const rclcpp::Node::SharedPtr &amp; node,const moveit_servo::ServoParameters::SharedConstPtr &amp; servo_parameters,const planning_scene_monitor::PlanningSceneMonitorPtr &amp; planning_scene_monitor)</computeroutput> | Constructor. Loads ROS parameters under the given namespace. <computeroutput>public PoseTrackingStatusCode</computeroutput><ulink url="#class_pose_tracking_1a921d741b7c5d641d79a502822082d101"><computeroutput>moveToPose</computeroutput></ulink><computeroutput>()</computeroutput> | <computeroutput>public inline bool</computeroutput><ulink url="#class_pose_tracking_1a0a0fd0ffa2ce16e162000088622cefde"><computeroutput>isGoalAchieved</computeroutput></ulink><computeroutput>()</computeroutput> | <computeroutput>public void</computeroutput><ulink url="#class_pose_tracking_1ad3cf9cbf97086a8b30da4ce3731cfe2c"><computeroutput>stopMotion</computeroutput></ulink><computeroutput>()</computeroutput> | A method for a different thread to stop motion and return early from control loop. <computeroutput>public bool</computeroutput><ulink url="#class_pose_tracking_1ac61ae07521fc52db7b3aa9c7d85a122b"><computeroutput>getCommandFrameTransform</computeroutput></ulink><computeroutput>(Eigen::Isometry3d &amp; transform)</computeroutput> | Get the End Effector link transform. The transform from the MoveIt planning frame to EE link <computeroutput>public void</computeroutput><ulink url="#class_pose_tracking_1aa0c00f7fe84a6916466ade74bf7266fe"><computeroutput>resetTargetPose</computeroutput></ulink><computeroutput>()</computeroutput> | Re-initialize the target pose to an empty message. Can be used to reset motion between waypoints. <computeroutput>public void</computeroutput><ulink url="#class_pose_tracking_1a67f56b8baea910817c9c476466e4478a"><computeroutput>setTargetPose</computeroutput></ulink><computeroutput>(const geometry_msgs::msg::PoseStamped::ConstSharedPtr &amp; msg)</computeroutput> | Subscribe to the target pose on this topic. <computeroutput>public void</computeroutput><ulink url="#class_pose_tracking_1ad434d0ef30be2d54a18ad433359a973c"><computeroutput>setSpeed</computeroutput></ulink><computeroutput>(const double speed)</computeroutput> | <computeroutput>public double</computeroutput><ulink url="#class_pose_tracking_1a0d12ae2723fb806f9364bee0399dc497"><computeroutput>getGripperPositionFeedback</computeroutput></ulink><computeroutput>(void)</computeroutput> |</para>
+</sect2>
+<sect2 id="md_doxygen_1autotoc_md112">
+<title>Members</title>
+<sect4 id="md_doxygen_1autotoc_md113">
+<title>&lt;tt&gt;public std::unique_ptr&lt; moveit_servo::Servo &gt;&lt;/tt&gt;&lt;a href=&quot;#class_pose_tracking_1a4e01588503f3f4daa40f831672b3abac&quot;&gt;&lt;tt&gt;servo_&lt;/tt&gt;&lt;/a&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md114">
+<title>&lt;tt&gt;public&lt;/tt&gt;&lt;a href=&quot;#class_pose_tracking_1a03044e3ae81a921cd3a1c99b7b3f51ca&quot;&gt;&lt;tt&gt;PoseTracking&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(const rclcpp::Node::SharedPtr &amp; node,const moveit_servo::ServoParameters::SharedConstPtr &amp; servo_parameters,const planning_scene_monitor::PlanningSceneMonitorPtr &amp; planning_scene_monitor)&lt;/tt&gt;</title>
+<para>Constructor. Loads ROS parameters under the given namespace.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md115">
+<title>&lt;tt&gt;public PoseTrackingStatusCode&lt;/tt&gt;&lt;a href=&quot;#class_pose_tracking_1a921d741b7c5d641d79a502822082d101&quot;&gt;&lt;tt&gt;moveToPose&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md116">
+<title>&lt;tt&gt;public inline bool&lt;/tt&gt;&lt;a href=&quot;#class_pose_tracking_1a0a0fd0ffa2ce16e162000088622cefde&quot;&gt;&lt;tt&gt;isGoalAchieved&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md117">
+<title>&lt;tt&gt;public void&lt;/tt&gt;&lt;a href=&quot;#class_pose_tracking_1ad3cf9cbf97086a8b30da4ce3731cfe2c&quot;&gt;&lt;tt&gt;stopMotion&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>A method for a different thread to stop motion and return early from control loop.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md118">
+<title>&lt;tt&gt;public bool&lt;/tt&gt;&lt;a href=&quot;#class_pose_tracking_1ac61ae07521fc52db7b3aa9c7d85a122b&quot;&gt;&lt;tt&gt;getCommandFrameTransform&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(Eigen::Isometry3d &amp; transform)&lt;/tt&gt;</title>
+<para>Get the End Effector link transform. The transform from the MoveIt planning frame to EE link</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md119">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>transform</computeroutput> the transform that will be calculated</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md120">
+<title>Returns</title>
+<para>true if a valid transform was available</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md121">
+<title>&lt;tt&gt;public void&lt;/tt&gt;&lt;a href=&quot;#class_pose_tracking_1aa0c00f7fe84a6916466ade74bf7266fe&quot;&gt;&lt;tt&gt;resetTargetPose&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>Re-initialize the target pose to an empty message. Can be used to reset motion between waypoints.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md122">
+<title>&lt;tt&gt;public void&lt;/tt&gt;&lt;a href=&quot;#class_pose_tracking_1a67f56b8baea910817c9c476466e4478a&quot;&gt;&lt;tt&gt;setTargetPose&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(const geometry_msgs::msg::PoseStamped::ConstSharedPtr &amp; msg)&lt;/tt&gt;</title>
+<para>Subscribe to the target pose on this topic.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md123">
+<title>&lt;tt&gt;public void&lt;/tt&gt;&lt;a href=&quot;#class_pose_tracking_1ad434d0ef30be2d54a18ad433359a973c&quot;&gt;&lt;tt&gt;setSpeed&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(const double speed)&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md124">
+<title>&lt;tt&gt;public double&lt;/tt&gt;&lt;a href=&quot;#class_pose_tracking_1a0d12ae2723fb806f9364bee0399dc497&quot;&gt;&lt;tt&gt;getGripperPositionFeedback&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(void)&lt;/tt&gt;</title>
+</sect4>
+</sect2>
+</sect1>
+<sect1 id="md_doxygen_1autotoc_md125">
+<title>class &lt;tt&gt;TCPServer&lt;/tt&gt;</title>
+<sect2 id="md_doxygen_1autotoc_md126">
+<title>Summary</title>
+<para>Members | Descriptions <linebreak/>
+ -----------------------------<mdash/>|------------------------------------------<mdash/> <computeroutput>public</computeroutput><ulink url="#class_t_c_p_server_1a34530b6adcb6ecc2a41eafea64be376b"><computeroutput>TCPServer</computeroutput></ulink><computeroutput>() = delete</computeroutput> | <computeroutput>public</computeroutput><ulink url="#class_t_c_p_server_1a6a46d69366b344b31c0844025f5ed6c5"><computeroutput>TCPServer</computeroutput></ulink><computeroutput>(const int port)</computeroutput> | <computeroutput>public virtual</computeroutput><ulink url="#class_t_c_p_server_1abc497ac52355e53986a6a1bd1acb9581"><computeroutput>~TCPServer</computeroutput></ulink><computeroutput>()</computeroutput> | <computeroutput>public inline void</computeroutput><ulink url="#class_t_c_p_server_1ac4692eebb919065ff1e47c03b9f32236"><computeroutput>setConnectCallback</computeroutput></ulink><computeroutput>(std::function&lt; void(const int)&gt; func)</computeroutput> | This callback will be triggered on clients connecting to the server. <computeroutput>public inline void</computeroutput><ulink url="#class_t_c_p_server_1a876d2df45973514fce6c03166418cdf0"><computeroutput>setDisconnectCallback</computeroutput></ulink><computeroutput>(std::function&lt; void(const int)&gt; func)</computeroutput> | This callback will be triggered on clients disconnecting from the server. <computeroutput>public inline void</computeroutput><ulink url="#class_t_c_p_server_1ac0d65df310bb5fb1a1485e51b8e3a247"><computeroutput>setMessageCallback</computeroutput></ulink><computeroutput>(std::function&lt; void(const int, char *, int)&gt; func)</computeroutput> | This callback will be triggered on messages received on the socket. <computeroutput>public void</computeroutput><ulink url="#class_t_c_p_server_1a02a481f18a96c41fda63f2caf97df239"><computeroutput>start</computeroutput></ulink><computeroutput>()</computeroutput> | Start event handling. <computeroutput>public void</computeroutput><ulink url="#class_t_c_p_server_1ab39f6193cd657921f6cbb8185ba94341"><computeroutput>shutdown</computeroutput></ulink><computeroutput>()</computeroutput> | Shut down the event listener thread. After calling this, no events will be handled anymore, but the socket will remain open and bound to the port. Call <ulink url="#class_t_c_p_server_1a02a481f18a96c41fda63f2caf97df239">start()</ulink> in order to restart event handling. <computeroutput>public bool</computeroutput><ulink url="#class_t_c_p_server_1aa97ea739a82504a2e2aed5a1f4854f8a"><computeroutput>write</computeroutput></ulink><computeroutput>(const int fd,const uint8_t * buf,const size_t buf_len,size_t &amp; written)</computeroutput> | Writes to a client. <computeroutput>public inline uint32_t</computeroutput><ulink url="#class_t_c_p_server_1af09a1f9ade5d6f8a1eab80390685b513"><computeroutput>getMaxClientsAllowed</computeroutput></ulink><computeroutput>() const</computeroutput> | Get the maximum number of clients allowed to connect to this server. <computeroutput>public inline void</computeroutput><ulink url="#class_t_c_p_server_1adf4db1a71bdd42642a8cc308e70dcd86"><computeroutput>setMaxClientsAllowed</computeroutput></ulink><computeroutput>(const uint32_t &amp; max_clients_allowed)</computeroutput> | Set the maximum number of clients allowed to connect to this server.</para>
+</sect2>
+<sect2 id="md_doxygen_1autotoc_md127">
+<title>Members</title>
+<sect4 id="md_doxygen_1autotoc_md128">
+<title>&lt;tt&gt;public&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_server_1a34530b6adcb6ecc2a41eafea64be376b&quot;&gt;&lt;tt&gt;TCPServer&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;() = delete&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md129">
+<title>&lt;tt&gt;public&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_server_1a6a46d69366b344b31c0844025f5ed6c5&quot;&gt;&lt;tt&gt;TCPServer&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(const int port)&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md130">
+<title>&lt;tt&gt;public virtual&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_server_1abc497ac52355e53986a6a1bd1acb9581&quot;&gt;&lt;tt&gt;~TCPServer&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md131">
+<title>&lt;tt&gt;public inline void&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_server_1ac4692eebb919065ff1e47c03b9f32236&quot;&gt;&lt;tt&gt;setConnectCallback&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(std::function&lt; void(const int)&gt; func)&lt;/tt&gt;</title>
+<para>This callback will be triggered on clients connecting to the server.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md132">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>func</computeroutput> Function handling the event information. The file descriptor created by the connection event will be passed to the function.</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md133">
+<title>&lt;tt&gt;public inline void&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_server_1a876d2df45973514fce6c03166418cdf0&quot;&gt;&lt;tt&gt;setDisconnectCallback&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(std::function&lt; void(const int)&gt; func)&lt;/tt&gt;</title>
+<para>This callback will be triggered on clients disconnecting from the server.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md134">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>func</computeroutput> Function handling the event information. The file descriptor created by the connection event will be passed to the function.</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md135">
+<title>&lt;tt&gt;public inline void&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_server_1ac0d65df310bb5fb1a1485e51b8e3a247&quot;&gt;&lt;tt&gt;setMessageCallback&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(std::function&lt; void(const int, char *, int)&gt; func)&lt;/tt&gt;</title>
+<para>This callback will be triggered on messages received on the socket.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md136">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>func</computeroutput> Function handling the event information. The file client&apos;s file_descriptor will be passed to the function as well as the actual message received from the client.</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md137">
+<title>&lt;tt&gt;public void&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_server_1a02a481f18a96c41fda63f2caf97df239&quot;&gt;&lt;tt&gt;start&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>Start event handling.</para>
+<para>Without calling this function the socket will be advertised and bound to a tcp port, but no handling of connection requests will be performed.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md138">
+<title>&lt;tt&gt;public void&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_server_1ab39f6193cd657921f6cbb8185ba94341&quot;&gt;&lt;tt&gt;shutdown&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+<para>Shut down the event listener thread. After calling this, no events will be handled anymore, but the socket will remain open and bound to the port. Call <ulink url="#class_t_c_p_server_1a02a481f18a96c41fda63f2caf97df239">start()</ulink> in order to restart event handling.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md139">
+<title>&lt;tt&gt;public bool&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_server_1aa97ea739a82504a2e2aed5a1f4854f8a&quot;&gt;&lt;tt&gt;write&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(const int fd,const uint8_t * buf,const size_t buf_len,size_t &amp; written)&lt;/tt&gt;</title>
+<para>Writes to a client.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md140">
+<title>Parameters</title>
+<para><itemizedlist>
+<listitem><para><computeroutput>fd</computeroutput> File descriptor belonging to the client the data should be sent to. The file descriptor will be given from the connection callback.</para>
+</listitem><listitem><para><computeroutput>buf</computeroutput> Buffer of bytes to write</para>
+</listitem><listitem><para><computeroutput>buf_len</computeroutput> Number of bytes in the buffer</para>
+</listitem><listitem><para><computeroutput>written</computeroutput> Number of bytes actually written</para>
+</listitem></itemizedlist>
+</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md141">
+<title>Returns</title>
+<para>True on success, false otherwise</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md142">
+<title>&lt;tt&gt;public inline uint32_t&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_server_1af09a1f9ade5d6f8a1eab80390685b513&quot;&gt;&lt;tt&gt;getMaxClientsAllowed&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;() const&lt;/tt&gt;</title>
+<para>Get the maximum number of clients allowed to connect to this server.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md143">
+<title>Returns</title>
+<para>The currently configured client limit. 0 means unlimited amount of clients allowed.</para>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md144">
+<title>&lt;tt&gt;public inline void&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_server_1adf4db1a71bdd42642a8cc308e70dcd86&quot;&gt;&lt;tt&gt;setMaxClientsAllowed&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(const uint32_t &amp; max_clients_allowed)&lt;/tt&gt;</title>
+<para>Set the maximum number of clients allowed to connect to this server.</para>
+<para>0 means unlimited number of clients allowed.</para>
+</sect4>
+</sect2>
+</sect1>
+<sect1 id="md_doxygen_1autotoc_md145">
+<title>class &lt;tt&gt;TCPSocket&lt;/tt&gt;</title>
+<para>Class for TCP socket abstraction.</para>
+<sect2 id="md_doxygen_1autotoc_md146">
+<title>Summary</title>
+<para>Members | Descriptions <linebreak/>
+ -----------------------------<mdash/>|------------------------------------------<mdash/> <computeroutput>public bool</computeroutput><ulink url="#class_t_c_p_socket_1a76c452c42f24a26bcdc2a19c9aaa1360"><computeroutput>setup</computeroutput></ulink><computeroutput>(std::string &amp; host,int port)</computeroutput> | <computeroutput>public</computeroutput><ulink url="#class_t_c_p_socket_1a7a50427a401d1a6f3209d51818bad901"><computeroutput>TCPSocket</computeroutput></ulink><computeroutput>()</computeroutput> | <computeroutput>public virtual</computeroutput><ulink url="#class_t_c_p_socket_1af357e6923a0f8adbbb8e46fab4523991"><computeroutput>~TCPSocket</computeroutput></ulink><computeroutput>()</computeroutput> | <computeroutput>public std::string</computeroutput><ulink url="#class_t_c_p_socket_1aab36a36e867e399afd78b1e91371ac1e"><computeroutput>getIP</computeroutput></ulink><computeroutput>() const</computeroutput> | <computeroutput>public bool</computeroutput><ulink url="#class_t_c_p_socket_1a8d88a687df0513d1372cac8524f500e2"><computeroutput>read</computeroutput></ulink><computeroutput>(char * character)</computeroutput> | <computeroutput>public bool</computeroutput><ulink url="#class_t_c_p_socket_1a663293961feef12b08f0a31aeb5c49f8"><computeroutput>read</computeroutput></ulink><computeroutput>(uint8_t * buf,const size_t buf_len,size_t &amp; read)</computeroutput> | <computeroutput>public bool</computeroutput><ulink url="#class_t_c_p_socket_1a181378aa8cec7a0bd77d78366aade064"><computeroutput>write</computeroutput></ulink><computeroutput>(const uint8_t * buf,const size_t buf_len,size_t &amp; written)</computeroutput> | <computeroutput>public void</computeroutput><ulink url="#class_t_c_p_socket_1ae64f7db5484a7f057446ac3c906629c0"><computeroutput>close</computeroutput></ulink><computeroutput>()</computeroutput> | <computeroutput>protected std::unique_ptr&lt; timeval &gt;</computeroutput><ulink url="#class_t_c_p_socket_1ac77bc18be799c23458a777644c7e5d9a"><computeroutput>recv_timeout_</computeroutput></ulink> | <computeroutput>protected virtual void</computeroutput><ulink url="#class_t_c_p_socket_1acd1d92dd73f3ab0dc5537af9b9c3fcdf"><computeroutput>setOptions</computeroutput></ulink><computeroutput>(int socket_fd)</computeroutput> |</para>
+</sect2>
+<sect2 id="md_doxygen_1autotoc_md147">
+<title>Members</title>
+<sect4 id="md_doxygen_1autotoc_md148">
+<title>&lt;tt&gt;public bool&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_socket_1a76c452c42f24a26bcdc2a19c9aaa1360&quot;&gt;&lt;tt&gt;setup&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(std::string &amp; host,int port)&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md149">
+<title>&lt;tt&gt;public&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_socket_1a7a50427a401d1a6f3209d51818bad901&quot;&gt;&lt;tt&gt;TCPSocket&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md150">
+<title>&lt;tt&gt;public virtual&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_socket_1af357e6923a0f8adbbb8e46fab4523991&quot;&gt;&lt;tt&gt;~TCPSocket&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md151">
+<title>&lt;tt&gt;public std::string&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_socket_1aab36a36e867e399afd78b1e91371ac1e&quot;&gt;&lt;tt&gt;getIP&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;() const&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md152">
+<title>&lt;tt&gt;public bool&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_socket_1a8d88a687df0513d1372cac8524f500e2&quot;&gt;&lt;tt&gt;read&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(char * character)&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md153">
+<title>&lt;tt&gt;public bool&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_socket_1a663293961feef12b08f0a31aeb5c49f8&quot;&gt;&lt;tt&gt;read&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(uint8_t * buf,const size_t buf_len,size_t &amp; read)&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md154">
+<title>&lt;tt&gt;public bool&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_socket_1a181378aa8cec7a0bd77d78366aade064&quot;&gt;&lt;tt&gt;write&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(const uint8_t * buf,const size_t buf_len,size_t &amp; written)&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md155">
+<title>&lt;tt&gt;public void&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_socket_1ae64f7db5484a7f057446ac3c906629c0&quot;&gt;&lt;tt&gt;close&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;()&lt;/tt&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md156">
+<title>&lt;tt&gt;protected std::unique_ptr&lt; timeval &gt;&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_socket_1ac77bc18be799c23458a777644c7e5d9a&quot;&gt;&lt;tt&gt;recv_timeout_&lt;/tt&gt;&lt;/a&gt;</title>
+</sect4>
+<sect4 id="md_doxygen_1autotoc_md157">
+<title>&lt;tt&gt;protected virtual void&lt;/tt&gt;&lt;a href=&quot;#class_t_c_p_socket_1acd1d92dd73f3ab0dc5537af9b9c3fcdf&quot;&gt;&lt;tt&gt;setOptions&lt;/tt&gt;&lt;/a&gt;&lt;tt&gt;(int socket_fd)&lt;/tt&gt;</title>
+</sect4>
+</sect2>
+</sect1>
+<sect1 id="md_doxygen_1autotoc_md158">
+<title>struct &lt;tt&gt;RVCMotionController::URPendantMotionController::Command&lt;/tt&gt;</title>
+<sect2 id="md_doxygen_1autotoc_md159">
+<title>Summary</title>
+<para>Members | Descriptions <linebreak/>
+ -----------------------------<mdash/>|------------------------------------------<mdash/> <computeroutput>enum</computeroutput><ulink url="#struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54"><computeroutput>type</computeroutput></ulink> |</para>
+</sect2>
+<sect2 id="md_doxygen_1autotoc_md160">
+<title>Members</title>
+<sect4 id="md_doxygen_1autotoc_md161">
+<title>&lt;tt&gt;enum&lt;/tt&gt;&lt;a href=&quot;#struct_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1_1_command_1a49e4d4fb376c80d35984e61c9025ed54&quot;&gt;&lt;tt&gt;type&lt;/tt&gt;&lt;/a&gt;</title>
+<para>Values | Descriptions <linebreak/>
+ -----------------------------<mdash/>|------------------------------------------<mdash/> sendPose | receiveJoints | receiveIsNear | receiveGripperSensor |</para>
+<para>Generated by <ulink url="https://sourcey.com/moxygen">Moxygen</ulink> </para>
+</sect4>
+</sect2>
+</sect1>
+    </detaileddescription>
+    <location file="doxygen.md"/>
+  </compounddef>
+</doxygen>

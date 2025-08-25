@@ -65,20 +65,20 @@ spec:
         - name: videos-volume
           mountPath: /tmp/videos
       - name: model-downloader
-        image: intel/dlstreamer:2025.0.1.3-ubuntu24
+        image: intel/dlstreamer:2025.1.2-ubuntu24
         command:
         - /bin/sh
         - -c
         - |
           mkdir -p /tmp/models
           cd /tmp/
-          wget -O /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/v1.0.0.tar.gz && \
+          curl -L -o /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/v1.0.0.tar.gz && \          
           tar -xzf /tmp/main.tar.gz -C /tmp && \
           cp -r /tmp/edge-ai-suites-1.0.0/metro-ai-suite/smart-parking/dlsps/models/* /tmp/models/ && \
           rm -rf /tmp/main.tar.gz /tmp/edge-ai-suites-1.0.0
           cd /home/dlstreamer/dlstreamer/samples
           chmod +x download_public_models.sh
-          export MODELS_PATH=/tmp/models/ 
+          export MODELS_PATH=/tmp/models/
           ./download_public_models.sh yolov10s
         env:
         - name: http_proxy
@@ -92,7 +92,7 @@ spec:
           mountPath: /tmp/models
       containers:
       - name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
-        image: {{ $.Values.DOCKER_REGISTRY }}{{ $.Values.dlstreamer_pipeline_server.image }}:{{ $.Values.dlstreamer_pipeline_server.imageTag }}
+        image: {{ $.Values.dlstreamer_pipeline_server.image }}:{{ $.Values.dlstreamer_pipeline_server.imageTag }}
         imagePullPolicy: {{ $.Values.imagePullPolicy }}
         {{- if $.Values.privileged_access_required }}
         securityContext:
@@ -133,7 +133,7 @@ spec:
         - name: ENABLE_RTSP
           value: "{{ $.Values.env.ENABLE_RTSP }}"
         - name: WEBRTC_SIGNALING_SERVER
-          value: "http://{{ $.Values.env.HOST_IP }}:{{ $.Values.config.mediamtx.ext.mediamtx_port }}"
+          value: "http://mediamtx:{{ $.Values.config.mediamtx.int.mediamtx_port }}"
         - name: RUN_MODE
           value: "EVA"
         - name: SERVICE_NAME
@@ -145,7 +145,9 @@ spec:
         - name: https_proxy
           value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx"
+        - name: NO_PROXY
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx"
         - name: MQTT_HOST
           value: "broker"
         - name: MQTT_PORT

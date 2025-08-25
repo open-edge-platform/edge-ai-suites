@@ -1,0 +1,16 @@
+__pycache__/
+*/__pycache__/*
+
+rosbag2*
+
+build/
+install/
+log/
+devel/
+
+debian/.debhelper/
+debian/debhelper*
+debian/ros-*
+debian/files
+
+*.log

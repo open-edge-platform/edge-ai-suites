@@ -1,0 +1,245 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="class_t_c_p_socket" kind="class" language="C++" prot="public">
+    <compoundname>TCPSocket</compoundname>
+    <includes refid="tcp__socket_8hpp" local="no">tcp_socket.hpp</includes>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_t_c_p_socket_1a5b340e10cd03e31c40ed298646b4a8e7" prot="private" static="no" mutable="no">
+        <type>std::atomic&lt; int &gt;</type>
+        <definition>std::atomic&lt;int&gt; TCPSocket::socket_fd_</definition>
+        <argsstring></argsstring>
+        <name>socket_fd_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="68" column="15" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" bodystart="68" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_socket_1a9ef565f2b6bd60b872345e4f4f5011f2" prot="private" static="no" mutable="no">
+        <type>std::atomic&lt; SocketState &gt;</type>
+        <definition>std::atomic&lt;SocketState&gt; TCPSocket::state_</definition>
+        <argsstring></argsstring>
+        <name>state_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="69" column="15" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_c_p_socket_1a9dbf3f7dcf3e352d9ea94823ad403c88" prot="private" static="no" mutable="no">
+        <type>std::chrono::seconds</type>
+        <definition>std::chrono::seconds TCPSocket::reconnection_time_</definition>
+        <argsstring></argsstring>
+        <name>reconnection_time_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="70" column="24" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="class_t_c_p_socket_1ac77bc18be799c23458a777644c7e5d9a" prot="protected" static="no" mutable="no">
+        <type>std::unique_ptr&lt; timeval &gt;</type>
+        <definition>std::unique_ptr&lt;timeval&gt; TCPSocket::recv_timeout_</definition>
+        <argsstring></argsstring>
+        <name>recv_timeout_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="75" column="19" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-func">
+      <memberdef kind="function" id="class_t_c_p_socket_1acd1d92dd73f3ab0dc5537af9b9c3fcdf" prot="protected" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void TCPSocket::setOptions</definition>
+        <argsstring>(int socket_fd)</argsstring>
+        <name>setOptions</name>
+        <param>
+          <type>int</type>
+          <declname>socket_fd</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="73" column="16" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_socket.cpp" bodystart="33" bodyend="43"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_t_c_p_socket_1a76c452c42f24a26bcdc2a19c9aaa1360" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool TCPSocket::setup</definition>
+        <argsstring>(std::string &amp;host, int port)</argsstring>
+        <name>setup</name>
+        <param>
+          <type>std::string &amp;</type>
+          <declname>host</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>port</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="78" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_socket.cpp" bodystart="45" bodyend="96"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_socket_1a7a50427a401d1a6f3209d51818bad901" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TCPSocket::TCPSocket</definition>
+        <argsstring>()</argsstring>
+        <name>TCPSocket</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="79" column="3" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_socket.cpp" bodystart="25" bodyend="27"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_socket_1af357e6923a0f8adbbb8e46fab4523991" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type></type>
+        <definition>TCPSocket::~TCPSocket</definition>
+        <argsstring>()</argsstring>
+        <name>~TCPSocket</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="80" column="11" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_socket.cpp" bodystart="28" bodyend="31"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_socket_1aab36a36e867e399afd78b1e91371ac1e" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string TCPSocket::getIP</definition>
+        <argsstring>() const</argsstring>
+        <name>getIP</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="81" column="15" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_socket.cpp" bodystart="108" bodyend="123"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_socket_1a8d88a687df0513d1372cac8524f500e2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool TCPSocket::read</definition>
+        <argsstring>(char *character)</argsstring>
+        <name>read</name>
+        <param>
+          <type>char *</type>
+          <declname>character</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="82" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_socket.cpp" bodystart="125" bodyend="132"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_socket_1a663293961feef12b08f0a31aeb5c49f8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool TCPSocket::read</definition>
+        <argsstring>(uint8_t *buf, const size_t buf_len, size_t &amp;read)</argsstring>
+        <name>read</name>
+        <param>
+          <type>uint8_t *</type>
+          <declname>buf</declname>
+        </param>
+        <param>
+          <type>const size_t</type>
+          <declname>buf_len</declname>
+        </param>
+        <param>
+          <type>size_t &amp;</type>
+          <declname>read</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="83" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_socket.cpp" bodystart="134" bodyend="153"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_socket_1a181378aa8cec7a0bd77d78366aade064" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool TCPSocket::write</definition>
+        <argsstring>(const uint8_t *buf, const size_t buf_len, size_t &amp;written)</argsstring>
+        <name>write</name>
+        <param>
+          <type>const uint8_t *</type>
+          <declname>buf</declname>
+        </param>
+        <param>
+          <type>const size_t</type>
+          <declname>buf_len</declname>
+        </param>
+        <param>
+          <type>size_t &amp;</type>
+          <declname>written</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="84" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_socket.cpp" bodystart="155" bodyend="183"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_c_p_socket_1ae64f7db5484a7f057446ac3c906629c0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TCPSocket::close</definition>
+        <argsstring>()</argsstring>
+        <name>close</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="85" column="8" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/src/tcp_socket.cpp" bodystart="98" bodyend="106"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Class for TCP socket abstraction. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" line="65" column="1" bodyfile="rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/tcp_socket.hpp" bodystart="66" bodyend="86"/>
+    <listofallmembers>
+      <member refid="class_t_c_p_socket_1ae64f7db5484a7f057446ac3c906629c0" prot="public" virt="non-virtual"><scope>TCPSocket</scope><name>close</name></member>
+      <member refid="class_t_c_p_socket_1aab36a36e867e399afd78b1e91371ac1e" prot="public" virt="non-virtual"><scope>TCPSocket</scope><name>getIP</name></member>
+      <member refid="class_t_c_p_socket_1a8d88a687df0513d1372cac8524f500e2" prot="public" virt="non-virtual"><scope>TCPSocket</scope><name>read</name></member>
+      <member refid="class_t_c_p_socket_1a663293961feef12b08f0a31aeb5c49f8" prot="public" virt="non-virtual"><scope>TCPSocket</scope><name>read</name></member>
+      <member refid="class_t_c_p_socket_1a9dbf3f7dcf3e352d9ea94823ad403c88" prot="private" virt="non-virtual"><scope>TCPSocket</scope><name>reconnection_time_</name></member>
+      <member refid="class_t_c_p_socket_1ac77bc18be799c23458a777644c7e5d9a" prot="protected" virt="non-virtual"><scope>TCPSocket</scope><name>recv_timeout_</name></member>
+      <member refid="class_t_c_p_socket_1acd1d92dd73f3ab0dc5537af9b9c3fcdf" prot="protected" virt="virtual"><scope>TCPSocket</scope><name>setOptions</name></member>
+      <member refid="class_t_c_p_socket_1a76c452c42f24a26bcdc2a19c9aaa1360" prot="public" virt="non-virtual"><scope>TCPSocket</scope><name>setup</name></member>
+      <member refid="class_t_c_p_socket_1a5b340e10cd03e31c40ed298646b4a8e7" prot="private" virt="non-virtual"><scope>TCPSocket</scope><name>socket_fd_</name></member>
+      <member refid="class_t_c_p_socket_1a9ef565f2b6bd60b872345e4f4f5011f2" prot="private" virt="non-virtual"><scope>TCPSocket</scope><name>state_</name></member>
+      <member refid="class_t_c_p_socket_1a7a50427a401d1a6f3209d51818bad901" prot="public" virt="non-virtual"><scope>TCPSocket</scope><name>TCPSocket</name></member>
+      <member refid="class_t_c_p_socket_1a181378aa8cec7a0bd77d78366aade064" prot="public" virt="non-virtual"><scope>TCPSocket</scope><name>write</name></member>
+      <member refid="class_t_c_p_socket_1af357e6923a0f8adbbb8e46fab4523991" prot="public" virt="virtual"><scope>TCPSocket</scope><name>~TCPSocket</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

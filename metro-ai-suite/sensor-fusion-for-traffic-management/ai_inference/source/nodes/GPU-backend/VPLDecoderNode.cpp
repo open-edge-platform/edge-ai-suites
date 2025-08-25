@@ -950,6 +950,10 @@ void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
                 inferenceTimeMeta.startTime = currentTime;
                 hvabuf->setMeta(inferenceTimeMeta);
 
+                VideoTimeStamp_t videoTimeMeta;
+                videoTimeMeta.startTime = currentTime;
+                hvabuf->setMeta(videoTimeMeta);
+
                 // Free the requested memory space for each frame
                 if (m_vplDecoderManager.isVPPUsed()) {
                     sts = pmfxDecOutSurface->FrameInterface->Release(pmfxDecOutSurface);

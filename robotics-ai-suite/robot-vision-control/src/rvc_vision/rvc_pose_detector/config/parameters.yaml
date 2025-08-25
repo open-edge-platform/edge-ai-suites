@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+
+
+            # This one matches yolo_tiny model
+            class_name_array: [ 'bolt', 'gear', 'nut', 'cube' ]
+            # This one matches yolo_rvc_4class model
+            #class_name_array: [ 'cube', 'bolt', 'gear', 'nut' ]
+
+            downsampling: 0.0055
+            downsample_clouds: 0.0055
+
+            normal_search_radius: 0.005
+            fpfh_search_radius: 0.05
+              #stddev_mul_threshold: 1.0
+            stddev_mul_threshold: 0.0
+            z_threshold: 0.66
+
+            inlier_fraction: 0.47
+            similarity_threshold: 0.86
+            max_corresp_randomness: 214.0
+
+            max_corresp_distance: 0.1
+            max_iterations: 1000
+            num_samples: 3
+
+            icp_max_corresp_distance: 0.1
+            icp_xform_epsilon: 0.000000001
+            icp_fitness_epsilon: 0.000006
+            icp_max_iterations: 50
+
+            rvc_use_case_binaries: rvc_use_case_binaries

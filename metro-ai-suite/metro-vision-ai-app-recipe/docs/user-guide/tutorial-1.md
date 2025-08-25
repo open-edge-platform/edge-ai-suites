@@ -29,7 +29,8 @@ By following this guide, you will learn how to:
 <!--
 **Architecture Image Placeholder**: Add architecture diagram showing the flow from video input through AI models to toll processing output
 -->
-*[Image placeholder: AI Tolling System Architecture - showing video input, object detection, license plate recognition, vehicle attributes analysis, and toll processing workflow]*
+![AI Tolling Sytem Diagram](_images/ai-tolling-system.svg)
+
 
 The AI Tolling system consists of several key components:
 - **Video Input**: Processes live camera feeds or video files from toll booth cameras
@@ -68,10 +69,10 @@ Video File Details
 
 The sample video contains:
 - Multiple vehicles passing through a toll booth scenario
-- Various vehicle types (cars, trucks, motorcycles)
+- Various vehicle types (cars, trucks)
 - Clear license plate visibility for testing recognition accuracy
-- Duration: Approximately 2-3 minutes of footage
-- Resolution: 1920x1080 (Full HD)
+- Duration: Approximately 5 minutes of footage
+- Resolution: 640x360
 
 </details>
 
@@ -82,53 +83,30 @@ Create and run the model download script to install all required AI models:
 ```bash
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
-  -v "$(dirname "$(readlink -f "$0")"):/opt/project" \
+  -v "$PWD:/home/dlstreamer/metro-suite" \
   intel/dlstreamer:2025.0.1.3-ubuntu24 bash -c "$(cat <<EOF
 
-##############################################################################
-# 4. Process YOLO model (if any)
-##############################################################################
-mkdir -p ai-tooling/src/dlstreamer-pipeline-server/models/public
-YOLO_MODELS=(
-    yolov10s
-)
-download_script="\$(
-  cat /home/dlstreamer/dlstreamer/samples/download_public_models.sh
-)"
-for model in \${YOLO_MODELS[@]}; do
-    if [ ! -e "ai-tooling/src/dlstreamer-pipeline-server/models/public/\$model" ]; then
-      bash -c "\$(cat <<EOF2
-MODELS_PATH=ai-tooling/src/dlstreamer-pipeline-server/models
-set -- \$model
+cd /home/dlstreamer/metro-suite/
 
-\$download_script
-EOF2
-)"
-    fi
-done
+mkdir -p ai-tolling/src/dlstreamer-pipeline-server/models/public
+export MODELS_PATH=/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models
+/home/dlstreamer/dlstreamer/samples/download_public_models.sh yolov10s
 
-##############################################################################
-mkdir -p ai-tooling/src/dlstreamer-pipeline-server/models/intel
-OMZ_MODELS=(license-plate-recognition-barrier-0007
-            vehicle-attributes-recognition-barrier-0039)
-for model in "\${OMZ_MODELS[@]}"; do
-  if [ ! -e "ai-tooling/src/dlstreamer-pipeline-server/models/intel/\$model/\$model.json" ]; then
-    python3 -m pip install openvino-dev[onnx tensorflow]
-    echo "Download \$model..." && \
-    omz_downloader --name "\$model" --output_dir ai-tooling/src/dlstreamer-pipeline-server/models && \
+mkdir -p ai-tolling/src/dlstreamer-pipeline-server/models/intel
 
-    echo "Download \$model proc file..." && \
-    wget -O "ai-tooling/src/dlstreamer-pipeline-server/models/intel/\${model}/\${model}.json" "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/master/samples/gstreamer/model_proc/intel/license-plate-recognition-barrier-0007.json"
-  fi
-done
+python3 -m pip install openvino-dev[onnx,tensorflow2]
 
-##############################################################################
+omz_downloader --name license-plate-recognition-barrier-0007 -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
+omz_converter --name license-plate-recognition-barrier-0007  -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/ -d /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
+wget -O "/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/public/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json" "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/master/samples/gstreamer/model_proc/intel/license-plate-recognition-barrier-0007.json"
 
-omz_converter -d ai-tooling/src/dlstreamer-pipeline-server/models --name license-plate-recognition-barrier-0007 -o ai-tooling/src/dlstreamer-pipeline-server/models/intel/
-mv ai-tooling/src/dlstreamer-pipeline-server/models/intel/public/license-plate-recognition-barrier-0007/* ai-tooling/src/dlstreamer-pipeline-server/models/intel/license-plate-recognition-barrier-0007
+
+omz_downloader --name vehicle-attributes-recognition-barrier-0039 -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
+omz_converter --name  vehicle-attributes-recognition-barrier-0039 -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/ -d /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
+wget -O "/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json" "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/master/samples/gstreamer/model_proc/intel/vehicle-attributes-recognition-barrier-0039.json"
 
 echo "Fix ownership..."
-chown -R "$(id -u):$(id -g)" ai-tooling/src/dlstreamer-pipeline-server/models ai-tooling/src/dlstreamer-pipeline-server/videos 2>/dev/null || true
+chown -R "$(id -u):$(id -g)" ai-tolling/src/dlstreamer-pipeline-server/models ai-tolling/src/dlstreamer-pipeline-server/videos 2>/dev/null || true
 EOF
 )"
 
@@ -179,7 +157,7 @@ cat > ./ai-tolling/src/dlstreamer-pipeline-server/config.json << 'EOF'
                 "name": "car_plate_recognition_1",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! gvadetect model=/home/pipeline-server/models/public/yolov10s/FP32/yolov10s.xml device=CPU pre-process-backend=ie ! queue ! gvaclassify model=/home/pipeline-server/models/intel/license-plate-recognition-barrier-0007/FP16/license-plate-recognition-barrier-0007.xml model_proc=/home/pipeline-server/models/intel/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json device=CPU pre-process-backend=ie ! queue ! gvaclassify model=/home/pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/FP16-INT8/vehicle-attributes-recognition-barrier-0039.xml model_proc=/home/pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json device=CPU pre-process-backend=ie ! queue ! gvawatermark ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! gvafpscounter ! appsink name=appsink",
+                "pipeline": "{auto_source} name=source ! decodebin ! gvadetect model=/home/pipeline-server/models/public/yolov10s/FP32/yolov10s.xml device=CPU pre-process-backend=ie ! queue ! gvaclassify model=/home/pipeline-server/models/public/license-plate-recognition-barrier-0007/FP16/license-plate-recognition-barrier-0007.xml model_proc=/home/pipeline-server/models/public/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json device=CPU pre-process-backend=ie ! queue ! gvaclassify model=/home/pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/FP16-INT8/vehicle-attributes-recognition-barrier-0039.xml model_proc=/home/pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json device=CPU pre-process-backend=ie ! queue ! gvawatermark ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! gvafpscounter ! appsink name=appsink",
                 "description": "Car plate recognition with license-plate-recognition-barrier-0007",
                 "parameters": {
                     "type": "object",
@@ -235,14 +213,14 @@ Each element can be configured for different hardware targets (CPU, GPU, VPU).
 Update the environment configuration to use the AI tolling application:
 
 ```bash
-# Navigate back to the recipe root directory
-cd ../
-
-# Update the .env file to specify the ai-tolling application
+# Update the .env file to specify the ai-tolling application and HOST IP Address
 sed -i 's/^SAMPLE_APP=.*/SAMPLE_APP=ai-tolling/' .env
+sed -i "s/^HOST_IP=.*/HOST_IP=$(hostname -I | cut -f1 -d' ')/" .env
+
 
 # Verify the configuration
-grep SAMPLE_APP .env
+grep SAMPLE_APP= .env
+grep HOST_IP= .env
 ```
 
 Expected output: `SAMPLE_APP=ai-tolling`
@@ -284,15 +262,11 @@ Expected output should show containers for:
 
 ### 2. **Access the Application Interface**
 
-<!--
-**Interface Image Placeholder**: Add screenshot of the AI Tolling dashboard showing vehicle detection and license plate recognition
--->
-*[Image placeholder: AI Tolling Dashboard Interface - showing live video feed with vehicle bounding boxes and license plate recognition results]*
-
 Open your web browser and navigate to:
 - **Main Dashboard**: `http://localhost:3000` (Grafana)
+    - Username: admin
+    - Password: admin
 - **Node-RED Flow Editor**: `http://localhost:1880`
-- **Pipeline Management**: `http://localhost:8080`
 
 ### 3. **Test Video Processing**
 
@@ -300,7 +274,7 @@ Start the AI pipeline and process the sample video:
 
 ```bash
 # Start the AI tolling pipeline with the sample video
-curl http://localhost:8080/pipelines/user_defined_pipelines/car_plate_recognition -X POST -H 'Content-Type: application/json' -d '
+curl http://localhost:8080/pipelines/user_defined_pipelines/car_plate_recognition_1 -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/cars_extended.mp4",
@@ -336,7 +310,7 @@ http://<HOST_IP>:8889/object_detection_1
 
 For local testing, you can use: `http://localhost:8889/object_detection_1`
 
-
+![Vehicle Live Detection](_images/car_live_detection.jpg)
 
 Expected results:
 - Vehicle detection accuracy > 90%
@@ -399,25 +373,8 @@ For slow processing or high CPU usage:
 
 After successfully setting up the AI Tolling system, consider these enhancements:
 
-1. **Integration with External Systems**:
-   - Connect to toll management databases
-   - Implement payment processing workflows
-   - Add vehicle blacklist checking
+[**Integration with Node Red for enhancing business logic**](./tutorial-2.md)
 
-2. **Advanced Features**:
-   - Multi-lane processing
-   - Speed detection and enforcement
-   - Traffic pattern analysis
-
-3. **Production Deployment**:
-   - Scale to multiple toll booths
-   - Implement high availability
-   - Add monitoring and alerting
-
-4. **Model Optimization**:
-   - Fine-tune models for specific camera angles
-   - Train custom models for local license plate formats
-   - Optimize for edge hardware acceleration
 
 ## Supporting Resources
 
