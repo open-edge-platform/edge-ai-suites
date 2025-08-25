@@ -20,10 +20,10 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   flows_cred.json: |
-{{ .Files.Get "files/node-red/flows_cred.json" | indent 4 }}
+{{ include "requiredFile" (list . "files/node-red/flows_cred.json") | indent 4 }}
   settings.js: |
-{{ .Files.Get "files/node-red/settings.js" | indent 4 }}
+{{ include "requiredFile" (list . "files/node-red/settings.js") | indent 4 }}
   flows.json: |
-{{ .Files.Get "files/node-red/flows.json" | indent 4 }}
+{{ include "requiredFile" (list . "files/node-red/flows.json") | indent 4 }}
   install_package.sh: |
-{{ .Files.Get "files/node-red/install_package.sh" | indent 4 }}
+{{ include "requiredFile" (list . "files/node-red/install_package.sh") | indent 4 }}

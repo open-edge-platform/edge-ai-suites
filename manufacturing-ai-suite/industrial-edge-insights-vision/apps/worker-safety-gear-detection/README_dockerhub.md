@@ -1,4 +1,4 @@
-# Worker Safety Gear Detection Reference Implementation
+# Worker Safety Gear Detection Sample Application
 
 This application enables real-time safety gear monitoring of workers by running inference workflows across multiple AI models. It connects multiple video streams from construction site cameras to AI-powered pipelines, all operating efficiently on a single industrial PC. This solution enhances logistics efficiency and inventory management by detecting defects before they impact operations.
 
@@ -9,7 +9,7 @@ For more details on deployment, refer to the [documentation](https://docs.opened
 ## Deploy using Kubernetes Charts
 
 ---
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/worker-safety-gear-detection/main/user-guide/how-to-deploy-with-helm.html).
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/worker-safety-gear-detection/main/user-guide/how-to-deploy-using-helm-charts.html).
 
 ## Supported versions
 

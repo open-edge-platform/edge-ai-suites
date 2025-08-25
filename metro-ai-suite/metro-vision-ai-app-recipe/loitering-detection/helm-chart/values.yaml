@@ -1,7 +1,6 @@
 # Copyright Intel Corporation
 
 namespace:
-DOCKER_REGISTRY: 'ghcr.io/open-edge-platform/edge-ai-libraries/'
 DOCKER_USERNAME: ''
 DOCKER_PASSWORD: ''
 imagePullPolicy: Always
@@ -16,8 +15,8 @@ mediamtx:
   image: bluenviron/mediamtx
   imageTag: 1.11.3
 dlstreamer_pipeline_server:
-  image: intel/edge-ai-dlstreamer-pipeline-server
-  imageTag: 20250731_EAL1.2_DLSPS_RC4-ubuntu24
+  image: intel/dlstreamer-pipeline-server
+  imageTag: 3.1.0-ubuntu24
 grafana:
   image: grafana/grafana
   imageTag: 11.5.4

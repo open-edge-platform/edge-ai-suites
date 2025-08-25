@@ -1,6 +1,6 @@
 .. realsense-ros2-sample-application:
 
-|realsense| |ros| Sample Application
+|realsense| Camera with |ros| Sample Application
 ==============================================================
 
 This tutorial tells you how to:
@@ -9,18 +9,18 @@ This tutorial tells you how to:
 
 -  List ROS topics.
 
--  Confirm that |realsense| topics are publishing data.
+-  Confirm that |realsense| camera topics are publishing data.
 
 -  Retrieve data from the |realsense| camera (data coming at FPS).
 
 -  Visualize an image from the |realsense| camera displayed in rviz2.
 
-This |realsense| |ros| Sample Application can be run using two different types of |realsense| cameras. The next section explains how to run this sample application using an |realsense| USB camera (for example, |realsense| D435i). The subsequent section focuses on an |intel_realsense_depth_camera_d457| in MIPI mode, which is connected to an |axiomtek_robox500_ros2_amr_controller|.
+This |realsense| with |ros| Sample Application can be run using two different types of |realsense| cameras. The next section explains how to run this sample application using an |realsense| camera connected through USB (for example, |realsense| camera D435i). The subsequent section focuses on an |intel_realsense_depth_camera_d457| in MIPI mode, which is connected to an |axiomtek_robox500_ros2_amr_controller|.
 
-Using |realsense| USB camera
-````````````````````````````
+Using |realsense| camera connected through USB
+`````````````````````````````````````````````````
 
-#. Connect an |realsense| USB camera (for example, |realsense| D435i) to the host.
+#. Connect an |realsense| camera (for example, |realsense| D435i) to the host, through USB.
 
 #. Install the ``librealsense2`` and ``realsense2`` tools:
 
@@ -28,7 +28,7 @@ Using |realsense| USB camera
 
       sudo apt-get install -y ros-humble-librealsense2-tools
 
-#. To download and install the |realsense| |ros| sample application, run the command below:
+#. Download and install the |realsense| camera with |ros| sample application:
 
    .. code-block::
 
@@ -40,7 +40,7 @@ Using |realsense| USB camera
 
       source /opt/ros/humble/setup.bash
 
-#. Run the |realsense| |ros| sample application:
+#. Run the |realsense| camera with |ros| sample application:
 
    .. code-block::
 
@@ -191,10 +191,10 @@ Add the user to the *video* and *render* group
     # Add the $USER to the render group
     sudo usermod -a -G render $USER
 
-Install and run the  |realsense| |ros| sample application
-.........................................................
+Install and run the  |realsense| camera with |ros| sample application
+......................................................................
 
-#. To download and install the |realsense| |ros| sample application run the below command:
+#. Download and install the |realsense| camera with |ros| sample application:
 
    .. code-block::
 
@@ -212,7 +212,7 @@ Install and run the  |realsense| |ros| sample application
 
       rs_ipu6_d457_bind.sh
 
-#. Run the |realsense| |ros| sample application:
+#. Run the |realsense| camera with |ros| sample application:
 
    .. code-block::
 

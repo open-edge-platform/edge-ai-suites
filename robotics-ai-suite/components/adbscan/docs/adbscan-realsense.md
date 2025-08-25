@@ -1,5 +1,6 @@
----
-title: ADBSCAN Algorithm with Intel® RealSense™ Camera Input Demo
+
+# ADBSCAN Algorithm with Intel® RealSense™ Camera Input Demo
+
 ---
 
 This tutorial describes how to run the ADBSCAN algorithm from Intel®
@@ -8,20 +9,20 @@ RealSense™ camera input.
 It outputs to the `obstacle_array` topic of type
 `nav2_dynamic_msgs/ObstacleArray`.
 
-# Prerequisites
+## Prerequisites
 
 - [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
-- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
-- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
-- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install.html)
-- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
+- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
+- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
+- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install.html)
+- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
 
-# Install
+## Install
 
 Install `ros-humble-adbscan-ros2` Deb package from Intel® Robotics AI
 Dev Kit APT repository
 
-> ``` 
+> ```sh
 > sudo apt update
 > sudo apt install ros-humble-adbscan-ros2
 > ```
@@ -29,15 +30,14 @@ Dev Kit APT repository
 Install the following package with ROS 2 bag files in order to publish
 point cloud data from 2D LIDAR or Intel® RealSense™ camera
 
-> ``` 
+> ```sh
 > sudo apt install ros-humble-bagfile-laser-pointcloud
 > ```
 
-# Run the demo with Intel® RealSense™
+## Run the demo with Intel® RealSense™
 
-> ``` 
-> sudo chmod +x /opt/ros/humble/share/adbscan_ros2/scripts/demo_RS.sh
-> /opt/ros/humble/share/adbscan_ros2/scripts/demo_RS.sh
+> ```sh
+> ros2 launch adbscan_ros2 play_demo_realsense_launch.py
 > ```
 >
 > Expected result: ROS 2 rviz2 starts, and you will see how ADBSCAN

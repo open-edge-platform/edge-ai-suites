@@ -1,5 +1,6 @@
----
-title: OpenVINO™ Yolov8 Tutorial
+
+# OpenVINO™ Yolov8 Tutorial
+
 ---
 
 This tutorial serves as an example for understanding the utilization of
@@ -7,15 +8,15 @@ OpenVINO™ node. It outlines the steps for installing ROS 2 OpenVINO™
 node and executing the segmentation model on the CPU, using a Intel®
 RealSense™ camera image as the input.
 
-# Getting Started
+## Getting Started
 
-# Prerequisites
+## Prerequisites
 
 - [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
-- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
-- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
-- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install.html)
-- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
+- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
+- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
+- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install.html)
+- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
 
 ## Install OpenVINO™ package
 
@@ -27,24 +28,24 @@ Following Python packages are necessary to automatically download and
 convert the model to IR files. Also You can provide your own model files
 in the config, if you have them already.
 
-> ``` 
+> ```bash
 > pip3 install numpy pandas openvino-dev ultralytics nncf onnx
 > ```
 
 ## Install Deb package
 
-> ``` 
+> ```bash
 > sudo apt install ros-humble-openvino-yolov8 ros-humble-openvino-yolov8-msgs
 > ```
 
-# Run Demo with Intel® RealSense™ Topic Input
+## Run Demo with Intel® RealSense™ Topic Input
 
 First create a config file [pipeline.toml]{.title-ref}. If not present,
 sample content for this configuration file (including the comments) will
 be generated in the command output when executing the
 `ros2 run yolo yolo` command.
 
-> ``` 
+> ```bash
 > title = "Yolo Ros Node"
 >
 > [main]
@@ -58,7 +59,7 @@ be generated in the command output when executing the
 > task = "segmentation" # options: detection, segmentation, pose
 > # w,h of internal resolution, input frames are resized
 > # consider using smaller resolution for faster inference
-> width = 640 
+> width = 640
 > height = 480
 > model_size = "n" # options: n, s, m, l, x (refer to ultralytics docs)
 > half = true # use half precision
@@ -71,7 +72,7 @@ be generated in the command output when executing the
 > priority = 1 # 0=Low, 1=Normal, 2=High
 > precision = 1 #  0 = FP32, 1 = FP16 , this is passed as hint to openvino
 > num_requests = 1 # Number of inference requests (hint for openvino) recommended 1 per input stream
-> map_frame = "map" # setting is ignored if single topic is used, otherwise it will be used to synchronize camera location
+> map_frame = "" # setting is ignored if single topic is used, otherwise it will be used to synchronize camera location
 > queue_size = 10
 > workers = 2 # Aim for 2 workers per input stream
 > max_fps = -1 # -1 for unlimited
@@ -88,7 +89,7 @@ be generated in the command output when executing the
 > rgbd_topic_max_fps = []
 > ```
 >
-> ``` 
+> ```bash
 > ros2 run yolo yolo --toml pipeline.toml &
 > ros2 run realsense2_camera realsense2_camera_node --ros-args \
 >             -p depth_module.profile:=640x480x60 \
@@ -97,20 +98,20 @@ be generated in the command output when executing the
 >             -r /camera/camera/color/image_raw:=/camera/color/image_raw \
 >             -r /camera/camera/color/camera_info:=/camera/color/camera_info \
 >             -r /camera/camera/aligned_depth_to_color/image_raw:=/camera/depth/image_raw \
->             -r /camera/camera/aligned_depth_to_color/camera_info:=/camera/depth/camera_info 
+>             -r /camera/camera/aligned_depth_to_color/camera_info:=/camera/depth/camera_info
 > ```
 
 Once you start the node, you view the output video and detections using
 the following command:
 
-> ``` 
-> rviz2 
+> ```bash
+> rviz2
 > ```
 
 Then you can subscribe to the `/pipeline1/color/image_raw/yolo_video`
 topic to view the result.
 
-# Advanced usage
+## Advanced usage
 
 Besides generating a video, this node is also capable of providing the
 number of post processed detections. Detections are published on a topic
@@ -119,13 +120,13 @@ configuration it would be `pipeline1/color/image_raw/yolo_frame`.
 
 The messages have following structure:
 
-> ``` 
+> ```bash
 > std_msgs/Header header # Header timestamp should be acquisition time of image
 >
 > sensor_msgs/Image rgb_image # Original image
 > sensor_msgs/Image depth_image # only if topic depth is provided
 >
-> string task # "Detection" "Segmentation "Pose" 
+> string task # "Detection" "Segmentation "Pose"
 >
 > geometry_msgs/TransformStamped camera_transform # Camera transform captured at the time of image arrival
 >
@@ -134,7 +135,7 @@ The messages have following structure:
 
 Structure of the YoloDetection message object:
 
-> ``` 
+> ```bash
 > float32 confidence
 >
 > # Coordinates of bounding box
@@ -161,7 +162,7 @@ understanding the meaning of joints and how they are connected. ..
 Connected Joints (Research gate)
 <https://www.researchgate.net/figure/Key-points-for-human-poses-according-to-the-COCO-output-format-R-L-right-left_fig3_353746430>
 
-# Other considerations
+## Other considerations
 
 Yolov8 model requires a commercial license from Ultralytics. This
 package only provides an efficient way to run the model on OpenVINO™

@@ -1,5 +1,6 @@
----
-title: ADBSCAN Algorithm
+
+# ADBSCAN Algorithm
+
 ---
 
 ADBSCAN (Adaptive DBSCAN) is an Intel® patented algorithm. It is a

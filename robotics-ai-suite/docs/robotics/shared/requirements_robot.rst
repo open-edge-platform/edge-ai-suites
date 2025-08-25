@@ -7,6 +7,7 @@ Target System
 
    -  |atom| processor with |intel| SSE4.1 support
    -  |intel| Pentium® processor N4200/5, N3350/5, N3450/5 with |intel| HD Graphics
+   -  |core| Ultra processors (Series 2) *(partial support - see note below)*
    -  |core| Ultra processors (Series 1)
    -  13th Generation |core| processors with |xe| or |intel| UHD Graphics
    -  12th Generation |core| processors with |xe| or |intel| UHD Graphics
@@ -22,6 +23,9 @@ Target System
 -  |ubuntu_version|
 -  |realsense| camera D435i
 -  Slamtec* RPLIDAR A3 2D LIDAR (optional)
+
+.. note::
+   | When deploying Robotics AI Suite with ROS2 Humble on Ubuntu 22.04 systems running kernel version 6.8 or lower, GPU/NPU offload functionality for |core| Ultra processors (Series 2) is not fully supported. In these environments, only CPU-based examples should be used.
 
 .. note::
 

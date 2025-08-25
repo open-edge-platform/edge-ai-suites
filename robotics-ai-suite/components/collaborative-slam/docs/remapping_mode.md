@@ -1,4 +1,6 @@
-### What is remapping mode
+
+# What is remapping mode
+
 Remapping mode is one of the operating modes in Collaborative SLAM and targets to update the pre-constructed
 keyframe/landmark map and octree map in mapping mode. A manual 2D-region input from user is needed to help
 Collaborative SLAM to know which region of pre-constructed maps is pending to be updated. This remapping region
@@ -6,7 +8,8 @@ is a quadrilateral and can be either convex or concave. The detailed shape of th
 by the 4 vertexes input by user. Collaborative SLAM will construct local maps on the tracker side and merge it into
 the loaded global maps on server side, both for keyframe/landmark map and octree map.
 
-### How to select the remapping region
+## How to select the remapping region
+
 Currently, we only support updating the maps constructed by Collaborative SLAM in mapping mode. Once you have a
 pre-constructed keyframe/landmark map together with a octree map, you can load them in localization mode and visualize
 them through the server rviz. It will help you to determine the remapping region by publishing points in the rviz window.
@@ -15,7 +18,8 @@ can use `octree_store_path` parameter when launching tracker node. The usage of 
 remapping mode in the below section.
 
 The recommended commands to visualize the pre-constructed maps are:
-```
+
+```bash
 # Localization (tracker)
 ros2 launch univloc_tracker tracker.launch.py slam_mode:=localization queue_size:=0 gui:=false rviz:=false octree_load_path:=/path_to_saved_octree_map/xx.bin
 
@@ -28,19 +32,22 @@ together with the keyframe/landmark map in the server rviz. To determine the ver
 first click on the **Publish Point** button in the top toolbar, then move your cursor to the point which you want to
 select as the remapping region vertex, and finally click your mouse to publish it. To get the detailed coordinate value
 of such point, you can use below command:
-```
+
+```bash
 # Subscribe to the published point
 ros2 topic echo /clicked_point geometry_msgs/msg/PointStamped
 ```
 
 ### How to run system in remapping mode
+
 The `server_remapping_region` input parameter is used to describe the 4 vertexes of your remapping region. The 4 vertexes must be
 in clockwise or anti-clockwise order and in the format of [P1.x, P1.y, ... , P4.x, P4.y]. Besides, the `enable_fast_mapping`
 parameter must be set to `true` to enable the fast mapping module. And all the fast mapping related parameters must be set
 to the same values as them in the mapping mode.
 
 The recommended commands are:
-```
+
+```bash
 # Remapping (tracker)
 ros2 launch univloc_tracker tracker.launch.py slam_mode:=remapping queue_size:=0 gui:=false rviz:=false octree_load_path:=/path_to_saved_octree_map/xx.bin enable_fast_mapping:=true octree_store_path:=/path_for_saving_updated_octree_map/xxx.bin
 
@@ -51,6 +58,7 @@ ros2 launch univloc_server server.launch.py server_mode:=remapping load_map_path
 ```
 
 ### Some notices
+
 1. The global octree map and keyframe/landmark map within the remapping region, will be updated based on the local map
 constructed by the tracker node in remapping mode. But at the same time, the maps outside the remapping region will also be
 impacted in current implementation. For the octree map, this kind of impact is slight due to the fast mapping module on the
@@ -64,4 +72,3 @@ design is to ensure the continuity and quality of the keyframe/landmark map.
 octree map in both mapping and remapping mode. But in the future, we may design to let the tracker node send the octree map
 to the server node when it is shutting down. Then the octree map can be saved and loaded from the server side just like the
 keyframe/landmark map does.
-

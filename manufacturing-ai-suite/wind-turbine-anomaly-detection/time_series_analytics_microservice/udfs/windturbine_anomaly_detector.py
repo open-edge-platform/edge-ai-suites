@@ -27,7 +27,6 @@ warnings.filterwarnings(
     message=".*Threading.*parallel backend is not supported by Extension for Scikit-learn.*"
 )
 
-# from gcp_mqtt_client import get_client
 
 log_level = os.getenv('KAPACITOR_LOGGING_LEVEL', 'INFO').upper()
 enable_benchmarking = os.getenv('ENABLE_BENCHMARKING', 'false').upper() == 'TRUE'

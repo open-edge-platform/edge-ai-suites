@@ -20,17 +20,27 @@ resolve common issues.
 ### 2. Port Conflicts
 
 - **Issue**: Port conflicts with other running applications.
+
 - **Solution**: Update the ports section in the Docker Compose file.
 
-### 3. Missing Dependencies
+### 3. ibvs-milvusdb container is unhealthy
 
-- **Issue**: Required software dependencies are not installed.
+- **Issue**: ibvs-milvusdb container fails to start 
 
 - **Solution**:
 
-  ```bash
-  sudo apt-get install -y <dependency>
-  ```
+  Currently, milvusdb does not work with proxy servers. Make sure that the proxies `http_proxy`, `https_proxy` and `no_proxy` are set to empty string in `compose.yml` file
+
+### 4. Empty search results after clicking on `Search Object`
+
+- **Issue**: Search results are empty after clicking on `Search Object` button
+
+- **Solution**:
+
+  - Make sure the models are able to detect the objects in the stream correctly
+  - Make sure you have analysed the stream first to capture the video frames into milvus database
+  - Make sure you are using the right frame to search the object
+  - Increase the 'To' timestamp in the search results to accommodate the latest results
 
 <!--
 ## Support

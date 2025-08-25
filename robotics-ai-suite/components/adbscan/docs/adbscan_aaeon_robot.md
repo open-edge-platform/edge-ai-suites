@@ -1,5 +1,6 @@
----
-title: ADBSCAN on AAEON Robot Kit
+
+# ADBSCAN on AAEON Robot Kit
+
 ---
 
 This tutorial describes how to run the ADBSCAN algorithm on the real
@@ -12,42 +13,42 @@ the environment around. User can use the default setup to move robot via
 gamepad or keyboard, so the 3D-camera on the robot can scan surroundings
 around.
 
-# Prerequisites
+## Prerequisites
 
 - Assemble your robotic kit following the instructions provided by
   AAEON.
 - [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
-- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
-- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
-- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install.html)
-- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/robotics-ai-suite/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
+- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
+- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
+- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install.html)
+- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
 - To control the robot remotely, you may need a Logitech\* F710 gamepad
   (to be purchased separately).
 
-# Run the ADBSCAN Algorithm Using the AAEON Robot Kit
+## Run the ADBSCAN Algorithm Using the AAEON Robot Kit
 
-1.  To download and install the tutorial run the command below:
+1. To download and install the tutorial run the command below:
 
     ``` bash
     sudo apt-get install ros-humble-aaeon-adbscan-tutorial-common
     sudo apt-get install ros-humble-aaeon-adbscan-tutorial
     ```
 
-2.  Please perform IMU calibration of the robot, launch script below:
+2. Please perform IMU calibration of the robot, launch script below:
 
     ``` bash
     source /opt/ros/humble/setup.bash
     /opt/ros/humble/share/ros2_amr_interface/scripts/calibration.sh
     ```
 
-3.  Place the robot in front of an object and use one of the two methods
+3. Place the robot in front of an object and use one of the two methods
     described below to control the robot:
 
     ![image](images/adbscan_aaeon_object_s.png)
 
-# Gamepad Robot Control Method
+## Gamepad Robot Control Method
 
-1.  Launch the ADBSCAN AAEON Robot gamepad control program:
+1. Launch the ADBSCAN AAEON Robot gamepad control program:
 
     ``` bash
     sudo chmod a+rw /dev/input/js0
@@ -56,10 +57,10 @@ around.
 
     ``` bash
     source /opt/ros/humble/setup.bash
-    /opt/ros/humble/share/aaeon_adbscan/tutorial-aaeon-adbscan/aaeon_robot_with_adbscan_realsense_gamepad.sh
+    ros2 launch tutorial_aaeon_adbscan aaeon_adbscan_gamepad_launch.py
     ```
 
-2.  Move the robot around using the gamepad:
+2. Move the robot around using the gamepad:
 
     ![image](images/gamepad_Logitech_F710_v2.png)
 
@@ -70,16 +71,16 @@ around.
 
     ![image](images/adbscan_aaeon_gamepad_control.gif)
 
-# Keyboard Robot Control Method
+## Keyboard Robot Control Method
 
-1.  Launch the ADBSCAN AAEON Robot keyboard control program:
+1. Launch the ADBSCAN AAEON Robot keyboard control program:
 
     ``` bash
     source /opt/ros/humble/setup.bash
-    /opt/ros/humble/share/aaeon_adbscan/tutorial-aaeon-adbscan/aaeon_robot_with_adbscan_realsense_keyboard.sh
+    ros2 launch tutorial_aaeon_adbscan aaeon_adbscan_keyboard_launch.py
     ```
 
-2.  In a separate Terminal window launch keyboard control handler:
+2. In a separate Terminal window launch keyboard control handler:
 
     ``` bash
     source /opt/ros/humble/setup.bash
@@ -101,7 +102,7 @@ around.
     - anything else: Stop
     - `Ctrl-c`: Quit
 
-3.  Move the robot around using the keyboard buttons:
+3. Move the robot around using the keyboard buttons:
 
     ![image](images/adbscan_aaeon_keyboard_control.gif)
 
@@ -110,9 +111,9 @@ around.
 
     ![image](images/adbscan_aaeon_pic4.png)
 
-# Expected Results
+## Expected Results
 
-1.  On the server rviz, you will see how ADBSCAN interprets the Intel®
+1. On the server rviz, you will see how ADBSCAN interprets the Intel®
     RealSense™ data based on real objects around the robot:
 
     - Green blocks indicate objects around.
@@ -123,15 +124,15 @@ around.
 
       ![image](images/adbscan_aaeon_pic2.png)
 
-2.  Default ADBSCAN view in the rviz window:
+2. Default ADBSCAN view in the rviz window:
 
     ![image](images/adbscan_aaeon_3d_map.gif)
 
-3.  Enable FastMapping 2D map view by turning off MakerArray check-box:
+3. Enable FastMapping 2D map view by turning off MakerArray check-box:
 
     ![image](images/adbscan_aaeon_2d_map.gif)
 
-# Troubleshooting
+## Troubleshooting
 
 For general robot issues, go to:
 `../../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting`.

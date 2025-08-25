@@ -60,43 +60,9 @@ The Metro Vision AI App Recipe architecture is designed to facilitate seamless i
 
 - **InfluxDB:** A time-series database optimized for storing and querying high-frequency transportation metrics such as vehicle counts, traffic flow rates, speed measurements, and system performance data. Enables efficient historical analysis and trend monitoring.
 
-### Transportation-Specific Features
+## Getting Started
 
-- **Vehicle Detection & Classification:** Accurately identifies and classifies different vehicle types
-- **Pedestrian Tracking:** Real-time tracking of pedestrians afor safety monitoring
-- **Incident Detection:** Automatic detection of accidents, stopped vehicles, or unusual traffic patterns
-- **Zone-Based Monitoring:** Configurable regions of interest for specific area monitoring
-- **Multi-Lane Support:** Simultaneous monitoring of multiple traffic lanes and directions
+To create your own sample application with the Metro Vision AI App Recipe, follow the comprehensive tutorial that demonstrates how to convert the sample app into a fully functional AI Tolling system. This hands-on tutorial will guide you through the entire development process, from initial setup to deployment, showing you how to leverage the platform's capabilities for real-world transportation solutions.
 
-The DL Streamer Pipeline Server serves as the cornerstone of the solution, specifically optimized for transportation and traffic management scenarios. It leverages Intel-optimized deep learning models including pedestrian and vehicle detectors, traffic flow analyzers, and behavior recognition models to perform real-time inference on video streams.
-
-The system is designed with professionals in mind, offering pre-configured pipelines for common traffic monitoring scenarios while maintaining the flexibility to customize detection parameters, tracking algorithms, and alert thresholds. This approach enables rapid deployment of AI-powered traffic management solutions without requiring deep learning expertise from traffic engineers and city planners.
-
-Key advantages include edge-based processing that reduces latency for time-critical traffic decisions, support for multiple video sources to cover complex intersections, and integration capabilities with existing traffic management systems through standard protocols and APIs.
-
-**Advanced Capabilities with Optional Components:**
-When deployed with the optional Scenescape components, the system provides enhanced spatial analytics capabilities including precise vehicle trajectory tracking, accurate speed measurement, and advanced zone-based analytics. The InfluxDB integration enables long-term trend analysis, capacity planning, and performance optimization based on historical traffic patterns.
-
-## Use Cases
-
-### Smart Intersection Management
-- Real-time traffic light optimization based on vehicle and pedestrian counts
-- Emergency vehicle detection and priority signal control
-- Pedestrian safety monitoring at crosswalks
-- Traffic violation detection and automated enforcement
-
-### Loitering Detection
-- Security monitoring at transit stations and stops
-- Identification of suspicious behavior in hubs
-- Crowd management in high-traffic areas
-- Automated alerts for security personnel
-
-### Smart Parking
-- Real-time parking space availability tracking
-- Automated payment and access control
-- Parking violation detection
-- Optimization of parking space utilization
-
-## Learn More
-- [Get Started](get-started.md) - Step-by-step installation and setup guide
-- [Release Notes](release-notes.md) - Latest updates and version history
+## Next Steps
+- [Tutorial](tutorial-1.md) - AI Tolling System Tutorial

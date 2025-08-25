@@ -39,22 +39,18 @@ By following this guide, you will learn how to:
      ```bash
      ./install.sh smart-parking
      ```
-    > **Note**: The application uses weekly builds from GitHub Container Registry (ghcr.io/open-edge-platform/) by default.
 
     <details>
     <summary>
-    Switch to Stable Build (Optional)
+    Specify Custom Host IP Address (Advanced Configuration)
     </summary>
 
-    To use stable releases from Docker Hub instead of weekly builds, run the following commands:
+    For environments requiring a specific host IP address (such as when using Edge Manageability Toolkit or deploying across different network interfaces), you can explicitly specify the IP address:
 
     ```bash
-    sed -i 's/^DOCKER_REGISTRY=.*/DOCKER_REGISTRY=/' .env
-    sed -i 's/intel\/edge-ai-dlstreamer-pipeline-server:.*/intel\/dlstreamer-pipeline-server:3.0.0/' docker-compose.yml
-    sed -i 's/intel\/scenescape-manager:.*/intel\/scenescape-manager:v1.3.0/' docker-compose.yml
-    sed -i 's/intel\/scenescape-controller:.*/intel\/scenescape-controller:v1.3.0/' docker-compose.yml
+    ./install.sh smart-parking <HOST_IP>
     ```
-    This updates the application to use stable images from [Docker Hub](https://hub.docker.com/u/intel/).
+    Replace `<HOST_IP>` with your target IP address.
 
     </details>
 
@@ -138,7 +134,8 @@ By following this guide, you will learn how to:
     ```bash
     curl http://localhost:8080/pipelines
     ```
-- **WebRTC**: [http://localhost:8889](http://localhost:8889)
+- **WebRTC**: [http://localhost:8889/object_detection_1](http://localhost:8889/object_detection_1)
+
 
 ## **Stop the Application**:
 

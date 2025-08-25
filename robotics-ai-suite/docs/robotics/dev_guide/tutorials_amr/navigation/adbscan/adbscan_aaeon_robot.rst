@@ -52,8 +52,7 @@ Gamepad Robot Control Method
    .. code-block:: bash
 
       source /opt/ros/humble/setup.bash
-      /opt/ros/humble/share/aaeon_adbscan/tutorial-aaeon-adbscan/aaeon_robot_with_adbscan_realsense_gamepad.sh
-
+      ros2 launch tutorial_aaeon_adbscan aaeon_adbscan_gamepad_launch.py
 
 #. Move the robot around using the gamepad:
 
@@ -78,7 +77,7 @@ Keyboard Robot Control Method
    .. code-block:: bash
 
       source /opt/ros/humble/setup.bash
-      /opt/ros/humble/share/aaeon_adbscan/tutorial-aaeon-adbscan/aaeon_robot_with_adbscan_realsense_keyboard.sh
+      ros2 launch tutorial_aaeon_adbscan aaeon_adbscan_keyboard_launch.py
 
 #. In a separate Terminal window launch keyboard control handler:
 
@@ -131,7 +130,7 @@ Expected Results
 
 
 #. On the server rviz, you will see how ADBSCAN interprets
-   the |realsense| data based on real objects around the robot:
+   the |realsense| camera data based on real objects around the robot:
 
    -  Green blocks indicate objects around.
            .. image:: ../../../../images/adbscan_aaeon_pic1.png

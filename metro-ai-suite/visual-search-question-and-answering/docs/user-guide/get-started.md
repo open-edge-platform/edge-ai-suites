@@ -53,7 +53,10 @@ mkdir -p $HOME/models
 mkdir -p $HOME/data
 ```
 
-Make sure to put all your data (images and video) in the created data directory (`$HOME/data` in the example commands) BEFORE deploying the services.
+If you would like to test the application with a demo dataset, please continue and follow the instructions in the [Try with a demo dataset](#try-with-a-demo-dataset) section later in this guide.
+
+Otherwise, if you would like to use your own data (images and video), make sure to put them all in the created data directory (`$HOME/data` in the example commands above) BEFORE deploying the services.
+
 
 Note: supported media types: jpg, png, mp4
 
@@ -128,7 +131,13 @@ source env.sh # refer to Option 1 for model selection
 docker compose -f compose.yaml up -d
 ```
 
+#### Option3: Deploy the application in Kubernetes
+
+Please refer to [Deploy with helm](./deploy-with-helm.md) for details.
+
+
 ## Try with a demo dataset
+*Applicable to deployment with Option 1 or 2 (docker compose deployment).
 ### Prepare demo dataset [DAVIS](https://davischallenge.org/davis2017/code.html)
 
 Create a `prepare_demo_dataset.sh` script as following
@@ -196,6 +205,37 @@ docker logs <container_id>
 ```
 
 -   Click `showInfo` button on the web UI to get essential information about microservices
+
+### VLM Microservice Model Loading Issues
+
+**Problem**: VLM microservice fails to load or save models with permission errors, or you see errors related to model access in the logs.
+
+**Cause**: This issue occurs when the `ov-models` Docker volume was created with incorrect ownership (root user) in previous versions of the application. The VLM microservice runs as a non-root user and requires proper permissions to read/write models.
+
+**Symptoms**:
+- VLM microservice container fails to start or crashes during model loading
+- Permission denied errors in VLM service logs
+- Model conversion or caching failures
+- Error messages mentioning `/home/appuser/.cache/huggingface` or `/app/ov-model` access issues
+
+**Solution**:
+1. Stop the running application:
+   ```bash
+   docker compose -f compose_milvus.yaml down
+   ```
+
+2. Remove the existing `ov-models`:
+   ```bash
+   docker volume rm ov-models
+   ```
+
+3. Restart the application (the volume will be recreated with correct permissions):
+   ```bash
+   source env.sh
+   docker compose -f compose_milvus.yaml up -d
+   ```
+
+**Note**: Removing the `ov-models` volume will delete any previously cached/converted models. The VLM service will automatically re-download and convert models on the next startup, which may take additional time depending on your internet connection and the model size.
 
 ## Known Issues
 

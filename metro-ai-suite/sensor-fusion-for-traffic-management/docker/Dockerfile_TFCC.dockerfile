@@ -54,9 +54,8 @@ RUN curl -L -O https://github.com/intel/intel-graphics-compiler/releases/downloa
     curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/intel-level-zero-gpu_1.6.31294.12_amd64.deb && \
     curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/intel-opencl-icd-dbgsym_24.39.31294.12_amd64.ddeb && \
     curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/intel-opencl-icd_24.39.31294.12_amd64.deb && \
-    curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/libigdgmm12_22.5.2_amd64.deb && \
     dpkg -i ./*.deb && rm -rf /tmp/gpu_deps && \
-    apt install -y libigdgmm12=22.7.1-1120~22.04
+    apt install -y libigdgmm12
 
 ## Install Linux NPU Driver v1.16.0 on Ubuntu 22.04
 WORKDIR /tmp/npu_deps
@@ -227,6 +226,15 @@ RUN git checkout v1.20.2 && \
 WORKDIR /home/openvino/3rd_build/level-zero/build
 RUN cmake .. -DCMAKE_INSTALL_PREFIX=/opt/intel/level-zero && \
     cmake --build . --config Release --target install 
+
+### Install libradar
+WORKDIR /home/openvino/3rd_build
+RUN curl -s https://eci.intel.com/sed-repos/gpg-keys/GPG-PUB-KEY-INTEL-SED.gpg | tee /usr/share/keyrings/sed-archive-keyring.gpg > /dev/null
+RUN echo "deb [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | tee /etc/apt/sources.list.d/sed.list
+RUN echo "deb-src [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | tee -a /etc/apt/sources.list.d/sed.list
+RUN bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
+RUN apt update -y && \
+    apt install libradar
 
 # Install display related libs
 RUN apt install -y libgtk2.0-0 libgl1 libsm6 libxext6 x11-apps

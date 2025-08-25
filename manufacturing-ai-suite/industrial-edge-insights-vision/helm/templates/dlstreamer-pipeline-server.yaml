@@ -64,6 +64,7 @@ spec:
             drop:
               - ALL
         {{- end }}
+        terminationMessagePath: /tmp/termination-log
         {{- if $.Values.gpu.enabled }}
         resources:
           limits:
@@ -104,15 +105,15 @@ spec:
         - name: ENABLE_RTSP
           value: "{{ $.Values.env.ENABLE_RTSP }}"
         - name: WEBRTC_SIGNALING_SERVER
-          value: "http://{{ $.Values.env.HOST_IP }}:{{ $.Values.config.mediamtx.ext.mediamtx_port }}"
+          value: "http://mediamtx:{{ $.Values.config.mediamtx.int.mediamtx_port }}"
         - name: SERVICE_NAME
           value: "dlstreamer-pipeline-server"
         - name: REST_SERVER_PORT
           value: "8080"
         - name: no_proxy
-          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector
+          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector,mediamtx
         - name: NO_PROXY
-          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector
+          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector,mediamtx
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
         - name: https_proxy

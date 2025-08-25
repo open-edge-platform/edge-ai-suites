@@ -5,6 +5,8 @@
 |top_name|
 ##########
 
+.. attention:: Robotics AI Suite is currently a preview release! A formal release will follow shortly.
+
 The |top_name| provides a collection of robotics applications spanning AI, libraries, samples, benchmarking, and more to help developers quickly build solutions.
 
 Based on your needs, you can install one, two, or all of the following kits and framework at the same time. While they are not prerequisites to each other, they complement each other:

@@ -20,7 +20,7 @@ To get started with the Robot Vision Control (RVC) project, you need to clone fr
 
 .. code-block:: bash
 
-    $ git clone https://github.com/open-edge-platform/robotics-ai-suite.git
+    $ git clone https://github.com/open-edge-platform/edge-ai-suites.git
 
 Open the folder ``robot-vision-control`` in VSCode and follow the instructions to open it in a devcontainer.
 This will automatically build a container with all the required dependencies to run RVC.

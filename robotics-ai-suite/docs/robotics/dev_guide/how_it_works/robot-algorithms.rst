@@ -37,7 +37,7 @@ average.
 
 **Tutorial**: :doc:`../../dev_guide/tutorials_amr/perception/pointcloud-groundfloor-segmentation`
 
-An algorithm, along with a demo application, that transforms (|realsense|) depth images to 3D
+An algorithm, along with a demo application, that transforms (|realsense|) Depth Camera images to 3D
 pointclouds. This algorithm further assigns classification labels such as 'ground floor' or
 'obstacle' to each point, delivering both the resulting and filtered pointclouds as output.
 
@@ -85,7 +85,7 @@ FastMapping
 **Tutorial**: :doc:`../../dev_guide/tutorials_amr/navigation/run-fastmapping-algorithm`
 
 FastMapping, is an algorithm to create a 3D voxel map of a robot's
-surrounding, based on |realsense| depth sensor data.
+surrounding, based on |realsense| Depth Camera sensor data.
 
 
 Collaborative Visual SLAM

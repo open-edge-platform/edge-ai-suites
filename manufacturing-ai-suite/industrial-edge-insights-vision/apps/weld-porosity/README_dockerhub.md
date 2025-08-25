@@ -9,7 +9,7 @@ For more details on deployment, refer to the [documentation](https://docs.opened
 ## Deploy using Kubernetes Charts
 
 ---
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/weld-porosity/main/user-guide/how-to-deploy-with-helm.html).
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/weld-porosity/main/user-guide/how-to-deploy-using-helm-charts.html).
 
 ## Supported versions
 
