@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+free_thresh: 0.90
+negate: 0
+origin: [-9.500000, -15.900000, 0.0]
+resolution: 0.080000
+mode: trinary
+occupied_thresh: 0.95
+image: aws_map_large.pgm

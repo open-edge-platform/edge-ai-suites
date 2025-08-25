@@ -3,10 +3,11 @@
 # Declare variables to be passed into your templates.
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+namespace:
 replicaCount: 1
-http_proxy: 
-https_proxy: 
-no_proxy: 
+http_proxy:
+https_proxy:
+no_proxy:
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 ntpserver:
@@ -90,8 +91,8 @@ grafana:
     size: 1Gi
 
 scene:
-  repository: docker.io/intel/scenescape-controller
-  tag: "v1.3.0"
+  repository: ghcr.io/open-edge-platform/edge-ai-libraries/intel/scenescape-controller
+  tag: v1.4.0-rc1
   pullPolicy: IfNotPresent
 
   service:
@@ -99,8 +100,8 @@ scene:
     port: 80
 
 pgserver:
-  repository: docker.io/intel/scenescape-manager
-  tag: "v1.3.0"
+  repository: ghcr.io/open-edge-platform/edge-ai-libraries/intel/scenescape-manager
+  tag: v1.4.0-rc1
   pullPolicy: IfNotPresent
 
   storageClassName: "hostpath"
@@ -112,8 +113,8 @@ pgserver:
 web:
   replicas: 1
   image:
-    repository: docker.io/intel/scenescape-manager
-    tag: "v1.3.0"
+    repository: ghcr.io/open-edge-platform/edge-ai-libraries/intel/scenescape-manager
+    tag: v1.4.0-rc1
     pullPolicy: IfNotPresent
   dbhost: pgserver
   broker: broker.scenescape.intel.com
@@ -126,7 +127,7 @@ dlstreamerPipelineServer:
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "3.0.0"
+  tag: 3.1.0-ubuntu24
   # Overrides the storage class name
   storageClassName: "standard"
 

@@ -1,0 +1,24 @@
+Source: ros-humble-its-relocalization
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), python3-ament-package, ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-ament-lint-auto, ros-humble-ament-cmake-gtest, ros-humble-rclcpp, ros-humble-rclcpp-action, ros-humble-rclcpp-lifecycle, ros-humble-std-msgs, ros-humble-geometry-msgs, ros-humble-visualization-msgs, ros-humble-nav-msgs, ros-humble-tf2-ros, ros-humble-nav2-core, ros-humble-nav2-amcl, ros-humble-its-planner, ros-humble-builtin-interfaces, ros-humble-pluginlib, libboost-dev, libboost-serialization-dev
+Standards-Version: 4.1.4
+
+Package: ros-humble-its-pose-checker
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, ros-humble-rcl, ros-humble-rclcpp, ros-humble-nav2-msgs, ros-humble-its-planner, ros-humble-nav2-costmap-2d, ros-humble-geometry-msgs, ros-humble-nav2-amcl, ros-humble-std-srvs, ros-humble-tf2-ros, ros-humble-nav2-core, ros-humble-robotics-sdk-license,
+Description: Pose checker package part of relocalization module for ROS2 Navigation
+
+Package: ros-humble-its-reloc-benchmarking
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-humble-rcl, ros-humble-rclcpp, ros-humble-geometry-msgs, ros-humble-std-srvs, ros-humble-robotics-sdk-license,
+Description: Benchmarking package part of relocalization module for ROS2 Navigation
+
+Package: ros-humble-its-relocalization-bringup
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-humble-rcl, ros-humble-rclcpp, ros-humble-navigation2, ros-humble-turtlebot3, ros-humble-its-pose-checker, ros-humble-its-reloc-benchmarking, ros-humble-its-send-localization, ros-humble-robotics-sdk-license,
+Description: Re-localization bringup package

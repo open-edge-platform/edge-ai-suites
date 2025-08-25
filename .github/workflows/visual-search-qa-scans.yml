@@ -1,0 +1,137 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: "[Visual Search and QA] SDLe Scans - Scan Trivy Bandit Virus"
+run-name: "[Visual Search and QA] SDLe Scans - Scan Trivy Bandit Virus"
+
+
+# Only run at most 1 workflow concurrently per PR, unlimited for branches
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:   
+
+  trivy-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          path: edge-ai-suites-repo
+          persist-credentials: false
+      - name: Run Trivy Filesystem Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-fs
+        with:
+          scan_type: "fs"  
+          scan-scope: "all"  
+          severity: "HIGH,CRITICAL" 
+          format: "json"  
+      
+      - name: Build Docker images
+        run: |
+          git clone https://github.com/open-edge-platform/edge-ai-libraries.git
+          cd edge-ai-libraries/microservices
+          docker build -t dataprep-visualdata-milvus:latest -f visual-data-preparation-for-retrieval/milvus/src/Dockerfile .
+          docker build -t retriever-milvus:latest -f vector-retriever/milvus/src/Dockerfile .
+          cd vlm-openvino-serving
+          docker build -t vlm-openvino-serving:latest -f docker/Dockerfile .
+          cd ../../..
+          cd edge-ai-suites-repo
+          cd metro-ai-suite
+          ls -R
+          docker build -t visual-search-qa-app:latest -f visual-search-question-and-answering/src/Dockerfile .
+          
+      - name: Run trivy Scan - dataprep-visualdata-milvus
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: dataprep-visualdata-milvus
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "dataprep-visualdata-milvus:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"  
+
+      - name: Run trivy Scan - retriever-milvus
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: retriever-milvus
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "retriever-milvus:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"  
+
+      - name: Run trivy Scan - vlm-openvino-serving
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id:  vlm-openvino-serving
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "vlm-openvino-serving:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"  
+
+      - name: Run trivy Scan - visual-search-qa-app
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id:  visual-search-qa-app
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "visual-search-qa-app:latest" 
+          severity: "HIGH,CRITICAL"  
+          format: "json"  
+          
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: trivy-report
+          path: security-results/trivy*
+
+  bandit-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+      
+      - name: Run Bandit Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@27276444a9bcf247a27369406686b689933bd1ff
+        id: bandit
+        with:
+          scan-scope: "all"  
+          output-format: "txt" 
+          fail-on-findings: "false" 
+          
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: bandit-report
+          path: security-results/bandit*
+        
+
+  clamav-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+      
+      - name: Run ClamAV Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/clamav@27276444a9bcf247a27369406686b689933bd1ff
+        id: clamav
+        with:
+          scan-scope: "all"  
+          output-format: "txt" 
+          fail-on-findings: "false" 
+          
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: clamav-report
+          path: security-results/clamav*
+
+

@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dataprepVisualdataMilvus.fullname" . }}
+  labels:
+    app: {{ include "dataprepVisualdataMilvus.name" . }}
+spec:
+  replicas: {{ .Values.dataprepVisualdataMilvus.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.dataprepVisualdataMilvus.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.dataprepVisualdataMilvus.name }}
+    spec:
+      hostIPC: true
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: {{ .Values.dataprepVisualdataMilvus.name }}
+        image: "{{ .Values.dataprepVisualdataMilvus.image.repository }}:{{ .Values.dataprepVisualdataMilvus.image.tag }}"
+        imagePullPolicy: {{ .Values.dataprepVisualdataMilvus.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.servicePorts.dataprep }}
+        env:
+        - name: MILVUS_HOST
+          value: {{ .Values.dataprepVisualdataMilvus.env.MILVUS_HOST | quote }}
+        - name: MILVUS_PORT
+          value: {{ .Values.dataprepVisualdataMilvus.env.MILVUS_PORT | quote  }}
+        - name: LOCAL_EMBED_MODEL_ID
+          value: {{ required "Value for `global.LOCAL_EMBED_MODEL_ID` is required!" .Values.global.LOCAL_EMBED_MODEL_ID | quote }}
+        - name: DEVICE
+          value: {{ .Values.dataprepVisualdataMilvus.env.DEVICE | quote }}
+        - name: HF_ENDPOINT
+          value: {{ .Values.dataprepVisualdataMilvus.env.HF_ENDPOINT | quote }}
+        - name: no_proxy
+          value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
+        - name: http_proxy
+          value: {{ .Values.global.proxy.http_proxy | quote }}
+        - name: https_proxy
+          value: {{ .Values.global.proxy.https_proxy | quote }}
+        - name: HOST_DATA_PATH
+          value: {{ .Values.volumes.hostDataPath.hostPath | quote }}
+        - name: MODEL_DIR
+          value: {{ .Values.volumes.modelDir.hostPath | quote}}
+        volumeMounts:
+        - name: models
+          mountPath: /home/user/models
+        - name: data
+          mountPath: /home/user/data
+        - name: huggingface-cache
+          mountPath: /home/user/.cache/huggingface
+        livenessProbe:
+          httpGet:
+            path: /v1/dataprep/health
+            port: {{ .Values.servicePorts.dataprep }}
+          {{- with .Values.dataprepVisualdataMilvus.livenessProbe }}
+          initialDelaySeconds: {{ .initialDelaySeconds }}
+          periodSeconds: {{ .periodSeconds }}
+          timeoutSeconds: {{ .timeoutSeconds }}
+          failureThreshold: {{ .failureThreshold }}
+          {{- end }}
+        readinessProbe:
+          {{- if .Values.dataprepVisualdataMilvus.readinessProbe.sameAsLiveness }}
+          httpGet:
+            path: /v1/dataprep/health
+            port: {{ .Values.servicePorts.dataprep }}
+          initialDelaySeconds: {{ .Values.dataprepVisualdataMilvus.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.dataprepVisualdataMilvus.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.dataprepVisualdataMilvus.livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.dataprepVisualdataMilvus.livenessProbe.failureThreshold }}
+          {{- end }}
+      volumes:
+      - name: models
+        hostPath:
+          path: {{ .Values.volumes.modelDir.hostPath }}
+          type: Directory
+      - name: data
+        hostPath:
+          path: {{ .Values.volumes.hostDataPath.hostPath }}
+      - name: huggingface-cache
+        hostPath:
+          path: {{ .Values.volumes.huggingfaceCache.hostPath }}
+
+

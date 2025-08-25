@@ -21,10 +21,21 @@ spec:
         {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
         katenary.v3/component: broker
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
       - image: '{{ tpl .Values.broker.repository.image $ }}:{{ tpl .Values.broker.repository.tag $ | default "latest" }}'
         imagePullPolicy: {{ .Values.broker.imagePullPolicy }}
         name: broker
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
         ports:
         - containerPort: 1883
           name: port-1883

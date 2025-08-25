@@ -1,0 +1,169 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+# TODO: remove the LDFLAGS override.  It's here to avoid esoteric problems
+# of this sort:
+#  https://code.ros.org/trac/ros/ticket/2977
+#  https://code.ros.org/trac/ros/ticket/3842
+# With --copy-dt-needed-entries, dynamic libraries will be recursively searched
+# it can solve "DSO missing from command line" issue, but better to directly add
+# missing library to the linker command line
+# https://stackoverflow.com/questions/19901934/libpthread-so-0-error-adding-symbols-dso-missing-from-command-line
+export LDFLAGS=-pthread -lfmt
+# export LDFLAGS="-Wl,--copy-dt-needed-entries"
+export PKG_CONFIG_PATH=/opt/ros/humble/lib/pkgconfig
+# Explicitly enable -DNDEBUG, see:
+# 	https://github.com/ros-infrastructure/bloom/issues/327
+export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG  -Wno-error=maybe-uninitialized
+# export DEB_LDFLAGS_MAINT_APPEND = -lpthread
+
+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+
+export CPPFLAGS := $(shell dpkg-buildflags --get CPPFLAGS) -Wno-aggressive-loop-optimizations
+export CFLAGS   := $(shell dpkg-buildflags --get CFLAGS) -Wno-aggressive-loop-optimizations
+export CXXFLAGS := $(shell dpkg-buildflags --get CXXFLAGS) -Wno-aggressive-loop-optimizations
+
+export ROS_VERSION=2
+export ROS_DISTRO=humble
+
+BUILD_LZE_DIR=$(CURDIR)/.obj-$(DEB_HOST_GNU_TYPE)-lze
+BUILD_SSE_DIR=$(CURDIR)/.obj-$(DEB_HOST_GNU_TYPE)-sse
+BUILD_AVX2_DIR=$(CURDIR)/.obj-$(DEB_HOST_GNU_TYPE)-avx2
+
+
+%:
+	dh $@ -v --buildsystem=cmake --sourcedirectory=./
+
+override_dh_auto_configure:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_auto_configure \
+		-O--builddir=$(BUILD_LZE_DIR) -- \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/humble \
+		-DAMENT_PREFIX_PATH=/opt/ros/humble \
+		-DCMAKE_PREFIX_PATH=/opt/ros/humble \
+		-DUSE_PREBUILT_DEPS=ON \
+		-DUSE_SLAM_SHAREDLIBS_PATH=/opt/ros/humble/lib/lze \
+		-DBUILD_NATIVE=OFF \
+		-DUSE_GPU_CM=1 \
+		-DBUILD_SHARED_LIBS=ON \
+		-DBUILD_TESTING=ON \
+		-DCMAKE_CXX_FLAGS=" -mavx2" -DCMAKE_C_FLAGS=" -mavx2"
+	dh_auto_configure \
+		-O--builddir=$(BUILD_AVX2_DIR) -- \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/humble \
+		-DAMENT_PREFIX_PATH=/opt/ros/humble \
+		-DCMAKE_PREFIX_PATH=/opt/ros/humble \
+		-DUSE_PREBUILT_DEPS=ON \
+		-DUSE_SLAM_SHAREDLIBS_PATH=/opt/ros/humble/lib/avx2 \
+		-DBUILD_NATIVE=OFF \
+		-DCMAKE_CXX_FLAGS=" -mavx2" -DCMAKE_C_FLAGS=" -mavx2" \
+		-DBUILD_SHARED_LIBS=ON \
+		-DBUILD_TESTING=ON
+	dh_auto_configure \
+		-O--builddir=$(BUILD_SSE_DIR) -- \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/humble \
+		-DAMENT_PREFIX_PATH=/opt/ros/humble \
+		-DCMAKE_PREFIX_PATH=/opt/ros/humble \
+		-DUSE_PREBUILT_DEPS=ON \
+		-DUSE_SLAM_SHAREDLIBS_PATH=/opt/ros/humble/lib/sse \
+		-DBUILD_NATIVE=OFF \
+		-DUSE_SSE_ORB=1 \
+		-DUSE_SSE_FP_MATH=1 \
+		-DBUILD_SHARED_LIBS=ON \
+		-DBUILD_TESTING=ON
+
+
+override_dh_auto_clean:
+	dh_auto_clean 	\
+		-O--builddir=$(BUILD_SSE_DIR) -- && \
+	dh_auto_clean 	\
+		-O--builddir=$(BUILD_LZE_DIR) -- && \
+	dh_auto_clean 	\
+		-O--builddir=$(BUILD_AVX2_DIR) --
+	$(RM) -r $(BUILD_SSE_DIR) $(BUILD_LZE_DIR) $(BUILD_AVX2_DIR)
+
+
+override_dh_auto_build:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_auto_build 	\
+		-O--builddir=$(BUILD_LZE_DIR) -- && \
+	dh_auto_build 	\
+		-O--builddir=$(BUILD_SSE_DIR) -- && \
+	dh_auto_build 	\
+		-O--builddir=$(BUILD_AVX2_DIR) --
+
+override_dh_auto_test:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	echo -- Running tests. Even if one of them fails the build is not canceled.
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_auto_test	 	\
+		-O--builddir=$(BUILD_LZE_DIR) -- || true && \
+	dh_auto_test	 	\
+		-O--builddir=$(BUILD_SSE_DIR) -- || true && \
+	dh_auto_test	 	\
+		-O--builddir=$(BUILD_AVX2_DIR) -- || true
+
+override_dh_shlibdeps:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_shlibdeps  \
+		-l$(CURDIR)/debian/ros-humble-univloc-server-lze//opt/ros/humble/lib && \
+	dh_shlibdeps  \
+		-l$(CURDIR)/debian/ros-humble-univloc-server-sse//opt/ros/humble/lib && \
+	dh_shlibdeps \
+		-l$(CURDIR)/debian/ros-humble-univloc-server-avx2//opt/ros/humble/lib
+
+override_dh_auto_install:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_auto_install \
+		-O--builddir=$(BUILD_LZE_DIR) --
+	install -d $(CURDIR)/debian/ros-humble-univloc-server-lze/opt/ros/humble && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/bin" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/bin $(CURDIR)/debian/ros-humble-univloc-server-lze/opt/ros/humble; fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/local" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/local $(CURDIR)/debian/ros-humble-univloc-server-lze/opt/ros/humble; fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/lib" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/lib $(CURDIR)/debian/ros-humble-univloc-server-lze/opt/ros/humble; fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/include" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/include $(CURDIR)/debian/ros-humble-univloc-server-lze/opt/ros/humble; fi && \
+	cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/share $(CURDIR)/debian/ros-humble-univloc-server-lze/opt/ros/humble
+	dh_auto_install \
+		-O--builddir=$(BUILD_SSE_DIR) --
+	install -d $(CURDIR)/debian/ros-humble-univloc-server-sse/opt/ros/humble && \
+	install -d $(CURDIR)/debian/ros-humble-univloc-server-testsuite/opt/ros/humble/share/univloc_server/tests && \
+	install -m 0755 $(BUILD_SSE_DIR)/test_map_merge_exe $(CURDIR)/debian/ros-humble-univloc-server-testsuite/opt/ros/humble/share/univloc_server/tests && \
+	install -m 0755 $(BUILD_SSE_DIR)/../tests/test_map_merge.launch.py $(CURDIR)/debian/ros-humble-univloc-server-testsuite/opt/ros/humble/share/univloc_server/tests && \
+	install -m 0755 $(BUILD_SSE_DIR)/test_remapping_exe $(CURDIR)/debian/ros-humble-univloc-server-testsuite/opt/ros/humble/share/univloc_server/tests && \
+	install -m 0755 $(BUILD_SSE_DIR)/../tests/test_remapping.launch.py $(CURDIR)/debian/ros-humble-univloc-server-testsuite/opt/ros/humble/share/univloc_server/tests && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/bin" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/bin $(CURDIR)/debian/ros-humble-univloc-server-sse/opt/ros/humble; fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/local" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/local $(CURDIR)/debian/ros-humble-univloc-server-sse/opt/ros/humble; fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/lib" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/lib $(CURDIR)/debian/ros-humble-univloc-server-sse/opt/ros/humble; fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/include" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/include $(CURDIR)/debian/ros-humble-univloc-server-sse/opt/ros/humble; fi  && \
+	cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/share $(CURDIR)/debian/ros-humble-univloc-server-sse/opt/ros/humble
+	dh_auto_install  \
+		-O--builddir=$(BUILD_AVX2_DIR) --
+	install -d $(CURDIR)/debian/ros-humble-univloc-server-avx2/opt/ros/humble && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/bin" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/bin $(CURDIR)/debian/ros-humble-univloc-server-avx2/opt/ros/humble; fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/local" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/local $(CURDIR)/debian/ros-humble-univloc-server-avx2/opt/ros/humble; fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/lib" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/lib $(CURDIR)/debian/ros-humble-univloc-server-avx2/opt/ros/humble; fi  && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/humble/include" ]; then cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/include $(CURDIR)/debian/ros-humble-univloc-server-avx2/opt/ros/humble; fi  && \
+	cp -rf $(CURDIR)/debian/tmp/opt/ros/humble/share $(CURDIR)/debian/ros-humble-univloc-server-avx2/opt/ros/humble

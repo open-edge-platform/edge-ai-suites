@@ -1,0 +1,10 @@
+Source: ros-humble-follow-me-tutorial-w-gesture
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Standards-Version: 4.1.4
+
+Package: ros-humble-follow-me-tutorial-w-gesture
+Architecture: any
+Depends: ros-humble-aaeon-ros2-amr-interface, ros-humble-realsense2-camera, ros-humble-adbscan-ros2-follow-me, ros-humble-gesture-recognition-pkg, ros-humble-xacro, psmisc, ros-humble-rviz2 
+Description:Gesture based Follow-Me application with ADBSCAN using Realsense camera  

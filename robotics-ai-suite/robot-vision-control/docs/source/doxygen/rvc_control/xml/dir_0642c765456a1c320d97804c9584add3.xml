@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_0642c765456a1c320d97804c9584add3" kind="dir">
+    <compoundname>rvc_motion_controller_interface/include/rvc_motion_controller_interface</compoundname>
+    <innerfile refid="rvc__motion__controller__interface_8hpp">rvc_motion_controller_interface.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/"/>
+  </compounddef>
+</doxygen>

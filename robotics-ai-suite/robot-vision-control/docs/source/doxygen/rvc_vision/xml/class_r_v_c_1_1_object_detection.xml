@@ -1,0 +1,187 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="class_r_v_c_1_1_object_detection" kind="class" language="C++" prot="public">
+    <compoundname>RVC::ObjectDetection</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">rclcpp::Node</basecompoundref>
+    <includes refid="rvc__object__detection_8hpp" local="no">rvc_object_detection.hpp</includes>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_r_v_c_1_1_object_detection_1ae4705bcc05117a558c3624db7cf0d596" prot="private" static="no" mutable="no">
+        <type>std::shared_ptr&lt; <ref refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface" kindref="compound">RVC_AI::RVCAIInterface</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;RVC_AI::RVCAIInterface&gt; RVC::ObjectDetection::ai</definition>
+        <argsstring></argsstring>
+        <name>ai</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>reference to the plugin interface abstraction. will be used to all the plugin APIs </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" line="29" column="21" bodyfile="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" bodystart="29" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_object_detection_1aa9fa0fb36489468deea60b348b05855d" prot="private" static="no" mutable="no">
+        <type>rclcpp::Subscription&lt; sensor_msgs::msg::Image &gt;::SharedPtr</type>
+        <definition>rclcpp::Subscription&lt;sensor_msgs::msg::Image&gt;::SharedPtr RVC::ObjectDetection::m_image_sub</definition>
+        <argsstring></argsstring>
+        <name>m_image_sub</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>subscription to the camera RGB image topic </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" line="32" column="38" bodyfile="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_object_detection_1a5910883f2fd5aaebfea9f47963729add" prot="private" static="no" mutable="no">
+        <type>rclcpp::Publisher&lt; rvc_vision_messages::msg::RotatedBBList &gt;::SharedPtr</type>
+        <definition>rclcpp::Publisher&lt;rvc_vision_messages::msg::RotatedBBList&gt;::SharedPtr RVC::ObjectDetection::m_rotated_bb_list_msg</definition>
+        <argsstring></argsstring>
+        <name>m_rotated_bb_list_msg</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>RotatedBBList publisher </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" line="35" column="35" bodyfile="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_object_detection_1acb87e6da300becb7568c5330ebb3fd7c" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool RVC::ObjectDetection::publish_inference_images_param</definition>
+        <argsstring></argsstring>
+        <name>publish_inference_images_param</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>boolean config parameter to enable/disable publishing the inference image with annotations </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" line="38" column="10" bodyfile="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_object_detection_1a8d21b1b86955aa83db38f9669b619229" prot="private" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string RVC::ObjectDetection::model_name_param</definition>
+        <argsstring></argsstring>
+        <name>model_name_param</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>config parameter to pass to the plugin initialization API </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" line="41" column="17" bodyfile="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" bodystart="41" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_1_1_object_detection_1a6b42a0db59bd15d89c9c1e1525931029" prot="private" static="no" mutable="no">
+        <type>image_transport::Publisher</type>
+        <definition>image_transport::Publisher RVC::ObjectDetection::m_inference_image_pub_</definition>
+        <argsstring></argsstring>
+        <name>m_inference_image_pub_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>inference image to publish </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" line="44" column="32" bodyfile="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" bodystart="44" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_r_v_c_1_1_object_detection_1ae989f2fa4abcddc3cd96d09efdd52175" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ObjectDetection::m_image_callback</definition>
+        <argsstring>(sensor_msgs::msg::Image::UniquePtr msg)</argsstring>
+        <name>m_image_callback</name>
+        <param>
+          <type>sensor_msgs::msg::Image::UniquePtr</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>callback on receiving image from camera publisher </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" line="47" column="10" bodyfile="rvc_object_detection/rvc_object_detection_engine/src/rvc_object_detection.cpp" bodystart="44" bodyend="148"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_r_v_c_1_1_object_detection_1ad5d9d344ab55095927725733590f0da5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>ObjectDetection::~ObjectDetection</definition>
+        <argsstring>()</argsstring>
+        <name>~ObjectDetection</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Destructor </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" line="51" column="5" bodyfile="rvc_object_detection/rvc_object_detection_engine/src/rvc_object_detection.cpp" bodystart="150" bodyend="153"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_1_1_object_detection_1ad6eafb0b6623457e048b2baa3c163f49" prot="public" static="no" const="no" explicit="yes" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>ObjectDetection::ObjectDetection</definition>
+        <argsstring>(const rclcpp::NodeOptions &amp;options)</argsstring>
+        <name>ObjectDetection</name>
+        <param>
+          <type>const rclcpp::NodeOptions &amp;</type>
+          <declname>options</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Constructor </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" line="54" column="14" bodyfile="rvc_object_detection/rvc_object_detection_engine/src/rvc_object_detection.cpp" bodystart="155" bodyend="249"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>Object Detection class, inherits from ros node </para>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>rclcpp::Node</label>
+      </node>
+      <node id="1">
+        <label>RVC::ObjectDetection</label>
+        <link refid="class_r_v_c_1_1_object_detection"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>rclcpp::Node</label>
+      </node>
+      <node id="1">
+        <label>RVC::ObjectDetection</label>
+        <link refid="class_r_v_c_1_1_object_detection"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" line="25" column="1" bodyfile="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" bodystart="26" bodyend="56"/>
+    <listofallmembers>
+      <member refid="class_r_v_c_1_1_object_detection_1ae4705bcc05117a558c3624db7cf0d596" prot="private" virt="non-virtual"><scope>RVC::ObjectDetection</scope><name>ai</name></member>
+      <member refid="class_r_v_c_1_1_object_detection_1ae989f2fa4abcddc3cd96d09efdd52175" prot="private" virt="non-virtual"><scope>RVC::ObjectDetection</scope><name>m_image_callback</name></member>
+      <member refid="class_r_v_c_1_1_object_detection_1aa9fa0fb36489468deea60b348b05855d" prot="private" virt="non-virtual"><scope>RVC::ObjectDetection</scope><name>m_image_sub</name></member>
+      <member refid="class_r_v_c_1_1_object_detection_1a6b42a0db59bd15d89c9c1e1525931029" prot="private" virt="non-virtual"><scope>RVC::ObjectDetection</scope><name>m_inference_image_pub_</name></member>
+      <member refid="class_r_v_c_1_1_object_detection_1a5910883f2fd5aaebfea9f47963729add" prot="private" virt="non-virtual"><scope>RVC::ObjectDetection</scope><name>m_rotated_bb_list_msg</name></member>
+      <member refid="class_r_v_c_1_1_object_detection_1a8d21b1b86955aa83db38f9669b619229" prot="private" virt="non-virtual"><scope>RVC::ObjectDetection</scope><name>model_name_param</name></member>
+      <member refid="class_r_v_c_1_1_object_detection_1ad6eafb0b6623457e048b2baa3c163f49" prot="public" virt="non-virtual"><scope>RVC::ObjectDetection</scope><name>ObjectDetection</name></member>
+      <member refid="class_r_v_c_1_1_object_detection_1acb87e6da300becb7568c5330ebb3fd7c" prot="private" virt="non-virtual"><scope>RVC::ObjectDetection</scope><name>publish_inference_images_param</name></member>
+      <member refid="class_r_v_c_1_1_object_detection_1ad5d9d344ab55095927725733590f0da5" prot="public" virt="non-virtual"><scope>RVC::ObjectDetection</scope><name>~ObjectDetection</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

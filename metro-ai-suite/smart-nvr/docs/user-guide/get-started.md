@@ -44,7 +44,7 @@ Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 
 ## Quick Start
 
-### Step 1: Clone and Build
+### Step 1: Clone the repo
 
 ```bash
 # Clone the repository
@@ -52,13 +52,15 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites/metro-ai-suite/smart-nvr
 ```
 
-> **Important**: This release requires building Docker images from source. See the [build guide](./how-to-build-from-source.md) for detailed instructions.
-
 ### Step 2: Configure Environment
 
 Set up the required environment variables:
 
 ```bash
+# Docker Registry Details
+export REGISTRY_URL="intel"
+export TAG="1.2.0"
+
 # VSS Service Endpoints
 export VSS_SUMMARY_IP=<vss-summary-device-ip>
 export VSS_SUMMARY_PORT=<vss-summary-port>        # Default: 12345

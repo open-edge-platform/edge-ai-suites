@@ -1,0 +1,228 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection" kind="class" language="Python" prot="public">
+    <compoundname>rvc_rotated_object_detection::object_detection::ObjectDetection</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">Node</basecompoundref>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a80c034a30e20180a0fc527dcb1dcf6d1" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.ObjectDetection::param_listener</definition>
+        <argsstring></argsstring>
+        <name>param_listener</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="128" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="128" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a443cc4f29c9f38903f1228c94cda7f4b" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.ObjectDetection::params</definition>
+        <argsstring></argsstring>
+        <name>params</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="129" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="129" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1aca9f3c897ef41534f72228ff72223af2" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.ObjectDetection::detection_publisher</definition>
+        <argsstring></argsstring>
+        <name>detection_publisher</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="131" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="131" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a4d4e10859df29e97cae4e0047e2f6428" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.ObjectDetection::cam_subscription</definition>
+        <argsstring></argsstring>
+        <name>cam_subscription</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="135" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="135" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1aa08b27700b37107672d08a5ed20ca378" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.ObjectDetection::cam_info_subscription</definition>
+        <argsstring></argsstring>
+        <name>cam_info_subscription</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="138" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="138" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a867242d1313132e997c7daae2b68707f" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.ObjectDetection::image_publisher</definition>
+        <argsstring></argsstring>
+        <name>image_publisher</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="142" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="142" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a6000d73d4ee39615fba54053f925c4f1" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.ObjectDetection::detector</definition>
+        <argsstring></argsstring>
+        <name>detector</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="145" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="145" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a7c41aba79e53dfa41afc346a82cbec27" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.ObjectDetection::bridge</definition>
+        <argsstring></argsstring>
+        <name>bridge</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="146" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="146" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a9c2405922e27360f270b1b6a3d36dcf0" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>rvc_rotated_object_detection.object_detection.ObjectDetection::camera_info</definition>
+        <argsstring></argsstring>
+        <name>camera_info</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="188" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="188" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1aaf90ef13e9664892169040fba08ec6b3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def rvc_rotated_object_detection.object_detection.ObjectDetection.__init__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__init__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="124" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="124" bodyend="164"/>
+      </memberdef>
+      <memberdef kind="function" id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1aeb18ea1a5342754a3e97a6a8dd0c2f33" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def rvc_rotated_object_detection.object_detection.ObjectDetection.image_callback</definition>
+        <argsstring>(self, msg)</argsstring>
+        <name>image_callback</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>msg</type>
+          <defname>msg</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="165" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="165" bodyend="185"/>
+      </memberdef>
+      <memberdef kind="function" id="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1af185ca7ee4cf51d57940980b5a74cc77" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def rvc_rotated_object_detection.object_detection.ObjectDetection.camera_info_callback</definition>
+        <argsstring>(self, info)</argsstring>
+        <name>camera_info_callback</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>info</type>
+          <defname>info</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="186" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="186" bodyend="191"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>Node</label>
+      </node>
+      <node id="1">
+        <label>rvc_rotated_object_detection.object_detection.ObjectDetection</label>
+        <link refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>Node</label>
+      </node>
+      <node id="1">
+        <label>rvc_rotated_object_detection.object_detection.ObjectDetection</label>
+        <link refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" line="122" column="1" bodyfile="rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py" bodystart="122" bodyend="192"/>
+    <listofallmembers>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1aaf90ef13e9664892169040fba08ec6b3" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::ObjectDetection</scope><name>__init__</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a7c41aba79e53dfa41afc346a82cbec27" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::ObjectDetection</scope><name>bridge</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1aa08b27700b37107672d08a5ed20ca378" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::ObjectDetection</scope><name>cam_info_subscription</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a4d4e10859df29e97cae4e0047e2f6428" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::ObjectDetection</scope><name>cam_subscription</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a9c2405922e27360f270b1b6a3d36dcf0" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::ObjectDetection</scope><name>camera_info</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1af185ca7ee4cf51d57940980b5a74cc77" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::ObjectDetection</scope><name>camera_info_callback</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1aca9f3c897ef41534f72228ff72223af2" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::ObjectDetection</scope><name>detection_publisher</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a6000d73d4ee39615fba54053f925c4f1" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::ObjectDetection</scope><name>detector</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1aeb18ea1a5342754a3e97a6a8dd0c2f33" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::ObjectDetection</scope><name>image_callback</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a867242d1313132e997c7daae2b68707f" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::ObjectDetection</scope><name>image_publisher</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a80c034a30e20180a0fc527dcb1dcf6d1" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::ObjectDetection</scope><name>param_listener</name></member>
+      <member refid="classrvc__rotated__object__detection_1_1object__detection_1_1_object_detection_1a443cc4f29c9f38903f1228c94cda7f4b" prot="public" virt="non-virtual"><scope>rvc_rotated_object_detection::object_detection::ObjectDetection</scope><name>params</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespacervc__rotated__object__detection_1_1rotated__object__detection__parameters" kind="namespace" language="Python">
+    <compoundname>rvc_rotated_object_detection::rotated_object_detection_parameters</compoundname>
+    <innerclass refid="classrvc__rotated__object__detection_1_1rotated__object__detection__parameters_1_1object__detection" prot="public">rvc_rotated_object_detection::rotated_object_detection_parameters::object_detection</innerclass>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_rotated_object_detection/rvc_rotated_object_detection/rotated_object_detection_parameters.py" line="1" column="1"/>
+  </compounddef>
+</doxygen>

@@ -1,3 +1,6 @@
+Weld Porosity Detection
+==============================
+
 .. toctree::
    :hidden:
 
@@ -24,6 +27,7 @@
    how-to-view-telemetry-data
    how-to-start-mqtt-publisher
    how-to-use-gpu-for-inference
+   how-to-use-opcua-publisher
 
 
 .. toctree::

@@ -19,6 +19,7 @@ import ssl
 import socket
 import glob
 import paho.mqtt.client as mqtt
+import pandas as pd
 
 
 SERVICE = 'mqtt'
@@ -52,6 +53,8 @@ def parse_args():
                      help='MQTT publication interval')
     a_p.add_argument('--csv', default=None, type=str,
                      help='CSV file to publish to MQTT broker')
+    a_p.add_argument('--topic', default=None, type=str, required=True,
+                     help='MQTT topic name to publish to')
     a_p.add_argument('--json', default=None, type=str,
                      help='folder containing json file(s) to publish'
                      'to MQTT broker')
@@ -77,34 +80,28 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, filename):
     print(f"\nMQTT Topic - {topic}\nSubsample - {subsample}\nSampling Rate - \
           {sampling_rate}\nFilename - {filename}\n")
     jencoder = json.JSONEncoder()
-
+    csv_data = pd.read_csv(filename, nrows=0)
+    columns = csv_data.columns.tolist()
+    chunk_size = 1000
     while True:
         start_time = time.time()
         row_served = 0
-
-
-        with open(filename, 'r') as fileobject:
-            tick = g_tick(float(subsample) / float(sampling_rate))
-
-            for row in fileobject:
-                row = [x.strip() for x in row.split(',') if x.strip()]
-                if not row or not re.match(r'^-?\d+', row[0]):
-                    continue
+        tick = g_tick(float(subsample) / float(sampling_rate))
+        for chunk in pd.read_csv(filename, chunksize=chunk_size):
+            for _, row in chunk.iterrows():
 
                 if subsample > 1 and (row_served % subsample) != 0:
                     row_served += 1
                     continue
 
                 try:
-                    values = [float(x) for x in row]
-                    msg = jencoder.encode({'grid_active_power': values[0], 'wind_speed': values[1]})
+                    msg = jencoder.encode({col: row[col] for col in columns})
                     print("Publishing message", msg)
                     mqttc.publish(topic, msg)
                 except (ValueError, IndexError):
                     print(f"Skipping row {row_served}- {row} due to ValueError: {ValueError} \
-                           or IndexError: {IndexError}")
+                          or IndexError: {IndexError}")
                     continue
-
                 row_served += 1
                 time.sleep(next(tick))
                 if row_served % max(1, int(sampling_rate) // max(1, int(subsample))) == 0:
@@ -213,7 +210,7 @@ def main():
     args.port = os.getenv('PORT', '1883')
     args.port = int(args.port)
     updated_topics = {}
-    topic = "wind_turbine_data"
+    topic = args.topic
     client = None
     if int(args.streams) == 1:
         client = mqtt.Client(client_id = '', clean_session = True, userdata = None,

@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+%YAML:1.0
+
+#==============#
+# Camera Model #
+#==============#
+
+Camera.name: "Realsense 435i"
+Camera.setup: "RGBD"
+Camera.model: "perspective"
+
+# set to 1 to get camera intrinsics from a CameraInfo topic
+Camera.from_topic: 1
+# baseline: 50mm for RS435, 55mm for RS415, 95ms for D455
+Camera.baseline: 0.05
+
+Camera.fps: 30.0
+
+Camera.focal_x_baseline: 40.0
+depthmap_factor: 1000.0
+depth_threshold: 20.0
+Camera.color_order: "RGB"
+Initializer.num_min_triangulated_pts: 400
+#================#
+# ORB Parameters #
+#================#
+
+Feature.max_num_keypoints: 1000
+Feature.scale_factor: 1.2
+Feature.num_levels: 8
+Feature.ini_fast_threshold: 20
+Feature.min_fast_threshold: 7
+
+#===========================#
+# PangolinViewer Parameters #
+#===========================#
+
+PangolinViewer.keyframe_size: 0.05
+PangolinViewer.keyframe_line_width: 1
+PangolinViewer.graph_line_width: 1
+PangolinViewer.point_size: 2
+PangolinViewer.camera_size: 0.08
+PangolinViewer.camera_line_width: 3
+PangolinViewer.viewpoint_x: 0
+PangolinViewer.viewpoint_y: -0.9
+PangolinViewer.viewpoint_z: -1.9
+PangolinViewer.viewpoint_f: 400

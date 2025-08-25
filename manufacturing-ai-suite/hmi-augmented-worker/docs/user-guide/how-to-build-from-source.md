@@ -91,12 +91,48 @@ To build the File Watcher executable binary, follow these steps:
 
 6. Set up Environment Variables using `.bat`.
 
+   To configure the file watcher service, you need to set up the environment variables using the [`set_env_vars.bat`](../../file_watcher/set_env_vars.bat) file provided. Follow the steps below to ensure proper configuration:
+
    - Open and edit the values for the variables with your corresponding setup.
+
+     Open the `set_env_vars.bat` file and update the values for the environment variables according to your setup. Below are the detailed explanation:
+
+     - **WATCH_DIRECTORY**:
+
+       This should point to the directory you want the file watcher service to monitor. It should be a valid path on your system where files are expected to be added, monitored, or deleted. The service will track these events and send the file data to the backend for embedding creation.
+
+       **Important**: Ensure that the directory specified in `WATCH_DIRECTORY` does not have access or permission restrictions. The file watcher service must have read and write permissions to monitor and process files within this directory effectively. And also only `.txt`, `.pdf` and `.docx` file format are only supported formats by backend for embedding creation.
+
+       Examples of Valid Directory Paths:
+
+       - On Windows:
+
+         - C:\Users\YourUsername\Documents\WatchedFolder
+         - D:\Data\Projects\MonitorFolder
+
+     - **DOCUMENT_ENDPOINT**:
+
+       This variable should be set to the URL of your backend service where the file data will be sent. Replace <your-backend-service-ip> with the actual IP address or hostname of your backend service.
+
+     - **no_proxy**:
+
+       This variable is used to specify IP addresses or hostnames that should bypass the proxy settings if your system is behind proxy. Set this to the IP address of your backend service to ensure direct communication.
+
    - Then, execute the `.bat` file as shown:
 
      ```sh
      .\set_env_vars.bat
      ```
+
+   - After executing the `set_env_vars.bat` file, you should see no output if the scripts run successfully. The environment variables will be set in the current command prompt session, and you can verify them by running the following command:
+
+     ```sh
+     echo %WATCH_DIRECTORY%
+     echo %DOCUMENT_ENDPOINT%
+     echo %no_proxy%
+     ```
+
+     These commands will display the values you have set for each variable, confirming that they are correctly configured.
 
 7. Compile and build the File Watcher Service executable.
 

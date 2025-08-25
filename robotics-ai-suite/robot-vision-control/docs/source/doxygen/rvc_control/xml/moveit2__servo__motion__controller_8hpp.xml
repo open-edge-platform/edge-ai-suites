@@ -1,0 +1,228 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="moveit2__servo__motion__controller_8hpp" kind="file" language="C++">
+    <compoundname>moveit2_servo_motion_controller.hpp</compoundname>
+    <includes refid="rvc__motion__controller__interface_8hpp" local="yes">rvc_motion_controller_interface/rvc_motion_controller_interface.hpp</includes>
+    <includes local="no">std_msgs/msg/int8.hpp</includes>
+    <includes local="no">geometry_msgs/msg/transform_stamped.hpp</includes>
+    <includes local="no">moveit_servo/servo.h</includes>
+    <includes refid="moveit2__pose__tracking_8hpp" local="yes">moveit2_pose_tracking.hpp</includes>
+    <includes local="no">moveit_servo/servo_parameters.h</includes>
+    <includes local="no">moveit/planning_scene_interface/planning_scene_interface.h</includes>
+    <includes local="no">std_msgs/msg/float64_multi_array.hpp</includes>
+    <includedby refid="moveit2__servo__motion__controller_8cpp" local="yes">rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp</includedby>
+    <incdepgraph>
+      <node id="5">
+        <label>geometry_msgs/msg/pose_stamped.hpp</label>
+      </node>
+      <node id="2">
+        <label>rvc_motion_controller_interface/rvc_motion_controller_interface.hpp</label>
+        <link refid="rvc__motion__controller__interface_8hpp_source"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>geometry_msgs/msg/pose.hpp</label>
+      </node>
+      <node id="16">
+        <label>moveit_servo/make_shared_from_pool.h</label>
+      </node>
+      <node id="13">
+        <label>std_msgs/msg/int8.hpp</label>
+      </node>
+      <node id="10">
+        <label>geometry_msgs/msg/transform_stamped.hpp</label>
+      </node>
+      <node id="3">
+        <label>rclcpp/rclcpp.hpp</label>
+      </node>
+      <node id="18">
+        <label>geometry_msgs/msg/twist_stamped.hpp</label>
+      </node>
+      <node id="14">
+        <label>moveit_servo/servo.h</label>
+      </node>
+      <node id="15">
+        <label>moveit2_pose_tracking.hpp</label>
+        <link refid="moveit2__pose__tracking_8hpp_source"/>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+      </node>
+      <node id="21">
+        <label>std_msgs/msg/float64_multi_array.hpp</label>
+      </node>
+      <node id="19">
+        <label>std_msgs/msg/float64.hpp</label>
+      </node>
+      <node id="7">
+        <label>tf2/LinearMath/Vector3.h</label>
+      </node>
+      <node id="1">
+        <label>rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp</label>
+        <link refid="moveit2__servo__motion__controller_8hpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+      </node>
+      <node id="9">
+        <label>sensor_msgs/msg/joint_state.hpp</label>
+      </node>
+      <node id="11">
+        <label>tf2_geometry_msgs/tf2_geometry_msgs.hpp</label>
+      </node>
+      <node id="17">
+        <label>moveit_servo/servo_parameters.h</label>
+      </node>
+      <node id="8">
+        <label>tf2_ros/transform_listener.h</label>
+      </node>
+      <node id="4">
+        <label>rclcpp/macros.hpp</label>
+      </node>
+      <node id="12">
+        <label>tf2_ros/buffer.h</label>
+      </node>
+      <node id="20">
+        <label>moveit/planning_scene_interface/planning_scene_interface.h</label>
+      </node>
+    </incdepgraph>
+    <innerclass refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller" prot="public">RVCMotionController::Moveit2ServoMotionController</innerclass>
+    <innernamespace refid="namespace_r_v_c_motion_controller">RVCMotionController</innernamespace>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="moveit2__servo__motion__controller_8hpp_1afe83163e266cb53226d273a2aa277c52" prot="public" static="no">
+        <name>__MOVEIT2_SERVO_MOTION_CONTROLLER_HPP__</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" line="23" column="9" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"></highlight></codeline>
+<codeline lineno="3"><highlight class="comment">INTEL<sp/>CONFIDENTIAL</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"></highlight></codeline>
+<codeline lineno="5"><highlight class="comment">Copyright<sp/>(C)<sp/>2022<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"></highlight></codeline>
+<codeline lineno="7"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>Intel<sp/>copyrighted<sp/>materials,</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">and<sp/>your<sp/>use<sp/>of<sp/>them<sp/>is<sp/>governed<sp/>by<sp/>the<sp/>express<sp/>license<sp/>under<sp/>which<sp/>they</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">were<sp/>provided<sp/>to<sp/>you<sp/>(License).<sp/>Unless<sp/>the<sp/>License<sp/>provides<sp/>otherwise,</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">you<sp/>may<sp/>not<sp/>use,<sp/>modify,<sp/>copy,<sp/>publish,<sp/>distribute,<sp/>disclose<sp/>or<sp/>transmit</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">this<sp/>software<sp/>or<sp/>the<sp/>related<sp/>documents<sp/>without<sp/>Intel&apos;s<sp/>prior<sp/>written</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">permission.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment"></highlight></codeline>
+<codeline lineno="14"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>provided<sp/>as<sp/>is,<sp/>with<sp/>no</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">express<sp/>or<sp/>implied<sp/>warranties,<sp/>other<sp/>than<sp/>those<sp/>that<sp/>are<sp/>expressly<sp/>stated</highlight></codeline>
+<codeline lineno="16"><highlight class="comment">in<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="17"><highlight class="comment"></highlight></codeline>
+<codeline lineno="18"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>__MOVEIT2_SERVO_MOTION_CONTROLLER_HPP__</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>__MOVEIT2_SERVO_MOTION_CONTROLLER_HPP__</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;rvc_motion_controller_interface/rvc_motion_controller_interface.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;std_msgs/msg/int8.hpp&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;geometry_msgs/msg/transform_stamped.hpp&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;moveit_servo/servo.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;moveit2_pose_tracking.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;moveit_servo/servo_parameters.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;moveit/planning_scene_interface/planning_scene_interface.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;std_msgs/msg/float64_multi_array.hpp&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight></codeline>
+<codeline lineno="40" refid="namespace_r_v_c_motion_controller" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespace_r_v_c_motion_controller" kindref="compound">RVCMotionController</ref><sp/>{</highlight></codeline>
+<codeline lineno="41" refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller" kindref="compound">Moveit2ServoMotionController</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionControllerInterface</ref></highlight></codeline>
+<codeline lineno="42"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ace3a0dfb12ab35bcae919676ae1b29e7" kindref="member">Moveit2ServoMotionController</ref><sp/>();</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/>~<ref refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller" kindref="compound">Moveit2ServoMotionController</ref>();</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a37df9d2b464a7563829e164291f8ef63" kindref="member">init</ref><sp/>(<sp/>rclcpp::Node::SharedPtr<sp/>node<sp/>);</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"></highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3cea9779b1b4f41dade9674f48f810d7" kindref="member">setControllerSpeed</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>controllerSpeed);</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a20b86cf9f2c710722ee94fd3cd267f02" kindref="member">sendGoal</ref><sp/>(<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>geometry_msgs::msg::Pose<sp/>destPose);</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a20b86cf9f2c710722ee94fd3cd267f02" kindref="member">sendGoal</ref><sp/>(<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;vector6d_t&gt;<sp/>dest,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>recomputeTraj<sp/>);</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ad2d7f8e6b49f9f325fbd311cc8ec1420" kindref="member">sendGripperPosition</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>pos);</highlight></codeline>
+<codeline lineno="62" refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a1524873c6fac09410295f18988adaaf3" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a1524873c6fac09410295f18988adaaf3" kindref="member">getGripperPositionFeedback</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>poseTracker-&gt;getGripperPositionFeedback();</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a5ecf5b6f4e46bac90b2d0b8aa41de14d" kindref="member">isGoalNear</ref>();</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/>std::unique_ptr&lt;PoseTracking&gt;<sp/>poseTracker;</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>initialized;</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"></highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/>std::shared_ptr&lt;std::thread&gt;<sp/>move_to_pose_thread;</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/>std::shared_ptr&lt;moveit::core::RobotState&gt;<sp/>kinematic_state<sp/>;</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"></highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/>moveit_servo::StatusCode<sp/>status_<sp/>=<sp/>moveit_servo::StatusCode::INVALID;</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/>rclcpp::Subscription&lt;std_msgs::msg::Int8&gt;::SharedPtr<sp/>sub_;</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>statusCB<sp/>(<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std_msgs::msg::Int8::ConstSharedPtr<sp/>msg<sp/>);</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"></highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/>geometry_msgs::msg::PoseStamped<sp/>currentPose;</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/><sp/><sp/>rclcpp::Publisher&lt;std_msgs::msg::Float64MultiArray&gt;::SharedPtr<sp/><sp/>gripper_controller_goal_pub;</highlight></codeline>
+<codeline lineno="80"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="81"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">//__MOVEIT2_SERVO_MOTION_CONTROLLER_HPP__</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="83"><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp"/>
+  </compounddef>
+</doxygen>

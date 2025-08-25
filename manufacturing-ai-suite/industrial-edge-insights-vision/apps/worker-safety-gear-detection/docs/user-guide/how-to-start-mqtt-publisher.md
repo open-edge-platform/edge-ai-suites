@@ -7,7 +7,7 @@ Start the MQTT broker [eclipse mosquitto](https://mosquitto.org/) using configur
 
   ```sh
   cd <WORKDIR>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection
-  docker run -d --name=mqtt_broker -p 1883:1883 -v $PWD/configs/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
+  docker run -d --name=mqtt-broker -p 1883:1883 -v $PWD/configs/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
   ```
 
 With the above configuration, the broker listens on port 1883.
@@ -17,8 +17,14 @@ With the above configuration, the broker listens on port 1883.
     ```yaml
     dlstreamer-pipeline-server:
       environment:
-        MQTT_HOST: <HOST_IP>
+        MQTT_HOST: mqtt-broker    # broker hostname or HOST_IP
         MQTT_PORT: 1883
+    ```
+    Once the changes are done, bring the services up. Restart them if already running.
+
+    ```sh
+    docker compose down # if already running
+    docker compose up -d
     ```
 
 The below CURL command publishes metadata to a MQTT broker and sends frames over WebRTC for streaming.
@@ -29,7 +35,7 @@ WebRTC Stream will be accessible at `http://<HOST_IP>:8889/mqttstream`.
 ```sh
 curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/worker_safety_gear_detection_mqtt -X POST -H 'Content-Type: application/json' -d '{
     "source": {
-        "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.mp4",
+        "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
         "type": "uri"
     },
     "destination": {
@@ -46,7 +52,7 @@ curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/worker_safety_gear_d
     },
     "parameters": {
         "detection-properties": {
-            "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/detection_1/model/model.xml",
+            "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
             "device": "CPU"
         }
     }
@@ -57,5 +63,5 @@ In the above curl command set `publish_frame` to false if you don't want frames 
 Output can be viewed on MQTT subscriber as shown below.
 
 ```sh
-docker run -it --entrypoint mosquitto_sub eclipse-mosquitto:latest --topic worker_safety_gear_detection -p 1883 -h <HOST_IP>
+docker run -it --entrypoint mosquitto_sub eclipse-mosquitto:latest --topic worker_safety_gear_detection -p 1883 -h mqtt-broker
 ```

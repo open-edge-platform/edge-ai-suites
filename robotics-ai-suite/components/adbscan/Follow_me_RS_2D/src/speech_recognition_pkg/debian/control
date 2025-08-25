@@ -1,0 +1,12 @@
+Source: ros-humble-speech-recognition-pkg
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), python3-ament-package, ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-std-msgs, ros-humble-rclcpp, ros-humble-rclpy, ros-humble-follow-me-interfaces, ros-humble-robotics-sdk-license
+Standards-Version: 4.1.4
+
+Package: ros-humble-speech-recognition-pkg
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-humble-std-msgs, ros-humble-rclcpp, ros-humble-rclpy, ros-humble-follow-me-interfaces, python3-pip, python3-dev, libasound2-dev, ros-humble-robotics-sdk-license
+Description: This package contains nodes for audio to text conversion using pre-trained speech Recognition model QuartzNet and publishing recorded audio files with audio commands for robot motion

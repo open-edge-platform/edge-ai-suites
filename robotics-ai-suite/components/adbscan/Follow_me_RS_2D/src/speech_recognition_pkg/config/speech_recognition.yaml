@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+speech_recognition_node:
+  ros__parameters:
+    audio_input: recorded
+    audio_publish_frequency: 4.0
+    live_audio_length_in_seconds: 20
+    use_sim_time: False
+    device_name: CPU
+
+audio_publisher_node:
+  ros__parameters:
+    odom_topic: /guide_robot/odom
+    Verbose: True
+    publish_frequency: 4

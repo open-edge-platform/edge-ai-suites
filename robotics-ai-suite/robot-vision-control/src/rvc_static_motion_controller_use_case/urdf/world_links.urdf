@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<robot name="world">
+  <link name="world"/>
+  <joint name="world_joint" type="fixed">
+	  <parent link="world"/>
+	  <child link="base_link"/>
+  </joint>
+  <link name="base_link"/>
+
+
+
+
+</robot>
+

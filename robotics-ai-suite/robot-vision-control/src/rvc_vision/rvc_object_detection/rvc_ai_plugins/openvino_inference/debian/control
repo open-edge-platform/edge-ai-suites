@@ -1,0 +1,12 @@
+Source: ros-humble-openvino-inference-plugin
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0), libopencv-dev, openvino-libraries-dev, ros-humble-ament-cmake-ros, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-rclcpp-components, ros-humble-rvc-ai-interface, ros-humble-rvc-vision-messages, ros-humble-std-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-openvino-inference-plugin
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libopencv-dev, openvino-libraries-dev, ros-humble-pluginlib, ros-humble-rvc-ai-interface, ros-humble-rvc-vision-messages, ros-humble-std-msgs
+Description: RVC AI interface-based Plugin implementing yolo V5, v6 and V8 using openvino inferencing

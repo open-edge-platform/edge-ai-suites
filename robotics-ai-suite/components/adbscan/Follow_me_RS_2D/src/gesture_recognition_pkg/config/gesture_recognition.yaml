@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+gesture_recognizer_node:
+  ros__parameters:
+    Camera_topic: /camera/color/image_raw
+    simulated_camera_topic: /sim_camera
+    Verbose: True
+    use_sim_time: True
+
+
+traj_and_img_publisher_node:
+  ros__parameters:
+    odom_topic: /guide_robot/odom
+    twist_topic: /guide_robot/cmd_vel
+    Verbose: True
+    publish_frequency: 6
+    Camera_topic: /sim_camera
+    
+   
+

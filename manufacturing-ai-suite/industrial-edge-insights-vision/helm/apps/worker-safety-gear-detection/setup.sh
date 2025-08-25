@@ -3,8 +3,8 @@
 # Download artifacts for a specific sample application
 #   by calling respective app's setup.sh script
 SCRIPT_DIR=$(dirname $(readlink -f "$0"))
-MODEL_URL=""
-VIDEO_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/c13b8dbf23d514c2667d39b66615bd1400cb889d/videos/Safety_Full_Hat_and_Vest.mp4"
+MODEL_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/edd25f37c324a9ef73df1642354b2ba5fa7b7df5/models/worker-safety-gear-detection.zip"
+VIDEO_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/edd25f37c324a9ef73df1642354b2ba5fa7b7df5/videos/Safety_Full_Hat_and_Vest.avi"
 
 err() {
     echo "ERROR: $1" >&2
@@ -38,7 +38,7 @@ download_artifacts() {
     fi
     # Download model artifacts if not already present
     LOCAL_MODEL_DIR="$SCRIPT_DIR/../../../resources/$app_name/models/$app_name"
-    if [ ! -d $LOCAL_MODEL_DIR ]; then
+    if [ ! -d $LOCAL_MODEL_DIR ] || [ -z "$(ls -A "$LOCAL_MODEL_DIR")" ]; then
         # create the models directory if it does not exist
 
         if ! mkdir -p $LOCAL_MODEL_DIR; then

@@ -45,6 +45,9 @@ spec:
       imagePullSecrets:
       - name: registryauth
       {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: otel-collector
           image: otel/opentelemetry-collector-contrib:0.94.0
@@ -63,6 +66,15 @@ spec:
             - name: otel-config-input
               mountPath: /etc/otelcol-contrib/config.yaml
               subPath: otel-collector-config.yaml
+          # Added security context to restrict container privileges
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
       restartPolicy: Always
       volumes:
         - name: otel-config-input

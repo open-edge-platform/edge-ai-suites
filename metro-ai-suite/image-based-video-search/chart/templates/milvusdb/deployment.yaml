@@ -1,3 +1,4 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,6 +22,9 @@ spec:
         {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
         katenary.v3/component: milvusdb
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
       - envFrom:
         - configMapRef:
@@ -29,8 +33,15 @@ spec:
         imagePullPolicy: {{ .Values.milvusdb.imagePullPolicy }}
         name: milvusdb
         securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
           seccompProfile:
-            type: Unconfined
+            type: RuntimeDefault
         command: ["/tini", "--"]
         args: ["/milvus/bin/milvus", "run", "standalone"]
         # command: ["/bin/bash", "-c"]
@@ -47,6 +58,14 @@ spec:
         volumeMounts:
         - name: '{{ include "image_based_video_search.fullname" . }}-milvusdb-config'
           mountPath: /milvus/configs/custom/
+        - name: milvus-runtime
+          mountPath: /run/milvus
+        - name: milvus-tmp
+          mountPath: /tmp/milvus
+        - name: milvus-etcd
+          mountPath: /var/libe/milvus
+        - name: milvus-var-lib
+          mountPath: /var/lib/milvus
         {{- if .Values.milvusdb.resources }}
         resources:
           {{ .Values.milvusdb.resources | toYaml | nindent 10 }}
@@ -55,6 +74,14 @@ spec:
       - name: '{{ include "image_based_video_search.fullname" . }}-milvusdb-config'
         configMap:
           name: '{{ include "image_based_video_search.fullname" . }}-milvusdb-config'
+      - name: milvus-runtime
+        emptyDir: {}
+      - name: milvus-tmp
+        emptyDir: {}
+      - name: milvus-etcd
+        emptyDir: {}
+      - name: milvus-var-lib
+        emptyDir: {}
       {{- if .Values.pullSecrets }}
       imagePullSecrets:
       {{- .Values.pullSecrets | toYaml | nindent 6 }}

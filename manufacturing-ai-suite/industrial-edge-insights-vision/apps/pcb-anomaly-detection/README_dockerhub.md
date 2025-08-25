@@ -1,4 +1,4 @@
-# PCB Anomaly Detection Reference Implementation
+# PCB Anomaly Detection Sample Application
 
 This application enables real-time anomaly detection monitoring in printed circuit boards (PCB) by running inference workflows across multiple AI models. It connects multiple video streams from different cameras to AI-powered pipelines, all operating efficiently on a single industrial PC. This solution enhances logistics efficiency and inventory management by detecting anomalies before they impact operations.
 
@@ -9,7 +9,7 @@ For more details on deployment, refer to the [documentation](https://docs.opened
 ## Deploy using Kubernetes Charts
 
 ---
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/pcb-anomaly-detection/main/user-guide/how-to-deploy-with-helm.html).
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/pcb-anomaly-detection/main/user-guide/how-to-deploy-using-helm-charts.html).
 
 ## Supported versions
 

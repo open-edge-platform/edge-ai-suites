@@ -35,6 +35,9 @@ spec:
       imagePullSecrets:
       - name: registryauth
       {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: prometheus
           image: prom/prometheus:latest
@@ -51,7 +54,19 @@ spec:
             - name: prometheus-config-input
               mountPath: /etc/prometheus/prometheus.yml
               subPath: prometheus.yml
+            - name: prometheus-data
+              mountPath: /prometheus
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
       volumes:
         - name: prometheus-config-input
           configMap:
             name: prometheus-config
+        - name: prometheus-data
+          emptyDir: {}

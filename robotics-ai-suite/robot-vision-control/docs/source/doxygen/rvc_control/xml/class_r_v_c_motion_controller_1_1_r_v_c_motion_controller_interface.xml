@@ -1,0 +1,539 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>RVCMotionController::RVCMotionControllerInterface</compoundname>
+    <derivedcompoundref refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller" prot="public" virt="non-virtual">RVCMotionController::Moveit2ServoMotionController</derivedcompoundref>
+    <derivedcompoundref refid="class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller" prot="public" virt="non-virtual">RVCMotionController::URPendantMotionController</derivedcompoundref>
+      <sectiondef kind="protected-type">
+      <memberdef kind="enum" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a38c11ed8f522a3e87077259b5b8824cd" prot="protected" static="no" strong="no">
+        <type></type>
+        <name>@0</name>
+        <enumvalue id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a38c11ed8f522a3e87077259b5b8824cdaf48d41d5029ea214fffcb16beec6b79b" prot="protected">
+          <name>UNDEFINED</name>
+          <initializer>= 0</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a38c11ed8f522a3e87077259b5b8824cdae40ba45aef1e82b91f2141f36dec3aff" prot="protected">
+          <name>JOINT_CONTROL_MODE</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a38c11ed8f522a3e87077259b5b8824cda7372a70cf929bbd05baf01b424359f65" prot="protected">
+          <name>TCP_CONTROL_MODE</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+<para>enumeration with the different control modes, used in current_control_mode </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="95" column="5" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="96" bodyend="100"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aac3f97e64f67377c59593a6b2853f1e9" prot="protected" static="no" mutable="no">
+        <type>rclcpp::Node::SharedPtr</type>
+        <definition>rclcpp::Node::SharedPtr RVCMotionController::RVCMotionControllerInterface::node_</definition>
+        <argsstring></argsstring>
+        <name>node_</name>
+        <briefdescription>
+<para>ros node </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="103" column="29" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="103" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1af579517cbf66e8ac5550a77c52dd1dce" prot="protected" static="no" mutable="no">
+        <type>vector6d_t</type>
+        <definition>vector6d_t RVCMotionController::RVCMotionControllerInterface::lastJointGoal</definition>
+        <argsstring></argsstring>
+        <name>lastJointGoal</name>
+        <briefdescription>
+<para>previous configured goal in Joint Space </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="106" column="16" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="106" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac3a613c724464f9317665dbac0fe4c64" prot="protected" static="no" mutable="no">
+        <type>geometry_msgs::msg::Pose</type>
+        <definition>geometry_msgs::msg::Pose RVCMotionController::RVCMotionControllerInterface::lastTCPGoal</definition>
+        <argsstring></argsstring>
+        <name>lastTCPGoal</name>
+        <briefdescription>
+<para>previous configured goal in Cartesian Space </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="108" column="30" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="108" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a05b4cd37612329c645a4240864b45745" prot="protected" static="no" mutable="no">
+        <type>int</type>
+        <definition>int RVCMotionController::RVCMotionControllerInterface::current_control_mode</definition>
+        <argsstring></argsstring>
+        <name>current_control_mode</name>
+        <briefdescription>
+<para>internal state representing if controller is currently in Joint or Cartesian space control mode </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="111" column="9" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="111" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a3d17f97e972931716683405299c9c228" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double RVCMotionController::RVCMotionControllerInterface::distance_threshold</definition>
+        <argsstring></argsstring>
+        <name>distance_threshold</name>
+        <briefdescription>
+<para>this variable publicly exposes the current value of the gripper position. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="121" column="12" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="121" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a9368c88dbfd3ef39d8c17e76c0305739" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double RVCMotionController::RVCMotionControllerInterface::distance_threshold_tcp</definition>
+        <argsstring></argsstring>
+        <name>distance_threshold_tcp</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="121" column="31" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="121" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a8e8cb0612d74729544c4e95e926162a0" prot="private" static="no" mutable="no">
+        <type>geometry_msgs::msg::Pose</type>
+        <definition>geometry_msgs::msg::Pose RVCMotionController::RVCMotionControllerInterface::currentTCPPose</definition>
+        <argsstring></argsstring>
+        <name>currentTCPPose</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="122" column="30" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="122" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac519dc6c1e3c4a4235d704aef79c325e" prot="private" static="no" mutable="no">
+        <type>std::shared_ptr&lt; tf2_ros::Buffer &gt;</type>
+        <definition>std::shared_ptr&lt;tf2_ros::Buffer&gt; RVCMotionController::RVCMotionControllerInterface::tfBuffer</definition>
+        <argsstring></argsstring>
+        <name>tfBuffer</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="124" column="21" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="124" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a621181e70842b05df384f88ffbbb9908" prot="private" static="no" mutable="no">
+        <type>std::shared_ptr&lt; tf2_ros::TransformListener &gt;</type>
+        <definition>std::shared_ptr&lt;tf2_ros::TransformListener&gt; RVCMotionController::RVCMotionControllerInterface::listener</definition>
+        <argsstring></argsstring>
+        <name>listener</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="125" column="21" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="125" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a773b27bb3d1f0a415d7a8a86f4dea712" prot="private" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string RVCMotionController::RVCMotionControllerInterface::base_link</definition>
+        <argsstring></argsstring>
+        <name>base_link</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="126" column="17" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="126" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a5eadcbecb7a0677783377154a18ad055" prot="private" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string RVCMotionController::RVCMotionControllerInterface::ee_link</definition>
+        <argsstring></argsstring>
+        <name>ee_link</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="126" column="27" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="126" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ab207b1f50cc7b3bb726221e0b782f255" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool RVCMotionController::RVCMotionControllerInterface::init</definition>
+        <argsstring>(rclcpp::Node::SharedPtr node)</argsstring>
+        <name>init</name>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a37df9d2b464a7563829e164291f8ef63">init</reimplementedby>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a2269ddc71a4c2fa31ada8c9e0e7f292b">init</reimplementedby>
+        <param>
+          <type>rclcpp::Node::SharedPtr</type>
+          <declname>node</declname>
+        </param>
+        <briefdescription>
+<para>initialization api </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>node</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the rclcpp::Node associated </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>true if succeded </para>
+</simplesect>
+<simplesect kind="return"><para>false if failed </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="55" column="18" bodyfile="rvc_motion_controller_interface/src/rvc_motion_controller_interface.cpp" bodystart="31" bodyend="62"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a267aaac3902ac1bf47a870f9b02b4d58" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void RVCMotionController::RVCMotionControllerInterface::setControllerSpeed</definition>
+        <argsstring>(const double controllerSpeed)=0</argsstring>
+        <name>setControllerSpeed</name>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a3cea9779b1b4f41dade9674f48f810d7">setControllerSpeed</reimplementedby>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a9327e8451d015841c1e33bf8a998d15e">setControllerSpeed</reimplementedby>
+        <param>
+          <type>const double</type>
+          <declname>controllerSpeed</declname>
+        </param>
+        <briefdescription>
+<para>Set the Controller Speed. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>controllerSpeed</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>new speed </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="62" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a5a54d8631325fb402fcd1412960c4357" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void RVCMotionController::RVCMotionControllerInterface::sendGoal</definition>
+        <argsstring>(const geometry_msgs::msg::Pose destPose)=0</argsstring>
+        <name>sendGoal</name>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a20b86cf9f2c710722ee94fd3cd267f02">sendGoal</reimplementedby>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a77f7d8cb5a7a511e2eedf352f2b0961f">sendGoal</reimplementedby>
+        <param>
+          <type>const geometry_msgs::msg::Pose</type>
+          <declname>destPose</declname>
+        </param>
+        <briefdescription>
+<para>Send the target goal Pose to the controller. Pure virtual function. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>destPose</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>target Pose </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>controllerSpeed</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Speed of the robot </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="67" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a0b35fed01e1e1018a831d2dfedafbe99" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void RVCMotionController::RVCMotionControllerInterface::sendGoal</definition>
+        <argsstring>(std::vector&lt; vector6d_t &gt; dest, const bool recomputeTraj)=0</argsstring>
+        <name>sendGoal</name>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a54c67ade6b09d153f429f791269881f2">sendGoal</reimplementedby>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a54168d82ff7ecd4d84baf96441c173f4">sendGoal</reimplementedby>
+        <param>
+          <type>std::vector&lt; vector6d_t &gt;</type>
+          <declname>dest</declname>
+        </param>
+        <param>
+          <type>const bool</type>
+          <declname>recomputeTraj</declname>
+        </param>
+        <briefdescription>
+<para>Send the target angles to the controller. Deprecated. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>dest</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>6 joint angles in radians </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>controllerSpeed</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Speed of the robot </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="71" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aef5ea596277bb87030274d71a0add677" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void RVCMotionController::RVCMotionControllerInterface::sendGripperPosition</definition>
+        <argsstring>(double position)=0</argsstring>
+        <name>sendGripperPosition</name>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1ad2d7f8e6b49f9f325fbd311cc8ec1420">sendGripperPosition</reimplementedby>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a15bcf5d9ccb78372e85dcf5d1c0f31af">sendGripperPosition</reimplementedby>
+        <param>
+          <type>double</type>
+          <declname>position</declname>
+        </param>
+        <briefdescription>
+<para>send the gripper position </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>position</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="77" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a75decf28e1a228ebd57d730a5638017c" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>bool</type>
+        <definition>virtual bool RVCMotionController::RVCMotionControllerInterface::isGoalNear</definition>
+        <argsstring>()=0</argsstring>
+        <name>isGoalNear</name>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a5ecf5b6f4e46bac90b2d0b8aa41de14d">isGoalNear</reimplementedby>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1ac19ea6ccd890b9d320b42b1bf751d4cc">isGoalNear</reimplementedby>
+        <briefdescription>
+<para>Controller gives an indication if the target is close enough. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>true if the goal is close enough </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="81" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aeb1c0f524dd83957f70d359e9a719df2" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>double</type>
+        <definition>virtual double RVCMotionController::RVCMotionControllerInterface::getGripperPositionFeedback</definition>
+        <argsstring>(void)=0</argsstring>
+        <name>getGripperPositionFeedback</name>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller_1a1524873c6fac09410295f18988adaaf3">getGripperPositionFeedback</reimplementedby>
+        <reimplementedby refid="class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller_1a41c541d0e9df5115831d43580a44bdb2">getGripperPositionFeedback</reimplementedby>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+<para>returns current value of the gripper position. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>current value of the gripper position. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="84" column="20"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a53c5a7a5136e94d0b7b0882bfca5ae83" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual RVCMotionController::RVCMotionControllerInterface::~RVCMotionControllerInterface</definition>
+        <argsstring>()</argsstring>
+        <name>~RVCMotionControllerInterface</name>
+        <briefdescription>
+<para>Virtual Destructor. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="87" column="13" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="87" bodyend="87"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-func">
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac8f879e7d8652768338343eec731b5b0" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>RVCMotionController::RVCMotionControllerInterface::RVCMotionControllerInterface</definition>
+        <argsstring>()</argsstring>
+        <name>RVCMotionControllerInterface</name>
+        <briefdescription>
+<para>Empty Constructor for pluginlib. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>node</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>a rclcpp node shared pointer </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="92" column="5" bodyfile="rvc_motion_controller_interface/src/rvc_motion_controller_interface.cpp" bodystart="22" bodyend="29"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a33b9e3e1ab6a06973ef0d86b04202eee" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>RVCMotionController::RVCMotionControllerInterface::RVCMotionControllerInterface</definition>
+        <argsstring>(const RVCMotionControllerInterface &amp;)</argsstring>
+        <name>RVCMotionControllerInterface</name>
+        <param>
+          <type>const <ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionControllerInterface</ref> &amp;</type>
+        </param>
+        <briefdescription>
+<para>Private copy constructor. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="115" column="5"/>
+      </memberdef>
+      <memberdef kind="function" id="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ab92900e6791c39446dd70b8a8bd048af" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionControllerInterface</ref> &amp;</type>
+        <definition>RVCMotionControllerInterface&amp; RVCMotionController::RVCMotionControllerInterface::operator=</definition>
+        <argsstring>(const RVCMotionControllerInterface &amp;)</argsstring>
+        <name>operator=</name>
+        <param>
+          <type>const <ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionControllerInterface</ref> &amp;</type>
+        </param>
+        <briefdescription>
+<para>Private copy assignment operator. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="118" column="34"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>RVCMotionController::Moveit2ServoMotionController</label>
+        <link refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>RVCMotionController::RVCMotionControllerInterface</label>
+        <link refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface"/>
+      </node>
+      <node id="3">
+        <label>RVCMotionController::URPendantMotionController</label>
+        <link refid="class_r_v_c_motion_controller_1_1_u_r_pendant_motion_controller"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="43" column="1" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="44" bodyend="127"/>
+    <listofallmembers>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a773b27bb3d1f0a415d7a8a86f4dea712" prot="private" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>base_link</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a05b4cd37612329c645a4240864b45745" prot="protected" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>current_control_mode</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a8e8cb0612d74729544c4e95e926162a0" prot="private" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>currentTCPPose</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a3d17f97e972931716683405299c9c228" prot="private" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>distance_threshold</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a9368c88dbfd3ef39d8c17e76c0305739" prot="private" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>distance_threshold_tcp</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a5eadcbecb7a0677783377154a18ad055" prot="private" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>ee_link</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aeb1c0f524dd83957f70d359e9a719df2" prot="public" virt="pure-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>getGripperPositionFeedback</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ab207b1f50cc7b3bb726221e0b782f255" prot="public" virt="virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>init</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a75decf28e1a228ebd57d730a5638017c" prot="public" virt="pure-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>isGoalNear</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a38c11ed8f522a3e87077259b5b8824cdae40ba45aef1e82b91f2141f36dec3aff" prot="protected" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>JOINT_CONTROL_MODE</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1af579517cbf66e8ac5550a77c52dd1dce" prot="protected" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>lastJointGoal</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac3a613c724464f9317665dbac0fe4c64" prot="protected" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>lastTCPGoal</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a621181e70842b05df384f88ffbbb9908" prot="private" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>listener</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aac3f97e64f67377c59593a6b2853f1e9" prot="protected" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>node_</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ab92900e6791c39446dd70b8a8bd048af" prot="private" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>operator=</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac8f879e7d8652768338343eec731b5b0" prot="protected" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>RVCMotionControllerInterface</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a33b9e3e1ab6a06973ef0d86b04202eee" prot="private" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>RVCMotionControllerInterface</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a5a54d8631325fb402fcd1412960c4357" prot="public" virt="pure-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>sendGoal</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a0b35fed01e1e1018a831d2dfedafbe99" prot="public" virt="pure-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>sendGoal</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aef5ea596277bb87030274d71a0add677" prot="public" virt="pure-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>sendGripperPosition</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a267aaac3902ac1bf47a870f9b02b4d58" prot="public" virt="pure-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>setControllerSpeed</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a38c11ed8f522a3e87077259b5b8824cda7372a70cf929bbd05baf01b424359f65" prot="protected" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>TCP_CONTROL_MODE</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac519dc6c1e3c4a4235d704aef79c325e" prot="private" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>tfBuffer</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a38c11ed8f522a3e87077259b5b8824cdaf48d41d5029ea214fffcb16beec6b79b" prot="protected" virt="non-virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>UNDEFINED</name></member>
+      <member refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a53c5a7a5136e94d0b7b0882bfca5ae83" prot="public" virt="virtual"><scope>RVCMotionController::RVCMotionControllerInterface</scope><name>~RVCMotionControllerInterface</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+shoulder_pan_joint: 1.57
+shoulder_lift_joint: -0.97
+elbow_joint: 2.0
+wrist_1_joint: -2.56
+wrist_2_joint: -1.55
+wrist_3_joint: 0.0

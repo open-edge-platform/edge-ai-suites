@@ -7,18 +7,24 @@ Start the MQTT broker [eclipse mosquitto](https://mosquitto.org/) using configur
 
   ```sh
   cd <WORKDIR>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity
-  docker run -d --name=mqtt_broker -p 1883:1883 -v $PWD/configs/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
+  docker run -d --name=mqtt-broker -p 1883:1883 -v $PWD/configs/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
   ```
 
-With the above configuration, the broker listens on port 1883.
+With the above configuration, the broker listens on port `1883`.
 
 - `MQTT_HOST` and `MQTT_PORT` environment variable must be set for DL Streamer Pipeline Server prior to sending this curl request.
     You can add them to the `environments` for DL Streamer Pipeline Server section in `docker-compose.yml`.
     ```yaml
     dlstreamer-pipeline-server:
       environment:
-        MQTT_HOST: <HOST_IP>
+        MQTT_HOST: mqtt-broker    # broker hostname or HOST_IP
         MQTT_PORT: 1883
+    ```
+    Once the changes are done, bring the services up. Restart them if already running.
+
+    ```sh
+    docker compose down # if already running
+    docker compose up -d
     ```
 
 The below CURL command publishes metadata to a MQTT broker and sends frames over WebRTC for streaming.
@@ -57,5 +63,5 @@ In the above curl command set `publish_frame` to false if you don't want frames 
 Output can be viewed on MQTT subscriber as shown below.
 
 ```sh
-docker run -it --entrypoint mosquitto_sub eclipse-mosquitto:latest --topic weld_porosity_classification -p 1883 -h <HOST_IP>
+docker run -it --entrypoint mosquitto_sub eclipse-mosquitto:latest --topic weld_porosity_classification -p 1883 -h mqtt-broker
 ```

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>robotiq_driver_plugin</name>
+  <version>2.0.0</version>
+  <description>robotiq 2f driver</description>
+  <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
+  <license>Proprietary</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>hardware_interface</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>std_srvs</depend>
+  <exec_depend>controller_manager</exec_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

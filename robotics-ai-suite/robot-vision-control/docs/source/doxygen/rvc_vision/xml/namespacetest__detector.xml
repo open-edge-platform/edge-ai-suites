@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespacetest__detector" kind="namespace" language="Python">
+    <compoundname>test_detector</compoundname>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="test__detector_8py_1a1a599c9bb4e9df56000baced9288dde1" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>test_detector.level</definition>
+        <argsstring></argsstring>
+        <name>level</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/test/test_detector.py" line="8" column="1" bodyfile="rvc_rotated_object_detection/test/test_detector.py" bodystart="8" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="test__detector_8py_1a42bc63d9df65e3ffc4fbd6039012ace2" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>test_detector.mylogger</definition>
+        <argsstring></argsstring>
+        <name>mylogger</name>
+        <initializer>=  logging.getLogger()</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/test/test_detector.py" line="9" column="1" bodyfile="rvc_rotated_object_detection/test/test_detector.py" bodystart="9" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="test__detector_8py_1a64fa68966e54b75ba8fca3a36dc70b9a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def test_detector.resources_dir</definition>
+        <argsstring>()</argsstring>
+        <name>resources_dir</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/test/test_detector.py" line="17" column="1" bodyfile="rvc_rotated_object_detection/test/test_detector.py" bodystart="17" bodyend="20"/>
+      </memberdef>
+      <memberdef kind="function" id="test__detector_8py_1a4a06d44e3ba61a02f79fd63956672412" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def test_detector.detector</definition>
+        <argsstring>(str resources_dir)</argsstring>
+        <name>detector</name>
+        <param>
+          <type>str</type>
+          <declname>resources_dir</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/test/test_detector.py" line="21" column="1" bodyfile="rvc_rotated_object_detection/test/test_detector.py" bodystart="21" bodyend="26"/>
+      </memberdef>
+      <memberdef kind="function" id="test__detector_8py_1afe0a692e4d19fb452ad6435dead47ef1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def test_detector.test_image</definition>
+        <argsstring>(Detector detector, str resources_dir)</argsstring>
+        <name>test_image</name>
+        <param>
+          <type><ref refid="classrvc__rotated__object__detection_1_1object__detection_1_1_detector" kindref="compound">Detector</ref></type>
+          <declname>detector</declname>
+        </param>
+        <param>
+          <type>str</type>
+          <declname>resources_dir</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/test/test_detector.py" line="27" column="1" bodyfile="rvc_rotated_object_detection/test/test_detector.py" bodystart="27" bodyend="49"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_rotated_object_detection/test/test_detector.py" line="1" column="1"/>
+  </compounddef>
+</doxygen>

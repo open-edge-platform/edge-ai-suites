@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="setup_8py" kind="file" language="Python">
+    <compoundname>setup.py</compoundname>
+    <innernamespace refid="namespacesetup">setup</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="keyword">import</highlight><highlight class="normal"><sp/>os</highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="keyword">from</highlight><highlight class="normal"><sp/>glob<sp/></highlight><highlight class="keyword">import</highlight><highlight class="normal"><sp/>glob</highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="keyword">from</highlight><highlight class="normal"><sp/>setuptools<sp/></highlight><highlight class="keyword">import</highlight><highlight class="normal"><sp/>find_packages,<sp/>setup</highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="keyword">from</highlight><highlight class="normal"><sp/>generate_parameter_library_py.setup_helper<sp/></highlight><highlight class="keyword">import</highlight><highlight class="normal"><sp/>generate_parameter_module</highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal">generate_parameter_module(</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"><sp/><sp/></highlight><highlight class="stringliteral">&quot;rotated_object_detection_parameters&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="comment">#<sp/>python<sp/>module<sp/>name<sp/>for<sp/>parameter<sp/>library</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"><sp/><sp/></highlight><highlight class="stringliteral">&quot;rvc_rotated_object_detection/detection_parameters.yaml&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="comment">#<sp/>path<sp/>to<sp/>input<sp/>yaml<sp/>file</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal">)</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal">package_name<sp/>=<sp/></highlight><highlight class="stringliteral">&apos;rvc_rotated_object_detection&apos;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><ref refid="namespacesetup" kindref="compound">setup</ref>(</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/><sp/><sp/>name=package_name,</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><sp/><sp/><sp/><sp/>version=</highlight><highlight class="stringliteral">&apos;0.0.0&apos;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/><sp/><sp/>packages=find_packages(exclude=[</highlight><highlight class="stringliteral">&apos;test&apos;</highlight><highlight class="normal">]),</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><sp/><sp/><sp/><sp/>data_files=[</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(</highlight><highlight class="stringliteral">&apos;share/ament_index/resource_index/packages&apos;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>[</highlight><highlight class="stringliteral">&apos;resource/&apos;</highlight><highlight class="normal"><sp/>+<sp/>package_name]),</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(</highlight><highlight class="stringliteral">&apos;share/&apos;</highlight><highlight class="normal"><sp/>+<sp/>package_name,<sp/>[</highlight><highlight class="stringliteral">&apos;package.xml&apos;</highlight><highlight class="normal">]),</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(os.path.join(</highlight><highlight class="stringliteral">&apos;share&apos;</highlight><highlight class="normal">,<sp/>package_name,<sp/></highlight><highlight class="stringliteral">&apos;launch&apos;</highlight><highlight class="normal">),<sp/>glob(</highlight><highlight class="stringliteral">&apos;launch/*&apos;</highlight><highlight class="normal">)),</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/>],</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/>install_requires=[</highlight><highlight class="stringliteral">&apos;setuptools&apos;</highlight><highlight class="normal">],</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/>zip_safe=</highlight><highlight class="keyword">True</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/>maintainer=</highlight><highlight class="stringliteral">&apos;ros&apos;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/>maintainer_email=</highlight><highlight class="stringliteral">&apos;robotics@intel.com&apos;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/>description=</highlight><highlight class="stringliteral">&apos;Rotated<sp/>object<sp/>detection<sp/>using<sp/>ORB<sp/>features&apos;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/>license=</highlight><highlight class="stringliteral">&apos;Proprietary&apos;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/>tests_require=[</highlight><highlight class="stringliteral">&apos;pytest&apos;</highlight><highlight class="normal">],</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/>entry_points={</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="stringliteral">&apos;console_scripts&apos;</highlight><highlight class="normal">:<sp/>[</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="stringliteral">&apos;object_detection<sp/>=<sp/>rvc_rotated_object_detection.object_detection:main&apos;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>],</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/>},</highlight></codeline>
+<codeline lineno="36"><highlight class="normal">)</highlight></codeline>
+    </programlisting>
+    <location file="rvc_rotated_object_detection/setup.py"/>
+  </compounddef>
+</doxygen>

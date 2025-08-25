@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<robot name="table">
+  <link name="world">
+    <visual>
+      <origin rpy="0.0 0 1.57" xyz="-0.08 0.2 0.0"/>
+      <geometry>
+	  <mesh filename="package://rvc_dynamic_motion_controller_tradeshows/meshes/table.dae"/>
+      </geometry>
+    </visual>
+  </link>
+</robot>

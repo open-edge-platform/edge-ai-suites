@@ -1,0 +1,12 @@
+Source: ros-humble-openvino-yolov8-msgs
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), ros-humble-ament-cmake, ros-humble-ament-lint-common,ros-humble-std-msgs, ros-humble-tf2-msgs ,ros-humble-sensor-msgs
+Standards-Version: 4.1.4
+
+Package: ros-humble-openvino-yolov8-msgs
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, ros-humble-std-msgs, ros-humble-tf2-msgs ,ros-humble-sensor-msgs
+Description: Yolov8 Openvino ROS2 Harness Messages

@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespace_r_v_c" kind="namespace" language="C++">
+    <compoundname>RVC</compoundname>
+    <innerclass refid="class_r_v_c_1_1_object_detection" prot="public">RVC::ObjectDetection</innerclass>
+    <innerclass refid="struct_r_v_c_1_1_match_settings" prot="public">RVC::MatchSettings</innerclass>
+    <innerclass refid="struct_r_v_c_1_1_match_result" prot="public">RVC::MatchResult</innerclass>
+    <innerclass refid="class_r_v_c_1_1_object_matcher" prot="public">RVC::ObjectMatcher</innerclass>
+    <innerclass refid="struct_r_v_c_1_1_match_operation" prot="public">RVC::MatchOperation</innerclass>
+    <innerclass refid="class_r_v_c_1_1_pose_detector" prot="public">RVC::PoseDetector</innerclass>
+    <innerclass refid="class_r_v_c_1_1_profiler" prot="public">RVC::Profiler</innerclass>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_object_detection/rvc_object_detection_engine/include/rvc_object_detection.hpp" line="22" column="1"/>
+  </compounddef>
+</doxygen>

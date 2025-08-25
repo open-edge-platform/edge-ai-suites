@@ -1,0 +1,23 @@
+# IDE project specific files
+.idea
+.vscode
+*.code-workspace
+
+# Python related folders
+.pytest_cache/
+.venv/
+
+# CMake build files
+build*
+devel*
+*.cmake
+CMakeCache.txt
+**/CMakeFiles/
+install*
+log
+
+# other build files
+*.o
+*.bin
+*.pyc
+*/*.d

@@ -1,0 +1,10 @@
+Source: ros-humble-wandering-aaeon-tutorial
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-humble-wandering-aaeon-tutorial
+Architecture: any
+Depends: ros-humble-launch-ros, ros-humble-imu-tools, ros-humble-tf2-ros, ros-humble-aaeon-ros2-amr-interface, ros-humble-realsense2-camera, ros-humble-wandering, ros-humble-depthimage-to-laserscan, ros-humble-nav2-bringup, ros-humble-rtabmap-ros, ros-humble-imu-filter-madgwick, ros-humble-robotics-sdk-license, ros-humble-joint-state-publisher, ros-humble-robot-state-publisher, ros-humble-realsense2-description
+Description: Intel Wandering tutorial on Aaeon Robot

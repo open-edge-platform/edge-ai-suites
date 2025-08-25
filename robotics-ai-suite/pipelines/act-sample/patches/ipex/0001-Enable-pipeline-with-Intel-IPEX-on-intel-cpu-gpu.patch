@@ -1,0 +1,380 @@
+From af0b4c3285480a18c6f408652aebf5a3c646db12 Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Tue, 24 Dec 2024 16:09:45 +0000
+Subject: [PATCH 1/2] Enable pipeline with Intel IPEX on intel cpu/gpu.
+
+Signed-off-by: HKH347710 <kanghua.he@intel.com>
+---
+ assets/scene.xml        |   1 +
+ constants.py            |   1 +
+ detr/main.py            |  20 +++++++-
+ detr/models/detr_vae.py |   4 +-
+ imitate_episodes.py     | 107 +++++++++++++++++++++++++++++++++-------
+ policy.py               |   5 ++
+ sim_env.py              |   2 +
+ 7 files changed, 119 insertions(+), 21 deletions(-)
+
+diff --git a/assets/scene.xml b/assets/scene.xml
+index ae59450..0705acb 100644
+--- a/assets/scene.xml
++++ b/assets/scene.xml
+@@ -9,6 +9,7 @@
+         <map fogstart="1.5" fogend="5" force="0.1" znear="0.1"/>
+         <quality shadowsize="4096" offsamples="4"/>
+         <headlight ambient="0.4 0.4 0.4"/>
++        <global offwidth="640" />
+     </visual>
+ 
+     <worldbody>
+diff --git a/constants.py b/constants.py
+index f445350..b9eb747 100644
+--- a/constants.py
++++ b/constants.py
+@@ -22,6 +22,7 @@ SIM_TASK_CONFIGS = {
+         'num_episodes': 50,
+         'episode_len': 400,
+         'camera_names': ['top']
++        # 'camera_names': ['top', 'angle', 'left_wrist', 'right_wrist']
+     },
+ 
+     'sim_insertion_human': {
+diff --git a/detr/main.py b/detr/main.py
+index 3c4a339..26ba0f9 100644
+--- a/detr/main.py
++++ b/detr/main.py
+@@ -63,6 +63,8 @@ def get_args_parser():
+     parser.add_argument('--kl_weight', action='store', type=int, help='KL Weight', required=False)
+     parser.add_argument('--chunk_size', action='store', type=int, help='chunk_size', required=False)
+     parser.add_argument('--temporal_agg', action='store_true')
++    parser.add_argument('--device', action='store', type=str, help='device:CPU/GPU/CUDA', required=True)
++    parser.add_argument('--print_time', action='store_true', help='print time log in eval', required=False)
+ 
+     return parser
+ 
+@@ -75,7 +77,14 @@ def build_ACT_model_and_optimizer(args_override):
+         setattr(args, k, v)
+ 
+     model = build_ACT_model(args)
+-    model.cuda()
++    if args.device == 'CPU':
++        model.cpu()
++    if args.device == 'GPU':
++        model.to("xpu")
++    elif args.device == 'CUDA':
++        model.cuda()
++    else:
++        model.cpu()
+ 
+     param_dicts = [
+         {"params": [p for n, p in model.named_parameters() if "backbone" not in n and p.requires_grad]},
+@@ -98,7 +107,14 @@ def build_CNNMLP_model_and_optimizer(args_override):
+         setattr(args, k, v)
+ 
+     model = build_CNNMLP_model(args)
+-    model.cuda()
++    if args.device == 'CPU':
++        model.cpu()
++    if args.device == 'GPU':
++        model.to("xpu")
++    elif args.device == 'CUDA':
++        model.cuda()
++    else:
++        model.cpu()
+ 
+     param_dicts = [
+         {"params": [p for n, p in model.named_parameters() if "backbone" not in n and p.requires_grad]},
+diff --git a/detr/models/detr_vae.py b/detr/models/detr_vae.py
+index bccfca7..524d876 100644
+--- a/detr/models/detr_vae.py
++++ b/detr/models/detr_vae.py
+@@ -118,7 +118,7 @@ class DETRVAE(nn.Module):
+             all_cam_features = []
+             all_cam_pos = []
+             for cam_id, cam_name in enumerate(self.camera_names):
+-                features, pos = self.backbones[0](image[:, cam_id]) # HARDCODED
++                features, pos = self.backbones[0](image[:, cam_id].to(qpos.device))
+                 features = features[0] # take the last layer feature
+                 pos = pos[0]
+                 all_cam_features.append(self.input_proj(features))
+@@ -183,7 +183,7 @@ class CNNMLP(nn.Module):
+         # Image observation features and position embeddings
+         all_cam_features = []
+         for cam_id, cam_name in enumerate(self.camera_names):
+-            features, pos = self.backbones[cam_id](image[:, cam_id])
++            features, pos = self.backbones[cam_id](image[:, cam_id].to(qpos.device))
+             features = features[0] # take the last layer feature
+             pos = pos[0] # not used
+             all_cam_features.append(self.backbone_down_projs[cam_id](features))
+diff --git a/imitate_episodes.py b/imitate_episodes.py
+index 34f9a37..43a4375 100644
+--- a/imitate_episodes.py
++++ b/imitate_episodes.py
+@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
+ from copy import deepcopy
+ from tqdm import tqdm
+ from einops import rearrange
++import time
+ 
+ from constants import DT
+ from constants import PUPPET_GRIPPER_JOINT_OPEN
+@@ -18,6 +19,9 @@ from visualize_episodes import save_videos
+ 
+ from sim_env import BOX_POSE
+ 
++from ipex_llm.transformers import AutoModelForCausalLM
++from transformers import AutoTokenizer
++
+ import IPython
+ e = IPython.embed
+ 
+@@ -32,6 +36,8 @@ def main(args):
+     batch_size_train = args['batch_size']
+     batch_size_val = args['batch_size']
+     num_epochs = args['num_epochs']
++    device = args['device']
++    print_time = args['print_time']
+ 
+     # get task parameters
+     is_sim = task_name[:4] == 'sim_'
+@@ -85,14 +91,16 @@ def main(args):
+         'seed': args['seed'],
+         'temporal_agg': args['temporal_agg'],
+         'camera_names': camera_names,
+-        'real_robot': not is_sim
++        'real_robot': not is_sim,
++        'device': device,
++        'print_time': print_time,
+     }
+ 
+     if is_eval:
+         ckpt_names = [f'policy_best.ckpt']
+         results = []
+         for ckpt_name in ckpt_names:
+-            success_rate, avg_return = eval_bc(config, ckpt_name, save_episode=True)
++            success_rate, avg_return = eval_bc(config, ckpt_name, save_episode=False)
+             results.append([ckpt_name, success_rate, avg_return])
+ 
+         for ckpt_name, success_rate, avg_return in results:
+@@ -138,13 +146,19 @@ def make_optimizer(policy_class, policy):
+     return optimizer
+ 
+ 
+-def get_image(ts, camera_names):
++def get_image(device, ts, camera_names):
+     curr_images = []
+     for cam_name in camera_names:
+         curr_image = rearrange(ts.observation['images'][cam_name], 'h w c -> c h w')
+         curr_images.append(curr_image)
+     curr_image = np.stack(curr_images, axis=0)
+-    curr_image = torch.from_numpy(curr_image / 255.0).float().cuda().unsqueeze(0)
++
++    if device == 'CPU':
++        curr_image = torch.from_numpy(curr_image / 255.0).float().cpu().unsqueeze(0)
++    if device == 'GPU':
++        curr_image = torch.from_numpy(curr_image / 255.0).float().xpu().unsqueeze(0)
++    elif device == 'CUDA':
++        curr_image = torch.from_numpy(curr_image / 255.0).float().cuda().unsqueeze(0)
+     return curr_image
+ 
+ 
+@@ -161,13 +175,29 @@ def eval_bc(config, ckpt_name, save_episode=True):
+     task_name = config['task_name']
+     temporal_agg = config['temporal_agg']
+     onscreen_cam = 'angle'
++    device = config['device']
++    print('device:', device)
++    print_time = config['print_time']
+ 
+     # load policy and stats
+     ckpt_path = os.path.join(ckpt_dir, ckpt_name)
+     policy = make_policy(policy_class, policy_config)
+-    loading_status = policy.load_state_dict(torch.load(ckpt_path))
+-    print(loading_status)
+-    policy.cuda()
++    if device == 'CPU':
++        loading_status = policy.deserialize(torch.load(ckpt_path, map_location=torch.device('cpu')))
++        print(loading_status)
++        policy.cpu()
++    elif device == 'GPU':
++        loading_status = policy.deserialize(torch.load(ckpt_path, map_location=torch.device('xpu')))
++        print(loading_status)
++        policy.to("xpu")
++    elif device == 'CUDA':
++        loading_status = policy.deserialize(torch.load(ckpt_path))
++        print(loading_status)
++        policy.cuda()
++    else:
++        loading_status = policy.deserialize(torch.load(ckpt_path, map_location=torch.device('cpu')))
++        print(loading_status)
++        policy.cpu()
+     policy.eval()
+     print(f'Loaded: {ckpt_path}')
+     stats_path = os.path.join(ckpt_dir, f'dataset_stats.pkl')
+@@ -195,7 +225,7 @@ def eval_bc(config, ckpt_name, save_episode=True):
+ 
+     max_timesteps = int(max_timesteps * 1) # may increase for real-world tasks
+ 
+-    num_rollouts = 50
++    num_rollouts = 10
+     episode_returns = []
+     highest_rewards = []
+     for rollout_id in range(num_rollouts):
+@@ -216,22 +246,39 @@ def eval_bc(config, ckpt_name, save_episode=True):
+ 
+         ### evaluation loop
+         if temporal_agg:
+-            all_time_actions = torch.zeros([max_timesteps, max_timesteps+num_queries, state_dim]).cuda()
+-
+-        qpos_history = torch.zeros((1, max_timesteps, state_dim)).cuda()
++            if device == 'CPU':
++                all_time_actions = torch.zeros([max_timesteps, max_timesteps+num_queries, state_dim]).cpu()
++            elif device == 'GPU':
++                all_time_actions = torch.zeros([max_timesteps, max_timesteps+num_queries, state_dim]).to('xpu')
++            elif device == 'CUDA':
++                all_time_actions = torch.zeros([max_timesteps, max_timesteps+num_queries, state_dim]).cuda()
++            else:
++                all_time_actions = torch.zeros([max_timesteps, max_timesteps+num_queries, state_dim]).cpu()
++
++        if device == 'CUDA':
++            qpos_history = torch.zeros((1, max_timesteps, state_dim)).cuda()
++        else:
++            qpos_history = np.zeros((max_timesteps, state_dim))
+         image_list = [] # for visualization
+         qpos_list = []
+         target_qpos_list = []
+         rewards = []
+         with torch.inference_mode():
++            latencies_all = []
++            time0 = time.time()
+             for t in range(max_timesteps):
++                latencies = []
++                onscreen_time = time.time()
++
+                 ### update onscreen render and wait for DT
+                 if onscreen_render:
+                     image = env._physics.render(height=480, width=640, camera_id=onscreen_cam)
+                     plt_img.set_data(image)
+                     plt.pause(DT)
++                latencies.append(time.time()-onscreen_time)
+ 
+                 ### process previous timestep to get qpos and image_list
++                pre_time = time.time()
+                 obs = ts.observation
+                 if 'images' in obs:
+                     image_list.append(obs['images'])
+@@ -239,23 +286,33 @@ def eval_bc(config, ckpt_name, save_episode=True):
+                     image_list.append({'main': obs['image']})
+                 qpos_numpy = np.array(obs['qpos'])
+                 qpos = pre_process(qpos_numpy)
+-                qpos = torch.from_numpy(qpos).float().cuda().unsqueeze(0)
+-                qpos_history[:, t] = qpos
+-                curr_image = get_image(ts, camera_names)
++
++                if device == 'CPU':
++                    qpos = torch.from_numpy(qpos).float().cpu().unsqueeze(0)
++                elif device == 'GPU':
++                    qpos = torch.from_numpy(qpos).float().to('xpu').unsqueeze(0)
++                elif device == "CUDA":
++                    qpos = torch.from_numpy(qpos).float().cuda().unsqueeze(0)
++                # qpos_history[:, t] = qpos
++                curr_image = get_image(device, ts, camera_names)
++                latencies.append(time.time()-pre_time)
+ 
+                 ### query policy
++                query_time = time.time()
+                 if config['policy_class'] == "ACT":
++                    model_time = time.time()
+                     if t % query_frequency == 0:
+                         all_actions = policy(qpos, curr_image)
++                    latencies.append(time.time()-model_time)
+                     if temporal_agg:
+                         all_time_actions[[t], t:t+num_queries] = all_actions
+                         actions_for_curr_step = all_time_actions[:, t]
+                         actions_populated = torch.all(actions_for_curr_step != 0, axis=1)
+                         actions_for_curr_step = actions_for_curr_step[actions_populated]
+                         k = 0.01
+-                        exp_weights = np.exp(-k * np.arange(len(actions_for_curr_step)))
++                        exp_weights = np.exp(-k * np.arange(len(actions_for_curr_step)), dtype=np.float32)
+                         exp_weights = exp_weights / exp_weights.sum()
+-                        exp_weights = torch.from_numpy(exp_weights).cuda().unsqueeze(dim=1)
++                        exp_weights = torch.from_numpy(exp_weights).to(qpos.device).unsqueeze(dim=1)
+                         raw_action = (actions_for_curr_step * exp_weights).sum(dim=0, keepdim=True)
+                     else:
+                         raw_action = all_actions[:, t % query_frequency]
+@@ -263,20 +320,34 @@ def eval_bc(config, ckpt_name, save_episode=True):
+                     raw_action = policy(qpos, curr_image)
+                 else:
+                     raise NotImplementedError
++                latencies.append(time.time()-query_time)
+ 
+                 ### post-process actions
++                post_time = time.time()
+                 raw_action = raw_action.squeeze(0).cpu().numpy()
+                 action = post_process(raw_action)
+                 target_qpos = action
++                latencies.append(time.time()-post_time)
+ 
+                 ### step the environment
++                env_time = time.time()
+                 ts = env.step(target_qpos)
++                latencies.append(time.time()-env_time)
+ 
+                 ### for visualization
+                 qpos_list.append(qpos_numpy)
+                 target_qpos_list.append(target_qpos)
+                 rewards.append(ts.reward)
+-
++                if print_time:
++                    print(f'{t} - screen render:{latencies[0]:.9f}s, process image:{(latencies[1]):.9f}s, model inference:{latencies[2]:.9f}, query policy:{(latencies[3]):.9f}s, post process:{(latencies[4]):.9f}, env:{(latencies[5]):.9f}')
++                latencies_all.append(latencies)
++
++            print(f'Avg fps {max_timesteps / (time.time() - time0)}')
++            if print_time:
++                latencies_all = np.array(latencies_all)
++                average_latency = np.mean(latencies_all[1:], axis=0)
++                print(f'==================Rollout {rollout_id} Avg Latency:==================\n \
++                    screen render:{average_latency[0]:.9f}s, process image:{average_latency[1]:.9f}s, model inference:{average_latency[2]:.9f}, query policy:{average_latency[3]:.9f}s, post process:{average_latency[4]:.9f}, env:{average_latency[5]:.9f}')
+             plt.close()
+         if real_robot:
+             move_grippers([env.puppet_bot_left, env.puppet_bot_right], [PUPPET_GRIPPER_JOINT_OPEN] * 2, move_time=0.5)  # open
+@@ -424,6 +495,8 @@ if __name__ == '__main__':
+     parser.add_argument('--seed', action='store', type=int, help='seed', required=True)
+     parser.add_argument('--num_epochs', action='store', type=int, help='num_epochs', required=True)
+     parser.add_argument('--lr', action='store', type=float, help='lr', required=True)
++    parser.add_argument('--device', action='store', type=str, help='device:CPU/GPU/CUDA', required=True)
++    parser.add_argument('--print_time', action='store_true', help='print time log in eval', required=False)
+ 
+     # for ACT
+     parser.add_argument('--kl_weight', action='store', type=int, help='KL Weight', required=False)
+diff --git a/policy.py b/policy.py
+index 7b091e5..0c3fe98 100644
+--- a/policy.py
++++ b/policy.py
+@@ -40,6 +40,11 @@ class ACTPolicy(nn.Module):
+     def configure_optimizers(self):
+         return self.optimizer
+ 
++    def serialize(self):
++        return self.state_dict()
++
++    def deserialize(self, model_dict):
++        return self.load_state_dict(model_dict)
+ 
+ class CNNMLPPolicy(nn.Module):
+     def __init__(self, args_override):
+diff --git a/sim_env.py b/sim_env.py
+index b79b935..857261c 100644
+--- a/sim_env.py
++++ b/sim_env.py
+@@ -108,6 +108,8 @@ class BimanualViperXTask(base.Task):
+         obs['env_state'] = self.get_env_state(physics)
+         obs['images'] = dict()
+         obs['images']['top'] = physics.render(height=480, width=640, camera_id='top')
++        obs['images']['left_wrist'] = physics.render(height=480, width=640, camera_id='left_wrist')
++        obs['images']['right_wrist'] = physics.render(height=480, width=640, camera_id='right_wrist')
+         obs['images']['angle'] = physics.render(height=480, width=640, camera_id='angle')
+         obs['images']['vis'] = physics.render(height=480, width=640, camera_id='front_close')
+ 
+-- 
+2.34.1
+

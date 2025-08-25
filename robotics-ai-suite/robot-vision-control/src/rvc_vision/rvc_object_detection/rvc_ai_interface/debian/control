@@ -1,0 +1,12 @@
+Source: ros-humble-rvc-ai-interface
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0), libopencv-dev, ros-humble-ament-cmake, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-rvc-vision-messages
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-rvc-ai-interface
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libopencv-dev, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-rvc-vision-messages
+Description: Interface every 2.5D AI plugin shall inmplement

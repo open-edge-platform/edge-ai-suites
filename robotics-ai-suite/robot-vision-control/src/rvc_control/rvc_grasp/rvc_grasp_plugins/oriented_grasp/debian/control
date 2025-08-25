@@ -1,0 +1,12 @@
+Source: ros-humble-oriented-grasp
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0), ros-humble-ament-cmake, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-pluginlib, ros-humble-rclcpp, ros-humble-rclcpp-components, ros-humble-rvc-grasp-interface, ros-humble-rvc-vision-messages, ros-humble-std-msgs, ros-humble-tf2, ros-humble-tf2-eigen, ros-humble-tf2-geometry-msgs, ros-humble-tf2-ros, ros-humble-visualization-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-oriented-grasp
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-humble-pluginlib, ros-humble-rvc-grasp-interface, ros-humble-rvc-vision-messages, ros-humble-std-msgs, ros-humble-tf2, ros-humble-tf2-eigen, ros-humble-tf2-geometry-msgs, ros-humble-tf2-ros, ros-humble-visualization-msgs
+Description: Non oriented grasp plugin

@@ -6,13 +6,9 @@ In this tutorial you will learn how to download and convert the `RADDet` dataset
 
 ### Download
 
-Download dataset from website: https://github.com/ZhangAoCanada/RADDet
+Download dataset from [BaiduPan](https://pan.baidu.com/s/1kBgFDzP04MUs61NF6NTPGA?pwd=i98h)
 
-Refer to [how to use](https://github.com/ZhangAoCanada/RADDet?tab=readme-ov-file#how-to-use) in the website above to download the dataset.
-
-Then from [BaiduPan](https://pan.baidu.com/s/1T3p5wrxgy0gdsZBRFqapVQ?pwd=szax) to download the corresponding ADC data.
-
-**Attention:** Please keep the same directory tree as shown in [OneDrive](https://uottawa-my.sharepoint.com/personal/azhan085_uottawa_ca/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fazhan085%5Fuottawa%5Fca%2FDocuments%2FRADDet%5FDATASET&ga=1)
+**Attention:** 
 
 Download the dataset and arrange it as the following directory tree:
 

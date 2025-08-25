@@ -11,7 +11,13 @@ on:
       - 'manufacturing-ai-suite/wind-turbine-anomaly-detection/*'
   workflow_call:
   workflow_dispatch:
-permissions: {}
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: read
+  security-events: write
+  actions: read
 
 jobs:
   windturbine-sample-app-pre-merge-build:
@@ -81,3 +87,8 @@ jobs:
         cd "${{ github.workspace }}"
         cd ./timeseries/manufacturing-ai-suite/wind-turbine-anomaly-detection
         make down
+
+  wind-turbine-anomaly-detection-scans:
+    uses: ./.github/workflows/windturbine-sampleapp-scans.yml
+    with:
+      target: all-scans

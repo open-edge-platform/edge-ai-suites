@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<robot name="d405camera" xmlns:xacro="http://ros.org/wiki/xacro">
+<xacro:arg name="use_nominal_extrinsics" default="false"/>
+<xacro:arg name="name" default="d405camera"/>
+<xacro:arg name="use_mesh" default="true"/>
+<xacro:arg name="use_plug" default="true"/>
+  <xacro:include filename="$(find realsense2_description)/urdf/_d415.urdf.xacro" />
+  <link name="tool0" />
+  <xacro:sensor_d415 parent="tool0" name="$(arg name)" use_mesh="$(arg use_mesh)" add_plug="$(arg use_plug)" use_nominal_extrinsics="$(arg use_nominal_extrinsics)" >
+      <origin xyz="-0.002900 0.05170 0.144000" rpy="0.155235 -0.913993 -1.697094"/>
+
+  </xacro:sensor_d415>
+</robot>
+

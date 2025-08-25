@@ -30,10 +30,11 @@ if [[ "$NPU_ON" == "true" ]]; then
         --device /dev/accel \
         --group-add $(stat -c "%g" /dev/accel/accel* | sort -u | head -n 1) \
         --env ZE_ENABLE_ALT_DRIVERS=libze_intel_vpu.so \
+        --user root \
         -e DISPLAY=$DISPLAY \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
         -v $HOME/.Xauthority:/root/.Xauthority:rw \
-        -w /root/vppsdk \
+        -w /home/vpp \
         $DOCKER_IMAGE
 else
     docker run -it --net=host \
@@ -44,9 +45,11 @@ else
         --cap-add=SYS_ADMIN \
         --device /dev/dri \
         --group-add $VIDEO_GROUP_ID --group-add $RENDER_GROUP_ID \
+        --user root \
+        --entrypoint /home/vpp/vppsample/docker/svet.sh \
         -e DISPLAY=$DISPLAY \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
         -v $HOME/.Xauthority:/root/.Xauthority:rw \
-        -w /root/vppsdk \
+        -w /home/vpp \
         $DOCKER_IMAGE
 fi
