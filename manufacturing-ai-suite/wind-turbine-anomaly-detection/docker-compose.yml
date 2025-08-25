@@ -88,7 +88,6 @@ services:
       - ia-mqtt-broker
     security_opt:
     - no-new-privileges
-    privileged: true
     read_only: true
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9092/kapacitor/v1/ping || exit 1"]
