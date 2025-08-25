@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespacerotated__object__detection" kind="namespace" language="Python">
+    <compoundname>rotated_object_detection</compoundname>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="rotated__object__detection_8launch_8py_1a7e08d0978a3180f0e456d91a2cbefc21" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def rotated_object_detection.generate_launch_description</definition>
+        <argsstring>()</argsstring>
+        <name>generate_launch_description</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_rotated_object_detection/launch/rotated_object_detection.launch.py" line="8" column="1" bodyfile="rvc_rotated_object_detection/launch/rotated_object_detection.launch.py" bodystart="8" bodyend="16"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_rotated_object_detection/launch/rotated_object_detection.launch.py" line="1" column="1"/>
+  </compounddef>
+</doxygen>

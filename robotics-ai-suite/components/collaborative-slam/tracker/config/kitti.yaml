@@ -1,0 +1,172 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+univloc_tracker:
+  # ID of this tracker
+  ID: 0
+
+  # The name of world coodinate in tf tree. Default is map
+  map_frame: 'map'
+
+  # Whether to get camera info from topic
+  # Previously used euroc_camera_info.bag is created by us and is not officially supported
+  # Also, we occasionally encounter the problem that the camera info bag cannot be received
+  # Therefore, we choose to directly feed the parameters of camera info to the system
+  get_camera_info_from_topic: false
+
+  # Monocular, Stereo, RGBD, Monocular_Inertial, Stereo_Inertial or RGBD_Inertial
+  camera_setup: 'Stereo'
+
+  # Default prefix of all the input topics
+  camera: 'camera'
+
+  # Camera intrinsics, necessary if get_camera_info_from_topic equals false
+  camera_intrinsics: [0.0]
+
+  # Camera distortion, necessary if get_camera_info_from_topic equals false
+  camera_distortion: [0.0]
+
+  # FPS of input camera images
+  camera_fps: 10.0
+
+  # Camera color order, options: "Gray", "RGB", "RGBA", "BGR", "BGRA"
+  camera_color_order: 'Gray'
+
+  # Topic of the color image; leave blank to use "$(arg camera)/color/image_raw"
+  image_topic: '/kitti/camera_gray_left/image_rect'
+
+  # Topic of the color image; leave blank to use "$(arg camera)/aligned_depth_to_color/image_raw"
+  depth_topic: ''
+
+  # Topic of camera info; leave blank to use (right_)image_topic with last substring replaced by "camera_info"
+  camera_info_topic: ''
+
+  # Topic of the right camera when receiving stereo image input
+  right_image_topic: '/kitti/camera_gray_right/image_rect'
+
+  # If using raw transport when enabling image transport feature.
+  raw_transport: true
+
+  # mapping, localization or relocalization
+  slam_mode: 'mapping'
+
+  # The usage model of the camera, Perspective or Fisheye
+  model_type: 'Perspective'
+
+  # Size of the input data queue; set 1 in real-time usage to always process the latest image
+  # Set 0 to specify an unlimited size to ensure every image be processed sequentially (with lag)
+  queue_size: 0
+
+  # Reset the system if consecutively lost for a specified number of frames; set 0 to never reset
+  num_lost_frames_to_reset: 0
+
+  # Vocabulary file, either filename under the config folder or an absolute path
+  vocabulary: 'orb_vocab.dbow2'
+
+  # Whether to publish the estimated pose onto /tf
+  publish_tf: true
+
+  # Child frame for publishing poses to /tf; usually "base_link" or "camera_link"
+  # Leave blank to use image_frame
+  pub_tf_child_frame: ''
+
+  # Parent frame for publishing poses to /tf; usually "map"
+  pub_tf_parent_frame: ''
+
+  # The pose of the camera in the tf2 message
+  image_frame: ''
+
+  # Whether to get camera extrinsics (w.r.t. robot base) from /tf
+  get_camera_extrin_from_tf: false
+
+  # Timeout to query camera extrinsics from /tf
+  camera_extrin_query_timeout: 10.0
+
+  # Used only if get_camera_extrin_from_tf is true
+  baselink_frame: 'base_link'
+
+  # Whether to clean redundant keyframe
+  clean_keyframe: true
+
+  # Whether to fuse odom data
+  use_odom: false
+
+  # Frame name of odom, if use_odom is true
+  odom_frame: ''
+
+  ### ORB feature extraction parameters
+  # Maximal number of keypoints
+  max_num_keypoints: 2000
+
+  # Image scaling factor of the pyramid
+  orb_scale_factor: 1.2
+
+  # Number of levels in the pyramid
+  orb_num_levels: 8
+
+  # Initial FAST threshold
+  orb_ini_fast_threshold: 12
+
+  # Minimum FAST threshold
+  orb_min_fast_threshold: 7
+
+  # Mask rectangle
+  # Must provide 4 rectangles and each rectangle param is xmin, xmax, ymin, ymax;  Leave blank if no mask require
+  # orb_mask_rectangles : [0.0, 1.0, 0.0, 0.1, 0.0, 1.0, 0.90, 1.0, 0.0, 0.2, 0.7, 1.0, 0.8, 1.0, 0.7, 1.0]
+  orb_mask_rectangles: [0.0]
+
+  # Mask Image
+  # Provide mask image in PNG or JPEG file with region in black and white. Keypoints inside black region will be drop
+  # Mask image width and height must match camera width and height
+  orb_mask_image: ''
+
+  ### More options
+  # Whether to visualize keypoints in a window
+  gui: false
+
+  # Whether to launch rviz
+  rviz: false
+
+  # Whether to launch the tracker node with gdb for debugging
+  gdb: false
+
+  # The path to save the trajectory of tracker node
+  traj_store_path: ''
+
+  # The level of the log info
+  log_level: 'info'
+
+  # The transformation matrix between camera coordinate and image frame (T_ic)
+  T_image_to_camera: [0.0]
+
+  # For stereo cameras, it is the value of the baseline between the left and right cameras multiplied by the focal length fx.
+  # If set as default value (0.0), it will automatically be set using camera_baseline and focal length fx.
+  focal_x_baseline: 386.1448
+
+  # The distance between lenses of a stereo camera (unit in meter)
+  # reference data for RealSense cameras: 50mm for D435, 55mm for D415, 95ms for D455
+  camera_baseline: 0.53716571886
+
+  # Depth threshold factor for RGBD and stereo input
+  # For stereo/RGBD input, it will be multiplied with camera_baseline to obtain the true depth threshold
+  depth_threshold: 40.0
+
+  # Scale factor of the depth values (in inverse meter; 1000 means 0.001 m)
+  depthmap_factor: 1000.0
+
+  # Whether to enable rectifier for stereo camera
+  enable_rectifier: false
+
+  # Whether stereo rectification parameters are provided
+  rectifier_params_given: true
+
+  # namespace under which topics are created
+  namespace: ''
+
+  # Initializer parameter
+  num_min_triangulated_pts: 100
+
+  # Divisor to trigger relocalization in localization mode
+  reloc_trig_divisor: 1
+
+  # Compute and publish covariance matrix of pose in mapping mode, will further enable in localization and remapping mode
+  need_covariance: false

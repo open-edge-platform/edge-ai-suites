@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rvc_rotated_object_detection</name>
+  <version>2.0.0</version>
+  <description>Rotated object detection using ORB features</description>
+  <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
+  <license>Proprietary</license>
+
+  <build_depend>generate_parameter_library</build_depend>
+  <build_depend>generate_parameter_library_py</build_depend>
+
+  <depend>rclpy</depend>
+  <depend>image_transport</depend>
+  <depend>image_geometry</depend>
+  <depend>cv_bridge</depend>
+  <depend>python3-opencv</depend>
+  <depend>rvc_vision_messages</depend>
+  <depend>tf2_ros</depend>
+  <depend>python3-transforms3d</depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

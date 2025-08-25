@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+
+INSTALL_DIR=opt/ros/humble/share/collab-slam
+
+override_dh_fixperms:
+	dh_fixperms
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	install -d $(CURDIR)/debian/ros-humble-cslam-tutorial-two-robot/$(INSTALL_DIR)/tutorial-two-robot
+	install -m 0755 scripts/cslam-two-robot.sh $(CURDIR)/debian/ros-humble-cslam-tutorial-two-robot/$(INSTALL_DIR)/tutorial-two-robot
+	dh_auto_install --

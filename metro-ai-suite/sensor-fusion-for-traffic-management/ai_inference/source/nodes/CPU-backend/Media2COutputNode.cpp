@@ -71,6 +71,7 @@ void Media2COutputNodeWorker::process(std::size_t batchIdx)
 
         hce::ai::inference::TimeStamp_t timeMeta;
         hce::ai::inference::InferenceTimeStamp_t inferenceTimeMeta;
+        hce::ai::inference::VideoTimeStamp_t videoTimeMeta;
         std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
         std::chrono::time_point<std::chrono::high_resolution_clock> endTime;
 
@@ -78,6 +79,7 @@ void Media2COutputNodeWorker::process(std::size_t batchIdx)
         roisTree.clear();
         std::vector<double> latencies;
         std::vector<double> inferenceLatencies;
+        std::vector<double> videoLatencies;
         endTime = std::chrono::high_resolution_clock::now();
 
         hva::hvaBlob_t::Ptr mediaBlob;
@@ -87,9 +89,13 @@ void Media2COutputNodeWorker::process(std::size_t batchIdx)
         std::chrono::duration<double, std::milli> latencyDuration = endTime - timeMeta.timeStamp;
         double latency = latencyDuration.count();
         double inferenceLatency = 0.0;
+        double videoLatency = 0.0;
 
         if (vecBlobInput[0]->get(0)->getMeta(inferenceTimeMeta) == hva::hvaSuccess) {
             inferenceLatency = std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
+        }
+        if (vecBlobInput[0]->get(0)->getMeta(videoTimeMeta) == hva::hvaSuccess) {
+            videoLatency = std::chrono::duration<double, std::milli>(videoTimeMeta.endTime - videoTimeMeta.startTime).count();
         }
 
         for (size_t portId = 0; portId < MEDIA_2C_OUTPUT_NODE_INPORT_NUM; portId++) {
@@ -106,6 +112,10 @@ void Media2COutputNodeWorker::process(std::size_t batchIdx)
             mediaBlob->get(0)->getMeta(inferenceTimeMeta);
             latencyDuration = inferenceTimeMeta.endTime - inferenceTimeMeta.startTime;
             inferenceLatencies.push_back(latencyDuration.count());
+
+            mediaBlob->get(0)->getMeta(videoTimeMeta);
+            latencyDuration = videoTimeMeta.endTime - videoTimeMeta.startTime;
+            videoLatencies.push_back(latencyDuration.count());
 
             for (const auto &item : mediaBuf->rois) {
                 boost::property_tree::ptree roiInfoTree;
@@ -164,12 +174,14 @@ void Media2COutputNodeWorker::process(std::size_t batchIdx)
         }
         jsonTree.put("inference_latency", inferenceLatency);
         jsonTree.put("latency", latency);
+        jsonTree.put("video_latency", videoLatency);
 
         for (size_t portId = 0; portId < MEDIA_2C_OUTPUT_NODE_INPORT_NUM; portId++) {
             double latency = latencies[portId];
             double inferenceLatency = inferenceLatencies[portId];
             jsonTree.put("inference_latency" + std::to_string(portId + 1), inferenceLatency);
             jsonTree.put("latency" + std::to_string(portId + 1), latency);
+            jsonTree.put("video_latency" + std::to_string(portId + 1), videoLatencies[portId]);
         }
 
         std::stringstream ss;

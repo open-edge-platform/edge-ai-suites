@@ -13,7 +13,7 @@
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
     ```sh
     git clone https://github.com/open-edge-platform/edge-ai-suites.git
-    cd manufacturing-ai-suite/industrial-edge-insights-vision
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
     ```
 2.  Set app specific environment variable file
     ```sh
@@ -23,6 +23,11 @@
 3.  Edit the HOST_IP and other environment variables in `.env` file as follows
     ```sh
     HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.
+
+    MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
+
+    MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
+    MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
 
     MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
@@ -103,7 +108,10 @@
     Posting payload to REST server at http://<HOST_IP>:8080/pipelines/user_defined_pipelines/pallet_defect_detection
     Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "4b36b3ce52ad11f0ad60863f511204e2"
     ```
-    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:8889/pdd/
+    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to below url
+    ```
+    http://<HOST_IP>:8889/pdd/
+    ```
     
 8.  Get status of pipeline instance(s) running.
     ```sh

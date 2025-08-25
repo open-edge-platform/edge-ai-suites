@@ -1,0 +1,10 @@
+[Unit]
+Description=ROS2 FastDDS Discovery server
+Documentation=https://fast-dds.docs.eprosima.com/en/latest/fastdds/ros2/discovery_server/ros2_discovery_server.html
+Documentation=https://docs.ros.org/en/humble/Tutorials/Advanced/Discovery-Server/Discovery-Server.html
+Documentation=https://iroboteducation.github.io/create3_docs/setup/discovery-server/
+
+[Service]
+ExecStart=/usr/bin/bash -c "source /opt/ros/humble/setup.bash; exec fastdds discovery --server-id 0"
+Restart=on-failure
+Type=exec

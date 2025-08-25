@@ -1,0 +1,9 @@
+<library path="rvc_panel_rviz2_plugin">
+  <class name="rvc_panel/RVCPanel"
+         type="rvc_panel::RVCPanel"
+         base_class_type="rviz_common::Panel">
+    <description>
+      A panel widget allowing RVC demo controls
+    </description>
+  </class>
+</library>

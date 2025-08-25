@@ -1,0 +1,10 @@
+Source: ros-humble-cslam-tutorial-fastmapping
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-humble-cslam-tutorial-fastmapping
+Architecture: any
+Depends: ros-humble-cslam-tutorial-common, ros-humble-bagfile-robot1,
+Description: Intel Collaborative SLAM tutorial for Fastmapping

@@ -1,0 +1,31 @@
+*.pyc
+*.iml
+*.swp
+.project
+.pydevproject
+.DS_Store
+.idea
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# colcon/CMake output
+build
+install
+log
+
+#debian files
+*.deb
+*.tar.gz
+*.log
+*.changes
+*.buildinfo
+*.dsc
+*.ddeb
+debhelper-build-stamp
+.DS_Store
+.debhelper
+*.build
+*.substvars
+/*/debian/files

@@ -32,7 +32,33 @@ sudo -E apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plug
 
 
 
-3. Verify that the installation is successful by running the `hello-world` image:
+3. Set proxy(Optional).
+
+Note you may need to set proxy for docker.
+
+```bash
+sudo mkdir -p /etc/systemd/system/docker.service.d
+sudo vim /etc/systemd/system/docker.service.d/http-proxy.conf
+
+# Modify the file contents as follows
+[Service]
+Environment="HTTP_PROXY=http://proxy.example.com:8080"
+Environment="HTTPS_PROXY=http://proxy.example.com:8080"
+Environment="NO_PROXY=localhost,127.0.0.1"
+```
+
+
+
+Then restart docker:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+
+
+4. Verify that the installation is successful by running the `hello-world` image:
 
 ```bash
 sudo docker run hello-world
@@ -40,7 +66,7 @@ sudo docker run hello-world
 
 This command downloads a test image and runs it in a container. When the container runs, it prints a confirmation message and exits.
 
-4. Add user to group
+5. Add user to group
 
 ```bash
 sudo usermod -aG docker $USER
@@ -49,7 +75,7 @@ newgrp docker
 
 
 
-5. Then pull base image
+6. Then pull base image
 
 ```bash
 docker pull ubuntu:22.04
@@ -63,11 +89,7 @@ docker pull ubuntu:22.04
 bash install_driver_related_libs.sh
 ```
 
-
-
-**Note that above driver is the BKC(best known configuration) version, which can get the best performance but with many restrictions when installing the driver and building the docker image.**
-
-**If BKC is not needed and other versions of the driver are already installed on the machine, you don't need to do this step.**
+**If driver are already installed on the machine, you don't need to do this step.**
 
 
 
@@ -77,15 +99,17 @@ bash install_driver_related_libs.sh
 
 ##### Build and run docker image
 
+Usage:
+
 ```bash
 bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 22.04> 
 ```
 
 ```
-bash run_docker.sh <DOCKER_IMAGE, default tfcc:latest> <NPU_ON, default true>
+bash run_docker.sh <DOCKER_IMAGE, default tfcc:latest> <NPU_ON, default false>
 ```
 
-
+Example:
 
 ```bash
 cd $PROJ_DIR/docker
@@ -96,6 +120,14 @@ bash run_docker.sh tfcc:latest false
 
 ##### Enter docker
 
+Get the container id by command bellow:
+
+```bash
+docker ps -a
+```
+
+And then enter docker by command bellow:
+
 ```bash
 docker exec -it <container id> /bin/bash
 ```
@@ -104,7 +136,9 @@ docker exec -it <container id> /bin/bash
 
 ##### Copy dataset
 
-```
+If you want to copy dataset or other files to docker, you can refer the command bellow:
+
+```bash
 docker cp /path/to/dataset <container id>:/path/to/dataset
 ```
 
@@ -142,14 +176,32 @@ echo $(getent group render | awk -F: '{printf "%s\n", $3}')
 
 
 ##### Build and run docker image
+Uasge:
+```bash
+cd $PROJ_DIR/docker
+docker compose up <services-name> -d # tfcc and tfcc-npu. tfcc-npu means with NPU support
+```
+
+Example:
 
 ```bash
 cd $PROJ_DIR/docker
 docker compose up tfcc -d
 ```
 
-##### Enter docker
+Note if you need NPU support, for example, on MTL platform please run the command bellow:
 
+```bash
+cd $PROJ_DIR/docker
+docker compose up tfcc-npu -d
+```
+
+##### Enter docker
+Usage:
+```bash
+docker compose exec <services-name> /bin/bash
+```
+Example:
 ```bash
 docker compose exec tfcc /bin/bash
 ```

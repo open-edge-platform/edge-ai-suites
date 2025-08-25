@@ -23,18 +23,28 @@ By following this guide, you will learn how to:
 
 ## Set up and First Use
 
-1. **Clone the Repository and Build Containers**:
+1. **Clone the Repository and update `.env` file**:
     - Create and navigate to directory:
       ```bash
         git clone https://github.com/open-edge-platform/edge-ai-suites.git
         cd edge-ai-suites/metro-ai-suite/image-based-video-search
-        docker compose build
       ```
+    
+    > Note: The below step is required for deployment with certain pre-release images
+    - Update `DOCKER_REGISTRY` variable in `.env` file present at `edge-ai-suites/metro-ai-suite/image-based-video-search/`. The recommended setting to use pre-release images is: `DOCKER_REGISTRY=docker.io/`
+      Please remember to include `/` at the end.
 <!--
 a pre-step to prepare models may be needed
 -->
 
-2. **Download the Models**:
+2. **Build from Source (Optional)**:
+    - Run the below command to build the images from source
+      ```bash
+        docker compose build
+      ```
+    > Note: You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
+
+3. **Download the Models**:
     - Download the models
       <details open>
       <summary>
@@ -85,7 +95,7 @@ a pre-step to prepare models may be needed
 
       docker pull openvino/ubuntu22_dev:2024.6.0
       $MODELS_PATH="$PWD\models"
- 
+
       docker run --rm `
           -e http_proxy -e https_proxy -e no_proxy \
           -v ${MODELS_PATH}:/output `
@@ -93,7 +103,7 @@ a pre-step to prepare models may be needed
           "omz_downloader --name resnet-50-pytorch --output_dir models && `
           omz_converter --name resnet-50-pytorch --download_dir models --output_dir models && `
           cp -r ./models/public/resnet-50-pytorch /output"
-      
+
       docker run --rm `
           -e http_proxy -e https_proxy -e no_proxy \
           -v ${MODELS_PATH}:/output `
@@ -105,35 +115,36 @@ a pre-step to prepare models may be needed
 
       </details>
 
-3. **Start the Application**:
+4. **Start the Application**:
     - Go back to the folder of compose.yml and run the application using Docker Compose:
       ```bash
       cd ../..
       docker compose up -d
       ```
 
-4. **Verify the Application**:
+5. **Verify the Application**:
     - Check that the application is running:
       ```bash
       docker compose ps
       ```
 
-5. **Access the Application**:
+6. **Access the Application**:
     - Open a browser and go to the following endpoints to access the application:
-      - Stream UI: `http://localhost:8889/stream`
       - App UI: `http://localhost:3000`
       - Search UI: `http://localhost:9000/docs`
       - MilvusDB UI: `http://localhost:8000/`
+      - Stream UI: `http://localhost:8889/stream`. To access this stream remotely, open this url `rtsp://<ip-addr>:8554/stream`. Replace `<ip-addr>` with your system IP address
+    > Note: To access `App UI`, `Search UI` and `MilvusDB UI` urls remotely, replace the `localhost` with your system IP address. 
 
 
-6. **Run the Application**:
+7. **Run the Application**:
 
     - **Analyze Stream**: Use the predefined video and click **Analyze Stream** to start processing the video stream.
     - **Video Search**: Click the **Upload Image** button to upload your own images for search or click the **Capture Frame** button to capture and adjust frames from the video stream. Click the **Search Object** button.
 
     - **Expected Results**:
       - Matched search results, including metadata, timestamps, distance to show the confidence rate of the prediction, and frames that include detected objects (e.g., vehicles, pedestrians, bikes).
-    
+
    | ![image1](./_images/imagesearch1.png) | ![image2](./_images/imagesearch2.png) |
     |--------------------------------|--------------------------------|
 
@@ -143,7 +154,7 @@ a pre-step to prepare models may be needed
 **Modify Basic Parameters**: Explain configurable options and their impacts.
 
 ## Modify Application Parameters
-<!--**User Story 4**: Modifying Basic Configurations  
+<!--**User Story 4**: Modifying Basic Configurations
 - **As a developer**, I want to adjust simple configurations (e.g., sensor inputs or thresholds), so that I can explore the application’s flexibility.
 
 **Acceptance Criteria**:
@@ -194,14 +205,14 @@ a pre-step to prepare models may be needed
      ```json
      "detection_threshold": 0.7
      ```
---> 
+-->
 ## Make Changes
 
 1. **Change Object Detection and Object Classification Models**
 
     - To use your own models instead of the default models, follow these steps:
 
-      - Open the `config.json` file.
+      - Open the `config.cpu.json` file present at the path `edge-ai-suites/metro-ai-suite/image-based-video-search/src/dlstreamer-pipeline-server/configs/filter-pipeline/`.
 
       - Change the paths in the `pipeline` section to point to your own models. Replace the paths for `gvadetect` and `gvaclassify` with the paths to your models:
         ```json

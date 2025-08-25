@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+/**:
+        ros__parameters:
+                pregrasp_distance: 0.08
+                grasp_z_offset: 0.000
+                distance_threshold: 0.1
+                distance_threshold_tcp: 0.025
+                object_pose_topic: "object_poses"
+                base_link: "base_link"
+                ee_link: "ee_link"
+                motion_controller: "RVCMotionController::Moveit2ServoMotionController"
+                #motion_controller: "RVCMotionController::DobbyMotionController"
+                grasp_plugin: "RVCControl::NonOrientedGrasp"
+                #collision_boxes: []
+                #collision_boxes: ["SideConveyorBeltBox", "FrontConveyorBeltBox", "CameraBox"]
+                #SideConveyorBeltBox:  [0.3, 1.0, 0.09, -0.6, 0.11, 0.20]
+                #FrontConveyorBeltBox: [1.0, 0.3, 0.09, 0.02, 0.62, 0.04]
+                #CameraBox: [0.1, 0.1, 0.1, 0.36, 0.66, 0.755]

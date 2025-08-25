@@ -4,6 +4,10 @@ FROM $BASE:${BASE_VERSION} AS base
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
+RUN echo "http_proxy=$http_proxy" >> /etc/environment && \
+    echo "https_proxy=$https_proxy" >> /etc/environment && \
+    echo "no_proxy=$no_proxy" >> /etc/environment
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
@@ -11,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     cmake \
     sudo \
     wget \
+    lsb-release \
     unzip
 
 RUN useradd -m -s /bin/bash vpp && \
@@ -28,6 +33,7 @@ RUN bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
 RUN bash ./live555_install.sh
 
 RUN bash ./build.sh
+RUN chmod +x /home/vpp/vppsample/docker/svet.sh
 
 USER vpp 
 WORKDIR /home/vpp

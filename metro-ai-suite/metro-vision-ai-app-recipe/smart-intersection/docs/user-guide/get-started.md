@@ -25,7 +25,7 @@ By following this guide, you will learn how to:
 ## Set up and First Use
 
 <!--
-**User Story 1**: Setting Up the Application  
+**User Story 1**: Setting Up the Application
 - **As a developer**, I want to set up the application in my environment, so that I can start exploring its functionality.
 
 **Acceptance Criteria**:
@@ -54,26 +54,26 @@ By following this guide, you will learn how to:
      ```bash
      docker compose up -d
      ```
-     
+
      <details>
      <summary>
      Check Status of Microservices
      </summary>
-     
+
      - The application starts the following microservices.
      - To check if all microservices are in Running state:
        ```bash
        docker ps
        ```
-       
+
      **Expected Services:**
      - Grafana Dashboard
-     - DL Streamer Pipeline Server  
+     - DL Streamer Pipeline Server
      - MQTT Broker
      - Node-RED (for applications without Scenescape)
      - Scenescape services (for Smart Intersection only)
-     
-     </details>   
+
+     </details>
 
 2. **View the Application Output**:
    - Open a browser and go to `http://localhost:3000` to access the Grafana dashboard.
@@ -101,7 +101,7 @@ Open a browser and go to the following endpoints to access the application. Use 
     - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
 
 > **Notes**:
-> - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface. Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, it is recommended to use **Google Chrome**.
+> - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface. Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, use **Google Chrome**.
 
 ### **Grafana UI** ###
 - **URL**: [http://localhost:3000](http://localhost:3000)

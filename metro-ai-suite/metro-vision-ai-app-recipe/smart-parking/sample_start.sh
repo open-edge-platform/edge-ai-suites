@@ -45,6 +45,7 @@ EOF
       echo -e "\nError: curl command failed. Check the deployment status."
       return 1
     fi
+    sleep 2
     pipeline_list+=("$response")
   done
   running=false
@@ -74,6 +75,7 @@ function stop_all_pipelines() {
   IFS=','
   for pipeline in $pipelines; do
     response=$(curl -s --location -X DELETE "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/${pipeline}")
+    sleep 2
   done
   unset IFS
   running=true

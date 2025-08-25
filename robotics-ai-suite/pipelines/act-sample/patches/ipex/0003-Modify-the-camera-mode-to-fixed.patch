@@ -1,0 +1,54 @@
+From 8ebaa4773446612ee5478c9e983db8f4de1593d8 Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Wed, 19 Mar 2025 13:01:55 +0800
+Subject: [PATCH 3/3] Modify the camera mode to fixed.
+
+Signed-off-by: HKH347710 <kanghua.he@intel.com>
+---
+ assets/vx300s_left.xml  | 4 ++--
+ assets/vx300s_right.xml | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/assets/vx300s_left.xml b/assets/vx300s_left.xml
+index 61e6219..af6d6a0 100644
+--- a/assets/vx300s_left.xml
++++ b/assets/vx300s_left.xml
+@@ -29,7 +29,7 @@
+                                 <site pos="0.15 0 0" size="0.003 0.003 0.03" type="box" name="cali_left_site1" rgba="0 0 1 0"/>
+                                 <site pos="0.15 0 0" size="0.003 0.03 0.003" type="box" name="cali_left_site2" rgba="0 0 1 0"/>
+                                 <site pos="0.15 0 0" size="0.03 0.003 0.003" type="box" name="cali_left_site3" rgba="0 0 1 0"/>
+-                                <camera name="left_wrist" pos="-0.1 0 0.16" fovy="20" mode="targetbody" target="vx300s_left/camera_focus"/>
++                                <camera name="left_wrist" pos="-0.1 0 0.16" fovy="20" mode="fixed" euler="0 -1.05 -1.5707" />
+                                 <inertial pos="0.0395662 -2.56311e-07 0.00400649" quat="0.62033 0.619916 -0.339682 0.339869" mass="0.251652" diaginertia="0.000689546 0.000650316 0.000468142" />
+                                 <joint name="vx300s_left/wrist_rotate" pos="0 0 0" axis="1 0 0" limited="true" range="-3.14158 3.14158" frictionloss="30" />
+                                 <geom pos="-0.02 0 0" quat="0.707107 0 0 0.707107" type="mesh" mesh="vx300s_7_gripper" name="vx300s_left/7_gripper" />
+@@ -56,4 +56,4 @@
+             </body>
+         </body>
+     </body>
+-</mujocoinclude>
+\ No newline at end of file
++</mujocoinclude>
+diff --git a/assets/vx300s_right.xml b/assets/vx300s_right.xml
+index 2c6f007..4c589c4 100644
+--- a/assets/vx300s_right.xml
++++ b/assets/vx300s_right.xml
+@@ -29,7 +29,7 @@
+                                 <site pos="0.15 0 0" size="0.003 0.003 0.03" type="box" name="cali_right_site1" rgba="0 0 1 0"/>
+                                 <site pos="0.15 0 0" size="0.003 0.03 0.003" type="box" name="cali_right_site2" rgba="0 0 1 0"/>
+                                 <site pos="0.15 0 0" size="0.03 0.003 0.003" type="box" name="cali_right_site3" rgba="0 0 1 0"/>
+-                                <camera name="right_wrist" pos="-0.1 0 0.16" fovy="20" mode="targetbody" target="vx300s_right/camera_focus"/>
++                                <camera name="right_wrist" pos="-0.1 0 0.16" fovy="20" mode="fixed" euler="0 -1.05 -1.5707" />
+                                 <inertial pos="0.0395662 -2.56311e-07 0.00400649" quat="0.62033 0.619916 -0.339682 0.339869" mass="0.251652" diaginertia="0.000689546 0.000650316 0.000468142" />
+                                 <joint name="vx300s_right/wrist_rotate" pos="0 0 0" axis="1 0 0" limited="true" range="-3.14158 3.14158" frictionloss="30" />
+                                 <geom pos="-0.02 0 0" quat="0.707107 0 0 0.707107" type="mesh" mesh="vx300s_7_gripper" name="vx300s_right/7_gripper" />
+@@ -56,4 +56,4 @@
+             </body>
+         </body>
+     </body>
+-</mujocoinclude>
+\ No newline at end of file
++</mujocoinclude>
+-- 
+2.34.1
+

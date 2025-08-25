@@ -1,0 +1,27 @@
+# syntax = edrevo/dockerfile-plus
+
+INCLUDE+ .devcontainer/Dockerfile
+
+
+FROM rvc-humble-dev AS rvc-humble-exec
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  ros-humble-ur-bringup \
+  ros-humble-ur-robot-driver \
+  ros-humble-ur-calibration \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN echo "$USERNAME soft rtprio   98" >> /etc/security/limits.conf \
+    && echo "$USERNAME soft priority 99" >> /etc/security/limits.conf \
+    && echo "$USERNAME hard priority 99" >> /etc/security/limits.conf \ 
+    && echo "$USERNAME soft memlock  102400" >> /etc/security/limits.conf \
+    && echo "$USERNAME hard memlock  102400" >> /etc/security/limits.conf \
+    && echo "$USERNAME - memlock     51200" >> /etc/security/limits.conf \
+    && echo "$USERNAME - rtprio      99" >> /etc/security/limits.conf
+
+COPY --chown=$USERNAME src /rvc/src
+USER $USERNAME
+
+RUN cd /rvc \
+    && . /opt/ros/${ROS_DISTRO}/setup.sh \
+    && colcon build --symlink-install --cmake-args -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release

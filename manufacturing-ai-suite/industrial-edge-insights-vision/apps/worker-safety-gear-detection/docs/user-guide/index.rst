@@ -1,3 +1,6 @@
+Worker Safety Gear Detection
+==============================
+
 .. toctree::
    :hidden:
 
@@ -24,6 +27,7 @@
    how-to-run-store-frames-in-s3
    how-to-view-telemetry-data
    how-to-use-gpu-for-inference
+   how-to-start-mqtt-publisher
 
 .. toctree::
    :caption: References

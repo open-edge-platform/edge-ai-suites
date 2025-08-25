@@ -1,0 +1,8 @@
+build/
+.vscode/
+.clang-format
+*.swp
+config/visualize_server.rviz
+.obj-x86_64-linux-gnu*
+*.deb
+tmp/

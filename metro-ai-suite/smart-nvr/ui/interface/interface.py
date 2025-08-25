@@ -375,6 +375,8 @@ def create_ui():
                     message = item.get("message", "")
                     if video_id or message:  # Only add if at least one is non-empty
                         rows.append([rule_id, video_id, message])
+                    else:
+                        rows.append([rule_id, "", "No event occurred for this rule."])
             else:
                 rows.append([rule_id, "", "No search results available."])
         return rows

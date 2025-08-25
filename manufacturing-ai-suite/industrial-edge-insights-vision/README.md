@@ -62,7 +62,7 @@ Following directory structure consisting of generic deployment code as well as p
  - **apps**: containing application specific pre-requisite installers, configurations and runtime data. Users can follow the same structure to create their own application. The data from here is used for docker based deployments.
 
     - *configs/*: 
-            associated container configurations suchas DLStreamer Pipeline Server configuration, etc.
+            associated container configurations such as DLStreamer Pipeline Server configuration, etc.
     - *setup.sh*: 
             pre-requisite installer to setup envs, download artificats such as models/videos to `resources/` directory. It also sets executable permissions for scripts.
     - *payload.json*: 
@@ -70,7 +70,7 @@ Following directory structure consisting of generic deployment code as well as p
             
  - **helm**: contains helm charts and application specific pre-requisite installers, configurations and runtime data. The configs and data within it are similar to **apps** but are kept here for easy packaging.
 
- - **resources**: This directory and its subdirs are created only after installation is done by running `setup.sh` for that application. It contains artificacts such as models, videos etc. Users can modify their application's `setup.sh` script to download artifacts as per their usecase requriements.
+ - **resources**: This directory and its subdirs are created only after installation is done by running `setup.sh` for that application. It contains artificacts such as models, videos etc. Users can modify their application's `setup.sh` script to download artifacts as per their usecase requirements.
 
  - **.env_app_name**: Environment file containing application specific variables. Before starting the application, Users should rename it to `.env` for compose file to source it automatically.
 

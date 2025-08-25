@@ -86,7 +86,6 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, filename):
     while True:
         start_time = time.time()
         row_served = 0
-
         tick = g_tick(float(subsample) / float(sampling_rate))
 
         for chunk in pd.read_csv(filename, chunksize=chunk_size):
@@ -104,7 +103,6 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, filename):
                     print(f"Skipping row {row_served}- {row} due to ValueError: {ValueError} \
                           or IndexError: {IndexError}")
                     continue
-
                 row_served += 1
                 time.sleep(next(tick))
                 if row_served % max(1, int(sampling_rate) // max(1, int(subsample))) == 0:

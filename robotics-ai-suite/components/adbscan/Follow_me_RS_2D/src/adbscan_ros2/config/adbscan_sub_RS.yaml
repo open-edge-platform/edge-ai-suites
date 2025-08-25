@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+adbscan_sub_node:
+  ros__parameters:
+    Lidar_type: RS
+    Lidar_topic: /camera/points
+    Verbose: True
+    subsample_ratio: 15.0
+    x_filter_back: 3.0
+    y_filter_left: 2.0
+    y_filter_right: -2.0
+    z_filter: 0.1
+    Z_based_ground_removal: 0.05
+    base: 5.29545454
+    coeff_1: -0.164835164
+    coeff_2: -0.017982017
+    scale_factor: 0.9
+    init_tgt_loc: 0.5
+    max_dist: 1.5
+    min_dist: 0.5
+    max_linear: 0.8
+    max_angular: 0.8
+    max_frame_blocked: 2
+    tracking_radius: 0.2
+  
+adbscan_sub_w_gesture_node:
+  ros__parameters:
+    Lidar_type: RS
+    Lidar_topic: /camera/points
+    Verbose: True
+    subsample_ratio: 60.0
+    x_filter_back: 3.0
+    y_filter_left: 2.0
+    y_filter_right: -2.0
+    z_filter: 0.1
+    Z_based_ground_removal: 0.05
+    base: 5.29545454
+    coeff_1: -0.164835164
+    coeff_2: -0.017982017
+    scale_factor: 0.9
+    init_tgt_loc: 0.25
+    max_dist: 1.5
+    min_dist: 0.25
+    max_linear: 0.8
+    max_angular: 0.25
+    max_frame_blocked: 1
+    tracking_radius: 0.27
+
+adbscan_sub_w_gesture_audio_node:
+  ros__parameters:
+    Lidar_type: RS
+    Lidar_topic: /camera/points
+    gesture_enable: True
+    audio_enable: True
+    Verbose: True
+    subsample_ratio: 120.0
+    x_filter_back: 3.0
+    y_filter_left: 2.0
+    y_filter_right: -2.0
+    z_filter: 0.1
+    Z_based_ground_removal: 0.05
+    base: 5.29545454
+    coeff_1: -0.164835164
+    coeff_2: -0.017982017
+    scale_factor: 0.9
+    init_tgt_loc: 0.25
+    max_dist: 1.5
+    min_dist: 0.25
+    max_linear: 0.8
+    max_angular: 0.25
+    max_frame_blocked: 1
+    tracking_radius: 0.27

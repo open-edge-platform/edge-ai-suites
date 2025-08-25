@@ -1,0 +1,9 @@
+<!--
+  This Behavior Tree rotates the robot in place 360 degrees
+-->
+
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Spin spin_dist="6.283185" time_allowance="30" is_recovery="false"/>
+  </BehaviorTree>
+</root>

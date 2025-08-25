@@ -2,11 +2,11 @@
 
 In a typical deployment, multiple cameras deliver video streams that are connected to AI pipelines to improve the detection and recognition accuracy. 
 
-The DLStreamer Pipeline Server config supports multiple pipelines that you can use to launch pipeline instances. The sample application has been provided with such a config i.e. **pipeline-server-config.json**. We will use the same to demonstrate launching multiple AI pipelines.
+The DLStreamer Pipeline Server config supports multiple pipelines that you can use to launch pipeline instances. The sample application has been provided with such a config i.e. `pipeline-server-config.json`. We will use the same to demonstrate launching multiple AI pipelines.
 
 ## Steps
 
- The following demonstrates running two AI pipelines and observing telemetry data from Prometheus* UI.
+ The following demonstrates running two AI pipelines.
 > **Note** We assume that the model and sample video is already available in the application directory under `resources/`.
 
 1. Bring up the containers.
@@ -48,7 +48,7 @@ The DLStreamer Pipeline Server config supports multiple pipelines that you can u
         },
         "parameters": {
             "detection-properties": {
-                "model": "/home/pipeline-server/resources/models/geti/pallet_defect_detection/deployment/Detection/model/model.xml",
+                "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
                 "device": "CPU"
             }
         }
@@ -63,6 +63,8 @@ The DLStreamer Pipeline Server config supports multiple pipelines that you can u
    Figure 1: WebRTC streaming
 
    You can see boxes, shipping labels, and defects being detected. You have successfully run the sample application.
+
+   > NOTE: You can also observe telemetry data from the Prometheus UI. Refer [this](./how-to-view-telemetry-data.md) document to learn more.
 
 5. Stop the 2nd pipeline using the instance ID noted in point #3 above, before proceeding with this documentation.
    ```shell

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>openvino_inference_plugin</name>
+  <version>2.0.0</version>
+  <description>RVC AI interface-based Plugin implementing yolo V5, v6 and V8 using openvino inferencing </description>
+  <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
+  <license>Rapid Prototype License</license>
+
+  <buildtool_depend>ament_cmake_ros</buildtool_depend>
+
+  <build_depend>rclcpp</build_depend>
+  <build_depend>rclcpp_components</build_depend>
+
+  <depend>std_msgs</depend>
+  <depend>rvc_ai_interface</depend>
+  <depend>pluginlib</depend>
+  <depend>rvc_vision_messages</depend>
+
+  <depend>libopencv-dev</depend>
+  <depend>openvino-libraries-dev</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

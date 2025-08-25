@@ -22,30 +22,19 @@ spec:
         - /bin/sh
         - -c
         - |
-          curl -L https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/v1.0.0.zip -o /tmp/main.zip && \
+          mkdir -p /tmp/data
+          mkdir -p /tmp/data/public/videos/
+          curl -L https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/v1.0.0.zip -o /tmp/main.zip
           unzip -q /tmp/main.zip -d /tmp && \
-          mkdir -p /tmp/data/public/videos && \
-          mkdir -p /tmp/data/nodes/core/function && \
-          cp -r /tmp/edge-ai-suites-1.0.0/metro-ai-suite/loitering-detection/node-red/public/* /tmp/data/public/ && \
-          cp -r /tmp/edge-ai-suites-1.0.0/metro-ai-suite/loitering-detection/node-red/nodes/core/function/* /tmp/data/nodes/core/function/ && \
-          rm -rf /tmp/main.zip /tmp/edge-ai-suites-1.0.0 && \
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000101.mp4 -o /tmp/data/public/videos/VIRAT_S_000101.mp4 && \
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000102.mp4 -o /tmp/data/public/videos/VIRAT_S_000102.mp4 && \
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000103.mp4 -o /tmp/data/public/videos/VIRAT_S_000103.mp4 && \
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000104.mp4 -o /tmp/data/public/videos/VIRAT_S_000104.mp4 && \
-          cat > /tmp/data/install_package.sh << 'EOF'
-          #!/bin/bash
-          
-          npm install node-red-contrib-image-tools
-          npm install node-red-contrib-image-output
-          npm install node-red-node-annotate-image
-          npm install node-red-node-ui-iframe
-          apk update
-          apk add --no-cache ffmpeg
-          EOF
-          chmod +x /tmp/data/install_package.sh && \
-          ls -l /tmp/data/public && \
-          ls -l /tmp/data/nodes/core/function
+          cp -r /tmp/edge-ai-suites-1.0.0/metro-ai-suite/loitering-detection/node-red/* /tmp/data/
+          rm -rf /tmp/main.zip /tmp/edge-ai-suites-1.0.0
+          mkdir -p /tmp/data/public/videos
+          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000101.mp4 -o /tmp/data/public/videos/VIRAT_S_000101.mp4
+          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000102.mp4 -o /tmp/data/public/videos/VIRAT_S_000102.mp4
+          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000103.mp4 -o /tmp/data/public/videos/VIRAT_S_000103.mp4
+          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000104.mp4 -o /tmp/data/public/videos/VIRAT_S_000104.mp4
+          rm /tmp/data/flows.json
+          cp -f /tmp/flows.json /tmp/data/flows.json
         env:
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
@@ -54,12 +43,11 @@ spec:
         - name: no_proxy
           value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
         volumeMounts:
-        - name: node-red-data-public
-          mountPath: /tmp/data/public
-        - name: node-red-data-core
-          mountPath: /tmp/data/nodes/core/function
-        - name: node-red-data-script
+        - name: node-red-data
           mountPath: /tmp/data
+        - name: node-red-flows-config
+          mountPath: /tmp/flows.json
+          subPath: flows.json
       containers:
       - name: node-red
         image: {{ $.Values.node_red.image }}:{{ $.Values.node_red.imageTag }}
@@ -78,26 +66,11 @@ spec:
         securityContext:
           runAsUser: 0  # root user
         volumeMounts:
-        - name: node-red-data-public
-          mountPath: /data/public
-        - name: node-red-data-core
-          mountPath: /data/nodes/core/function
-        - name: node-red-data-script
-          mountPath: /data/install_package.sh
-          subPath: install_package.sh
-        - name: node-red-flows-config
-          mountPath: /data/flows.json
-          subPath: flows.json
+        - name: node-red-data
+          mountPath: /data
       volumes:
-      - name: node-red-data-public
-        emptyDir:
-          sizeLimit: 100Mi
-      - name: node-red-data-core
-        emptyDir:
-          sizeLimit: 100Mi 
-      - name: node-red-data-script
-        emptyDir:
-          sizeLimit: 10Mi
+      - name: node-red-data
+        emptyDir: {}
       - name: node-red-flows-config
         configMap:
           name: node-red-flows-config 

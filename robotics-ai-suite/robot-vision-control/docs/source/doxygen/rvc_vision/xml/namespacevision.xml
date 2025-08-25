@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespacevision" kind="namespace" language="Python">
+    <compoundname>vision</compoundname>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="vision_8composition_8launch_8py_1a870ee0cc5a184fda3c5b86a9413339e4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def vision.exit_process_function</definition>
+        <argsstring>(_launch_context)</argsstring>
+        <name>exit_process_function</name>
+        <param>
+          <type>_launch_context</type>
+          <defname>_launch_context</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_vision_main/launch/vision.composition.launch.py" line="42" column="1" bodyfile="rvc_vision_main/launch/vision.composition.launch.py" bodystart="42" bodyend="46"/>
+      </memberdef>
+      <memberdef kind="function" id="vision_8composition_8launch_8py_1afcd802f4723f2a858cac49b79ed0a7b9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def vision::launch_setup</definition>
+        <argsstring>(context, *args, **kwargs)</argsstring>
+        <name>launch_setup</name>
+        <param>
+          <type>context</type>
+          <defname>context</defname>
+        </param>
+        <param>
+          <type>*</type>
+          <declname>args</declname>
+        </param>
+        <param>
+          <type>**</type>
+          <declname>kwargs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_vision_main/launch/vision.composition.launch.py" line="47" column="1" bodyfile="rvc_vision_main/launch/vision.composition.launch.py" bodystart="47" bodyend="106"/>
+      </memberdef>
+      <memberdef kind="function" id="vision_8composition_8launch_8py_1aeef55e94bd39e0dd525c1fae86fde8b9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def vision::generate_launch_description</definition>
+        <argsstring>()</argsstring>
+        <name>generate_launch_description</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_vision_main/launch/vision.composition.launch.py" line="107" column="1" bodyfile="rvc_vision_main/launch/vision.composition.launch.py" bodystart="107" bodyend="130"/>
+      </memberdef>
+      <memberdef kind="function" id="vision_8launch_8py_1a8e0422ff567a0e20735c1be54e6e13ec" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def vision.generate_tmp_conf_file</definition>
+        <argsstring>(name, namespace, naked_origin)</argsstring>
+        <name>generate_tmp_conf_file</name>
+        <param>
+          <type>name</type>
+          <defname>name</defname>
+        </param>
+        <param>
+          <type>namespace</type>
+          <defname>namespace</defname>
+        </param>
+        <param>
+          <type>naked_origin</type>
+          <defname>naked_origin</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_vision_main/launch/vision.launch.py" line="34" column="1" bodyfile="rvc_vision_main/launch/vision.launch.py" bodystart="34" bodyend="45"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_vision_main/launch/vision.composition.launch.py" line="1" column="1"/>
+  </compounddef>
+</doxygen>

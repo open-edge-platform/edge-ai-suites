@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespacegeometry__msgs" kind="namespace" language="C++">
+    <compoundname>geometry_msgs</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="38" column="1"/>
+  </compounddef>
+</doxygen>

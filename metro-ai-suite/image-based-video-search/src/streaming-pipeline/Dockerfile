@@ -1,8 +1,8 @@
-FROM docker.io/intel/dlstreamer:2025.0.1.3-ubuntu24
+FROM docker.io/intel/dlstreamer:2025.1.2-ubuntu22
 
 USER root
 
-RUN apt-get update && apt-get install --yes gstreamer1.0-plugins-ugly
+RUN apt-get update && apt-get install --yes --no-install-recommends gstreamer1.0-plugins-ugly wget && rm -rf /var/lib/apt/lists/*
 
 USER dlstreamer
 

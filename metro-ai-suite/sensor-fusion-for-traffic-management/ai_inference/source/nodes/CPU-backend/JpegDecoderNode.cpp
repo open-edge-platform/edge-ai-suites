@@ -236,6 +236,10 @@ void JpegDecoderNodeWorker::process(std::size_t batchIdx){
         inferenceTimeMeta.startTime = currentTime;
         jpegBlob->get(0)->setMeta(inferenceTimeMeta);
 
+        VideoTimeStamp_t videoTimeMeta;
+        videoTimeMeta.startTime = currentTime;
+        jpegBlob->get(0)->setMeta(videoTimeMeta);
+
         // process done
         // send output
         HVA_DEBUG("Jpeg decoder sending blob with frameid %u and streamid %u", pBlob->frameId, pBlob->streamId);

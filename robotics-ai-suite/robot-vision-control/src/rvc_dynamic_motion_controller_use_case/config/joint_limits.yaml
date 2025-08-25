@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+joint_limits:
+  shoulder_pan_joint:
+    has_acceleration_limits: true
+    max_acceleration: 0.3
+    has_jerk_limits: false
+    has_velocity_limits: true
+    max_position: 6.28
+    max_velocity: 3.14
+    min_position: -6.28
+  shoulder_lift_joint:
+    has_acceleration_limits: true
+    max_acceleration: 0.3
+    has_jerk_limits: false
+    has_velocity_limits: true
+    max_position: 6.28
+    max_velocity: 3.14
+    min_position: -6.28
+  elbow_joint:
+    has_acceleration_limits: true
+    max_acceleration: 0.3
+    has_jerk_limits: false
+    has_velocity_limits: true
+    max_position: 3.14
+    max_velocity: 3.14
+    min_position: -3.14
+  wrist_1_joint:
+    has_acceleration_limits: true
+    max_acceleration: 0.3
+    has_jerk_limits: false
+    has_velocity_limits: true
+    max_position: 6.28
+    max_velocity: 3.14
+    min_position: -6.28
+  wrist_2_joint:
+    has_acceleration_limits: true
+    max_acceleration: 0.3
+    has_jerk_limits: false
+    has_velocity_limits: true
+    max_position: 6.28
+    max_velocity: 3.14
+    min_position: -6.28
+  wrist_3_joint:
+    has_acceleration_limits: true
+    max_acceleration: 0.3
+    has_jerk_limits: false
+    has_velocity_limits: true
+    max_position: 6.28
+    max_velocity: 3.14
+    min_position: -6.28

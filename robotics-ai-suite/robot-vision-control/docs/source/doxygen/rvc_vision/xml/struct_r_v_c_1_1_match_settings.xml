@@ -1,0 +1,255 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="struct_r_v_c_1_1_match_settings" kind="struct" language="C++" prot="public">
+    <compoundname>RVC::MatchSettings</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1ab66b047808b670dd6aa59a997ea52aad" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::downsampling</definition>
+        <argsstring></argsstring>
+        <name>downsampling</name>
+        <initializer>= 0.004f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="55" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="55" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1a9bda510de472eac7d79aeb2439c2ff20" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::downsample_clouds</definition>
+        <argsstring></argsstring>
+        <name>downsample_clouds</name>
+        <initializer>= 0.004f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="56" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="56" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1a986895fad02b9814d943b2634998c7b5" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::normal_search_radius</definition>
+        <argsstring></argsstring>
+        <name>normal_search_radius</name>
+        <initializer>= 0.04f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="58" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="58" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1aa80d3d170aee499d2d80e8c023306304" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::fpfh_search_radius</definition>
+        <argsstring></argsstring>
+        <name>fpfh_search_radius</name>
+        <initializer>= 0.025f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="59" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="59" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1aab8b22434af4a002060f27fd8a6ff28d" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::stddev_mul_threshold</definition>
+        <argsstring></argsstring>
+        <name>stddev_mul_threshold</name>
+        <initializer>= 4.0f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="60" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="60" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1a0aaf041f9f166cde1b4d8cde03197359" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::z_threshold</definition>
+        <argsstring></argsstring>
+        <name>z_threshold</name>
+        <initializer>= 0.5f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="61" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1a75764de3a9d4c83b0d22226c6238a334" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::inlier_fraction</definition>
+        <argsstring></argsstring>
+        <name>inlier_fraction</name>
+        <initializer>= 0.4f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="63" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="63" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1a33fbc70c2a250075a42146f9cbe276d6" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::similarity_threshold</definition>
+        <argsstring></argsstring>
+        <name>similarity_threshold</name>
+        <initializer>= 0.9f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="64" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="64" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1a57342ee6a9ac15a8aad86d70007ab05a" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::max_corresp_randomness</definition>
+        <argsstring></argsstring>
+        <name>max_corresp_randomness</name>
+        <initializer>= 8.0f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="65" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="65" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1a3fda88e8ba2072763b318d2dbd74f1e7" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::max_corresp_distance</definition>
+        <argsstring></argsstring>
+        <name>max_corresp_distance</name>
+        <initializer>= 0.01f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="67" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="67" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1abbce8795a9b38e2a854dab6220f844be" prot="public" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t RVC::MatchSettings::max_iterations</definition>
+        <argsstring></argsstring>
+        <name>max_iterations</name>
+        <initializer>= 30000</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="68" column="12" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="68" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1a0d4d9154a4d5ca44ec47e18027b26cfc" prot="public" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t RVC::MatchSettings::num_samples</definition>
+        <argsstring></argsstring>
+        <name>num_samples</name>
+        <initializer>= 3</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="69" column="12" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1ad48473757db5672a214c9c4926863e95" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::icp_max_corresp_distance</definition>
+        <argsstring></argsstring>
+        <name>icp_max_corresp_distance</name>
+        <initializer>= 0.1f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="71" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="71" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1a31dfcecdd14ab796ea13312bd2d1e7f8" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::icp_xform_epsilon</definition>
+        <argsstring></argsstring>
+        <name>icp_xform_epsilon</name>
+        <initializer>= 1e-9f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="72" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="72" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1a60fd1973f2303e330fd3dbf59b41cdfe" prot="public" static="no" mutable="no">
+        <type>float</type>
+        <definition>float RVC::MatchSettings::icp_fitness_epsilon</definition>
+        <argsstring></argsstring>
+        <name>icp_fitness_epsilon</name>
+        <initializer>= 6e-6f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="73" column="11" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="73" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_r_v_c_1_1_match_settings_1aaec6f468be04d44fa5f516ae0d0700b8" prot="public" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t RVC::MatchSettings::icp_max_iterations</definition>
+        <argsstring></argsstring>
+        <name>icp_max_iterations</name>
+        <initializer>= 50</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_pose_detector/include/matcher.hpp" line="74" column="12" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="74" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_pose_detector/include/matcher.hpp" line="53" column="1" bodyfile="rvc_pose_detector/include/matcher.hpp" bodystart="54" bodyend="75"/>
+    <listofallmembers>
+      <member refid="struct_r_v_c_1_1_match_settings_1a9bda510de472eac7d79aeb2439c2ff20" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>downsample_clouds</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1ab66b047808b670dd6aa59a997ea52aad" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>downsampling</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1aa80d3d170aee499d2d80e8c023306304" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>fpfh_search_radius</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1a60fd1973f2303e330fd3dbf59b41cdfe" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>icp_fitness_epsilon</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1ad48473757db5672a214c9c4926863e95" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>icp_max_corresp_distance</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1aaec6f468be04d44fa5f516ae0d0700b8" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>icp_max_iterations</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1a31dfcecdd14ab796ea13312bd2d1e7f8" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>icp_xform_epsilon</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1a75764de3a9d4c83b0d22226c6238a334" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>inlier_fraction</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1a3fda88e8ba2072763b318d2dbd74f1e7" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>max_corresp_distance</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1a57342ee6a9ac15a8aad86d70007ab05a" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>max_corresp_randomness</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1abbce8795a9b38e2a854dab6220f844be" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>max_iterations</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1a986895fad02b9814d943b2634998c7b5" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>normal_search_radius</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1a0d4d9154a4d5ca44ec47e18027b26cfc" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>num_samples</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1a33fbc70c2a250075a42146f9cbe276d6" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>similarity_threshold</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1aab8b22434af4a002060f27fd8a6ff28d" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>stddev_mul_threshold</name></member>
+      <member refid="struct_r_v_c_1_1_match_settings_1a0aaf041f9f166cde1b4d8cde03197359" prot="public" virt="non-virtual"><scope>RVC::MatchSettings</scope><name>z_threshold</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

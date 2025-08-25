@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ur_pendant_motion_controller</name>
+  <version>1.0.0</version>
+  <description>Direct Universal Robot pendant controller</description>
+  <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
+  <license>Proprietary</license>
+
+  <buildtool_depend>ament_cmake_ros</buildtool_depend>
+
+  <depend>rvc_motion_controller_interface</depend>
+  <depend>pluginlib</depend>
+  <depend>rvc_messages</depend>
+  <build_depend>rclcpp</build_depend>
+  <build_depend>rclcpp_components</build_depend>
+
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

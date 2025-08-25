@@ -21,31 +21,36 @@ Complete this section to confirm that your setup is working correctly and try ou
 
 ## Step 1: Download the Helm chart
 
-Follow this procedure on the target system to install the package.
+Follow this procedure on the target system to download the package.
 
-1. Download Helm chart with the following command:
+**Note**: Skip this step if you have already followed the steps as part of the [Get Started guide](./get-started.md).
 
-    `helm pull oci://registry-1.docker.io/intel/loitering-detection --version 1.1.0`
+Before you can deploy with Helm, you must clone the repository and download the helm chart:
 
-2. Unzip the package using the following command:
+```bash
+# Clone the repository
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
 
-    `tar xvf loitering-detection-1.1.0.tgz`
-    
-3. Go to the Helm directory:
+# Navigate to the Metro AI Suite directory
+cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
-    `cd loitering-detection`
-
+```
 
 ## Step 2: Configure and update the environment variables
 
 1. Update the following fields in `values.yaml` file in the Helm chart:
+
+    ```bash
+        # Edit the values.yml file to add proxy configuration
+        nano ./loitering-detection/helm-chart/values.yaml
+    ```
 
     ``` sh
     HOST_IP: # replace localhost with system IP example: HOST_IP: 10.100.100.100
     http_proxy: # example: http_proxy: http://proxy.example.com:891
     https_proxy: # example: http_proxy: http://proxy.example.com:891
     webrtcturnserver:
-        username: # example: username: myuser 
+        username: # example: username: myuser
         password: # example: password: mypassword
     ```
 
@@ -56,7 +61,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 1. Deploy Helm chart
 
     ```sh
-    helm install loitering-detection . -n ld  --create-namespace
+    helm install loitering-detection ./loitering-detection/helm-chart -n ld  --create-namespace
     ```
 
 2. Verify all the pods and services are running:
@@ -177,7 +182,7 @@ Follow this procedure to stop the sample application and end this demonstration.
     ```sh
     helm uninstall loitering-detection -n ld
     ```
-    
+
 
 2. Confirm the pods are no longer running.
 

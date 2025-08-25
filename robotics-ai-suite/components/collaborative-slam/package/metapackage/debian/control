@@ -1,0 +1,25 @@
+Source: ros-humble-collab-slam
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-humble-collab-slam
+Architecture: any
+Depends: ros-humble-univloc-server-sse | ros-humble-univloc-server-avx2 | ros-humble-univloc-server-lze, ros-humble-univloc-tracker-sse | ros-humble-univloc-tracker-avx2 | ros-humble-univloc-tracker-lze,
+Description: Intel package for Collaborative SLAM
+
+Package: ros-humble-collab-slam-sse
+Architecture: any
+Depends: ros-humble-univloc-server-sse, ros-humble-univloc-tracker-sse,
+Description: Intel SSE-only CPU instruction accelerated package for Collaborative SLAM
+
+Package: ros-humble-collab-slam-lze
+Architecture: any
+Depends: ros-humble-univloc-server-lze, ros-humble-univloc-tracker-lze,
+Description: Intel GPU Level-Zero accelerated package for Collaborative SLAM
+
+Package: ros-humble-collab-slam-avx2
+Architecture: any
+Depends: ros-humble-univloc-server-avx2, ros-humble-univloc-tracker-avx2,
+Description: Intel AVX2 CPU instruction accelerated package for Collaborative SLAM

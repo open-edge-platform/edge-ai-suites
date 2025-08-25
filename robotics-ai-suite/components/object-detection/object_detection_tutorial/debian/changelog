@@ -1,0 +1,12 @@
+ros-humble-object-detection-tutorial (2.2-1) UNRELEASED; urgency=low
+
+  * Created generic launch files for Object detection that lets user choose the inference engine like GPU, NPU, CPU
+  * Renamed package name from ros-humble-object-det-gpu-tutorial to ros-humble-object-detection-tutorial
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 21 July 2024 00:00:00 +0000
+
+ros-humble-object-det-gpu-tutorial (2.1-1) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 28 Sep 2023 00:00:00 +0000

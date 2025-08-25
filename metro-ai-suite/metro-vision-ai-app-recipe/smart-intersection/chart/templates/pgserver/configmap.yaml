@@ -5,4 +5,4 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   user_access_config.json: |
-{{ .Files.Get "files/webserver/user_access_config.json" | indent 4 }}
+{{ include "requiredFile" (list . "files/webserver/user_access_config.json") | indent 4 }}

@@ -1,0 +1,113 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+# TODO: remove the LDFLAGS override.  It's here to avoid esoteric problems
+# of this sort:
+#  https://code.ros.org/trac/ros/ticket/2977
+#  https://code.ros.org/trac/ros/ticket/3842
+export LDFLAGS=
+export PKG_CONFIG_PATH=/opt/ros/humble/lib/pkgconfig
+# Explicitly enable -DNDEBUG, see:
+# 	https://github.com/ros-infrastructure/bloom/issues/327
+export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG
+ifneq ($(filter nocheck,$(DEB_BUILD_OPTIONS)),)
+	BUILD_TESTING_ARG=-DBUILD_TESTING=OFF
+endif
+
+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+
+BUILD_POSE_CHECKER_DIR=$(CURDIR)/.obj-$(DEB_HOST_GNU_TYPE)-pose_checker
+BUILD_BENCHMARKING_DIR=$(CURDIR)/.obj-$(DEB_HOST_GNU_TYPE)-reloc_benchmarking
+BUILD_BRINGUP_DIR=$(CURDIR)/.obj-$(DEB_HOST_GNU_TYPE)-relocalization_bringup
+
+export ROS_DISTRO=humble
+
+%:
+	dh $@ -v --buildsystem=cmake --parallel
+
+override_dh_auto_configure:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_auto_configure  \
+		-O--builddir=$(BUILD_POSE_CHECKER_DIR) \
+		--sourcedirectory=$(CURDIR)/pose_checker -- \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/humble \
+		-DAMENT_PREFIX_PATH=/opt/ros/humble \
+		-DCMAKE_PREFIX_PATH=/opt/ros/humble \
+		$(BUILD_TESTING_ARG)  -DCMAKE_BUILD_TYPE=Release
+	dh_auto_configure  \
+		-O--builddir=$(BUILD_BENCHMARKING_DIR) \
+		--sourcedirectory=$(CURDIR)/reloc_benchmarking -- \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/humble \
+		-DAMENT_PREFIX_PATH=/opt/ros/humble \
+		-DCMAKE_PREFIX_PATH=/opt/ros/humble \
+		$(BUILD_TESTING_ARG)  -DCMAKE_BUILD_TYPE=Release
+	dh_auto_configure  \
+		-O--builddir=$(BUILD_BRINGUP_DIR) \
+		--sourcedirectory=$(CURDIR)/relocalization_bringup -- \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/humble \
+		-DAMENT_PREFIX_PATH=/opt/ros/humble \
+		-DCMAKE_PREFIX_PATH=/opt/ros/humble \
+		$(BUILD_TESTING_ARG)  -DCMAKE_BUILD_TYPE=Release
+
+override_dh_auto_build:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_auto_build  \
+		-O--builddir=$(BUILD_POSE_CHECKER_DIR) \
+		--sourcedirectory=$(CURDIR)/pose_checker --
+	dh_auto_build  \
+		-O--builddir=$(BUILD_BENCHMARKING_DIR) \
+		--sourcedirectory=$(CURDIR)/reloc_benchmarking --
+	dh_auto_build  \
+		-O--builddir=$(BUILD_BRINGUP_DIR) \
+		--sourcedirectory=$(CURDIR)/relocalization_bringup --
+
+override_dh_auto_test:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	echo -- Running tests. Even if one of them fails the build is not canceled.
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_auto_test  \
+		-O--builddir=$(BUILD_POSE_CHECKER_DIR) \
+		--sourcedirectory=$(CURDIR)/pose_checker -- || true
+	dh_auto_test  \
+		-O--builddir=$(BUILD_BENCHMARKING_DIR) \
+		--sourcedirectory=$(CURDIR)/reloc_benchmarking --  || true
+	dh_auto_test  \
+		-O--builddir=$(BUILD_BRINGUP_DIR) \
+		--sourcedirectory=$(CURDIR)/relocalization_bringup --  || true
+
+override_dh_auto_install:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	install -d $(CURDIR)/debian/ros-humble-its-pose-checker/opt/ros/humble/share/its_pose_checker
+	dh_auto_install   \
+		-O--builddir=$(BUILD_POSE_CHECKER_DIR) \
+		--sourcedirectory=$(CURDIR)/pose_checker --
+	install -d $(CURDIR)/debian/ros-humble-its-reloc-benchmarking/opt/ros/humble/share/its_reloc_benchmarking
+	dh_auto_install  \
+		-O--builddir=$(BUILD_BENCHMARKING_DIR) \
+		--sourcedirectory=$(CURDIR)/reloc_benchmarking --
+	install -d $(CURDIR)/debian/ros-humble-its-relocalization-bringup/opt/ros/humble/share/its_relocalization_bringup
+	#install -m 0755 $(CURDIR)/relocalization_bringup/launch/relocalization_demo.launch.xml $(CURDIR)/debian/ros-humble-its-relocalization-bringup/opt/ros/humble/share/its_relocalization_bringup
+	#install -m 0755 $(CURDIR)/relocalization_bringup/launch/relocalization.launch.xml $(CURDIR)/debian/ros-humble-its-relocalization-bringup/opt/ros/humble/share/its_relocalization_bringup
+	install -m 0755 $(CURDIR)/relocalization_bringup/saved_poses.txt $(CURDIR)/debian/ros-humble-its-relocalization-bringup/opt/ros/humble/share/its_relocalization_bringup
+	dh_auto_install  \
+		-O--builddir=$(BUILD_BRINGUP_DIR) \
+		--sourcedirectory=$(CURDIR)/relocalization_bringup --
+

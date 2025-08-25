@@ -1,11 +1,11 @@
 # Release Notes
 
-## v2.4.0 (July 2025)
+## v2.4.0 (August 2025)
 
 ### Updates
 - Consumed latest DL Streamer Pipeline Server version 3.1.0.
 - Model Registry is now accessed as environment variables.
-- Documentation updates
+- Redesigned based on common application template for manufacturing ai suite.
 
 ---
 

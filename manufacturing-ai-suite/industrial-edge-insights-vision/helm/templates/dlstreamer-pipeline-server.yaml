@@ -44,12 +44,27 @@ spec:
       # hostNetwork: true
       containers:
       - name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
-        image: {{ $.Values.DOCKER_REGISTRY }}intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
+        image: {{ $.Values.DOCKER_REGISTRY }}{{ $.Values.images.dlstreamer_pipeline_server }}
         imagePullPolicy: {{ $.Values.imagePullPolicy }}
         {{- if $.Values.privileged_access_required }}
         securityContext:
-          privileged: true  # Required for direct access to /dev
+          privileged: true # Required for direct access to /dev
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: true
+          capabilities:
+            drop:
+              - ALL
+        {{- else }}
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          runAsUser: 1999
+          capabilities:
+            drop:
+              - ALL
         {{- end }}
+        terminationMessagePath: /tmp/termination-log
         {{- if $.Values.gpu.enabled }}
         resources:
           limits:
@@ -60,6 +75,7 @@ spec:
           name: vol-pipeline-root-tmpfs0
         - name: dev
           mountPath: /dev
+          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
         - name: dev-shm
           mountPath: /dev/shm
         - name: tmp
@@ -77,6 +93,10 @@ spec:
           subPath: config.json
         - name: model-registry-temp-models
           mountPath: /home/pipeline-server/mr_models
+        - name: pipeline-resources-models
+          mountPath: /home/pipeline-server/resources/models
+        - name: pipeline-resources-videos
+          mountPath: /home/pipeline-server/resources/videos
         env:
         - name: AppName
           value: 'DLStreamerPipelineServer'
@@ -85,15 +105,15 @@ spec:
         - name: ENABLE_RTSP
           value: "{{ $.Values.env.ENABLE_RTSP }}"
         - name: WEBRTC_SIGNALING_SERVER
-          value: "http://{{ $.Values.env.HOST_IP }}:{{ $.Values.config.mediamtx.ext.mediamtx_port }}"
+          value: "http://mediamtx:{{ $.Values.config.mediamtx.int.mediamtx_port }}"
         - name: SERVICE_NAME
           value: "dlstreamer-pipeline-server"
         - name: REST_SERVER_PORT
           value: "8080"
         - name: no_proxy
-          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector
+          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector,mediamtx
         - name: NO_PROXY
-          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector
+          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector,mediamtx
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
         - name: https_proxy
@@ -136,6 +156,12 @@ spec:
       - name: wait-for-model-registry
         image: busybox
         command: ['sh', '-c', 'wget --spider --quiet --tries=5 --timeout=3 http://model-registry:8111/docs']
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
       volumes:
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}
@@ -155,6 +181,10 @@ spec:
         hostPath:
           path: /run/udev
       - name: model-registry-temp-models
+        emptyDir: {}
+      - name: pipeline-resources-models
+        emptyDir: {}
+      - name: pipeline-resources-videos
         emptyDir: {}
       - name: {{ $.Values.volumes.models.name }}
         hostPath:

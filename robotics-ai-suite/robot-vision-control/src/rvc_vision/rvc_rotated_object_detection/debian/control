@@ -1,0 +1,12 @@
+Source: ros-humble-rvc-rotated-object-detection
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0), python3-opencv, python3-pytest <!nocheck>, python3-transforms3d, ros-humble-ament-copyright <!nocheck>, ros-humble-ament-flake8 <!nocheck>, ros-humble-ament-pep257 <!nocheck>, ros-humble-cv-bridge, ros-humble-generate-parameter-library, ros-humble-generate-parameter-library-py, ros-humble-image-geometry, ros-humble-image-transport, ros-humble-rclpy, ros-humble-rvc-vision-messages, ros-humble-tf2-ros, python3-all, python3-setuptools, dh-python
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-rvc-rotated-object-detection
+Architecture: any
+Depends: ${python3:Depends}, ${misc:Depends}, python3-opencv, python3-transforms3d, ros-humble-cv-bridge, ros-humble-image-geometry, ros-humble-image-transport, ros-humble-rclpy, ros-humble-rvc-vision-messages, ros-humble-tf2-ros
+Description: Rotated object detection using ORB features

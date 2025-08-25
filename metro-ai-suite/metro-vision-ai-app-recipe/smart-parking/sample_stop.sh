@@ -15,6 +15,7 @@ function stop_all_pipelines() {
   IFS=','
   for pipeline in $pipelines; do
     response=$(curl -s --location -X DELETE "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/${pipeline}")
+    sleep 2
   done
   unset IFS
   running=true

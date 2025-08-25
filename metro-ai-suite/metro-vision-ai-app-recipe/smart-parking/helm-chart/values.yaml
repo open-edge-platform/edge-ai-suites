@@ -1,7 +1,6 @@
 # Copyright Intel Corporation
 
 namespace:
-DOCKER_REGISTRY: ''
 DOCKER_USERNAME: ''
 DOCKER_PASSWORD: ''
 imagePullPolicy: Always
@@ -17,7 +16,7 @@ mediamtx:
   imageTag: 1.11.3
 dlstreamer_pipeline_server:
   image: intel/dlstreamer-pipeline-server
-  imageTag: 3.0.0
+  imageTag: 3.1.0-ubuntu24
 grafana:
   image: grafana/grafana
   imageTag: 11.5.4

@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+# rvc_object_detection engine specific:
+    plugin_name: "RVC_AI::OIInference"
+    publish_yolo_images: true
+    model_name: "yolo_nano"
+    #Ordered array of strings: cube = 0, bolt = 1, etc, this one matched yolo_rvc_4class 
+    #class_name_array: [ 'cube', 'bolt', 'gear', 'nut' ]
+    class_name_array: [ 'bolt', 'gear', 'nut', 'cube' ]
+    rvc_use_case_binaries: "rvc_use_case_binaries"
+
+# plugins specific:
+    inference_device: "GPU"
+    model_format: "OpenVINO"
+    #model_format: "onnx"
+    model_version: 5
+    rvc_use_case_binaries: "rvc_use_case_binaries"
+    resX: 640
+    resY: 480
+    confidence_threshold: 0.7
+    nms_threshold: 0.5

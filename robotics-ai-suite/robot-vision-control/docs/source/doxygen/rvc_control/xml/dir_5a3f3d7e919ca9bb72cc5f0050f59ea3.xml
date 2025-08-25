@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_5a3f3d7e919ca9bb72cc5f0050f59ea3" kind="dir">
+    <compoundname>rvc_dynamic_motion_controller</compoundname>
+    <innerdir refid="dir_08679506a480dd55fc6684542e246377">rvc_dynamic_motion_controller/rvc_motion_controller_plugins</innerdir>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_dynamic_motion_controller/"/>
+  </compounddef>
+</doxygen>

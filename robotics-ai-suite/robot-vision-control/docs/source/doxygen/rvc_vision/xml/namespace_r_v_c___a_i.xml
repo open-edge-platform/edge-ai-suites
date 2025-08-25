@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespace_r_v_c___a_i" kind="namespace" language="C++">
+    <compoundname>RVC_AI</compoundname>
+    <innerclass refid="class_r_v_c___a_i_1_1_r_v_c_a_i_interface" prot="public">RVC_AI::RVCAIInterface</innerclass>
+    <innerclass refid="class_r_v_c___a_i_1_1_o_i_inference" prot="public">RVC_AI::OIInference</innerclass>
+    <briefdescription>
+<para>Any defined controllers have to inerit from this to be used in the StateMachine node. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="rvc_object_detection/rvc_ai_interface/include/rvc_ai_interface.hpp" line="33" column="1"/>
+  </compounddef>
+</doxygen>

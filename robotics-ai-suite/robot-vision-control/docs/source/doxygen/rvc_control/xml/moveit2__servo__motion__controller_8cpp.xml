@@ -1,0 +1,474 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="moveit2__servo__motion__controller_8cpp" kind="file" language="C++">
+    <compoundname>moveit2_servo_motion_controller.cpp</compoundname>
+    <includes local="no">thread</includes>
+    <includes local="no">algorithm</includes>
+    <includes refid="moveit2__servo__motion__controller_8hpp" local="yes">moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp</includes>
+    <includes local="no">pluginlib/class_list_macros.hpp</includes>
+    <incdepgraph>
+      <node id="8">
+        <label>geometry_msgs/msg/pose_stamped.hpp</label>
+      </node>
+      <node id="5">
+        <label>rvc_motion_controller_interface/rvc_motion_controller_interface.hpp</label>
+        <link refid="rvc__motion__controller__interface_8hpp_source"/>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+      </node>
+      <node id="9">
+        <label>geometry_msgs/msg/pose.hpp</label>
+      </node>
+      <node id="19">
+        <label>moveit_servo/make_shared_from_pool.h</label>
+      </node>
+      <node id="16">
+        <label>std_msgs/msg/int8.hpp</label>
+      </node>
+      <node id="13">
+        <label>geometry_msgs/msg/transform_stamped.hpp</label>
+      </node>
+      <node id="6">
+        <label>rclcpp/rclcpp.hpp</label>
+      </node>
+      <node id="1">
+        <label>rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp</label>
+        <link refid="moveit2__servo__motion__controller_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+      </node>
+      <node id="21">
+        <label>geometry_msgs/msg/twist_stamped.hpp</label>
+      </node>
+      <node id="17">
+        <label>moveit_servo/servo.h</label>
+      </node>
+      <node id="25">
+        <label>pluginlib/class_list_macros.hpp</label>
+      </node>
+      <node id="18">
+        <label>moveit2_pose_tracking.hpp</label>
+        <link refid="moveit2__pose__tracking_8hpp_source"/>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+      </node>
+      <node id="24">
+        <label>std_msgs/msg/float64_multi_array.hpp</label>
+      </node>
+      <node id="22">
+        <label>std_msgs/msg/float64.hpp</label>
+      </node>
+      <node id="10">
+        <label>tf2/LinearMath/Vector3.h</label>
+      </node>
+      <node id="4">
+        <label>moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp</label>
+        <link refid="moveit2__servo__motion__controller_8hpp_source"/>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+      </node>
+      <node id="12">
+        <label>sensor_msgs/msg/joint_state.hpp</label>
+      </node>
+      <node id="14">
+        <label>tf2_geometry_msgs/tf2_geometry_msgs.hpp</label>
+      </node>
+      <node id="20">
+        <label>moveit_servo/servo_parameters.h</label>
+      </node>
+      <node id="11">
+        <label>tf2_ros/transform_listener.h</label>
+      </node>
+      <node id="7">
+        <label>rclcpp/macros.hpp</label>
+      </node>
+      <node id="2">
+        <label>thread</label>
+      </node>
+      <node id="15">
+        <label>tf2_ros/buffer.h</label>
+      </node>
+      <node id="3">
+        <label>algorithm</label>
+      </node>
+      <node id="23">
+        <label>moveit/planning_scene_interface/planning_scene_interface.h</label>
+      </node>
+    </incdepgraph>
+    <innernamespace refid="namespace_r_v_c_motion_controller">RVCMotionController</innernamespace>
+    <innernamespace refid="namespacestd_1_1chrono">std::chrono</innernamespace>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="moveit2__servo__motion__controller_8cpp_1a5a42421b0311e4b603861e5b1e809ea5" prot="public" static="yes" mutable="no">
+        <type>bool</type>
+        <definition>bool exitApp</definition>
+        <argsstring></argsstring>
+        <name>exitApp</name>
+        <initializer>= false</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" line="26" column="13" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="moveit2__servo__motion__controller_8cpp_1afbd88e8fbfa291e1444bdff01dc7b4a4" prot="public" static="yes" mutable="no">
+        <type>const rclcpp::Logger</type>
+        <definition>const rclcpp::Logger LOGGER</definition>
+        <argsstring></argsstring>
+        <name>LOGGER</name>
+        <initializer>= rclcpp::get_logger ( &quot;moveit_servo.pose_tracking_demo&quot; )</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" line="28" column="29" bodyfile="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp" bodystart="28" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"></highlight></codeline>
+<codeline lineno="3"><highlight class="comment">INTEL<sp/>CONFIDENTIAL</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"></highlight></codeline>
+<codeline lineno="5"><highlight class="comment">Copyright<sp/>(C)<sp/>2022<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"></highlight></codeline>
+<codeline lineno="7"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>Intel<sp/>copyrighted<sp/>materials,</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">and<sp/>your<sp/>use<sp/>of<sp/>them<sp/>is<sp/>governed<sp/>by<sp/>the<sp/>express<sp/>license<sp/>under<sp/>which<sp/>they</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">were<sp/>provided<sp/>to<sp/>you<sp/>(License).<sp/>Unless<sp/>the<sp/>License<sp/>provides<sp/>otherwise,</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">you<sp/>may<sp/>not<sp/>use,<sp/>modify,<sp/>copy,<sp/>publish,<sp/>distribute,<sp/>disclose<sp/>or<sp/>transmit</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">this<sp/>software<sp/>or<sp/>the<sp/>related<sp/>documents<sp/>without<sp/>Intel&apos;s<sp/>prior<sp/>written</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">permission.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment"></highlight></codeline>
+<codeline lineno="14"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>provided<sp/>as<sp/>is,<sp/>with<sp/>no</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">express<sp/>or<sp/>implied<sp/>warranties,<sp/>other<sp/>than<sp/>those<sp/>that<sp/>are<sp/>expressly<sp/>stated</highlight></codeline>
+<codeline lineno="16"><highlight class="comment">in<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="17"><highlight class="comment"></highlight></codeline>
+<codeline lineno="18"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;thread&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;algorithm&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>exitApp<sp/>=<sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>rclcpp::Logger<sp/>LOGGER<sp/>=<sp/>rclcpp::get_logger<sp/>(<sp/></highlight><highlight class="stringliteral">&quot;moveit_servo.pose_tracking_demo&quot;</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">std::chrono_literals;</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">std::chrono;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespace_r_v_c_motion_controller" kindref="compound">RVCMotionController</ref></highlight></codeline>
+<codeline lineno="34"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>Moveit2ServoMotionController::statusCB<sp/>(<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std_msgs::msg::Int8::ConstSharedPtr<sp/>msg<sp/>)</highlight></codeline>
+<codeline lineno="37"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/>moveit_servo::StatusCode<sp/>latest_status<sp/>=<sp/></highlight><highlight class="keyword">static_cast&lt;</highlight><highlight class="normal">moveit_servo::StatusCode</highlight><highlight class="keyword">&gt;</highlight><highlight class="normal"><sp/>(<sp/>msg-&gt;data<sp/>);</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(<sp/>latest_status<sp/>!=<sp/>status_<sp/>)<sp/>{</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>status_<sp/>=<sp/>latest_status;</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal">&amp;<sp/>status_str<sp/>=<sp/>moveit_servo::SERVO_STATUS_CODE_MAP.at<sp/>(<sp/>status_<sp/>);</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_INFO_STREAM<sp/>(<sp/>LOGGER,<sp/></highlight><highlight class="stringliteral">&quot;Servo<sp/>status:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>status_str<sp/>);</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="44"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal">moveit_msgs::msg::CollisionObject<sp/>createCollisionBox<sp/>(<sp/>std::string<sp/>name,<sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>dimx,</highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>dimy,<sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>dimz,<sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>posx,<sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>posy,<sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>posz<sp/>)</highlight></codeline>
+<codeline lineno="48"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/>moveit_msgs::msg::CollisionObject<sp/>collision_object;</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/>collision_object.header.frame_id<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;world&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/>collision_object.id<sp/>=<sp/>std::move(name);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/>shape_msgs::msg::SolidPrimitive<sp/>primitive;</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Define<sp/>the<sp/>size<sp/>of<sp/>the<sp/>box<sp/>in<sp/>meters</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/>primitive.type<sp/>=<sp/>primitive.BOX;</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/>primitive.dimensions.resize<sp/>(<sp/>3<sp/>);</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/>primitive.dimensions[primitive.BOX_X]<sp/>=<sp/>dimx;</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/>primitive.dimensions[primitive.BOX_Y]<sp/>=<sp/>dimy;</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/>primitive.dimensions[primitive.BOX_Z]<sp/>=<sp/>dimz;</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"></highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Define<sp/>the<sp/>pose<sp/>of<sp/>the<sp/>box<sp/>(relative<sp/>to<sp/>the<sp/>frame_id)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/>geometry_msgs::msg::Pose<sp/>box_pose;</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/>box_pose.orientation.w<sp/>=<sp/>1.0;</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/>box_pose.position.x<sp/>=<sp/>posx;</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/>box_pose.position.y<sp/>=<sp/>posy;</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/>box_pose.position.z<sp/>=<sp/>posz;</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/>collision_object.primitives.push_back<sp/>(<sp/>primitive<sp/>);</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/>collision_object.primitive_poses.push_back<sp/>(<sp/>box_pose<sp/>);</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/>collision_object.operation<sp/>=<sp/>collision_object.ADD;</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"></highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>collision_object;</highlight></codeline>
+<codeline lineno="73"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"></highlight></codeline>
+<codeline lineno="75"><highlight class="normal">Moveit2ServoMotionController::Moveit2ServoMotionController<sp/>(<sp/>)</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/>:<sp/>initialized(false)</highlight></codeline>
+<codeline lineno="77"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="78"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal"></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>Moveit2ServoMotionController::init<sp/>(<sp/>rclcpp::Node::SharedPtr<sp/>node<sp/>)</highlight></codeline>
+<codeline lineno="81"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>res<sp/>=<sp/>RVCMotionControllerInterface::init(node);</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"></highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>servo_parameters<sp/>=<sp/>moveit_servo::ServoParameters::makeServoParameters<sp/>(<sp/>node<sp/>);</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"></highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(<sp/>servo_parameters<sp/>==<sp/></highlight><highlight class="keyword">nullptr</highlight><highlight class="normal"><sp/>)<sp/>{</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_FATAL<sp/>(<sp/>LOGGER,<sp/></highlight><highlight class="stringliteral">&quot;Could<sp/>not<sp/>get<sp/>servo<sp/>parameters!&quot;</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"></highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Load<sp/>the<sp/>planning<sp/>scene<sp/>monitor</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/>planning_scene_monitor::PlanningSceneMonitorPtr<sp/>planning_scene_monitor<sp/>=</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::make_shared&lt;planning_scene_monitor::PlanningSceneMonitor&gt;<sp/>(<sp/>node,<sp/></highlight><highlight class="stringliteral">&quot;robot_description&quot;</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"></highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(<sp/>!planning_scene_monitor-&gt;getPlanningScene()<sp/>)<sp/>{</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_ERROR_STREAM<sp/>(<sp/>LOGGER,<sp/></highlight><highlight class="stringliteral">&quot;Error<sp/>in<sp/>setting<sp/>up<sp/>the<sp/>PlanningSceneMonitor.&quot;</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"></highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/>planning_scene_monitor-&gt;providePlanningSceneService();</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/>planning_scene_monitor-&gt;startSceneMonitor();</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//planning_scene_monitor-&gt;startSceneMonitor(&quot;monitored_planning_scene&quot;);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/>planning_scene_monitor-&gt;startWorldGeometryMonitor<sp/>(</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>planning_scene_monitor::PlanningSceneMonitor::DEFAULT_COLLISION_OBJECT_TOPIC,</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>planning_scene_monitor::PlanningSceneMonitor::DEFAULT_PLANNING_SCENE_WORLD_TOPIC,</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal"><sp/></highlight><highlight class="comment">/*<sp/>skip<sp/>octomap<sp/>monitor<sp/>*/</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"></highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/><sp/><sp/>RCLCPP_ERROR<sp/>(<sp/>LOGGER,<sp/></highlight><highlight class="stringliteral">&quot;<sp/>TOPIC:<sp/>%s&quot;</highlight><highlight class="normal">,servo_parameters-&gt;joint_topic.c_str()<sp/>);</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"><sp/><sp/><sp/><sp/>RCLCPP_ERROR<sp/>(<sp/>LOGGER,<sp/></highlight><highlight class="stringliteral">&quot;<sp/>COMMAND<sp/>OUT<sp/>TOPIC:<sp/>%s&quot;</highlight><highlight class="normal">,servo_parameters-&gt;command_out_topic.c_str()<sp/>);</highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/>planning_scene_monitor-&gt;startStateMonitor<sp/>(<sp/>servo_parameters-&gt;joint_topic<sp/>);</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"></highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/>planning_scene_monitor-&gt;setPlanningScenePublishingFrequency<sp/>(<sp/>60<sp/>);</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/>planning_scene_monitor-&gt;setStateUpdateFrequency<sp/>(<sp/>60<sp/>);</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/>planning_scene_monitor-&gt;providePlanningSceneService();</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/>planning_scene_monitor-&gt;startPublishingPlanningScene<sp/>(<sp/>planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE<sp/>);</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"></highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Wait<sp/>for<sp/>Planning<sp/>Scene<sp/>Monitor<sp/>to<sp/>setup</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(<sp/>!planning_scene_monitor-&gt;waitForCurrentRobotState<sp/>(<sp/>node-&gt;now(),<sp/>5.0<sp/></highlight><highlight class="comment">/*<sp/>seconds<sp/>*/</highlight><highlight class="normal"><sp/>)<sp/>)<sp/>{</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_ERROR_STREAM<sp/>(<sp/>LOGGER,<sp/></highlight><highlight class="stringliteral">&quot;Error<sp/>waiting<sp/>for<sp/>current<sp/>robot<sp/>state<sp/>in<sp/>PlanningSceneMonitor.&quot;</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="122"><highlight class="normal"></highlight></codeline>
+<codeline lineno="123"><highlight class="normal"></highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/>moveit_msgs::msg::PlanningScene<sp/>planning_scene;</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/>node-&gt;declare_parameter&lt;std::vector&lt;std::string&gt;&gt;(</highlight><highlight class="stringliteral">&quot;collision_boxes&quot;</highlight><highlight class="normal">,<sp/>std::vector&lt;std::string&gt;());</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>collision_boxes<sp/>=<sp/>node-&gt;get_parameter(</highlight><highlight class="stringliteral">&quot;collision_boxes&quot;</highlight><highlight class="normal">).as_string_array();</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"></highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/>std::vector&lt;moveit_msgs::msg::CollisionObject&gt;<sp/>collision_objects;</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"></highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>it<sp/>=<sp/>begin<sp/>(collision_boxes);<sp/>it<sp/>!=<sp/>end<sp/>(collision_boxes);<sp/>++it)<sp/></highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_ERROR(<sp/>LOGGER,<sp/></highlight><highlight class="stringliteral">&quot;============&gt;<sp/>DECLARING<sp/>%s<sp/>&quot;</highlight><highlight class="normal">,<sp/>it-&gt;c_str());</highlight></codeline>
+<codeline lineno="133"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>node-&gt;declare_parameter&lt;std::vector&lt;double&gt;&gt;(*it,<sp/>std::vector&lt;double&gt;());</highlight></codeline>
+<codeline lineno="134"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::vector&lt;double&gt;<sp/>box3d<sp/>=<sp/><sp/>node-&gt;get_parameter(*it).as_double_array();</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"></highlight></codeline>
+<codeline lineno="136"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>collision_objects.push_back<sp/>(<sp/></highlight></codeline>
+<codeline lineno="137"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>createCollisionBox<sp/>(*it,<sp/>box3d.at(0),box3d.at(1),box3d.at(2),box3d.at(3),box3d.at(4),box3d.at(5)));</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"></highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"></highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/><sp/><sp/>planning_scene.world.collision_objects<sp/>=<sp/>std::move(collision_objects);</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"></highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/><sp/><sp/>planning_scene.is_diff<sp/>=<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/><sp/><sp/>planning_scene_monitor-&gt;newPlanningSceneMessage<sp/>(<sp/>planning_scene<sp/>);</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"></highlight></codeline>
+<codeline lineno="146"><highlight class="normal"></highlight></codeline>
+<codeline lineno="147"><highlight class="normal"></highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><sp/><sp/><sp/><sp/>poseTracker<sp/>=<sp/>std::make_unique&lt;PoseTracking&gt;<sp/>(<sp/>node,<sp/>servo_parameters,<sp/>planning_scene_monitor<sp/>),</highlight></codeline>
+<codeline lineno="149"><highlight class="normal"></highlight></codeline>
+<codeline lineno="150"><highlight class="normal"><sp/><sp/><sp/><sp/>sub_<sp/>=<sp/>node-&gt;create_subscription&lt;std_msgs::msg::Int8&gt;<sp/>(<sp/>servo_parameters-&gt;status_topic,<sp/>1,<sp/>std::bind<sp/>(<sp/>&amp;Moveit2ServoMotionController::statusCB,<sp/></highlight><highlight class="keyword">this</highlight><highlight class="normal">,<sp/>std::placeholders::_1<sp/>)<sp/>);</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"></highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/><sp/><sp/>robot_model_loader::RobotModelLoader<sp/>robot_model_loader<sp/>(<sp/>node,<sp/></highlight><highlight class="stringliteral">&quot;robot_description&quot;</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>kinematic_model<sp/>=<sp/>robot_model_loader.getModel();</highlight></codeline>
+<codeline lineno="154"><highlight class="normal"><sp/><sp/><sp/><sp/>RCLCPP_INFO<sp/>(<sp/>LOGGER,</highlight><highlight class="stringliteral">&quot;Model<sp/>frame:<sp/>%s&quot;</highlight><highlight class="normal">,<sp/>kinematic_model-&gt;getModelFrame().c_str()<sp/>);</highlight></codeline>
+<codeline lineno="155"><highlight class="normal"></highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><sp/><sp/><sp/><sp/>kinematic_state<sp/>=<sp/>std::make_shared&lt;moveit::core::RobotState&gt;<sp/>(<sp/>kinematic_model<sp/>);</highlight></codeline>
+<codeline lineno="157"><highlight class="normal"></highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><sp/><sp/><sp/><sp/>kinematic_state-&gt;setToDefaultValues();</highlight></codeline>
+<codeline lineno="159"><highlight class="normal"></highlight></codeline>
+<codeline lineno="160"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>resetTargetPose()<sp/>can<sp/>be<sp/>used<sp/>to<sp/>clear<sp/>the<sp/>target<sp/>pose<sp/>and<sp/>wait<sp/>for<sp/>a<sp/>new<sp/>one,<sp/>e.g.<sp/>when<sp/>moving<sp/>between<sp/>multiple</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="161"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>waypoints</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="162"><highlight class="normal"><sp/><sp/><sp/><sp/>poseTracker-&gt;resetTargetPose();</highlight></codeline>
+<codeline lineno="163"><highlight class="normal"></highlight></codeline>
+<codeline lineno="164"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Publish<sp/>target<sp/>pose</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><sp/><sp/><sp/><sp/>currentPose.header.stamp<sp/>=<sp/>node-&gt;now();</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"></highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(<sp/>move_to_pose_thread<sp/>==<sp/></highlight><highlight class="keyword">nullptr</highlight><highlight class="normal"><sp/>)</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>move_to_pose_thread<sp/>=<sp/>std::make_shared&lt;std::thread&gt;<sp/>(<sp/>[</highlight><highlight class="keyword">this</highlight><highlight class="normal">]<sp/></highlight></codeline>
+<codeline lineno="170"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="171"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>pthread_t<sp/>this_thread<sp/>=<sp/>pthread_self();</highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>pthread_setname_np(this_thread,<sp/></highlight><highlight class="stringliteral">&quot;PSmove&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="173"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">sched_param<sp/>params;</highlight></codeline>
+<codeline lineno="174"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>params.sched_priority<sp/>=<sp/>90;</highlight></codeline>
+<codeline lineno="175"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>policy;</highlight></codeline>
+<codeline lineno="176"><highlight class="normal"></highlight></codeline>
+<codeline lineno="177"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>ret<sp/>=<sp/>pthread_setschedparam(this_thread,<sp/>SCHED_FIFO,<sp/>&amp;params);</highlight></codeline>
+<codeline lineno="178"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(ret<sp/>!=<sp/>0)</highlight></codeline>
+<codeline lineno="179"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="180"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_ERROR(node_-&gt;get_logger(),<sp/></highlight><highlight class="stringliteral">&quot;Failure<sp/>setting<sp/>thread<sp/>realtime<sp/>priority.<sp/>Error<sp/>code:<sp/>%d&quot;</highlight><highlight class="normal">,<sp/>ret);</highlight></codeline>
+<codeline lineno="181"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="182"><highlight class="normal"></highlight></codeline>
+<codeline lineno="183"><highlight class="normal"></highlight></codeline>
+<codeline lineno="184"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ret<sp/>=<sp/>pthread_getschedparam(this_thread,<sp/>&amp;policy,<sp/>&amp;params);</highlight></codeline>
+<codeline lineno="185"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(ret<sp/>!=<sp/>0)</highlight></codeline>
+<codeline lineno="186"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_ERROR(node_-&gt;get_logger(),</highlight><highlight class="stringliteral">&quot;moveToPose<sp/>Couldn&apos;t<sp/>retrieve<sp/>scheduling<sp/>parameters&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="187"><highlight class="normal"></highlight></codeline>
+<codeline lineno="188"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Check<sp/>the<sp/>correct<sp/>policy<sp/>was<sp/>applied</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="189"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(policy<sp/>!=<sp/>SCHED_FIFO)</highlight></codeline>
+<codeline lineno="190"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_ERROR(node_-&gt;get_logger(),</highlight><highlight class="stringliteral">&quot;moveToPose:<sp/>Scheduling<sp/>is<sp/>NOT<sp/>SCHED_FIFO!&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="191"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="192"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_ERROR(node_-&gt;get_logger(),</highlight><highlight class="stringliteral">&quot;moveToPose:<sp/>SCHED_FIFO<sp/>OK,<sp/>priority<sp/>%i&quot;</highlight><highlight class="normal">,<sp/>params.sched_priority);</highlight></codeline>
+<codeline lineno="193"><highlight class="normal"></highlight></codeline>
+<codeline lineno="194"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">while</highlight><highlight class="normal"><sp/>(<sp/>!exitApp<sp/>)</highlight></codeline>
+<codeline lineno="195"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="196"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>PoseTrackingStatusCode<sp/>tracking_status<sp/>=<sp/>poseTracker-&gt;moveToPose<sp/>();</highlight></codeline>
+<codeline lineno="197"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//RCLCPP_INFO_STREAM_THROTTLE<sp/>(<sp/>node_-&gt;get_logger(),<sp/>*node_-&gt;get_clock(),<sp/>1000,&quot;Pose<sp/>tracker<sp/>exited<sp/>with<sp/>status:<sp/>&quot;<sp/>&lt;&lt;<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>POSE_TRACKING_STATUS_CODE_MAP.at<sp/>(<sp/>tracking_status<sp/>)<sp/>);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="198"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_INFO_STREAM<sp/>(<sp/>node_-&gt;get_logger(),</highlight><highlight class="stringliteral">&quot;Pose<sp/>tracker<sp/>exited<sp/>with<sp/>status:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>POSE_TRACKING_STATUS_CODE_MAP.at<sp/>(<sp/>tracking_status<sp/>)<sp/>);</highlight></codeline>
+<codeline lineno="199"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="200"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="201"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_INFO<sp/>(<sp/>node_-&gt;get_logger(),<sp/></highlight><highlight class="stringliteral">&quot;moveToPose<sp/>thread<sp/>exiting...&quot;</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="202"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}<sp/>);</highlight></codeline>
+<codeline lineno="203"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="204"><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>1</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="205"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>qos<sp/>=<sp/>rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default),<sp/>rmw_qos_profile_default);</highlight></codeline>
+<codeline lineno="206"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="207"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>qos<sp/>=<sp/>rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_sensor_data),<sp/>rmw_qos_profile_sensor_data);</highlight></codeline>
+<codeline lineno="208"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="209"><highlight class="normal"></highlight></codeline>
+<codeline lineno="210"><highlight class="normal"><sp/><sp/><sp/><sp/>gripper_controller_goal_pub<sp/>=</highlight></codeline>
+<codeline lineno="211"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>node_-&gt;create_publisher&lt;std_msgs::msg::Float64MultiArray&gt;(<sp/></highlight><highlight class="stringliteral">&quot;gripper_forward_command_controller/commands&quot;</highlight><highlight class="normal">,<sp/>qos<sp/>);</highlight></codeline>
+<codeline lineno="212"><highlight class="normal"></highlight></codeline>
+<codeline lineno="213"><highlight class="normal"><sp/><sp/><sp/><sp/>initialized<sp/>=<sp/>res;</highlight></codeline>
+<codeline lineno="214"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>res;</highlight></codeline>
+<codeline lineno="215"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="216"><highlight class="normal"></highlight></codeline>
+<codeline lineno="217"><highlight class="normal">Moveit2ServoMotionController::~Moveit2ServoMotionController()</highlight></codeline>
+<codeline lineno="218"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="219"><highlight class="normal"><sp/><sp/><sp/><sp/>exitApp<sp/>=<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="220"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Make<sp/>sure<sp/>the<sp/>tracker<sp/>is<sp/>stopped<sp/>and<sp/>clean<sp/>up</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="221"><highlight class="normal"><sp/><sp/><sp/><sp/>move_to_pose_thread-&gt;join();</highlight></codeline>
+<codeline lineno="222"><highlight class="normal"></highlight></codeline>
+<codeline lineno="223"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="224"><highlight class="normal"></highlight></codeline>
+<codeline lineno="225"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>Moveit2ServoMotionController::setControllerSpeed<sp/>(<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>controllerSpeed<sp/>)</highlight></codeline>
+<codeline lineno="226"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="227"><highlight class="normal"><sp/><sp/><sp/><sp/>poseTracker-&gt;setSpeed(controllerSpeed);</highlight></codeline>
+<codeline lineno="228"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="229"><highlight class="normal"></highlight></codeline>
+<codeline lineno="230"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>Moveit2ServoMotionController::sendGoal<sp/>(<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>geometry_msgs::msg::Pose<sp/>destPose<sp/>)</highlight></codeline>
+<codeline lineno="231"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="232"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!initialized)</highlight></codeline>
+<codeline lineno="233"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="234"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>RCLCPP_INFO<sp/>(<sp/>node_-&gt;get_logger(),<sp/></highlight><highlight class="stringliteral">&quot;Moveit2ServoMotionController:<sp/>GOAL<sp/>CONTROLLER<sp/>NOT<sp/>INITIALIZED!&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="235"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="236"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="237"><highlight class="normal"></highlight></codeline>
+<codeline lineno="238"><highlight class="normal"><sp/><sp/><sp/><sp/>current_control_mode<sp/>=<sp/>TCP_CONTROL_MODE;</highlight></codeline>
+<codeline lineno="239"><highlight class="normal"><sp/><sp/><sp/><sp/>lastTCPGoal<sp/>=<sp/>destPose;</highlight></codeline>
+<codeline lineno="240"><highlight class="normal"></highlight></codeline>
+<codeline lineno="241"><highlight class="normal"><sp/><sp/><sp/><sp/>currentPose.pose=<sp/>destPose;</highlight></codeline>
+<codeline lineno="242"><highlight class="normal"><sp/><sp/><sp/><sp/>currentPose.header.frame_id<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;base_link&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="243"><highlight class="normal"><sp/><sp/><sp/><sp/>currentPose.header.stamp<sp/>=<sp/>node_-&gt;now();</highlight></codeline>
+<codeline lineno="244"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>geometry_msgs::msg::PoseStamped::ConstSharedPtr<sp/>msg<sp/>=<sp/>std::make_shared&lt;const<sp/>geometry_msgs::msg::PoseStamped&gt;<sp/>(<sp/>currentPose<sp/>);</highlight></codeline>
+<codeline lineno="245"><highlight class="normal"></highlight></codeline>
+<codeline lineno="246"><highlight class="normal"><sp/><sp/><sp/><sp/>poseTracker-&gt;setTargetPose<sp/>(<sp/>msg<sp/>);</highlight></codeline>
+<codeline lineno="247"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="248"><highlight class="normal"></highlight></codeline>
+<codeline lineno="249"><highlight class="normal"></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>Moveit2ServoMotionController::isGoalNear()</highlight></codeline>
+<codeline lineno="250"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="251"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!initialized)</highlight></codeline>
+<codeline lineno="252"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="253"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::cout<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;GOAL<sp/>CONTROLLER<sp/>NOT<sp/>INITIALIZED!\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="254"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="255"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="256"><highlight class="normal"><sp/><sp/><sp/><sp/>RCLCPP_DEBUG_THROTTLE(node_-&gt;get_logger(),<sp/>*node_-&gt;get_clock(),<sp/>1000,<sp/></highlight><highlight class="stringliteral">&quot;Moveit2ServoMotionController::isGoalNear():<sp/>RESULT:<sp/>%d&quot;</highlight><highlight class="normal">,<sp/>poseTracker-&gt;isGoalAchieved());</highlight></codeline>
+<codeline lineno="257"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>poseTracker-&gt;isGoalAchieved();</highlight></codeline>
+<codeline lineno="258"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="259"><highlight class="normal"></highlight></codeline>
+<codeline lineno="260"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>Moveit2ServoMotionController::sendGoal<sp/>(<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;vector6d_t&gt;<sp/>dest,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>recomputeTraj<sp/>)</highlight></codeline>
+<codeline lineno="261"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="262"><highlight class="normal"><sp/><sp/><sp/><sp/>(void)dest;</highlight></codeline>
+<codeline lineno="263"><highlight class="normal"><sp/><sp/><sp/><sp/>(void)recomputeTraj;</highlight></codeline>
+<codeline lineno="264"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!initialized)</highlight></codeline>
+<codeline lineno="265"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="266"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::cout<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;GOAL<sp/>CONTROLLER<sp/>NOT<sp/>INITIALIZED!\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="267"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="268"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="269"><highlight class="normal"></highlight></codeline>
+<codeline lineno="270"><highlight class="normal"><sp/><sp/><sp/><sp/>RCLCPP_FATAL<sp/>(<sp/>node_-&gt;get_logger(),<sp/></highlight><highlight class="stringliteral">&quot;===================&gt;<sp/>Moveit2ServoMotionController::sendGoal<sp/>JOINT<sp/>MODE<sp/>Unimplemented<sp/>!!!&quot;</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="271"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="272"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>Moveit2ServoMotionController::sendGripperPosition(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>pos)</highlight></codeline>
+<codeline lineno="273"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="274"><highlight class="normal"><sp/><sp/><sp/><sp/>std_msgs::msg::Float64MultiArray<sp/>gripperPositionMsg;</highlight></codeline>
+<codeline lineno="275"><highlight class="normal"><sp/><sp/><sp/><sp/>gripperPositionMsg.data.push_back<sp/>(<sp/>pos<sp/>);</highlight></codeline>
+<codeline lineno="276"><highlight class="normal"><sp/><sp/><sp/><sp/>gripper_controller_goal_pub-&gt;publish<sp/>(<sp/>gripperPositionMsg<sp/>);</highlight></codeline>
+<codeline lineno="277"><highlight class="normal"></highlight></codeline>
+<codeline lineno="278"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="279"><highlight class="normal"></highlight></codeline>
+<codeline lineno="280"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="281"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pluginlib/class_list_macros.hpp&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="282"><highlight class="normal"></highlight></codeline>
+<codeline lineno="283"><highlight class="normal">PLUGINLIB_EXPORT_CLASS(<ref refid="class_r_v_c_motion_controller_1_1_moveit2_servo_motion_controller" kindref="compound">RVCMotionController::Moveit2ServoMotionController</ref>,<sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionController::RVCMotionControllerInterface</ref>)</highlight></codeline>
+<codeline lineno="284"><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/src/moveit2_servo_motion_controller.cpp"/>
+  </compounddef>
+</doxygen>

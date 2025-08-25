@@ -1,0 +1,15 @@
+clip @ git+https://github.com/openai/CLIP.git@a1d071733d7111c9c014f024669f959182114e33
+loguru==0.7.3
+opencv-python==4.11.0.86
+openvino==2025.2
+optimum==1.25.3
+optimum-intel==1.23.1
+psutil==5.9.8
+pyaudio==0.2.14
+pyrealsense2==2.55.1.6486
+pyside6==6.9.1
+qtawesome==1.4.0
+segment_anything==1.0
+sentence-transformers==5.0.0
+translate==3.6.1
+websockets==13.0.1

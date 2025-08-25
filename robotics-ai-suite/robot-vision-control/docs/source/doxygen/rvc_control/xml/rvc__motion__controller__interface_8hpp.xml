@@ -1,0 +1,222 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="rvc__motion__controller__interface_8hpp" kind="file" language="C++">
+    <compoundname>rvc_motion_controller_interface.hpp</compoundname>
+    <includes local="yes">rclcpp/rclcpp.hpp</includes>
+    <includes local="yes">rclcpp/macros.hpp</includes>
+    <includes local="yes">geometry_msgs/msg/pose_stamped.hpp</includes>
+    <includes local="yes">geometry_msgs/msg/pose.hpp</includes>
+    <includes local="yes">tf2/LinearMath/Vector3.h</includes>
+    <includes local="yes">tf2_ros/transform_listener.h</includes>
+    <includes local="no">sensor_msgs/msg/joint_state.hpp</includes>
+    <includes local="no">geometry_msgs/msg/transform_stamped.hpp</includes>
+    <includes local="no">tf2_geometry_msgs/tf2_geometry_msgs.hpp</includes>
+    <includes local="no">tf2_ros/buffer.h</includes>
+    <includedby refid="moveit2__servo__motion__controller_8hpp" local="yes">rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp</includedby>
+    <includedby refid="rvc__motion__controller__interface_8cpp" local="yes">rvc_motion_controller_interface/src/rvc_motion_controller_interface.cpp</includedby>
+    <includedby refid="ur__pendant__motion__controller_8hpp" local="yes">rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/ur_pendant_motion_controller.hpp</includedby>
+    <incdepgraph>
+      <node id="4">
+        <label>geometry_msgs/msg/pose_stamped.hpp</label>
+      </node>
+      <node id="1">
+        <label>rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp</label>
+        <link refid="rvc__motion__controller__interface_8hpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>geometry_msgs/msg/pose.hpp</label>
+      </node>
+      <node id="9">
+        <label>geometry_msgs/msg/transform_stamped.hpp</label>
+      </node>
+      <node id="2">
+        <label>rclcpp/rclcpp.hpp</label>
+      </node>
+      <node id="6">
+        <label>tf2/LinearMath/Vector3.h</label>
+      </node>
+      <node id="8">
+        <label>sensor_msgs/msg/joint_state.hpp</label>
+      </node>
+      <node id="10">
+        <label>tf2_geometry_msgs/tf2_geometry_msgs.hpp</label>
+      </node>
+      <node id="7">
+        <label>tf2_ros/transform_listener.h</label>
+      </node>
+      <node id="3">
+        <label>rclcpp/macros.hpp</label>
+      </node>
+      <node id="11">
+        <label>tf2_ros/buffer.h</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="3">
+        <label>rvc_static_motion_controller/rvc_motion_controller_plugins/ur_pendant_motion_controller/include/ur_pendant_motion_controller/ur_pendant_motion_controller.hpp</label>
+        <link refid="ur__pendant__motion__controller_8hpp_source"/>
+      </node>
+      <node id="1">
+        <label>rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp</label>
+        <link refid="rvc__motion__controller__interface_8hpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>rvc_dynamic_motion_controller/rvc_motion_controller_plugins/moveit2_servo_motion_controller/include/moveit2_servo_motion_controller/moveit2_servo_motion_controller.hpp</label>
+        <link refid="moveit2__servo__motion__controller_8hpp_source"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" prot="public">RVCMotionController::RVCMotionControllerInterface</innerclass>
+    <innernamespace refid="namespace_r_v_c_motion_controller">RVCMotionController</innernamespace>
+    <innernamespace refid="namespacegeometry__msgs">geometry_msgs</innernamespace>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="rvc__motion__controller__interface_8hpp_1ab76c7886f422357e6447be4d2533ee77" prot="public" static="no">
+        <name>__RVC_MOTION_CONTROLLER_INTERFACE_HPP__</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="23" column="9" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="rvc__motion__controller__interface_8hpp_1a983a73aa86f38f90930a4d20d42f3804" prot="public" static="no">
+        <type>std::array&lt; double, 6 &gt;</type>
+        <definition>using vector6d_t =  std::array&lt;double, 6&gt;</definition>
+        <argsstring></argsstring>
+        <name>vector6d_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" line="37" column="1" bodyfile="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"></highlight></codeline>
+<codeline lineno="3"><highlight class="comment">INTEL<sp/>CONFIDENTIAL</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"></highlight></codeline>
+<codeline lineno="5"><highlight class="comment">Copyright<sp/>(C)<sp/>2022<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"></highlight></codeline>
+<codeline lineno="7"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>Intel<sp/>copyrighted<sp/>materials,</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">and<sp/>your<sp/>use<sp/>of<sp/>them<sp/>is<sp/>governed<sp/>by<sp/>the<sp/>express<sp/>license<sp/>under<sp/>which<sp/>they</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">were<sp/>provided<sp/>to<sp/>you<sp/>(License).<sp/>Unless<sp/>the<sp/>License<sp/>provides<sp/>otherwise,</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">you<sp/>may<sp/>not<sp/>use,<sp/>modify,<sp/>copy,<sp/>publish,<sp/>distribute,<sp/>disclose<sp/>or<sp/>transmit</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">this<sp/>software<sp/>or<sp/>the<sp/>related<sp/>documents<sp/>without<sp/>Intel&apos;s<sp/>prior<sp/>written</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">permission.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment"></highlight></codeline>
+<codeline lineno="14"><highlight class="comment">This<sp/>software<sp/>and<sp/>the<sp/>related<sp/>documents<sp/>are<sp/>provided<sp/>as<sp/>is,<sp/>with<sp/>no</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">express<sp/>or<sp/>implied<sp/>warranties,<sp/>other<sp/>than<sp/>those<sp/>that<sp/>are<sp/>expressly<sp/>stated</highlight></codeline>
+<codeline lineno="16"><highlight class="comment">in<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="17"><highlight class="comment"></highlight></codeline>
+<codeline lineno="18"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>__RVC_MOTION_CONTROLLER_INTERFACE_HPP__</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>__RVC_MOTION_CONTROLLER_INTERFACE_HPP__</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;rclcpp/rclcpp.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;rclcpp/macros.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;geometry_msgs/msg/pose_stamped.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;geometry_msgs/msg/pose.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;tf2/LinearMath/Vector3.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;tf2_ros/transform_listener.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;sensor_msgs/msg/joint_state.hpp&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;geometry_msgs/msg/transform_stamped.hpp&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;tf2_geometry_msgs/tf2_geometry_msgs.hpp&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;tf2_ros/buffer.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight><highlight class="keyword">using</highlight><highlight class="normal"><sp/>vector6d_t<sp/>=<sp/>std::array&lt;double,<sp/>6&gt;;</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">geometry_msgs;</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespace_r_v_c_motion_controller" kindref="compound">RVCMotionController</ref></highlight></codeline>
+<codeline lineno="42"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="43" refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionControllerInterface</ref></highlight></codeline>
+<codeline lineno="44"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/>RCLCPP_SMART_PTR_ALIASES_ONLY(<ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionControllerInterface</ref>)</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>init(rclcpp::Node::SharedPtr<sp/>node);</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight></codeline>
+<codeline lineno="62" refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a267aaac3902ac1bf47a870f9b02b4d58" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a267aaac3902ac1bf47a870f9b02b4d58" kindref="member">setControllerSpeed</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>controllerSpeed)<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight></codeline>
+<codeline lineno="67" refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a5a54d8631325fb402fcd1412960c4357" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a5a54d8631325fb402fcd1412960c4357" kindref="member">sendGoal</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>geometry_msgs::msg::Pose<sp/>destPose)<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="71" refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a0b35fed01e1e1018a831d2dfedafbe99" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a0b35fed01e1e1018a831d2dfedafbe99" kindref="member">sendGoal</ref>(std::vector&lt;vector6d_t&gt;<sp/>dest,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>recomputeTraj)<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="77" refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aef5ea596277bb87030274d71a0add677" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aef5ea596277bb87030274d71a0add677" kindref="member">sendGripperPosition</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>position)<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"></highlight></codeline>
+<codeline lineno="81" refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a75decf28e1a228ebd57d730a5638017c" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a75decf28e1a228ebd57d730a5638017c" kindref="member">isGoalNear</ref>()<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="84" refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aeb1c0f524dd83957f70d359e9a719df2" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aeb1c0f524dd83957f70d359e9a719df2" kindref="member">getGripperPositionFeedback</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">)<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"></highlight></codeline>
+<codeline lineno="87" refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a53c5a7a5136e94d0b7b0882bfca5ae83" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a53c5a7a5136e94d0b7b0882bfca5ae83" kindref="member">~RVCMotionControllerInterface</ref>()<sp/>{};</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"></highlight></codeline>
+<codeline lineno="89"><highlight class="normal"></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionControllerInterface</ref>();</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"></highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">enum</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>UNDEFINED<sp/>=<sp/>0,</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>JOINT_CONTROL_MODE,</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>TCP_CONTROL_MODE</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"></highlight></codeline>
+<codeline lineno="103" refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aac3f97e64f67377c59593a6b2853f1e9" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>rclcpp::Node::SharedPtr<sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1aac3f97e64f67377c59593a6b2853f1e9" kindref="member">node_</ref>;</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"></highlight></codeline>
+<codeline lineno="106" refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1af579517cbf66e8ac5550a77c52dd1dce" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>vector6d_t<sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1af579517cbf66e8ac5550a77c52dd1dce" kindref="member">lastJointGoal</ref>;</highlight></codeline>
+<codeline lineno="108" refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac3a613c724464f9317665dbac0fe4c64" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>geometry_msgs::msg::Pose<sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1ac3a613c724464f9317665dbac0fe4c64" kindref="member">lastTCPGoal</ref>;</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"></highlight></codeline>
+<codeline lineno="111" refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a05b4cd37612329c645a4240864b45745" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface_1a05b4cd37612329c645a4240864b45745" kindref="member">current_control_mode</ref>;</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"></highlight></codeline>
+<codeline lineno="113"><highlight class="normal"></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionControllerInterface</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionControllerInterface</ref>&amp;);</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"></highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionControllerInterface</ref>&amp;<sp/>operator=(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="class_r_v_c_motion_controller_1_1_r_v_c_motion_controller_interface" kindref="compound">RVCMotionControllerInterface</ref>&amp;);</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"></highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>distance_threshold,<sp/>distance_threshold_tcp;</highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/><sp/><sp/>geometry_msgs::msg::Pose<sp/>currentTCPPose;</highlight></codeline>
+<codeline lineno="123"><highlight class="normal"></highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/>std::shared_ptr&lt;tf2_ros::Buffer&gt;<sp/>tfBuffer;</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/>std::shared_ptr&lt;tf2_ros::TransformListener&gt;<sp/>listener;</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/>std::string<sp/>base_link,<sp/>ee_link;</highlight></codeline>
+<codeline lineno="127"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="128"><highlight class="normal">}<sp/></highlight><highlight class="comment">//namespace<sp/>RVCMotionController</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="129"><highlight class="normal"></highlight></codeline>
+<codeline lineno="130"><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">//__RVC_MOTION_CONTROLLER_INTERFACE_HPP__</highlight><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="rvc_motion_controller_interface/include/rvc_motion_controller_interface/rvc_motion_controller_interface.hpp"/>
+  </compounddef>
+</doxygen>
