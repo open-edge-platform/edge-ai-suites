@@ -206,7 +206,7 @@ services:
     restart: on-failure:5
 
   pgserver:
-    image: ghcr.io/open-edge-platform/edge-ai-libraries/intel/scenescape-manager:v1.4.0-rc1
+    image: docker.io/intel/scenescape-manager:v1.4.0
     init: true
     networks:
       - scenescape
@@ -248,7 +248,7 @@ services:
     restart: on-failure:5
 
   web:
-    image: ghcr.io/open-edge-platform/edge-ai-libraries/intel/scenescape-manager:v1.4.0-rc1
+    image: docker.io/intel/scenescape-manager:v1.4.0
     init: true
     networks:
       scenescape:
@@ -299,7 +299,7 @@ services:
     restart: on-failure:5
 
   scene:
-    image: ghcr.io/open-edge-platform/edge-ai-libraries/intel/scenescape-controller:v1.4.0-rc1
+    image: docker.io/intel/scenescape-controller:v1.4.0
     init: true
     environment:
       - http_proxy=${http_proxy}

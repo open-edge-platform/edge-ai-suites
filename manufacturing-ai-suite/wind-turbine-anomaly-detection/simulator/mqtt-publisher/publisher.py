@@ -10,16 +10,17 @@ Sample MQTT publisher to publish the input data.
 
 import json
 import time
-import random
 import argparse
 import re
 import sys
 import os
-import glob
-import paho.mqtt.client as mqtt
 from multiprocessing import Process
 import ssl
 import socket
+import glob
+import paho.mqtt.client as mqtt
+import pandas as pd
+
 
 SERVICE = 'mqtt'
 SAMPLING_RATE = 10  # 500.0 # 2msecdd
@@ -52,6 +53,8 @@ def parse_args():
                      help='MQTT publication interval')
     a_p.add_argument('--csv', default=None, type=str,
                      help='CSV file to publish to MQTT broker')
+    a_p.add_argument('--topic', default=None, type=str, required=True,
+                     help='MQTT topic name to publish to')
     a_p.add_argument('--json', default=None, type=str,
                      help='folder containing json file(s) to publish'
                      'to MQTT broker')
@@ -74,41 +77,38 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, filename):
     """
     continous_simulator_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true").lower()
 
-    print(f"\nMQTT Topic - {topic}\nSubsample - {subsample}\nSampling Rate - {sampling_rate}\nFilename - {filename}\n")
+    print(f"\nMQTT Topic - {topic}\nSubsample - {subsample}\nSampling Rate - \
+          {sampling_rate}\nFilename - {filename}\n")
     jencoder = json.JSONEncoder()
-
+    csv_data = pd.read_csv(filename, nrows=0)
+    columns = csv_data.columns.tolist()
+    chunk_size = 1000
     while True:
         start_time = time.time()
         row_served = 0
-        
-
-        with open(filename, 'r') as fileobject:
-            tick = g_tick(float(subsample) / float(sampling_rate))
-
-            for row in fileobject:
-                row = [x.strip() for x in row.split(',') if x.strip()]
-                if not row or not re.match(r'^-?\d+', row[0]):
-                    continue
+        tick = g_tick(float(subsample) / float(sampling_rate))
+        for chunk in pd.read_csv(filename, chunksize=chunk_size):
+            for _, row in chunk.iterrows():
 
                 if subsample > 1 and (row_served % subsample) != 0:
                     row_served += 1
                     continue
 
                 try:
-                    values = [float(x) for x in row]
-                    msg = jencoder.encode({'grid_active_power': values[0], 'wind_speed': values[1]})
+                    msg = jencoder.encode({col: row[col] for col in columns})
                     print("Publishing message", msg)
                     mqttc.publish(topic, msg)
                 except (ValueError, IndexError):
-                    print(f"Skipping row {row_served}- {row} due to ValueError: {ValueError} or IndexError: {IndexError}")
+                    print(f"Skipping row {row_served}- {row} due to ValueError: {ValueError} \
+                          or IndexError: {IndexError}")
                     continue
-
                 row_served += 1
                 time.sleep(next(tick))
                 if row_served % max(1, int(sampling_rate) // max(1, int(subsample))) == 0:
                     print(f'{row_served} rows served in {time.time() - start_time:.2f} seconds')
 
-        print(f'{filename} Done! {row_served} rows served in {time.time() - start_time:.2f} seconds')
+        print(f'{filename} Done! {row_served} rows served in {time.time() - start_time:.2f} \
+              seconds')
         if continous_simulator_ingestion == "false":
             print("End of data reached.")
             while True:
@@ -127,7 +127,7 @@ def send_json_cb(instance_id, host, port, topic, data, qos, service):
     client.connect(host, port, 60)
     client.loop_start()
     if service == "benchmarking":
-        for i in range(0, POINTSPERPROCESS):
+        for _ in range(0, POINTSPERPROCESS):
             t_s = time.time()
             for value in data:
                 msg = {'ts': t_s, 'value': value}
@@ -159,12 +159,13 @@ def publish_json(mqttc, topic, path, qos, argsinterval, streams, host, port, ser
         print("Path :", path, " files: ", files)
         totalpoints = streams * POINTSPERPROCESS * len(data)
         processes = []
-        print("streams: ", streams, "topic: ", topic, " pointsperprocess: ", POINTSPERPROCESS, " length of data: ",
-              len(data))
+        print("streams: ", streams, "topic: ", topic, " pointsperprocess: ", POINTSPERPROCESS,
+               " length of data: ", len(data))
         try:
             for i in range(0, streams):
                 port = port + i
-                processes.append(Process(target=send_json_cb, args=(argsinterval, host, port, topic, data, qos, service)))
+                processes.append(Process(target=send_json_cb, args=(argsinterval, host, port,
+                                                                    topic, data, qos, service)))
                 processes[i].start()
             for process in processes:
                 process.join()
@@ -189,11 +190,13 @@ def publish_json(mqttc, topic, path, qos, argsinterval, streams, host, port, ser
 
 
 def on_disconnect(client, userdata, rc):
+    """ Callback for MQTT disconnection"""
     print("MQTT disconnected:\nclient: ", client, "\n userdata: ", userdata,
           "\n rc: ", rc)
 
 
-def on_connect(client, userdata, flags, rc):
+def on_connect(client, userdata, rc):
+    """ Callback for MQTT connection"""
     print("MQTT Connected:\nclient: ", client, "\n userdata: ", userdata,
           "\n rc: ", rc)
 MQTTversion = mqtt.MQTTv31
@@ -207,10 +210,11 @@ def main():
     args.port = os.getenv('PORT', '1883')
     args.port = int(args.port)
     updated_topics = {}
-    topic = "wind_turbine_data"
+    topic = args.topic
     client = None
     if int(args.streams) == 1:
-        client = mqtt.Client(client_id = '', clean_session = True, userdata = None, protocol = MQTTversion, transport="tcp" )
+        client = mqtt.Client(client_id = '', clean_session = True, userdata = None,
+                             protocol = MQTTversion, transport="tcp" )
         secure_mode = os.getenv('SECURE_MODE', 'false')
         if secure_mode.lower() == "true":
             context = ssl.SSLContext(protocol = TLS_protocol_version)
@@ -261,9 +265,9 @@ def is_port_accessible():
     :return: True if the port is accessible, False otherwise.
     """
     host = os.getenv("TS_MS_SERVER", "ia-time-series-analytics-microservice")
-    port = int(os.getenv("TS_MS_PORT", 9092))
+    port = int(os.getenv("TS_MS_PORT", "9092"))
     print(f"Waiting for {host} accessible...")
-    while(True):
+    while True:
         try:
             # Create a socket object
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -273,7 +277,7 @@ def is_port_accessible():
                 sock.connect((host, port))
             print(f"{host} is accessible...")
             return True
-        except (socket.timeout, socket.error) as e:
+        except (socket.timeout, socket.error):
             pass
         time.sleep(1)
 

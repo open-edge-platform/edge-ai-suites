@@ -52,24 +52,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          if [ -f /data/videos/.done ]; then
-              echo ".done file exists in /data/videos"
-          else
-              echo ".done file does NOT exist in /data/videos"
-              echo "Downloading videos from GitHub..."
-              apk add --no-cache wget
-              mkdir -p /data/videos
-              VIDEO_URL="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos"
-              VIDEOS="1122east.ts 1122west.ts 1122north.ts 1122south.ts"
-              for video in $VIDEOS; do
-                  echo "Downloading $video..."
-                  wget -O "/data/videos/$video" "$VIDEO_URL/$video"
-              done
-              echo "Videos downloaded successfully"
-              touch /data/videos/.done
-          fi
-          chown -R 1000:1000 /data
-          echo "Initializing..."
+          {{- tpl (include "dlstreamer-pipeline-server.init-videos-script" .) . | nindent 10 }}
         volumeMounts:
         - mountPath: /data/videos
           name: dlstreamer-pipeline-server-videos-data
@@ -86,22 +69,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          if [ -f /data/models/.done ]; then
-            echo ".done file exists in /data/models"
-          else
-            echo ".done file does NOT exist in /data/models"
-            echo "Downloading models from GitHub..."
-            apk add --no-cache wget tar
-            cd /tmp
-            wget -O models.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/v1.2.0-20250624.tar.gz
-            tar -xzf models.tar.gz
-            mkdir -p /data/models
-            cp -r edge-ai-suites-1.2.0-20250624/metro-ai-suite/smart-intersection/src/dlstreamer-pipeline-server/models/* /data/models/
-            echo "Models downloaded successfully"
-            touch /data/models/.done
-          fi 
-          chown -R 1000:1000 /data
-          echo "Initializing..."
+          {{- tpl (include "dlstreamer-pipeline-server.init-models-script" .) . | nindent 10 }}
         volumeMounts:
         - mountPath: /data/models
           name: dlstreamer-pipeline-server-models-data
@@ -125,16 +93,7 @@ spec:
         command: ["/bin/bash", "-c"]
         args:
           - |
-            mkdir -p /run/secrets/certs &&
-            cp /home/pipeline-server/certs/root-cert /run/secrets/certs/scenescape-ca.pem &&
-            cp /tmp/pipeline/config.json . &&
-            mkdir -p /home/pipeline-server/user_scripts/gvapython/sscape &&
-            cp /tmp/udf/config.json /home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py &&
-            chmod a+rwx /home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py &&
-            chown -R intelmicroserviceuser:intelmicroserviceuser /home/pipeline-server/models &&
-            chown -R intelmicroserviceuser:intelmicroserviceuser /home/pipeline-server/videos &&
-            echo "$SMART_INTERSECTION_BROKER_SERVICE_HOST    $MQTT_HOST" >> /etc/hosts &&
-            runuser -u intelmicroserviceuser ./run.sh
+            {{- tpl (include "dlstreamer-pipeline-server.startup-script" .) . | nindent 12 }}
         volumeMounts:
         - mountPath: /home/pipeline-server/videos
           name: dlstreamer-pipeline-server-videos-data

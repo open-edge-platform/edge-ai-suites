@@ -143,7 +143,7 @@ For more details about the display mode, please refer to [section 4.3 Run Entry 
 
 - set $PROJ_DIR
   ```bash
-  cd applications.iot.video-edge-device.holographic-sensor-fusion
+  cd metro-ai-suite/sensor-fusion-for-traffic-management
   export PROJ_DIR=$PWD
   ```
 - prepare global radar configs in folder: /opt/datasets

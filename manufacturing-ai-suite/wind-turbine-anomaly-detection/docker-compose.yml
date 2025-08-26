@@ -121,6 +121,17 @@ services:
     - ./time_series_analytics_microservice/tick_scripts/:/tmp/windturbine_anomaly_detector/tick_scripts/
     - ./time_series_analytics_microservice/config.json:/app/config.json
     - ./time_series_analytics_microservice/models/:/tmp/windturbine_anomaly_detector/models/
+    - /dev/dri:/dev/dri
+    - "/run/udev:/run/udev:ro"
+    group_add:
+    # render group ID for ubuntu 20.04 host OS
+    - "109"
+    # render group ID for ubuntu 22.04 host OS
+    - "110"
+    devices:
+      # Following devices under /dev filesystem will be needed based on usecase
+      # dri - GPU
+    - "/dev/dri:/dev/dri"
 
   ia-grafana:
     image: grafana/grafana-oss:12.0.0-ubuntu
@@ -245,7 +256,7 @@ services:
       CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
     networks:
     - timeseries_network
-    command: ["--csv", "/windturbine_data.csv"]
+    command: ["--csv", "/windturbine_data.csv", "--topic", "wind_turbine_data"]
     volumes:
     - ./simulator/simulation_data/windturbine_data.csv:/windturbine_data.csv
 

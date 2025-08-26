@@ -227,6 +227,15 @@ WORKDIR /home/openvino/3rd_build/level-zero/build
 RUN cmake .. -DCMAKE_INSTALL_PREFIX=/opt/intel/level-zero && \
     cmake --build . --config Release --target install 
 
+### Install libradar
+WORKDIR /home/openvino/3rd_build
+RUN curl -s https://eci.intel.com/sed-repos/gpg-keys/GPG-PUB-KEY-INTEL-SED.gpg | tee /usr/share/keyrings/sed-archive-keyring.gpg > /dev/null
+RUN echo "deb [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | tee /etc/apt/sources.list.d/sed.list
+RUN echo "deb-src [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | tee -a /etc/apt/sources.list.d/sed.list
+RUN bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
+RUN apt update -y && \
+    apt install libradar
+
 # Install display related libs
 RUN apt install -y libgtk2.0-0 libgl1 libsm6 libxext6 x11-apps
 

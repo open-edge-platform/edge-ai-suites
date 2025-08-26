@@ -2,7 +2,9 @@ Follow-me with ADBSCAN on |clearpath_robotics| |jackal| Robot
 ================================================================
 
 This tutorial provides instructions for running the ADBSCAN-based Follow-me algorithm from |p_amr| using |realsense| camera input when using a |clearpath_robotics| |jackal| robot.
-The |realsense| camera publishes to ``/camera/depth/color/points`` topic. The ``adbscan_sub_node`` subscribes to the corresponding topic, detects the obstacle array, computes the robot's velocity and publishes to the ``/cmd_vel`` topic of type `geometry_msg/msg/Twist`. This ``twist`` message consists of the updated angular and linear velocity of the robot to follow the target, which can be subsequently subscribed by a robot-driver.
+The |realsense| camera publishes to ``/camera/depth/color/points`` topic. The ``adbscan_sub_node`` subscribes to the corresponding topic, 
+detects the obstacle array, computes the robot's velocity and publishes to the ``/cmd_vel`` topic of type `geometry_msg/msg/Twist`. 
+This ``twist`` message consists of the updated angular and linear velocity of the robot to follow the target, which can be subsequently subscribed by a robot-driver.
 
 Getting Started
 ----------------
@@ -21,18 +23,18 @@ Install the ``ros-humble-follow-me-tutorial`` |deb_pack| from the |lp_amr| APT r
 Run Demo
 ----------------
 
-Run the following script to launch the Follow-me application tutorial on the |jackal| robot.
+To launch the Follow-me application tutorial on the |jackal| robot, use the following ROS 2 launch file.
 
 .. code-block:: bash
 
    source /opt/ros/humble/setup.bash
-   /opt/ros/humble/share/tutorial-follow-me/scripts/jackal-follow-me.sh
+   ros2 launch tutorial_follow_me jackal_followme_launch.py
 
 After starting the script, the robot should begin searching for trackable objects in its initial detection radius (defaulting to around 0.5m), and then following acquired targets as they move from the initial target location. 
 
    .. note::
 
-    There are reconfigurable parameters in ``/opt/ros/humble/share/tutorial-follow-me/params/followme_adbscan_RS_params.yaml``. 
+    There are reconfigurable parameters in ``/opt/ros/humble/share/tutorial_follow_me/params/followme_adbscan_RS_params.yaml``. 
     You can modify the parameters depending on the respective robot, sensor configuration and environments (if required) before running the tutorial.
     Find a brief description of the parameters in the following table.
 

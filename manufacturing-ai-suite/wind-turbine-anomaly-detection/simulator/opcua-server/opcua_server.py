@@ -4,14 +4,17 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-from asyncua.sync import Server
-from asyncua import ua
-from datetime import datetime
+"""
+This script sets up an OPC UA server that simulates wind turbine data.
+It reads data from a CSV file and updates the server variables at regular intervals.
+"""
 import time
-import pandas as pd
 import logging
 import os
 import socket
+import pandas as pd
+from asyncua.sync import Server
+from asyncua import ua
 
 # Configure logging
 
@@ -36,9 +39,9 @@ def is_port_accessible():
     :return: True if the port is accessible, False otherwise.
     """
     host = os.getenv("TS_MS_SERVER", "ia-time-series-analytics-microservice")
-    port = int(os.getenv("TS_MS_PORT", 9092))
-    logger.info(f"Waiting for {host} accessible...")
-    while(True):
+    port = int(os.getenv("TS_MS_PORT", "9092"))
+    logger.info("Waiting for %s accessible...", host)
+    while True:
         try:
             # Create a socket object
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -46,9 +49,9 @@ def is_port_accessible():
                 sock.settimeout(5)
                 # Attempt to connect to the host and port
                 sock.connect((host, port))
-            logger.info(f"{host} is accessible...")
+            logger.info("%s is accessible...", host)
             return True
-        except (socket.timeout, socket.error) as e:
+        except (socket.timeout, socket.error):
             pass
         time.sleep(1)
 is_port_accessible()
@@ -73,11 +76,11 @@ else:
         ua.SecurityPolicyType.NoSecurity,
     ])
 
-continous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true")).lower()
+continuous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true")).lower()
 
 # Create a new namespace for your objects
-uri = "urn:freeopcua:python:server"
-idx = server.register_namespace(uri)
+URI = "urn:freeopcua:python:server"
+idx = server.register_namespace(URI)
 
 data = pd.read_csv('./windturbine_data.csv')
 
@@ -97,9 +100,9 @@ alert_message.set_writable()
 # Start the server
 server.start()
 
-logger.info(f"grid_active_power Node ID:{grid_active_power.nodeid}")
-logger.info(f"wind_speed Node ID:, {wind_speed.nodeid}")
-logger.info(f"alert_message Node ID:, {alert_message.nodeid}")
+logger.info("grid_active_power Node ID:%s", grid_active_power.nodeid)
+logger.info("wind_speed Node ID:%s", wind_speed.nodeid)
+logger.info("alert_message Node ID:%s", alert_message.nodeid)
 
 # logger.info("Server started at {}".format(server.endpoint))
 i = 0
@@ -107,14 +110,14 @@ try:
     while True:
         # Update variable values
         grid_active_power.set_value(data['grid_active_power'][i])
-        logger.debug(f"grid_active_power updated {grid_active_power.get_value()}")
+        logger.debug("grid_active_power updated %s", grid_active_power.get_value())
         wind_speed.set_value(data['wind_speed'][i])
-        logger.debug(f"wind_speed updated {wind_speed.get_value()}")
+        logger.debug("wind_speed updated %s", wind_speed.get_value())
 
         time.sleep(1)  # 1-second delay
         i += 1
         if i >= len(data):
-            if continous_simulator_ingestion == "false":
+            if continuous_simulator_ingestion == "false":
                 logger.info("End of data reached.")
                 grid_active_power.delete()
                 wind_speed.delete()
@@ -124,4 +127,3 @@ try:
 except KeyboardInterrupt:
     print("Server is shutting down...")
     server.stop()
-

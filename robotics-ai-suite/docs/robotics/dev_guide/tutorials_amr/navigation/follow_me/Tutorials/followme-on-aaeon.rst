@@ -1,8 +1,19 @@
 Follow-me with ADBSCAN on Aaeon Robot
 ================================================
 
-This tutorial provides instructions for running the ADBSCAN-based Follow-me algorithm from |p_amr| using |realsense| camera input. Validation of the the algorithm was performed on a custom Aaeon robot.
-The |realsense| camera publishes to ``/camera/depth/color/points`` topic. The `adbscan_sub_node` subscribes to the corresponding topic, detects the obstacle array, computes the robot's velocity and publishes to the ``/cmd_vel`` topic of type `geometry_msg/msg/Twist`. This ``twist`` message consists of the updated angular and linear velocity of the robot to follow the target, which can be subsequently subscribed by a robot-driver.
+This tutorial provides instructions for running the ADBSCAN-based Follow-me algorithm from |p_amr| using |realsense| camera input. 
+Validation of the the algorithm was performed on a custom Aaeon robot.
+The |realsense| camera publishes to ``/camera/depth/color/points`` topic. The `adbscan_sub_node` subscribes to the corresponding topic, 
+detects the obstacle array, computes the robot's velocity and publishes to the ``/cmd_vel`` topic of type `geometry_msg/msg/Twist`. 
+This ``twist`` message consists of the updated angular and linear velocity of the robot to follow the target, which can be subsequently subscribed by a robot-driver.
+
+
+Prerequisites:
+
+- Assemble your robotic kit following the instructions provided by AAEON.
+
+- Ensure the :doc:`system is set up correctly <../../../../../gsg_robot/prepare-system>`.
+
 
 Getting Started
 ----------------
@@ -18,21 +29,32 @@ Install the ``ros-humble-follow-me-tutorial`` |deb_pack| from the |intel| |p_amr
       sudo apt update
       sudo apt install ros-humble-follow-me-tutorial
 
+Calibrate the robot 
+^^^^^^^^^^^^^^^^^^^^^^^
+Please perform IMU calibration of the robot, launch script below:
+
+   .. code-block:: bash
+
+      source /opt/ros/humble/setup.bash
+      /opt/ros/humble/share/ros2_amr_interface/scripts/calibration.sh
+
 Run Demo
 ----------------
 
-Run the following script to launch the Follow-me application tutorial on the Aaeon robot.
+To launch the Follow-me application tutorial on the Aaeon robot, use the following ROS 2 launch file.
 
    .. code-block::
 
       source /opt/ros/humble/setup.bash
-      /opt/ros/humble/share/tutorial-follow-me/scripts/follow-me.sh
+      ros2 launch tutorial_follow_me aaeon_followme_launch.py
 
-After executing the above command, you can observe that the robot detecting the target within a tracking radius (~0.5 - 0.7 m) and subsequently following the moving target person. 
+After executing the above command, you can observe that the robot detecting the target within a tracking radius 
+(~0.5 - 1.5 m; `min_dist` and `max_dist` are set in `/opt/ros/humble/share/tutorial_follow_me/params/followme_adbscan_RS_params.yaml`) 
+and subsequently following the moving target person.  
 
 .. note::
 
-   There are reconfigurable parameters in `/opt/ros/humble/share/tutorial-follow-me/params/followme_adbscan_RS_params.yaml`
+   There are reconfigurable parameters in `/opt/ros/humble/share/tutorial_follow_me/params/followme_adbscan_RS_params.yaml`
    file. The user can modify the parameters depending on the respective robot, sensor configuration and environments (if required) before running the tutorial.
    Find a brief description of the parameters in the following table.
 

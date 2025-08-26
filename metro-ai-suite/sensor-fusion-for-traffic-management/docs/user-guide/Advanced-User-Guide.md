@@ -187,7 +187,7 @@ Currently we support four display types: media, radar, media_radar, media_fusion
 
 - set $PROJ_DIR
   ```bash
-  cd applications.iot.video-edge-device.holographic-sensor-fusion
+  cd metro-ai-suite/sensor-fusion-for-traffic-management
   export PROJ_DIR=$PWD
   ```
 - prepare global radar configs in folder: /opt/datasets

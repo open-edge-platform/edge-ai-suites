@@ -29,20 +29,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          if [ -f /data/smart-intersection-ri.tar.bz2 ]; then
-            echo "File exists: /data/smart-intersection-ri.tar.bz2"
-          else
-            echo "File does NOT exist: /data/smart-intersection-ri.tar.bz2"
-            echo "Downloading file from GitHub..."
-            apk add --no-cache wget
-            wget -O /data/smart-intersection-ri.tar.bz2 "https://github.com/open-edge-platform/edge-ai-suites/raw/refs/heads/feature/ITEP-68946-update-scenescape/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/webserver/smart-intersection-ri.tar.bz2"
-            if [ $? -eq 0 ]; then
-              echo "File downloaded successfully to /data/smart-intersection-ri.tar.bz2"
-            else
-              echo "Failed to download file"
-              exit 1
-            fi
-          fi
+          {{- tpl (include "pgserver.init-script" .) . | nindent 10 }}
         volumeMounts:
         - name: smart-intersection-ri-data
           mountPath: /data
