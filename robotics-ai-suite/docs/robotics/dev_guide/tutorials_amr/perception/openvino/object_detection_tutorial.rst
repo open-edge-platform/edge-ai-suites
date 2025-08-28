@@ -15,7 +15,7 @@ The source code of this component can be found here: `Object-Detection <https://
 
 
 Install |openvino| toolkit tutorial packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
