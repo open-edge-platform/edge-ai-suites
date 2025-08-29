@@ -144,6 +144,5 @@ launch file as argument ``irobot_ns``.
 .. toctree::
    :maxdepth: 1
 
-   ../navigation/wandering_app/wandering-tutorial-irobot
+   ../navigation/wandering_app/wandering-irobot-tutorial
    ../navigation/follow_me/Tutorials/followme-on-irobot
-   ../navigation/follow_me/Tutorials/followme-with-gesture-on-irobot

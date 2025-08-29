@@ -10,14 +10,14 @@ This ``twist`` message consists of the updated angular and linear velocity of th
 
 Prerequisites:
 
-- Assemble your robotic kit following the instructions :doc:`irobot-create3 <../../../tutorials_amr/developer-kit/irobot-create3-robot>`
+- Assemble your robotic kit following the instructions :doc:`irobot-create3 <../../../developer_kit/irobot-create3-robot>`
 
 - Ensure the :doc:`system is set up correctly <../../../../../gsg_robot/prepare-system>`.
 
 
 Getting Started
+-------------------------------------------
 
-----------------
 |intel| board connected to |irobot_create3|
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -9,14 +9,14 @@ compute board, an |realsense| camera and a |slamtec_rplidar| 2D lidar sensor.
 The tutorial uses the |realsense| camera and the |slamtec_rplidar| 2D
 lidar sensor for both mapping with RTAB-Map and navigation with Nav2.
 For navigation, |intel| :doc:`ground floor segmentation
-<../../../dev_guide/tutorials_amr/perception/pointcloud-groundfloor-segmentation>`
+<../../../../dev_guide/tutorials_amr/perception/pointcloud-groundfloor-segmentation>`
 is used for segmenting ground level and remove it from the |realsense|
 camera pointcloud.
 
 Watch the video for a demonstration of the |irobot_create3| navigating
 in a testing playground:
 
-.. video:: ../../../videos/irobot-create3-demo-wandering-rviz.mp4
+.. video:: ../../../../videos/irobot-create3-demo-wandering-rviz.mp4
    :preload: none
    :width: 900
 
