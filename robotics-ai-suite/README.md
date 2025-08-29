@@ -36,7 +36,7 @@ Collections organize workflows and capabilities for three robot categories—sta
 | ------------| ------------- | ----------- |
 | [Stationary Robot Vision & Control](robot-vision-control) | [Stationary Robot Vision & Control](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/rvc/index.html) | Robot Vision and Control is a robotic software framework aimed at tackling Pick and place, Track and place industrial problems. Under active development, hence released in *pre-release* quality |
 
-**Intel® OpenVINO™ optimized model algorithms:**
+**Intel® OpenVINO™ toolkit optimized model algorithms:**
 
 | Algorithm | Description |
 | --------- | ----------- |
