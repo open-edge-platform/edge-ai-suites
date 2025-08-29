@@ -77,7 +77,7 @@ services:
         condition: service_started
     volumes:
       - image-data:/user/src/app/static
-    restart: on-failure:5
+    restart: always
   streaming-pipeline:
     image: ${DOCKER_REGISTRY}intel/streaming-pipeline:v1.0.1
     build:
@@ -96,7 +96,7 @@ services:
       "
     depends_on:
       - rtsp-server
-    restart: on-failure:5
+    restart: always
   rtsp-server:
     image: docker.io/bluenviron/mediamtx:1.10.0
     container_name: ibvs-mediamtx
@@ -124,7 +124,7 @@ services:
       - ./src/broker:/mosquitto/config
     ports:
       - "1883:1883"
-    restart: on-failure:5
+    restart: always
   dlstreamer-pipeline-server:
     image: ${DOCKER_REGISTRY}intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
     hostname: dlstreamer-pipeline-server
