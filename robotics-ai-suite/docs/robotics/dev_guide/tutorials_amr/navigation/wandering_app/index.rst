@@ -18,6 +18,7 @@ The |lp_amr| provides several tutorials showing the Wandering App running on rob
    :maxdepth: 1
 
    wandering-aaeon-tutorial
+   wandering-irobot-tutorial
    ../../developer_kit/clearpath-jackal/jackal-wandering
 
 
