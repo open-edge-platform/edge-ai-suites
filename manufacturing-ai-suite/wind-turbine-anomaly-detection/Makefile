@@ -29,6 +29,14 @@ build_copyleft_sources:
 	@echo "Building Docker containers including copyleft licensed sources..."
 	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true;
 
+# This section generates an SSL certificate for secure communication.
+.PHONY: generated_ssl_certs_nginx
+generated_ssl_certs_nginx:
+	@echo "Generating SSL certificates for Nginx..."
+	@if [ -d "./nginx/ssl" ]; then rm -rf ./nginx/ssl; fi
+	@mkdir -p ./nginx/ssl
+	@openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./nginx/ssl/key.pem -out ./nginx/ssl/cert.pem -subj "/CN=localhost"
+	@chmod 644 ./nginx/ssl/key.pem ./nginx/ssl/cert.pem
 # Check if multiple particular variables in .env are assigned with values
 .PHONY: check_env_variables
 check_env_variables:
@@ -91,7 +99,7 @@ check_env_variables:
 	done
 
 .PHONY: up_mqtt_ingestion
-up_mqtt_ingestion: check_env_variables down
+up_mqtt_ingestion: check_env_variables down generated_ssl_certs_nginx
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
 	echo "Starting Docker containers..."; \
 	if [ $(INCLUDE) = 'validation' ]; then \
@@ -102,7 +110,7 @@ up_mqtt_ingestion: check_env_variables down
 
 # Run Docker containers
 .PHONY: up_opcua_ingestion
-up_opcua_ingestion: check_env_variables down
+up_opcua_ingestion: check_env_variables down generated_ssl_certs_nginx
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	echo "Starting Docker containers..."; \
 	if [ $(INCLUDE) = 'validation' ]; then \
