@@ -4,7 +4,7 @@ Automated quality control with AI-driven vision systems.
 
 ## Overview
 
-This Sample Application enables real-time anomaly detection in printed circuit boards (PCB) by running inference workflows across multiple AI models. It connects multiple video streams from different cameras to AI-powered pipelines, all operating efficiently on a single industrial PC. This solution enhances logistics efficiency and inventory management by detecting anomalies before they impact operations.
+This Sample Application enables real-time anomaly detection in printed circuit boards (PCB) by running inference workflows across multiple AI models. It connects multiple video streams from different cameras to AI-powered pipelines, all operating efficiently on a single industrial PC. This solution improves PCB production and compliance by anomalies before they can impact operations.
 
 ## How It Works
 
