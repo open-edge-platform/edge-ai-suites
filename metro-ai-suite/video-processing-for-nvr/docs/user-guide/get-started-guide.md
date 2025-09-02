@@ -28,15 +28,15 @@ Figure 2. High-level Architecture of svet_app
 **Software:**
 * VPP SDK
 
-## 2. Installation Guide
+## Installation Guide
 
-### 2.1	System Installation
+### 1	System Installation
 Install Ubuntu* 24.04 and set up the network correctly and run the sudo apt update.  
 
-### 2.2 Install Software Dependencies
+### 2 Install Software Dependencies
 The SVET2 sample application depends on Intel VPP SDK for video decode, encoding, and post-processing functionalities. It also depends on the live555 library for RTSP streaming.  
 
-#### 2.2.1 Install Intel VPP SDK
+#### 2.1 Install Intel VPP SDK
 Install VPP SDK first. 
 ```
 sudo -E wget -O- https://eci.intel.com/sed-repos/gpg-keys/GPG-PUB-KEY-INTEL-SED.gpg | sudo tee /usr/share/keyrings/sed-archive-keyring.gpg > /dev/null
@@ -100,10 +100,10 @@ It will start to run a decode and display pipeline. You will see below message i
 [  PASSED  ] 1 test.
 ```
   
-#### 2.2.2	Install the live555 library
+#### 2.2	Install the live555 library
 There is a `live555_install.sh` under the root directory of SVET2 source code package. Make sure the network connection is good on your system, then run this script, and it will download, build, and install live555 libraries. The libraries will be installed to /usr/local/lib/.  
   
-### 2.3	Build sample application svet_app
+### 3	Build sample application svet_app
 If you have not run the commands below in the current terminal, run them first to set up the correct environment variables:  
   
 ```
@@ -119,8 +119,8 @@ $ ./build.sh
   
 If the build.sh runs successfully, you can find `svet_app` binary under the build directory.  
   
-## 3. Run Sample Application svet_app
-### 3.1	Configuration Files
+## Run Sample Application svet_app
+### 1	Configuration Files
 You can pass the configuration file to svet_app by option `load`.  
   
 ```
@@ -129,7 +129,7 @@ You can pass the configuration file to svet_app by option `load`.
   
 You can use `quit` or `Ctrl+C` to exit the application.  
   
-### 3.2	Switch to root and Set Environment Variables
+### 2	Switch to root and Set Environment Variables
 Before running the sample application, make sure the environment variables are set correctly in the current bash:  
   
 ```
@@ -142,7 +142,7 @@ Before running the sample application, make sure the environment variables are s
   
 Note:	VPP SDK uses drm display, which requires that there is no X server running and with root privileges.  
   
-### 3.3	Run Basic Decode and Display Pipeline
+### 3	Run Basic Decode and Display Pipeline
 Run the command below:  
   
 ```
@@ -170,7 +170,7 @@ display id      device id       Max resolution  Refresh rate    name
 1               326             3840X2160       60
 ```
   
-### 3.4	Run 16 Channel Decode and Display Pipeline
+### 4	Run 16 Channel Decode and Display Pipeline
 Configuration file `sample_config/multiview/16dec_4kdisp.txt` defines workload that includes 16 channel H265 decode, composition to 4K surface and show on display. Below is the command line to run this workload.
     
 ```
@@ -188,7 +188,7 @@ Newvl -i 0 -W 3840 -H 2160 --refresh=30 --format=nv12 --dispid=0
   
 It chooses display with id=0 and display mode 3840x2160@30. If the maximum resolution of the connected display is 1080p, you can only see the 4 video playbacks in the top left of the above screenshot. This is because svet_app will select the top display mode if it has not found the display mode specified in the configuration file.  
 
-### 3.5	Run 32 Channel Decode on 2 Displays
+### 5	Run 32 Channel Decode on 2 Displays
   
 The configuration file `sample_config/multiview/16_16dec_2disp4k.txt` defines a workload that includes a 16-channel decode and shows on the 1st and 2nd 4k displays.
 Below is the command line to run this workload.  
