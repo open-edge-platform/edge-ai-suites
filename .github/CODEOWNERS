@@ -35,7 +35,7 @@ README.md          @xwu2intel
 
 
 # documentation content - manufacturing-ai
-/metro-ai-suite/README.md                                              @xwu2intel @hteeyeoh @ajagadi1 @vkb1                                     @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/README.md                                      @xwu2intel @hteeyeoh @ajagadi1 @vkb1                                     @open-edge-platform/open-edge-platform-docs-write
 /manufacturing-ai-suite/hmi-augmented-worker/docs/                     @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel                            @open-edge-platform/open-edge-platform-docs-write
 /manufacturing-ai-suite/hmi-augmented-worker/README.md                 @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel                            @open-edge-platform/open-edge-platform-docs-write
 /manufacturing-ai-suite/industrial-edge-insights-vision/**/docs/       @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel                @open-edge-platform/open-edge-platform-docs-write
@@ -72,6 +72,7 @@ README.md          @xwu2intel
 # documentation content - robotics-ai
 /robotics-ai-suite/docs/               @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 /robotics-ai-suite/README.md           @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-
+/robotics-ai-suite/**/docs/            @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/**/README.md        @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 
 # documentation content - retail-ai - needs to be defined once content appears
