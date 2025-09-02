@@ -349,6 +349,10 @@ services:
       - ./nginx/ssl:/opt/bitnami/nginx/conf/bitnami/certs:ro
     networks:
       - timeseries_network
+    depends_on:
+      - ia-grafana
+      - ia-time-series-analytics-microservice
+      - ia-mqtt-broker
 networks:
   timeseries_network:
     driver: bridge
