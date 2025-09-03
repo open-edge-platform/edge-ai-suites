@@ -306,3 +306,7 @@ async def clear():
         os.remove(os.path.join("static", file))
 
     return JSONResponse(status_code=200, content={"message": "Success"})
+
+@app.get("/healthz")
+def health():
+    return {"status": "ok"}

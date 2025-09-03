@@ -45,9 +45,11 @@ services:
       - no_proxy=
     ports:
       - "8000:3000"
-    restart: always
+    restart: on-failure:5
     depends_on:
-      - milvus-db
+      milvus-db:
+        condition: service_healthy
+
   feature-matching:
     image: ${DOCKER_REGISTRY}intel/feature-matching:v1.0.1
     ports:
@@ -77,7 +79,13 @@ services:
         condition: service_started
     volumes:
       - image-data:/user/src/app/static
-    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: on-failure:5
   streaming-pipeline:
     image: ${DOCKER_REGISTRY}intel/streaming-pipeline:v1.0.1
     build:
@@ -95,8 +103,14 @@ services:
         gst-launch-1.0 multifilesrc location=file.ts loop=true ! tsdemux ! h264parse ! rtspclientsink protocols=tcp location=rtsp://rtsp-server:8554/stream
       "
     depends_on:
-      - rtsp-server
-    restart: always
+      rtsp-server:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "ffprobe -v error -rtsp_transport tcp rtsp://10.223.22.169:8554/stream -show_streams || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: on-failure:5
   rtsp-server:
     image: docker.io/bluenviron/mediamtx:1.10.0
     container_name: ibvs-mediamtx
@@ -194,7 +208,8 @@ services:
     devices:
       - "/dev:/dev"
     depends_on:
-      - broker
+      broker:
+        condition: service_started
     restart: on-failure:5
   app:
     image: ${DOCKER_REGISTRY}intel/image-based-video-search:v1.0.1
@@ -205,9 +220,18 @@ services:
       context: src/app
       dockerfile: Dockerfile
     depends_on:
-      - streaming-pipeline
-      - feature-matching
-      - dlstreamer-pipeline-server
+      streaming-pipeline:
+        condition: service_started
+      feature-matching:
+        condition: service_healthy
+      dlstreamer-pipeline-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     restart: on-failure:5
 
 volumes:
