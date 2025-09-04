@@ -4,7 +4,7 @@ Automated quality control with AI-driven vision systems.
 
 ## Overview
 
-This Sample Application enables real-time safety gear monitoring of workers by running inference workflows across multiple AI models. It connects multiple video streams from construction site cameras to AI-powered pipelines, all operating efficiently on a single industrial PC. This solution enhances logistics efficiency and inventory management by detecting defects before they impact operations.
+This Sample Application enables real-time safety gear monitoring of workers by running inference workflows across multiple AI models. It connects multiple video streams from construction site cameras to AI-powered pipelines, all operating efficiently on a single industrial PC. This solution improves construction site safety and compliance by detecting safety gear related risks before they can impact operations.
 
 ## How It Works
 
@@ -38,4 +38,4 @@ This sample application offers the following features:
 - High-speed data exchange with low-latency compute.
 - AI-assisted worker safety gear detection monitoring in real-time as workers enter the construction site.
 - On-premise data processing for data privacy and efficient use of bandwidth.
-- Interconnected constuction site cameras deliver analytics for quick and informed tracking and decision making.
+- Interconnected construction site cameras deliver analytics for quick and informed tracking and decision making.

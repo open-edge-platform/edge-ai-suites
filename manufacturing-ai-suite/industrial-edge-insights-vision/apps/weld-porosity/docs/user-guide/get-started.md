@@ -7,55 +7,68 @@
 
 - [System Requirements](system-requirements.md)
 
-## Setup the application
-> Note that the following instructions assume Docker engine is setup in the host system.
+## Set up the application
+
+The following instructions assume Docker engine is correctly set up in the host system.
+If not, follow the [installation guide for docker engine](https://docs.docker.com/engine/install/ubuntu/) at docker.com.
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
-    ```sh
+
+    ```bash
     git clone https://github.com/open-edge-platform/edge-ai-suites.git
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
     ```
+
 2.  Set app specific environment variable file
-    ```sh
+
+    ```bash
     cp .env_weld_porosity_classification .env
-    ```    
+    ```
 
-3.  Edit the HOST_IP and other environment variables in `.env` file as follows
-    ```sh
+3.  Edit the `HOST_IP`, `MTX_WEBRTCICESERVERS2_0_USERNAME` and `MTX_WEBRTCICESERVERS2_0_PASSWORD` environment variables in `.env` file, as follows:
+
+    ```bash
     HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.
-
-    MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
-
-    MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
-    MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
 
     MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
 
     # application directory
-    SAMPLE_APP=weld-porosity
+    SAMPLE_APP=env_weld_porosity_classification
     ```
+
 4.  Install pre-requisites. Run with sudo if needed.
-    ```sh
+
+    ```bash
     ./setup.sh
     ```
-    This sets up application pre-requisites, download artifacts, sets executable permissions for scripts etc. Downloaded resource directories are made available to the application via volume mounting in docker compose file automatically.
+
+    This sets up application pre-requisites, downloads artifacts, sets executable permissions for scripts etc. Downloaded resource directories are made available to the application via volume mounting in the docker compose file automatically.
 
 ## Deploy the Application
 
-5.  Bring up the application
-    ```sh
+5.  Start the Docker application:
+
+   The Docker daemon service should start automatically at boot. If not, you can start it manually:
+   ```bash
+   sudo systemctl start docker
+   ```
+
+    ```bash
     docker compose up -d
     ```
+
 6.  Fetch the list of pipeline loaded available to launch
-    ```sh
+
+    ```bash
     ./sample_list.sh
     ```
+
     This lists the pipeline loaded in DL Streamer Pipeline Server.
-    
+
     Example Output:
 
-    ```sh
+    ```bash
     # Example output for Weld Porosity Classification
     Environment variables loaded from /home/intel/OEP/new/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: weld-porosity
@@ -84,15 +97,18 @@
         ...
     ]
     ```
+
 7.  Start the sample application with a pipeline.
-    ```sh
+
+    ```bash
     ./sample_start.sh -p weld_porosity_classification
     ```
-    This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available. 
-    
+
+    This command will look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available.
+
     Output:
 
-    ```sh
+    ```bash
     # Example output for Weld Porosity Classification
     Environment variables loaded from /home/intel/OEP/new/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: weld-porosity
@@ -109,19 +125,24 @@
     Payload for pipeline 'weld_porosity_classification' posted successfully. Response: "6d06422c5c7511f091f03266c7df2abf"
 
     ```
-    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to below url
-    ```
+
+    > **NOTE:** This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following url:
+    
+    ```bash
     http://<HOST_IP>:8889/weld/
     ```
-    
+
 8.  Get status of pipeline instance(s) running.
-    ```sh
+
+    ```bash
     ./sample_status.sh
     ```
+
     This command lists status of pipeline instances launched during the lifetime of sample application.
-    
+
     Output:
-    ```sh
+
+    ```bash
     # Example output for Weld Porosity Classification
     Environment variables loaded from /home/intel/OEP/new/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: weld-porosity
@@ -136,14 +157,18 @@
     }
     ]
     ```
-9.  Stop pipeline instance.
-    ```sh
+
+9.  Stop pipeline instances.
+
+    ```bash
     ./sample_stop.sh
     ```
+
     This command will stop all instances that are currently in `RUNNING` state and respond with the last status.
-    
+
     Output:
-    ```sh
+
+    ```bash
     # Example output for Weld Porosity Classification
     No pipelines specified. Stopping all pipeline instances
     Environment variables loaded from /home/intel/OEP/new/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
@@ -162,17 +187,21 @@
     "state": "RUNNING"
     }
     ```
-    If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.    
+
+    To stop a specific instance, identify it with the `--id` argument.
     For example, `./sample_stop.sh --id 0714ca6e5c7611f091f03266c7df2abf`
 
-10. Bring down the application
-    ```sh
+10. Stop the Docker application.
+
+    ```bash
     docker compose down -v
     ```
+
     This will bring down the services in the application and remove any volumes.
 
 
 ## Further Reading
+
 - [Helm based deployment](how-to-deploy-using-helm-charts.md)
 - [MLOps using Model Registry](how-to-enable-mlops.md)
 - [Run multiple AI pipelines](how-to-run-multiple-ai-pipelines.md)
@@ -181,4 +210,5 @@
 - [Publish metadata to MQTT](how-to-start-mqtt-publisher.md)
 
 ## Troubleshooting
+
 - [Troubleshooting Guide](troubleshooting-guide.md)

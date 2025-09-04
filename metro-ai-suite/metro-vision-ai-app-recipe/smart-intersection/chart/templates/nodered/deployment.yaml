@@ -45,7 +45,7 @@ spec:
                 key: influxdb2-admin-token
         image: {{ .Values.nodered.repository }}:{{ .Values.nodered.tag }}
         name: {{ .Release.Name }}-nodered
-        imagePullPolicy: {{ .Values.nodered.imagePullPolicy }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
         volumeMounts:
           - name: secrets-volume
             mountPath: /mosquitto/secrets

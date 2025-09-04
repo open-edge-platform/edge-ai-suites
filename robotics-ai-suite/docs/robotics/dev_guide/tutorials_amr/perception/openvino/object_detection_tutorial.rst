@@ -3,7 +3,7 @@
 |openvino| Object Detection Tutorial
 =======================================
 
-This tutorial is an example for understanding the utilization of the |ros| |openvino| node.
+This tutorial is an example for understanding the utilization of the |ros| node with |openvino| toolkit.
 It outlines the steps for installing the node and executing the object detection model.
 Object detection is performed using the |openvino| toolkit. The node is configured to accept dynamically
 device parameters (NPU, GPU, or CPU) to specify which inference engine should be used.
@@ -14,8 +14,8 @@ Source Code
 The source code of this component can be found here: `Object-Detection <https://github.com/open-edge-platform/edge-ai-suites/robotics-ai-suite/components/object-detection>`_
 
 
-Install |openvino| tutorial packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Install |openvino| toolkit tutorial packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 

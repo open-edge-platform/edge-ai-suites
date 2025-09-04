@@ -9,7 +9,7 @@ else
     echo "Downloading videos from GitHub..."
     apk add --no-cache wget
     mkdir -p /data/videos
-    VIDEO_URL="https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos"
+    VIDEO_URL="{{ .Values.externalUrls.videosRepo }}"
     VIDEOS="1122east.ts 1122west.ts 1122north.ts 1122south.ts"
     for video in $VIDEOS; do
         echo "Downloading $video..."

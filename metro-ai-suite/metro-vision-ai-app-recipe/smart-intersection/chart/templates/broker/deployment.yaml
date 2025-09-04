@@ -17,7 +17,8 @@ spec:
     spec:
       containers:
         - name: broker
-          image: eclipse-mosquitto
+          image: "{{ .Values.broker.repository }}:{{ .Values.broker.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
           env:
             - name: http_proxy
               value: {{ .Values.http_proxy | quote }}

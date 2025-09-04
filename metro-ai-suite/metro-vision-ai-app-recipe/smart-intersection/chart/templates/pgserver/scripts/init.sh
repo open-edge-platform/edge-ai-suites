@@ -8,7 +8,7 @@ else
   echo "File does NOT exist: /data/smart-intersection-ri.tar.bz2"
   echo "Downloading file from GitHub..."
   apk add --no-cache wget
-  wget -O /data/smart-intersection-ri.tar.bz2 "https://github.com/open-edge-platform/edge-ai-suites/raw/refs/tags/v1.2.0-20250819/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/webserver/smart-intersection-ri.tar.bz2"
+  wget -O /data/smart-intersection-ri.tar.bz2 "{{ .Values.externalUrls.githubRepo }}/raw/refs/tags/{{ .Values.version.release }}/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/webserver/smart-intersection-ri.tar.bz2"
   if [ $? -eq 0 ]; then
     echo "File downloaded successfully to /data/smart-intersection-ri.tar.bz2"
   else

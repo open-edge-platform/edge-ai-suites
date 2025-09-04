@@ -8,26 +8,27 @@
 - [System Requirements](system-requirements.md)
 
 ## Setup the application
-> Note that the following instructions assume Docker engine is setup in the host system.
+
+The following instructions assume Docker engine is correctly set up in the host system.
+If not, follow the [installation guide for docker engine](https://docs.docker.com/engine/install/ubuntu/).
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
-    ```sh
+
+    ```bash
     git clone https://github.com/open-edge-platform/edge-ai-suites.git
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
     ```
-2.  Set app specific environment variable file
-    ```sh
+
+2.  Set app specific environment variable file:
+
+    ```bash
     cp .env_pcb_anomaly_detection .env
-    ```    
+    ```
 
-3.  Edit the HOST_IP and other environment variables in `.env` file as follows
-    ```sh
+3.  Edit the `HOST_IP`, `MTX_WEBRTCICESERVERS2_0_USERNAME` and `MTX_WEBRTCICESERVERS2_0_PASSWORD` environment variables in the `.env` file as follows:
+
+    ```bash
     HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.
-
-    MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
-
-    MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
-    MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
 
     MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
@@ -35,27 +36,34 @@
     # application directory
     SAMPLE_APP=pcb-anomaly-detection
     ```
-4.  Install pre-requisites. Run with sudo if needed.
-    ```sh
+
+4.  Install the pre-requisites. Run with sudo if needed.
+
+    ```bash
     ./setup.sh
     ```
-    This sets up application pre-requisites, download artifacts, sets executable permissions for scripts etc. Downloaded resource directories are made available to the application via volume mounting in docker compose file automatically.
+
+    This script sets up application pre-requisites, downloads artifacts, sets executable permissions for scripts etc. Downloaded resource directories are made available to the application via volume mounting in docker compose file automatically.
 
 ## Deploy the Application
 
-5.  Bring up the application
-    ```sh
+5.  Start the Docker application:
+
+    ```bash
     docker compose up -d
     ```
-6.  Fetch the list of pipeline loaded available to launch
-    ```sh
+
+6.  Fetch the list of pipeline loaded available to launch:
+
+    ```bash
     ./sample_list.sh
     ```
+
     This lists the pipeline loaded in DL Streamer Pipeline Server.
-    
+
     Example Output:
 
-    ```sh
+    ```bash
     # Example output for PCB Anomaly Detection
     Environment variables loaded from [WORKDIR]/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: pcb-anomaly-detection
@@ -84,15 +92,18 @@
         ...
     ]
     ```
+
 7.  Start the sample application with a pipeline.
-    ```sh
+
+    ```bash
     ./sample_start.sh -p pcb_anomaly_detection
     ```
-    This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available. 
-    
+
+    This command will look for the payload for the pipeline specified in the `-p` argument above, inside the `payload.json` file and launch a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different available options.
+
     Output:
 
-    ```sh
+    ```bash
     # Example output for PCB Anomaly Detection
     Environment variables loaded from [WORKDIR]/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: pcb-anomaly-detection
@@ -108,19 +119,24 @@
     Posting payload to REST server at http://10.223.23.156:8080/pipelines/user_defined_pipelines/pcb_anomaly_detection
     Payload for pipeline 'pcb_anomaly_detection' posted successfully. Response: "f0c0b5aa5d4911f0bca7023bb629a486"
     ```
-    NOTE: This would start the pipeline. We can view the inference stream on WebRTC by opening a browser and navigating to below url 
-    ```
+
+    > **NOTE:** This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser at the following url:
+
+    ```bash
     http://<HOST_IP>:8889/anomaly/
     ```
-    
-8.  Get status of pipeline instance(s) running.
-    ```sh
+
+8.  Get the status of running pipeline instance(s).
+
+    ```bash
     ./sample_status.sh
     ```
+
     This command lists status of pipeline instances launched during the lifetime of sample application.
-    
+
     Output:
-    ```sh
+
+    ```bash
     # Example output for PCB Anomaly Detection
     Environment variables loaded from [WORKDIR]/manufacturing-ai-suite/industrial-edge-insights-vision/.env
     Running sample app: pcb-anomaly-detection
@@ -135,14 +151,18 @@
     }
     ]
     ```
-9.  Stop pipeline instance.
-    ```sh
+
+9.  Stop pipeline instances.
+
+    ```bash
     ./sample_stop.sh
     ```
-    This command will stop all instances that are currently in `RUNNING` state and respond with the last status.
-    
+
+    This command will stop all instances that are currently in the `RUNNING` state and return their last status.
+
     Output:
-    ```sh
+
+    ```bash
     # Example output for PCB Anomaly Detection
     No pipelines specified. Stopping all pipeline instances
     Environment variables loaded from [WORKDIR]/manufacturing-ai-suite/industrial-edge-insights-vision/.env
@@ -161,17 +181,21 @@
         "state": "RUNNING"
     }
     ```
-    If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.    
+
+   To stop a specific instance, identify it with the `--id` argument.
     For example, `./sample_stop.sh --id f0c0b5aa5d4911f0bca7023bb629a486`
 
-10. Bring down the application
-    ```sh
+10. Stop the Docker application:
+
+    ```bash
     docker compose down -v
     ```
+
     This will bring down the services in the application and remove any volumes.
 
 
 ## Further Reading
+
 - [Helm based deployment](how-to-deploy-using-helm-charts.md)
 - [MLOps using Model Registry](how-to-enable-mlops.md)
 - [Run multiple AI pipelines](how-to-run-multiple-ai-pipelines.md)
