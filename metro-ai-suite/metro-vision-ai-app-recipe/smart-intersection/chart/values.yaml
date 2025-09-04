@@ -9,20 +9,41 @@ http_proxy:
 https_proxy:
 no_proxy:
 
+# Global image pull policy for all containers
+imagePullPolicy: IfNotPresent
+
+# Global version configuration for external dependencies and assets
+version:
+  release: "v1.2.0-20250819"
+  modelsRelease: "v1.2.0-20250624"
+
+# External URLs and repositories
+externalUrls:
+  githubRepo: "https://github.com/open-edge-platform/edge-ai-suites"
+  videosRepo: "https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos"
+
+# Container images for utilities and init containers
+images:
+  alpine:
+    repository: alpine
+    tag: latest
+  curl:
+    repository: curlimages/curl
+    tag: latest
+  busybox:
+    repository: busybox
+    tag: latest
+
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 ntpserver:
   # This is the image repository
   repository: docker.io/dockurr/chrony
-  # This sets the pull policy for images.
-  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "4.6.1"
 
 nodered:
   # This is the image repository
   repository: docker.io/nodered/node-red
-  # This sets the pull policy for images.
-  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
   # Overrides the storage class name
@@ -32,7 +53,6 @@ broker:
   # Image settings
   repository: eclipse-mosquitto
   tag: 2.0.21
-  pullPolicy: IfNotPresent
 
   # UID:GID to run container as (defaulting to 1000:1000 unless overridden)
   uid: 1000
@@ -48,7 +68,6 @@ influxdb:
   # Image settings
   repository: influxdb
   tag: 2.7.11
-  pullPolicy: IfNotPresent
 
   # Initialization parameters
   org: ITM
@@ -67,7 +86,6 @@ influxdb:
 grafana:
   repository: grafana/grafana
   tag: 11.6.0
-  pullPolicy: IfNotPresent
 
   service:
     type: ClusterIP
@@ -93,7 +111,6 @@ grafana:
 scene:
   repository: docker.io/intel/scenescape-controller
   tag: v1.4.0
-  pullPolicy: IfNotPresent
 
   service:
     type: ClusterIP
@@ -102,7 +119,6 @@ scene:
 pgserver:
   repository: docker.io/intel/scenescape-manager
   tag: v1.4.0
-  pullPolicy: IfNotPresent
 
   storageClassName: "hostpath"
   storage:
@@ -115,7 +131,6 @@ web:
   image:
     repository: docker.io/intel/scenescape-manager
     tag: v1.4.0
-    pullPolicy: IfNotPresent
   dbhost: pgserver
   broker: broker.scenescape.intel.com
   service:
@@ -124,8 +139,6 @@ web:
 dlstreamerPipelineServer:
   # This is the image repository
   repository: docker.io/intel/dlstreamer-pipeline-server
-  # This sets the pull policy for images.
-  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: 3.1.0-ubuntu24
   # Overrides the storage class name

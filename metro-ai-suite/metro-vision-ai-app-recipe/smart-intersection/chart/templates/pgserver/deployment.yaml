@@ -17,7 +17,8 @@ spec:
     spec:
       initContainers:
       - name: init-smart-intersection-ri
-        image: alpine:latest
+        image: "{{ .Values.images.alpine.repository }}:{{ .Values.images.alpine.tag }}"
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
         env:
           - name: http_proxy
             value: {{ .Values.http_proxy | quote }}

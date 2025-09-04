@@ -28,7 +28,7 @@ spec:
           value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
         image: {{ .Values.ntpserver.repository }}:{{ .Values.ntpserver.tag }}
         name: {{ .Release.Name }}-ntpserver
-        imagePullPolicy: {{ .Values.ntpserver.imagePullPolicy }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
         ports:
           - containerPort: 123
       restartPolicy: Always

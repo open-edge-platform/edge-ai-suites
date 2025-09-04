@@ -17,7 +17,8 @@ spec:
     spec:
       initContainers:
       - name: wait-for-db-ready
-        image: curlimages/curl
+        image: "{{ .Values.images.curl.repository }}:{{ .Values.images.curl.tag }}"
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
         env:
           - name: http_proxy
             value: {{ .Values.http_proxy | quote }}
