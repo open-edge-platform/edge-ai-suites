@@ -7,6 +7,10 @@ This tutorial serves as an example for understanding the utilization of the |ros
 It outlines the steps for installing and executing the semantic segmentation model using the |ros| |openvino| toolkit.
 This tutorial uses the |realsense| camera image as input and performs inference on CPU, GPU devices.
 
+Prerequisites
+^^^^^^^^^^^^^
+
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
 
 Install |openvino| tutorial packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

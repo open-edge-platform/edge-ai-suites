@@ -20,6 +20,11 @@ Use ``ros2 topic hz`` when:
 
 - You want to measure arbitrary topics quickly. (Due to technical limitations this tool is not capable of recording arbitrary topics, and support for them needs to be included in the source code. On the bright size this is easily extendable and requires 3 lines of code to add a new topic type.)
 
+Prerequisites
+-------------
+
+Complete the :doc:`../../../gsg_robot/index` before continuing.
+
 
 Installation
 --------------

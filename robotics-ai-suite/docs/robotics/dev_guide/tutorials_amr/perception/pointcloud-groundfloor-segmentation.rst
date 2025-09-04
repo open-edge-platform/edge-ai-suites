@@ -23,7 +23,7 @@ The second topic provides a reduced pointcloud containing only points labeled as
 Source Code
 -----------
 
-The source code of this component can be found here: `Groundfloor <https://github.com/open-edge-platform/edge-ai-suites/robotics-ai-suite/components/groundfloor>`_
+The source code of this component can be found here: `Groundfloor <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/groundfloor>`_
 
 
 Getting Started
@@ -34,6 +34,13 @@ Getting Started
 - OS: Ubuntu 22.04 LTS
 
 - ROS version: humble
+
+
+Prerequisites
+-------------
+
+Complete the :doc:`../../../gsg_robot/index` before continuing.
+
 
 Install |deb_pack|
 ^^^^^^^^^^^^^^^^^^^^^^^

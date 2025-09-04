@@ -37,6 +37,10 @@ Once the starting criteria are met, the robot keeps following the target unless 
 Getting Started
 ----------------
 
+Prerequisites
+^^^^^^^^^^^^^
+
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
 
 Install the |deb_pack|
 ^^^^^^^^^^^^^^^^^^^^^^^

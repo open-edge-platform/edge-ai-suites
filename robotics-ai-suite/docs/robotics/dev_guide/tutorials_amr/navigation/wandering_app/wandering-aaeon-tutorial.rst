@@ -6,6 +6,11 @@ This tutorial details the steps to install Wandering Application with |realsense
 Getting Started
 ----------------
 
+Prerequisites
+^^^^^^^^^^^^^
+
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
+
 Install |deb_pack|
 ^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -10,6 +10,11 @@ This Pick-n-Place demo is a simulation implemented using |ros| Humble and |Gazeb
 Getting Started
 ----------------
 
+Prerequisites
+^^^^^^^^^^^^^
+
+Complete the :doc:`../../../gsg_robot/index` before continuing.
+
 
 Install Debian Package
 ^^^^^^^^^^^^^^^^^^^^^^^

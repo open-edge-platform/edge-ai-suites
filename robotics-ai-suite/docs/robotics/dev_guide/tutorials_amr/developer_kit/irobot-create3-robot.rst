@@ -10,6 +10,12 @@ industry or further their knowledge in this rapidly evolving field.
 Before starting, review the |irobot_create3_documentation| to be able to
 perform the configuration changes needed for the tutorial.
 
+Prerequisites
+-------------
+
+Complete the :doc:`../../../gsg_robot/index` before continuing.
+
+
 |irobot_create3| hardware extensions
 ------------------------------------
 

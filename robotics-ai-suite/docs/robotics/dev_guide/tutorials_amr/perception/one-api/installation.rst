@@ -105,8 +105,10 @@ Supported Operating System
 * Ubuntu 22.04 LTS
 * Microsoft Windows 10/11
 
+Prerequisites
+-------------
 
-
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
 
 PCL |oneapi| Installation
 -------------------------

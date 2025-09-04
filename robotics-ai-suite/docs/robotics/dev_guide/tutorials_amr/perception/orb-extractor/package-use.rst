@@ -48,6 +48,11 @@ Any of the following CPU with integrated |intel| GPU.
   1) liborb-lze - Include host libraries libgpu_orb.so, libgpu_orb_ocvfree.so and compiled GPU kernels.
   2) liborb-lze-dev - Samples code to show how to use the library.
 
+Prerequisites
+-------------
+
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
+
 Install |deb_packs| 
 -----------------------------------------------------------------------------
 
