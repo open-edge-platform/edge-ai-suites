@@ -8,20 +8,15 @@ detects the obstacle array, computes the robot's velocity and publishes to the `
 This ``twist`` message consists of the updated angular and linear velocity of the robot to follow the target, which can be subsequently subscribed by a robot-driver.
 
 
-Prerequisites:
-
-- Assemble your robotic kit following the instructions provided by AAEON.
-
-- Ensure the :doc:`system is set up correctly <../../../../../gsg_robot/prepare-system>`.
-
-
 Getting Started
 ----------------
 
 Prerequisites
 ^^^^^^^^^^^^^
 
-Complete the :doc:`../../../../gsg_robot/index` before continuing.
+- Assemble your robotic kit following the instructions provided by AAEON.
+
+- Complete the :doc:`../../../../../gsg_robot/index` before continuing.
 
 
 Install the |deb_pack|
