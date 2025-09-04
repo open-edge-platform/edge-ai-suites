@@ -106,7 +106,7 @@ services:
       rtsp-server:
         condition: service_started
     healthcheck:
-      test: ["CMD", "ffprobe -v error -rtsp_transport tcp rtsp://10.223.22.169:8554/stream -show_streams || exit 1"]
+      test: ["CMD", "ffprobe -v error -rtsp_transport tcp rtsp://ibvs-mediamtx:8554/stream -show_streams || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
