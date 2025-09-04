@@ -13,7 +13,7 @@ Getting Started
 Prerequisites
 ^^^^^^^^^^^^^
 
-Complete the :doc:`../../../../gsg_robot/index` before continuing.
+Complete the :doc:`../../../../../gsg_robot/index` before continuing.
 
 Install the |deb_pack|
 ^^^^^^^^^^^^^^^^^^^^^^^
