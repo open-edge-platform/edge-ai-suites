@@ -8,15 +8,15 @@ detects the obstacle array, computes the robot's velocity and publishes to the `
 This ``twist`` message consists of the updated angular and linear velocity of the robot to follow the target, which can be subsequently subscribed by a robot-driver.
 
 
-Prerequisites:
+Getting Started
+-------------------------------------------
+
+Prerequisites
+^^^^^^^^^^^^^
 
 - Assemble your robotic kit following the instructions :doc:`irobot-create3 <../../../developer_kit/irobot-create3-robot>`
 
-- Ensure the :doc:`system is set up correctly <../../../../../gsg_robot/prepare-system>`.
-
-
-Getting Started
--------------------------------------------
+- Complete the :doc:`../../../../../gsg_robot/index` before continuing.
 
 |intel| board connected to |irobot_create3|
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

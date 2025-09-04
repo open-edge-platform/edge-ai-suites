@@ -20,6 +20,15 @@ in a testing playground:
    :preload: none
    :width: 900
 
+Getting Started
+-------------------------------------------
+
+Prerequisites
+^^^^^^^^^^^^^
+
+- Assemble your robotic kit following the instructions :doc:`irobot-create3 <../../developer_kit/irobot-create3-robot>`
+
+- Complete the :doc:`../../../../gsg_robot/index` before continuing.
 
 |intel| board connected to |irobot_create3|
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
