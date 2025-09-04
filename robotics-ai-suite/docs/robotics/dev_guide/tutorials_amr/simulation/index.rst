@@ -14,4 +14,4 @@ The following tutorials guide you on how to use the |ros| simulations with |lp_a
 Source Code
 -----------
 
-The source code of this component can be found here: `Simulations <https://github.com/open-edge-platform/edge-ai-suites/robotics-ai-suite/components/simulations>`_
+The source code of this component can be found here: `Simulations <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/simulations>`_

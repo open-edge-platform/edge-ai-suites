@@ -4,6 +4,11 @@ ADBSCAN Algorithm with 2D RPLIDAR Input Demo
 This tutorial describes how to run the ADBSCAN algorithm from |p_amr|
 using 2D RPLIDAR input.
 
+Prerequisites
+-------------
+
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
+
 Install
 --------------------------------
 

@@ -7,6 +7,11 @@ The Wandering Application will use the Nav2 navigation stack and the
 RTAB-Map SLAM application to let the |jackal| robot move around and create
 a map of the environment.
 
+Prerequisites
+-------------
+
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
+
 Installation and Execution
 --------------------------
 

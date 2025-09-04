@@ -14,6 +14,11 @@ This tutorial describes how to:
 
 - Launch rviz graphic application to view ROS topics.
 
+Prerequisites
+-------------
+
+Complete the :doc:`../../../gsg_robot/index` before continuing.
+
 
 Run the Turtlesim |ros| Sample application
 --------------------------------------------------------------

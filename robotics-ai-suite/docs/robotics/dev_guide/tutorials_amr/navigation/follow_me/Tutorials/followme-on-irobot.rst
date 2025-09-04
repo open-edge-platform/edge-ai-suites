@@ -1,46 +1,78 @@
-Follow-me with ADBSCAN on |clearpath_robotics| |jackal| Robot
-================================================================
+Follow-me with ADBSCAN on |irobot_create3|
+================================================
 
-This tutorial provides instructions for running the ADBSCAN-based Follow-me algorithm from |p_amr| using |realsense| camera input when using a |clearpath_robotics| |jackal| robot.
-The |realsense| camera publishes to ``/camera/depth/color/points`` topic. The ``adbscan_sub_node`` subscribes to the corresponding topic,
-detects the obstacle array, computes the robot's velocity and publishes to the ``/cmd_vel`` topic of type `geometry_msg/msg/Twist`.
+This tutorial provides instructions for running the ADBSCAN-based Follow-me algorithm from |p_amr| using |realsense| camera input. 
+Validation of the the algorithm was performed on a custom |irobot_create3|.
+The |realsense| camera publishes to ``/camera/depth/color/points`` topic. The `adbscan_sub_node` subscribes to the corresponding topic, 
+detects the obstacle array, computes the robot's velocity and publishes to the ``/cmd_vel`` topic of type `geometry_msg/msg/Twist`. 
 This ``twist`` message consists of the updated angular and linear velocity of the robot to follow the target, which can be subsequently subscribed by a robot-driver.
 
+
 Getting Started
-----------------
+-------------------------------------------
 
 Prerequisites
 ^^^^^^^^^^^^^
 
-Complete the :doc:`../../../../../gsg_robot/index` before continuing.
+- Assemble your robotic kit following the instructions :doc:`irobot-create3 <../../../developer_kit/irobot-create3-robot>`
+
+- Complete the :doc:`../../../../../gsg_robot/index` before continuing.
+
+|intel| board connected to |irobot_create3|
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Follow the instructions on page
+`iRobot® Create® 3 - Network Recommendations
+<https://iroboteducation.github.io/create3_docs/setup/network-config/>`__
+to set up an Ethernet over USB connection and to configure the network
+device on the |intel| board.
+Use an IP address of the same subnet as used on the |irobot_create3|.
+
+Check that the |irobot_create3| is reachable over the Ethernet
+connection. Output on the robot with the configuration from the image
+above:
+
+.. code-block:: bash
+
+   $ ping -c 3 192.168.99.2
+   PING 192.168.99.2 (192.168.99.2) 56(84) bytes of data.
+   64 bytes from 192.168.99.2: icmp_seq=1 ttl=64 time=1.99 ms
+   64 bytes from 192.168.99.2: icmp_seq=2 ttl=64 time=2.31 ms
+   64 bytes from 192.168.99.2: icmp_seq=3 ttl=64 time=2.02 ms
+
+   --- 192.168.99.2 ping statistics ---
+   3 packets transmitted, 3 received, 0% packet loss, time 2004ms
+   rtt min/avg/max/mdev = 1.989/2.105/2.308/0.144 ms
 
 Install the |deb_pack|
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Install the ``ros-humble-follow-me-tutorial`` |deb_pack| from the |lp_amr| APT repository.
+Install the ``ros-humble-follow-me-tutorial`` |deb_pack| from the |intel| |p_amr| APT repository.
 
-.. code-block:: bash
+   .. code-block::
 
-   sudo apt update
-   sudo apt install ros-humble-follow-me-tutorial
+      sudo apt update
+      sudo apt install ros-humble-follow-me-tutorial
 
 Run Demo
 ----------------
 
-To launch the Follow-me application tutorial on the |jackal| robot, use the following ROS 2 launch file.
+To launch the Follow-me application tutorial on the |irobot_create3| robot, use the following ROS 2 launch file.
 
-.. code-block:: bash
+   .. code-block::
 
-   source /opt/ros/humble/setup.bash
-   ros2 launch tutorial_follow_me jackal_followme_launch.py
+      source /opt/ros/humble/setup.bash
+      ros2 launch tutorial_follow_me irobot_followme_launch.py
 
-After starting the script, the robot should begin searching for trackable objects in its initial detection radius (defaulting to around 0.5m), and then following acquired targets as they move from the initial target location.
+After executing the above command, you can observe that the robot detecting the target within a tracking radius 
+(~0.5 - 1.5 m; `min_dist` and `max_dist` are set in `/opt/ros/humble/share/tutorial_follow_me/params/followme_adbscan_RS_params.yaml`) 
+and subsequently following the moving target person.  
 
-   .. note::
+.. note::
 
-    There are reconfigurable parameters in ``/opt/ros/humble/share/tutorial_follow_me/params/followme_adbscan_RS_params.yaml``.
-    You can modify the parameters depending on the respective robot, sensor configuration and environments (if required) before running the tutorial.
-    Find a brief description of the parameters in the following table.
+   There are reconfigurable parameters in `/opt/ros/humble/share/tutorial_follow_me/params/followme_adbscan_RS_params.yaml`
+   file. The user can modify the parameters depending on the respective robot, sensor configuration and environments (if required) before running the tutorial.
+   Find a brief description of the parameters in the following table.
 
    .. list-table:: Configurable Parameters
       :widths: 20 80
@@ -77,7 +109,7 @@ After starting the script, the robot should begin searching for trackable object
         - The robot will keep following the target for ``max_frame_blocked`` number of frames in the event of a temporary occlusion.
       * - ``tracking_radius``
         - The robot will keep following the target as long as the current target location = previous location +/- ``tracking_radius``
-
+   
 Troubleshooting
 ----------------------------
 
@@ -87,6 +119,6 @@ Troubleshooting
 
 - If the robot rotates more than intended at each step, try reducing the parameter ``max_angular`` in the parameter file.
 
-- If the motor controller board does not start, restart the robot.
-
 - For general robot issues, go to: :doc:`../../../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting`.
+
+- If the motor controller board does not start, restart the robot.

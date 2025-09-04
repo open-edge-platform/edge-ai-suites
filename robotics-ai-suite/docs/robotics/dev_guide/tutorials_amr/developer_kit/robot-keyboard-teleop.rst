@@ -3,6 +3,11 @@
 Robot Teleop Using a Keyboard
 =====================================================
 
+Prerequisites
+-------------
+
+Complete the :doc:`../../../gsg_robot/index` before continuing.
+
 Hardware Prerequisites
 ------------------------
 
