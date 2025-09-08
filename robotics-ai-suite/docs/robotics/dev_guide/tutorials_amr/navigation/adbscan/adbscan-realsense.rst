@@ -3,6 +3,12 @@ ADBSCAN Algorithm with |realsense| Camera Input Demo
 
 This tutorial describes how to run the ADBSCAN algorithm from |realsense| camera input.
 
+Prerequisites
+-------------
+
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
+
+
 Install
 --------------------------------
 

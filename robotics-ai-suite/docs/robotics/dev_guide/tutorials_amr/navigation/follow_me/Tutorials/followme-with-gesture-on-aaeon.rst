@@ -13,13 +13,6 @@ This RGB image is passed through a deep learning-based gesture recognition pipel
 called `Mediapipe Hands Framework <https://mediapipe.readthedocs.io/en/latest/solutions/hands.html>`__, to detect the gesture category. 
 The motion commands for the robot are published to ``twist`` topic based on these two outputs: person's position and gesture category. 
 
-Prerequisites:
-
-- Assemble your robotic kit following the instructions provided by AAEON.
-
-- Ensure the :doc:`system is set up correctly <../../../../../gsg_robot/prepare-system>`.
-
-
 The two conditions required to start the robot's movement are as follows:
 
 -  The target person will be within the tracking radius 
@@ -37,6 +30,12 @@ Once the starting criteria are met, the robot keeps following the target unless 
 Getting Started
 ----------------
 
+Prerequisites
+^^^^^^^^^^^^^
+
+- Assemble your robotic kit following the instructions provided by AAEON.
+
+- Complete the :doc:`../../../../../gsg_robot/index` before continuing.
 
 Install the |deb_pack|
 ^^^^^^^^^^^^^^^^^^^^^^^

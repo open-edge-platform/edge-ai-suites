@@ -7,6 +7,11 @@ Recorder tool
 
 This tutorial will show you how to use the recorder tool to efficiently store video topics using encode and decode.
 
+Prerequisites
+-------------
+
+Complete the :doc:`../../../gsg_robot/index` before continuing.
+
 Installation
 --------------
 

@@ -5,13 +5,15 @@ This tutorial describes how to run the ADBSCAN algorithm on the real robot `UP X
 During the execution of the program the ADBSCAN algorithm detects objects, and draws them in rviz. Then, the FastMapping algorithm uses data from the ADBSCAN to generate a 2D Map of the environment around.
 User can use the default setup to move robot via gamepad or keyboard, so the 3D-camera on the robot can scan surroundings around.
 
-Prerequisites:
+
+Prerequisites
+-------------
 
 - Assemble your robotic kit following the instructions provided by AAEON.
 
-- Ensure the :doc:`system is set up correctly <../../../../gsg_robot/prepare-system>`.
-
 - To control the robot remotely, you may need a Logitech* F710 gamepad (to be purchased separately).
+
+- Complete the :doc:`../../../../gsg_robot/index` before continuing.
 
 
 Run the ADBSCAN Algorithm Using the AAEON Robot Kit

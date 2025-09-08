@@ -10,6 +10,10 @@ using a |realsense| camera image as the input.
 Getting Started
 ----------------
 
+Prerequisites
+^^^^^^^^^^^^^
+
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
 
 Install |openvino| package
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
