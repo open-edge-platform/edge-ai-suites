@@ -11,8 +11,12 @@ device parameters (NPU, GPU, or CPU) to specify which inference engine should be
 
 Source Code
 ^^^^^^^^^^^
-The source code of this component can be found here: `Object-Detection <https://github.com/open-edge-platform/edge-ai-suites/robotics-ai-suite/components/object-detection>`_
+The source code of this component can be found here: `Object-Detection <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/object-detection>`_
 
+Prerequisites
+^^^^^^^^^^^^^
+
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
 
 Install |openvino| toolkit tutorial packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

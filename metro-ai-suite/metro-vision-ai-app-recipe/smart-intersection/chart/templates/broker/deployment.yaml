@@ -46,5 +46,22 @@ spec:
               - key: mosquitto-secure.conf
                 path: mosquitto-secure.conf
         - name: secrets-volume
+          {{- if .Values.import.certManager.enabled }}
+          projected:
+            sources:
+            - secret:
+                name: {{ .Release.Name }}-broker-tls
+                items:
+                - key: tls.crt
+                  path: broker-cert
+                - key: tls.key
+                  path: broker-key
+            - secret:
+                name: {{ .Release.Name }}-ca-secret
+                items:
+                - key: tls.crt
+                  path: root-cert
+          {{- else }}
           secret:
             secretName: {{ .Release.Name }}-broker-rootcert
+          {{- end }}

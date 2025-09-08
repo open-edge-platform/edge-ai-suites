@@ -39,8 +39,12 @@ The following steps are required in order to set up the |axiomtek| to support fo
 Source Code
 -----------
 
-The source code of this component can be found here: `Multicamera-Demo <https://github.com/open-edge-platform/edge-ai-suites/robotics-ai-suite/components/multicam-demo>`_
+The source code of this component can be found here: `Multicamera-Demo <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/multicam-demo>`_
 
+Prerequisites
+-------------
+
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
 
 |axiomtek| Setup
 ----------------

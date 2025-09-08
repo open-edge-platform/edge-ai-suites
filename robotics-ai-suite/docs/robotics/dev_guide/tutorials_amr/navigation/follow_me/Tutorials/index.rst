@@ -8,5 +8,6 @@ These tutorials have been written to use |up_xtreme| and the |clearpath_robotics
 
    followme-on-aaeon
    followme-with-gesture-on-aaeon
+   followme-on-irobot
    followme-on-clearpathjackal
    followme-with-gesture-on-clearpathjackal

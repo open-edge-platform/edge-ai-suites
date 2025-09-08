@@ -12,6 +12,14 @@ It explains employing multiple CPU threads with multiple ORB extractor objects, 
 
 The multithread feature provides more flexibility for visual SLAM to call multiple objects of the orb-extractor feature library.
 
+Prerequisites
+-------------
+
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
+
+Tutorial
+--------
+
 .. note::
 
    This tutorial can be run both inside and outside a Docker* image. We assume that the ``liborb-lze-dev`` |deb_pack| has been installed,

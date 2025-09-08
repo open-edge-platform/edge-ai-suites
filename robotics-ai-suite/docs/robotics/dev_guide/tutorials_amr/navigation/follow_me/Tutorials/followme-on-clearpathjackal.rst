@@ -9,6 +9,10 @@ This ``twist`` message consists of the updated angular and linear velocity of th
 Getting Started
 ----------------
 
+Prerequisites
+^^^^^^^^^^^^^
+
+Complete the :doc:`../../../../../gsg_robot/index` before continuing.
 
 Install the |deb_pack|
 ^^^^^^^^^^^^^^^^^^^^^^^

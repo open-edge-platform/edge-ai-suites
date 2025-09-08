@@ -15,6 +15,12 @@ We demonstrate the gain in latency for a |ros| bag file with point cloud data fr
 number of input points is large. In case of a 2D LIDAR, the point cloud is comparatively sparse and hence, not showed here.
 
 
+Prerequisites
+-------------
+
+Complete the :doc:`../../../../gsg_robot/index` before continuing.
+
+
 Install and run the |ros| bag file |deb_pack|
 -----------------------------------------------
 

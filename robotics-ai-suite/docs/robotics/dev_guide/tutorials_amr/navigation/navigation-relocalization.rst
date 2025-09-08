@@ -10,6 +10,11 @@ Getting Started
 
 - ROS version: humble
 
+Prerequisites
+^^^^^^^^^^^^^
+
+Complete the :doc:`../../../gsg_robot/index` before continuing.
+
 Install |deb_pack|
 ^^^^^^^^^^^^^^^^^^^^^^
 

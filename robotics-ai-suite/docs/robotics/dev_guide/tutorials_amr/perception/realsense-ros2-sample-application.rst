@@ -17,6 +17,11 @@ This tutorial tells you how to:
 
 This |realsense| with |ros| Sample Application can be run using two different types of |realsense| cameras. The next section explains how to run this sample application using an |realsense| camera connected through USB (for example, |realsense| camera D435i). The subsequent section focuses on an |intel_realsense_depth_camera_d457| in MIPI mode, which is connected to an |axiomtek_robox500_ros2_amr_controller|.
 
+Prerequisites
+`````````````
+
+Complete the :doc:`../../../gsg_robot/index` before continuing.
+
 Using |realsense| camera connected through USB
 `````````````````````````````````````````````````
 

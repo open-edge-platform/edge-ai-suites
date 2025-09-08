@@ -43,7 +43,7 @@ For customization options, see :doc:`../../../dev_guide/tutorials_amr/navigation
 Source Code
 -----------
 
-The source code of this component can be found here: `ITS-Planner <https://github.com/open-edge-platform/edge-ai-suites/robotics-ai-suite/components/its-planner>`_
+The source code of this component can be found here: `ITS-Planner <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/its-planner>`_
 
 Getting Started
 ----------------
@@ -51,6 +51,11 @@ Getting Started
 |p_amr| provides a |ros| |deb_pack| for the application, supported by the following platform:
 
 - ROS version: humble
+
+Prerequisites
+^^^^^^^^^^^^^
+
+Complete the :doc:`../../../gsg_robot/index` before continuing.
 
 Install |deb_pack|
 ^^^^^^^^^^^^^^^^^^^^^^^

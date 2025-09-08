@@ -1,6 +1,11 @@
-# Default values for chart.
+# Default values for smart-intersection chart.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+
+# Certificate Manager Configuration
+import:
+  certManager:
+    enabled: false
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 namespace:
@@ -143,6 +148,9 @@ dlstreamerPipelineServer:
   tag: 3.1.0-ubuntu24
   # Overrides the storage class name
   storageClassName: "standard"
+
+cert-manager:
+  installCRDs: true
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []

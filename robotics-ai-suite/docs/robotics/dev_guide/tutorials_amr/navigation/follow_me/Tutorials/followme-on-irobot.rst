@@ -1,23 +1,48 @@
-Follow-me with ADBSCAN on Aaeon Robot
+Follow-me with ADBSCAN on |irobot_create3|
 ================================================
 
 This tutorial provides instructions for running the ADBSCAN-based Follow-me algorithm from |p_amr| using |realsense| camera input. 
-Validation of the the algorithm was performed on a custom Aaeon robot.
+Validation of the the algorithm was performed on a custom |irobot_create3|.
 The |realsense| camera publishes to ``/camera/depth/color/points`` topic. The `adbscan_sub_node` subscribes to the corresponding topic, 
 detects the obstacle array, computes the robot's velocity and publishes to the ``/cmd_vel`` topic of type `geometry_msg/msg/Twist`. 
 This ``twist`` message consists of the updated angular and linear velocity of the robot to follow the target, which can be subsequently subscribed by a robot-driver.
 
 
 Getting Started
-----------------
+-------------------------------------------
 
 Prerequisites
 ^^^^^^^^^^^^^
 
-- Assemble your robotic kit following the instructions provided by AAEON.
+- Assemble your robotic kit following the instructions :doc:`irobot-create3 <../../../developer_kit/irobot-create3-robot>`
 
 - Complete the :doc:`../../../../../gsg_robot/index` before continuing.
 
+|intel| board connected to |irobot_create3|
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Follow the instructions on page
+`iRobot® Create® 3 - Network Recommendations
+<https://iroboteducation.github.io/create3_docs/setup/network-config/>`__
+to set up an Ethernet over USB connection and to configure the network
+device on the |intel| board.
+Use an IP address of the same subnet as used on the |irobot_create3|.
+
+Check that the |irobot_create3| is reachable over the Ethernet
+connection. Output on the robot with the configuration from the image
+above:
+
+.. code-block:: bash
+
+   $ ping -c 3 192.168.99.2
+   PING 192.168.99.2 (192.168.99.2) 56(84) bytes of data.
+   64 bytes from 192.168.99.2: icmp_seq=1 ttl=64 time=1.99 ms
+   64 bytes from 192.168.99.2: icmp_seq=2 ttl=64 time=2.31 ms
+   64 bytes from 192.168.99.2: icmp_seq=3 ttl=64 time=2.02 ms
+
+   --- 192.168.99.2 ping statistics ---
+   3 packets transmitted, 3 received, 0% packet loss, time 2004ms
+   rtt min/avg/max/mdev = 1.989/2.105/2.308/0.144 ms
 
 Install the |deb_pack|
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -29,24 +54,15 @@ Install the ``ros-humble-follow-me-tutorial`` |deb_pack| from the |intel| |p_amr
       sudo apt update
       sudo apt install ros-humble-follow-me-tutorial
 
-Calibrate the robot 
-^^^^^^^^^^^^^^^^^^^^^^^
-Please perform IMU calibration of the robot, launch script below:
-
-   .. code-block:: bash
-
-      source /opt/ros/humble/setup.bash
-      /opt/ros/humble/share/ros2_amr_interface/scripts/calibration.sh
-
 Run Demo
 ----------------
 
-To launch the Follow-me application tutorial on the Aaeon robot, use the following ROS 2 launch file.
+To launch the Follow-me application tutorial on the |irobot_create3| robot, use the following ROS 2 launch file.
 
    .. code-block::
 
       source /opt/ros/humble/setup.bash
-      ros2 launch tutorial_follow_me aaeon_followme_launch.py
+      ros2 launch tutorial_follow_me irobot_followme_launch.py
 
 After executing the above command, you can observe that the robot detecting the target within a tracking radius 
 (~0.5 - 1.5 m; `min_dist` and `max_dist` are set in `/opt/ros/humble/share/tutorial_follow_me/params/followme_adbscan_RS_params.yaml`) 

@@ -91,9 +91,22 @@ spec:
       - name: tracker-config
         configMap:
           name: {{ .Release.Name }}-scene-config
+      {{- if .Values.import.certManager.enabled }}
+      - name: secrets
+        projected:
+          sources:
+          - secret:
+              name: {{ .Release.Name }}-scene-secrets
+          - secret:
+              name: {{ .Release.Name }}-ca-secret
+              items:
+              - key: tls.crt
+                path: scenescape-ca.pem
+      {{- else }}
       - name: secrets
         secret:
           secretName: {{ .Release.Name }}-scene-secrets
+      {{- end }}
       - name: scene-secrets-data
         persistentVolumeClaim:
           claimName: {{ .Release.Name }}-scene-secrets-pvc
