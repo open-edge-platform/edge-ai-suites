@@ -103,6 +103,39 @@ export default defineComponent({
           });
     }
   },
+  async mounted() {
+    try {
+      const res = await fetch("/pipelines/status",{
+          method: "GET"
+      });
+      const pipelines = await res.json();
+
+      // look for pipeline with name "filter-pipeline" which is "RUNNING". (Ignore "search_image" pipeline)
+      // If found, then analyse pipeline is running in background. Set this.pipeline variable to running pipeline id
+      if (Array.isArray(pipelines)) {
+        for (const p of pipelines) {
+          if (p.state === "RUNNING") {
+            try {
+              const detailsRes = await fetch(`/pipelines/${p.id}`,{
+                  method: "GET"
+              });
+              const details = await detailsRes.json();
+              const name = details?.params?.version;
+              if (name === "filter-pipeline") {
+                this.pipeline = p.id;
+                break; // found our pipeline, stop looking
+              }
+            } catch (err) {
+              console.error(`Error fetching details for pipeline ${p.id}:`, err);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch pipeline status:", err);
+      this.pipeline = null;
+    }
+  },
   methods: {
     async captureScreenshot() {
       if (!this.video) {
@@ -231,7 +264,6 @@ export default defineComponent({
 
           // Iterate over response.data and fetch images
           let results = await Promise.all(response.data[0].map(async (data) => {
-            console.log("data", data);
             if (typeof data.entity.filename === 'string') {
               return {
                 url: data.entity.filename,
