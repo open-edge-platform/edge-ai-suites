@@ -23,7 +23,7 @@ and orientation in space with a 2.5D algorithm and the robot picks it up accordi
 
 The only configuration needed on the robot, is to put the teaching pendant in ``remote control`` as show in following picture
 
-    .. image:: /images/html/setremotecontrol.png
+    .. image:: images/html/setremotecontrol.png
      :alt: Setting pendant to Remote control
 
 

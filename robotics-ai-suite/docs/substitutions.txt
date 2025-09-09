@@ -1,13 +1,3 @@
-.. |GSG Robot| replace::  :doc:`/robotics/gsg_robot/index`
-.. |Dev Guide| replace:: :doc:`/robotics/dev_guide/index`
-
-.. |GSG Robot Index| replace::  :doc:`/robotics/gsg_robot/index`
-.. |Dev Guide Index| replace:: :doc:`/robotics/dev_guide/index`
-
-.. |GSG Robot Requirements| replace::  :doc:`/robotics/gsg_robot/requirements`
-.. |Dev Guide Robot Tutorials| replace::  :doc:`/robotics/dev_guide/tutorials_amr/index`
-.. |EDSQ| replace:: :doc:`/robotics/dev_guide/system_integrator/esdq`
-
 .. |ros_install_instructions| replace:: `ROS 2 setup guide <https://docs.ros.org/en/humble/Installation.html>`__
 .. |ros_install_instructions_debian| replace:: `ROS 2 setup with Ubuntu Deb Packages <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages>`__
 
