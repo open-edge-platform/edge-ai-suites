@@ -1,0 +1,404 @@
+From 93b1e789b31f0af053a62c086454dfe75cd97666 Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Mon, 14 Jul 2025 10:16:05 +0800
+Subject: [PATCH 4/6] add OpenVINO convert script
+
+---
+ scripts/convert/README.md     |   6 +
+ scripts/convert/ov_convert.py | 356 ++++++++++++++++++++++++++++++++++
+ scripts/maniskill_model.py    |   3 +
+ 3 files changed, 365 insertions(+)
+ create mode 100644 scripts/convert/README.md
+ create mode 100644 scripts/convert/ov_convert.py
+
+diff --git a/scripts/convert/README.md b/scripts/convert/README.md
+new file mode 100644
+index 0000000..331c0bc
+--- /dev/null
++++ b/scripts/convert/README.md
+@@ -0,0 +1,6 @@
++# OpenVINO Conversion
++Usage in project directory:
++```bash
++python -m scripts.convert.ov_convert --pretrained <pretrained_rdt_model_path> --output_dir <output_dir> 
++```
++--output_dir is an optional argument with default value "ov_ir".
+diff --git a/scripts/convert/ov_convert.py b/scripts/convert/ov_convert.py
+new file mode 100644
+index 0000000..6bda4a5
+--- /dev/null
++++ b/scripts/convert/ov_convert.py
+@@ -0,0 +1,356 @@
++import torch
++import torch.nn as nn
++import yaml
++import argparse
++import os
++
++from models.rdt.blocks import (FinalLayer, RDTBlock, TimestepEmbedder)
++from scripts.aloha_static_model import create_model
++
++import openvino as ov
++
++from transformers import AutoModel, AutoProcessor, SiglipVisionModel, SiglipImageProcessor, SiglipModel
++
++
++def convert_rdt(original_rdt, config, output_dir):
++    class RDT(nn.Module):
++        """
++        Class for Robotics Diffusion Transformers.
++        """
++        def __init__(
++            self,
++            output_dim=128,
++            horizon=32,
++            hidden_size=1152,
++            depth=28,
++            num_heads=16,
++            max_lang_cond_len=1024,
++            img_cond_len=4096,
++            lang_pos_embed_config=None,
++            img_pos_embed_config=None,
++            dtype=torch.bfloat16
++        ):
++            super().__init__()
++            self.horizon = horizon
++            self.hidden_size = hidden_size
++            self.max_lang_cond_len = max_lang_cond_len
++            self.img_cond_len = img_cond_len
++            self.dtype = dtype
++            self.lang_pos_embed_config = lang_pos_embed_config
++            self.img_pos_embed_config = img_pos_embed_config
++
++            self.t_embedder = TimestepEmbedder(hidden_size, dtype=dtype)
++            self.freq_embedder = TimestepEmbedder(hidden_size, dtype=dtype)
++            
++            # We will use trainable sin-cos embeddings
++            # [timestep; state; action]
++            self.x_pos_embed = nn.Parameter(
++                torch.zeros(1, horizon+3, hidden_size))
++            # Language conditions
++            self.lang_cond_pos_embed = nn.Parameter(
++                torch.zeros(1, max_lang_cond_len, hidden_size))
++            # Image conditions
++            self.img_cond_pos_embed = nn.Parameter(
++                torch.zeros(1, img_cond_len, hidden_size))
++
++            self.blocks = nn.ModuleList([
++                RDTBlock(hidden_size, num_heads) for _ in range(depth)
++            ])
++            self.final_layer = FinalLayer(hidden_size, output_dim)
++
++        def forward(self, x, freq, t, lang_c, img_c, lang_mask=None, img_mask=None):
++            """
++            Forward pass of RDT.
++            
++            x: (B, T, D), state + action token sequence, T = horizon + 1,
++                dimension D is assumed to be the same as the hidden size.
++            freq: (B,), a scalar indicating control frequency.
++            t: (B,) or (1,), diffusion timesteps.
++            lang_c: (B, L_lang, D) or None, language condition tokens (variable length),
++                dimension D is assumed to be the same as the hidden size.
++            img_c: (B, L_img, D) or None, image condition tokens (fixed length),
++                dimension D is assumed to be the same as the hidden size.
++            lang_mask: (B, L_lang) or None, language condition mask (True for valid).
++            img_mask: (B, L_img) or None, image condition mask (True for valid).
++            """
++            t = self.t_embedder(t).unsqueeze(1)             # (B, 1, D) or (1, 1, D)
++            freq = self.freq_embedder(freq).unsqueeze(1)    # (B, 1, D)
++            # Append timestep to the input tokens
++            if t.shape[0] == 1:
++                t = t.expand(x.shape[0], -1, -1)
++            x = torch.cat([t, freq, x], dim=1)               # (B, T+1, D)
++            
++            # Add multimodal position embeddings
++            x = x + self.x_pos_embed
++            # Note the lang is of variable length
++            lang_c = lang_c + self.lang_cond_pos_embed[:, :lang_c.shape[1]]
++            img_c = img_c + self.img_cond_pos_embed
++
++            # Forward pass
++            conds = [lang_c, img_c]
++            masks = [lang_mask, img_mask]
++            for i, block in enumerate(self.blocks):
++                c, mask = conds[i%2], masks[i%2]
++                # x = block(x, c, mask)                       # (B, T+1, D)
++                x = block(x, c)   # to avoid nan output issue
++            # Inject the language condition at the final layer
++            x = self.final_layer(x)                         # (B, T+1, out_channels)
++
++            # Only preserve the action tokens
++            x = x[:, -self.horizon:]
++            return x
++
++    # Build model 
++    model = RDT(
++        output_dim=config["common"]["state_dim"],
++        horizon=original_rdt.horizon,
++        hidden_size=original_rdt.hidden_size,
++        depth=config['model']['rdt']['depth'],
++        num_heads=config['model']['rdt']['num_heads'],
++        max_lang_cond_len=original_rdt.max_lang_cond_len,
++        img_cond_len=original_rdt.img_cond_len,
++        lang_pos_embed_config=original_rdt.lang_pos_embed_config,
++        img_pos_embed_config=original_rdt.img_pos_embed_config,
++        dtype=original_rdt.dtype
++    )
++
++    # Load the weights from the original model
++    model.load_state_dict(original_rdt.state_dict())
++    model.eval()
++
++    # Create example input tensor
++    state_action_traj =  torch.randn(1,65,2048)  # (B, T+1, D)
++    freq = torch.tensor([1.0])  # (B,)
++    t = torch.tensor([0.0])  # (B,) or (1,)
++    lang_cond = torch.randn(1, 20, 2048)  
++    img_cond = torch.randn(1, 4374, 2048)  # (B, L_img, D)
++    lang_mask = torch.ones(1, 20, dtype=torch.bool)
++
++    # Convert the model
++    with torch.inference_mode():
++        traced_model = torch.jit.trace(
++            model,
++            (state_action_traj, freq, t, lang_cond, img_cond, lang_mask),
++        )
++        ov_model = ov.convert_model(traced_model,
++                                    example_input=[state_action_traj, freq, t, lang_cond, img_cond, lang_mask],
++                                    )
++        ov.save_model(ov_model, os.path.join(output_dir, "rdt/model.xml"))
++    
++    print("RDT model converted successfully")
++
++
++def convert_lang_adaptor(original_model, output_dir):
++    original_model.eval()
++    # Create example input tensor
++    # lang_tokens: [1,20,4096]
++    lang_tokens = torch.randn(1, 20, 4096)  # (B, lang_len, lang_token_dim)
++    # Convert the model
++    with torch.inference_mode():
++        traced_model = torch.jit.trace(
++            original_model,
++            (lang_tokens, ),
++        )
++        ov_model = ov.convert_model(traced_model,
++                                    example_input=[lang_tokens],
++                                    )
++        ov.save_model(ov_model, os.path.join(output_dir, "lang_adaptor/model.xml"))
++    print("Language adaptor model converted successfully")
++
++
++def convert_img_adaptor(original_model, output_dir):
++    original_model.eval()
++    # Create example input tensor
++    # img_tokens: [1,4374,1152]
++    img_tokens = torch.randn(1, 4374, 1152)  # (B, img_len, img_token_dim)
++    # Convert the model
++    with torch.inference_mode():
++        traced_model = torch.jit.trace(
++            original_model,
++            (img_tokens, ),
++        )
++        ov_model = ov.convert_model(traced_model,
++                                    example_input=[img_tokens],
++                                    )
++        ov.save_model(ov_model, os.path.join(output_dir, "img_adaptor/model.xml"))
++    
++    print("Image adaptor model converted successfully")
++
++
++def convert_state_adaptor(original_model, output_dir):
++    original_model.eval()
++    # Create example input tensor
++    # state_tokens: [1,1,256]
++    state_tokens = torch.randn(1, 1, 256)  # (B, state_len, state_token_dim * 2) -> state + state mask (indicator)
++    # Convert the model
++    with torch.inference_mode():
++        traced_model = torch.jit.trace(
++            original_model,
++            (state_tokens, ),
++        )
++        ov_model = ov.convert_model(traced_model,
++                                    example_input=[state_tokens],
++                                    )
++        ov.save_model(ov_model, os.path.join(output_dir, "state_adaptor/model.xml"))
++
++    print("State adaptor model converted successfully")
++
++
++def convert_siglip_full_model(siglip_model_name, output_dir):
++    
++    original_siglip = AutoModel.from_pretrained(
++        pretrained_vision_encoder_name_or_path,
++        torch_dtype=torch.float32,
++    )
++    processor = AutoProcessor.from_pretrained(siglip_model_name)
++
++    original_siglip.eval()
++    # Create example input tensor
++    # siglip-so400m-patch14-384 expects inputs of shape [B, 3, 384, 384]
++    example_inputs = processor(text=["test input"],
++                               images=[torch.randint(low=0,high=256,size=(384, 384, 3),dtype=torch.uint8)],
++                               padding="max_length",
++                               return_tensors="pt",
++    )
++
++    with torch.inference_mode():
++        original_siglip.config.torchscript = True
++        ov_model = ov.convert_model(original_siglip, 
++                                    example_input=dict(example_inputs),
++                                    )
++        ov.save_model(ov_model, os.path.join(output_dir, "siglip/model.xml"))
++
++    print("image encoder siglip model converted successfully")
++
++
++def convert_siglip_vision_model(siglip_model_name, output_dir):
++    class SiglipImageModel(nn.Module):
++        def __init__(self, siglip_model_name, device_map='cpu'):
++            super().__init__()
++            self.image_processor = SiglipImageProcessor.from_pretrained(siglip_model_name)
++            self.model = SiglipModel.from_pretrained(siglip_model_name, device_map=device_map)
++            self.config = self.model.config
++            self.model.eval()
++
++        @torch.no_grad()
++        def forward(self, images):
++            # Use SiglipModel's config for some fields (if specified) instead of those of vision & text components.
++            output_attentions = self.config.output_attentions
++            output_hidden_states = (
++               self.config.output_hidden_states
++            )
++            return_dict = self.config.use_return_dict
++
++            vision_outputs = self.model.vision_model(
++                pixel_values=images,
++                output_attentions=output_attentions,
++                output_hidden_states=output_hidden_states,
++                return_dict=return_dict,
++                interpolate_pos_encoding=False,  # Default
++            )
++
++            last_hidden_state = vision_outputs.last_hidden_state if return_dict else vision_outputs[0]
++
++            return last_hidden_state
++        
++        @property
++        def dtype(self):
++            return self.model.dtype
++
++        @property
++        def device(self):
++            return self.model.device
++        
++    original_model = SiglipImageModel(siglip_model_name)
++    # Create example input tensor
++    # siglip-so400m-patch14-384 expects inputs of shape [B, 3, 384, 384]
++    example_images = original_model.image_processor(
++                                            images=[torch.randint(low=0,high=256,size=(384, 384, 3),dtype=torch.uint8)],
++                                            padding="max_length",
++                                            return_tensors="pt", 
++                                        )["pixel_values"]
++    with torch.inference_mode():
++        traced_model = torch.jit.trace(
++            original_model,
++            (example_images, ),
++        )
++        ov_model = ov.convert_model(traced_model, input=[-1, 3, 384, 384],
++                                    example_input=[example_images],
++                                    )
++        ov.save_model(ov_model, os.path.join(output_dir, "siglip_vision/model.xml"))
++
++    print("image encoder siglip vision model converted successfully")
++
++
++def convert_t5(tokenizer, original_model, output_dir):
++
++    original_model.eval()
++    # Create example input tensor
++    # t5 expects inputs of shape [B, L], use tokenizer to generate tokens
++    tokens = tokenizer(
++            "demo instruction", return_tensors="pt",
++            padding="longest",
++            truncation=True
++        )["input_ids"]
++
++    # Ensure tokens are in the correct shape
++    tokens = tokens.view(1, -1)
++
++    with torch.inference_mode():
++        traced_model = torch.jit.trace(
++            original_model,
++            (tokens, ),
++        )
++        ov_model = ov.convert_model(traced_model,
++                                    example_input=[tokens],
++                                    )
++        ov.save_model(ov_model, os.path.join(output_dir, "t5/model.xml"))
++
++    print("text encoder T5 model converted successfully")
++
++
++if __name__ == "__main__":
++
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--pretrained', type=str, required=True, help='Path to the original pretrained RDT model file')
++    parser.add_argument('--output_dir', type=str, default='ov_ir', required=False, help='Path to the output directory')
++    args = parser.parse_args()
++
++    # Make original policy
++    config_path = 'configs/base.yaml'
++    with open(config_path, "r") as fp:
++        config = yaml.safe_load(fp)
++    # pretrained_text_encoder_name_or_path = "google/t5-v1_1-xxl"  # text encoder t5-xxl is too large for edge devices, suggest using pre-encoded embeddings for inference
++    pretrained_vision_encoder_name_or_path = "google/siglip-so400m-patch14-384"
++    pretrained_path =  args.pretrained
++
++    policy = create_model(
++        args=config, 
++        device='cpu',
++        dtype=torch.float32,
++        pretrained=pretrained_path,
++        # pretrained_text_encoder_name_or_path=pretrained_text_encoder_name_or_path,
++        pretrained_vision_encoder_name_or_path=pretrained_vision_encoder_name_or_path  # use full model instead
++    )
++   
++    # Convert the RDT model
++    original_rdt = policy.policy.model
++    convert_rdt(original_rdt, config, args.output_dir)
++
++    # Convert the language adaptor
++    original_lang_adaptor = policy.policy.lang_adaptor
++    convert_lang_adaptor(original_lang_adaptor, args.output_dir)
++
++    # Convert the image adaptor
++    original_img_adaptor = policy.policy.img_adaptor
++    convert_img_adaptor(original_img_adaptor, args.output_dir)
++
++    # Convert the state adaptor
++    original_state_adaptor = policy.policy.state_adaptor
++    convert_state_adaptor(original_state_adaptor, args.output_dir)
++
++    # Convert the image encoder Siglip model
++    convert_siglip_vision_model(pretrained_vision_encoder_name_or_path, args.output_dir) 
++
++
++
+diff --git a/scripts/maniskill_model.py b/scripts/maniskill_model.py
+index c8baddb..40ebb84 100644
+--- a/scripts/maniskill_model.py
++++ b/scripts/maniskill_model.py
+@@ -126,6 +126,9 @@ class RoboticDiffusionTransformerModel(object):
+         elif filename.endswith('.safetensors'):
+             from safetensors.torch import load_model
+             load_model(self.policy, pretrained)
++        elif filename.endswith('.bin'):
++            checkpoint = torch.load(pretrained)
++            self.policy.load_state_dict(checkpoint)
+         else:
+             raise NotImplementedError(f"Unknown checkpoint format: {pretrained}")
+ 
+-- 
+2.34.1
+
