@@ -45,16 +45,36 @@ Intel OpenVINO supports most of the TensorFlow and PyTorch models. The table bel
          * - CLIP
            - Transformer based image classification
            - https://github.com/openvinotoolkit/openvino_notebooks/tree/latest/notebooks/clip-zero-shot-image-classification
+         * - Qwen2.5VL
+           - Multimodal large language model
+           - https://github.com/openvinotoolkit/openvino_notebooks/tree/latest/notebooks/qwen2.5-vl
+         * - Whisper
+           - Automatic speech recognition
+           - https://github.com/openvinotoolkit/openvino_notebooks/tree/latest/notebooks/whisper-asr-genai
+         * - FunASR
+           - Automatic speech recognition
+           - Refer to the :ref:`FunASR Setup <funasr-setup>` in LLM Robotics sample pipeline
 
+
+.. attention::
+   When following these tutorials for model conversion, please ensure that the OpenVINO version used for model conversion is the same as the runtime version used for inference. Otherwise, unexpected errors may occur, especially if the model is converted using a newer version and the runtime is an older version. See more details in the :ref:`Troubleshooting <ov_inference_troubleshooting>`.
+   
 Please also find information for the models of imitation learning, grasp generation, simultaneous localization and mapping (SLAM) and bird's-eye view (BEV):
+
+.. note::
+  Before using these models, please ensure that you have read the :ref:`AI Content Disclaimer <ai_content_disclaimer>`.
 
 .. toctree::
     :maxdepth: 1
 
     model_tutorials/model_act
+    model_tutorials/model_cns
+    model_tutorials/model_dp
+    model_tutorials/model_idp3
     model_tutorials/model_superpoint
     model_tutorials/model_lightglue
     model_tutorials/model_fastbev
     model_tutorials/model_depthanythingv2
-
-    
+    model_tutorials/model_rdt
+   
+ 

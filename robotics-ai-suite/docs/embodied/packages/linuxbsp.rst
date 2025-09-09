@@ -144,6 +144,13 @@ For generic kernel:
          $ sudo dpkg -i *.deb
          $ sudo update-grub
 
+   **Note:** When updating or installing packages with `dpkg` on the same kernel, you might encounter issues if the kernel is actively in use. This can happen because certain files or resources are locked or in use by the running kernel, preventing the installation process from completing successfully.
+
+   Here are some strategies to address on this issue:
+
+   1. Switch to Another Kernel.
+   2. Force installation with `sudo dpkg -i --force-all *.deb`
+
 **Step 6. Reboot and Verify Kernel version**
 
    When you complete the steps above, reboot the machine.

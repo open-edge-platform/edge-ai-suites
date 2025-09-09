@@ -71,10 +71,18 @@
              | ros-humble-realsense2-description
            - RealSense Camera driver and tools.
          * - :doc:`Imitation Learning - ACT <sample_pipelines/imitation_learning_act>`
-           - | act-ipex
-             | act-ov
+           - | act-ov
            - Action Chunking with Transformers (ACT), a method that trains a generative model to understand and predict action sequences.
-
+         * - :doc:`Diffusion Policy <sample_pipelines/diffusion_policy>`
+           - | diffusion-policy-ov
+           - Diffusion Policy (DP), a method for generating robot actions by conceptualizing visuomotor policy learning as a conditional denoising diffusion process.
+         * - :doc:`LLM Robotics Demo <sample_pipelines/llm_robotics>`
+           - | funasr
+             | llm-robotics
+           - LLM Robotics demo, a code generation pipeline for robotics, which uses a large language model and vision model to generate pick and place actions.
+         * - :doc:`Robotics Diffusion Transformer (RDT) <sample_pipelines/robotics_diffusion_transformer>`
+           - | rdt-ov
+           - Robotics Diffusion Transformer (RDT), the largest bimanual manipulation foundation model with strong generalizability.
 
 .. toctree::
    :maxdepth: 1

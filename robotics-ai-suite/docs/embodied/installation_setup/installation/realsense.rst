@@ -45,7 +45,11 @@ Installation
     .. code-block:: bash
 
         $ sudo apt install librealsense2-dkms
-        $ sudo apt install librealsense2
+        $ sudo apt install librealsense2=2.55.1-0~realsense.12474
+
+.. attention::
+
+    Since the version of ``librealsense2`` package is fixed in the above command, other dependent packages should be installed with the same version, such as ``librealsense2-utils``, ``librealsense2-dev``, ``librealsense2-gl``, etc.
 
 #. [Optional] Install the ROS wrappers for RealSense by running the below command:
 

@@ -6,12 +6,52 @@
 EtherCAT Master Stack
 ######################
 
+Overview
+*********
+
 The EtherCAT master stack by IgH is used for open source projects for automation of systems such as Robot Operating System (ROS) and LinuxCNC. Applications of an open source–based EtherCAT master system reduces cost and makes application program development flexible.
 Based on the native, Intel made the following optimizations:
 
 - Support for |Linux| Kernel 5.x/6.x
 - Support for Preempt RT
 - Migration to the latest IGB/IGC/mGBE driver to stack
+
+EtherCAT Master User Space Stack
+***********************************
+
+The EtherCAT Master User Space Stack is an optimized version of the IgH EtherCAT Master Stack designed to run in user space on systems with the Preempt RT patch. This optimization eliminates the need for ioctl system calls, which can introduce latency, thereby improving performance. By maintaining all APIs from the original IgH EtherCAT Master Stack, this user space stack ensures compatibility with existing EtherCAT application programs, allowing for seamless integration and transition.
+
+Key features of the EtherCAT Master User Space Stack include:
+
+- **Latency Improvement:** By avoiding ioctl system calls, the stack reduces latency, which is crucial for real-time applications.
+- **Compatibility:** The stack retains all APIs from the original IgH EtherCAT Master Stack, ensuring that existing EtherCAT applications can run without modification.
+- **Containerization:** The stack is designed to be easily containerized, facilitating deployment in modern software environments that use containers for isolation and scalability.
+- **Multiple Master Support:** The stack supports multiple EtherCAT masters, allowing for complex network configurations and improved scalability.
+
+Overall, this user space stack provides a robust solution for real-time EtherCAT applications, offering improved performance and flexibility while maintaining compatibility with existing software.
+
+EtherCAT Enablekit
+*************************
+
+**EtherCAT Enablekit** streamlines the configuration and development of EtherCAT systems by offering a comprehensive set of tools and APIs. It simplifies the setup of EtherCAT masters, slaves, and network topology, allowing developers to focus on application logic rather than low-level configuration details. With Ecat EnableKit, building robust EtherCAT applications becomes faster and more efficient.
+
+Key features of the EtherCAT Enablekit include:
+
+- Built on the IgH EtherCAT Master Stack
+- Supports both Preempt-RT and Xenomai/Dovetail real-time frameworks
+- Provides utilities to parse EtherCAT Network Information (ENI) files
+- Includes tools for parsing EtherCAT Slave Information (ESI) files
+- Offers user-friendly APIs for rapid EtherCAT application development
+- Supplies example code for controlling EtherCAT IO slaves
+- Includes example code for operating EtherCAT CoE slaves (SOE currently not supported)
+
+The architecture is as following:
+
+.. figure:: assets/ethercat/arch.png
+   :align: center
+
+Packages
+**************
 
 The EtherCAT master stack currently contains the following packages:
 
@@ -47,6 +87,9 @@ The EtherCAT master stack currently contains the following packages:
 Quick Start
 ************
 
+Kernel Space Stack
+-------------------
+
 You can install this component from the Intel* Embodied Intelligence SDK repository.
 
 .. code-block:: bash
@@ -54,7 +97,7 @@ You can install this component from the Intel* Embodied Intelligence SDK reposit
    $ sudo apt install ighethercat ighethercat-dkms ighethercat-examples ecat-enablekit
 
 Set up EtherCAT Master
-------------------------
++++++++++++++++++++++++
 
 This section describes the procedure to run IgH EtherCAT Master Stack.
 
@@ -77,10 +120,12 @@ Dependencies
 
 EtherCAT Initialization Script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The EtherCAT master ``init`` script is installed in ``/etc/init.d/ethercat``.
 
 EtherCAT *Sysconfig* File
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The ``init`` script uses a mandatory ``sysconfig`` file installed in ``/etc/sysconfig/ethercat``. The ``sysconfig`` file contains the configuration variables needed to operate one or more masters. The documentation is within the file and also included here.
 
    .. figure:: assets/ethercat/ethercat_sysconfig.png
@@ -130,7 +175,7 @@ Do the following:
 
 
 Start Master as Service
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 After the ``init`` script and the ``sysconfig`` file are ready to configure, and are placed in the right location, the EtherCAT master can be inserted as a service. You can use the ``init`` script to manually start and stop the EtherCAT master. Execute the ``init`` script with one of the following parameters:
 
@@ -153,7 +198,7 @@ After the ``init`` script and the ``sysconfig`` file are ready to configure, and
    +-----------------------------------------------+---------------------------------------------------------+
 
 EtherCAT Configuration & Compilation
-------------------------------------------------
+++++++++++++++++++++++++++++++++++++++
 
 By default, Intel Embodied Intelligence SDK provides a generic configuration to enable EtherCAT. EtherCAT stack supports DKMS to build kernel modules whose sources generally reside outside the kernel source tree.
 
@@ -161,7 +206,7 @@ The source code of the EtherCAT stack can be found at: ``/var/lib/dkms/ighetherc
 The default configuration of EtherCAT stack is located in a file named ``dkms.conf``. The configuration can be modified as needed.
 
 Compiling EtherCAT
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 #. Change directory to the EtherCAT source:
 
@@ -229,4 +274,57 @@ Provided below are some Makefile templates for EtherCAT application. These templ
       %.o:%.c
               $(CC) $(CFLAGS) -o $@ -c $<
 
+User Space Stack
+-------------------
 
+You can install this component from the Intel* Embodied Intelligence SDK repository.
+
+.. code-block:: bash
+
+   $ sudo apt install ighethercat-dpdk ighethercat-dpdk-examples ecat-enablekit-dpdk
+
+Set up EtherCAT Master
++++++++++++++++++++++++
+
+This section describes the procedure to run EtherCAT Master User Space Stack.   
+
+EtherCAT *Sysconfig* File
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``ecrt.conf`` file located at ``/etc/sysconfig/`` is a crucial configuration file for setting up EtherCAT master nodes. This file contains the necessary configuration variables to operate one or more EtherCAT masters effectively. Make sure to customize below parameters based on your hardware setup and operational needs.
+
+The following describes the configuration parameters that can be defined within the **ethercat** section:
+
+**node_id:**
+
+   This parameter assigns a unique identifier to each EtherCAT master node. The ``node_id`` is essential for distinguish between different nodes, especially in setups involving multiple masters or when managing several EtherCAT networks. Each node should have a distinct ID to ensure proper communication and control within the network.
+
+**master_mac:**
+
+   This specifies the MAC address of the network interface card (NIC) that the EtherCAT master will use for communication. The MAC address is a unique identifier for network devices, ensuring that each master can be correctly identified on the network. If you are using multiple master within a single EtherCAT application, you can register multiple MAC addresses as a list. This allows for flexible configurations and supports complex network setups.
+
+**debug_level:**
+
+   This setting controls the verbosity of debug information output by the EtherCAT master. A debug level of ``0`` means no debug information will be printed, which is suitable for production environments where performance is prioritized. Higher debug levels(up to ``2``) provide more detailed logs, which can be invaluable during development or troubleshooting to understand the system's behavior and diagnose issues.
+
+**drv_argv:**
+
+   This parameter allows you to add extra Environment Abstraction Layer(**EAL**) for the Data Plane Development Kit(**DPDK**) framework. **DPDK** is a set of libraries and drivers for fast packet processing, and **EAL** parameters help configure its operation. For detailed information on available **EAL** parameters and their usage, you can refer to the official **DPDK** documentation at `EAL parameters <https://doc.dpdk.org/guides/linux_gsg/linux_eal_parameters.html>`_. This flexibility enables you to optimize the performance and behavior of the EtherCAT master according to your specific requirements.
+
+vfio binding
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As EtherCAT Master User Space Stack requires **DPDK** support for efficient EtherCAT communication, leveraging the ``vfio-pci`` driver as a kernel module for DPDK-bound ports. This setup is crucial for achieving high-performance packet processing, which is essential in real-time applications like EtherCAT. If an IOMMU is unavailable, the ``vfio-pci`` can used in `no-iommu <https://doc.dpdk.org/guides/linux_gsg/linux_drivers.html#vfio-noiommu>`_ mode.
+
+To enable **DPDK** to manage network ports, a utility script called ``dpdk-driver-bind.sh`` is provided to facilitate the binding and unbinding ``vfio-pci`` process for specify EtherCAT ports.
+
+- Binding ``vfio-pci`` on EtherCAT ports
+
+   .. code-block:: bash
+   
+      dpdk-driver-bind.sh start <EtherCAT port BDF address>
+- Unbinding ``vfio-pci`` on EtherCAT ports
+
+   .. code-block:: bash
+   
+      dpdk-driver-bind.sh stop <EtherCAT port BDF address>
