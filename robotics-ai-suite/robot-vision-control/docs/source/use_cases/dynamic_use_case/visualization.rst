@@ -7,7 +7,7 @@ Rviz2 Plugin
 
 A rviz2 plugin has been implemented to give full control of the use case in the same HMI:
 
-.. image:: /images/html/RvizDynamicUseCase1.png
+.. image:: images/html/RvizDynamicUseCase1.png
    :alt: RViz2 Control Panel Custom plugin
 
 - Enable/Disable motion button 

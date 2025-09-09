@@ -17,10 +17,10 @@ Two use cases are delivered using the RVC framework trying to cover as many opti
 
     We strongly suggest to set the real robot in this home position, and move it there before starting any of the provided use cases:
 
-.. image:: /images/html/sethomeposition.png
+.. image:: images/html/sethomeposition.png
    :alt: setting home position
 
-.. image:: /images/html/homeposition.png
+.. image:: images/html/homeposition.png
    :alt: home position
 
 
