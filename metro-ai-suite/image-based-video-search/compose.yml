@@ -138,7 +138,7 @@ services:
       - ./src/broker:/mosquitto/config
     ports:
       - "1883:1883"
-    restart: always
+    restart: unless-stopped
   dlstreamer-pipeline-server:
     image: ${DOCKER_REGISTRY}intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
     hostname: dlstreamer-pipeline-server
