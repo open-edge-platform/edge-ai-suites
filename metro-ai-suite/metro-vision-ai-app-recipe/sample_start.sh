@@ -30,7 +30,7 @@ cd "$SAMPLE_APP" || exit 1
 
 if [ -f "./sample_start.sh" ]; then
     chmod +x ./sample_start.sh
-    ./sample_start.sh
+    ./sample_start.sh "$@"
 else
     echo "Error: sample_start.sh not found in $SAMPLE_APP directory."
     exit 1
