@@ -21,4 +21,5 @@ node_modules
 **/src/node-red/package.json
 src/dlstreamer-pipeline-server/models/
 src/dlstreamer-pipeline-server/videos/
+src/nginx/ssl/
 .venv

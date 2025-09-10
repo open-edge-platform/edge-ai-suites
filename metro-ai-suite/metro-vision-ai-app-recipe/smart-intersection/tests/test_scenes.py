@@ -5,6 +5,7 @@
 import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from tests.utils.kubernetes_utils import get_scenescape_kubernetes_url
 from tests.utils.ui_utils import waiter, driver
 from .conftest import (
   SCENESCAPE_URL,
@@ -12,7 +13,6 @@ from .conftest import (
   SCENESCAPE_USERNAME,
   SCENESCAPE_PASSWORD,
 )
-
 
 def verify_intersection_demo_availability(waiter, url):
   """Helper function to verify the Intersection-Demo scene."""
@@ -41,11 +41,11 @@ def verify_intersection_demo_availability(waiter, url):
     "Scene name text does not match 'Intersection-Demo'"
   )
 
-def create_and_verify_scene(waiter, name_of_new_scene):
+def create_and_verify_scene(waiter, name_of_new_scene, url=SCENESCAPE_URL):
   """Helper function to create and verify a new scene."""
   # Perform login using Waiter class object
   waiter.perform_login(
-    SCENESCAPE_URL,
+    url,
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
@@ -110,12 +110,11 @@ def interact_with_help_section(waiter, tab_id, help_button_id, modal_id):
   )
   close_button.click()
 
-@pytest.mark.zephyr_id("NEX-T9391")
-def test_scene_help(waiter):
-  """Test that the scene help is available."""
+def scene_help_functionality_check(waiter, scenescape_url):
+  """Common function to test that the scene help is available."""
   # Perform login using Waiter class object
   waiter.perform_login(
-    SCENESCAPE_URL,
+    scenescape_url,
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
@@ -136,39 +135,16 @@ def test_scene_help(waiter):
   interact_with_help_section(waiter, "tripwires-tab", "tripwire-help", "tripwireHelpModal")
   interact_with_help_section(waiter, "children-tab", "children-help", "childrenHelpModal")
 
-
-@pytest.mark.zephyr_id("NEX-T9370")
-def test_intersection_demo_availability(waiter):
-  """Test that Intersection-Demo is visible after login."""
-  # Perform login using Waiter class object
-  verify_intersection_demo_availability(waiter, SCENESCAPE_URL)
-
-@pytest.mark.zephyr_id("NEX-T9372")
-def test_remote_intersection_demo_availability(waiter):
-  """Test that Intersection-Demo is visible after login via remote."""
-  if not SCENESCAPE_REMOTE_URL:
-    pytest.skip("SCENESCAPE_REMOTE_URL is not set")
-
-  verify_intersection_demo_availability(waiter, SCENESCAPE_REMOTE_URL)
-
-
-
-@pytest.mark.zephyr_id("NEX-T9380")
-def test_add_scene(waiter):
-  """Test that the admin can add a new scene."""
-  name_of_new_scene = "new_scene_NEX-T9380"
-  create_and_verify_scene(waiter, name_of_new_scene)
-
-@pytest.mark.zephyr_id("NEX-T9381")
-def test_delete_scene(waiter):
-  """Test that the admin can add and delete a new scene."""
-  name_of_new_scene = "new_scene_NEX-T9381"
-  create_and_verify_scene(waiter, name_of_new_scene)
+def delete_scene_functionality_check(waiter, scene_name, url=SCENESCAPE_URL):
+  """
+  Helper function to create and delete a scene, verifying deletion.
+  """
+  create_and_verify_scene(waiter, scene_name, url)
 
   # Find the 'Delete' link within the scene card and click it
   delete_link = waiter.wait_and_assert(
-    EC.presence_of_element_located((By.XPATH, f"//div[@class='card' and @name='{name_of_new_scene}']//a[@name='Delete']")),
-    error_message=f"Delete link for scene '{name_of_new_scene}' is not present on the page"
+    EC.presence_of_element_located((By.XPATH, f"//div[@class='card' and @name='{scene_name}']//a[@name='Delete']")),
+    error_message=f"Delete link for scene '{scene_name}' is not present on the page"
   )
   delete_link.click()
 
@@ -181,6 +157,76 @@ def test_delete_scene(waiter):
 
   # Verify that the scene card is no longer present
   waiter.wait_and_assert(
-    EC.invisibility_of_element_located((By.XPATH, f"//div[@class='card' and @name='{name_of_new_scene}']")),
-    error_message=f"Scene card with name '{name_of_new_scene}' is still present on the page after deletion"
+    EC.invisibility_of_element_located((By.XPATH, f"//div[@class='card' and @name='{scene_name}']")),
+    error_message=f"Scene card with name '{scene_name}' is still present on the page after deletion"
   )
+
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T10686")
+def test_scene_help_kubernetes(waiter):
+  """Test that the scene help is available."""
+  scene_help_functionality_check(waiter, get_scenescape_kubernetes_url())
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9391")
+def test_scene_help_docker(waiter):
+  """Test that the scene help is available."""
+  scene_help_functionality_check(waiter, SCENESCAPE_URL)
+
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T10679")
+def test_intersection_demo_availability_kubernetes(waiter):
+  """Test that Intersection-Demo is visible after login."""
+  # Perform login using Waiter class object
+  verify_intersection_demo_availability(waiter, get_scenescape_kubernetes_url())
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9370")
+def test_intersection_demo_availability_docker(waiter):
+  """Test that Intersection-Demo is visible after login."""
+  # Perform login using Waiter class object
+  verify_intersection_demo_availability(waiter, SCENESCAPE_URL)
+
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T10681")
+def test_remote_intersection_demo_availability_kubernetes(waiter):
+  """Test that Intersection-Demo is visible after login via remote."""
+  if not SCENESCAPE_REMOTE_URL:
+    pytest.skip("SCENESCAPE_REMOTE_URL is not set")
+
+  verify_intersection_demo_availability(waiter, get_scenescape_kubernetes_url())
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9372")
+def test_remote_intersection_demo_availability_docker(waiter):
+  """Test that Intersection-Demo is visible after login via remote."""
+  if not SCENESCAPE_REMOTE_URL:
+    pytest.skip("SCENESCAPE_REMOTE_URL is not set")
+
+  verify_intersection_demo_availability(waiter, SCENESCAPE_REMOTE_URL)
+
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T13923")
+def test_add_scene_kubernetes(waiter):
+  """Test that the admin can add a new scene."""
+  name_of_new_scene = "scene_NEX-T13923"
+  create_and_verify_scene(waiter, name_of_new_scene, url=get_scenescape_kubernetes_url())
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9380")
+def test_add_scene_docker(waiter):
+  """Test that the admin can add a new scene."""
+  name_of_new_scene = "new_scene_NEX-T9380"
+  create_and_verify_scene(waiter, name_of_new_scene)
+
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T13924")
+def test_delete_scene_kubernetes(waiter):
+  """Test that the admin can add and delete a new scene."""
+  delete_scene_functionality_check(waiter, "scene_NEX-T13924", url=get_scenescape_kubernetes_url())
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9381")
+def test_delete_scene_docker(waiter):
+  """Test that the admin can add and delete a new scene."""
+  delete_scene_functionality_check(waiter, "new_scene_NEX-T9381")

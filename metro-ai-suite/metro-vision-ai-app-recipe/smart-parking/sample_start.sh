@@ -1,7 +1,6 @@
 #!/bin/bash
 
 DLSPS_NODE_IP="localhost"
-DLSPS_PORT=8080
 
 function run_sample() {
   pipelines=$1
@@ -40,9 +39,9 @@ function run_sample() {
   }
 EOF
 )
-    response=$(curl  -s "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/user_defined_pipelines/${pipeline_name}" -X POST -H "Content-Type: application/json" -d "$payload")
+    response=$(curl -k  -s "https://$DLSPS_NODE_IP/api/pipelines/user_defined_pipelines/${pipeline_name}" -X POST -H "Content-Type: application/json" -d "$payload")
     if [ $? -ne 0 ]; then
-      echo -e "\nError: curl command failed. Check the deployment status."
+      echo -e "\nError: curl -k command failed. Check the deployment status."
       return 1
     fi
     sleep 2
@@ -50,7 +49,7 @@ EOF
   done
   running=false
   while [ "$running" != true ]; do
-    status=$(curl -s --location -X GET "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/status" | grep state | awk ' { print $2 } ' | tr -d \")
+    status=$(curl -k -s --location -X GET "https://$DLSPS_NODE_IP/api/pipelines/status" | grep state | awk ' { print $2 } ' | tr -d \")
     if [[ "$status" == *"QUEUED"* ]]; then
       running=false
       echo -n "."
@@ -66,22 +65,22 @@ EOF
 function stop_all_pipelines() {
   echo
   echo -n ">>>>>Stopping all running pipelines."
-  status=$(curl -s -X GET "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/status" -H "accept: application/json")
+  status=$(curl -k -s -X GET "https://$DLSPS_NODE_IP/api/pipelines/status" -H "accept: application/json")
   if [ $? -ne 0 ]; then
-    echo -e "\nError: curl command failed. Check the deployment status."
+    echo -e "\nError: curl -k command failed. Check the deployment status."
     return 1
   fi
   pipelines=$(echo $status  | grep -o '"id": "[^"]*"' | awk ' { print $2 } ' | tr -d \"  | paste -sd ',' - )
   IFS=','
   for pipeline in $pipelines; do
-    response=$(curl -s --location -X DELETE "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/${pipeline}")
+    response=$(curl -k -s --location -X DELETE "https://$DLSPS_NODE_IP/api/pipelines/${pipeline}")
     sleep 2
   done
   unset IFS
   running=true
   while [ "$running" == true ]; do
     echo -n "."
-    status=$(curl -s --location -X GET "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/status" | grep state | awk ' { print $2 } ' | tr -d \")
+    status=$(curl -k -s --location -X GET "https://$DLSPS_NODE_IP/api/pipelines/status" | grep state | awk ' { print $2 } ' | tr -d \")
     if [[ "$status" == *"RUNNING"* ]]; then
       running=true
       sleep 2
@@ -134,6 +133,6 @@ elif $forcedCPU; then
     fi
 fi
 
-echo -e "\n>>>>>Results are visualized in Grafana at 'http://localhost:3000' "
-echo -e "\n>>>>>Pipelines status can be checked with 'curl --location -X GET http://localhost:8080/pipelines/status' or using script 'sample_status.sh'. \n"
+echo -e "\n>>>>>Results are visualized in Grafana at 'https://localhost/grafana' "
+echo -e "\n>>>>>Pipelines status can be checked with 'curl -k --location -X GET https://localhost/api/pipelines/status' or using script 'sample_status.sh'. \n"
 

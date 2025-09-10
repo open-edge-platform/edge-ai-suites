@@ -1,0 +1,926 @@
+From bd7a97e3350e6c34f5e951049dd63a6d0a741bae Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Mon, 14 Jul 2025 10:12:31 +0800
+Subject: [PATCH 2/6] add MUJOCO pipeline for cuda
+
+---
+ eval_sim/constants.py             | 100 +++++++++++
+ eval_sim/eval_rdt_aloha_static.py | 234 +++++++++++++++++++++++++
+ eval_sim/sim_env.py               | 280 ++++++++++++++++++++++++++++++
+ scripts/aloha_static_model.py     | 269 ++++++++++++++++++++++++++++
+ 4 files changed, 883 insertions(+)
+ create mode 100644 eval_sim/constants.py
+ create mode 100644 eval_sim/eval_rdt_aloha_static.py
+ create mode 100644 eval_sim/sim_env.py
+ create mode 100644 scripts/aloha_static_model.py
+
+diff --git a/eval_sim/constants.py b/eval_sim/constants.py
+new file mode 100644
+index 0000000..519dd85
+--- /dev/null
++++ b/eval_sim/constants.py
+@@ -0,0 +1,100 @@
++import pathlib
++import os
++
++### Task parameters
++DATA_DIR = '/mnt/raid12t/kanghua/dataset/mobile-aloha'
++SIM_TASK_CONFIGS = {
++    'sim_transfer_cube_scripted':{
++        'dataset_dir': DATA_DIR + '/sim_transfer_cube_scripted/three_camera',
++        'num_episodes': 50,
++        'episode_len': 400,
++        'camera_names': ['top', 'left_wrist', 'right_wrist']
++    },
++
++    'sim_transfer_cube_human':{
++        'dataset_dir': DATA_DIR + '/sim_transfer_cube_human',
++        'num_episodes': 50,
++        'episode_len': 400,
++        'camera_names': ['top']
++    },
++
++    'sim_insertion_scripted': {
++        'dataset_dir': DATA_DIR + '/sim_insertion_scripted/three_camera_128',
++        'num_episodes': 128,
++        'episode_len': 400,
++        'camera_names': ['top', 'left_wrist', 'right_wrist']
++    },
++
++    'sim_insertion_human': {
++        'dataset_dir': DATA_DIR + '/sim_insertion_human',
++        'num_episodes': 50,
++        'episode_len': 500,
++        'camera_names': ['top']
++    },
++    'all': {
++        'dataset_dir': DATA_DIR + '/',
++        'num_episodes': None,
++        'episode_len': None,
++        'name_filter': lambda n: 'sim' not in n,
++        'camera_names': ['cam_high', 'cam_left_wrist', 'cam_right_wrist']
++    },
++
++    'sim_transfer_cube_scripted_mirror':{
++        'dataset_dir': DATA_DIR + '/sim_transfer_cube_scripted_mirror',
++        'num_episodes': None,
++        'episode_len': 400,
++        'camera_names': ['top', 'left_wrist', 'right_wrist']
++    },
++
++    'sim_insertion_scripted_mirror': {
++        'dataset_dir': DATA_DIR + '/sim_insertion_scripted_mirror',
++        'num_episodes': None,
++        'episode_len': 400,
++        'camera_names': ['top', 'left_wrist', 'right_wrist']
++    },
++
++}
++
++### Simulation envs fixed constants
++DT = 0.02
++FPS = 50
++JOINT_NAMES = ["waist", "shoulder", "elbow", "forearm_roll", "wrist_angle", "wrist_rotate"]
++START_ARM_POSE = [0, -0.96, 1.16, 0, -0.3, 0, 0.02239, -0.02239,  0, -0.96, 1.16, 0, -0.3, 0, 0.02239, -0.02239]
++
++XML_DIR = str(pathlib.Path(__file__).parent.resolve()) + '/assets/mujoco' # note: absolute path
++
++# Left finger position limits (qpos[7]), right_finger = -1 * left_finger
++MASTER_GRIPPER_POSITION_OPEN = 0.02417
++MASTER_GRIPPER_POSITION_CLOSE = 0.01244
++PUPPET_GRIPPER_POSITION_OPEN = 0.05800
++PUPPET_GRIPPER_POSITION_CLOSE = 0.01844
++
++# Gripper joint limits (qpos[6])
++MASTER_GRIPPER_JOINT_OPEN = -0.8
++MASTER_GRIPPER_JOINT_CLOSE = -1.65
++PUPPET_GRIPPER_JOINT_OPEN = 1.4910
++PUPPET_GRIPPER_JOINT_CLOSE = -0.6213
++
++############################ Helper functions ############################
++
++MASTER_GRIPPER_POSITION_NORMALIZE_FN = lambda x: (x - MASTER_GRIPPER_POSITION_CLOSE) / (MASTER_GRIPPER_POSITION_OPEN - MASTER_GRIPPER_POSITION_CLOSE)
++PUPPET_GRIPPER_POSITION_NORMALIZE_FN = lambda x: (x - PUPPET_GRIPPER_POSITION_CLOSE) / (PUPPET_GRIPPER_POSITION_OPEN - PUPPET_GRIPPER_POSITION_CLOSE)
++MASTER_GRIPPER_POSITION_UNNORMALIZE_FN = lambda x: x * (MASTER_GRIPPER_POSITION_OPEN - MASTER_GRIPPER_POSITION_CLOSE) + MASTER_GRIPPER_POSITION_CLOSE
++PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN = lambda x: x * (PUPPET_GRIPPER_POSITION_OPEN - PUPPET_GRIPPER_POSITION_CLOSE) + PUPPET_GRIPPER_POSITION_CLOSE
++MASTER2PUPPET_POSITION_FN = lambda x: PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN(MASTER_GRIPPER_POSITION_NORMALIZE_FN(x))
++
++MASTER_GRIPPER_JOINT_NORMALIZE_FN = lambda x: (x - MASTER_GRIPPER_JOINT_CLOSE) / (MASTER_GRIPPER_JOINT_OPEN - MASTER_GRIPPER_JOINT_CLOSE)
++PUPPET_GRIPPER_JOINT_NORMALIZE_FN = lambda x: (x - PUPPET_GRIPPER_JOINT_CLOSE) / (PUPPET_GRIPPER_JOINT_OPEN - PUPPET_GRIPPER_JOINT_CLOSE)
++MASTER_GRIPPER_JOINT_UNNORMALIZE_FN = lambda x: x * (MASTER_GRIPPER_JOINT_OPEN - MASTER_GRIPPER_JOINT_CLOSE) + MASTER_GRIPPER_JOINT_CLOSE
++PUPPET_GRIPPER_JOINT_UNNORMALIZE_FN = lambda x: x * (PUPPET_GRIPPER_JOINT_OPEN - PUPPET_GRIPPER_JOINT_CLOSE) + PUPPET_GRIPPER_JOINT_CLOSE
++MASTER2PUPPET_JOINT_FN = lambda x: PUPPET_GRIPPER_JOINT_UNNORMALIZE_FN(MASTER_GRIPPER_JOINT_NORMALIZE_FN(x))
++
++MASTER_GRIPPER_VELOCITY_NORMALIZE_FN = lambda x: x / (MASTER_GRIPPER_POSITION_OPEN - MASTER_GRIPPER_POSITION_CLOSE)
++PUPPET_GRIPPER_VELOCITY_NORMALIZE_FN = lambda x: x / (PUPPET_GRIPPER_POSITION_OPEN - PUPPET_GRIPPER_POSITION_CLOSE)
++
++MASTER_POS2JOINT = lambda x: MASTER_GRIPPER_POSITION_NORMALIZE_FN(x) * (MASTER_GRIPPER_JOINT_OPEN - MASTER_GRIPPER_JOINT_CLOSE) + MASTER_GRIPPER_JOINT_CLOSE
++MASTER_JOINT2POS = lambda x: MASTER_GRIPPER_POSITION_UNNORMALIZE_FN((x - MASTER_GRIPPER_JOINT_CLOSE) / (MASTER_GRIPPER_JOINT_OPEN - MASTER_GRIPPER_JOINT_CLOSE))
++PUPPET_POS2JOINT = lambda x: PUPPET_GRIPPER_POSITION_NORMALIZE_FN(x) * (PUPPET_GRIPPER_JOINT_OPEN - PUPPET_GRIPPER_JOINT_CLOSE) + PUPPET_GRIPPER_JOINT_CLOSE
++PUPPET_JOINT2POS = lambda x: PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN((x - PUPPET_GRIPPER_JOINT_CLOSE) / (PUPPET_GRIPPER_JOINT_OPEN - PUPPET_GRIPPER_JOINT_CLOSE))
++
++MASTER_GRIPPER_JOINT_MID = (MASTER_GRIPPER_JOINT_OPEN + MASTER_GRIPPER_JOINT_CLOSE)/2
+diff --git a/eval_sim/eval_rdt_aloha_static.py b/eval_sim/eval_rdt_aloha_static.py
+new file mode 100644
+index 0000000..1225932
+--- /dev/null
++++ b/eval_sim/eval_rdt_aloha_static.py
+@@ -0,0 +1,234 @@
++from typing import Callable, List, Type
++import sys
++sys.path.append('/')
++import gymnasium as gym
++import numpy as np
++import argparse
++import yaml
++from scripts.aloha_static_model import create_model
++import torch
++from collections import deque
++from PIL import Image
++import time
++import matplotlib.pyplot as plt
++
++def sample_box_pose():
++    x_range = [0.0, 0.2]
++    y_range = [0.4, 0.6]
++    z_range = [0.05, 0.05]
++
++    ranges = np.vstack([x_range, y_range, z_range])
++    cube_position = np.random.uniform(ranges[:, 0], ranges[:, 1])
++
++    cube_quat = np.array([1, 0, 0, 0])
++    return np.concatenate([cube_position, cube_quat])
++
++def sample_insertion_pose():
++    # Peg
++    x_range = [0.1, 0.2]
++    y_range = [0.4, 0.6]
++    z_range = [0.05, 0.05]
++
++    ranges = np.vstack([x_range, y_range, z_range])
++    peg_position = np.random.uniform(ranges[:, 0], ranges[:, 1])
++
++    peg_quat = np.array([1, 0, 0, 0])
++    peg_pose = np.concatenate([peg_position, peg_quat])
++
++    # Socket
++    x_range = [-0.2, -0.1]
++    y_range = [0.4, 0.6]
++    z_range = [0.05, 0.05]
++
++    ranges = np.vstack([x_range, y_range, z_range])
++    socket_position = np.random.uniform(ranges[:, 0], ranges[:, 1])
++
++    socket_quat = np.array([1, 0, 0, 0])
++    socket_pose = np.concatenate([socket_position, socket_quat])
++
++    return peg_pose, socket_pose
++
++def parse_args(args=None):
++    parser = argparse.ArgumentParser()
++    parser.add_argument("-e", "--env-id", type=str, default="TransferCube-v1", help=f"Environment to run motion planning solver on. ")
++    parser.add_argument("-o", "--obs-mode", type=str, default="rgb", help="Observation mode to use. Usually this is kept as 'none' as observations are not necesary to be stored, they can be replayed later via the mani_skill.trajectory.replay_trajectory script.")
++    parser.add_argument("-n", "--num-traj", type=int, default=25, help="Number of trajectories to test.")
++    parser.add_argument("--only-count-success", action="store_true", help="If true, generates trajectories until num_traj of them are successful and only saves the successful trajectories/videos")
++    parser.add_argument("--reward-mode", type=str)
++    parser.add_argument("-b", "--sim-backend", type=str, default="auto", help="Which simulation backend to use. Can be 'auto', 'cpu', 'gpu'")
++    parser.add_argument("--render-mode", type=str, default="rgb_array", help="can be 'sensors' or 'rgb_array' which only affect what is saved to videos")
++    parser.add_argument("--shader", default="default", type=str, help="Change shader used for rendering. Default is 'default' which is very fast. Can also be 'rt' for ray tracing and generating photo-realistic renders. Can also be 'rt-fast' for a faster but lower quality ray-traced renderer")
++    parser.add_argument("--num-procs", type=int, default=1, help="Number of processes to use to help parallelize the trajectory replay process. This uses CPU multiprocessing and only works with the CPU simulation backend at the moment.")
++    parser.add_argument("--pretrained_path", type=str, default=None, help="Path to the pretrained model")
++    parser.add_argument("--random_seed", type=int, default=0, help="Random seed for the environment.")
++    parser.add_argument("--onscreen_render", action="store_true", help="If true, renders the environment onscreen using matplotlib.")
++    return parser.parse_args()
++
++import random
++import os
++
++# set cuda 
++args = parse_args()
++# set random seeds
++seed = args.random_seed
++random.seed(seed)
++os.environ['PYTHONHASHSEED'] = str(seed)
++np.random.seed(seed)
++torch.manual_seed(seed)
++torch.cuda.manual_seed(seed)
++torch.backends.cudnn.deterministic = True
++torch.backends.cudnn.benchmark = False
++
++task2lang = {
++    "TransferCube-v1": "Use the right robot arm to pick up the red cube and transfer it to the left robot arm.",
++    "PegInsertion-v1": "Pick up a red peg and insert into the blue socket with a hole in it."
++}
++
++# set env_id and task_name
++env_id = args.env_id
++if env_id == "TransferCube-v1":
++    task_name = 'sim_transfer_cube_scripted'
++elif env_id == "PegInsertion-v1":
++    task_name = 'sim_insertion_scripted'
++else:
++    task_name = 'sim_transfer_cube_scripted'
++print(f"Running evaluation for task: {task_name} with env_id: {env_id}")
++
++# MUJOCO env
++onscreen_cam = 'angle'
++onscreen_render = args.onscreen_render
++from eval_sim.sim_env import BOX_POSE
++from eval_sim.sim_env import make_sim_env
++env = make_sim_env(task_name)
++env_max_reward = env.task.max_reward
++
++# make policy
++config_path = 'configs/base.yaml'
++with open(config_path, "r") as fp:
++    config = yaml.safe_load(fp)
++pretrained_text_encoder_name_or_path = "google/t5-v1_1-xxl"
++pretrained_vision_encoder_name_or_path = "google/siglip-so400m-patch14-384"
++pretrained_path = args.pretrained_path
++policy = create_model(
++    args=config, 
++    dtype=torch.bfloat16,
++    pretrained=pretrained_path,
++    pretrained_text_encoder_name_or_path=pretrained_text_encoder_name_or_path,
++    pretrained_vision_encoder_name_or_path=pretrained_vision_encoder_name_or_path
++)
++
++### text embedding
++if os.path.exists(f'../text_embed/text_embed_{env_id}.pt'):
++    text_embed = torch.load(f'../text_embed/text_embed_{env_id}.pt')
++else:
++    text_embed = policy.encode_instruction(task2lang[env_id])
++    torch.save(text_embed, f'text_embed_{env_id}.pt')
++
++MAX_EPISODE_STEPS = 400 
++total_episodes = args.num_traj  
++success_count = 0  
++
++base_seed = 20241201
++import tqdm
++for episode in tqdm.trange(total_episodes):
++    latencies_all = []
++
++    # set simulation task
++    if 'sim_transfer_cube' in task_name:
++        BOX_POSE[0] = sample_box_pose() # used in sim reset
++    elif 'sim_insertion' in task_name:
++        BOX_POSE[0] = np.concatenate(sample_insertion_pose()) # used in sim reset
++    ts = env.reset()
++
++    # onscreen render
++    if onscreen_render:
++        ax = plt.subplot()
++        plt_img = ax.imshow(env._physics.render(height=480, width=640, camera_id=onscreen_cam))
++        plt.ion()
++    rewards = []
++
++    # policy reset
++    policy.reset()
++    global_steps = 0
++    done = False
++
++    # image
++    obs_window = deque(maxlen=2)
++    img = ts.observation['images']['top']
++    obs_window.append(None)
++    obs_window.append(np.array(img))
++
++    while global_steps < MAX_EPISODE_STEPS and not done:
++        latencies = []
++        prepare_time = time.time()
++
++        # update images
++        obs = ts.observation
++        image_arrs = []
++        for window_img in obs_window:
++            image_arrs.append(window_img)
++            image_arrs.append(None)
++            image_arrs.append(None)
++        images = [Image.fromarray(arr) if arr is not None else None
++                  for arr in image_arrs]
++
++        # update qpos
++        qpos_numpy = np.array(obs['qpos']) # (14,)
++        qpos = torch.from_numpy(qpos_numpy).float().cuda().unsqueeze(0) # (1, 14)
++
++        latencies.append(time.time()-prepare_time)
++        policy_time = time.time()
++        actions = policy.step(qpos, images, text_embed).squeeze(0).cpu().numpy()
++        latencies.append(time.time()-policy_time)
++
++        # Take 8 steps since RDT is trained to predict interpolated 64 steps(actual 14 steps)
++        # actions = actions[::4, :]
++        action_time = time.time()
++        for idx in range(actions.shape[0]):
++            # process action
++            action = actions[idx]
++
++            # step action
++            ts = env.step(action)
++
++            # observation
++            img = ts.observation['images']['top']
++            obs_window.append(np.array(img))
++            rewards.append(ts.reward)
++            global_steps += 1
++
++            # update onscreen render and wait for DT
++            if onscreen_render:
++                image = env._physics.render(height=480, width=640, camera_id=onscreen_cam)
++                plt_img.set_data(image)
++                plt.pause(0.02)
++
++            # check if done
++            if ts.reward == env_max_reward:
++                done = True
++                break
++
++        latencies.append(time.time()-action_time)
++        latencies_all.append(latencies)
++
++    if onscreen_render:
++        plt.close()
++
++    # collect rewards
++    rewards = np.array(rewards)
++    episode_highest_reward = np.max(rewards)
++    print(f"Trial {episode+1} finished, max reward: {episode_highest_reward}, Success: {episode_highest_reward==env_max_reward}, steps: {global_steps}")
++
++    # print latencies
++    print(f"      Cold - prepare time:{latencies_all[0][0]:.9f}s, policy time:{latencies_all[0][1]:.9f}s, action time:{latencies_all[0][2]:.9f}s")
++    latencies_all = np.array(latencies_all)
++    average_latency = np.mean(latencies_all[1:], axis=0)
++    print(f'==================episode {episode} Avg Latency:==================\n \
++            prepare time:{average_latency[0]:.9f}s, policy time:{average_latency[1]:.9f}s, action time:{average_latency[2]:.9f}s')
++
++    # check success
++    if episode_highest_reward == env_max_reward:
++        success_count += 1
++
++success_rate = success_count / total_episodes * 100
++print(f"Success rate: {success_rate}%")
+diff --git a/eval_sim/sim_env.py b/eval_sim/sim_env.py
+new file mode 100644
+index 0000000..f29e9d2
+--- /dev/null
++++ b/eval_sim/sim_env.py
+@@ -0,0 +1,280 @@
++import numpy as np
++import os
++import collections
++import matplotlib.pyplot as plt
++from dm_control import mujoco
++from dm_control.rl import control
++from dm_control.suite import base
++
++from eval_sim.constants import DT, XML_DIR, START_ARM_POSE
++from eval_sim.constants import PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN
++from eval_sim.constants import MASTER_GRIPPER_POSITION_NORMALIZE_FN
++from eval_sim.constants import PUPPET_GRIPPER_POSITION_NORMALIZE_FN
++from eval_sim.constants import PUPPET_GRIPPER_VELOCITY_NORMALIZE_FN
++
++import IPython
++e = IPython.embed
++
++BOX_POSE = [None] # to be changed from outside
++
++def make_sim_env(task_name):
++    """
++    Environment for simulated robot bi-manual manipulation, with joint position control
++    Action space:      [left_arm_qpos (6),             # absolute joint position
++                        left_gripper_positions (1),    # normalized gripper position (0: close, 1: open)
++                        right_arm_qpos (6),            # absolute joint position
++                        right_gripper_positions (1),]  # normalized gripper position (0: close, 1: open)
++
++    Observation space: {"qpos": Concat[ left_arm_qpos (6),         # absolute joint position
++                                        left_gripper_position (1),  # normalized gripper position (0: close, 1: open)
++                                        right_arm_qpos (6),         # absolute joint position
++                                        right_gripper_qpos (1)]     # normalized gripper position (0: close, 1: open)
++                        "qvel": Concat[ left_arm_qvel (6),         # absolute joint velocity (rad)
++                                        left_gripper_velocity (1),  # normalized gripper velocity (pos: opening, neg: closing)
++                                        right_arm_qvel (6),         # absolute joint velocity (rad)
++                                        right_gripper_qvel (1)]     # normalized gripper velocity (pos: opening, neg: closing)
++                        "images": {"main": (480x640x3)}        # h, w, c, dtype='uint8'
++    """
++    if 'sim_transfer_cube' in task_name:
++        xml_path = os.path.join(XML_DIR, f'bimanual_viperx_transfer_cube.xml')
++        physics = mujoco.Physics.from_xml_path(xml_path)
++        task = TransferCubeTask(random=False)
++        env = control.Environment(physics, task, time_limit=20, control_timestep=DT,
++                                  n_sub_steps=None, flat_observation=False)
++    elif 'sim_insertion' in task_name:
++        xml_path = os.path.join(XML_DIR, f'bimanual_viperx_insertion.xml')
++        physics = mujoco.Physics.from_xml_path(xml_path)
++        task = InsertionTask(random=False)
++        env = control.Environment(physics, task, time_limit=20, control_timestep=DT,
++                                  n_sub_steps=None, flat_observation=False)
++    else:
++        raise NotImplementedError
++    return env
++
++class BimanualViperXTask(base.Task):
++    def __init__(self, random=None):
++        super().__init__(random=random)
++
++    def before_step(self, action, physics):
++        left_arm_action = action[:6]
++        right_arm_action = action[7:7+6]
++        normalized_left_gripper_action = action[6]
++        normalized_right_gripper_action = action[7+6]
++
++        left_gripper_action = PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN(normalized_left_gripper_action)
++        right_gripper_action = PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN(normalized_right_gripper_action)
++
++        full_left_gripper_action = [left_gripper_action, -left_gripper_action]
++        full_right_gripper_action = [right_gripper_action, -right_gripper_action]
++
++        env_action = np.concatenate([left_arm_action, full_left_gripper_action, right_arm_action, full_right_gripper_action])
++        super().before_step(env_action, physics)
++        return
++
++    def initialize_episode(self, physics):
++        """Sets the state of the environment at the start of each episode."""
++        super().initialize_episode(physics)
++
++    @staticmethod
++    def get_qpos(physics):
++        qpos_raw = physics.data.qpos.copy()
++        left_qpos_raw = qpos_raw[:8]
++        right_qpos_raw = qpos_raw[8:16]
++        left_arm_qpos = left_qpos_raw[:6]
++        right_arm_qpos = right_qpos_raw[:6]
++        left_gripper_qpos = [PUPPET_GRIPPER_POSITION_NORMALIZE_FN(left_qpos_raw[6])]
++        right_gripper_qpos = [PUPPET_GRIPPER_POSITION_NORMALIZE_FN(right_qpos_raw[6])]
++        return np.concatenate([left_arm_qpos, left_gripper_qpos, right_arm_qpos, right_gripper_qpos])
++
++    @staticmethod
++    def get_qvel(physics):
++        qvel_raw = physics.data.qvel.copy()
++        left_qvel_raw = qvel_raw[:8]
++        right_qvel_raw = qvel_raw[8:16]
++        left_arm_qvel = left_qvel_raw[:6]
++        right_arm_qvel = right_qvel_raw[:6]
++        left_gripper_qvel = [PUPPET_GRIPPER_VELOCITY_NORMALIZE_FN(left_qvel_raw[6])]
++        right_gripper_qvel = [PUPPET_GRIPPER_VELOCITY_NORMALIZE_FN(right_qvel_raw[6])]
++        return np.concatenate([left_arm_qvel, left_gripper_qvel, right_arm_qvel, right_gripper_qvel])
++
++    @staticmethod
++    def get_env_state(physics):
++        raise NotImplementedError
++
++    def get_observation(self, physics):
++        obs = collections.OrderedDict()
++        obs['qpos'] = self.get_qpos(physics)
++        obs['qvel'] = self.get_qvel(physics)
++        obs['env_state'] = self.get_env_state(physics)
++        obs['images'] = dict()
++        obs['images']['top'] = physics.render(height=480, width=640, camera_id='top')
++        obs['images']['left_wrist'] = physics.render(height=480, width=640, camera_id='left_wrist')
++        obs['images']['right_wrist'] = physics.render(height=480, width=640, camera_id='right_wrist')
++        # obs['images']['angle'] = physics.render(height=480, width=640, camera_id='angle')
++        # obs['images']['vis'] = physics.render(height=480, width=640, camera_id='front_close')
++
++        return obs
++
++    def get_reward(self, physics):
++        # return whether left gripper is holding the box
++        raise NotImplementedError
++
++
++class TransferCubeTask(BimanualViperXTask):
++    def __init__(self, random=None):
++        super().__init__(random=random)
++        self.max_reward = 4
++
++    def initialize_episode(self, physics):
++        """Sets the state of the environment at the start of each episode."""
++        # TODO Notice: this function does not randomize the env configuration. Instead, set BOX_POSE from outside
++        # reset qpos, control and box position
++        with physics.reset_context():
++            physics.named.data.qpos[:16] = START_ARM_POSE
++            np.copyto(physics.data.ctrl, START_ARM_POSE)
++            assert BOX_POSE[0] is not None
++            physics.named.data.qpos[-7:] = BOX_POSE[0]
++            # print(f"{BOX_POSE=}")
++        super().initialize_episode(physics)
++
++    @staticmethod
++    def get_env_state(physics):
++        env_state = physics.data.qpos.copy()[16:]
++        return env_state
++
++    def get_reward(self, physics):
++        # return whether left gripper is holding the box
++        all_contact_pairs = []
++        for i_contact in range(physics.data.ncon):
++            id_geom_1 = physics.data.contact[i_contact].geom1
++            id_geom_2 = physics.data.contact[i_contact].geom2
++            name_geom_1 = physics.model.id2name(id_geom_1, 'geom')
++            name_geom_2 = physics.model.id2name(id_geom_2, 'geom')
++            contact_pair = (name_geom_1, name_geom_2)
++            all_contact_pairs.append(contact_pair)
++
++        touch_left_gripper = ("red_box", "vx300s_left/10_left_gripper_finger") in all_contact_pairs
++        touch_right_gripper = ("red_box", "vx300s_right/10_right_gripper_finger") in all_contact_pairs
++        touch_table = ("red_box", "table") in all_contact_pairs
++
++        reward = 0
++        if touch_right_gripper:
++            reward = 1
++        if touch_right_gripper and not touch_table: # lifted
++            reward = 2
++        if touch_left_gripper: # attempted transfer
++            reward = 3
++        if touch_left_gripper and not touch_table: # successful transfer
++            reward = 4
++        return reward
++
++
++class InsertionTask(BimanualViperXTask):
++    def __init__(self, random=None):
++        super().__init__(random=random)
++        self.max_reward = 4
++
++    def initialize_episode(self, physics):
++        """Sets the state of the environment at the start of each episode."""
++        # TODO Notice: this function does not randomize the env configuration. Instead, set BOX_POSE from outside
++        # reset qpos, control and box position
++        with physics.reset_context():
++            physics.named.data.qpos[:16] = START_ARM_POSE
++            np.copyto(physics.data.ctrl, START_ARM_POSE)
++            assert BOX_POSE[0] is not None
++            physics.named.data.qpos[-7*2:] = BOX_POSE[0] # two objects
++            # print(f"{BOX_POSE=}")
++        super().initialize_episode(physics)
++
++    @staticmethod
++    def get_env_state(physics):
++        env_state = physics.data.qpos.copy()[16:]
++        return env_state
++
++    def get_reward(self, physics):
++        # return whether peg touches the pin
++        all_contact_pairs = []
++        for i_contact in range(physics.data.ncon):
++            id_geom_1 = physics.data.contact[i_contact].geom1
++            id_geom_2 = physics.data.contact[i_contact].geom2
++            name_geom_1 = physics.model.id2name(id_geom_1, 'geom')
++            name_geom_2 = physics.model.id2name(id_geom_2, 'geom')
++            contact_pair = (name_geom_1, name_geom_2)
++            all_contact_pairs.append(contact_pair)
++
++        touch_right_gripper = ("red_peg", "vx300s_right/10_right_gripper_finger") in all_contact_pairs
++        touch_left_gripper = ("socket-1", "vx300s_left/10_left_gripper_finger") in all_contact_pairs or \
++                             ("socket-2", "vx300s_left/10_left_gripper_finger") in all_contact_pairs or \
++                             ("socket-3", "vx300s_left/10_left_gripper_finger") in all_contact_pairs or \
++                             ("socket-4", "vx300s_left/10_left_gripper_finger") in all_contact_pairs
++
++        peg_touch_table = ("red_peg", "table") in all_contact_pairs
++        socket_touch_table = ("socket-1", "table") in all_contact_pairs or \
++                             ("socket-2", "table") in all_contact_pairs or \
++                             ("socket-3", "table") in all_contact_pairs or \
++                             ("socket-4", "table") in all_contact_pairs
++        peg_touch_socket = ("red_peg", "socket-1") in all_contact_pairs or \
++                           ("red_peg", "socket-2") in all_contact_pairs or \
++                           ("red_peg", "socket-3") in all_contact_pairs or \
++                           ("red_peg", "socket-4") in all_contact_pairs
++        pin_touched = ("red_peg", "pin") in all_contact_pairs
++
++        reward = 0
++        if touch_left_gripper and touch_right_gripper: # touch both
++            reward = 1
++        if touch_left_gripper and touch_right_gripper and (not peg_touch_table) and (not socket_touch_table): # grasp both
++            reward = 2
++        if peg_touch_socket and (not peg_touch_table) and (not socket_touch_table): # peg and socket touching
++            reward = 3
++        if pin_touched: # successful insertion
++            reward = 4
++        return reward
++
++
++def get_action(master_bot_left, master_bot_right):
++    action = np.zeros(14)
++    # arm action
++    action[:6] = master_bot_left.dxl.joint_states.position[:6]
++    action[7:7+6] = master_bot_right.dxl.joint_states.position[:6]
++    # gripper action
++    left_gripper_pos = master_bot_left.dxl.joint_states.position[7]
++    right_gripper_pos = master_bot_right.dxl.joint_states.position[7]
++    normalized_left_pos = MASTER_GRIPPER_POSITION_NORMALIZE_FN(left_gripper_pos)
++    normalized_right_pos = MASTER_GRIPPER_POSITION_NORMALIZE_FN(right_gripper_pos)
++    action[6] = normalized_left_pos
++    action[7+6] = normalized_right_pos
++    return action
++
++def test_sim_teleop():
++    """ Testing teleoperation in sim with ALOHA. Requires hardware and ALOHA repo to work. """
++    from interbotix_xs_modules.arm import InterbotixManipulatorXS
++
++    BOX_POSE[0] = [0.2, 0.5, 0.05, 1, 0, 0, 0]
++
++    # source of data
++    master_bot_left = InterbotixManipulatorXS(robot_model="wx250s", group_name="arm", gripper_name="gripper",
++                                              robot_name=f'master_left', init_node=True)
++    master_bot_right = InterbotixManipulatorXS(robot_model="wx250s", group_name="arm", gripper_name="gripper",
++                                              robot_name=f'master_right', init_node=False)
++
++    # setup the environment
++    env = make_sim_env('sim_transfer_cube')
++    ts = env.reset()
++    episode = [ts]
++    # setup plotting
++    ax = plt.subplot()
++    plt_img = ax.imshow(ts.observation['images']['angle'])
++    plt.ion()
++
++    for t in range(1000):
++        action = get_action(master_bot_left, master_bot_right)
++        ts = env.step(action)
++        episode.append(ts)
++
++        plt_img.set_data(ts.observation['images']['angle'])
++        plt.pause(0.02)
++
++
++if __name__ == '__main__':
++    test_sim_teleop()
++
+diff --git a/scripts/aloha_static_model.py b/scripts/aloha_static_model.py
+new file mode 100644
+index 0000000..c9abfcc
+--- /dev/null
++++ b/scripts/aloha_static_model.py
+@@ -0,0 +1,269 @@
++import os
++
++import numpy as np
++import torch
++from PIL import Image
++from torchvision import transforms
++
++from configs.state_vec import STATE_VEC_IDX_MAPPING
++from models.multimodal_encoder.siglip_encoder import SiglipVisionTower
++from models.multimodal_encoder.t5_encoder import T5Embedder
++from models.rdt_runner import RDTRunner
++
++
++ALOHA_STATIC_INDICES = [
++    STATE_VEC_IDX_MAPPING[f"left_arm_joint_{i}_pos"] for i in range(6)
++] + [
++    STATE_VEC_IDX_MAPPING["left_gripper_open"]
++] + [
++    STATE_VEC_IDX_MAPPING[f"right_arm_joint_{i}_pos"] for i in range(6)
++] + [
++    STATE_VEC_IDX_MAPPING[f"right_gripper_open"]
++]
++
++def create_model(args, pretrained, **kwargs):
++    model = RoboticDiffusionTransformerModel(args, **kwargs)
++    if pretrained is not None:
++        model.load_pretrained_weights(pretrained)
++    return model
++
++class RoboticDiffusionTransformerModel(object):
++    """A wrapper for the RDT model, which handles
++            1. Model initialization
++            2. Encodings of instructions
++            3. Model inference
++    """
++    def __init__(
++        self, args, 
++        device='cuda',
++        dtype=torch.bfloat16,
++        image_size=None,
++        control_frequency=25,
++        pretrained_text_encoder_name_or_path=None,
++        pretrained_vision_encoder_name_or_path=None,
++    ):
++        self.args = args
++        self.dtype = dtype
++        self.image_size = image_size
++        self.device = device
++        self.control_frequency = control_frequency
++        # self.text_tokenizer, self.text_model = self.get_text_encoder(pretrained_text_encoder_name_or_path)
++        self.image_processor, self.vision_model = self.get_vision_encoder(pretrained_vision_encoder_name_or_path)
++        self.policy = self.get_policy()
++        self.reset()
++
++    def get_policy(self):
++        """Initialize the model."""
++        # Initialize model with arguments
++        img_cond_len = (self.args["common"]["img_history_size"] 
++                        * self.args["common"]["num_cameras"] 
++                        * self.vision_model.num_patches)
++        
++        _model = RDTRunner(
++            action_dim=self.args["common"]["state_dim"],
++            pred_horizon=self.args["common"]["action_chunk_size"],
++            config=self.args["model"],
++            lang_token_dim=self.args["model"]["lang_token_dim"],
++            img_token_dim=self.args["model"]["img_token_dim"],
++            state_token_dim=self.args["model"]["state_token_dim"],
++            max_lang_cond_len=self.args["dataset"]["tokenizer_max_length"],
++            img_cond_len=img_cond_len,
++            img_pos_embed_config=[
++                # No initial pos embed in the last grid size
++                # since we've already done in ViT
++                ("image", (self.args["common"]["img_history_size"], 
++                    self.args["common"]["num_cameras"], 
++                    -self.vision_model.num_patches)),  
++            ],
++            lang_pos_embed_config=[
++                # Similarly, no initial pos embed for language
++                ("lang", -self.args["dataset"]["tokenizer_max_length"]),
++            ],
++            dtype=self.dtype,
++        )
++
++        return _model
++
++    def get_text_encoder(self, pretrained_text_encoder_name_or_path):
++        text_embedder = T5Embedder(from_pretrained=pretrained_text_encoder_name_or_path, 
++                                   model_max_length=self.args["dataset"]["tokenizer_max_length"], 
++                                   device=self.device)
++        tokenizer, text_encoder = text_embedder.tokenizer, text_embedder.model
++        return tokenizer, text_encoder
++
++    def get_vision_encoder(self, pretrained_vision_encoder_name_or_path):
++        vision_encoder = SiglipVisionTower(vision_tower=pretrained_vision_encoder_name_or_path, args=None)
++        image_processor = vision_encoder.image_processor
++        return image_processor, vision_encoder
++
++    def reset(self):
++        """Set model to evaluation mode.
++        """
++        device = self.device
++        weight_dtype = self.dtype
++        self.policy.eval()
++        # self.text_model.eval()
++        self.vision_model.eval()
++
++        self.policy = self.policy.to(device, dtype=weight_dtype)
++        # self.text_model = self.text_model.to(device, dtype=weight_dtype)
++        self.vision_model = self.vision_model.to(device, dtype=weight_dtype)
++
++    def load_pretrained_weights(self, pretrained=None):
++        if pretrained is None:
++            return 
++        print(f'Loading weights from {pretrained}')
++        filename = os.path.basename(pretrained)
++        if filename.endswith('.pt'):
++            checkpoint =  torch.load(pretrained, map_location='cpu')
++            self.policy.load_state_dict(checkpoint["module"])
++        elif filename.endswith('.safetensors'):
++            from safetensors.torch import load_model
++            load_model(self.policy, pretrained)
++        elif filename.endswith('.bin'):
++            checkpoint = torch.load(pretrained, map_location='cpu')
++            self.policy.load_state_dict(checkpoint)
++        else:
++            raise NotImplementedError(f"Unknown checkpoint format: {pretrained}")
++
++    def encode_instruction(self, instruction, device="cuda"):
++        """Encode string instruction to latent embeddings.
++
++        Args:
++            instruction: a string of instruction
++            device: a string of device
++        
++        Returns:
++            pred: a tensor of latent embeddings of shape (text_max_length, 512)
++        """
++        tokens = self.text_tokenizer(
++            instruction, return_tensors="pt",
++            padding="longest",
++            truncation=True
++        )["input_ids"].to(device)
++
++        tokens = tokens.view(1, -1)
++        with torch.no_grad():
++            pred = self.text_model(tokens).last_hidden_state.detach()
++
++        return pred
++
++    def _format_joint_to_state(self, joints):
++        """
++        Format the robot joint state into the unified state vector.
++
++        Args:
++            joints (torch.Tensor): The joint state to be formatted. 
++                qpos ([B, N, 14]).
++
++        Returns:
++            state (torch.Tensor): The formatted state for RDT ([B, N, 128]). 
++        """
++        B, N, _ = joints.shape
++        state = torch.zeros(
++            (B, N, self.args["model"]["state_token_dim"]), 
++            device=joints.device, dtype=joints.dtype
++        )
++        # assemble the unifed state vector
++        state[:, :, ALOHA_STATIC_INDICES] = joints
++        state_elem_mask = torch.zeros(
++            (B, self.args["model"]["state_token_dim"]),
++            device=joints.device, dtype=joints.dtype
++        )
++        state_elem_mask[:, ALOHA_STATIC_INDICES] = 1
++        return state, state_elem_mask
++
++    def _unformat_action_to_joint(self, action):
++        action_indices = ALOHA_STATIC_INDICES
++        joints = action[:, :, action_indices]
++        
++        # Rescale the gripper back to the action range
++        # Note that the action range and proprioception range are different
++        # for Mobile ALOHA robot
++        joints = joints * torch.tensor(
++            [[[1, 1, 1, 1, 1, 1, 11.8997, 1, 1, 1, 1, 1, 1, 13.9231]]], # 11.8997 / 13.9231
++            device=joints.device, dtype=joints.dtype
++        )
++        return joints
++
++    @torch.no_grad()
++    def step(self, proprio, images, text_embeds):
++        """
++        Args:
++            proprio: proprioceptive states
++            images: RGB images
++            text_embeds: instruction embeddings
++
++        Returns:
++            action: predicted action
++        """
++        device = self.device
++        dtype = self.dtype
++        
++        background_color = np.array([
++            int(x*255) for x in self.image_processor.image_mean
++        ], dtype=np.uint8).reshape(1, 1, 3)
++        background_image = np.ones((
++            self.image_processor.size["height"], 
++            self.image_processor.size["width"], 3), dtype=np.uint8
++        ) * background_color
++        
++        image_tensor_list = []
++        for image in images:
++            if image is None:
++                # Replace it with the background image
++                image = Image.fromarray(background_image)
++            
++            if self.image_size is not None:
++                image = transforms.Resize(self.data_args.image_size)(image)
++            
++            if self.args["dataset"].get("auto_adjust_image_brightness", False):
++                pixel_values = list(image.getdata())
++                average_brightness = sum(sum(pixel) for pixel in pixel_values) / (len(pixel_values) * 255.0 * 3)
++                if average_brightness <= 0.15:
++                    image = transforms.ColorJitter(brightness=(1.75,1.75))(image)
++                    
++            if self.args["dataset"].get("image_aspect_ratio", "pad") == 'pad':
++                def expand2square(pil_img, background_color):
++                    width, height = pil_img.size
++                    if width == height:
++                        return pil_img
++                    elif width > height:
++                        result = Image.new(pil_img.mode, (width, width), background_color)
++                        result.paste(pil_img, (0, (width - height) // 2))
++                        return result
++                    else:
++                        result = Image.new(pil_img.mode, (height, height), background_color)
++                        result.paste(pil_img, ((height - width) // 2, 0))
++                        return result
++                image = expand2square(image, tuple(int(x*255) for x in self.image_processor.image_mean))
++            image = self.image_processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
++            image_tensor_list.append(image)
++
++        image_tensor = torch.stack(image_tensor_list, dim=0).to(device, dtype=dtype)
++
++        image_embeds = self.vision_model(image_tensor).detach()
++        image_embeds = image_embeds.reshape(-1, self.vision_model.hidden_size).unsqueeze(0)
++
++        # history of actions
++        joints = proprio.to(device).unsqueeze(0)   # (1, 1, 14)
++        states, state_elem_mask = self._format_joint_to_state(joints)    # (1, 1, 128), (1, 128)
++        states, state_elem_mask = states.to(device, dtype=dtype), state_elem_mask.to(device, dtype=dtype)
++        states = states[:, -1:, :]  # (1, 1, 128)
++        ctrl_freqs = torch.tensor([self.control_frequency]).to(device)
++        
++        text_embeds = text_embeds.to(device, dtype=dtype)
++        
++        trajectory = self.policy.predict_action(
++            lang_tokens=text_embeds,
++            lang_attn_mask=torch.ones(
++                text_embeds.shape[:2], dtype=torch.bool,
++                device=text_embeds.device),
++            img_tokens=image_embeds,
++            state_tokens=states,
++            action_mask=state_elem_mask.unsqueeze(1),  
++            ctrl_freqs=ctrl_freqs
++        )
++        trajectory = self._unformat_action_to_joint(trajectory).to(torch.float32)
++
++        return trajectory
+-- 
+2.34.1
+

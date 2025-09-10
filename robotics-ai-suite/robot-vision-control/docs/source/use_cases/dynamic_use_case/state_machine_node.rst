@@ -150,13 +150,13 @@ the two, here is the conversion:
 
 
 
-.. image:: /images/html/convertWaypoint.png
+.. image:: images/html/convertWaypoint.png
     :alt: UR External Control
 
 1. Assure that the drop down ``Feature`` is set to ``base``
 2. Assure that the TCP offset takes in account how far the gripper picking position is (in this case our gripper closed fingertips is at 17.5 cm from End effector of UR5e)
 
-.. image:: /images/html/TCPOffset.png
+.. image:: images/html/TCPOffset.png
     :alt: UR External Control
 
 

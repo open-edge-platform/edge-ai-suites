@@ -1,0 +1,104 @@
+From bbcb8477bc2c3d8b19f4b2a6746bb0b7f7d45b65 Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Thu, 10 Apr 2025 09:48:45 +0800
+Subject: [PATCH 2/5] Add test script.
+
+Signed-off-by: HKH347710 <kanghua.he@intel.com>
+---
+ .../policy/diffusion_unet_image_policy.py     | 34 +++++++++----------
+ eval.py                                       |  3 --
+ test_mean_reward.sh                           | 17 ++++++++++
+ 3 files changed, 33 insertions(+), 21 deletions(-)
+ create mode 100644 test_mean_reward.sh
+
+diff --git a/diffusion_policy/policy/diffusion_unet_image_policy.py b/diffusion_policy/policy/diffusion_unet_image_policy.py
+index 33125b5..2aaf876 100644
+--- a/diffusion_policy/policy/diffusion_unet_image_policy.py
++++ b/diffusion_policy/policy/diffusion_unet_image_policy.py
+@@ -139,30 +139,28 @@ class DiffusionUnetImagePolicy(BaseImagePolicy):
+         device = self.device
+         dtype = self.dtype
+ 
+-        cond_data, local_cond, global_cond, cond_mask
+-
+         # handle different ways of passing observation
+-        # local_cond = None
+-        # global_cond = None
+-        #if self.obs_as_global_cond:
++        local_cond = None
++        global_cond = None
++        if self.obs_as_global_cond:
+             # condition through global feature
+-        #    this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
+-       #     nobs_features = self.obs_encoder(this_nobs)
++            this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
++            nobs_features = self.obs_encoder(this_nobs)
+             # reshape back to B, Do
+-       #     global_cond = nobs_features.reshape(B, -1)
++            global_cond = nobs_features.reshape(B, -1)
+             # empty data for action
+-        #    cond_data = torch.zeros(size=(B, T, Da), device=device, dtype=dtype)
+-         #   cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
+-       # else:
++            cond_data = torch.zeros(size=(B, T, Da), device=device, dtype=dtype)
++            cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
++        else:
+             # condition through impainting
+-        #    this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
+-        #    nobs_features = self.obs_encoder(this_nobs)
++            this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
++            nobs_features = self.obs_encoder(this_nobs)
+             # reshape back to B, T, Do
+-        #    nobs_features = nobs_features.reshape(B, To, -1)
+-        #    cond_data = torch.zeros(size=(B, T, Da+Do), device=device, dtype=dtype)
+-        #    cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
+-        #    cond_data[:,:To,Da:] = nobs_features
+-        #    cond_mask[:,:To,Da:] = True
++            nobs_features = nobs_features.reshape(B, To, -1)
++            cond_data = torch.zeros(size=(B, T, Da+Do), device=device, dtype=dtype)
++            cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
++            cond_data[:,:To,Da:] = nobs_features
++            cond_mask[:,:To,Da:] = True
+ 
+         # run sampling
+         nsample = self.conditional_sample(
+diff --git a/eval.py b/eval.py
+index 081e5bd..559567d 100644
+--- a/eval.py
++++ b/eval.py
+@@ -21,9 +21,6 @@ from diffusion_policy.workspace.base_workspace import BaseWorkspace
+ from omegaconf import OmegaConf
+ import numpy as np
+ 
+-# from ipex_llm.transformers import AutoModelForCausalLM
+-# from transformers import AutoTokenizer
+-
+ @click.command()
+ @click.option('-c', '--checkpoint', required=True)
+ @click.option('-o', '--output_dir', required=True)
+diff --git a/test_mean_reward.sh b/test_mean_reward.sh
+new file mode 100644
+index 0000000..0ce1552
+--- /dev/null
++++ b/test_mean_reward.sh
+@@ -0,0 +1,17 @@
++#!/bin/sh
++
++# image - Transformer
++CKPT_PATH=/home/intel/DP/experiments/image/pusht/diffusion_policy_transformer/train_0/checkpoints/epoch\=0100-test_mean_score\=0.748.ckpt
++
++# image - CNN
++# CKPT_PATH=/home/intel/DP/experiments/image/pusht/diffusion_policy_cnn/train_0/checkpoints/epoch\=0500-test_mean_score\=0.884.ckpt
++
++
++for start_seed in {4300000..4300049};
++do
++	echo $start_seed
++	python3 eval.py --checkpoint $CKPT_PATH --output_dir data/test_$seed --device CPU --seed $start_seed
++  sleep 1
++done
++
++
+-- 
+2.34.1
+

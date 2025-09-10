@@ -1,0 +1,39 @@
+From e2ca3ea47e652c30f375c7fd5326965d8d20ecca Mon Sep 17 00:00:00 2001
+From: tao-ov <tao.xiong@intel.com>
+Date: Tue, 15 Jul 2025 15:41:30 +0800
+Subject: [PATCH 3/3] update convert_idp3.py
+
+---
+ Improved-3D-Diffusion-Policy/convert_idp3.py | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/Improved-3D-Diffusion-Policy/convert_idp3.py b/Improved-3D-Diffusion-Policy/convert_idp3.py
+index da8f661..a849575 100755
+--- a/Improved-3D-Diffusion-Policy/convert_idp3.py
++++ b/Improved-3D-Diffusion-Policy/convert_idp3.py
+@@ -87,6 +87,7 @@ class ConvertModel(torch.nn.Module):
+             self.convert_obs_encoder,
+             (agent_pos, point_cloud),
+             export_name_obs_encoder,
++            input_names=['agent_pos', 'point_cloud'],
+             export_params=True,
+             opset_version=13,
+             do_constant_folding=True,
+@@ -108,6 +109,7 @@ class ConvertModel(torch.nn.Module):
+             self.convert_diffusion_unet,
+             unet_inputs,
+             export_name_unet,
++            input_names=['trajectory', 't', 'global_cond', 'local_cond'],
+             export_params=True,
+             opset_version=13,
+             do_constant_folding=True,
+@@ -116,4 +118,4 @@ class ConvertModel(torch.nn.Module):
+ 
+ convert_model = ConvertModel(policy)
+ # convert to onnx
+-convert_model.export_onnx(output_dir, ckpt_name)
+\ No newline at end of file
++convert_model.export_onnx(output_dir, ckpt_name)
+-- 
+2.34.1
+

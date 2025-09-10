@@ -6,14 +6,18 @@ import pytest
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from tests.utils.kubernetes_utils import get_scenescape_kubernetes_url
 from tests.utils.ui_utils import waiter, driver
-from .conftest import SCENESCAPE_URL, SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
+from .conftest import (
+  SCENESCAPE_URL,
+  SCENESCAPE_USERNAME,
+  SCENESCAPE_PASSWORD,
+)
 
-
-def add_object(waiter, object_name):
+def add_object(waiter, object_name, url=SCENESCAPE_URL):
   """Helper function to log in and add a new object."""
   waiter.perform_login(
-    SCENESCAPE_URL,
+    url,
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
@@ -38,7 +42,7 @@ def add_object(waiter, object_name):
   add_new_object_button = waiter.wait_and_assert(
     EC.presence_of_element_located((By.XPATH, "//input[@class='btn btn-primary' and @value='Add New Object']")),
     error_message="Add New Object button is not present on the page"
-  )  
+  )
 
   object_name_input = waiter.driver.find_element(By.ID, "id_name")
   object_name_input.send_keys(object_name)
@@ -51,25 +55,16 @@ def add_object(waiter, object_name):
     error_message=f"Table row with object name '{object_name}' is not present on the page"
   )
 
-@pytest.mark.zephyr_id("NEX-T9386")
-def test_add_object(waiter):
-  """Test that the admin can add a new object."""
-  new_object_name = "object_NEX-T9386"
-
-  add_object(waiter, new_object_name)
-
-
-@pytest.mark.zephyr_id("NEX-T9387")
-def test_delete_object(waiter):
-  """Test that the admin can delete an existing object."""
-  new_object_name = "object_NEX-T9387"
-
-  add_object(waiter, new_object_name)
+def delete_object_functionality_check(waiter, object_name, url=SCENESCAPE_URL):
+  """
+  Helper function to test that the admin can delete an existing object.
+  """
+  add_object(waiter, object_name, url)
 
   # Find the delete link in the same row and click it
   delete_link = waiter.wait_and_assert(
-    EC.presence_of_element_located((By.XPATH, f"//tr[td[text()='{new_object_name}']]/td/a[contains(@href, '/asset/delete/')]")),
-    error_message=f"Delete link for object '{new_object_name}' is not present on the page"
+    EC.presence_of_element_located((By.XPATH, f"//tr[td[text()='{object_name}']]/td/a[contains(@href, '/asset/delete/')]")),
+    error_message=f"Delete link for object '{object_name}' is not present on the page"
   )
   delete_link.click()
 
@@ -81,7 +76,31 @@ def test_delete_object(waiter):
   confirm_delete_button.click()
 
   # Wait to verify that the object row is no longer present
-  object_row = waiter.wait_and_assert(
-    EC.invisibility_of_element_located((By.XPATH, f"//tr/td[text()='{new_object_name}']")),
-    error_message=f"Table row with object name '{new_object_name}' is not present on the page"
+  waiter.wait_and_assert(
+    EC.invisibility_of_element_located((By.XPATH, f"//tr/td[text()='{object_name}']")),
+    error_message=f"Table row with object name '{object_name}' is not present on the page"
   )
+
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T13921")
+def test_add_object_kubernetes(waiter):
+  """Test that the admin can add a new object."""
+  add_object(waiter, "object_NEX-T13921", get_scenescape_kubernetes_url())
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9386")
+def test_add_object_docker(waiter):
+  """Test that the admin can add a new object."""
+  add_object(waiter, "object_NEX-T9386")
+
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T13922")
+def test_delete_object_kubernetes(waiter):
+  """Test that the admin can delete an existing object."""
+  delete_object_functionality_check(waiter, "object_NEX-T13922", get_scenescape_kubernetes_url())
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9387")
+def test_delete_object_docker(waiter):
+  """Test that the admin can delete an existing object."""
+  delete_object_functionality_check(waiter, "object_NEX-T9387")

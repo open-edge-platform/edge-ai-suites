@@ -1,0 +1,38 @@
+From cca596aa221ddf4c8e8adb76bcd57699265f3df9 Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Wed, 20 Aug 2025 16:58:25 +0800
+Subject: [PATCH] Modify README.md for OpenVINO model conversion.
+
+Signed-off-by: HKH347710 <kanghua.he@intel.com>
+---
+ ov_convert/README.md | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/ov_convert/README.md b/ov_convert/README.md
+index d14d77d..434389d 100644
+--- a/ov_convert/README.md
++++ b/ov_convert/README.md
+@@ -27,16 +27,16 @@ Usage in project directory:
+ # source <virtual_env>/bin/activate
+ 
+ # Low Dim Transformer DP model Conversion
+-python ov_convert/convert_lowdim_transformer.py --pretrained <lowdim_t967.ckpt_path> --output_dir <output_dir>
++python -m ov_convert.convert_lowdim_transformer --pretrained <lowdim_t967.ckpt_path> --output_dir <output_dir>
+ 
+ # Low Dim CNN DP model Conversion
+-python ov_convert/convert_lowdim_cnn.py --pretrained <lowdim_c969.ckpt_path> --output_dir <output_dir>
++python -m ov_convert.convert_lowdim_cnn --pretrained <lowdim_c969.ckpt_path> --output_dir <output_dir>
+ 
+ # Image Transformer DP model Conversion
+-python ov_convert/convert_image_transformer.py --pretrained <image_t748.ckpt_path> --output_dir <output_dir>
++python -m ov_convert.convert_image_transformer --pretrained <image_t748.ckpt_path> --output_dir <output_dir>
+ 
+ # Image CNN DP model Conversion
+-python ov_convert/convert_image_cnn.py --pretrained <image_c884.ckpt_path> --output_dir <output_dir>
++python -m ov_convert.convert_image_cnn --pretrained <image_c884.ckpt_path> --output_dir <output_dir>
+ ```
+ --output_dir is an optional argument with default value "ov_ir".
+ 
+-- 
+2.34.1
+

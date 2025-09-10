@@ -21,3 +21,4 @@ node_modules
 **/src/node-red/package.json
 **/src/dlstreamer-pipeline-server/models/public/
 **/src/dlstreamer-pipeline-server/videos/
+**/src/nginx/ssl/

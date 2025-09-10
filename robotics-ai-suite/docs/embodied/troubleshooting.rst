@@ -52,6 +52,27 @@ Troubleshooting
             None: "https://hf-mirror.com/depth-anything/Depth-Anything-V2-Base/resolve/main/depth_anything_v2_vitb.pth?download=true",
             ..
         },
+
+#. **OpenVINO inference failed**
+
+    .. _ov_inference_troubleshooting:
+
+    If you encounter some errors when running OpenVINO inference of models from :doc:`Model Tutorials <developer_tools_tutorials/model_tutorials>`, please check the OpenVINO version used for model conversion and the runtime version used for inference. The OpenVINO version used for model conversion should be the same as the runtime version used for inference. Otherwise, unexpected errors may occur, especially if the model is converted using a newer version and the runtime is an older version.
+
+    You can check the OpenVINO version used for model conversion at the end of the OpenVINO IR file ``*.xml``. For example:
+
+    .. code-block:: xml
+
+        ...
+         <rt_info>
+                <Runtime_version value="2025.0.0-17942-1f68be9f594-releases/2025/0" />
+                <conversion_parameters>
+                        <framework value="pytorch" />
+                        <is_python_object value="True" />
+                </conversion_parameters>
+        </rt_info>
+        ...
+
 #. **IOMMU deivce assigned failed when ACRN hypervisor boot up**
   
     .. code-block:: console
@@ -60,3 +81,15 @@ Troubleshooting
 
     1. Please check VT-d Enabled in BIOS, refer to the BIOS configuration listed in :doc:`OS Setup <installation_setup/prerequisites/os_setup>`. 
     2. Please check all PCIe devices plugged in have been enabled correctly.
+
+#. **Docker pull time out**
+
+    .. _docker_proxy_troubleshooting:
+
+    If your network environment requires proxy, please refer to the `docker documentation website <https://docs.docker.com/engine/daemon/proxy/>`_ to configure proxy settings.
+
+#. **Performance of iGPU degrade when passthrough to VM on ACRN**
+
+    .. _ACRN_troubleshooting:
+
+    When passthrough the iGPU to Guest VM based on ACRN, the performance of iGPU running AI models will degrade compared to the performance on native.

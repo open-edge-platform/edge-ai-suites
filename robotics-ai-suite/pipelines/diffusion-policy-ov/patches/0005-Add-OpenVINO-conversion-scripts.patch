@@ -1,0 +1,1009 @@
+From 1bf9cb71783c5b24f3f584c6519cfdb50b52e614 Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Thu, 10 Jul 2025 12:42:38 +0800
+Subject: [PATCH 5/5] Add OpenVINO conversion scripts.
+
+Signed-off-by: HKH347710 <kanghua.he@intel.com>
+---
+ .../model/vision/crop_randomizer.py           |   9 +-
+ ...ffusion_transformer_hybrid_image_policy.py |  88 ++++++++------
+ .../diffusion_transformer_lowdim_policy.py    |  22 +---
+ .../diffusion_unet_hybrid_image_policy.py     |  85 +++++++------
+ .../policy/diffusion_unet_lowdim_policy.py    |  21 +---
+ eval.py                                       |   4 +-
+ ov_convert/README.md                          |  61 ++++++++++
+ ov_convert/__init__.py                        |   0
+ ov_convert/convert_image_cnn.py               | 113 ++++++++++++++++++
+ ov_convert/convert_image_transformer.py       | 107 +++++++++++++++++
+ ov_convert/convert_lowdim_cnn.py              |  94 +++++++++++++++
+ ov_convert/convert_lowdim_transformer.py      |  91 ++++++++++++++
+ test_mean_reward.sh                           |  23 +++-
+ 13 files changed, 603 insertions(+), 115 deletions(-)
+ create mode 100644 ov_convert/README.md
+ create mode 100644 ov_convert/__init__.py
+ create mode 100644 ov_convert/convert_image_cnn.py
+ create mode 100644 ov_convert/convert_image_transformer.py
+ create mode 100755 ov_convert/convert_lowdim_cnn.py
+ create mode 100755 ov_convert/convert_lowdim_transformer.py
+
+diff --git a/diffusion_policy/model/vision/crop_randomizer.py b/diffusion_policy/model/vision/crop_randomizer.py
+index 9079574..f825a19 100644
+--- a/diffusion_policy/model/vision/crop_randomizer.py
++++ b/diffusion_policy/model/vision/crop_randomizer.py
+@@ -96,8 +96,13 @@ class CropRandomizer(nn.Module):
+             return tu.join_dimensions(out, 0, 1)
+         else:
+             # take center crop during eval
+-            out = ttf.center_crop(img=inputs, output_size=(
+-                self.crop_height, self.crop_width))
++            # out = ttf.center_crop(img=inputs, output_size=(
++            #     self.crop_height, self.crop_width))
++            ## transform center_crop by torchvision into torch
++            height, width = inputs.shape[-2:]
++            top, left = (height - self.crop_height) // 2, (width - self.crop_width) // 2
++            out = inputs[:, :, top:top+self.crop_height, left:left+self.crop_width]
++            # out = inputs
+             if self.num_crops > 1:
+                 B,C,H,W = out.shape
+                 out = out.unsqueeze(1).expand(B,self.num_crops,C,H,W).reshape(-1,C,H,W)
+diff --git a/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py b/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py
+index 11e0433..59cf667 100644
+--- a/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py
++++ b/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py
+@@ -229,34 +229,15 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+ 
+             # 2. predict model output
+             query_model_time = time.time()
+-            # print("[!!!] cond: ", type(cond))
+-
+             input = {
+                         'trajectory': trajectory.numpy(),
+                         't': t.numpy(),
+                         'cond': cond if isinstance(cond, np.ndarray) else cond.numpy() if cond is not None else np.zeros_like(condition_data),
+-                        #'cond_data': condition_data.numpy(),
+-                        #'cond_mask': condition_mask.numpy(),
+-                        # 'cond': cond.numpy() if cond is not None else np.zeros_like(condition_data.numpy()),
+-                        # 'cond_data': condition_data.numpy(),
+-                        # 'cond_mask': condition_mask.numpy(),
+                     }
+-            # print('model input:')
+-            # print(trajectory.shape) # torch.Size([1, 10, 2])
+-            # print(t)                # tensor(99)
+-            # print(cond.shape)       # (1, 2, 66)
+-            # print(condition_data.shape)
+-            # print(condition_mask.shape)
+ 
+             # model_output = model(trajectory, t, cond)
+             model_output = image_t_policy_ov_model(input)[0]
+-
+-            # print('model output:')
+-            # print(model_output)
+             model_output = torch.from_numpy(model_output)
+-            # print(model_output.shape)
+-
+-            # print(f'   - step {t} - query_model_time: {time.time()-query_model_time}')
+             latencies += time.time()-query_model_time
+ 
+             # 3. compute previous image: x_t -> x_t-1
+@@ -266,7 +247,6 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+                 **kwargs
+                 ).prev_sample
+ 
+-        # print(f'model_latency: {latencies / float(scheduler.timesteps.numel())} s')
+         # finally make sure conditioning is enforced
+         trajectory[condition_mask] = condition_data[condition_mask]        
+ 
+@@ -300,33 +280,15 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+         cond = None
+         cond_data = None
+         cond_mask = None
+-        # input = {
+-        #                'value.1': obs_dict['agent_pos'],
+-        #               'value.5': obs_dict['image'],
+-        #             }
+-        # obs_outs = image_t_encoder_ov_model(input)
+-        #print(len(obs_outs))
+-        # cond, cond_data, cond_mask = obs_outs[0], obs_outs[1], obs_outs[2]
+-        # cond, cond_data, cond_mask = torch.from_numpy(cond), torch.from_numpy(cond_data), torch.from_numpy(cond_mask)
+         if self.obs_as_cond:
+             query_encoder_time = time.time()
+-            # print(nobs['agent_pos'].shape)
+-            # print(nobs['image'].shape)
+             this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
+-            # print('obs_encoder input:')
+-            # print(this_nobs['agent_pos'].shape)
+-            # print(this_nobs['image'].shape)
+             input = {
+                        'x': this_nobs['agent_pos'],
+                        'x.1': this_nobs['image'],
+                     }
+             nobs_features = image_t_encoder_ov_model(input)[0]
+             # nobs_features = self.obs_encoder(this_nobs)
+-            # nobs_features = image_t_encoder_ov_model(this_nobs)
+-
+-            # print('obs_encoder output:')
+-            # print(nobs_features.shape)
+-            # print(f'encoder_latency: {time.time()-query_encoder_time} s')
+ 
+             # reshape back to B, To, Do
+             cond = nobs_features.reshape(B, To, -1)
+@@ -373,6 +335,56 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+         }
+         return result
+ 
++    def obs_encoder_forward_onepass(self, this_nobs):
++        return self.obs_encoder(this_nobs)
++
++    def obs_encoder_forward(self, obs_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
++        assert 'past_action' not in obs_dict # not implemented yet
++        # normalize input
++        nobs = self.normalizer.normalize(obs_dict)
++        value = next(iter(nobs.values()))
++        B, To = value.shape[:2]
++        T = self.horizon
++        Da = self.action_dim
++        Do = self.obs_feature_dim
++        To = self.n_obs_steps
++
++        # build input
++        device = self.device
++        dtype = self.dtype
++
++        # handle different ways of passing observation
++        cond = None
++        cond_data = None
++        cond_mask = None
++        if self.obs_as_cond:
++            this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
++            nobs_features = self.obs_encoder(this_nobs)
++            # reshape back to B, To, Do
++            cond = nobs_features.reshape(B, To, -1)
++            shape = (B, T, Da)
++            if self.pred_action_steps_only:
++                shape = (B, self.n_action_steps, Da)
++            cond_data = torch.zeros(size=shape, device=device, dtype=dtype)
++            cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
++        else:
++            # condition through impainting
++            this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
++            nobs_features = self.obs_encoder(this_nobs)
++            # reshape back to B, To, Do
++            nobs_features = nobs_features.reshape(B, To, -1)
++            shape = (B, T, Da+Do)
++            cond_data = torch.zeros(size=shape, device=device, dtype=dtype)
++            cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
++            cond_data[:,:To,Da:] = nobs_features
++            cond_mask[:,:To,Da:] = True
++        return cond, cond_data, cond_mask
++
++    def diffusion_unet_forward(self, trajectory, t, cond):
++        # run sampling
++        model_output = self.model(trajectory, t, cond)
++        return model_output
++
+     # ========= training  ============
+     def set_normalizer(self, normalizer: LinearNormalizer):
+         self.normalizer.load_state_dict(normalizer.state_dict())
+diff --git a/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py b/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py
+index 03bdf55..0f7f8b8 100644
+--- a/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py
++++ b/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py
+@@ -93,35 +93,19 @@ class DiffusionTransformerLowdimPolicy(BaseLowdimPolicy):
+         latencies = 0.0
+         for t in scheduler.timesteps:
+             # 1. apply conditioning
+-            # print(t)
+             trajectory[condition_mask] = condition_data[condition_mask]
+ 
+             # 2. predict model output
+             query_model_time = time.time()
+-
+             input = {
+                         'trajectory': trajectory.numpy(),
+                         't': t.numpy(),
+                         'cond': cond.numpy() if cond is not None else np.zeros_like(condition_data.numpy()),
+-                        # 'cond_data': condition_data.numpy(),
+-                        # 'cond_mask': condition_mask.numpy(),
+                     }
+-            #print('model input:')
+-            #print(trajectory.shape) # torch.Size([1, 10, 2])
+-            #print(condition_data.shape)
+-            #print(condition_mask.shape)
+-            #print(t)
+-            #print(cond.shape)
+ 
+             # model_output = model(trajectory, t, cond)
+             model_output = lowdim_t_policy_ov_model(input)[0]
+-
+-            # print('model output:')
+-            # print(model_output)
+             model_output = torch.from_numpy(model_output)
+-            # print(model_output.shape)
+-
+-            # print(f'   - step {t} - query_model_time: {time.time()-query_model_time}')
+             latencies += time.time()-query_model_time
+ 
+             # 3. compute previous image: x_t -> x_t-1
+@@ -131,7 +115,6 @@ class DiffusionTransformerLowdimPolicy(BaseLowdimPolicy):
+                 **kwargs
+                 ).prev_sample
+ 
+-        # print(f'model_latency: {latencies / float(scheduler.timesteps.numel())} s')
+         # finally make sure conditioning is enforced
+         trajectory[condition_mask] = condition_data[condition_mask]        
+ 
+@@ -207,6 +190,11 @@ class DiffusionTransformerLowdimPolicy(BaseLowdimPolicy):
+             result['obs_pred'] = obs_pred
+         return result
+ 
++    def diffusion_unet_forward(self, trajectory, t, cond):
++        # run sampling
++        model_output = self.model(trajectory, t, cond)
++        return model_output
++
+     # ========= training  ============
+     def set_normalizer(self, normalizer: LinearNormalizer):
+         self.normalizer.load_state_dict(normalizer.state_dict())
+diff --git a/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py b/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
+index 90c16f8..89d9ed1 100644
+--- a/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
++++ b/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
+@@ -217,27 +217,15 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+ 
+             # 2. predict model output
+             query_model_time = time.time()
+-
+             input = {
+                         'trajectory': trajectory.numpy(),
+                         't': t.numpy(),
+                         'global_cond': global_cond,
+                     }
+-            # print("policy input: ")
+-            # print(trajectory.shape)  # torch.Size([1, 16, 2])
+-            # print(t)                 # tensor(99)
+-            # print(local_cond)
+-            # print(global_cond.shape) # (1, 132)
+             # model_output = model(trajectory, t,
+             #     local_cond=local_cond, global_cond=global_cond)
+             model_output = image_c_policy_ov_model(input)[0]
+-
+-            # print('model output:')
+-            # print(model_output)
+             model_output = torch.from_numpy(model_output)
+-            # print(model_output.shape)
+-
+-            # print(f'   - step {t} - query_model_time: {time.time()-query_model_time}')
+             latencies += time.time()-query_model_time
+ 
+             # 3. compute previous image: x_t -> x_t-1
+@@ -247,7 +235,6 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+                 **kwargs
+                 ).prev_sample
+ 
+-        # print(f'model_latency: {latencies / float(scheduler.timesteps.numel())} s')
+         # finally make sure conditioning is enforced
+         trajectory[condition_mask] = condition_data[condition_mask]        
+ 
+@@ -272,32 +259,16 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+         # build input
+         device = self.device
+         dtype = self.dtype
+-
+         global image_c_encoder_ov_model
+         if image_c_encoder_ov_model == None:
+             image_c_encoder_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_c884_obs_encoder_onepass.xml', device='GPU')
+-
+-        # input = {
+-        #                'value.1': obs_dict['agent_pos'],
+-        #               'value.5': obs_dict['image'],
+-        #             }
+-        # obs_outs = image_c_encoder_ov_model(input)
+-        # local_cond=None
+-        # # print("[!!!], ", len(obs_outs), obs_outs[0].shape, obs_outs[1].shape, obs_outs[2].shape)
+-        # cond_data, global_cond, cond_mask = obs_outs[0], obs_outs[1], obs_outs[2]
+-        # cond_data, global_cond, cond_mask = torch.from_numpy(cond_data), torch.from_numpy(global_cond), torch.from_numpy(cond_mask)
+-
+         # handle different ways of passing observation
+         local_cond = None
+         global_cond = None
+         if self.obs_as_global_cond:
+             query_encoder_time = time.time()
+-            # print(nobs['agent_pos'].shape)
+-            # print(nobs['image'].shape)
+-
+             # condition through global feature
+             this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
+-            
+             agent_pos = this_nobs['agent_pos']
+             image = this_nobs['image']
+             # this_nobs = dict_apply(nobs, lambda x: x[:,:To,...])
+@@ -307,10 +278,6 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+                     }
+             nobs_features = image_c_encoder_ov_model(input)[0]
+ 
+-            # print('obs_encoder output:')
+-            # print(nobs_features.shape)
+-            # print(f'encoder_latency: {time.time()-query_encoder_time} s')
+-
+             # reshape back to B, Do
+             global_cond = nobs_features.reshape(B, -1)
+             # empty data for action
+@@ -319,7 +286,6 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+         else:
+             # condition through impainting
+             this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
+-            
+             agent_pos = this_nobs['agent_pos']
+             image = this_nobs['image']
+             # this_nobs = dict_apply(nobs, lambda x: x[:,:To,...])
+@@ -359,6 +325,57 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+         }
+         return result
+ 
++    def obs_encoder_forward_onepass(self, this_nobs):
++        return self.obs_encoder(this_nobs)
++
++    def obs_encoder_forward(self, obs_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
++        assert 'past_action' not in obs_dict # not implemented yet
++        # normalize input
++        nobs = self.normalizer.normalize(obs_dict)
++        value = next(iter(nobs.values()))
++        B, To = value.shape[:2]
++        T = self.horizon
++        Da = self.action_dim
++        Do = self.obs_feature_dim
++        To = self.n_obs_steps
++
++        # build input
++        device = self.device
++        dtype = self.dtype
++
++        # handle different ways of passing observation
++        local_cond = None
++        global_cond = None
++        if self.obs_as_global_cond:
++            # condition through global feature
++            this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
++            print("this nobs from if: ", this_nobs.shape)
++            nobs_features = self.obs_encoder(this_nobs)
++            # reshape back to B, Do
++            global_cond = nobs_features.reshape(B, -1)
++            # empty data for action
++            cond_data = torch.zeros(size=(B, T, Da), device=device, dtype=dtype)
++            cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
++            print("global_cond:", global_cond)
++            exit()
++        else:
++            # condition through impainting
++            this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
++            print("this nobs from else: ", this_nobs.shape)
++            nobs_features = self.obs_encoder(this_nobs)
++            # reshape back to B, To, Do
++            nobs_features = nobs_features.reshape(B, To, -1)
++            cond_data = torch.zeros(size=(B, T, Da+Do), device=device, dtype=dtype)
++            cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
++            cond_data[:,:To,Da:] = nobs_features
++            cond_mask[:,:To,Da:] = True
++        return cond_data, local_cond, global_cond, cond_mask
++
++    def diffusion_unet_forward(self, trajectory, t, global_cond):
++        # run sampling
++        model_output = self.model(trajectory, t, global_cond = global_cond)
++        return model_output
++
+     # ========= training  ============
+     def set_normalizer(self, normalizer: LinearNormalizer):
+         self.normalizer.load_state_dict(normalizer.state_dict())
+diff --git a/diffusion_policy/policy/diffusion_unet_lowdim_policy.py b/diffusion_policy/policy/diffusion_unet_lowdim_policy.py
+index 612786d..52c9ce4 100644
+--- a/diffusion_policy/policy/diffusion_unet_lowdim_policy.py
++++ b/diffusion_policy/policy/diffusion_unet_lowdim_policy.py
+@@ -101,29 +101,14 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
+ 
+             # 2. predict model output
+             query_model_time = time.time()
+-
+             input = {
+                         'trajectory': trajectory.numpy(),
+                         't': t.numpy(),
+-                        # 'local_cond':local_cond,
+-                        # 'global_cond':global_cond,
+                     }
+-            #print("model input: ")
+-            #print(trajectory.shape) # torch.Size([1, 16, 22])
+-            # print(t)
+-            # print(local_cond)
+-            # print(global_cond)
+-
+             # model_output = model(trajectory, t,
+             #     local_cond=local_cond, global_cond=global_cond)
+             model_output = lowdim_c_policy_ov_model(input)[0]
+-
+-            # print('model output:')
+-            # print(model_output)
+             model_output = torch.from_numpy(model_output)
+-            # print(model_output.shape)
+-
+-            # print(f'   - step {t} - query_model_time: {time.time()-query_model_time}')
+             latencies += time.time()-query_model_time
+ 
+             # 3. compute previous image: x_t -> x_t-1
+@@ -133,7 +118,6 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
+                 **kwargs
+                 ).prev_sample
+ 
+-        # print(f'model_latency: {latencies / float(scheduler.timesteps.numel())} s')
+         # finally make sure conditioning is enforced
+         trajectory[condition_mask] = condition_data[condition_mask]        
+ 
+@@ -220,6 +204,11 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
+             result['obs_pred'] = obs_pred
+         return result
+ 
++    def diffusion_unet_forward(self, trajectory, t):
++        # run sampling
++        model_output = self.model(trajectory, t)
++        return model_output
++
+     # ========= training  ============
+     def set_normalizer(self, normalizer: LinearNormalizer):
+         self.normalizer.load_state_dict(normalizer.state_dict())
+diff --git a/eval.py b/eval.py
+index 10fc9e0..b340a81 100644
+--- a/eval.py
++++ b/eval.py
+@@ -29,8 +29,8 @@ import psutil
+ @click.option('-s', '--seed', default='4300000')
+ def main(checkpoint, output_dir, device, seed):
+     # Core Affinity
+-    p = psutil.Process()
+-    p.cpu_affinity([0, 2, 3, 4, 5])
++    # p = psutil.Process()
++    # p.cpu_affinity([0, 2, 3, 4, 5])
+ 
+     # if os.path.exists(output_dir):
+     #     click.confirm(f"Output path {output_dir} already exists! Overwrite?", abort=True)
+diff --git a/ov_convert/README.md b/ov_convert/README.md
+new file mode 100644
+index 0000000..d14d77d
+--- /dev/null
++++ b/ov_convert/README.md
+@@ -0,0 +1,61 @@
++# OpenVINO Conversion
++
++### Download the pre-trained Diffusion Policy checkpoints
++
++Pre-trained Checkpoint:
++* Low Dim Transformer DP model checkpoint: **epoch=0850-test_mean_score=0.967.ckpt**
++```bash
++wget https://diffusion-policy.cs.columbia.edu/data/experiments/low_dim/pusht/diffusion_policy_transformer/train_0/checkpoints/epoch%3D0850-test_mean_score%3D0.967.ckpt -O lowdim_t967.ckpt
++```
++* Low Dim CNN DP model checkpoint: **epoch=0550-test_mean_score=0.969.ckpt**
++```bash
++wget https://diffusion-policy.cs.columbia.edu/data/experiments/low_dim/pusht/diffusion_policy_cnn/train_0/checkpoints/epoch%3D0550-test_mean_score%3D0.969.ckpt -O lowdim_c969.ckpt
++```
++* Image Transformer DP model checkpoint: **epoch=0100-test_mean_score=0.748.ckpt**
++```bash
++wget https://diffusion-policy.cs.columbia.edu/data/experiments/image/pusht/diffusion_policy_transformer/train_0/checkpoints/epoch%3D0100-test_mean_score%3D0.748.ckpt -O image_t748.ckpt
++```
++* Image CNN DP model checkpoint: **epoch=0500-test_mean_score=0.884.ckpt**
++```bash
++wget https://diffusion-policy.cs.columbia.edu/data/experiments/image/pusht/diffusion_policy_cnn/train_0/checkpoints/epoch%3D0500-test_mean_score%3D0.884.ckpt -O image_c884.ckpt
++```
++
++### Convert the pre-trained checkpoint to ONNX
++
++Usage in project directory:
++```bash
++# source <virtual_env>/bin/activate
++
++# Low Dim Transformer DP model Conversion
++python ov_convert/convert_lowdim_transformer.py --pretrained <lowdim_t967.ckpt_path> --output_dir <output_dir>
++
++# Low Dim CNN DP model Conversion
++python ov_convert/convert_lowdim_cnn.py --pretrained <lowdim_c969.ckpt_path> --output_dir <output_dir>
++
++# Image Transformer DP model Conversion
++python ov_convert/convert_image_transformer.py --pretrained <image_t748.ckpt_path> --output_dir <output_dir>
++
++# Image CNN DP model Conversion
++python ov_convert/convert_image_cnn.py --pretrained <image_c884.ckpt_path> --output_dir <output_dir>
++```
++--output_dir is an optional argument with default value "ov_ir".
++
++### Convert ONNX to OpenVINO IR format
++```bash
++# source <virtual_env>/bin/activate
++cd <output_dir>
++
++# Low Dim Transformer DP model Conversion
++ovc <lowdim_t967_unet.onnx_path> --compress_to_fp16=False
++
++# Low Dim CNN DP model Conversion
++ovc <lowdim_c969_unet.onnx_path> --compress_to_fp16=False
++
++# Image Transformer DP model Conversion
++ovc <image_t748_obs_encoder_onepass.onnx_path> --compress_to_fp16=True
++ovc <image_t748_unet_onepass.onnx_path> --compress_to_fp16=True
++
++# Image CNN DP model Conversion
++ovc <image_c884_obs_encoder_onepass.onnx_path> --compress_to_fp16=False
++ovc <image_c884_unet_onepass.onnx_path> --compress_to_fp16=False
++```
+\ No newline at end of file
+diff --git a/ov_convert/__init__.py b/ov_convert/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/ov_convert/convert_image_cnn.py b/ov_convert/convert_image_cnn.py
+new file mode 100644
+index 0000000..b759fcc
+--- /dev/null
++++ b/ov_convert/convert_image_cnn.py
+@@ -0,0 +1,113 @@
++"""
++Use DiffusionPolicy as model
++use its predict_action function as forward / inference
++
++"""
++import hydra
++import torch
++import dill
++import os
++import argparse
++
++class ConvertModel(torch.nn.Module):
++    def __init__(self, policy):
++        super(ConvertModel, self).__init__()
++        self.policy = policy
++        self.policy.model.eval()  # Ensure the model is in evaluation mode
++        self.policy.obs_encoder.eval()
++
++        # Wrapping obs encoder
++        class ConvertObsEncoder(torch.nn.Module):
++            def __init__(self, policy):
++                super(ConvertObsEncoder, self).__init__()
++                self.policy = policy
++
++            def forward(self, agent_pos, image):
++                with torch.no_grad():
++                    this_nobs = {'agent_pos': agent_pos, 'image': image}
++                    return self.policy.obs_encoder_forward_onepass(this_nobs)
++
++        # Wrapping diffusion model
++        class ConvertUnetModel(torch.nn.Module):
++            def __init__(self, policy):
++                super(ConvertUnetModel, self).__init__()
++                self.policy = policy
++                self.forward = self.forward_cnn
++
++            def forward_cnn(self, trajectory, t, global_cond):
++                print("==> trajectory: ", trajectory.shape)
++                print("==> t: ", t.shape)
++                # print("==> local_cond: ", local_cond.shape if local_cond is not None else local_cond)
++                # print("==> global_cond: ", global_cond.shape if global_cond is not None else global_cond)
++                # print("==> cond_data: (data processing)", cond_data.shape)
++                # print("==> cond_mask: (data processing)", cond_mask.shape)
++                with torch.no_grad():
++                    return self.policy.diffusion_unet_forward(trajectory, t, global_cond)
++
++        self.convert_obs_encoder = ConvertObsEncoder(self.policy)
++        self.convert_diffusion_unet = ConvertUnetModel(self.policy)
++
++    @torch.no_grad()
++    def export_onnx(self, output_dir, ckpt_name):
++        # Export obs_encoder
++        # initialize this_nobs as input of conv encoder
++        agent_pos=torch.rand(2, 2)
++        image = torch.rand(2,3,96,96)
++        export_name_obs_encoder = os.path.join(output_dir, f"{ckpt_name}_obs_encoder_onepass.onnx")
++        torch.onnx.export(
++            self.convert_obs_encoder,
++            args=(agent_pos, image),
++            f=export_name_obs_encoder,
++            export_params=True,
++            opset_version=13,
++            do_constant_folding=True,
++        )
++        print(f"[===] Obs Encoder exported to {export_name_obs_encoder}")
++
++        # Export diffusion unet
++        trajectory = torch.rand(1,16,2)
++        global_cond = torch.rand(1,132)
++        # cond = torch.rand()
++        t = torch.tensor([10], dtype=torch.float32)
++        export_name_unet = os.path.join(output_dir, f"{ckpt_name}_unet_onepass.onnx")
++        unet_inputs = (trajectory, t,global_cond.detach())
++
++        torch.onnx.export(
++            self.convert_diffusion_unet,
++            unet_inputs,
++            export_name_unet,
++            input_names=['trajectory', 't', 'global_cond'],
++            export_params=True,
++            opset_version=13,
++            do_constant_folding=True,
++        )
++        print(f"[===] Diffusion UNet exported to {export_name_unet}")
++
++if __name__ == "__main__":
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--pretrained', type=str, required=True, help='Path to the original pretrained model file')
++    parser.add_argument('--output_dir', type=str, default='ov_ir', required=False, help='Path to the output directory')
++    args = parser.parse_args()
++
++    ckpt = args.pretrained
++    ckpt_name = ckpt.split("/")[-1].split(".ckpt")[0]
++    output_dir = args.output_dir  # save onnx convert result
++    # create folder
++    os.makedirs(output_dir, exist_ok=True)
++    # load checkpoint
++    payload = torch.load(open(ckpt, 'rb'), pickle_module=dill)
++    # read config from checkpoint
++    cfg = payload['cfg']
++    # for k, v in cfg.items():
++    #     print("{}: {}".format(k, v))
++    cls = hydra.utils.get_class(cfg._target_)
++    # create model
++    workspace = cls(cfg, output_dir=output_dir)
++    print(f"cls: {cls}, workspace: {workspace}")
++    # load pre-trained weights
++    workspace.load_payload(payload, exclude_keys=None, include_keys=None)
++    # model
++    policy = workspace.model # diffusion policy, not torch nn.Module
++
++    convert_model = ConvertModel(policy)
++    convert_model.export_onnx(output_dir, ckpt_name)
+diff --git a/ov_convert/convert_image_transformer.py b/ov_convert/convert_image_transformer.py
+new file mode 100644
+index 0000000..08f1ea8
+--- /dev/null
++++ b/ov_convert/convert_image_transformer.py
+@@ -0,0 +1,107 @@
++"""
++Use DiffusionPolicy as model
++use its predict_action function as forward / inference
++
++"""
++import hydra
++import torch
++import dill
++import os
++import argparse
++
++class ConvertModel(torch.nn.Module):
++    def __init__(self, policy):
++        super(ConvertModel, self).__init__()
++        self.policy = policy
++        self.policy.model.eval()  # Ensure the model is in evaluation mode
++        self.policy.obs_encoder.eval()
++
++        # Wrapping obs encoder
++        class ConvertObsEncoder(torch.nn.Module):
++            def __init__(self, policy):
++                super(ConvertObsEncoder, self).__init__()
++                self.policy = policy
++            
++            def forward(self, agent_pos, image):
++                with torch.no_grad():
++                    this_nobs = {'agent_pos': agent_pos, 'image': image}
++                    return self.policy.obs_encoder_forward_onepass(this_nobs)
++        
++        # Wrapping diffusion model
++        class ConvertUnetModel(torch.nn.Module):
++            def __init__(self, policy):
++                super(ConvertUnetModel, self).__init__()
++                self.policy = policy
++                self.forward = self.forward_transformer
++
++            def forward_transformer(self, trajectory, t, cond):
++                print("==> trajectory: ", trajectory.shape)
++                print("==> cond: ", cond.shape)
++                print("==> t: ", t.shape)
++                # print("==> cond_data: (data processing)", cond_data.shape)
++                # print("==> cond_mask: (data processing)", cond_mask.shape)
++                with torch.no_grad():
++                    return self.policy.diffusion_unet_forward(trajectory, t, cond)
++
++        self.convert_obs_encoder = ConvertObsEncoder(self.policy)
++        self.convert_diffusion_unet = ConvertUnetModel(self.policy)
++
++    @torch.no_grad()
++    def export_onnx(self, output_dir, ckpt_name):
++        agent_pos = torch.rand(2, 2)
++        image = torch.rand(2, 3, 96, 96)      
++        export_name_obs_encoder = os.path.join(output_dir, f"{ckpt_name}_obs_encoder_onepass.onnx")
++        torch.onnx.export(
++            self.convert_obs_encoder,
++            args=(agent_pos, image),
++            f=export_name_obs_encoder,
++            export_params=True,
++            opset_version=13,
++            do_constant_folding=True,
++        )
++        print(f"[===] Obs Encoder exported to {export_name_obs_encoder}")
++
++        trajectory = torch.rand(1, 10, 2)
++        cond = torch.rand(1, 2, 66)
++        t = torch.tensor([10], dtype=torch.float32)
++        export_name_unet = os.path.join(output_dir, f"{ckpt_name}_unet_onepass.onnx")
++        unet_inputs = (trajectory, t, cond.detach())
++        torch.onnx.export(
++            self.convert_diffusion_unet,
++            unet_inputs,
++            export_name_unet,
++            input_names=['trajectory', 't', 'cond'],
++            export_params=True,
++            opset_version=13,
++            do_constant_folding=True,
++        )
++        print(f"[===] Diffusion UNet exported to {export_name_unet}")
++
++if __name__ == "__main__":
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--pretrained', type=str, required=True, help='Path to the original pretrained model file')
++    parser.add_argument('--output_dir', type=str, default='ov_ir', required=False, help='Path to the output directory')
++    args = parser.parse_args()
++
++    ckpt = args.pretrained
++    ckpt_name = ckpt.split("/")[-1].split(".ckpt")[0]
++    output_dir = args.output_dir  # save onnx convert result
++    # create folder
++    os.makedirs(output_dir, exist_ok=True)
++    # load checkpoint
++    payload = torch.load(open(ckpt, 'rb'), pickle_module=dill)
++    # read config from checkpoint
++    cfg = payload['cfg']
++    # for k, v in cfg.items():
++    #     print("{}: {}".format(k, v))
++    cls = hydra.utils.get_class(cfg._target_)
++    # create model
++    workspace = cls(cfg, output_dir=output_dir)
++    print(f"cls: {cls}, workspace: {workspace}")
++    # load pre-trained weights
++    workspace.load_payload(payload, exclude_keys=None, include_keys=None)
++    # model
++    policy = workspace.model # diffusion policy, not torch nn.Module
++
++    convert_model = ConvertModel(policy)
++    convert_model.export_onnx(output_dir, ckpt_name)
+\ No newline at end of file
+diff --git a/ov_convert/convert_lowdim_cnn.py b/ov_convert/convert_lowdim_cnn.py
+new file mode 100755
+index 0000000..a619935
+--- /dev/null
++++ b/ov_convert/convert_lowdim_cnn.py
+@@ -0,0 +1,94 @@
++"""
++Use DiffusionPolicy as model
++use its predict_action function as forward / inference
++"""
++import hydra
++import torch
++import dill
++import os
++import argparse
++
++# forward pass
++# export onnx model
++# find input names in model.forward or using help(model.forward)
++class ConvertModel(torch.nn.Module):
++    def __init__(self, policy):
++        super(ConvertModel, self).__init__()
++        self.policy = policy
++        self.policy.model.eval()  # Set the internal model to evaluation mode
++
++        # Wrapper for diffusion UNet model
++        class ConvertUnetModel(torch.nn.Module):
++            def __init__(self, policy):
++                super(ConvertUnetModel, self).__init__()
++                self.policy = policy
++                self.forward = self.forward_cnn
++
++            def forward_cnn(self, trajectory, t):
++                print("==> trajectory: ", trajectory.shape)
++                print("==> t: ", t.shape)
++                # print("==> local_cond: ", local_cond.shape if local_cond is not None else local_cond)
++                # print("==> global_cond: ", global_cond.shape if global_cond is not None else global_cond)
++                # print("==> cond_data: ", cond_data.shape)
++                # print("==> cond_mask: ", cond_mask.shape)
++                with torch.no_grad():
++                    return self.policy.diffusion_unet_forward(trajectory, t)
++
++        self.convert_diffusion_unet = ConvertUnetModel(self.policy)
++#help(model.forward)
++
++    @torch.no_grad()
++    def export_onnx(self, output_dir, ckpt_name):
++        """Exports the model components to ONNX format."""
++        # Generate dummy inputs for exporting the observation encoder
++        # # Export unet
++        trajectory = torch.randn(1, 16, 22)
++        t = torch.tensor([10], dtype=torch.float32)
++        # cond_data = torch.randn(1, 16, 22)
++        # cond_mask = (torch.randn(1, 16, 22) < 0.5).bool()
++        # local_cond = None
++        # global_cond = None
++
++        export_name_unet = os.path.join(output_dir, f"{ckpt_name}_unet.onnx")
++        unet_inputs = (trajectory, t)
++        torch.onnx.export(
++            self.convert_diffusion_unet,
++            unet_inputs,
++            export_name_unet,
++            input_names=['trajectory', 't'],
++            export_params=True,
++            opset_version=13,
++            # do_constant_folding=True,
++            do_constant_folding=False,
++        )
++        print(f"[===] Diffusion UNet exported to {export_name_unet}")
++
++if __name__ == "__main__":
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--pretrained', type=str, required=True, help='Path to the original pretrained model file')
++    parser.add_argument('--output_dir', type=str, default='ov_ir', required=False, help='Path to the output directory')
++    args = parser.parse_args()
++
++    ckpt = args.pretrained
++    ckpt_name = ckpt.split("/")[-1].split(".ckpt")[0]
++    output_dir = args.output_dir  # save onnx convert result
++    # create folder
++    os.makedirs(output_dir, exist_ok=True)
++    # load checkpoint
++    payload = torch.load(open(ckpt, 'rb'), pickle_module=dill)
++    # read config from checkpoint
++    cfg = payload['cfg']
++    # for k, v in cfg.items():
++    #     print("{}: {}".format(k, v))
++    cls = hydra.utils.get_class(cfg._target_)
++    # create model
++    workspace = cls(cfg)
++    print(f"cls: {cls}, workspace: {workspace}")
++    # load pre-trained weights
++    workspace.load_payload(payload, exclude_keys=None, include_keys=None)
++    # model
++    policy = workspace.model # diffusion policy, not torch nn.Module
++
++    # Instantiate the converter and export the model
++    convert_model = ConvertModel(policy)
++    convert_model.export_onnx(output_dir, ckpt_name)
+diff --git a/ov_convert/convert_lowdim_transformer.py b/ov_convert/convert_lowdim_transformer.py
+new file mode 100755
+index 0000000..daa0496
+--- /dev/null
++++ b/ov_convert/convert_lowdim_transformer.py
+@@ -0,0 +1,91 @@
++"""
++Use DiffusionPolicy as model
++use its predict_action function as forward / inference
++"""
++import hydra
++import torch
++import dill
++import os
++import argparse
++
++# forward pass
++# export onnx model
++# find input names in model.forward or using help(model.forward)
++class ConvertModel(torch.nn.Module):
++    def __init__(self, policy):
++        super(ConvertModel, self).__init__()
++        self.policy = policy
++        self.policy.model.eval()  # Set the internal model to evaluation mode
++
++        # Wrapper for diffusion UNet model
++        class ConvertUnetModel(torch.nn.Module):
++            def __init__(self, policy):
++                super(ConvertUnetModel, self).__init__()
++                self.policy = policy
++                self.forward = self.forward_transformer
++
++            def forward_transformer(self, trajectory, t, cond):
++                print("==> trajectory: ", trajectory.shape)
++                print("==> cond: ", cond.shape)
++                print("==> t: ", t.shape)
++                # print("==> cond_data: ", cond_data.shape)
++                # print("==> cond_mask: ", cond_mask.shape)
++                with torch.no_grad():
++                    return self.policy.diffusion_unet_forward(trajectory, t, cond)
++
++        self.convert_diffusion_unet = ConvertUnetModel(self.policy)
++#help(model.forward)
++
++    @torch.no_grad()
++    def export_onnx(self, output_dir, ckpt_name):
++        """Exports the model components to ONNX format."""
++        # Export diffusion
++        trajectory = torch.randn(1, 10, 2)
++        t = torch.tensor([10], dtype=torch.float32)
++        # cond_data = torch.randn(1, 10, 2)
++        # cond_mask = (torch.randn(1, 10, 2) < 0.5).bool()
++        cond = torch.randn(1, 2, 20)
++
++        export_name_unet = os.path.join(output_dir, f"{ckpt_name}_unet.onnx")
++        unet_inputs = (trajectory, t, cond.detach())
++        torch.onnx.export(
++            self.convert_diffusion_unet,
++            unet_inputs,
++            export_name_unet,
++            input_names=['trajectory', 't', 'cond'],
++            export_params=True,
++            opset_version=13,
++            # do_constant_folding=True,
++            do_constant_folding=False,
++        )
++        print(f"[===] Diffusion UNet exported to {export_name_unet}")
++
++if __name__ == "__main__":
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--pretrained', type=str, required=True, help='Path to the original pretrained model file')
++    parser.add_argument('--output_dir', type=str, default='ov_ir', required=False, help='Path to the output directory')
++    args = parser.parse_args()
++
++    ckpt = args.pretrained
++    ckpt_name = ckpt.split("/")[-1].split(".ckpt")[0]
++    output_dir = args.output_dir  # save onnx convert result
++    # create folder
++    os.makedirs(output_dir, exist_ok=True)
++    # load checkpoint
++    payload = torch.load(open(ckpt, 'rb'), pickle_module=dill)
++    # read config from checkpoint
++    cfg = payload['cfg']
++    # for k, v in cfg.items():
++    #     print("{}: {}".format(k, v))
++    cls = hydra.utils.get_class(cfg._target_)
++    # create model
++    workspace = cls(cfg)
++    print(f"cls: {cls}, workspace: {workspace}")
++    # load pre-trained weights
++    workspace.load_payload(payload, exclude_keys=None, include_keys=None)
++    # model
++    policy = workspace.model # diffusion policy, not torch nn.Module
++
++    # Instantiate the converter and export the model
++    convert_model = ConvertModel(policy)
++    convert_model.export_onnx(output_dir, ckpt_name)
+\ No newline at end of file
+diff --git a/test_mean_reward.sh b/test_mean_reward.sh
+index 0ce1552..8e4e9eb 100644
+--- a/test_mean_reward.sh
++++ b/test_mean_reward.sh
+@@ -1,11 +1,24 @@
+ #!/bin/sh
+ 
+-# image - Transformer
+-CKPT_PATH=/home/intel/DP/experiments/image/pusht/diffusion_policy_transformer/train_0/checkpoints/epoch\=0100-test_mean_score\=0.748.ckpt
++###############################################################
++#           pre-trained model             |   renamed model
++# epoch=0100-test_mean_score=0.748.ckpt   |   image_t748.ckpt
++# epoch=0500-test_mean_score=0.884.ckpt   |   image_c884.ckpt
++# epoch=0550-test_mean_score=0.969.ckpt   |   lowdim_c969.ckpt
++# epoch=0850-test_mean_score=0.967.ckpt   |   lowdim_t967.ckpt
++###############################################################
+ 
+-# image - CNN
+-# CKPT_PATH=/home/intel/DP/experiments/image/pusht/diffusion_policy_cnn/train_0/checkpoints/epoch\=0500-test_mean_score\=0.884.ckpt
++# For image - Transformer
++# CKPT_PATH=/home/intel/hkh/DP/models/image_t748.ckpt
+ 
++# For image - CNN
++# CKPT_PATH=/home/intel/hkh/DP/models/image_c884.ckpt
++
++# For low-dim - Transformer
++# CKPT_PATH=/home/intel/hkh/DP/models/lowdim_t967.ckpt
++
++# For low-dim - CNN
++# CKPT_PATH=/home/intel/hkh/DP/models/lowdim_c969.ckpt
+ 
+ for start_seed in {4300000..4300049};
+ do
+@@ -13,5 +26,3 @@ do
+ 	python3 eval.py --checkpoint $CKPT_PATH --output_dir data/test_$seed --device CPU --seed $start_seed
+   sleep 1
+ done
+-
+-
+-- 
+2.34.1
+

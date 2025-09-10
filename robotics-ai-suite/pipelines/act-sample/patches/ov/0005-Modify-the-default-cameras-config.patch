@@ -1,0 +1,27 @@
+From 8b4ca9041f635ebbb4a7c188524890e5d39f587b Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Tue, 8 Jul 2025 10:39:46 +0800
+Subject: [PATCH 5/5] Modify the default cameras config.
+
+Signed-off-by: HKH347710 <kanghua.he@intel.com>
+---
+ constants.py | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/constants.py b/constants.py
+index 16316f6..dc1da55 100644
+--- a/constants.py
++++ b/constants.py
+@@ -7,7 +7,8 @@ SIM_TASK_CONFIGS = {
+         'dataset_dir': DATA_DIR + '/sim_transfer_cube_scripted',
+         'num_episodes': 50,
+         'episode_len': 400,
+-        'camera_names': ['top']
++        'camera_names': ['top', 'angle', 'left_wrist', 'right_wrist']
++        # 'camera_names': ['top']
+     },
+ 
+     'sim_transfer_cube_human':{
+-- 
+2.34.1
+

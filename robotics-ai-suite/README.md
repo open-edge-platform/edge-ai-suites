@@ -12,8 +12,11 @@ Collections organize workflows and capabilities for three robot categories—sta
 
 | Application | Documentation | Description |
 | ----------- | ------------- | ----------- |
+| [Diffusion Policy (OpenVINO)](pipelines/diffusion-policy-ov) | [Diffusion Policy (OpenVINO)](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/embodied/sample_pipelines/diffusion_policy.html) | Diffusion Policy implementation optimized with Intel OpenVINO toolkit |
 | [Imitation Learning - ACT](pipelines/act-sample) | [Imitation Learning - ACT](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/embodied/sample_pipelines/imitation_learning_act.html) | Imitation learning pipeline using Action Chunking with Transformers(ACT) algorithm to train and evaluate in simulator or real robot environment with Intel® optimization |
+| [Improved 3D Diffusion Policy (OpenVINO)](pipelines/idp3-ov) | [Improved 3D Diffusion Policy (OpenVINO)](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/embodied/developer_tools_tutorials/model_tutorials/model_idp3.html) | Improved 3D Diffusion Policy implementation optimized with Intel OpenVINO toolkit |
 | [LLM Robotics Demo](pipelines/llm-robotics-demo) | [LLM Robotics Demo](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/embodied/sample_pipelines/llm_robotics.html) | This tutorial provides a step-by-step guide to set up a real-time system to control a JAKA robot arm with movement commands generated using an LLM |
+| [Robotics Diffusion Transformer (OpenVINO)](pipelines/rdt-ov) | [Robotics Diffusion Transformer (OpenVINO)](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/embodied/sample_pipelines/robotics_diffusion_transformer.html) | Robotics Diffusion Transformer implementation optimized with Intel OpenVINO toolkit |
 | [VSLAM: ORB-SLAM3](pipelines/orb-slam3-sample) | [VSLAM: ORB-SLAM3](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/embodied/sample_pipelines/ORB_VSLAM.html) | One of the popular real-time feature-based SLAM libraries able to perform Visual, Visual-Inertial and Multi-Map SLAM with monocular, stereo and RGB-D cameras, using pin-hole and fisheye lens models |
 
 **Autonomous Mobile Robot:**

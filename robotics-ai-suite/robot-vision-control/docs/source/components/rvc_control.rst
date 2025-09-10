@@ -6,7 +6,7 @@ Control
 
 .. _High Level Design:
 
-.. image:: /images/html/RVCControl.png
+.. image:: images/html/RVCControl.png
    :alt: High Level Design
 
 The above :ref:`High Level Design <High Level Design>` diagram shows in communication between 

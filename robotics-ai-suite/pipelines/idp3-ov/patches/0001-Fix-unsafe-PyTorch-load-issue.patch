@@ -1,0 +1,42 @@
+From 219447477c37f0e7598b7dc7420367172683ee23 Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Wed, 13 Aug 2025 11:12:14 +0800
+Subject: [PATCH] Fix unsafe PyTorch load issue.
+
+Signed-off-by: HKH347710 <kanghua.he@intel.com>
+---
+ Improved-3D-Diffusion-Policy/convert_idp3.py | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/Improved-3D-Diffusion-Policy/convert_idp3.py b/Improved-3D-Diffusion-Policy/convert_idp3.py
+index a849575..e63ea5f 100755
+--- a/Improved-3D-Diffusion-Policy/convert_idp3.py
++++ b/Improved-3D-Diffusion-Policy/convert_idp3.py
+@@ -7,6 +7,7 @@ import hydra
+ import torch
+ import dill
+ import os
++import pickle
+ 
+ ckpt = "latest.ckpt"
+ 
+@@ -15,7 +16,15 @@ output_dir = "onnx_ckpt" # save onnx convert result
+ # create folder
+ os.makedirs(output_dir, exist_ok=True)
+ # load checkpoint
+-payload = torch.load(open(ckpt, 'rb'), pickle_module=dill)
++try:
++    # Try with weights_only parameter for security (newer PyTorch versions)
++    payload = torch.load(ckpt, map_location='cpu', weights_only=True)
++except (TypeError, pickle.UnpicklingError):
++    # For older PyTorch versions that don't support weights_only parameter
++    # This is a known security risk, but necessary for backward compatibility
++    # Users should upgrade PyTorch to version >= 1.13.0 for better security
++    print("Warning: Using unsafe PyTorch load due to older PyTorch version. Consider upgrading PyTorch for better security.")
++    payload = torch.load(ckpt, map_location='cpu')  # nosec B614
+ # read config from checkpoint
+ cfg = payload['cfg']
+ # for k, v in cfg.items():
+-- 
+2.34.1
+

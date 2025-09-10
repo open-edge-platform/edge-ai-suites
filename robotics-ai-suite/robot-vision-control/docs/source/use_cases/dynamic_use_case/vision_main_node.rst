@@ -49,18 +49,18 @@ Here the step by step procedure:
 - Create the stl file to 3D print the object via `FreeCAD <https://www.freecad.org/>`_ or similar
 - Import the stl file via `Blender <https://www.blender.org/>`_
 
-.. image:: /images/html/importSTL.png
+.. image:: images/html/importSTL.png
    :alt: Import STL Blender menu
 
 
 - Edit so the metrics matches the Realsense Camera metrics: Units are in meters AND the center of the object is in the origin of blender and parallel to the axes where applicable. In short, perform scaling, rotating and translating operations so that dimension matches the realsense camera and the rototranslation from blender origin matches the desired outcome. For example, looking at the following image, the imported STL has been scaled down so the side of the cube is 5CM (0.05 meters), and translated down the Z axis of 0.025 centimeters, so the center of the cube is at 0,0,0. No rotation was needed as the cube was already parallel to the absolute reference system.
 
-.. image:: /images/html/editObject.png
+.. image:: images/html/editObject.png
    :alt: Transform object by scaling, rotating and translating with Blender
 
 - Export the object in WaveFront format (.obj) as shown in picture
 
-.. image:: /images/html/exportToObj.png
+.. image:: images/html/exportToObj.png
    :alt: Blender menu to export selected object to WaveFront format
 
 
@@ -69,7 +69,7 @@ Here the step by step procedure:
 Note: Important consideration: The RVC Pose Detector will align this object PCD file to the input cloud from realsense. This means calculating how much every points of the object pcd are translated and rotated on top of the realsense poincloud from the original file location. To have a consistent meaning, the object baricenter should be in the origin to simulate the center of the optical camera (where all the optical and depth information are translated to). in this way, the algorithm will determine how far and how rotated is the object from the camera optical lense. if the object is not centered in 0,0,0, this calculation would be wrong. See following picture:
 
 
-.. image:: /images/html/CenteredObject.png
+.. image:: images/html/CenteredObject.png
    :alt: Vertices of a 0,0,0 centered object
 
 
@@ -91,7 +91,7 @@ Verify that the PCD file has enough points using the pcl_viewer tool which comes
 As show in following image  
 
 
-.. image:: /images/html/pcl_viewer.png
+.. image:: images/html/pcl_viewer.png
    :alt: PCD visualizer
 
 rvc_use_case_binaries package creation

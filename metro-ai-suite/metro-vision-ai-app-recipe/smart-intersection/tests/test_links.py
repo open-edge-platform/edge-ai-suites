@@ -33,8 +33,11 @@ def extract_links_from_file(file_path):
 
 def should_skip_url(url):
   """Check if the URL should be skipped."""
-  skip_urls = ['http://localhost:8080', 'http://localhost:8555']
-  return url in skip_urls
+  # Skip all localhost URLs (both http and https)
+  parsed_url = urlparse(url)
+  if parsed_url.hostname in ['localhost', '127.0.0.1']:
+    return True
+  return False
 
 def prepend_project_github_url(file_path, url, repo_root):
   """Prepend PROJECT_GITHUB_URL to a relative URL."""
@@ -49,10 +52,8 @@ def prepend_project_github_url(file_path, url, repo_root):
   # Construct the full URL
   return f"{PROJECT_GITHUB_URL}/{relative_path.parent}/{url}"
 
-
-@pytest.mark.zephyr_id("NEX-T9364")
-def test_links_in_md_files():
-  """Test all links in markdown files for HTTP 200 response."""
+def links_in_md_files_functionality():
+  """Common function to test all links in markdown files for HTTP 200 response."""
   # Determine the directory one level above the current tests folder
   current_file = Path(__file__).resolve()
   repo_root = current_file.parent.parent
@@ -92,3 +93,15 @@ def test_links_in_md_files():
   if any_failed_urls:
     error_message = "Some links were inaccessible"
     assert False, error_message
+
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T10674")
+def test_links_in_md_files_kubernetes():
+  """Test all links in markdown files for HTTP 200 response."""
+  links_in_md_files_functionality()
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9364")
+def test_links_in_md_files_docker():
+  """Test all links in markdown files for HTTP 200 response."""
+  links_in_md_files_functionality()

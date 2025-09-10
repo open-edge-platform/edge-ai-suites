@@ -10,7 +10,7 @@ import pytest
 import json
 from tests.utils.docker_utils import get_all_services, get_running_services
 from tests.utils.ui_utils import waiter, driver
-from tests.utils.utils import run_command, check_url_access
+from tests.utils.utils import run_command, check_urls_access
 from .conftest import (
   wait_for_services_readiness,
   SCENESCAPE_URL,
@@ -22,7 +22,7 @@ from .conftest import (
 logger = logging.getLogger(__name__)
 
 DLSTREAMER_CONTAINER = "metro-vision-ai-app-recipe-dlstreamer-pipeline-server-1"
-URLS_TO_CHECK = [
+SERIVES_URLS = [
   SCENESCAPE_URL,
   GRAFANA_URL,
   INFLUX_DB_URL,
@@ -48,19 +48,15 @@ def get_running_dlstreamer_container():
   except docker.errors.NotFound:
     assert False, f"DLStreamer container '{DLSTREAMER_CONTAINER}' not found"
 
-def check_all_urls():
-  """Check access to all application URLs."""
-  for url in URLS_TO_CHECK:
-    check_url_access(url)
 
-
+@pytest.mark.docker
 @pytest.mark.zephyr_id("NEX-T9625")
-def test_components_access_with_no_dlstreamer():
+def test_components_access_with_no_dlstreamer_docker():
   """Test that all application components are accessible without DLStreamer."""
   container = get_running_dlstreamer_container()
 
   # Check initial access - all services should be running
-  check_all_urls()
+  check_urls_access(SERIVES_URLS)
 
   # Stop the container
   container.stop()
@@ -74,7 +70,7 @@ def test_components_access_with_no_dlstreamer():
     assert False, f"Container failed to stop: {e}"
 
   # Check URL access after stopping the container
-  check_all_urls()
+  check_urls_access(SERIVES_URLS)
 
   # Start the container
   container.start()
@@ -82,14 +78,14 @@ def test_components_access_with_no_dlstreamer():
   # Wait for the container to start
   assert wait_for_container_to_start(container, timeout=30), "Container did not start - next tests may fail"
 
-
+@pytest.mark.docker
 @pytest.mark.zephyr_id("NEX-T9626")
-def test_components_access_after_dlstreamer_restart():
+def test_components_access_after_dlstreamer_restart_docker():
   """Test that all application components are accessible after DLStreamer container restart."""
   container = get_running_dlstreamer_container()
 
   # Check initial access - all services should be running
-  check_all_urls()
+  check_urls_access(SERIVES_URLS)
 
   # Restart the container
   container.restart(timeout=30)
@@ -98,18 +94,20 @@ def test_components_access_after_dlstreamer_restart():
   assert wait_for_container_to_start(container, timeout=30), "Container did not start after restart"
 
   # Check URL access after restart
-  check_all_urls()
+  check_urls_access(SERIVES_URLS)
 
 
+@pytest.mark.docker
 @pytest.mark.zephyr_id("NEX-T9366")
-def test_docker_build_and_deployment():
+def test_docker_build_and_deployment_docker():
   """Test that all docker-compose services are running after build and deploy."""
   running = get_running_services()
   expected = get_all_services()
   assert expected == running, f"Not all services are running. Expected: {expected}, Running: {running}"
 
+@pytest.mark.docker
 @pytest.mark.zephyr_id("NEX-T9376")
-def test_docker_application_restart():
+def test_docker_application_restart_docker():
   """Test that all application components are accessible after Docker restart."""
   # Teardown: stop and remove containers
   logger.info("Tearing down Docker containers...")
@@ -123,7 +121,6 @@ def test_docker_application_restart():
   logger.info("Docker containers deployed.")
 
   # Wait for services to be ready
-  services_urls = [SCENESCAPE_URL, GRAFANA_URL, INFLUX_DB_URL, NODE_RED_URL]
-  wait_for_services_readiness(services_urls)
+  wait_for_services_readiness(SERIVES_URLS)
 
-  check_all_urls()
+  check_urls_access(SERIVES_URLS)

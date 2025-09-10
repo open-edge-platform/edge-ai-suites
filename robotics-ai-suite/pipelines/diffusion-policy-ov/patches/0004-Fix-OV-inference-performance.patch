@@ -1,0 +1,157 @@
+From c2d198ed932ee0f555cdde94929bba1aa31c035c Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Wed, 23 Apr 2025 13:50:42 +0800
+Subject: [PATCH 4/5] Fix OV inference performance.
+
+Signed-off-by: HKH347710 <kanghua.he@intel.com>
+---
+ diffusion_policy/env_runner/pusht_keypoints_runner.py     | 4 +++-
+ .../policy/diffusion_transformer_hybrid_image_policy.py   | 8 ++++++--
+ .../policy/diffusion_transformer_lowdim_policy.py         | 4 +++-
+ .../policy/diffusion_unet_hybrid_image_policy.py          | 8 ++++++--
+ diffusion_policy/policy/diffusion_unet_lowdim_policy.py   | 4 +++-
+ 5 files changed, 21 insertions(+), 7 deletions(-)
+
+diff --git a/diffusion_policy/env_runner/pusht_keypoints_runner.py b/diffusion_policy/env_runner/pusht_keypoints_runner.py
+index d2de1f2..f115a1f 100644
+--- a/diffusion_policy/env_runner/pusht_keypoints_runner.py
++++ b/diffusion_policy/env_runner/pusht_keypoints_runner.py
+@@ -49,7 +49,7 @@ class PushTKeypointsRunner(BaseLowdimRunner):
+         n_train = 0
+         n_test = 1
+         n_envs = 1
+-        test_start_seed = 4300000
++        # test_start_seed = 4300000
+         print(f"n_train : {n_train}; n_test : {n_test} test_start_seed : {test_start_seed} ")
+ 
+         # handle latency step
+@@ -281,6 +281,7 @@ class PushTKeypointsRunner(BaseLowdimRunner):
+             max_reward = np.max(all_rewards[i])
+             max_rewards[prefix].append(max_reward)
+             log_data[prefix+f'sim_max_reward_{seed}'] = max_reward
++            print(f'sim_max_reward_{seed} : {max_reward}')
+ 
+             # visualize sim
+             video_path = all_video_paths[i]
+@@ -293,5 +294,6 @@ class PushTKeypointsRunner(BaseLowdimRunner):
+             name = prefix+'mean_score'
+             value = np.mean(value)
+             log_data[name] = value
++            print(f'{name} : {value}')
+ 
+         return log_data
+diff --git a/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py b/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py
+index 329f0e2..11e0433 100644
+--- a/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py
++++ b/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py
+@@ -23,7 +23,9 @@ import openvino as ov
+ import numpy as np
+ 
+ global image_t_policy_ov_model
++image_t_policy_ov_model = None
+ global image_t_encoder_ov_model
++image_t_encoder_ov_model = None
+ 
+ def get_ov_model(model_path, device='CPU'):
+     core = ov.Core()
+@@ -206,7 +208,8 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+             **kwargs
+             ):
+         global image_t_policy_ov_model
+-        image_t_policy_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_t748_unet_onepass.xml', device='GPU')
++        if image_t_policy_ov_model == None:
++            image_t_policy_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_t748_unet_onepass.xml', device='GPU')
+         # model = self.model
+         scheduler = self.noise_scheduler
+ 
+@@ -290,7 +293,8 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+         dtype = self.dtype
+ 
+         global image_t_encoder_ov_model
+-        image_t_encoder_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_t748_obs_encoder_onepass.xml', device='GPU')
++        if image_t_encoder_ov_model == None:
++            image_t_encoder_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_t748_obs_encoder_onepass.xml', device='GPU')
+ 
+         # handle different ways of passing observation
+         cond = None
+diff --git a/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py b/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py
+index ceeaa9f..03bdf55 100644
+--- a/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py
++++ b/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py
+@@ -15,6 +15,7 @@ import time
+ import openvino as ov
+ 
+ global lowdim_t_policy_ov_model
++lowdim_t_policy_ov_model = None
+ 
+ def get_ov_model(model_path, device='CPU'):
+     core = ov.Core()
+@@ -75,7 +76,8 @@ class DiffusionTransformerLowdimPolicy(BaseLowdimPolicy):
+             **kwargs
+             ):
+         global lowdim_t_policy_ov_model
+-        lowdim_t_policy_ov_model = get_ov_model('/home/intel/ov_models/pushT/lowdim_t967_unet.xml', device='GPU')
++        if lowdim_t_policy_ov_model == None:
++            lowdim_t_policy_ov_model = get_ov_model('/home/intel/ov_models/pushT/lowdim_t967_unet.xml', device='GPU')
+         #model = self.model
+         scheduler = self.noise_scheduler
+ 
+diff --git a/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py b/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
+index 79bab9c..90c16f8 100644
+--- a/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
++++ b/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
+@@ -22,7 +22,9 @@ import time
+ import openvino as ov
+ 
+ global image_c_policy_ov_model
++image_c_policy_ov_model = None
+ global image_c_encoder_ov_model
++image_c_encoder_ov_model = None
+ 
+ def get_ov_model(model_path, device='CPU'):
+     core = ov.Core()
+@@ -194,7 +196,8 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+             **kwargs
+             ):
+         global image_c_policy_ov_model
+-        image_c_policy_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_c884_unet_onepass.xml', device='GPU')
++        if image_c_policy_ov_model == None:
++            image_c_policy_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_c884_unet_onepass.xml', device='GPU')
+         # model = self.model
+         scheduler = self.noise_scheduler
+ 
+@@ -271,7 +274,8 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+         dtype = self.dtype
+ 
+         global image_c_encoder_ov_model
+-        image_c_encoder_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_c884_obs_encoder_onepass.xml', device='GPU')
++        if image_c_encoder_ov_model == None:
++            image_c_encoder_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_c884_obs_encoder_onepass.xml', device='GPU')
+ 
+         # input = {
+         #                'value.1': obs_dict['agent_pos'],
+diff --git a/diffusion_policy/policy/diffusion_unet_lowdim_policy.py b/diffusion_policy/policy/diffusion_unet_lowdim_policy.py
+index 491861f..612786d 100644
+--- a/diffusion_policy/policy/diffusion_unet_lowdim_policy.py
++++ b/diffusion_policy/policy/diffusion_unet_lowdim_policy.py
+@@ -14,6 +14,7 @@ import time
+ import openvino as ov
+ 
+ global lowdim_c_policy_ov_model
++lowdim_c_policy_ov_model = None
+ 
+ def get_ov_model(model_path, device='CPU'):
+     core = ov.Core()
+@@ -79,7 +80,8 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
+             **kwargs
+             ):
+         global lowdim_c_policy_ov_model
+-        lowdim_c_policy_ov_model = get_ov_model('/home/intel/ov_models/pushT/lowdim_c969_unet.xml', device='GPU')
++        if lowdim_c_policy_ov_model == None:
++            lowdim_c_policy_ov_model = get_ov_model('/home/intel/ov_models/pushT/lowdim_c969_unet.xml', device='GPU')
+         # model = self.model
+         scheduler = self.noise_scheduler
+ 
+-- 
+2.34.1
+

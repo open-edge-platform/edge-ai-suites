@@ -30,7 +30,7 @@ If you cannot find the firmwares in ``/lib/firmware/i915/experimental/``, instal
 
 .. code-block:: bash
 
-   $ sudo apt install -y linux-firmware=20220329.git681281e4-0ubuntu3.36-intel-iotg.eci5
+   $ sudo apt install -y linux-firmware=20220329.git681281e4-0ubuntu3.36-intel-iotg.eci8
 
 You can double check if the correct linux-firmware is in use:
 
@@ -43,7 +43,7 @@ Expected result:
 .. code-block:: console
 
   linux-firmware:
-    Installed: 20220329.git681281e4-0ubuntu3.36-intel-iotg.eci5
+    Installed: 20220329.git681281e4-0ubuntu3.36-intel-iotg.eci8
 
 3. Install the real-time |Linux| kernel. For details, see :ref:`LinuxBSP <linuxbsp>`.
 
@@ -66,13 +66,20 @@ Expected result:
     # Modify default cmdline parameters to enable cstate/pstate
     $ sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
     # Modify default cmdline parameter to affinity irq to core 0-9
-    $ sudo sed -i 's/irqaffinity=0/irqaffinity=0-9/g' /etc/grub.d/10_eci_experimental
+    $ sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' /etc/grub.d/10_eci_experimental
     # Modify default cmdline parameter to isolate cpus to core 10-13
-    $ sudo sed -i 's/isolcpus=1,3 rcu_nocbs=1,3 nohz_full=1,3/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
+    $ sudo sed -i 's/isolcpus=${isolcpus} rcu_nocbs=${isolcpus} nohz_full=${isolcpus}/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
     $ sudo update-grub
-    $ sudo reboot
 
-4. Select `[Experimental] ECI Ubuntu` booting:
+The following command line parameters are used for real-time optimization. You can modify them according to your requirements:
+
+- ``isolcpus``: Isolates specified CPU cores from the generic scheduler, dedicating them to real-time tasks.
+- ``rcu_nocbs``: Prevents specified CPU cores from handling RCU (Real-Copy-Update) callback, reducing latency.
+- ``nohz_full``: Enables full dynamic ticks on specified CPU cores, reducing timer interrupts.
+- ``irqaffinity``: Directs all hardware interrupts to specified CPU cores, keeping them free for real-time tasks.
+
+
+4. Select `[Experimental] ECI Ubuntu` booting after rebooting.
 
 .. image:: assets/images/eci_grub.png
    :width: 65%
@@ -87,12 +94,103 @@ Expected result:
 Real-time Runtime Optimization
 ================================
 
+To achieve real-time performance on a target system, specific runtime configurations and optimizations are recommended. This section provides a foundation for enabling real-time capable workloads.
+
+.. image:: ../../assets/images/arl_rt_setup.png
+   :align: center
+
+Use Cache Allocation Technology
+:::::::::::::::::::::::::::::::::
+
+Intel® Cache Allocation Technology (CAT) enables partitioning of caches at various levels within the caching hierarchy. providing a straightforward method to enhance temporal isolation between real-time and best-effort workloads.
+
+This is an example configuration should be tailored to your specific use case and processor. To determine cache topology, including size and number of ways supported by a processor, use the CPUID leaf "Deterministic Cache Parameters Leaf - 0x4". Linux utilities link ``lstopo`` are also useful for obtaining an overview of a processor's cache topology.
+
+For more information about CAT, refer to the following resources:
+
+ - Public Intel® Time Coordinated Computing (TCC) User Guide - `RDC #[831067] <https://cdrdv2.intel.com/v1/dl/getContent/831067>`_
+ - Intel® Resource Director Technology (Intel® RDT) Architecture Specification - `RDC #[789566] <https://cdrdv2.intel.com/v1/dl/getContent/789566>`_
+ - Intel® 64 and IA-32 Architectures Software Developer’s Manual - `RDC#[671200] <https://cdrdv2.intel.com/v1/dl/getContent/671200>`_
+
+Below is an example script to partition the Last Level Cache (LLC) and L2 Cache, assigning an exclusive portion to real-time tasks. Ensure you have installed the Linux ``msr-tools`` to test it according to your configuration:
+ 
+(e.g. core 13 as isolate core)
+
+ .. code-block:: bash
+
+    # ! /bin/sh
+    # define LLC Core Masks
+    wrmsr 0xc90 0x3f          # best effort mask
+    wrmsr 0xc91 0xfc0         # real-time mask
+
+    # define E-core L2 Core Mask
+    wrmsr -p10 0xd10 0xff     # best effort mask
+    wrmsr -p11 0xd10 0xff     # best effort mask
+    wrmsr -p12 0xd10 0xff     # best effort mask
+    wrmsr -p13 0xd11 0xff00   # real-time mask
+
+    # assign the masks to the cores
+    # This has to match with the core selected for the real-time task
+    wrmsr -p13 0xc8f 0x100000000
+
+Use Dynamic Voltage and Frequency
+:::::::::::::::::::::::::::::::::::
+
+Dynamic Voltage and Frequency Scaling (DVFS) features, such as Intel® Speed Step, Speed Shift, and Turbo Boost Technology, allow processors to adjust voltage and frequency within P-States to balance power efficiency and performance. Speed Step and Speed Shift manage these adjustments, while Turbo Boost temporarily exceeds the highest P-State for additional performance during demanding task.
+
+To enhance single-thread performance, boost the frequency of the real-time core within the turbo frequency range. For real-time requirements, you can lock the core frequency during runtime using HWP MSRs or the ``intel_pstate`` driver in Linux. Locking the core frequency of the real-time application to a turbo frequency and limiting the maximum frequency of best-effort (BE) cores to the base frequency, as guided by the TCC User Guide, results in reduced execution time jitter and significantly lower execution time.
+
+Boost the frequency of the real-time core to a value within the turbo frequency range to leverage higher single-thread performance. As real-time requirements, you have the option to lock core frequency during runtime using the HWP MSRs or the ``intel_pstate`` driver under Linux.
+
+For more information on accessing HWP MSRs directly instead of using the ``sysfs`` entries of the ``intel_pstate`` driver, refer to the `[TCC User Guide] <https://cdrdv2.intel.com/v1/dl/getContent/831067>`_ and the Intel® 64 and the Intel® 64 and IA-32 Architectures Software Developer’s Manual Vol3 section "Power and Thermal Management-Hardware Controlled Performance States - `RDC #[671200] <https://cdrdv2.intel.com/v1/dl/getContent/671200>`_.
+
+.. attention::
+   Setting even just a few cores to a higher, fixed frequency does not come without a cost. Due to higher internal frequency, voltages, and subsequent higher temperature and power, such settings will negatively impact the reliability expectations of the CPU and should be used with careful consideration.
+
+Below is an example to boost the real-time core to 3GHz, with the Energy Performance Preference (EPP) set to performance to ensure Quality of Service (QoS) in case of power limit throttling:
+
+(e.g. core 13 as isolate core on Intel® Core™ Ultra Processors 255H)
+
+- (Option 1): Using the ``sysfs`` entries of the ``intel_pstate`` driver
+
+ .. code-block:: bash
+
+    # ! /bin/sh
+    # Set the min and max frequencies to specific turbo frequency
+    echo performance >  /sys/devices/system/cpu/cpu13/cpufreq/scaling_governor
+    echo 3000000 >  /sys/devices/system/cpu/cpu13/cpufreq/scaling_max_freq
+    echo 3000000 >  /sys/devices/system/cpu/cpu13/cpufreq/scaling_min_freq
+    
+- (Option 2): Using ``msr-tools`` to modify ``IA32_HWP_REQUEST(0x774)`` for setting specific core frequency.
+
+**Note:** For details on ``IA32_HWP_REQUEST``, please refer to the Intel® 64 and the Intel® 64 and IA-32 Architectures Software Developer’s Manual Vol3 section "Power and Thermal Management-Hardware Controlled Performance States - `RDC #[671200] <https://cdrdv2.intel.com/v1/dl/getContent/671200>`_.
+
+.. code-block:: bash
+
+    # ! /bin/sh
+    wrmsr 0x774 -p 0 0x80005201
+    wrmsr 0x774 -p 1 0x80005201
+    wrmsr 0x774 -p 2 0x80005201
+    wrmsr 0x774 -p 3 0x80005201
+    wrmsr 0x774 -p 4 0x80005201
+    wrmsr 0x774 -p 5 0x80005201
+    wrmsr 0x774 -p 6 0x80003e01
+    wrmsr 0x774 -p 7 0x80003e01
+    wrmsr 0x774 -p 8 0x80003e01
+    wrmsr 0x774 -p 9 0x80003e01
+    wrmsr 0x774 -p 10 0x80003e01
+    wrmsr 0x774 -p 11 0x80003e01
+    wrmsr 0x774 -p 12 0x80003e01
+    wrmsr 0x774 -p 13 0x00002a2a
+
 Per-core C-State Disable
-:::::::::::::::::::::::::
+:::::::::::::::::::::::::::
 
 Refer to :ref:`OS Setup <OS_Setup>` for BIOS optimization and |Linux| boot parameter optimization on real-time performance, Intel C-state and P-state are enabled. It brings more power consumption to improve on GPU AI performance, but C-state can introduce jitter due to the varying times required to transition between states in isolate cores. **Per-core C-state Disable** helps minimize this jitter, providing a more stable environment for real-time task.
 
-Follow with below command to disable C-state in isolate core(e.g. core 13 as isolate core)
+Follow with below command to disable C-state in isolate core:
+
+(e.g. core 13 as isolate core)
 
 .. code-block:: bash
 
@@ -127,6 +225,16 @@ Timer migration can be disabled with the following command:
 .. code-block:: bash
 
     $ echo 0 > /proc/sys/kernel/timer_migration
+
+Disable Swap
+::::::::::::::
+
+Accessing anonymous memory that has been swapped to disk results in a major page fault. Handling page faults can further increase latency and unpredictability, which is undesirable in real-time tasks. 
+Swap can be disabled with following command:
+
+.. code-block:: bash
+
+   $ swapoff -a
 
 Verify Benchmark Performance
 ===============================
