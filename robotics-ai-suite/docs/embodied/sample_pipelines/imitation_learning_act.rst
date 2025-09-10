@@ -14,7 +14,7 @@ In this tutorial, we will introduce how to setup ACT pipeline.
 Source Code
 ===========
 
-The source code of this component can be found here: `ACT-Sample <https://github.com/open-edge-platform/edge-ai-suites/robotics-ai-suite/pipelines/act-sample>`_
+The source code of this component can be found here: `ACT-Sample <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/act-sample>`_
 
 Prerequisites
 =============

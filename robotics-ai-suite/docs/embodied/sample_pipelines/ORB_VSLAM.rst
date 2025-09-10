@@ -25,7 +25,7 @@ ORB-SLAM3 is as robust as the best systems available in the literature, and sign
 Source Code
 ===========
 
-The source code of this component can be found here: `ORB-SLAM3-Sample <https://github.com/open-edge-platform/edge-ai-suites/robotics-ai-suite/pipelines/orb-slam3-sample>`_
+The source code of this component can be found here: `ORB-SLAM3-Sample <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/orb-slam3-sample>`_
 
 Prerequisites
 =============
