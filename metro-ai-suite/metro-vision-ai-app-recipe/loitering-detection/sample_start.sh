@@ -1,5 +1,5 @@
 #!/bin/bash
-curl http://localhost:8080/pipelines/user_defined_pipelines/object_tracking_1 -X POST -H 'Content-Type: application/json' -d '
+curl -k https://localhost/api/pipelines/user_defined_pipelines/object_tracking_1 -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/VIRAT_S_000101.mp4",
@@ -21,7 +21,7 @@ curl http://localhost:8080/pipelines/user_defined_pipelines/object_tracking_1 -X
     }
 }'
 
-curl http://localhost:8080/pipelines/user_defined_pipelines/object_tracking_2 -X POST -H 'Content-Type: application/json' -d '
+curl -k https://localhost/api/pipelines/user_defined_pipelines/object_tracking_2 -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/VIRAT_S_000102.mp4",
@@ -43,7 +43,7 @@ curl http://localhost:8080/pipelines/user_defined_pipelines/object_tracking_2 -X
     }
 }'
 
-curl http://localhost:8080/pipelines/user_defined_pipelines/object_tracking_3 -X POST -H 'Content-Type: application/json' -d '
+curl -k https://localhost/api/pipelines/user_defined_pipelines/object_tracking_3 -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/VIRAT_S_000103.mp4",
@@ -65,7 +65,7 @@ curl http://localhost:8080/pipelines/user_defined_pipelines/object_tracking_3 -X
     }
 }'
 
-curl http://localhost:8080/pipelines/user_defined_pipelines/object_tracking_4 -X POST -H 'Content-Type: application/json' -d '
+curl -k https://localhost/api/pipelines/user_defined_pipelines/object_tracking_4 -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/VIRAT_S_000104.mp4",

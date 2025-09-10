@@ -1,0 +1,108 @@
+From 226da417bf7e012dabb1094e24b8ff7e14f69b3e Mon Sep 17 00:00:00 2001
+From: intel <intel@MTL-CRB.sh.intel.com>
+Date: Thu, 17 Apr 2025 15:35:04 +0800
+Subject: [PATCH 3/5] Add core affinity.
+
+Signed-off-by: intel <intel@MTL-CRB.sh.intel.com>
+---
+ .../policy/diffusion_transformer_hybrid_image_policy.py    | 6 +++---
+ .../policy/diffusion_transformer_lowdim_policy.py          | 2 +-
+ .../policy/diffusion_unet_hybrid_image_policy.py           | 6 +++---
+ diffusion_policy/policy/diffusion_unet_lowdim_policy.py    | 4 ++--
+ eval.py                                                    | 7 ++++++-
+ 5 files changed, 15 insertions(+), 10 deletions(-)
+
+diff --git a/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py b/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py
+index aa420d8..329f0e2 100644
+--- a/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py
++++ b/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py
+@@ -239,9 +239,9 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+                         # 'cond_mask': condition_mask.numpy(),
+                     }
+             # print('model input:')
+-            # print(trajectory.shape)
+-            # print(t)
+-            # print(cond.shape)
++            # print(trajectory.shape) # torch.Size([1, 10, 2])
++            # print(t)                # tensor(99)
++            # print(cond.shape)       # (1, 2, 66)
+             # print(condition_data.shape)
+             # print(condition_mask.shape)
+ 
+diff --git a/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py b/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py
+index 4566a2a..ceeaa9f 100644
+--- a/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py
++++ b/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py
+@@ -105,7 +105,7 @@ class DiffusionTransformerLowdimPolicy(BaseLowdimPolicy):
+                         # 'cond_mask': condition_mask.numpy(),
+                     }
+             #print('model input:')
+-            #print(trajectory.shape)
++            #print(trajectory.shape) # torch.Size([1, 10, 2])
+             #print(condition_data.shape)
+             #print(condition_mask.shape)
+             #print(t)
+diff --git a/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py b/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
+index 5820a46..79bab9c 100644
+--- a/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
++++ b/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
+@@ -221,10 +221,10 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+                         'global_cond': global_cond,
+                     }
+             # print("policy input: ")
+-            # print(trajectory.shape)
+-            # print(t)
++            # print(trajectory.shape)  # torch.Size([1, 16, 2])
++            # print(t)                 # tensor(99)
+             # print(local_cond)
+-            # print(global_cond)
++            # print(global_cond.shape) # (1, 132)
+             # model_output = model(trajectory, t,
+             #     local_cond=local_cond, global_cond=global_cond)
+             model_output = image_c_policy_ov_model(input)[0]
+diff --git a/diffusion_policy/policy/diffusion_unet_lowdim_policy.py b/diffusion_policy/policy/diffusion_unet_lowdim_policy.py
+index e015a48..491861f 100644
+--- a/diffusion_policy/policy/diffusion_unet_lowdim_policy.py
++++ b/diffusion_policy/policy/diffusion_unet_lowdim_policy.py
+@@ -106,8 +106,8 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
+                         # 'local_cond':local_cond,
+                         # 'global_cond':global_cond,
+                     }
+-            # print("model input: ")
+-            # print(trajectory.shape)
++            #print("model input: ")
++            #print(trajectory.shape) # torch.Size([1, 16, 22])
+             # print(t)
+             # print(local_cond)
+             # print(global_cond)
+diff --git a/eval.py b/eval.py
+index 559567d..10fc9e0 100644
+--- a/eval.py
++++ b/eval.py
+@@ -20,6 +20,7 @@ from diffusion_policy.workspace.base_workspace import BaseWorkspace
+ 
+ from omegaconf import OmegaConf
+ import numpy as np
++import psutil
+ 
+ @click.command()
+ @click.option('-c', '--checkpoint', required=True)
+@@ -27,10 +28,14 @@ import numpy as np
+ @click.option('-d', '--device', default='cuda:0')
+ @click.option('-s', '--seed', default='4300000')
+ def main(checkpoint, output_dir, device, seed):
++    # Core Affinity
++    p = psutil.Process()
++    p.cpu_affinity([0, 2, 3, 4, 5])
++
+     # if os.path.exists(output_dir):
+     #     click.confirm(f"Output path {output_dir} already exists! Overwrite?", abort=True)
+     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
+-    
++
+     # load checkpoint
+     payload = torch.load(open(checkpoint, 'rb'), pickle_module=dill)
+     cfg = payload['cfg']
+-- 
+2.34.1
+

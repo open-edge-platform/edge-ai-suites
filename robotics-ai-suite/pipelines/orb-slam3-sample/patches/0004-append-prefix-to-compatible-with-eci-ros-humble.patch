@@ -1,0 +1,29 @@
+From 2bdacc943ccd4c78a0c8bc249470da0b663cb82a Mon Sep 17 00:00:00 2001
+From: "Zhang, Wei E" <wei.e.zhang@intel.com>
+Date: Fri, 15 Aug 2025 13:57:12 +0800
+Subject: [PATCH] append prefix to compatible with eci-ros-humble
+
+Signed-off-by: Zhang, Wei E <wei.e.zhang@intel.com>
+---
+ debian/rules | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/debian/rules b/debian/rules
+index 9b52513..d4d33ef 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -26,7 +26,10 @@ override_dh_auto_configure:
+ 	dh_auto_configure \
+ 		-O--sourcedir=$(CURDIR)/Thirdparty/Sophus/ \
+ 		--builddir=$(BUILD_DIR_SOPHUS)
+-	dh_auto_configure -- -DLINK_LIBRARY_STATIC=1
++	dh_auto_configure -- -DLINK_LIBRARY_STATIC=1 \
++		-DCMAKE_INSTALL_PREFIX=/opt/ros/humble \
++    -DAMENT_PREFIX_PATH=/opt/ros/humble \
++    -DCMAKE_PREFIX_PATH=/opt/ros/humble
+ 
+ # Override the default build step to include custom third-party library builds
+ override_dh_auto_build:
+-- 
+2.34.1
+

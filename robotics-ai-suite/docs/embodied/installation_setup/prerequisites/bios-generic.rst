@@ -33,6 +33,9 @@
          * - C States
            - Enabled
            - Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control
+         * - HWP Autonomous EPP Grouping
+           - Disabled
+           - Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control
          * - RC6 (Render Standby)
            - Disabled
            - Intel Advanced Menu ⟶ Power & Performance ⟶ GT - Power Management Control
@@ -102,6 +105,9 @@
            - Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control
          * - C States
            - Enabled
+           - Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control
+         * - HWP Autonomous EPP Grouping
+           - Disabled
            - Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control
          * - RC6 (Render Standby)
            - Enabled

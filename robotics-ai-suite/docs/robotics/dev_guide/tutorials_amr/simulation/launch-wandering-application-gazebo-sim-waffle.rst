@@ -17,9 +17,9 @@ Run the Sample Application
 --------------------------
 
 
-#. If your system has an |intel| GPU, follow the steps in the |GSG Robot| to
-   enable the GPU for simulation. This step improves Gazebo* simulation
-   performance.
+#. If your system has an |intel| GPU, follow the steps in the
+   :doc:`../../../gsg_robot/index` to enable the GPU for
+   simulation. This step improves Gazebo* simulation performance.
 
 
 #. Install the Wandering Gazebo tutorial:

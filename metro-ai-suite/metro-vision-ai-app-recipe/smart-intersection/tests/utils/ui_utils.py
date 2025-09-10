@@ -26,4 +26,4 @@ def driver():
 
 @pytest.fixture
 def waiter(driver):
-    return ElementWaiter(driver)
+  return ElementWaiter(driver)

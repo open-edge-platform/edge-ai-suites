@@ -1,0 +1,100 @@
+From 71acb479acfaa0e9d1e9221425a52811dae8017d Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Wed, 13 Aug 2025 10:53:22 +0800
+Subject: [PATCH] Fix unsafe PyTorch load issue.
+
+Signed-off-by: HKH347710 <kanghua.he@intel.com>
+---
+ ov_convert/convert_image_cnn.py          | 10 +++++++++-
+ ov_convert/convert_image_transformer.py  | 10 +++++++++-
+ ov_convert/convert_lowdim_cnn.py         | 10 +++++++++-
+ ov_convert/convert_lowdim_transformer.py | 10 +++++++++-
+ 4 files changed, 36 insertions(+), 4 deletions(-)
+
+diff --git a/ov_convert/convert_image_cnn.py b/ov_convert/convert_image_cnn.py
+index b759fcc..9154b0d 100644
+--- a/ov_convert/convert_image_cnn.py
++++ b/ov_convert/convert_image_cnn.py
+@@ -95,7 +95,15 @@ if __name__ == "__main__":
+     # create folder
+     os.makedirs(output_dir, exist_ok=True)
+     # load checkpoint
+-    payload = torch.load(open(ckpt, 'rb'), pickle_module=dill)
++    try:
++        # Try with weights_only parameter for security (newer PyTorch versions)
++        payload = torch.load(ckpt, map_location='cpu', weights_only=True)
++    except TypeError:
++        # For older PyTorch versions that don't support weights_only parameter
++        # This is a known security risk, but necessary for backward compatibility
++        # Users should upgrade PyTorch to version >= 1.13.0 for better security
++        print("Warning: Using unsafe PyTorch load due to older PyTorch version. Consider upgrading PyTorch for better security.")
++        payload = torch.load(ckpt, map_location='cpu')  # nosec B614
+     # read config from checkpoint
+     cfg = payload['cfg']
+     # for k, v in cfg.items():
+diff --git a/ov_convert/convert_image_transformer.py b/ov_convert/convert_image_transformer.py
+index 08f1ea8..6060487 100644
+--- a/ov_convert/convert_image_transformer.py
++++ b/ov_convert/convert_image_transformer.py
+@@ -89,7 +89,15 @@ if __name__ == "__main__":
+     # create folder
+     os.makedirs(output_dir, exist_ok=True)
+     # load checkpoint
+-    payload = torch.load(open(ckpt, 'rb'), pickle_module=dill)
++    try:
++        # Try with weights_only parameter for security (newer PyTorch versions)
++        payload = torch.load(ckpt, map_location='cpu', weights_only=True)
++    except TypeError:
++        # For older PyTorch versions that don't support weights_only parameter
++        # This is a known security risk, but necessary for backward compatibility
++        # Users should upgrade PyTorch to version >= 1.13.0 for better security
++        print("Warning: Using unsafe PyTorch load due to older PyTorch version. Consider upgrading PyTorch for better security.")
++        payload = torch.load(ckpt, map_location='cpu')  # nosec B614
+     # read config from checkpoint
+     cfg = payload['cfg']
+     # for k, v in cfg.items():
+diff --git a/ov_convert/convert_lowdim_cnn.py b/ov_convert/convert_lowdim_cnn.py
+index a619935..8b61605 100755
+--- a/ov_convert/convert_lowdim_cnn.py
++++ b/ov_convert/convert_lowdim_cnn.py
+@@ -75,7 +75,15 @@ if __name__ == "__main__":
+     # create folder
+     os.makedirs(output_dir, exist_ok=True)
+     # load checkpoint
+-    payload = torch.load(open(ckpt, 'rb'), pickle_module=dill)
++    try:
++        # Try with weights_only parameter for security (newer PyTorch versions)
++        payload = torch.load(ckpt, map_location='cpu', weights_only=True)
++    except TypeError:
++        # For older PyTorch versions that don't support weights_only parameter
++        # This is a known security risk, but necessary for backward compatibility
++        # Users should upgrade PyTorch to version >= 1.13.0 for better security
++        print("Warning: Using unsafe PyTorch load due to older PyTorch version. Consider upgrading PyTorch for better security.")
++        payload = torch.load(ckpt, map_location='cpu')  # nosec B614
+     # read config from checkpoint
+     cfg = payload['cfg']
+     # for k, v in cfg.items():
+diff --git a/ov_convert/convert_lowdim_transformer.py b/ov_convert/convert_lowdim_transformer.py
+index daa0496..821a4d2 100755
+--- a/ov_convert/convert_lowdim_transformer.py
++++ b/ov_convert/convert_lowdim_transformer.py
+@@ -72,7 +72,15 @@ if __name__ == "__main__":
+     # create folder
+     os.makedirs(output_dir, exist_ok=True)
+     # load checkpoint
+-    payload = torch.load(open(ckpt, 'rb'), pickle_module=dill)
++    try:
++        # Try with weights_only parameter for security (newer PyTorch versions)
++        payload = torch.load(ckpt, map_location='cpu', weights_only=True)
++    except TypeError:
++        # For older PyTorch versions that don't support weights_only parameter
++        # This is a known security risk, but necessary for backward compatibility
++        # Users should upgrade PyTorch to version >= 1.13.0 for better security
++        print("Warning: Using unsafe PyTorch load due to older PyTorch version. Consider upgrading PyTorch for better security.")
++        payload = torch.load(ckpt, map_location='cpu')  # nosec B614
+     # read config from checkpoint
+     cfg = payload['cfg']
+     # for k, v in cfg.items():
+-- 
+2.34.1
+

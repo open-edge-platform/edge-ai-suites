@@ -8,7 +8,7 @@ function get_status() {
   interval=10
   start_time=$(date +%s)
 
-  status=$(curl -s --location -X GET "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/status" | grep state | awk ' { print $2 } ' | tr -d \")
+  status=$(curl -k -s --location -X GET "https://$DLSPS_NODE_IP/api/pipelines/status" | grep state | awk ' { print $2 } ' | tr -d \")
   if [[ "$status" != *"RUNNING"* ]]; then
       running=false
       echo -e "\nNo running pipelines"
@@ -19,14 +19,14 @@ function get_status() {
     echo -e "\n>>>>>Press Ctrl+C to exit..."
 
     while [ "$running" == true ]; do
-      status=$(curl -s --location -X GET "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/status" | grep state | awk ' { print $2 } ' | tr -d \")
+      status=$(curl -k -s --location -X GET "https://$DLSPS_NODE_IP/api/pipelines/status" | grep state | awk ' { print $2 } ' | tr -d \")
       if [[ "$status" != *"RUNNING"* ]]; then
         running=false
       else
       results_pipeline=()
       elapsed_time=$(($(date +%s) - $start_time))
       echo -e "\n>>>>>>>>>>>>>>> $elapsed_time seconds."
-      results=$(curl -s --location -X GET "http://$DLSPS_NODE_IP:$DLSPS_PORT/pipelines/status" | grep -A 2 -B 5 RUNNING | grep fps | awk -F': ' '{print $2}' | awk -F',' '{printf" %.2f ", $1}')
+      results=$(curl -k -s --location -X GET "https://$DLSPS_NODE_IP/api/pipelines/status" | grep -A 2 -B 5 RUNNING | grep fps | awk -F': ' '{print $2}' | awk -F',' '{printf" %.2f ", $1}')
       results_pipeline+=("$results")
       echo -e "pipelines fps: (${results_pipeline[@]})"
       sleep $interval

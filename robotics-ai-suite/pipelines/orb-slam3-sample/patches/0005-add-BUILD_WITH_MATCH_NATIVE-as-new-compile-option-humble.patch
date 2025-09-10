@@ -1,0 +1,115 @@
+From 2d8182a567702bf56c00a1bbe228baa0bebdb94e Mon Sep 17 00:00:00 2001
+From: kas User <kas@example.com>
+Date: Mon, 25 Aug 2025 07:00:58 +0000
+Subject: [PATCH] add BUILD_WITH_MATCH_NATIVE as new compile option
+
+Signed-off-by: Zhang, Wei E <wei.e.zhang@intel.com>
+---
+ CMakeLists.txt                  | 16 ++++++++++++----
+ Thirdparty/DBoW2/CMakeLists.txt |  9 +++++++--
+ Thirdparty/g2o/CMakeLists.txt   | 11 +++++++----
+ debian/rules                    | 11 +++++++----
+ 4 files changed, 33 insertions(+), 14 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index aeba869..0d7405c 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -10,10 +10,18 @@ ENDIF()
+ 
+ MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
+ 
+-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall   -O3")
+-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3")
+-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
+-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
++option (BUILD_WITH_MARCH_NATIVE "Build with \"-march native\"" OFF)
++if(BUILD_WITH_MARCH_NATIVE)
++  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall   -O3 -march=native")
++  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3 -march=native")
++else()
++  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall   -O3")
++  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3")
++endif()
++
++
++set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
++set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+ 
+ # Check C++11 or C++0x support
+ include(CheckCXXCompilerFlag)
+diff --git a/Thirdparty/DBoW2/CMakeLists.txt b/Thirdparty/DBoW2/CMakeLists.txt
+index 83a2c07..fa15e04 100644
+--- a/Thirdparty/DBoW2/CMakeLists.txt
++++ b/Thirdparty/DBoW2/CMakeLists.txt
+@@ -21,8 +21,13 @@ if(NOT CMAKE_BUILD_TYPE)
+   set(CMAKE_BUILD_TYPE Release)
+ endif()
+ 
+-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native -fPIC")
+-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -O3 -march=native -fPIC")
++if(BUILD_WITH_MARCH_NATIVE)
++  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native -fPIC")
++  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -O3 -march=native -fPIC")
++else()
++  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -fPIC")
++  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -O3 -fPIC")
++endif()
+ 
+ set(HDRS_DBOW2
+   DBoW2/BowVector.h
+diff --git a/Thirdparty/g2o/CMakeLists.txt b/Thirdparty/g2o/CMakeLists.txt
+index 4f3179c..b3a42f4 100644
+--- a/Thirdparty/g2o/CMakeLists.txt
++++ b/Thirdparty/g2o/CMakeLists.txt
+@@ -72,10 +72,13 @@ IF(OPENMP_FOUND AND G2O_USE_OPENMP)
+ ENDIF(OPENMP_FOUND AND G2O_USE_OPENMP)
+ 
+ # Compiler specific options for gcc
+-SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
+-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -march=native")
+-# SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+-# SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
++if(BUILD_WITH_MARCH_NATIVE)
++  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
++  SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -march=native")
++else()
++  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
++  SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
++endif()
+ 
+ # activate warnings !!!
+ SET(g2o_C_FLAGS "${g2o_C_FLAGS} -Wall -W -fPIC")
+diff --git a/debian/rules b/debian/rules
+index d4d33ef..0cbf87a 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -18,18 +18,21 @@ override_dh_auto_configure:
+ 	dh_auto_configure \
+ 		-O--sourcedir=$(CURDIR)/Thirdparty/DBoW2/ \
+ 		--builddir=$(BUILD_DIR_DBOW2) -- \
+-		-DBOW2_STATIC=1
++		-DBOW2_STATIC=1 \
++		-DBUILD_WITH_MARCH_NATIVE=OFF
+ 	dh_auto_configure \
+ 		-O--sourcedir=$(CURDIR)/Thirdparty/g2o/ \
+ 		--builddir=$(BUILD_DIR_G2O) -- \
+-		-DG2O_STATIC=1
++		-DG2O_STATIC=1 \
++		-DBUILD_WITH_MARCH_NATIVE=OFF
+ 	dh_auto_configure \
+ 		-O--sourcedir=$(CURDIR)/Thirdparty/Sophus/ \
+ 		--builddir=$(BUILD_DIR_SOPHUS)
+ 	dh_auto_configure -- -DLINK_LIBRARY_STATIC=1 \
++		-DBUILD_WITH_MARCH_NATIVE=OFF \
+ 		-DCMAKE_INSTALL_PREFIX=/opt/ros/humble \
+-    -DAMENT_PREFIX_PATH=/opt/ros/humble \
+-    -DCMAKE_PREFIX_PATH=/opt/ros/humble
++		-DAMENT_PREFIX_PATH=/opt/ros/humble \
++		-DCMAKE_PREFIX_PATH=/opt/ros/humble
+ 
+ # Override the default build step to include custom third-party library builds
+ override_dh_auto_build:
+-- 
+2.34.1
+

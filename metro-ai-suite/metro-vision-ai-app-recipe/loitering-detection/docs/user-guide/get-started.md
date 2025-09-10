@@ -111,7 +111,7 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      </details>
 
 3. **View the Application Output**:
-   - Open a browser and go to `http://localhost:3000` to access the Grafana dashboard.
+   - Open a browser and go to `https://localhost/grafana` to access the Grafana dashboard.
      - Change the localhost to your host IP if you are accessing it remotely.
    - Log in with the following credentials:
      - **Username**: `admin`
@@ -122,8 +122,11 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 
 ## **Access the Application and Components** ##
 
+### **Nginx Dashboard** ###
+- **URL**: [https://localhost](https://localhost)
+
 ### **Grafana UI** ###
-- **URL**: [http://localhost:3000](http://localhost:3000)
+- **URL**: [https://localhost/grafana](https://localhost/grafana)
 - **Log in with credentials**:
     - **Username**: `admin`
     - **Password**: `admin` (You will be prompted to change it on first login.)
@@ -131,15 +134,15 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
       ![Grafana Dashboard](_images/grafana.png)
 
 ### **NodeRED UI** ###
-- **URL**: [http://localhost:1880](http://localhost:1880)
+- **URL**: [https://localhost/nodered/](https://localhost/nodered/)
 
 ### **DL Streamer Pipeline Server** ###
-- **REST API**: [http://localhost:8080](http://localhost:8080)
+- **REST API**: [https://localhost/api/](https://localhost/api/)
   - **Check Pipeline Status**:
     ```bash
-    curl http://localhost:8080/pipelines
+    curl -k https://localhost/api/pipelines
     ```
-- **WebRTC**: [http://localhost:8889/object_tracking_1](http://localhost:8889/object_tracking_1)
+- **WebRTC**: [https://localhost/mediamtx/object_tracking_1](https://localhost/mediamtx/object_tracking_1)
 
 ## **Stop the Application**:
 

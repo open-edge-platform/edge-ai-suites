@@ -1,0 +1,614 @@
+From 10b4109f39fa2b7707bf782d451b049048753a82 Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Mon, 14 Jul 2025 10:15:38 +0800
+Subject: [PATCH 3/6] add MUJOCO OpenVINO pipeline
+
+---
+ eval_sim/eval_rdt_aloha_static_ov.py | 231 +++++++++++++++++
+ scripts/aloha_static_ov_model.py     | 356 +++++++++++++++++++++++++++
+ 2 files changed, 587 insertions(+)
+ create mode 100644 eval_sim/eval_rdt_aloha_static_ov.py
+ create mode 100644 scripts/aloha_static_ov_model.py
+
+diff --git a/eval_sim/eval_rdt_aloha_static_ov.py b/eval_sim/eval_rdt_aloha_static_ov.py
+new file mode 100644
+index 0000000..8c70559
+--- /dev/null
++++ b/eval_sim/eval_rdt_aloha_static_ov.py
+@@ -0,0 +1,231 @@
++from typing import Callable, List, Type
++import sys
++sys.path.append('/')
++import numpy as np
++import argparse
++import yaml
++from scripts.aloha_static_ov_model import RDTPolicy
++import torch
++from collections import deque
++from PIL import Image
++import time
++import matplotlib.pyplot as plt
++
++def sample_box_pose():
++    x_range = [0.0, 0.2]
++    y_range = [0.4, 0.6]
++    z_range = [0.05, 0.05]
++
++    ranges = np.vstack([x_range, y_range, z_range])
++    cube_position = np.random.uniform(ranges[:, 0], ranges[:, 1])
++
++    cube_quat = np.array([1, 0, 0, 0])
++    return np.concatenate([cube_position, cube_quat])
++
++def sample_insertion_pose():
++    # Peg
++    x_range = [0.1, 0.2]
++    y_range = [0.4, 0.6]
++    z_range = [0.05, 0.05]
++
++    ranges = np.vstack([x_range, y_range, z_range])
++    peg_position = np.random.uniform(ranges[:, 0], ranges[:, 1])
++
++    peg_quat = np.array([1, 0, 0, 0])
++    peg_pose = np.concatenate([peg_position, peg_quat])
++
++    # Socket
++    x_range = [-0.2, -0.1]
++    y_range = [0.4, 0.6]
++    z_range = [0.05, 0.05]
++
++    ranges = np.vstack([x_range, y_range, z_range])
++    socket_position = np.random.uniform(ranges[:, 0], ranges[:, 1])
++
++    socket_quat = np.array([1, 0, 0, 0])
++    socket_pose = np.concatenate([socket_position, socket_quat])
++
++    return peg_pose, socket_pose
++
++def parse_args(args=None):
++    parser = argparse.ArgumentParser()
++    parser.add_argument("-e", "--env-id", type=str, default="TransferCube-v1", help=f"Environment to run motion planning solver on. ")
++    parser.add_argument("-o", "--obs-mode", type=str, default="rgb", help="Observation mode to use. Usually this is kept as 'none' as observations are not necesary to be stored, they can be replayed later via the mani_skill.trajectory.replay_trajectory script.")
++    parser.add_argument("-n", "--num-traj", type=int, default=25, help="Number of trajectories to test.")
++    parser.add_argument("--only-count-success", action="store_true", help="If true, generates trajectories until num_traj of them are successful and only saves the successful trajectories/videos")
++    parser.add_argument("--reward-mode", type=str)
++    parser.add_argument("-b", "--sim-backend", type=str, default="auto", help="Which simulation backend to use. Can be 'auto', 'cpu', 'gpu'")
++    parser.add_argument("--render-mode", type=str, default="rgb_array", help="can be 'sensors' or 'rgb_array' which only affect what is saved to videos")
++    parser.add_argument("--shader", default="default", type=str, help="Change shader used for rendering. Default is 'default' which is very fast. Can also be 'rt' for ray tracing and generating photo-realistic renders. Can also be 'rt-fast' for a faster but lower quality ray-traced renderer")
++    parser.add_argument("--num-procs", type=int, default=1, help="Number of processes to use to help parallelize the trajectory replay process. This uses CPU multiprocessing and only works with the CPU simulation backend at the moment.")
++    parser.add_argument("--pretrained_path", type=str, default=None, help="Path to the pretrained model")
++    parser.add_argument("--random_seed", type=int, default=0, help="Random seed for the environment.")
++    parser.add_argument("--device", type=str, default='GPU', help="Device to run the model on")
++    parser.add_argument("--openvino_ir_path", type=str, default=None, help="Path to the OpenVINO IR model")
++    parser.add_argument("--onscreen_render", action="store_true", help="If true, renders the environment onscreen using matplotlib.")
++    return parser.parse_args()
++
++import random
++import os
++
++args = parse_args()
++# set random seeds
++seed = args.random_seed
++random.seed(seed)
++os.environ['PYTHONHASHSEED'] = str(seed)
++np.random.seed(seed)
++torch.manual_seed(seed)
++# torch.cuda.manual_seed(seed)
++torch.backends.cudnn.deterministic = True
++torch.backends.cudnn.benchmark = False
++
++task2lang = {
++    "TransferCube-v1": "Use the right robot arm to pick up the red cube and transfer it to the left robot arm.",
++    "PegInsertion-v1": "Pick up a red peg and insert into the blue socket with a hole in it."
++}
++
++# set env_id and task_name
++env_id = args.env_id
++if env_id == "TransferCube-v1":
++    task_name = 'sim_transfer_cube_scripted'
++elif env_id == "PegInsertion-v1":
++    task_name = 'sim_insertion_scripted'
++else:
++    task_name = 'sim_transfer_cube_scripted'
++print(f"Running evaluation for task: {task_name} with env_id: {env_id}")
++
++# MUJOCO env
++onscreen_cam = 'angle'
++onscreen_render = args.onscreen_render
++from eval_sim.sim_env import BOX_POSE
++from eval_sim.sim_env import make_sim_env
++env = make_sim_env(task_name)
++env_max_reward = env.task.max_reward
++
++# make policy
++config_path = 'configs/base.yaml'
++with open(config_path, "r") as fp:
++    config = yaml.safe_load(fp)
++rdt_model_path = args.openvino_ir_path + "/rdt/model.xml"
++lang_adaptor_path = args.openvino_ir_path + "/lang_adaptor/model.xml"
++img_adaptor_path = args.openvino_ir_path + "/img_adaptor/model.xml"
++state_adaptor_path = args.openvino_ir_path + "/state_adaptor/model.xml"
++siglip_model = args.openvino_ir_path + "/siglip_vision/model.xml"  # for siglip vision model
++# siglip_model = args.openvino_ir_path + "/siglip/model.xml"  # for siglip full model
++policy = RDTPolicy(config, rdt_model_path, lang_adaptor_path, img_adaptor_path, state_adaptor_path, siglip_model, device=args.device)
++
++# text embedding
++if os.path.exists(f'./text_embed_{env_id}.pt'):
++    text_embed = torch.load(f'./text_embed_{env_id}.pt', map_location=torch.device('cpu'))
++else:
++    text_embed = policy.encode_instruction(task2lang[env_id])
++    torch.save(text_embed, f'text_embed_{env_id}.pt')
++
++MAX_EPISODE_STEPS = 400 
++total_episodes = args.num_traj  
++success_count = 0  
++
++base_seed = 20241201
++import tqdm
++for episode in tqdm.trange(total_episodes):
++    latencies_all = []
++
++    # set simulation task
++    if 'sim_transfer_cube' in task_name:
++        BOX_POSE[0] = sample_box_pose() # used in sim reset
++    elif 'sim_insertion' in task_name:
++        BOX_POSE[0] = np.concatenate(sample_insertion_pose()) # used in sim reset
++    ts = env.reset()
++
++    # onscreen render
++    if onscreen_render:
++        ax = plt.subplot()
++        plt_img = ax.imshow(env._physics.render(height=480, width=640, camera_id=onscreen_cam))
++        plt.ion()
++    rewards = []
++
++    # policy reset
++    policy.reset()
++    global_steps = 0
++    done = False
++
++    # image
++    obs_window = deque(maxlen=2)
++    img = ts.observation['images']['top']
++    obs_window.append(None)
++    obs_window.append(np.array(img))
++
++    while global_steps < MAX_EPISODE_STEPS and not done:
++        latencies = []
++        prepare_time = time.time()
++
++        # update images
++        obs = ts.observation
++        image_arrs = []
++        for window_img in obs_window:
++            image_arrs.append(window_img)
++            image_arrs.append(None)
++            image_arrs.append(None)
++        images = [Image.fromarray(arr) if arr is not None else None
++                  for arr in image_arrs]
++
++        # update qpos
++        qpos_numpy = np.array(obs['qpos']) # (14,)
++        qpos = torch.from_numpy(qpos_numpy).float().cpu().unsqueeze(0) # (1, 14)
++
++        latencies.append(time.time()-prepare_time)
++        policy_time = time.time()
++        actions = policy.step(qpos, images, text_embed).squeeze(0).cpu().numpy()
++        latencies.append(time.time()-policy_time)
++
++        # Take 8 steps since RDT is trained to predict interpolated 64 steps(actual 14 steps)
++        # actions = actions[::4, :]
++        action_time = time.time()
++        for idx in range(actions.shape[0]):
++            # process action
++            action = actions[idx]
++
++            # step action
++            ts = env.step(action)
++
++            # observation
++            img = ts.observation['images']['top']
++            obs_window.append(np.array(img))
++            rewards.append(ts.reward)
++            global_steps += 1
++
++            # update onscreen render and wait for DT
++            if onscreen_render:
++                image = env._physics.render(height=480, width=640, camera_id=onscreen_cam)
++                plt_img.set_data(image)
++                plt.pause(0.02)
++
++            # check if done
++            if ts.reward == env_max_reward:
++                done = True
++                break
++
++        latencies.append(time.time()-action_time)
++        latencies_all.append(latencies)
++
++    if onscreen_render:
++        plt.close()
++
++    # collect rewards
++    rewards = np.array(rewards)
++    episode_highest_reward = np.max(rewards)
++    print(f"Trial {episode+1} finished, max reward: {episode_highest_reward}, Success: {episode_highest_reward==env_max_reward}, steps: {global_steps}")
++
++    # print latencies
++    print(f"      Cold - prepare time:{latencies_all[0][0]:.9f}s, policy time:{latencies_all[0][1]:.9f}s, action time:{latencies_all[0][2]:.9f}s")
++    latencies_all = np.array(latencies_all)
++    average_latency = np.mean(latencies_all[1:], axis=0)
++    print(f'==================episode {episode} Avg Latency:==================\n \
++            prepare time:{average_latency[0]:.9f}s, policy time:{average_latency[1]:.9f}s, action time:{average_latency[2]:.9f}s')
++
++    # check success
++    if episode_highest_reward == env_max_reward:
++        success_count += 1
++
++success_rate = success_count / total_episodes * 100
++print(f"Success rate: {success_rate}%")
+diff --git a/scripts/aloha_static_ov_model.py b/scripts/aloha_static_ov_model.py
+new file mode 100644
+index 0000000..082a63f
+--- /dev/null
++++ b/scripts/aloha_static_ov_model.py
+@@ -0,0 +1,356 @@
++import torch
++from transformers import SiglipImageProcessor
++import openvino as ov
++import numpy as np
++from PIL import Image
++from torchvision import transforms
++from configs.state_vec import STATE_VEC_IDX_MAPPING
++from diffusers.schedulers.scheduling_dpmsolver_multistep import \
++    DPMSolverMultistepScheduler
++
++ALOHA_STATIC_INDICES = [
++    STATE_VEC_IDX_MAPPING[f"left_arm_joint_{i}_pos"] for i in range(6)
++] + [
++    STATE_VEC_IDX_MAPPING["left_gripper_open"]
++] + [
++    STATE_VEC_IDX_MAPPING[f"right_arm_joint_{i}_pos"] for i in range(6)
++] + [
++    STATE_VEC_IDX_MAPPING[f"right_gripper_open"]
++]
++
++class RDTPolicy():
++    def __init__(self, args, rdt_model, lang_adap_model, img_adap_model, state_adap_model, vision_encoder, device, control_frequency=25):
++        self.args = args
++        self.policy = RDTOVRunner(args, rdt_model, lang_adap_model, img_adap_model, state_adap_model, device)
++        self.vision_model = SiglipOVModel(vision_encoder, device)
++        # self.vision_model = SiglipOVFullModel(vision_encoder, device)
++        self.image_processor = self.vision_model.image_processor
++        self.control_frequency = control_frequency
++
++    def reset(self):
++        """Set model to evaluation mode.
++        """
++        # device = self.device
++        # weight_dtype = self.dtype
++        # self.policy.eval()
++        # self.text_model.eval()
++        # self.vision_model.eval()
++
++        # self.policy = self.policy.to(device, dtype=weight_dtype)
++        # self.text_model = self.text_model.to(device, dtype=weight_dtype)
++        # self.vision_model = self.vision_model.to(device, dtype=weight_dtype)
++
++    # def reset(self):
++    def _format_joint_to_state(self, joints):
++        """
++        Format the robot joint state into the unified state vector.
++
++        Args:
++            joints (torch.Tensor): The joint state to be formatted. 
++                qpos ([B, N, 14]).
++
++        Returns:
++            state (torch.Tensor): The formatted state for RDT ([B, N, 128]). 
++        """
++        B, N, _ = joints.shape
++        state = torch.zeros(
++            (B, N, self.args["model"]["state_token_dim"]), 
++            device=joints.device, dtype=joints.dtype
++        )
++        # assemble the unifed state vector
++        state[:, :, ALOHA_STATIC_INDICES] = joints
++        state_elem_mask = torch.zeros(
++            (B, self.args["model"]["state_token_dim"]),
++            device=joints.device, dtype=joints.dtype
++        )
++        state_elem_mask[:, ALOHA_STATIC_INDICES] = 1
++        return state, state_elem_mask
++
++    def _unformat_action_to_joint(self, action):
++        action_indices = ALOHA_STATIC_INDICES
++        joints = action[:, :, action_indices]
++        
++        # Rescale the gripper back to the action range
++        # Note that the action range and proprioception range are different
++        # for Mobile ALOHA robot
++        joints = joints * torch.tensor(
++            [[[1, 1, 1, 1, 1, 1, 11.8997, 1, 1, 1, 1, 1, 1, 13.9231]]], # 11.8997 / 13.9231
++            device=joints.device, dtype=joints.dtype
++        )
++        return joints
++
++    def step(self, proprio, images, text_embeds):
++        """
++        Args:
++            proprio: proprioceptive states
++            images: RGB images
++            text_embeds: instruction embeddings
++
++        Returns:
++            action: predicted action
++        """
++
++        background_color = np.array([
++            int(x*255) for x in self.image_processor.image_mean
++        ], dtype=np.uint8).reshape(1, 1, 3)
++        background_image = np.ones((
++            self.image_processor.size["height"], 
++            self.image_processor.size["width"], 3), dtype=np.uint8
++        ) * background_color
++        
++        image_tensor_list = []
++        for image in images:
++            if image is None:
++                # Replace it with the background image
++                image = Image.fromarray(background_image)
++
++            if self.args["dataset"].get("auto_adjust_image_brightness", False):
++                pixel_values = list(image.getdata())
++                average_brightness = sum(sum(pixel) for pixel in pixel_values) / (len(pixel_values) * 255.0 * 3)
++                if average_brightness <= 0.15:
++                    image = transforms.ColorJitter(brightness=(1.75,1.75))(image)
++                    
++            if self.args["dataset"].get("image_aspect_ratio", "pad") == 'pad':
++                def expand2square(pil_img, background_color):
++                    width, height = pil_img.size
++                    if width == height:
++                        return pil_img
++                    elif width > height:
++                        result = Image.new(pil_img.mode, (width, width), background_color)
++                        result.paste(pil_img, (0, (width - height) // 2))
++                        return result
++                    else:
++                        result = Image.new(pil_img.mode, (height, height), background_color)
++                        result.paste(pil_img, ((height - width) // 2, 0))
++                        return result
++                image = expand2square(image, tuple(int(x*255) for x in self.image_processor.image_mean))
++            # image = self.image_processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
++            image_tensor_list.append(image)
++
++        image_embeds = self.vision_model.get_features(image_tensor_list)
++        # print(f'image_embeds : {image_embeds.shape}')
++        image_embeds = np.expand_dims(image_embeds.reshape(-1, image_embeds.shape[-1]),axis=0)
++        # print(f'image_embeds : {image_embeds.shape}')
++
++        # history of actions
++        joints = proprio.unsqueeze(0)   # (1, 1, 14)
++        states, state_elem_mask = self._format_joint_to_state(joints)    # (1, 1, 128), (1, 128)
++        states, state_elem_mask = states, state_elem_mask
++        states = states[:, -1:, :]  # (1, 1, 128)
++        ctrl_freqs = torch.tensor([self.control_frequency])
++
++        text_embeds = text_embeds
++
++        trajectory = self.policy.predict_action(
++            lang_tokens=text_embeds,
++            lang_attn_mask=torch.ones(
++                text_embeds.shape[:2], dtype=torch.bool),
++            img_tokens=image_embeds,
++            state_tokens=states,
++            action_mask=state_elem_mask.unsqueeze(1),  
++            ctrl_freqs=ctrl_freqs
++        )
++        trajectory = self._unformat_action_to_joint(trajectory).to(torch.float32)
++
++        return trajectory
++
++
++class RDTOVRunner():
++    def __init__(self, config, rdt_model, lang_adap_model, img_adap_model, state_adap_model, device):
++        self.model = RDTOVModel(rdt_model, device)
++        self.lang_adaptor = RDTLangOVModel(lang_adap_model, device)
++        self.img_adaptor = RDTImgOVModel(img_adap_model, device)
++        self.state_adaptor = RDTStateOVModel(state_adap_model, device)
++        self.pred_horizon = config["common"]["action_chunk_size"]
++        self.action_dim = config["common"]["state_dim"]
++        
++        noise_scheduler_config = config["model"]['noise_scheduler']
++        self.noise_scheduler_sample = DPMSolverMultistepScheduler(
++            num_train_timesteps=noise_scheduler_config['num_train_timesteps'],
++            beta_schedule=noise_scheduler_config['beta_schedule'],
++            prediction_type=noise_scheduler_config['prediction_type'],
++        )
++        self.num_inference_timesteps = noise_scheduler_config['num_inference_timesteps']
++
++    def adapt_conditions(self, lang_tokens, img_tokens, state_tokens):
++        # print(f' img_tokens : {img_tokens.shape}')
++        # float32
++        lang_tokens = lang_tokens.to(torch.float32)
++        # img_tokens = img_tokens.to(torch.float32)
++        state_tokens = state_tokens.to(torch.float32)
++
++        adpated_lang = self.lang_adaptor.predict(lang_tokens)
++        adpated_img = self.img_adaptor.predict(img_tokens)
++        adpated_state = self.state_adaptor.predict(state_tokens)
++
++        return adpated_lang, adpated_img, adpated_state
++
++    def conditional_sample(self, lang_cond, lang_attn_mask, img_cond, 
++                           state_traj, action_mask, ctrl_freqs):
++        '''
++        lang_cond: language conditional data, (batch_size, lang_len, hidden_size).
++        lang_attn_mask: (batch_size, lang_len), a mask for valid language tokens,
++            which should be True-False bool tensor.
++        img_cond: image conditional data, (batch_size, img_len, hidden_size).
++        state_traj: (batch_size, 1, hidden_size), state trajectory.
++        action_mask: (batch_size, 1, action_dim), a 0-1 **float** tensor
++            indicating the valid action dimensions.
++        ctrl_freqs: (batch_size,), control frequency for each sample.
++        
++        return: (batch_size, horizon, action_dim)
++        '''
++
++        noisy_action = torch.randn(
++            size=(state_traj.shape[0], self.pred_horizon, self.action_dim), dtype=torch.float32)
++        action_mask = action_mask.expand(-1, self.pred_horizon, -1).to(torch.float32)
++    
++        # Set step values
++        self.noise_scheduler_sample.set_timesteps(self.num_inference_timesteps)
++        # import pdb;pdb.set_trace()
++        for t in self.noise_scheduler_sample.timesteps:
++            # Prepare state-action trajectory
++            action_traj = torch.cat([noisy_action, action_mask], dim=2).to(torch.float32)
++            action_traj = self.state_adaptor.predict(action_traj)
++            state_action_traj = torch.cat([torch.from_numpy(state_traj), torch.from_numpy(action_traj)], dim=1).to(torch.float32)
++            # Predict the model output
++            model_output = self.model.predict(state_action_traj, ctrl_freqs.to(torch.float32),
++                                    t.unsqueeze(-1).to(torch.float32),
++                                    lang_cond, img_cond,
++                                    lang_mask=lang_attn_mask.to(torch.float32))
++            
++            # Compute previous actions: x_t -> x_t-1
++            noisy_action = self.noise_scheduler_sample.step(
++                torch.from_numpy(model_output), t, noisy_action).prev_sample
++            noisy_action = noisy_action
++        
++        # Finally apply the action mask to mask invalid action dimensions
++        noisy_action = noisy_action * action_mask
++
++        return noisy_action
++
++    def predict_action(self, lang_tokens, lang_attn_mask, img_tokens, state_tokens,
++                       action_mask, ctrl_freqs):
++        '''
++        lang_tokens: (batch_size, lang_len, lang_token_dim)
++        lang_attn_mask: (batch_size, lang_len), a mask for valid language tokens,
++            which should be True-False bool tensor.
++        img_tokens: (batch_size, img_len, img_token_dim)
++        state_tokens: (batch_size, 1, state_token_dim)
++        action_mask: (batch_size, 1, action_dim),
++            which should be a 0-1 **float** tensor.
++        ctrl_freqs: (batch_size,), control frequency for each sample.
++        
++        return: (batch_size, horizon, action_dim), predicted action sequence
++        '''
++
++        # 确保所有输入张量为 float32 类型
++        lang_tokens = lang_tokens.to(torch.float32)
++        lang_attn_mask = lang_attn_mask.to(torch.float32)
++        # img_tokens = img_tokens.to(torch.float32)
++        state_tokens = state_tokens.to(torch.float32)
++        action_mask = action_mask.to(torch.float32)
++        ctrl_freqs = ctrl_freqs.to(torch.float32)
++
++        # Prepare the state and conditions
++        state_tokens = torch.cat([state_tokens, action_mask], dim=2)
++        # import pdb;pdb.set_trace()
++        lang_cond, img_cond, state_traj = self.adapt_conditions(
++            lang_tokens, img_tokens, state_tokens)
++
++        # Run sampling
++        action_pred = self.conditional_sample(
++            lang_cond, lang_attn_mask, img_cond, 
++            state_traj, action_mask, ctrl_freqs,
++        )
++        
++        return action_pred
++
++class RDTOVModel():
++    def __init__(self, model_path, device="CPU"):
++        super().__init__()
++        self.model = ov.Core().compile_model(model_path, device)
++        self.output = self.model.output(0)
++
++    def predict(self, x, freq, t, lang_c, img_c, lang_mask=None):
++        return self.model([x, freq, t, lang_c, img_c, lang_mask])[self.output]
++
++class RDTLangOVModel():
++    def __init__(self, model_path, device="CPU"):
++        super().__init__()
++        self.model = ov.Core().compile_model(model_path, device)
++        self.output = self.model.output(0)
++
++    def predict(self, inputs):
++        return self.model(inputs)[self.output]
++
++class RDTImgOVModel():
++    def __init__(self, model_path, device="CPU"):
++        super().__init__()
++        self.model = ov.Core().compile_model(model_path, device)
++        self.output = self.model.output(0)
++
++    def predict(self, inputs):
++        inputs = np.array(inputs.data)
++        return self.model(inputs)[self.output]
++
++class RDTStateOVModel():
++    def __init__(self, model_path, device="CPU"):
++        super().__init__()
++        self.model = ov.Core().compile_model(model_path, device)
++        self.output = self.model.output(0)
++
++    def predict(self, inputs):
++        return self.model(inputs)[self.output]
++
++
++class SiglipOVModel():
++    def __init__(self, model_path, device="CPU"):
++        super().__init__()
++        self.model_name = "google/siglip-so400m-patch14-384"
++        self.model = ov.Core().compile_model(model_path, device)
++        self.output = self.model.output("hidden_state.1")
++
++        self.image_processor = SiglipImageProcessor.from_pretrained(self.model_name)
++
++    def get_features(self, inputs):
++        if type(inputs) is list:
++            image_features = []
++            pinputs = []
++            for image in inputs:
++                # print(image.size)
++                pinput = self.image_processor(images=image, return_tensors="pt")['pixel_values']
++                pinputs.append(pinput)
++            pinputs = torch.cat(pinputs, dim=0)
++            image_features = self.model(pinputs)[0]
++            # print(f'image_features shape : {image_features.shape}')
++            
++            return image_features
++        else:
++            # import pdb;pdb.set_trace()
++            return self.model(inputs)[self.output]
++
++from transformers import AutoProcessor
++
++class SiglipOVFullModel():
++    def __init__(self, model_path, device="CPU"):
++        super().__init__()
++        self.model_name = "google/siglip-so400m-patch14-384"
++        self.model = ov.compile_model(model_path, device)
++        # self.output = self.model.output("last_hidden_state")
++        self.output = self.model.output("hidden_state.1")
++
++        self.image_processor = AutoProcessor.from_pretrained(self.model_name)
++        input_labels = ["a red cube"]
++        self.text_descriptions = [f"This is a photo of a {label}" for label in input_labels]
++
++    def get_features(self, inputs):
++        if type(inputs) is list:
++            image_features = []
++            for image in inputs:
++                pinputs = self.image_processor(text=self.text_descriptions, images=[image], padding="max_length", return_tensors="pt")
++                image_feature = self.model(dict(pinputs))[self.output]
++                image_features.append(image_feature)
++            return torch.tensor(np.array(image_features))
++        else:
++            pinputs = self.image_processor(text=self.text_descriptions, images=[inputs], padding="max_length", return_tensors="pt")
++            return self.model(dict(pinputs))[self.output]
+-- 
+2.34.1
+

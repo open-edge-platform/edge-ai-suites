@@ -1,0 +1,849 @@
+From aa1be88113cb579147672aa29cc6bfbb36a832e8 Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Tue, 18 Feb 2025 15:29:05 +0800
+Subject: [PATCH 1/5] Enable pipeline with OV 2024.6
+
+Signed-off-by: HKH347710 <kanghua.he@intel.com>
+---
+ .../env_runner/pusht_image_runner.py          | 25 +++++
+ .../env_runner/pusht_keypoints_runner.py      | 30 +++++-
+ ...ffusion_transformer_hybrid_image_policy.py | 94 +++++++++++++++++--
+ .../diffusion_transformer_lowdim_policy.py    | 54 ++++++++++-
+ .../diffusion_unet_hybrid_image_policy.py     | 94 +++++++++++++++++--
+ .../policy/diffusion_unet_image_policy.py     | 34 +++----
+ .../policy/diffusion_unet_lowdim_policy.py    | 52 +++++++++-
+ diffusion_policy/workspace/base_workspace.py  |  4 +-
+ eval.py                                       | 24 +++--
+ 9 files changed, 360 insertions(+), 51 deletions(-)
+
+diff --git a/diffusion_policy/env_runner/pusht_image_runner.py b/diffusion_policy/env_runner/pusht_image_runner.py
+index f65c06a..9358f34 100644
+--- a/diffusion_policy/env_runner/pusht_image_runner.py
++++ b/diffusion_policy/env_runner/pusht_image_runner.py
+@@ -17,6 +17,8 @@ from diffusion_policy.policy.base_image_policy import BaseImagePolicy
+ from diffusion_policy.common.pytorch_util import dict_apply
+ from diffusion_policy.env_runner.base_image_runner import BaseImageRunner
+ 
++import time
++
+ class PushTImageRunner(BaseImageRunner):
+     def __init__(self,
+             output_dir,
+@@ -41,6 +43,12 @@ class PushTImageRunner(BaseImageRunner):
+         if n_envs is None:
+             n_envs = n_train + n_test
+ 
++        n_train = 0
++        n_test = 1
++        n_envs = 1
++        # test_start_seed = 4300000
++        print(f"n_train : {n_train}; n_test : {n_test} test_start_seed : {test_start_seed} ")
++
+         steps_per_render = max(10 // fps, 1)
+         def env_fn():
+             return MultiStepWrapper(
+@@ -181,7 +189,11 @@ class PushTImageRunner(BaseImageRunner):
+             pbar = tqdm.tqdm(total=self.max_steps, desc=f"Eval PushtImageRunner {chunk_idx+1}/{n_chunks}", 
+                 leave=False, mininterval=self.tqdm_interval_sec)
+             done = False
++            latencies_all = []
++            latencies = []
+             while not done:
++                latencies = []
++                start_time = time.time()
+                 # create obs dict
+                 np_obs_dict = dict(obs)
+                 if self.past_action and (past_action is not None):
+@@ -194,10 +206,14 @@ class PushTImageRunner(BaseImageRunner):
+                     lambda x: torch.from_numpy(x).to(
+                         device=device))
+ 
++                latencies.append(time.time()-start_time)
+                 # run policy
++                query_policy_time = time.time()
+                 with torch.no_grad():
+                     action_dict = policy.predict_action(obs_dict)
++                latencies.append(time.time()-query_policy_time)
+ 
++                end_time = time.time()
+                 # device_transfer
+                 np_action_dict = dict_apply(action_dict,
+                     lambda x: x.detach().to('cpu').numpy())
+@@ -211,8 +227,15 @@ class PushTImageRunner(BaseImageRunner):
+ 
+                 # update pbar
+                 pbar.update(action.shape[1])
++                latencies.append(time.time()-end_time)
++                latencies_all.append(latencies)
+             pbar.close()
+ 
++            print(f"Cold - prepare:{latencies_all[0][0]:.9f}, query policy:{latencies_all[0][1]:.9f}, execute:{latencies_all[0][2]:.9f}")
++            latencies_all = np.array(latencies_all)
++            average_latency = np.mean(latencies_all[1:], axis=0)
++            print(f'==================Avg Latency:==================\n \
++                  Warm - prepare:{average_latency[0]:.9f}s, query policy:{average_latency[1]:.9f}s, execute:{average_latency[2]:.9f}')
+             all_video_paths[this_global_slice] = env.render()[this_local_slice]
+             all_rewards[this_global_slice] = env.call('get_attr', 'reward')[this_local_slice]
+         # clear out video buffer
+@@ -235,6 +258,7 @@ class PushTImageRunner(BaseImageRunner):
+             max_reward = np.max(all_rewards[i])
+             max_rewards[prefix].append(max_reward)
+             log_data[prefix+f'sim_max_reward_{seed}'] = max_reward
++            print(f'sim_max_reward_{seed} : {max_reward:.6f}')
+ 
+             # visualize sim
+             video_path = all_video_paths[i]
+@@ -247,5 +271,6 @@ class PushTImageRunner(BaseImageRunner):
+             name = prefix+'mean_score'
+             value = np.mean(value)
+             log_data[name] = value
++            print(f'mean_score_{seed} : {value:.6f}')
+ 
+         return log_data
+diff --git a/diffusion_policy/env_runner/pusht_keypoints_runner.py b/diffusion_policy/env_runner/pusht_keypoints_runner.py
+index a16bd58..d2de1f2 100644
+--- a/diffusion_policy/env_runner/pusht_keypoints_runner.py
++++ b/diffusion_policy/env_runner/pusht_keypoints_runner.py
+@@ -17,6 +17,8 @@ from diffusion_policy.policy.base_lowdim_policy import BaseLowdimPolicy
+ from diffusion_policy.common.pytorch_util import dict_apply
+ from diffusion_policy.env_runner.base_lowdim_runner import BaseLowdimRunner
+ 
++import time
++
+ class PushTKeypointsRunner(BaseLowdimRunner):
+     def __init__(self,
+             output_dir,
+@@ -44,6 +46,12 @@ class PushTKeypointsRunner(BaseLowdimRunner):
+         if n_envs is None:
+             n_envs = n_train + n_test
+ 
++        n_train = 0
++        n_test = 1
++        n_envs = 1
++        test_start_seed = 4300000
++        print(f"n_train : {n_train}; n_test : {n_test} test_start_seed : {test_start_seed} ")
++
+         # handle latency step
+         # to mimic latency, we request n_latency_steps additional steps 
+         # of past observations, and the discard the last n_latency_steps
+@@ -157,8 +165,8 @@ class PushTKeypointsRunner(BaseLowdimRunner):
+         self.tqdm_interval_sec = tqdm_interval_sec
+     
+     def run(self, policy: BaseLowdimPolicy):
+-        device = policy.device
+-        dtype = policy.dtype
++        # device = policy.device
++        # dtype = policy.dtype
+ 
+         env = self.env
+ 
+@@ -196,7 +204,11 @@ class PushTKeypointsRunner(BaseLowdimRunner):
+             pbar = tqdm.tqdm(total=self.max_steps, desc=f"Eval PushtKeypointsRunner {chunk_idx+1}/{n_chunks}", 
+                 leave=False, mininterval=self.tqdm_interval_sec)
+             done = False
++            latencies_all = []
++            latencies = []
+             while not done:
++                latencies = []
++                start_time = time.time()
+                 Do = obs.shape[-1] // 2
+                 # create obs dict
+                 np_obs_dict = {
+@@ -212,12 +224,17 @@ class PushTKeypointsRunner(BaseLowdimRunner):
+                 # device transfer
+                 obs_dict = dict_apply(np_obs_dict, 
+                     lambda x: torch.from_numpy(x).to(
+-                        device=device))
++                        'cpu'))
+ 
++                latencies.append(time.time()-start_time)
+                 # run policy
++                query_policy_time = time.time()
+                 with torch.no_grad():
+                     action_dict = policy.predict_action(obs_dict)
++                latencies.append(time.time()-query_policy_time)
++                # print(f'   - query_policy_time: {time.time()-query_policy_time}')
+ 
++                end_time = time.time()
+                 # device_transfer
+                 np_action_dict = dict_apply(action_dict,
+                     lambda x: x.detach().to('cpu').numpy())
+@@ -233,8 +250,15 @@ class PushTKeypointsRunner(BaseLowdimRunner):
+ 
+                 # update pbar
+                 pbar.update(action.shape[1])
++                latencies.append(time.time()-end_time)
++                latencies_all.append(latencies)
+             pbar.close()
+ 
++            print(f"Cold - prepare:{latencies_all[0][0]:.9f}, query policy:{latencies_all[0][1]:.9f}, execute:{latencies_all[0][2]:.9f}")
++            latencies_all = np.array(latencies_all)
++            average_latency = np.mean(latencies_all[1:], axis=0)
++            print(f'==================Avg Latency:==================\n \
++                  Warm - prepare:{average_latency[0]:.9f}s, query policy:{average_latency[1]:.9f}s, execute:{average_latency[2]:.9f}')
+             # collect data for this round
+             all_video_paths[this_global_slice] = env.render()[this_local_slice]
+             all_rewards[this_global_slice] = env.call('get_attr', 'reward')[this_local_slice]
+diff --git a/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py b/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py
+index 114d844..aa420d8 100644
+--- a/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py
++++ b/diffusion_policy/policy/diffusion_transformer_hybrid_image_policy.py
+@@ -18,6 +18,18 @@ import robomimic.models.base_nets as rmbn
+ import diffusion_policy.model.vision.crop_randomizer as dmvc
+ from diffusion_policy.common.pytorch_util import dict_apply, replace_submodules
+ 
++import time
++import openvino as ov
++import numpy as np
++
++global image_t_policy_ov_model
++global image_t_encoder_ov_model
++
++def get_ov_model(model_path, device='CPU'):
++    core = ov.Core()
++    ov_model = core.read_model(model_path)
++    compiled_model = ov.compile_model(ov_model, device)
++    return compiled_model
+ 
+ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+     def __init__(self, 
+@@ -107,7 +119,7 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+             )
+ 
+         obs_encoder = policy.nets['policy'].nets['encoder'].nets['obs']
+-        
++
+         if obs_encoder_group_norm:
+             # replace batch norm with group norm
+             replace_submodules(
+@@ -179,7 +191,13 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+         if num_inference_steps is None:
+             num_inference_steps = noise_scheduler.config.num_train_timesteps
+         self.num_inference_steps = num_inference_steps
+-    
++
++        # model params
++        n_params_diff = sum(p.numel() for p in self.model.parameters())
++        print("Diffusion params: %.2fM" % (n_params_diff/1e6))
++        n_params_vision = sum(p.numel() for p in self.obs_encoder.parameters())
++        print("Vision params: %.2fM" % (n_params_vision/1e6))
++
+     # ========= inference  ============
+     def conditional_sample(self, 
+             condition_data, condition_mask,
+@@ -187,7 +205,9 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+             # keyword arguments to scheduler.step
+             **kwargs
+             ):
+-        model = self.model
++        global image_t_policy_ov_model
++        image_t_policy_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_t748_unet_onepass.xml', device='GPU')
++        # model = self.model
+         scheduler = self.noise_scheduler
+ 
+         trajectory = torch.randn(
+@@ -199,12 +219,42 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+         # set step values
+         scheduler.set_timesteps(self.num_inference_steps)
+ 
++        latencies = 0.0
+         for t in scheduler.timesteps:
+             # 1. apply conditioning
+             trajectory[condition_mask] = condition_data[condition_mask]
+ 
+             # 2. predict model output
+-            model_output = model(trajectory, t, cond)
++            query_model_time = time.time()
++            # print("[!!!] cond: ", type(cond))
++
++            input = {
++                        'trajectory': trajectory.numpy(),
++                        't': t.numpy(),
++                        'cond': cond if isinstance(cond, np.ndarray) else cond.numpy() if cond is not None else np.zeros_like(condition_data),
++                        #'cond_data': condition_data.numpy(),
++                        #'cond_mask': condition_mask.numpy(),
++                        # 'cond': cond.numpy() if cond is not None else np.zeros_like(condition_data.numpy()),
++                        # 'cond_data': condition_data.numpy(),
++                        # 'cond_mask': condition_mask.numpy(),
++                    }
++            # print('model input:')
++            # print(trajectory.shape)
++            # print(t)
++            # print(cond.shape)
++            # print(condition_data.shape)
++            # print(condition_mask.shape)
++
++            # model_output = model(trajectory, t, cond)
++            model_output = image_t_policy_ov_model(input)[0]
++
++            # print('model output:')
++            # print(model_output)
++            model_output = torch.from_numpy(model_output)
++            # print(model_output.shape)
++
++            # print(f'   - step {t} - query_model_time: {time.time()-query_model_time}')
++            latencies += time.time()-query_model_time
+ 
+             # 3. compute previous image: x_t -> x_t-1
+             trajectory = scheduler.step(
+@@ -212,7 +262,8 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+                 generator=generator,
+                 **kwargs
+                 ).prev_sample
+-        
++
++        # print(f'model_latency: {latencies / float(scheduler.timesteps.numel())} s')
+         # finally make sure conditioning is enforced
+         trajectory[condition_mask] = condition_data[condition_mask]        
+ 
+@@ -238,13 +289,41 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+         device = self.device
+         dtype = self.dtype
+ 
++        global image_t_encoder_ov_model
++        image_t_encoder_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_t748_obs_encoder_onepass.xml', device='GPU')
++
+         # handle different ways of passing observation
+         cond = None
+         cond_data = None
+         cond_mask = None
++        # input = {
++        #                'value.1': obs_dict['agent_pos'],
++        #               'value.5': obs_dict['image'],
++        #             }
++        # obs_outs = image_t_encoder_ov_model(input)
++        #print(len(obs_outs))
++        # cond, cond_data, cond_mask = obs_outs[0], obs_outs[1], obs_outs[2]
++        # cond, cond_data, cond_mask = torch.from_numpy(cond), torch.from_numpy(cond_data), torch.from_numpy(cond_mask)
+         if self.obs_as_cond:
++            query_encoder_time = time.time()
++            # print(nobs['agent_pos'].shape)
++            # print(nobs['image'].shape)
+             this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
+-            nobs_features = self.obs_encoder(this_nobs)
++            # print('obs_encoder input:')
++            # print(this_nobs['agent_pos'].shape)
++            # print(this_nobs['image'].shape)
++            input = {
++                       'x': this_nobs['agent_pos'],
++                       'x.1': this_nobs['image'],
++                    }
++            nobs_features = image_t_encoder_ov_model(input)[0]
++            # nobs_features = self.obs_encoder(this_nobs)
++            # nobs_features = image_t_encoder_ov_model(this_nobs)
++
++            # print('obs_encoder output:')
++            # print(nobs_features.shape)
++            # print(f'encoder_latency: {time.time()-query_encoder_time} s')
++
+             # reshape back to B, To, Do
+             cond = nobs_features.reshape(B, To, -1)
+             shape = (B, T, Da)
+@@ -253,9 +332,10 @@ class DiffusionTransformerHybridImagePolicy(BaseImagePolicy):
+             cond_data = torch.zeros(size=shape, device=device, dtype=dtype)
+             cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
+         else:
++
+             # condition through impainting
+             this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
+-            nobs_features = self.obs_encoder(this_nobs)
++            nobs_features = image_t_encoder_ov_model(this_nobs)[0]
+             # reshape back to B, To, Do
+             nobs_features = nobs_features.reshape(B, To, -1)
+             shape = (B, T, Da+Do)
+diff --git a/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py b/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py
+index 7d0eff8..4566a2a 100644
+--- a/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py
++++ b/diffusion_policy/policy/diffusion_transformer_lowdim_policy.py
+@@ -2,6 +2,7 @@ from typing import Dict, Tuple
+ import torch
+ import torch.nn as nn
+ import torch.nn.functional as F
++import numpy as np
+ from einops import rearrange, reduce
+ from diffusers.schedulers.scheduling_ddpm import DDPMScheduler
+ 
+@@ -10,6 +11,17 @@ from diffusion_policy.policy.base_lowdim_policy import BaseLowdimPolicy
+ from diffusion_policy.model.diffusion.transformer_for_diffusion import TransformerForDiffusion
+ from diffusion_policy.model.diffusion.mask_generator import LowdimMaskGenerator
+ 
++import time
++import openvino as ov
++
++global lowdim_t_policy_ov_model
++
++def get_ov_model(model_path, device='CPU'):
++    core = ov.Core()
++    ov_model = core.read_model(model_path)
++    compiled_model = ov.compile_model(ov_model, device)
++    return compiled_model
++
+ class DiffusionTransformerLowdimPolicy(BaseLowdimPolicy):
+     def __init__(self, 
+             model: TransformerForDiffusion,
+@@ -50,7 +62,11 @@ class DiffusionTransformerLowdimPolicy(BaseLowdimPolicy):
+         if num_inference_steps is None:
+             num_inference_steps = noise_scheduler.config.num_train_timesteps
+         self.num_inference_steps = num_inference_steps
+-    
++
++        # model params
++        n_params_diff = sum(p.numel() for p in self.model.parameters())
++        print("Diffusion params: %.2fM" % (n_params_diff/1e6))
++
+     # ========= inference  ============
+     def conditional_sample(self, 
+             condition_data, condition_mask,
+@@ -58,7 +74,9 @@ class DiffusionTransformerLowdimPolicy(BaseLowdimPolicy):
+             # keyword arguments to scheduler.step
+             **kwargs
+             ):
+-        model = self.model
++        global lowdim_t_policy_ov_model
++        lowdim_t_policy_ov_model = get_ov_model('/home/intel/ov_models/pushT/lowdim_t967_unet.xml', device='GPU')
++        #model = self.model
+         scheduler = self.noise_scheduler
+ 
+         trajectory = torch.randn(
+@@ -70,12 +88,39 @@ class DiffusionTransformerLowdimPolicy(BaseLowdimPolicy):
+         # set step values
+         scheduler.set_timesteps(self.num_inference_steps)
+ 
++        latencies = 0.0
+         for t in scheduler.timesteps:
+             # 1. apply conditioning
++            # print(t)
+             trajectory[condition_mask] = condition_data[condition_mask]
+ 
+             # 2. predict model output
+-            model_output = model(trajectory, t, cond)
++            query_model_time = time.time()
++
++            input = {
++                        'trajectory': trajectory.numpy(),
++                        't': t.numpy(),
++                        'cond': cond.numpy() if cond is not None else np.zeros_like(condition_data.numpy()),
++                        # 'cond_data': condition_data.numpy(),
++                        # 'cond_mask': condition_mask.numpy(),
++                    }
++            #print('model input:')
++            #print(trajectory.shape)
++            #print(condition_data.shape)
++            #print(condition_mask.shape)
++            #print(t)
++            #print(cond.shape)
++
++            # model_output = model(trajectory, t, cond)
++            model_output = lowdim_t_policy_ov_model(input)[0]
++
++            # print('model output:')
++            # print(model_output)
++            model_output = torch.from_numpy(model_output)
++            # print(model_output.shape)
++
++            # print(f'   - step {t} - query_model_time: {time.time()-query_model_time}')
++            latencies += time.time()-query_model_time
+ 
+             # 3. compute previous image: x_t -> x_t-1
+             trajectory = scheduler.step(
+@@ -83,7 +128,8 @@ class DiffusionTransformerLowdimPolicy(BaseLowdimPolicy):
+                 generator=generator,
+                 **kwargs
+                 ).prev_sample
+-        
++
++        # print(f'model_latency: {latencies / float(scheduler.timesteps.numel())} s')
+         # finally make sure conditioning is enforced
+         trajectory[condition_mask] = condition_data[condition_mask]        
+ 
+diff --git a/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py b/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
+index cb2d848..5820a46 100644
+--- a/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
++++ b/diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
+@@ -18,6 +18,17 @@ import robomimic.models.base_nets as rmbn
+ import diffusion_policy.model.vision.crop_randomizer as dmvc
+ from diffusion_policy.common.pytorch_util import dict_apply, replace_submodules
+ 
++import time
++import openvino as ov
++
++global image_c_policy_ov_model
++global image_c_encoder_ov_model
++
++def get_ov_model(model_path, device='CPU'):
++    core = ov.Core()
++    ov_model = core.read_model(model_path)
++    compiled_model = ov.compile_model(ov_model, device)
++    return compiled_model
+ 
+ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+     def __init__(self, 
+@@ -168,8 +179,11 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+             num_inference_steps = noise_scheduler.config.num_train_timesteps
+         self.num_inference_steps = num_inference_steps
+ 
+-        print("Diffusion params: %e" % sum(p.numel() for p in self.model.parameters()))
+-        print("Vision params: %e" % sum(p.numel() for p in self.obs_encoder.parameters()))
++        # model params
++        n_params_diff = sum(p.numel() for p in self.model.parameters())
++        print("Diffusion params: %.2fM" % (n_params_diff/1e6))
++        n_params_vision = sum(p.numel() for p in self.obs_encoder.parameters())
++        print("Vision params: %.2fM" % (n_params_vision/1e6))
+     
+     # ========= inference  ============
+     def conditional_sample(self, 
+@@ -179,7 +193,9 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+             # keyword arguments to scheduler.step
+             **kwargs
+             ):
+-        model = self.model
++        global image_c_policy_ov_model
++        image_c_policy_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_c884_unet_onepass.xml', device='GPU')
++        # model = self.model
+         scheduler = self.noise_scheduler
+ 
+         trajectory = torch.randn(
+@@ -191,13 +207,35 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+         # set step values
+         scheduler.set_timesteps(self.num_inference_steps)
+ 
++        latencies = 0.0
+         for t in scheduler.timesteps:
+             # 1. apply conditioning
+             trajectory[condition_mask] = condition_data[condition_mask]
+ 
+             # 2. predict model output
+-            model_output = model(trajectory, t, 
+-                local_cond=local_cond, global_cond=global_cond)
++            query_model_time = time.time()
++
++            input = {
++                        'trajectory': trajectory.numpy(),
++                        't': t.numpy(),
++                        'global_cond': global_cond,
++                    }
++            # print("policy input: ")
++            # print(trajectory.shape)
++            # print(t)
++            # print(local_cond)
++            # print(global_cond)
++            # model_output = model(trajectory, t,
++            #     local_cond=local_cond, global_cond=global_cond)
++            model_output = image_c_policy_ov_model(input)[0]
++
++            # print('model output:')
++            # print(model_output)
++            model_output = torch.from_numpy(model_output)
++            # print(model_output.shape)
++
++            # print(f'   - step {t} - query_model_time: {time.time()-query_model_time}')
++            latencies += time.time()-query_model_time
+ 
+             # 3. compute previous image: x_t -> x_t-1
+             trajectory = scheduler.step(
+@@ -205,7 +243,8 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+                 generator=generator,
+                 **kwargs
+                 ).prev_sample
+-        
++
++        # print(f'model_latency: {latencies / float(scheduler.timesteps.numel())} s')
+         # finally make sure conditioning is enforced
+         trajectory[condition_mask] = condition_data[condition_mask]        
+ 
+@@ -231,13 +270,43 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+         device = self.device
+         dtype = self.dtype
+ 
++        global image_c_encoder_ov_model
++        image_c_encoder_ov_model = get_ov_model('/home/intel/ov_models/pushT/image_c884_obs_encoder_onepass.xml', device='GPU')
++
++        # input = {
++        #                'value.1': obs_dict['agent_pos'],
++        #               'value.5': obs_dict['image'],
++        #             }
++        # obs_outs = image_c_encoder_ov_model(input)
++        # local_cond=None
++        # # print("[!!!], ", len(obs_outs), obs_outs[0].shape, obs_outs[1].shape, obs_outs[2].shape)
++        # cond_data, global_cond, cond_mask = obs_outs[0], obs_outs[1], obs_outs[2]
++        # cond_data, global_cond, cond_mask = torch.from_numpy(cond_data), torch.from_numpy(global_cond), torch.from_numpy(cond_mask)
++
+         # handle different ways of passing observation
+         local_cond = None
+         global_cond = None
+         if self.obs_as_global_cond:
++            query_encoder_time = time.time()
++            # print(nobs['agent_pos'].shape)
++            # print(nobs['image'].shape)
++
+             # condition through global feature
+             this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
+-            nobs_features = self.obs_encoder(this_nobs)
++            
++            agent_pos = this_nobs['agent_pos']
++            image = this_nobs['image']
++            # this_nobs = dict_apply(nobs, lambda x: x[:,:To,...])
++            input = {
++                        'x': agent_pos,
++                        'x.1': image,
++                    }
++            nobs_features = image_c_encoder_ov_model(input)[0]
++
++            # print('obs_encoder output:')
++            # print(nobs_features.shape)
++            # print(f'encoder_latency: {time.time()-query_encoder_time} s')
++
+             # reshape back to B, Do
+             global_cond = nobs_features.reshape(B, -1)
+             # empty data for action
+@@ -246,7 +315,16 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
+         else:
+             # condition through impainting
+             this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
+-            nobs_features = self.obs_encoder(this_nobs)
++            
++            agent_pos = this_nobs['agent_pos']
++            image = this_nobs['image']
++            # this_nobs = dict_apply(nobs, lambda x: x[:,:To,...])
++            input = {
++                        'x': agent_pos,
++                        'x.1': image,
++                    }
++            nobs_features = image_c_encoder_ov_model(input)[0]
++            
+             # reshape back to B, To, Do
+             nobs_features = nobs_features.reshape(B, To, -1)
+             cond_data = torch.zeros(size=(B, T, Da+Do), device=device, dtype=dtype)
+diff --git a/diffusion_policy/policy/diffusion_unet_image_policy.py b/diffusion_policy/policy/diffusion_unet_image_policy.py
+index 2aaf876..33125b5 100644
+--- a/diffusion_policy/policy/diffusion_unet_image_policy.py
++++ b/diffusion_policy/policy/diffusion_unet_image_policy.py
+@@ -139,28 +139,30 @@ class DiffusionUnetImagePolicy(BaseImagePolicy):
+         device = self.device
+         dtype = self.dtype
+ 
++        cond_data, local_cond, global_cond, cond_mask
++
+         # handle different ways of passing observation
+-        local_cond = None
+-        global_cond = None
+-        if self.obs_as_global_cond:
++        # local_cond = None
++        # global_cond = None
++        #if self.obs_as_global_cond:
+             # condition through global feature
+-            this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
+-            nobs_features = self.obs_encoder(this_nobs)
++        #    this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
++       #     nobs_features = self.obs_encoder(this_nobs)
+             # reshape back to B, Do
+-            global_cond = nobs_features.reshape(B, -1)
++       #     global_cond = nobs_features.reshape(B, -1)
+             # empty data for action
+-            cond_data = torch.zeros(size=(B, T, Da), device=device, dtype=dtype)
+-            cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
+-        else:
++        #    cond_data = torch.zeros(size=(B, T, Da), device=device, dtype=dtype)
++         #   cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
++       # else:
+             # condition through impainting
+-            this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
+-            nobs_features = self.obs_encoder(this_nobs)
++        #    this_nobs = dict_apply(nobs, lambda x: x[:,:To,...].reshape(-1,*x.shape[2:]))
++        #    nobs_features = self.obs_encoder(this_nobs)
+             # reshape back to B, T, Do
+-            nobs_features = nobs_features.reshape(B, To, -1)
+-            cond_data = torch.zeros(size=(B, T, Da+Do), device=device, dtype=dtype)
+-            cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
+-            cond_data[:,:To,Da:] = nobs_features
+-            cond_mask[:,:To,Da:] = True
++        #    nobs_features = nobs_features.reshape(B, To, -1)
++        #    cond_data = torch.zeros(size=(B, T, Da+Do), device=device, dtype=dtype)
++        #    cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
++        #    cond_data[:,:To,Da:] = nobs_features
++        #    cond_mask[:,:To,Da:] = True
+ 
+         # run sampling
+         nsample = self.conditional_sample(
+diff --git a/diffusion_policy/policy/diffusion_unet_lowdim_policy.py b/diffusion_policy/policy/diffusion_unet_lowdim_policy.py
+index c01ed7a..e015a48 100644
+--- a/diffusion_policy/policy/diffusion_unet_lowdim_policy.py
++++ b/diffusion_policy/policy/diffusion_unet_lowdim_policy.py
+@@ -10,6 +10,17 @@ from diffusion_policy.policy.base_lowdim_policy import BaseLowdimPolicy
+ from diffusion_policy.model.diffusion.conditional_unet1d import ConditionalUnet1D
+ from diffusion_policy.model.diffusion.mask_generator import LowdimMaskGenerator
+ 
++import time
++import openvino as ov
++
++global lowdim_c_policy_ov_model
++
++def get_ov_model(model_path, device='CPU'):
++    core = ov.Core()
++    ov_model = core.read_model(model_path)
++    compiled_model = ov.compile_model(ov_model, device)
++    return compiled_model
++
+ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
+     def __init__(self, 
+             model: ConditionalUnet1D,
+@@ -54,7 +65,11 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
+         if num_inference_steps is None:
+             num_inference_steps = noise_scheduler.config.num_train_timesteps
+         self.num_inference_steps = num_inference_steps
+-    
++
++        # model params
++        n_params_diff = sum(p.numel() for p in self.model.parameters())
++        print("Diffusion params: %.2fM" % (n_params_diff/1e6))
++
+     # ========= inference  ============
+     def conditional_sample(self, 
+             condition_data, condition_mask,
+@@ -63,7 +78,9 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
+             # keyword arguments to scheduler.step
+             **kwargs
+             ):
+-        model = self.model
++        global lowdim_c_policy_ov_model
++        lowdim_c_policy_ov_model = get_ov_model('/home/intel/ov_models/pushT/lowdim_c969_unet.xml', device='GPU')
++        # model = self.model
+         scheduler = self.noise_scheduler
+ 
+         trajectory = torch.randn(
+@@ -75,13 +92,37 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
+         # set step values
+         scheduler.set_timesteps(self.num_inference_steps)
+ 
++        latencies = 0.0
+         for t in scheduler.timesteps:
+             # 1. apply conditioning
+             trajectory[condition_mask] = condition_data[condition_mask]
+ 
+             # 2. predict model output
+-            model_output = model(trajectory, t, 
+-                local_cond=local_cond, global_cond=global_cond)
++            query_model_time = time.time()
++
++            input = {
++                        'trajectory': trajectory.numpy(),
++                        't': t.numpy(),
++                        # 'local_cond':local_cond,
++                        # 'global_cond':global_cond,
++                    }
++            # print("model input: ")
++            # print(trajectory.shape)
++            # print(t)
++            # print(local_cond)
++            # print(global_cond)
++
++            # model_output = model(trajectory, t,
++            #     local_cond=local_cond, global_cond=global_cond)
++            model_output = lowdim_c_policy_ov_model(input)[0]
++
++            # print('model output:')
++            # print(model_output)
++            model_output = torch.from_numpy(model_output)
++            # print(model_output.shape)
++
++            # print(f'   - step {t} - query_model_time: {time.time()-query_model_time}')
++            latencies += time.time()-query_model_time
+ 
+             # 3. compute previous image: x_t -> x_t-1
+             trajectory = scheduler.step(
+@@ -89,7 +130,8 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
+                 generator=generator,
+                 **kwargs
+                 ).prev_sample
+-        
++
++        # print(f'model_latency: {latencies / float(scheduler.timesteps.numel())} s')
+         # finally make sure conditioning is enforced
+         trajectory[condition_mask] = condition_data[condition_mask]        
+ 
+diff --git a/diffusion_policy/workspace/base_workspace.py b/diffusion_policy/workspace/base_workspace.py
+index 1352404..98bcc24 100644
+--- a/diffusion_policy/workspace/base_workspace.py
++++ b/diffusion_policy/workspace/base_workspace.py
+@@ -9,7 +9,6 @@ import dill
+ import torch
+ import threading
+ 
+-
+ class BaseWorkspace:
+     include_keys = tuple()
+     exclude_keys = tuple()
+@@ -78,13 +77,16 @@ class BaseWorkspace:
+             exclude_keys = tuple()
+         if include_keys is None:
+             include_keys = payload['pickles'].keys()
++        # include_keys : ['_output_dir', 'global_step', 'epoch']
+ 
+         for key, value in payload['state_dicts'].items():
+             if key not in exclude_keys:
++                # key : ['model', 'ema_model', 'optimizer']
+                 self.__dict__[key].load_state_dict(value, **kwargs)
+         for key in include_keys:
+             if key in payload['pickles']:
+                 self.__dict__[key] = dill.loads(payload['pickles'][key])
++#       self.__dict__.keys() : ['cfg', '_output_dir', '_saving_thread', 'model', 'ema_model', 'optimizer', 'global_step', 'epoch']
+     
+     def load_checkpoint(self, path=None, tag='latest',
+             exclude_keys=None, 
+diff --git a/eval.py b/eval.py
+index 06003f9..081e5bd 100644
+--- a/eval.py
++++ b/eval.py
+@@ -18,20 +18,28 @@ import wandb
+ import json
+ from diffusion_policy.workspace.base_workspace import BaseWorkspace
+ 
++from omegaconf import OmegaConf
++import numpy as np
++
++# from ipex_llm.transformers import AutoModelForCausalLM
++# from transformers import AutoTokenizer
++
+ @click.command()
+ @click.option('-c', '--checkpoint', required=True)
+ @click.option('-o', '--output_dir', required=True)
+ @click.option('-d', '--device', default='cuda:0')
+-def main(checkpoint, output_dir, device):
+-    if os.path.exists(output_dir):
+-        click.confirm(f"Output path {output_dir} already exists! Overwrite?", abort=True)
++@click.option('-s', '--seed', default='4300000')
++def main(checkpoint, output_dir, device, seed):
++    # if os.path.exists(output_dir):
++    #     click.confirm(f"Output path {output_dir} already exists! Overwrite?", abort=True)
+     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
+     
+     # load checkpoint
+     payload = torch.load(open(checkpoint, 'rb'), pickle_module=dill)
+     cfg = payload['cfg']
++    # print(OmegaConf.to_yaml(cfg, resolve=True))
+     cls = hydra.utils.get_class(cfg._target_)
+-    workspace = cls(cfg, output_dir=output_dir)
++    workspace = cls(cfg)
+     workspace: BaseWorkspace
+     workspace.load_payload(payload, exclude_keys=None, include_keys=None)
+     
+@@ -40,11 +48,13 @@ def main(checkpoint, output_dir, device):
+     if cfg.training.use_ema:
+         policy = workspace.ema_model
+     
+-    device = torch.device(device)
+-    policy.to(device)
+-    policy.eval()
++    # device = torch.device(device)
++    # policy.to(device)
++    # policy.eval()
+     
+     # run eval
++    cfg.task.env_runner.test_start_seed = int(seed)
++    # np.random.seed(int(seed))
+     env_runner = hydra.utils.instantiate(
+         cfg.task.env_runner,
+         output_dir=output_dir)
+-- 
+2.34.1
+

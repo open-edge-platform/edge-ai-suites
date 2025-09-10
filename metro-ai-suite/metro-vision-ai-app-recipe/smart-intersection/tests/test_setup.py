@@ -11,9 +11,8 @@ VIDEO_DIR = os.path.join(SOURCE, "dlstreamer-pipeline-server/videos")
 VIDEOS = ["1122east.ts", "1122west.ts", "1122north.ts", "1122south.ts"]
 SECRETS_DIR = os.path.join(SOURCE, "secrets")
 
-@pytest.mark.zephyr_id("NEX-T9365")
-def test_setup():
-  """Verify that secrets and videos have been set up."""
+def setup_functionality_check():
+  """Common function to verify that secrets and videos have been set up."""
   
   # Check if browser.auth file exists
   browser_auth = os.path.join(SECRETS_DIR, "browser.auth")
@@ -46,4 +45,15 @@ def test_setup():
     assert os.path.isfile(video_path), f"Video file {video} is not downloaded."
     # Check file is not empty
     assert os.path.getsize(video_path) > 1024, f"Video file {video} appears to be empty or corrupted."
-  
+
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T10675")
+def test_setup_kubernetes():
+  """Verify that secrets and videos have been set up."""
+  setup_functionality_check()
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9365")
+def test_setup_docker():
+  """Verify that secrets and videos have been set up."""
+  setup_functionality_check()

@@ -32,10 +32,17 @@
   
   Replace `YOUR_MACHINE_IP` with the actual IP address of your machine. If you do not set those URLs, remote endpoint tests will be skipped.
 
-- Prepare your environment according to the following guides:
-  - [Get Started Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md)
+**Note:** Some tests executed in the Kubernetes environment require privileged port forwarding using `kubectl port-forward` with `sudo`. In such cases (e.g., port 443), you need to set the `SUDO_PASSWORD` environment variable to your sudo password before running the tests, or they will fail.  
+
+```bash
+export SUDO_PASSWORD=your_sudo_password
+```
 
 ## Installation
+
+- Clone the repository and install prerequisites according to the following guides (for Kubernetes, also set up proxy settings if needed):
+  - [Docker Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md)
+  - [Kubernetes Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/how-to-deploy-helm.md)
 
 1. **Navigate to the smart-intersection directory:**
 
@@ -65,12 +72,21 @@ Now you are ready to run tests on your system.
 
 ## Running tests
 
-Use pytest to run all or selected tests:
+Use `pytest` to run tests based on either Docker or Kubernetes, using the `-m docker` or `-m kubernetes` options. Docker is the default, so you do not need to define it explicitly.
 
 ```bash
-# Run all tests
+# Run all Docker tests (default)
 pytest tests
 
-# Run a specific test
-pytest tests/test_admin.py::test_login
+# Run all Docker tests (explicit)
+pytest -m docker
+
+# Run all Kubernetes tests
+pytest -m kubernetes
+
+# Run a specific Docker test
+pytest tests/test_admin.py::test_login_docker
+
+# Run a specific Kubernetes test
+pytest -m kubernetes tests/test_admin.py::test_login_kubernetes
 ```

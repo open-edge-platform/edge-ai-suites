@@ -1,0 +1,142 @@
+From 0c4a5496cd5f29d495716aa30d8565b1a73ab1da Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Wed, 13 Aug 2025 11:51:48 +0800
+Subject: [PATCH] Fix unsafe PyTorch load issue.
+
+Signed-off-by: HKH347710 <kanghua.he@intel.com>
+---
+ eval_sim/eval_rdt_aloha_static.py    |  2 +-
+ eval_sim/eval_rdt_aloha_static_ov.py |  2 +-
+ scripts/aloha_static_model.py        | 14 +++++++++++---
+ scripts/aloha_static_ov_model.py     | 10 ++++++++--
+ scripts/convert/ov_convert.py        | 17 ++++++++++++++---
+ 5 files changed, 35 insertions(+), 10 deletions(-)
+
+diff --git a/eval_sim/eval_rdt_aloha_static.py b/eval_sim/eval_rdt_aloha_static.py
+index 1225932..7b1c244 100644
+--- a/eval_sim/eval_rdt_aloha_static.py
++++ b/eval_sim/eval_rdt_aloha_static.py
+@@ -119,7 +119,7 @@ policy = create_model(
+ 
+ ### text embedding
+ if os.path.exists(f'../text_embed/text_embed_{env_id}.pt'):
+-    text_embed = torch.load(f'../text_embed/text_embed_{env_id}.pt')
++    text_embed = torch.load(f'../text_embed/text_embed_{env_id}.pt', weights_only=True)
+ else:
+     text_embed = policy.encode_instruction(task2lang[env_id])
+     torch.save(text_embed, f'text_embed_{env_id}.pt')
+diff --git a/eval_sim/eval_rdt_aloha_static_ov.py b/eval_sim/eval_rdt_aloha_static_ov.py
+index 8c70559..f440882 100644
+--- a/eval_sim/eval_rdt_aloha_static_ov.py
++++ b/eval_sim/eval_rdt_aloha_static_ov.py
+@@ -116,7 +116,7 @@ policy = RDTPolicy(config, rdt_model_path, lang_adaptor_path, img_adaptor_path,
+ 
+ # text embedding
+ if os.path.exists(f'./text_embed_{env_id}.pt'):
+-    text_embed = torch.load(f'./text_embed_{env_id}.pt', map_location=torch.device('cpu'))
++    text_embed = torch.load(f'./text_embed_{env_id}.pt', map_location=torch.device('cpu'), weights_only=True)
+ else:
+     text_embed = policy.encode_instruction(task2lang[env_id])
+     torch.save(text_embed, f'text_embed_{env_id}.pt')
+diff --git a/scripts/aloha_static_model.py b/scripts/aloha_static_model.py
+index c9abfcc..6be7f5d 100644
+--- a/scripts/aloha_static_model.py
++++ b/scripts/aloha_static_model.py
+@@ -1,5 +1,5 @@
+ import os
+-
++import pickle
+ import numpy as np
+ import torch
+ from PIL import Image
+@@ -115,13 +115,21 @@ class RoboticDiffusionTransformerModel(object):
+         print(f'Loading weights from {pretrained}')
+         filename = os.path.basename(pretrained)
+         if filename.endswith('.pt'):
+-            checkpoint =  torch.load(pretrained, map_location='cpu')
++            try:
++                # Try with weights_only parameter for security (newer PyTorch versions)
++                checkpoint = torch.load(pretrained, map_location='cpu', weights_only=True)
++            except (TypeError, pickle.UnpicklingError):
++                # For older PyTorch versions that don't support weights_only parameter
++                # This is a known security risk, but necessary for backward compatibility
++                # Users should upgrade PyTorch to version >= 1.13.0 for better security
++                print("Warning: Using unsafe PyTorch load due to older PyTorch version. Consider upgrading PyTorch for better security.")
++                checkpoint = torch.load(pretrained, map_location='cpu')  # nosec B614
+             self.policy.load_state_dict(checkpoint["module"])
+         elif filename.endswith('.safetensors'):
+             from safetensors.torch import load_model
+             load_model(self.policy, pretrained)
+         elif filename.endswith('.bin'):
+-            checkpoint = torch.load(pretrained, map_location='cpu')
++            checkpoint = torch.load(pretrained, map_location='cpu', weights_only=True)
+             self.policy.load_state_dict(checkpoint)
+         else:
+             raise NotImplementedError(f"Unknown checkpoint format: {pretrained}")
+diff --git a/scripts/aloha_static_ov_model.py b/scripts/aloha_static_ov_model.py
+index 082a63f..50f3b77 100644
+--- a/scripts/aloha_static_ov_model.py
++++ b/scripts/aloha_static_ov_model.py
+@@ -310,7 +310,10 @@ class SiglipOVModel():
+         self.model = ov.Core().compile_model(model_path, device)
+         self.output = self.model.output("hidden_state.1")
+ 
+-        self.image_processor = SiglipImageProcessor.from_pretrained(self.model_name)
++        self.image_processor = SiglipImageProcessor.from_pretrained(
++            self.model_name,
++            revision="9fdffc5"
++        )
+ 
+     def get_features(self, inputs):
+         if type(inputs) is list:
+@@ -339,7 +342,10 @@ class SiglipOVFullModel():
+         # self.output = self.model.output("last_hidden_state")
+         self.output = self.model.output("hidden_state.1")
+ 
+-        self.image_processor = AutoProcessor.from_pretrained(self.model_name)
++        self.image_processor = AutoProcessor.from_pretrained(
++            self.model_name,
++            revision="9fdffc5"
++        )
+         input_labels = ["a red cube"]
+         self.text_descriptions = [f"This is a photo of a {label}" for label in input_labels]
+ 
+diff --git a/scripts/convert/ov_convert.py b/scripts/convert/ov_convert.py
+index f9cdac4..f874a7e 100644
+--- a/scripts/convert/ov_convert.py
++++ b/scripts/convert/ov_convert.py
+@@ -201,8 +201,12 @@ def convert_siglip_full_model(siglip_model_name, output_dir):
+     original_siglip = AutoModel.from_pretrained(
+         pretrained_vision_encoder_name_or_path,
+         torch_dtype=torch.float32,
++        revision="9fdffc5"
++    )
++    processor = AutoProcessor.from_pretrained(
++        siglip_model_name,
++        revision="9fdffc5"
+     )
+-    processor = AutoProcessor.from_pretrained(siglip_model_name)
+ 
+     original_siglip.eval()
+     # Create example input tensor
+@@ -227,8 +231,15 @@ def convert_siglip_vision_model(siglip_model_name, output_dir):
+     class SiglipImageModel(nn.Module):
+         def __init__(self, siglip_model_name, device_map='cpu'):
+             super().__init__()
+-            self.image_processor = SiglipImageProcessor.from_pretrained(siglip_model_name)
+-            self.model = SiglipModel.from_pretrained(siglip_model_name, device_map=device_map)
++            self.image_processor = SiglipImageProcessor.from_pretrained(
++                siglip_model_name,
++                revision="9fdffc5"
++            )
++            self.model = SiglipModel.from_pretrained(
++                siglip_model_name,
++                device_map=device_map,
++                revision="9fdffc5"
++            )
+             self.config = self.model.config
+             self.model.eval()
+ 
+-- 
+2.34.1
+

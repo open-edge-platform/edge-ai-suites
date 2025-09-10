@@ -3,6 +3,7 @@
 # This file is licensed under the Limited Edge Software Distribution License Agreement.
 
 import pytest
+import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from tests.utils.ui_utils import waiter, driver
@@ -53,17 +54,37 @@ def navigate_to_dashboard(waiter, url):
   )
   anthem_dashboard_link.click()
 
-@pytest.mark.zephyr_id("NEX-T9371")
-def test_grafana_anthem_dashboard_availability(waiter):
+def grafana_anthem_dashboard_availability_check(waiter, grafana_url):
   """Test the availability of the Anthem dashboard in Grafana."""
-  navigate_to_dashboard(waiter, GRAFANA_URL)
+  navigate_to_dashboard(waiter, grafana_url)
   check_grafana_panel_value(waiter)
 
-@pytest.mark.zephyr_id("NEX-T9373")
-def test_remote_grafana_anthem_dashboard_availability(waiter):
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T10680")
+def test_grafana_anthem_dashboard_availability_kubernetes(waiter):
+  """Test the availability of the Anthem dashboard in Grafana for Kubernetes deployment."""
+  grafana_anthem_dashboard_availability_check(waiter, GRAFANA_URL)
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9371")
+def test_grafana_anthem_dashboard_availability_docker(waiter):
+  """Test the availability of the Anthem dashboard in Grafana for Docker deployment."""
+  grafana_anthem_dashboard_availability_check(waiter, GRAFANA_URL)
+
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T10682")
+def test_remote_grafana_anthem_dashboard_availability_kubernetes(waiter):
   """Test the availability of the Anthem dashboard in remote Grafana."""
   if not GRAFANA_REMOTE_URL:
     pytest.skip("GRAFANA_REMOTE_URL is not set")
 
-  navigate_to_dashboard(waiter, GRAFANA_REMOTE_URL)
-  check_grafana_panel_value(waiter)
+  grafana_anthem_dashboard_availability_check(waiter, GRAFANA_REMOTE_URL)
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9373")
+def test_remote_grafana_anthem_dashboard_availability_docker(waiter):
+  """Test the availability of the Anthem dashboard in remote Grafana."""
+  if not GRAFANA_REMOTE_URL:
+    pytest.skip("GRAFANA_REMOTE_URL is not set")
+
+  grafana_anthem_dashboard_availability_check(waiter, GRAFANA_REMOTE_URL)

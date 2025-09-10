@@ -1,0 +1,57 @@
+From 260c1bfe7352aa2e8639c705fde33a89386fe395 Mon Sep 17 00:00:00 2001
+From: HKH347710 <kanghua.he@intel.com>
+Date: Mon, 14 Jul 2025 10:11:07 +0800
+Subject: [PATCH 1/6] add language convert script
+
+---
+ eval_sim/language_to_pt.py | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
+ create mode 100644 eval_sim/language_to_pt.py
+
+diff --git a/eval_sim/language_to_pt.py b/eval_sim/language_to_pt.py
+new file mode 100644
+index 0000000..0d19102
+--- /dev/null
++++ b/eval_sim/language_to_pt.py
+@@ -0,0 +1,38 @@
++import torch
++from models.multimodal_encoder.t5_encoder import T5Embedder
++
++# example usage:
++# python -m eval_sim.language_to_pt --instruction_name "InsertionSide-v2" --instruction "Pick up a red peg and insert into the blue socket with a hole in it."
++
++if __name__ == "__main__":
++    import argparse
++
++    # Parse command-line arguments
++    parser = argparse.ArgumentParser(description="Encode a language instruction into a .pt file.")
++    parser.add_argument("--instruction_name", type=str, required=True, help="The language instruction name to encode (e.g., 'PegInsertionSide-v1').")
++    parser.add_argument("--instruction", type=str, required=True, help="The language instruction to encode.")
++    parser.add_argument("--pretrained_text_encoder", type=str, default="google/t5-v1_1-xxl", help="Pretrained text encoder name or path.")
++    parser.add_argument("--tokenizer_max_length", type=int, default="1024", help="Maximum number of language tokens to encode.")
++    parser.add_argument("--device", type=str, default="cuda", help="Device to run the encoding on (e.g., 'cuda' or 'cpu').")
++    args = parser.parse_args()
++
++    # Load model
++    text_embedder = T5Embedder(from_pretrained=args.pretrained_text_encoder, 
++                                   model_max_length=args.tokenizer_max_length, 
++                                   device=args.device)
++    tokenizer, text_encoder = text_embedder.tokenizer, text_embedder.model
++
++    # Set the device for the tokenizer and text encoder 
++    tokens = tokenizer(
++            args.instruction, return_tensors="pt",
++            padding="longest",
++            truncation=True
++        )["input_ids"].to(args.device)
++
++    # Ensure tokens are in the correct shape
++    tokens = tokens.view(1, -1)
++
++    # Encode the language instruction
++    with torch.no_grad():
++        pred = text_encoder(tokens).last_hidden_state.detach()
++        torch.save(pred, f'text_embed_{args.instruction_name}.pt')
+-- 
+2.34.1
+

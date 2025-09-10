@@ -1,7 +1,13 @@
+import logging
+import time
+
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.common.exceptions import TimeoutException
+
+logger = logging.getLogger(__name__)
+
 
 class ElementWaiter:
   """
@@ -38,7 +44,12 @@ class ElementWaiter:
 
   def perform_login(self, url, username_selector, username_selector_value, password_selector, password_selector_value, login_selector, login_selector_value, username, password):
     """Performs login action."""
-    self.driver.get(url)  # Load login page
+    logger.info(f"Navigating to login page: {url}")
+    try:
+      self.driver.get(url)  # Load login page
+    except Exception as e:
+      logger.error(f"Error navigating to URL {url}: {e}")
+      raise
 
     try:
       # Wait for the username selector to be present

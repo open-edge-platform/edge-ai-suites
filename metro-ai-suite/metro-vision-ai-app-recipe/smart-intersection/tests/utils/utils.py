@@ -21,6 +21,7 @@ def run_command(cmd):
   out, err = proc.communicate()
   return out.decode(), err.decode(), proc.returncode
 
+
 def read_from_file(file_path):
   """Read content from a specified file."""
   try:
@@ -63,11 +64,52 @@ def suppress_insecure_request_warning(func):
 @suppress_insecure_request_warning
 def check_url_access(url, timeout=10):
   """Helper function to check if a component is accessible."""
+  logger.info(f"Checking access to service: {url}")
+
+  # Add browser-like headers
+  headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Accept-Encoding': 'gzip, deflate',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1'
+  }
+
   try:
-    # Send a GET request to the URL, ignoring SSL certificate errors
-    response = requests.get(url, verify=False, timeout=timeout)
-    
-    # Check if the response status code is 200 (OK)
-    assert response.status_code == 200, f"Expected status code 200 for {url}, but got {response.status_code}"
+    # Create session for cookie handling
+    session = requests.Session()
+    session.headers.update(headers)
+
+    response = session.get(url, verify=False, timeout=timeout, allow_redirects=True)
+
+    # Accept both 200 and 3xx redirects as success
+    if response.status_code in [200, 301, 302, 303, 307, 308]:
+      logger.info(f"Successfully accessed service: {url} (status: {response.status_code})")
+      return True
+    else:
+      logger.error(f"Service access failed: {url} (status: {response.status_code})")
+      return False
+
   except requests.exceptions.RequestException as e:
-    assert False, f"Request to {url} failed: {e}"
+    logger.error(f"Service access failed: {url} (error: {e})")
+    return False
+
+def check_urls_access(urls_to_check):
+  """
+  Common function to check access to multiple URLs and collect failures.
+
+  Args:
+    urls_to_check: List of URLs to check
+
+  Raises:
+    AssertionError: If any URLs fail with list of failed URLs
+  """
+  failed_urls = []
+  for url in urls_to_check:
+    if not check_url_access(url):
+      failed_urls.append(url)
+      logger.error(f"Failed to access URL: {url}")
+
+  if failed_urls:
+    assert False, f"Failed to access the following URLs: {failed_urls}"

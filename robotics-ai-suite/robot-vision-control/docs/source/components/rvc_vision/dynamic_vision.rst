@@ -24,7 +24,7 @@ The component of this container are:
 
 .. _vision_container_high_level_diagram:
 
-.. image:: /images/html/RVCVisionHighLevel.png
+.. image:: images/html/RVCVisionHighLevel.png
     :alt: Vision container high level diagram
 
 

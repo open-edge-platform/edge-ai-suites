@@ -6,14 +6,18 @@ import pytest
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from tests.utils.kubernetes_utils import get_scenescape_kubernetes_url
 from tests.utils.ui_utils import waiter, driver
-from .conftest import SCENESCAPE_URL, SCENESCAPE_USERNAME, SCENESCAPE_PASSWORD
+from .conftest import (
+  SCENESCAPE_URL,
+  SCENESCAPE_USERNAME,
+  SCENESCAPE_PASSWORD,  
+)
 
-
-def add_sensor(waiter, sensor_name, sensor_id):
+def add_sensor(waiter, sensor_name, sensor_id, url=SCENESCAPE_URL):
   """Helper function to log in and add a new sensor."""
   waiter.perform_login(
-    SCENESCAPE_URL,
+    url,
     By.ID, "username",
     By.ID, "password",
     By.ID, "login-submit",
@@ -65,32 +69,19 @@ def add_sensor(waiter, sensor_name, sensor_id):
     error_message=f"Expected sensor ID '{sensor_id}' not found in sensor ID element"
   )
 
-
-@pytest.mark.zephyr_id("NEX-T9384")
-def test_add_sensor(waiter):
-  """Test that the admin can add a new sensor."""
-  name_of_new_sensor = "sensor_NEX-T9384"
-  id_of_new_sensor = "sensor_id_NEX-T9384"  
-
-  add_sensor(waiter, name_of_new_sensor, id_of_new_sensor)
-
-
-@pytest.mark.zephyr_id("NEX-T9385")
-def test_delete_sensor(waiter):
-  """Test that the admin can delete a new sensor."""
-  name_of_new_sensor = "sensor_NEX-T9385"
-  id_of_new_sensor = "sensor_id_NEX-T9385"
-
-  add_sensor(waiter, name_of_new_sensor, id_of_new_sensor)
+def delete_sensor_functionality_check(waiter, sensor_name, sensor_id, url):
+  """
+  Helper function to add and delete a sensor, verifying deletion.
+  """
+  add_sensor(waiter, sensor_name, sensor_id, url)
 
   # Verify the presence of the delete link in the same card body
   delete_link = waiter.wait_and_assert(
-    EC.presence_of_element_located((By.XPATH, f"//td[@class='small sensor-id' and text()='{id_of_new_sensor}']/ancestor::div[@class='card-body']//a[@class='btn btn-secondary btn-sm' and contains(@href, '/delete/')]")),
-    error_message=f"Delete link not found for sensor ID '{id_of_new_sensor}'"
+    EC.presence_of_element_located((By.XPATH, f"//td[@class='small sensor-id' and text()='{sensor_id}']/ancestor::div[@class='card-body']//a[@class='btn btn-secondary btn-sm' and contains(@href, '/delete/')]")),
+    error_message=f"Delete link not found for sensor ID '{sensor_id}'"
   )
-
   delete_link.click()
-  
+
   # Wait for the 'Yes, Delete the Sensor!' button to be present and clickable
   delete_confirm_button = waiter.wait_and_assert(
     EC.element_to_be_clickable((By.XPATH, "//input[@class='btn btn-primary' and @value='Yes, Delete the Sensor!']")),
@@ -107,6 +98,38 @@ def test_delete_sensor(waiter):
 
   # Verify the sensor ID was deleted by checking the sensor ID element is no longer present
   waiter.wait_and_assert(
-    EC.invisibility_of_element_located((By.XPATH, f"//td[@class='small sensor-id' and text()='{id_of_new_sensor}']")),
-    error_message=f"Expected sensor ID '{id_of_new_sensor}' should not be present after deletion"
+    EC.invisibility_of_element_located((By.XPATH, f"//td[@class='small sensor-id' and text()='{sensor_id}']")),
+    error_message=f"Expected sensor ID '{sensor_id}' should not be present after deletion"
   )
+
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T13925")
+def test_add_sensor_kubernetes(waiter):
+  """Test that the admin can add a new sensor."""
+  name_of_new_sensor = "sensor_NEX-T13925"
+  id_of_new_sensor = "sensor_id_NEX-T13925"
+  add_sensor(waiter, name_of_new_sensor, id_of_new_sensor, get_scenescape_kubernetes_url())
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9384")
+def test_add_sensor_docker(waiter):
+  """Test that the admin can add a new sensor."""
+  name_of_new_sensor = "sensor_NEX-T9384"
+  id_of_new_sensor = "sensor_id_NEX-T9384"
+  add_sensor(waiter, name_of_new_sensor, id_of_new_sensor)
+
+@pytest.mark.kubernetes
+@pytest.mark.zephyr_id("NEX-T13926")
+def test_delete_sensor_kubernetes(waiter):
+  """Test that the admin can delete a new sensor."""
+  name_of_new_sensor = "sensor_NEX-T13926"
+  id_of_new_sensor = "sensor_id_NEX-T13926"
+  delete_sensor_functionality_check(waiter, name_of_new_sensor, id_of_new_sensor, get_scenescape_kubernetes_url())
+
+@pytest.mark.docker
+@pytest.mark.zephyr_id("NEX-T9385")
+def test_delete_sensor_docker(waiter):
+  """Test that the admin can delete a new sensor."""
+  name_of_new_sensor = "sensor_NEX-T9385"
+  id_of_new_sensor = "sensor_id_NEX-T9385"
+  delete_sensor_functionality_check(waiter, name_of_new_sensor, id_of_new_sensor, SCENESCAPE_URL)
