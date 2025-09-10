@@ -18,6 +18,11 @@ HELM_PACKAGE_SCRIPT = ./package_helm.sh
 include $(ENV_FILE)
 export $(shell sed 's/=.*//' $(ENV_FILE))
 
+# Default values
+KEY_LENGTH=3072
+DAYS=365
+SHA_ALGO="sha384"
+
 # Build Docker containers
 .PHONY: build
 build:
@@ -35,7 +40,7 @@ generated_ssl_certs_nginx:
 	@echo "Generating SSL certificates for Nginx..."
 	@if [ -d "./nginx/ssl" ]; then rm -rf ./nginx/ssl; fi
 	@mkdir -p ./nginx/ssl
-	@openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./nginx/ssl/key.pem -out ./nginx/ssl/cert.pem -subj "/CN=localhost"
+	@openssl req -x509 -nodes -days ${DAYS} -${SHA_ALGO} -newkey rsa:${KEY_LENGTH} -keyout ./nginx/ssl/key.pem -out ./nginx/ssl/cert.pem -subj "/CN=localhost"
 	@chmod 644 ./nginx/ssl/key.pem ./nginx/ssl/cert.pem
 # Check if multiple particular variables in .env are assigned with values
 .PHONY: check_env_variables
