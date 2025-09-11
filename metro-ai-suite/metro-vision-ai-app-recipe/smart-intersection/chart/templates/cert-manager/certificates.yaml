@@ -1,12 +1,9 @@
-{{- if .Values.import.certManager.enabled }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ .Release.Name }}-broker-cert
   namespace: {{ .Release.Namespace }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
 spec:
   secretName: {{ .Release.Name }}-broker-tls
   issuerRef:
@@ -26,8 +23,6 @@ kind: Certificate
 metadata:
   name: {{ .Release.Name }}-web-cert
   namespace: {{ .Release.Namespace }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
 spec:
   secretName: {{ .Release.Name }}-web-tls
   issuerRef:
@@ -41,4 +36,3 @@ spec:
   - "{{ .Release.Name }}-web.{{ .Release.Namespace }}.svc.cluster.local"
   duration: 8760h
   renewBefore: 720h
-{{- end }}

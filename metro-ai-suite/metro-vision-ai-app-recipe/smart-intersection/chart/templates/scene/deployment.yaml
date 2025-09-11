@@ -14,6 +14,8 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-scene
+      annotations:
+        checksum/secrets: {{ include (print $.Template.BasePath "/app-secrets.yaml") . | sha256sum }}
     spec:
       initContainers:
       - name: wait-for-db-ready
@@ -82,7 +84,7 @@ spec:
         - name: CONTROLLER_AUTH
           valueFrom:
             secretKeyRef:
-              name: {{ .Release.Name }}-scene-secrets
+              name: {{ .Release.Name }}-mqtt-auth-secrets
               key: controller.auth
       volumes:
       - name: pgserver-media
@@ -91,22 +93,18 @@ spec:
       - name: tracker-config
         configMap:
           name: {{ .Release.Name }}-scene-config
-      {{- if .Values.import.certManager.enabled }}
       - name: secrets
         projected:
           sources:
           - secret:
-              name: {{ .Release.Name }}-scene-secrets
+              name: {{ .Release.Name }}-django-secrets
+          - secret:
+              name: {{ .Release.Name }}-mqtt-auth-secrets
           - secret:
               name: {{ .Release.Name }}-ca-secret
               items:
               - key: tls.crt
                 path: scenescape-ca.pem
-      {{- else }}
-      - name: secrets
-        secret:
-          secretName: {{ .Release.Name }}-scene-secrets
-      {{- end }}
       - name: scene-secrets-data
         persistentVolumeClaim:
           claimName: {{ .Release.Name }}-scene-secrets-pvc

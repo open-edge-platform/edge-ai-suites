@@ -1,29 +1,30 @@
 
-The Manufacturing AI Suite (MAS) is a comprehensive toolkit to build, deploy, and scale AI
-applications in industrial environments. With Intel's advanced Edge AI technologies and
-optimized hardware, it delivers a seamless development experience that supports real-time AI
-integration and innovation.
+**Manufacturing AI Suite (MAS)** is a comprehensive toolkit for building, deploying, and scaling AI applications in industrial environments. Powered by Intel’s Edge AI technologies, it enables real-time integration and innovation with optimized hardware.
 
-The suite includes tools and software for AI acceleration—such as IoT protocol support (MQTT/OPC UA), accelerated libraries for data analytics, and system software for multi-interface cameras. It also offers an actionable AI pipeline for closed-loop systems and comprehensive benchmarking support for evaluating performance across time series, vision, and generative AI workloads.
+It includes:
+•	Tools for AI acceleration (for example, MQTT/OPC UA support, analytics libraries, camera system software)
+•	A complete AI pipeline for closed-loop systems
+•	Benchmarking support for evaluating performance across time series, vision, and generative AI workloads
 
 The Manufacturing AI Suite helps you develop solutions for:
-- Production Workflow: Efficiency optimizations, product quality (detect anomalies, defects, or variations)
-- Workplace Safety: AI-based safety insights to help reduce risks
-- Real-Time Insights: Improve the production process (local data processing, integration with existing manufacturing executions systems, tracking defect rates, identifying trends)
-- Automation: Correct problems almost immediately (instant alerts, implementation of corrective actions)
+•	**Production Workflow**: Detect defects, optimize efficiency
+•	**Workplace Safety**: AI-driven risk reduction
+•	**Real-Time Insights**: Local data processing, trend tracking
+•	**Automation**: Instant alerts and corrective actions
 
-The following sample applications will give you a quick preview of the suite's workflows
-and show you how to utilize them in your use cases:
+**Sample Applications**
 
-* [HMI Augmented worker](./hmi-augmented-worker/),
-* [Pallet Defect Detection](industrial-edge-insights-vision/apps/pallet-defect-detection),
-* [PCB Anomaly Detection](industrial-edge-insights-vision/apps/pcb-anomaly-detection),
-* [Weld Porosity](industrial-edge-insights-vision/apps/weld-porosity),
-* [Worker Safety Gear Detection](industrial-edge-insights-vision/apps/worker-safety-gear-detection),
-* [Wind Turbine Anomaly Detection](wind-turbine-anomaly-detection/).
+| Applications | Description | User Guide |
+|:------------|:------------|:-----------|
+| [HMI Augmented worker](./hmi-augmented-worker/) | Demonstrates an RAG-enabled HMI application a Hypervisor environment, allowing a standard HMI deployment setup. | https://docs.openedgeplatform.intel.com/edge-ai-suites/hmi-augmented-worker/main/user-guide/overview.html |
+| [Pallet Defect Detection](industrial-edge-insights-vision/apps/pallet-defect-detection) | Provides automated quality control with AI-driven vision systems. | [Link](https://docs.openedgeplatform.intel.com/edge-ai-suites/pallet-defect-detection/main/user-guide/Overview |
+| [PCB Anomaly Detection](industrial-edge-insights-vision/apps/pcb-anomaly-detection) | Provides real-time anomaly detection in printed circuit boards (PCB) by running with AI-driven vision systemspenedgeplatform.intel.com/edge-ai-suites/pcb-anomaly-detection/main/user-guide/Overview.html) |
+| [Weld Porosity](industrial-edge-insights-vision/apps/weld-porosity) | Prevents defectsng AI-powered monitoring. AI and machine vision enable real-time detection of welding defects, ensuring immediate recovery before issues escalate. | https://docs.openedgeplatform.intel.com/edge-ai-suites/weld-porosity/main/user-guide/Overview.html |
+| [Worker Safety Gear Detection](industrial-edge-insights-vision/apps/worker-safety-gear-detection) | Provides real-time monitoring of worker safety gear with AI-driven visionopenedgeplatform.intel.com/edgetes/worker-safety-gear-detection/main/user-guide/Overview.html |
+| [Wind Turbine Anomaly Detection](wind-turbine-anomaly-detection/) | Demonstrates a time series use case by detecting the anomalous power generation patterns relative to wind speed. | [Link](https://docs.openedgeplatform.intel.com/2025.1/edge-ai-suites/wind-turbine-anomaly-detection.html |
 
 
-Some of the the more important components and AI Libraries the Suite uses for its industrial
+Some of the the  important components and AI Libraries the Suite uses for its industrial
 and manufacturing use cases are:
 
 - [Deep Learning Streamer](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/libraries/dl-streamer): A pipeline framework that provides that enables building optimized media analytics pipeline powered by OpenVINO&trade; toolkit.

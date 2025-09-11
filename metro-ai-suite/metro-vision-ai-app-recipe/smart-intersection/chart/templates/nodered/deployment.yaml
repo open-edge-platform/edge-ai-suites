@@ -13,12 +13,13 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-nodered
+      annotations:
+        checksum/secrets: {{ include (print $.Template.BasePath "/app-secrets.yaml") . | sha256sum }}
     spec:
       volumes:
       - name: nodered-config
         configMap:
           name: {{ .Release.Name }}-nodered # Reference the ConfigMap created above
-      {{- if .Values.import.certManager.enabled }}
       - name: secrets-volume
         projected:
           sources:
@@ -34,11 +35,6 @@ spec:
                 path: broker-cert
               - key: tls.key
                 path: broker-key
-      {{- else }}
-      - name: secrets-volume
-        secret:
-          secretName: {{ .Release.Name }}-nodered-rootcert
-      {{- end }}
       containers:
       - envFrom:
         - configMapRef:
@@ -59,7 +55,7 @@ spec:
           - name: INFLUX_TOKEN
             valueFrom:
               secretKeyRef:
-                name: {{ .Release.Name }}-nodered-secrets
+                name: {{ .Release.Name }}-influxdb-secrets
                 key: influxdb2-admin-token
         image: {{ .Values.nodered.repository }}:{{ .Values.nodered.tag }}
         name: {{ .Release.Name }}-nodered

@@ -1,32 +1,35 @@
 # Deploy with Helm
 
-Use Helm to deploy Smart Intersection to a Kubernetes cluster. This guide will help you:
+Use Helm to deploy Smart Intersection to a Kubernetes cluster.
+This guide will help you:
+
 - Add the Helm chart repository.
 - Configure the Helm chart to match your deployment needs.
 - Deploy and verify the application.
 
-Helm simplifies Kubernetes deployments by streamlining configurations and enabling easy scaling and updates. For more details, see [Helm Documentation](https://helm.sh/docs/).
-
+Helm simplifies Kubernetes deployments by streamlining configurations and
+enabling easy scaling and updates. For more details, see
+[Helm Documentation](https://helm.sh/docs/).
 
 ## Prerequisites
 
 Before You Begin, ensure the following:
 
-- **Kubernetes Cluster**: Ensure you have a properly installed and configured Kubernetes cluster.
+- **Kubernetes Cluster**: Ensure you have a properly installed and
+configured Kubernetes cluster.
 - **System Requirements**: Verify that your system meets the [minimum requirements](./system-requirements.md).
 - **Tools Installed**: Install the required tools:
-    - Kubernetes CLI (kubectl)
-    - Helm 3 or later
+  - Kubernetes CLI (kubectl)
+  - Helm 3 or later
+- **cert-manager**: Will be installed as part of the deployment process (instructions provided below)
 
 ## Steps to Deploy
 
 To deploy the Smart Intersection Sample Application, copy and paste the entire block of following commands into your terminal and run them:
 
-### Clone the Repository and Install Prerequisites
+### Clone the Repository
 
-**Note**: Skip this step if you have already followed the steps as part of the [Get Started guide](./get-started.md).
-
-Before you can deploy with Helm, you must clone the repository and run the installation script:
+Before you can deploy with Helm, you must clone the repository:
 
 ```bash
 # Clone the repository
@@ -34,15 +37,11 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
-
-# Run the installation script for smart-intersection
-./install.sh smart-intersection
-
 ```
 
 ### Configure Proxy Settings (If Behind a Proxy)
 
-If you are deploying in a proxy environment, update the values.yml file with your proxy settings before installation:
+If you are deploying in a proxy environment, update the values.yaml file with your proxy settings before installation:
 
 ```bash
 # Edit the values.yml file to add proxy configuration
@@ -59,44 +58,30 @@ no_proxy: "localhost,127.0.0.1,.local,.cluster.local"
 
 Replace `your-proxy-server:port` with your actual proxy server details.
 
-<details>
-<summary>
-Switch to Stable Build (Optional)
-</summary>
+### Install cert-manager
 
-To use stable releases from Docker Hub instead of weekly builds, update the values.yaml file with following information,
+The Smart Intersection application requires cert-manager for TLS certificate management. Install cert-manager before deploying the application:
 
-```yaml
-scene:
-  repository: intel/scenescape-controller
-  tag: v1.3.0
-pgserver:
-  repository: intel/scenescape-manager
-  tag: v1.3.0
-web:
-  image:
-    repository: intel/scenescape-manager
-    tag: v1.3.0
-dlstreamerPipelineServer:
-  repository: intel/dlstreamer-pipeline-server
-  tag: 3.1.0-ubuntu24
+```bash
+# Install cert-manager
+helm install \
+  cert-manager oci://quay.io/jetstack/charts/cert-manager \
+  --version v1.18.2 \
+  --namespace cert-manager \
+  --create-namespace \
+  --set crds.enabled=true
 ```
-This updates the application to use stable images from [Docker Hub](https://hub.docker.com/u/intel/).
-
-</details>
 
 ### Deploy the application
 
 Now you're ready to deploy the Smart Intersection application:
 
 ```bash
-
 # Install the chart
 helm upgrade --install smart-intersection ./smart-intersection/chart \
   --create-namespace \
   --set grafana.service.type=NodePort \
   -n smart-intersection
-
 ```
 
 ## Access Application Services using Node Port
@@ -104,25 +89,32 @@ helm upgrade --install smart-intersection ./smart-intersection/chart \
 ### Access the Application UI using Node Port
 
 - Get the Node Port Number using following command and use it to access the Application UI
+
 ```bash
 kubectl get service smart-intersection-web -n smart-intersection -o jsonpath='{.spec.ports[0].nodePort}'
 ```
+
 - Go to https://<HOST_IP>:<Node_PORT>
-- - **Log in with credentials**:
-    - **Username**: `admin`
-    - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
+- **Log in with credentials**:
+  - **Username**: `admin`
+  - **Password**: Stored in `supass` secret. To retrieve run the following command:
+
+    ```bash
+    kubectl get secret smart-intersection-supass-secret -n smart-intersection -o jsonpath='{.data.supass}' | base64 -d && echo
+    ```
 
 ### Access the Grafana UI using Node Port
 
 - Get the Node Port Number using following command and use it to access the Grafana UI
+
 ```bash
 kubectl get service smart-intersection-grafana -n smart-intersection -o jsonpath='{.spec.ports[0].nodePort}'
 ```
-- Go to http://<HOST_IP>:<Node_PORT>
-- - **Log in with credentials**:
-    - **Username**: `admin`
-    - **Password**: `admin`
 
+- Go to http://<HOST_IP>:<Node_PORT>
+- **Log in with credentials**:
+  - **Username**: `admin`
+  - **Password**: `admin`
 
 ## Access Application Services using Port Forwarding (Optional)
 
@@ -132,11 +124,15 @@ kubectl get service smart-intersection-grafana -n smart-intersection -o jsonpath
 WEB_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-web -o jsonpath="{.items[0].metadata.name}")
 sudo -E kubectl -n smart-intersection port-forward $WEB_POD 443:443
 ```
-- Go to https://<HOST_IP>
-- - **Log in with credentials**:
-    - **Username**: `admin`
-    - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
 
+- Go to https://<HOST_IP>
+- **Log in with credentials**:
+  - **Username**: `admin`
+  - **Password**: Stored in `supass` secret. To retrieve run the following command:
+
+    ```bash
+    kubectl get secret smart-intersection-supass-secret -n smart-intersection -o jsonpath='{.data.supass}' | base64 -d && echo
+    ```
 
 ### Access the Grafana UI
 
@@ -144,10 +140,11 @@ sudo -E kubectl -n smart-intersection port-forward $WEB_POD 443:443
 GRAFANA_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-grafana -o jsonpath="{.items[0].metadata.name}")
 kubectl -n smart-intersection port-forward $GRAFANA_POD 3000:3000
 ```
+
 - Go to http://<HOST_IP>:<Node_PORT>
-- - **Log in with credentials**:
-    - **Username**: `admin`
-    - **Password**: `admin`
+- **Log in with credentials**:
+  - **Username**: `admin`
+  - **Password**: `admin`
 
 ### Access the InfluxDB UI
 

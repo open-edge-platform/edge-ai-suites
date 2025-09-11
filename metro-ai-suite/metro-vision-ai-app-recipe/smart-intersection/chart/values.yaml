@@ -1,13 +1,3 @@
-# Default values for smart-intersection chart.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-# Certificate Manager Configuration
-import:
-  certManager:
-    enabled: false
-
-# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 namespace:
 replicaCount: 1
 http_proxy:
@@ -39,23 +29,17 @@ images:
     repository: busybox
     tag: latest
 
-# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 ntpserver:
-  # This is the image repository
   repository: docker.io/dockurr/chrony
-  # Overrides the image tag whose default is the chart appVersion.
   tag: "4.6.1"
 
 nodered:
-  # This is the image repository
   repository: docker.io/nodered/node-red
-  # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
   # Overrides the storage class name
   storageClassName: "standard"
 
 broker:
-  # Image settings
   repository: eclipse-mosquitto
   tag: 2.0.21
 
@@ -63,14 +47,10 @@ broker:
   uid: 1000
   gid: 1000
 
-  # # Secret name containing TLS certs or other secrets (matches mounted secrets in Deployment)
-  # secretName: broker-secrets
-
   # Enable websocket listener
   enableWebsockets: true
 
 influxdb:
-  # Image settings
   repository: influxdb
   tag: 2.7.11
 
@@ -79,7 +59,6 @@ influxdb:
   bucket: SS-Anthem
   retention: 1w
 
-  # Service configuration
   service:
     type: ClusterIP
     port: 8086
@@ -142,15 +121,10 @@ web:
     type: NodePort
 
 dlstreamerPipelineServer:
-  # This is the image repository
   repository: docker.io/intel/dlstreamer-pipeline-server
-  # Overrides the image tag whose default is the chart appVersion.
   tag: 3.1.0-ubuntu24
   # Overrides the storage class name
   storageClassName: "standard"
-
-cert-manager:
-  installCRDs: true
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []

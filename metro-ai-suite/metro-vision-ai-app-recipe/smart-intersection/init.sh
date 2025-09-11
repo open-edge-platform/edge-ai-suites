@@ -41,7 +41,6 @@ cp -r \
   ${SOURCE}/grafana \
   ${SOURCE}/mosquitto \
   ${SOURCE}/node-red \
-  ${SOURCE}/secrets \
   ${CHART}/files
 cp -r \
   ${SOURCE}/dlstreamer-pipeline-server/user_scripts \

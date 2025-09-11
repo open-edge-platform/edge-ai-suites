@@ -14,6 +14,8 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-pgserver
+      annotations:
+        checksum/secrets: {{ include (print $.Template.BasePath "/app-secrets.yaml") . | sha256sum }}
     spec:
       initContainers:
       - name: init-smart-intersection-ri
@@ -95,8 +97,14 @@ spec:
         configMap:
           name: {{ .Release.Name }}-pgserver-config
       - name: secrets
-        secret:
-          secretName: {{ .Release.Name }}-pgserver-secrets
+        projected:
+          sources:
+          - secret:
+              name: {{ .Release.Name }}-mqtt-auth-secrets
+          - secret:
+              name: {{ .Release.Name }}-django-secrets
+          - secret:
+              name: {{ .Release.Name }}-supass-secret
       - name: smart-intersection-ri-data
         persistentVolumeClaim:
           claimName: {{ .Release.Name }}-ri-pvc

@@ -35,7 +35,6 @@ spec:
       - name: {{ .Release.Name }}-dlstreamer-pipeline-server-udf
         configMap:
           name: {{ .Release.Name }}-dlstreamer-pipeline-server-udf
-      {{- if .Values.import.certManager.enabled }}
       - name: {{ .Release.Name }}-dlstreamer-pipeline-server-rootcert
         projected:
           sources:
@@ -44,11 +43,6 @@ spec:
               items:
               - key: tls.crt
                 path: root-cert
-      {{- else }}
-      - name: {{ .Release.Name }}-dlstreamer-pipeline-server-rootcert
-        secret:
-          secretName: {{ .Release.Name }}-dlstreamer-pipeline-server-rootcert
-      {{- end }}
       initContainers:
       - name: init-dlstreamer-pipeline-server-videos
         image: "{{ .Values.images.alpine.repository }}:{{ .Values.images.alpine.tag }}"
