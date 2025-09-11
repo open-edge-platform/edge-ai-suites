@@ -1,0 +1,94 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+name: "[Industrial Edge Insights Time Series] PR workflow"
+run-name: "[Industrial Edge Insights Time Series] PR  workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+on:
+  pull_request:
+    paths:
+      - 'manufacturing-ai-suite/industrial-edge-insights-time-series/*'
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: read
+  security-events: write
+  actions: read
+
+jobs:
+  industrial-edge-insights-time-series-pre-merge-build:
+    permissions:
+      contents: read
+      packages: read          # needed for actions/checkout
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Runner workspace path
+      run: |
+        echo "Cleaning up previous run"
+        if [ -n "$(docker ps -aq)" ]; then
+            docker stop $(docker ps -aq)
+        fi
+        if [ -n "$(docker ps -aq)" ]; then
+            docker rm $(docker ps -aq)
+        fi
+        docker images --quiet --filter=dangling=true | xargs --no-run-if-empty docker rmi -f
+    - name: Checkout edge-ai-libraries (main)
+      uses: actions/checkout@v4
+      with:
+        repository: open-edge-platform/edge-ai-libraries
+        ref: main
+        path: edge-ai-libraries
+        persist-credentials: false
+    - name: Building Time Series Analytics microservices
+      run: |
+        cd ./edge-ai-libraries/microservices/time-series-analytics/docker
+        docker compose down -v 
+        docker compose build
+    - uses: actions/checkout@v4
+      with:
+          path: timeseries
+          persist-credentials: false
+    - name: Building Wind Turbine Anomaly Detection Sample App
+      run: |
+        cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
+        make down 
+        # Generate random values for sensitive environment variables
+        INFLUXDB_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+        INFLUXDB_PASSWORD=$(openssl rand -hex 6)
+        VISUALIZER_GRAFANA_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+        VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 6)
+        MR_PSQL_PASSWORD=$(openssl rand -hex 10)
+        MR_MINIO_ACCESS_KEY=$(openssl rand -hex 10)
+        MR_MINIO_SECRET_KEY=$(openssl rand -hex 10)
+
+        sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
+        sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
+        sed -i "s/VISUALIZER_GRAFANA_USER=.*/VISUALIZER_GRAFANA_USER=${VISUALIZER_GRAFANA_USER}/g" .env
+        sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
+        sed -i "s/MR_PSQL_PASSWORD=.*/MR_PSQL_PASSWORD=${MR_PSQL_PASSWORD}/g" .env
+        sed -i "s/MR_MINIO_ACCESS_KEY=.*/MR_MINIO_ACCESS_KEY=${MR_MINIO_ACCESS_KEY}/g" .env
+        sed -i "s/MR_MINIO_SECRET_KEY=.*/MR_MINIO_SECRET_KEY=${MR_MINIO_SECRET_KEY}/g" .env 
+        make build
+    - name: Deploying Wind Turbine Anomaly Detection Sample App
+      run: |
+        cd "${{ github.workspace }}"
+        cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
+        echo "Deploying Wind Turbine Anomaly Detection Sample App"
+        echo "Deploying using mqtt ingestion"
+        make up_mqtt_ingestion app=wind-turbine-anomaly-detection
+        echo "Deploying using opcua ingestion"
+        make up_opcua_ingestion app=wind-turbine-anomaly-detection
+    - name: Undeploying Wind Turbine Anomaly Detection Sample App
+      run: |
+        cd "${{ github.workspace }}"
+        cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
+        make down
+
+  industrial-edge-insights-time-series-scans:
+    uses: ./.github/workflows/industrial-edge-insights-time-series-scans.yml
+    with:
+      target: all-scans
