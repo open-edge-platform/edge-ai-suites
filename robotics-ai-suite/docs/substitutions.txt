@@ -108,7 +108,7 @@
 .. |lp_embodied| replace:: Humanoid - Imitation Learning
 .. |p_amr| replace:: Autonomous Mobile Robot
 .. |amr_package_name| replace:: Autonomous Mobile Robot
-.. |top_name| replace:: Robotics AI Suite
+.. |top_name_robotics| replace:: Robotics AI Suite
 
 .. RVC Specific Substitutions
 
