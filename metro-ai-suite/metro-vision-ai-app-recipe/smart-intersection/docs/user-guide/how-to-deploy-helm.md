@@ -123,7 +123,7 @@ kubectl get service smart-intersection-grafana -n smart-intersection -o jsonpath
 
 ```bash
 WEB_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-web -o jsonpath="{.items[0].metadata.name}")
-sudo -E kubectl -n smart-intersection port-forward $WEB_POD 443:443
+sudo -E kubectl -n smart-intersection port-forward $WEB_POD 443:443 --address <HOST_IP>
 ```
 
 - Go to https://<HOST_IP>
