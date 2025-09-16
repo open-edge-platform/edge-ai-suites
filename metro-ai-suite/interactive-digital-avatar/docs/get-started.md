@@ -2,20 +2,17 @@
 
 ## Operating System
 
-The total pipeline needs two machines, one for client and one for server. 
+This software is developed and tested on: 
 
-- Windows 11 22H2 or above for client.
-- Ubuntu 22.04 for server. 
+- Windows 11 22H2 or above. 
 
-For 2D avatar, the RAG will run on server and other parts will run on client.
-For 3D avatar, the RAG and lipsync (SAiD) will run on server and the other parts will run on client.
+Note: For 3D avatar, the lipsync (SAiD) need run in docker on WSL2.
 
 ## Hardware
 
-- Windows: Intel Arc A770 GPU 16GB x1
-- Ubuntu: Intel Arc A770 GPU 16GB x1
+- Intel Arc A770 GPU 16GB
 
-# Environment setup for windows
+# Environment setup
 
 Please use the tools you are familiar with. Here we take Visual Studio Code and Conda-forge as an example.
 
@@ -104,15 +101,15 @@ pip install -r requirements.txt
 mim install -r requirements-mim.txt
 ```
 
-# Environment setup for Ubuntu
+## Setup for 3D lipsync
 
 ## Install docker
 
-Please refer to the [official website](https://docs.docker.com/engine/install/ubuntu/) to install the docker. 
+Please refer to the [official website](https://docs.docker.com/desktop/setup/install/windows-install) to install the docker on Windows. 
 
 ## Prepare project code and models
 
-Put the project code in the appropriate directory. In the Ubuntu, the code we need is in the said_docker folder.
+Put the project code in the appropriate directory. In the wsl2, the code we need is in the said_docker folder.
 
 Download the third-party models and organize them according to the following structure.
 
@@ -128,6 +125,8 @@ said_docker
 
 And follow [SAiD README.md](../said_docker/README.md) to build and setup said server.
 
-## Prepare RAG
+## Prepare RAG backend
 
-Please refer to [this guide](https://github.com/opea-project/GenAIExamples/tree/main/EdgeCraftRAG) to set up RAG.
+You could use any OpenAI-Compatible provider as RAG backend.
+
+Optionally, refer to [this guide](https://github.com/opea-project/GenAIExamples/tree/main/EdgeCraftRAG) to set up Edge Craft Retrieval-Augmented Generation. 
