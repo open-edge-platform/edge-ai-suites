@@ -127,6 +127,8 @@ services:
     - "109"
     # render group ID for ubuntu 22.04 host OS
     - "110"
+    # render group ID for ubuntu 24.04 host OS
+    - "992"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
