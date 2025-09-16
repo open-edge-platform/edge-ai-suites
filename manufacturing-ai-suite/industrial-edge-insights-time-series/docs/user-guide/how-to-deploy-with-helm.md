@@ -36,7 +36,7 @@ You can either generate or download the Helm charts.
 - To generate the Helm charts:
    
     ```bash
-    cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection # path relative to git clone folder
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series # path relative to git clone folder
     make gen_helm_charts
     cd helm/
     ```
@@ -102,8 +102,8 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 
 2. Copy your new UDF package (using the windturbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
     ```sh
-    cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection # path relative to git clone folder
-    cd time_series_analytics_microservice
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection # path relative to git clone folder
+    cd time-series-analytics-config
     mkdir windturbine_anomaly_detector
     cp -r models tick_scripts udfs windturbine_anomaly_detector/.
 

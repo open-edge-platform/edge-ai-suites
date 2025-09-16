@@ -3,7 +3,7 @@
 This guide provides step-by-step instructions on how one can create a new
 sample app by taking `Wind Turbine Anomaly Detection` Sample Application as a reference
 by configuring the generic `Time Series AI Stack` as per the [how it works](./how-it-works.md).
-Create a copy of the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection`
+Create a copy of the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection`
 folder and replace with the sample app name to be created.
 
 ## Steps to follow
@@ -13,7 +13,7 @@ folder and replace with the sample app name to be created.
 #### 1. **Data Simulators/Destinations**:
    
    Options available:
-   1. Update the OPC-UA/MQTT simulator containers (`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator`) as needed
+   1. Update the OPC-UA/MQTT simulator containers (`edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/simulator`) as needed
       to ingest the needed dataset to analyze via a CSV file
    2. If you have existing `OPC-UA/MQTT` simulators, you can use that too. Just model the compose and helm template files like
       the way it's done for the above existing OPC-UA/MQTT simulators
@@ -24,7 +24,7 @@ folder and replace with the sample app name to be created.
 
 - **Data Ingestion - Telegraf**
 
-    Update the `[[inputs.mqtt_consumer]]` and `[[inputs.opcua]]` sections in `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/telegraf/Telegraf_devmode.conf`, based on the MQTT/OPC-UA configuration, the input
+    Update the `[[inputs.mqtt_consumer]]` and `[[inputs.opcua]]` sections in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/telegraf-config/Telegraf.conf`, based on the MQTT/OPC-UA configuration, the input
     would be read and the topics in MQTT input plugin and name_override in OPC-UA
     input plugin is used for writing this as measurement in InfluxDB.
 
@@ -33,14 +33,14 @@ folder and replace with the sample app name to be created.
 
 - **Data Processing - Time Series Analytics Microservice**
 
-    The `tick_scripts`, `models` and `udfs` folders at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice` constitutes the User Defined Function (UDF) deployment package. The `config.json` at the same location is the Time Series microservice configuration.
+    The `tick_scripts`, `models` and `udfs` folders at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config` constitutes the User Defined Function (UDF) deployment package. The `config.json` at the same location is the Time Series microservice configuration.
 
     More details at [how-to-configure-custom-udf](./how-to-configure-custom-udf.md)
 
 - **Data Visualization - Grafana**
   
-    Prepare the custom grafana dashboard (`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/grafana/dashboards`) and volume mount it by referring the grafana microservice at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml`. For helm deployment,
-    refer `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/helm/templates/grafana.yaml` file.
+    Prepare the custom grafana dashboard (`edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/grafana/dashboards`) and volume mount it by referring the grafana microservice at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/docker-compose.yml`. For helm deployment,
+    refer `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/helm/templates/grafana.yaml` file.
 
 ### Deployment
 

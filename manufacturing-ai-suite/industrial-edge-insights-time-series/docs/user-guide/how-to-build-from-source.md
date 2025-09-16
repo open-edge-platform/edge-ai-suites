@@ -28,7 +28,7 @@ before proceeding with the below steps.
 
     ```bash
     git clone https://github.com/open-edge-platform/edge-ai-suites.git
-    cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
 
     # build
     make build # builds only data simulator (OPC-UA server and MQTT publisher) docker images

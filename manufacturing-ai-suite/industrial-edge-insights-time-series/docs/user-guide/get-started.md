@@ -45,7 +45,7 @@ To configure Docker:
 
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
 ```
 ## Data flow explanation
 
@@ -55,7 +55,7 @@ OPC-UA simulator and publishing the anomaly alerts to MQTT broker.
 
 ### **Data Sources**
 
-Using the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator/simulation_data/windturbine_data.csv` which is a normalized version of open source data wind turbine dataset (`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/training/T1.csv`) from <https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset>.
+Using the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/ingestor-data/wind-turbine-anomaly-detection.csv` which is a normalized version of open source data wind turbine dataset (`edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/T1.csv`) from <https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset>.
 This data is being ingested into **Telegraf** using the **OPC-UA** protocol using the **OPC-UA** data simulator.
   
 ### **Data Ingestion**
@@ -69,7 +69,7 @@ This data is being ingested into **Telegraf** using the **OPC-UA** protocol usin
 ### **Data Processing**
 
 **Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) which is already built-in to the container image. The UDF deployment package is available
-at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice`. Directory details is as below:
+at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config`. Directory details is as below:
   
 #### **`config.json`**:
 
@@ -131,7 +131,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
    
 #### **`models/`**:
    - The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo.
-     More details on how it is built is accessible at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/training/windturbine/README.md`
+     More details on how it is built is accessible at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/windturbine/README.md`
 
 ## Deploy with Docker Compose
 
@@ -151,7 +151,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 >    as per the rules called out in `.env` file.
 >  - The sample app is deployed by pulling the pre-built container images of the sample app 
 >    from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY`
->    env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection`)
+>    env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series`)
 >  - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) and in `helm/values.yaml` (for Helm deployments) 
 >    is set to `true` by default, enabling continuous looping of simulator data. To ingest the simulator data only once (without looping), 
 >    set this variable to `false`.

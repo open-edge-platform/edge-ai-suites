@@ -8,7 +8,7 @@ This section provides instructions for setting up alerts in **Time Series Analyt
 
 #### Configure MQTT Alerts
 
-By default, the following MQTT alerts is configured in `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` file.
+By default, the following MQTT alerts is configured in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json` file.
 
   ```json
     "alerts": {
@@ -23,7 +23,7 @@ By default, the following MQTT alerts is configured in `edge-ai-suites/manufactu
 #### Configure MQTT Alert in TICK Script
 
 The following snippet shows how to add the MQTT if not 
-already added. By default, the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/tick_scripts/windturbine_anomaly_detector.tick` TICK Script has the following configuration done by default.
+already added. By default, the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick` TICK Script has the following configuration done by default.
 
 ```bash
 @windturbine_anomaly_detector()
@@ -68,7 +68,7 @@ To enable OPC-UA alerts in `Time Series Analytics Microservice`, use the followi
 
 The following details shows the snippet on how to add the OPC-UA alert if not 
 already added, replace this in place of MQTT alert section at
-`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/tick_scripts/windturbine_anomaly_detector.tick`.
+`edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick`.
 
 ```bash
 data0
@@ -189,7 +189,7 @@ Copy the TICK script using the following command:
 
 ```sh
 cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection # path relative to git clone folder
-cd time_series_analytics_microservice
+cd time-series-analytics-config
 mkdir -p windturbine_anomaly_detector
 cp -r models tick_scripts udfs windturbine_anomaly_detector/.
 

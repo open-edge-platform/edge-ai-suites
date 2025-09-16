@@ -60,8 +60,8 @@ This guide provides instructions for setting up custom UDF deployment package (U
 
 ### Docker compose deployment Only
 
-The files at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice` representing the UDF deployment package (UDFs, TICKscripts, models)
-and config.json has been volume mounted for the Time Series Analytics Microservice service in `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and config.json, it has to be done at this location and the time series analytics microservice container needs to be restarted manually.
+The files at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config` representing the UDF deployment package (UDFs, TICKscripts, models)
+and config.json has been volume mounted for the Time Series Analytics Microservice service in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and config.json, it has to be done at this location and the time series analytics microservice container needs to be restarted manually.
 
 ### Helm Deployment
 
@@ -135,7 +135,7 @@ to the Model Registry microservice.
 
 1. The following step demonstrates how to create a sample model file from an existing model folder for uploading to the Model Registry. If you already have a model zip file, you can skip this step.
    ```bash
-   cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/
    zip -r windturbine_anomaly_detector.zip udfs models tick_scripts
    ```
    You can utilize the generated `windturbine_anomaly_detector.zip` absolute path as `<udf_deployment_package_path.zip>` in the next step
