@@ -76,7 +76,7 @@ data0
         .crit(lambda: "anomaly_status" > 0)
         .message('Anomaly detected: Wind Speed: {{ index .Fields "wind_speed" }}, Grid Active Power: {{ index .Fields "grid_active_power" }}, Anomaly Status: {{ index .Fields "anomaly_status" }}')
         .noRecoveries()
-        .post('http://localhost:5000/opcua_alerts')
+        .post('https://localhost:3000/ts-api/opcua_alerts')
         .timeout(30s)
 ```
 > **Note**:
@@ -89,7 +89,7 @@ Make the following REST API call to the Time Series Analytics microservice. Note
 
 ```sh
 curl -X 'POST' \
-'http://<HOST_IP>:5000/config' \
+'https://<HOST_IP>:3000/ts-api/config' \
 -H 'accept: application/json' \
 -H 'Content-Type: application/json' \
 -d '{

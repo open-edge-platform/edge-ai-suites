@@ -102,14 +102,15 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 
 2. Copy your new UDF package (using the windturbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
     ```sh
+    export SAMPLE_APP="wind-turbine-anomaly-detection"
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection # path relative to git clone folder
     cd time-series-analytics-config
-    mkdir windturbine_anomaly_detector
-    cp -r models tick_scripts udfs windturbine_anomaly_detector/.
+    mkdir -p $SAMPLE_APP
+    cp -r models tick_scripts udfs $SAMPLE_APP.
 
     POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
 
-    kubectl cp windturbine_anomaly_detector $POD_NAME:/tmp/ -n ts-sample-app
+    kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
     ```
    > **Note:**  
    > Run the commands only after performing the Helm install.
