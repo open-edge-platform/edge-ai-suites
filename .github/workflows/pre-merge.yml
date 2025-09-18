@@ -77,7 +77,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/hmi-augmented-worker
-      exclude_patterns: "**/user-guide/overview.md"
+      exclude_patterns: "**user-guide/overview.md"
 
   build_image-based-video-search:
     permissions:
@@ -104,7 +104,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-time-series
-      exclude_patterns: "**/user-guide/Overview.md"
+      exclude_patterns: "**user-guide/Overview.md"
 
   build_loitering-detection:
     permissions:
@@ -131,7 +131,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection
-      exclude_patterns: "**/user-guide/Overview.md"
+      exclude_patterns: "**user-guide/Overview.md"
 
   build_pcb-anomaly-detection:
     permissions:
@@ -145,7 +145,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection
-      exclude_patterns: "**/user-guide/Overview.md"
+      exclude_patterns: "**user-guide/Overview.md"
 
   build_robotics-ai-suite:
     permissions:
@@ -199,7 +199,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: metro-ai-suite/visual-search-question-and-answering
-      exclude_patterns: "**/user-guide/Overview.md"
+      exclude_patterns: "**user-guide/Overview.md"
 
   build_weld-porosity:
     permissions:
@@ -213,7 +213,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity
-      exclude_patterns: "**/user-guide/Overview.md"
+      exclude_patterns: "**user-guide/Overview.md"
 
   build_worker-safety-gear-detection:
     permissions:
@@ -227,4 +227,4 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection
-      exclude_patterns: "**/user-guide/Overview.md"
+      exclude_patterns: "**user-guide/Overview.md"
