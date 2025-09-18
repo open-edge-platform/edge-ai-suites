@@ -104,7 +104,7 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-time-series
-      exclude_patterns: "**/user-guide/Overview.md"
+      exclude_patterns: "**/Overview.md"
 
   build_loitering-detection:
     permissions:
