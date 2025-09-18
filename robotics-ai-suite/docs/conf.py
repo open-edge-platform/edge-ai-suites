@@ -69,13 +69,14 @@ html_context = docconf.html_context
 html_theme_options = docconf.html_theme_options
 
 # RVC Specific content
-extensions += ['breathe']
+extensions += ["breathe"]
 
 breathe_projects = {
     "rvc_control": "doxygen/rvc_control/xml/",
     "rvc_vision": "doxygen/rvc_vision/xml/",
 }
 
+
 def setup(app):
-   app.add_css_file("robotics-custom.css")
-   app.add_js_file("robotics-custom.js")
+    app.add_css_file("robotics-custom.css")
+    app.add_js_file("robotics-custom.js")
