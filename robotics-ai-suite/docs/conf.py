@@ -69,7 +69,7 @@ html_context = docconf.html_context
 html_theme_options = docconf.html_theme_options
 
 # RVC Specific content
-extensions += ['breathe']
+extensions += ["breathe"]
 
 breathe_projects = {
     "rvc_control": "doxygen/rvc_control/xml/",
