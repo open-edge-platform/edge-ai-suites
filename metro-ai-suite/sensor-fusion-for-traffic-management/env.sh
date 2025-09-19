@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ -d "/opt/intel/media" ]; then
-    source /opt/intel/openvino_2024/setupvars.sh
+    source /opt/intel/openvino_2025/setupvars.sh
     source /opt/intel/oneapi/setvars.sh
     source /opt/intel/media/etc/vpl/vars.sh
 
@@ -17,7 +17,7 @@ if [ -d "/opt/intel/media" ]; then
 
     export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 else
-    source /opt/intel/openvino_2024/setupvars.sh
+    source /opt/intel/openvino_2025/setupvars.sh
     source /opt/intel/oneapi/setvars.sh
     source /usr/local/etc/vpl/vars.sh
 

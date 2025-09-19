@@ -46,7 +46,7 @@ All these tasks run on single Intel SoC processor which provides all the require
 
 - Intel® OpenVINO™ Toolkit
 
-    - Version Type: 2024.6
+    - Version Type: 2025.2
 
 - RADDet Dataset
 
@@ -152,7 +152,7 @@ Currently we support four display types: media, radar, media_radar, media_fusion
 
 | Software           | Version                |
 | ------------------ | ---------------------- |
-| Intel  OpenVINO    | 2024.6.0               |
+| Intel  OpenVINO    | 2025.2.0               |
 | Intel  oneMKL      | 2025.1.0               |
 | NEO OpenCL         | Release/23.22.26516.25 |
 | cmake              | 3.21.2                 |
@@ -459,7 +459,7 @@ Open another terminal, run the following commands:
 ```bash
 ## no need to run the service
 export HVA_NODE_DIR=$PWD/build/lib
-source /opt/intel/openvino_2024/setupvars.sh
+source /opt/intel/openvino_2025/setupvars.sh
 source /opt/intel/oneapi/setvars.sh
 ./build/bin/testRadarPerformance ai_inference/test/configs/raddet/1C1R/libradar/localRadarPipeline_libradar.json /path-to-dataset 1
 ```

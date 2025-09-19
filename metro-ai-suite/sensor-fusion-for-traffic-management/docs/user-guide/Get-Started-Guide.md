@@ -10,7 +10,7 @@ Get started guide for running on bare metal.
   - Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics (16C+4R usecase)
 - Intel® OpenVINO™ Toolkit
   
-  - Version Type: 2024.6
+  - Version Type: 2025.2
 - RADDet Dataset
   
   - https://github.com/ZhangAoCanada/RADDet#Dataset
@@ -108,7 +108,7 @@ For more details about the display mode, please refer to [section 4.3 Run Entry 
 
 | Software           | Version                |
 | ------------------ | ---------------------- |
-| Intel  OpenVINO    | 2024.6.0               |
+| Intel  OpenVINO    | 2025.2.0               |
 | Intel  oneMKL      | 2025.1.0               |
 | NEO OpenCL         | Release/23.22.26516.25 |
 | cmake              | 3.21.2                 |
@@ -561,6 +561,6 @@ Current Version: 2.0
 - Support 2C+1R pipeline
 - Support 16C+4R pipeline
 - Support YOLOv6 model
-- Updated OpenVINO to 2024.6
+- Updated OpenVINO to 2025.2
 - Updated oneMKL to 2025.1.0
 
