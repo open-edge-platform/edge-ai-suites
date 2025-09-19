@@ -113,7 +113,7 @@ Following are the four demo configurations. Please refer to the [Get Started Gui
 
     | Software           | Version                |
     | ------------------ | ---------------------- |
-    | Intel  OpenVINO    | 2024.6.0               |
+    | Intel  OpenVINO    | 2025.2.0               |
     | Intel  oneMKL      | 2025.1.0               |
     | NEO OpenCL         | Release/23.22.26516.25 |
     | cmake              | 3.22.1                 |

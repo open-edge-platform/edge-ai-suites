@@ -54,8 +54,9 @@ RUN curl -L -O https://github.com/intel/intel-graphics-compiler/releases/downloa
     curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/intel-level-zero-gpu_1.6.31294.12_amd64.deb && \
     curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/intel-opencl-icd-dbgsym_24.39.31294.12_amd64.ddeb && \
     curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/intel-opencl-icd_24.39.31294.12_amd64.deb && \
+    curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/libigdgmm12_22.5.2_amd64.deb && \
     dpkg -i ./*.deb && rm -rf /tmp/gpu_deps && \
-    apt install -y libigdgmm12
+    apt install -y libigdgmm12=22.7.1-1120~22.04
 
 ## Install Linux NPU Driver v1.16.0 on Ubuntu 22.04
 WORKDIR /tmp/npu_deps
@@ -186,12 +187,12 @@ RUN cmake .. -DCMAKE_INSTALL_PREFIX=${LIBVA_INSTALL_PREFIX} -DCMAKE_INSTALL_LIBD
     cmake --build . --config Release && \
     cmake --build . --config Release --target install
 
-### Install openvino 2024.6
+### Install openvino 2025.2
 WORKDIR /home/openvino/3rd_build
-RUN curl -k -o l_openvino_toolkit_ubuntu22_2024.6.0.17404.4c0f47d2335_x86_64.tgz https://storage.openvinotoolkit.org/repositories/openvino/packages/2024.6/linux/l_openvino_toolkit_ubuntu22_2024.6.0.17404.4c0f47d2335_x86_64.tgz -L && \
-    tar -xvf l_openvino_toolkit_ubuntu22_2024.6.0.17404.4c0f47d2335_x86_64.tgz && \
-    mkdir -p /opt/intel/openvino_2024 && \
-    mv l_openvino_toolkit_ubuntu22_2024.6.0.17404.4c0f47d2335_x86_64/* /opt/intel/openvino_2024 
+RUN curl -k -o openvino_toolkit_ubuntu22_2025.2.0.19140.c01cd93e24d_x86_64.tgz https://storage.openvinotoolkit.org/repositories/openvino/packages/2025.2/linux/openvino_toolkit_ubuntu22_2025.2.0.19140.c01cd93e24d_x86_64.tgz -L && \
+    tar -xvf openvino_toolkit_ubuntu22_2025.2.0.19140.c01cd93e24d_x86_64.tgz && \
+    mkdir -p /opt/intel/openvino_2025 && \
+    mv openvino_toolkit_ubuntu22_2025.2.0.19140.c01cd93e24d_x86_64/* /opt/intel/openvino_2025
 RUN apt install -y libgdal-dev libpugixml-dev libopencv-dev
 
 # ### Install grpc 1.72.0
@@ -241,7 +242,7 @@ RUN apt install -y libgtk2.0-0 libgl1 libsm6 libxext6 x11-apps
 
 WORKDIR /home/openvino
 RUN rm -rf /home/openvino/3rd_build && \
-    echo "source /opt/intel/openvino_2024/setupvars.sh" >> /home/openvino/.bashrc && \
+    echo "source /opt/intel/openvino_2025/setupvars.sh" >> /home/openvino/.bashrc && \
     echo "source /opt/intel/media/etc/vpl/vars.sh" >> /home/openvino/.bashrc && \
     echo "source /opt/intel/oneapi/setvars.sh" >> /home/openvino/.bashrc
 ENV DEBIAN_FRONTEND=noninteractive
