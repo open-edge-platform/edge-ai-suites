@@ -157,7 +157,7 @@ to the Model Registry microservice.
 
     ```bash
     curl -X 'POST' \
-    'https://<HOST_IP>:<PORT>/config' \
+    'https://<HOST_IP>:<PORT>/ts-api/config' \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -d '{
