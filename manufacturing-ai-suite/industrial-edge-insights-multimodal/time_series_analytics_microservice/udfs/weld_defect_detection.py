@@ -10,16 +10,15 @@ import os
 import logging
 import pickle
 import time
-import math
 import warnings
-from collections import deque
+from xml.parsers.expat import model
 from kapacitor.udf.agent import Agent, Handler
 from kapacitor.udf import udf_pb2
+import catboost as cb
+import pandas as pd
 import numpy as np
-import requests
-from sklearnex import patch_sklearn, config_context
-patch_sklearn()
-from sklearn.linear_model import LinearRegression
+
+
 
 warnings.filterwarnings(
     "ignore",
@@ -53,11 +52,22 @@ class AnomalyDetectorHandler(Handler):
                 model = pickle.load(f)
             return model
         # Need to enable after model training
-        # model_name = (os.path.basename(__file__)).replace('.py', '.pkl')
-        # model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-        #                             "../models/" + model_name)
-        # model_path = os.path.abspath(model_path)
+        model_name = (os.path.basename(__file__)).replace('.py', '.cb')
+        model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "../models/" + model_name)
+        model_path = os.path.abspath(model_path)
         # self.rf = load_model(model_path)
+
+        self.model = cb.CatBoostClassifier(
+            depth=10,
+            iterations=2000,
+            learning_rate=0.1,
+            task_type="CPU",
+            devices="1:2",
+            random_seed=40,
+        )
+
+        self.model.load_model(model_path)
 
         self.points_received = {}
         global total_no_pts
@@ -114,12 +124,30 @@ class AnomalyDetectorHandler(Handler):
                 return
             self.points_received[server] += 1
 
+        fields = {}
+        for kv in point.fieldsDouble:
+            fields[kv.key] = kv.value
+        for kv in point.fieldsInt:
+            fields[kv.key] = kv.value
+        for kv in point.fieldsString:
+            fields[kv.key] = kv.value
+        point_series = pd.Series(fields)
+        if "Primary Weld Current" in point_series and point_series["Primary Weld Current"] > 50:
+            defect_likelihood_main = self.model.predict_proba(point_series)
+            bad_defect = defect_likelihood_main[0]*100
+            good_defect = defect_likelihood_main[1]*100
+            logger.info(f"Good Weld: {good_defect:.2f}%, Defective Weld: {bad_defect:.2f}%")
+        else:
+            logger.info("Good Weld: N/A, Defective Weld: N/A") 
+
+        point.fieldsDouble.add(key = "Good Weld", value = round(good_defect, 2) if "good_defect" in locals() else 0.0)
+        point.fieldsDouble.add(key = "Defective Weld", value = round(bad_defect,2) if "bad_defect" in locals() else 0.0)
+
         logger.info("Processing point %s %s for source %s", point.time, time.time(), server)
 
         response = udf_pb2.Response()
         if not any(kv.key == "anomaly_status" for kv in point.fieldsDouble):
             point.fieldsDouble.add(key = "anomaly_status", value = 0.0)
-            
         response.point.CopyFrom(point)
         self._agent.write_response(response, True)
 

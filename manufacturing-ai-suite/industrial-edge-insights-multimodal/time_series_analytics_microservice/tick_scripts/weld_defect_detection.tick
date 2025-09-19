@@ -10,7 +10,7 @@ data0
         |influxDBOut()
                 .buffer(0)
                 .database('datain')
-                .measurement('ts_welding_data')
+                .measurement('ts_welding_anomaly_data')
                 .retentionPolicy('autogen')
 data0
         |alert()

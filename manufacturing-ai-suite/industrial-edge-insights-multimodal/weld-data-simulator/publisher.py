@@ -96,7 +96,9 @@ def stream_video_and_csv():
             del csv_row["Time"]
         if "Remarks " in csv_row:   
             del csv_row["Remarks "]
-        csv_row["frame_id"] = frame_id
+        if "Part No " in csv_row:   
+            del csv_row["Part No"]
+        # csv_row["frame_id"] = frame_id
         csv_row = json.dumps(csv_row)
         # Publish each CSV row only once
         
