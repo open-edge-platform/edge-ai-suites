@@ -8,7 +8,7 @@ Key use cases include:
 
 | Sample Application | Definitions | User Docs       |
 |:-------------------|:------------|:----------------|
-| [Automated Self-Checkout](https://github.com/intel-retail/automated-self-checkout) | Product recognition (detection, classification, and tracking), full pipeline workflow (product, weight, text, and barcode), and age verification. | [Link]([https://intel-retail.github.io/documentation/use-cases/automated-self-checkout/automated-self-checkout.html] |
+| [Automated Self-Checkout](https://github.com/intel-retail/automated-self-checkout) | Product recognition (detection, classification, and tracking), full pipeline workflow (product, weight, text, and barcode), and age verification. | [Link](https://intel-retail.github.io/documentation/use-cases/automated-self-checkout/automated-self-checkout.html) |
 | [Loss Prevention](https://github.com/intel-retail/loss-prevention)| Fake scans, items in basket, multi-product identification, product switching, shopper behavior (obscuring/hiding an item), and event video summation. | [Link](https://github.com/intel-retail/loss-prevention/blob/main/README.md) |
 |[Performance evaluation](https://github.com/intel-retail/performance-tools?tab=readme-ov-file) | An easily repeatable process for generating performance numbers across multi modalities on Intel’s heterogenous compute. The tool helps determine compute requirements for scaling retail edge AI workloads. |  [Link](metro-ai-suite/interactive-digital-avatar/docs/get-started.md) |
  

@@ -7,7 +7,8 @@ README.md          @xwu2intel
 # manufacturing-ai
 /manufacturing-ai-suite/hmi-augmented-worker/             @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel
 /manufacturing-ai-suite/industrial-edge-insights-vision/  @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel
-/manufacturing-ai-suite/wind-turbine-anomaly-detection/   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe
+/manufacturing-ai-suite/industrial-edge-insights-time-series/   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe
+/manufacturing-ai-suite/industrial-edge-insights-multimodal/   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @sugnanprabhu
 # moved into "industrial-edge-insights-vision" - consider removing
 /manufacturing-ai-suite/pallet-defect-detection/          @ajagadi1 @sugnanprabhu @rrajore @xwu2intel
 /manufacturing-ai-suite/weld-porosity/                    @ajagadi1 @sugnanprabhu @rrajore @xwu2intel
@@ -41,8 +42,12 @@ README.md          @xwu2intel
 /manufacturing-ai-suite/industrial-edge-insights-vision/**/docs/       @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel                @open-edge-platform/open-edge-platform-docs-write
 /manufacturing-ai-suite/industrial-edge-insights-vision/**/README.md   @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel                @open-edge-platform/open-edge-platform-docs-write
 /manufacturing-ai-suite/industrial-edge-insights-vision/README.md      @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel                @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/           @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe   @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/wind-turbine-anomaly-detection/README.md       @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe   @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-time-series/docs/     @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe   @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-time-series/README.md @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe   @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-multimodal/docs/           @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @sugnanprabhu   @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-multimodal/docs/README.md   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @sugnanprabhu   @open-edge-platform/open-edge-platform-docs-write
+
+
 
 
 # documentation content - metro-ai

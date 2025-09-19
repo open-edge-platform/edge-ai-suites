@@ -27,7 +27,8 @@ configured Kubernetes cluster.
 
 To deploy the Smart Intersection Sample Application, copy and paste the entire block of following commands into your terminal and run them:
 
-### Clone the Repository
+
+### Step 1: Clone the Repository
 
 Before you can deploy with Helm, you must clone the repository:
 
@@ -39,7 +40,7 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ```
 
-### Configure Proxy Settings (If Behind a Proxy)
+### Step 2: Configure Proxy Settings (If behind a proxy)
 
 If you are deploying in a proxy environment, update the values.yaml file with your proxy settings before installation:
 
@@ -72,7 +73,7 @@ helm install \
   --set crds.enabled=true
 ```
 
-### Deploy the application
+### Step 3: Deploy the application
 
 Now you're ready to deploy the Smart Intersection application:
 
@@ -122,7 +123,7 @@ kubectl get service smart-intersection-grafana -n smart-intersection -o jsonpath
 
 ```bash
 WEB_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-web -o jsonpath="{.items[0].metadata.name}")
-sudo -E kubectl -n smart-intersection port-forward $WEB_POD 443:443
+sudo -E kubectl -n smart-intersection port-forward $WEB_POD 443:443 --address <HOST_IP>
 ```
 
 - Go to https://<HOST_IP>

@@ -2,8 +2,8 @@
 
 This document describes the syntax and examples of APIs exposed by the AI Inference Service.
 
-## 1.0 RESTful API
-### 1.1 Overview
+## RESTful API
+### Overview
 
 -   ***Verb***:
 ```
@@ -55,7 +55,7 @@ POST
 }
 
 ```
-### 1.2 Request
+### Request
 | Property Name   | Value | Description                 | Notes      |
 |---|---|---|----|
 | pipelineConfig         | string     | Contains the pipeline topology that server will execute. The syntax should follow HVA pipeline framework serialized pipeline format. | Serialized from a JSON structure above|
@@ -64,7 +64,7 @@ POST
 
 <center> Table 1. Properties of Request in RESTful API. </center>
 
-#### 1.2.1 pipelineConfig
+#### pipelineConfig
 
 This parameter is serialized from a JSON structure, which contains the topology of a pipeline executed by a server. Its syntax should follow the serialized pipeline format defined in the HVA pipeline framework.
 
@@ -82,7 +82,7 @@ The part "ProcessingNode" should contain at least one node and other parts must 
 
 Besides, the link topology in pipeline topology should also be defined.
 
-#### 1.2.2 mediaUri
+#### mediaUri
 
 This property contains a list of input items. It should contain the descriptor or the actual contents in inputs to the specified pipeline. Its actual format depends on the ***InputNode*** within the pipeline parsing this value.
 
@@ -170,7 +170,7 @@ Here's a pipeline definition example for this type of ***InputNode***
     "Is Source Node": "true"
 }
 ```
-#### 1.2.3 An Example of Request
+#### An Example of Request
 
 The following is an example of sending a request to AI Inference Service via RESTful API.
 ```vim
@@ -234,7 +234,7 @@ Content-Length: 81508
 }                      
 
 ```
-### 1.3 Response
+### Response
 
 ***An example of Response JSON:***
 ```vim
@@ -288,7 +288,7 @@ The following part only exist when output node is configured as
 |result.roi_info.attribute.type_score|float|Predicted confidence for type of the detected bounding box.|Value range: [0, 1.0]|
 
 
-### 1.4 Return Values
+### Return Values
 
 Upon completing the user requests, AI Inference Service will return one of the following three responses under different conditions.
 
@@ -304,9 +304,9 @@ Upon completing the user requests, AI Inference Service will return one of the f
 
 > This response implies the request parameter "pipelineConfig" is invalid, so the service itself is unable to construct the specific pipeline.
 
-## 2.0 gRPC API
+## gRPC API
 
-### 2.1 Overview
+### Overview
 
 ***Request Syntax***
 ```vim
@@ -333,7 +333,7 @@ Upon completing the user requests, AI Inference Service will return one of the f
 	"binary": bytes
 }
 ```
-### 2.2 Request
+### Request
 | Property Name | Value | Description | Notes |
 |-----------------------|--|--|--|
 |pipelineConfig|string|Contains the pipeline topology that server will execute.The syntax should follow HVA pipeline framework serialized pipeline format.Can be optional if field “jobHandle” is not None.| Serialized from a JSON structure|
@@ -344,7 +344,7 @@ Upon completing the user requests, AI Inference Service will return one of the f
 
 <center> Table 3. Properties of Request in gRPC API. </center>
 
-#### 2.2.1 Process Targets
+#### Process Targets
 
 -   ***target: run***
 
@@ -364,7 +364,7 @@ Upon completing the user requests, AI Inference Service will return one of the f
 
     -   Note that the jobHandle should be the existing handle, which can be fetched through target: load_pipeline.
 
-### 2.3 Response
+### Response
 
 ***Response Syntax***
 ```vim
@@ -389,11 +389,11 @@ Upon completing the user requests, AI Inference Service will return one of the f
 
 <center> Table 4. Properties of Response in gRPC API. </center>
 
-#### 2.3.1 Response: message
+#### Response: message
 
 This section describes the response schema for the property of ***message***. Depending on the process target field, the message contents of ***Response*** will vary accordingly. See details in the following sub-sections.
 
-##### 2.3.1.1 For process target: run
+##### For process target: run
 
 This section describes the response schema for the property of ***message***, when the process target is set as "run".
 
@@ -472,7 +472,7 @@ This section describes the response schema for the property of ***message***, wh
 
 <center> Table 5. Property of message in Response in gRPC API. </center>
 
-##### 2.3.1.2 For process target: load_pipeline
+##### For process target: load_pipeline
 
 This section describes the response schema for the property of ***message***, when the calling target is set as "load_pipeline".
 
@@ -492,7 +492,7 @@ This section describes the response schema for the property of ***message***, wh
 	"handle": "2147483648",
 }
 ```
-##### 2.3.1.3 For process target: unload_pipeline
+##### For process target: unload_pipeline
 
 ***JSON syntax of Response:***
 ```vim
@@ -510,7 +510,7 @@ This section describes the response schema for the property of ***message***, wh
 	"handle": "2147483648",
 }
 ```
-## 3.0 Status Code
+## Status Code
 |Status code|Description|
 |--|--|
 |1|Service succeeded but no detected ROI|
@@ -518,7 +518,7 @@ This section describes the response schema for the property of ***message***, wh
 |-1|Service failed due to invalid media format|
 ## 4.0 HVA Framework Pipeline Schema
 
-### 4.1 Pipeline Configure Schema
+### Pipeline Configure Schema
 
 ***JSON syntax:***
 
@@ -571,7 +571,7 @@ This section describes the response schema for the property of ***message***, wh
 "Key#1=(Type)Value#1;Key#2=(Type)Val#2..."
 ```
 
-### 4.2 Pipeline Configure Example
+### Pipeline Configure Example
 
 This section shows an example of pipeline configuration. The pipeline consumes images from local file input, decodes jpeg, and then returns the output to the client.
 ```vim
@@ -615,7 +615,7 @@ This section shows an example of pipeline configuration. The pipeline consumes i
 }
 ```
 
-## 5.0 libradar
+## libradar
 The `libradar` is a set of APIs to get the range, doppler, angle, clustering and tracking results for each radar frames. The library does not include any memory allocation/deallocation, creation/destroy of a thread. This library is NOT thread-safe.Check the `src/test.cpp` for usage of this library.
 There are 6 APIs in the `libradar` as follows:
 ```

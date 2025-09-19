@@ -1,8 +1,8 @@
 # Get Started Guide
 Get started guide for running on bare metal.
 
-## 1. Overview
-### 1.1 Prerequisites
+## Overview
+### Prerequisites
 - Operating System: [Ubuntu 22.04.1 Desktop LTS](https://old-releases.ubuntu.com/releases/22.04.1/ubuntu-22.04.1-desktop-amd64.iso) (fresh installation) on target system
 - Platform
   - Intel® Celeron® Processor 7305E (1C+1R/2C+1R usecase)
@@ -10,7 +10,7 @@ Get started guide for running on bare metal.
   - Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics (16C+4R usecase)
 - Intel® OpenVINO™ Toolkit
   
-  - Version Type: 2024.6
+  - Version Type: 2025.2
 - RADDet Dataset
   
   - https://github.com/ZhangAoCanada/RADDet#Dataset
@@ -34,14 +34,14 @@ Get started guide for running on bare metal.
   # https_proxy=<Your-Proxy>
   ```
 
-### 1.2 Modules
+### Modules
 - AI Inference Service:
   - Media Processing (Camera)
   - Radar Processing (mmWave Radar)
   - Sensor Fusion
 - Demo Application
 
-#### 1.2.1 AI Inference Service
+#### AI Inference Service
 
 AI Inference Service expose both RESTful API or gRPC API to clients, so as pipelines defined by clients could be requested to run within service.
 
@@ -63,7 +63,7 @@ gRPCPort=50052
 >
 > - For how to run tests through RESTful API and gRPC API, please refer to [section 4. Run Sensor Fusion Application](#4-run-sensor-fusion-application)
 
-#### 1.2.2 Demo Application
+#### Demo Application
 The media processing and sensor fusion results will be displayed. Here's an example for reference:
 
 ![1C1R-Display-type-media-fusion](./_images/1C1R-Display-type-media-fusion.png)
@@ -73,9 +73,9 @@ For more details about the display mode, please refer to [section 4.3 Run Entry 
 
 
 
-##	2. System Requirements
+##	System Requirements
 
-### 2.1 Hardware requirements
+### Hardware requirements
 
 - Platform
 
@@ -104,11 +104,11 @@ For more details about the display mode, please refer to [section 4.3 Run Entry 
 
 
 
-### 2.2 Software requirements
+### Software requirements
 
 | Software           | Version                |
 | ------------------ | ---------------------- |
-| Intel  OpenVINO    | 2024.6.0               |
+| Intel  OpenVINO    | 2025.2.0               |
 | Intel  oneMKL      | 2025.1.0               |
 | NEO OpenCL         | Release/23.22.26516.25 |
 | cmake              | 3.21.2                 |
@@ -121,7 +121,7 @@ For more details about the display mode, please refer to [section 4.3 Run Entry 
 
 
 
-## 3. Install Dependencies and Build Project
+## Install Dependencies and Build Project
 
 * install driver related libs
 
@@ -166,7 +166,7 @@ For more details about the display mode, please refer to [section 4.3 Run Entry 
 
 
 
-## 4. How it works
+## How it works
 
 In this section, we describe how to run Metro AI Suite Sensor Fusion for Traffic Management application.
 
@@ -178,7 +178,7 @@ There are two steps required for running the sensor fusion application:
 
 Besides, users can test each component (without display) following the guides at [Advanced-User-Guide.md](./Advanced-User-Guide.md#532-1c+1r-unit-tests)
 
-### 4.1 Resources Summary
+### Resources Summary
 - Local File Pipeline for Media pipeline
   - Json File: localMediaPipeline.json 
     
@@ -269,7 +269,7 @@ Besides, users can test each component (without display) following the guides at
                |              -> radarOfflineResults ->                           |                                    |
         ```
 
-### 4.2 Start Service
+### Start Service
 Open a terminal, run the following commands:
 
 ```bash
@@ -303,8 +303,8 @@ sudo pkill Hce
 ```
 
 
-### 4.3 Run Entry Program
-#### 4.3.1 1C+1R
+### Run Entry Program
+#### 1C+1R
 
 **The target platform is Intel® Celeron® Processor 7305E.**
 
@@ -348,7 +348,7 @@ sudo -E ./build/bin/CRSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/conf
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 > change /path-to-dataset to your data path if you generate demo data independently, or simply change it to $PROJ_DIR/ai_inference/test/demo/raddet_bin_files to use the demo data.
 
-#### 4.3.2 4C+4R
+#### 4C+4R
 
 **The target platform is Intel® Core™ Ultra 7 Processor 165H.**
 
@@ -391,7 +391,7 @@ sudo -E ./build/bin/CRSensorFusion4C4RDisplay 127.0.0.1 50052 ai_inference/test/
 ```
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 
-#### 4.3.3 2C+1R
+#### 2C+1R
 
 **The target platform is Intel® Celeron® Processor 7305E.**
 
@@ -439,7 +439,7 @@ sudo -E ./build/bin/CRSensorFusion2C1RDisplay 127.0.0.1 50052 ai_inference/test/
 
 
 
-#### 4.3.4 16C+4R
+#### 16C+4R
 
 **The target platform is Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics.**
 
@@ -487,7 +487,7 @@ sudo -E ./build/bin/CRSensorFusion16C4RDisplay 127.0.0.1 50052 ai_inference/test
 
 
 
-## 5. Code Reference
+## Code Reference
 
 Some of the code is referenced from the following projects:
 - [IGT GPU Tools](https://gitlab.freedesktop.org/drm/igt-gpu-tools) (MIT License)
@@ -561,6 +561,6 @@ Current Version: 2.0
 - Support 2C+1R pipeline
 - Support 16C+4R pipeline
 - Support YOLOv6 model
-- Updated OpenVINO to 2024.6
+- Updated OpenVINO to 2025.2
 - Updated oneMKL to 2025.1.0
 

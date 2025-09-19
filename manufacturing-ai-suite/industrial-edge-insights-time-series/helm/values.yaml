@@ -1,0 +1,126 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+namespace: ts-sample-app
+# Please provide docker registry details below for docker images pull/push operations.
+# Please provide full registry url with port trail by /
+# e.q. localhost:5000/
+DOCKER_REGISTRY: ''
+DOCKER_USERNAME: ''
+DOCKER_PASSWORD: ''
+imagePullPolicy: IfNotPresent
+storageClassName: manual
+env:
+  # The INFLUXDB_USERNAME must contain only alphabets and be at least 5 characters minimum
+  # Do not set INFLUXDB_USERNAME to 'admin'.
+  INFLUXDB_USERNAME:
+
+  # The INFLUXDB_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit
+  # Do not use the following special characters in the INFLUXDB_PASSWORD "~:'+[/@^{%(-"*|,&<`}._=}!>;?#$)\"
+  INFLUXDB_PASSWORD:
+
+  # The VISUALIZER_GRAFANA_USER must contain only alphabets and be at least 5 characters minimum
+  VISUALIZER_GRAFANA_USER:
+
+  # The VISUALIZER_GRAFANA_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit
+  VISUALIZER_GRAFANA_PASSWORD:
+
+  # MR_PSQL_PASSWORD length must be a minimum of 10 alphanumeric characters with atleast one digit
+  POSTGRES_PASSWORD:
+
+  # MINIO_ACCESS_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit
+  MINIO_ACCESS_KEY:
+
+  # MINIO_SECRET_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit
+  MINIO_SECRET_KEY:
+
+  HTTP_PROXY: 
+  HTTPS_PROXY: 
+  # If CONTINUOUS_SIMULATOR_INGESTION is set to true (default), continuous looping of simulator data is enabled.
+  # To ingest the simulator data only once (without looping), set this variable to false.
+  CONTINUOUS_SIMULATOR_INGESTION: true
+  SAMPLE_APP: wind-turbine-anomaly-detection
+  TELEGRAF_INPUT_PLUGIN: mqtt_consumer
+  TIMESERIES_USER_NAME: timeseries_user
+  TIMESERIES_UID: 1999
+  TIMESERIES_NO_PROXY: influxdb,time-series-analytics-microservice,mqttbroker,ia-mqtt-broker,ia-opcua-server 
+  # For proxy environment, please append IP addresses or Range IP addresses of each node of the cluster to no_proxy
+  # e.q. timeseries_no_proxy=localhost,127.0.0.1,10.223.109.130,10.223.109.170
+  timeseries_no_proxy: localhost,127.0.0.1,.intel.com
+  # The InfluxDB retention policy durations can be configured using a combination of time units such as hours(h), minutes(m), and seconds(s), eg., 1h0m0s for 1 hour.
+  INFLUXDB_RETENTION_DURATION: 1h0m0s
+  # The Telegraf metric_batch_size specifies the number of metrics or data points that are grouped together and sent in a single batch to the InfluxDB.
+  TELEGRAF_METRIC_BATCH_SIZE: 100
+  LOG_LEVEL: INFO
+  # Model Registry Environment Variables
+  AppName: ModelRegistry
+  CA_CERT: /run/secrets/modelregistry-server/server-ca.crt
+  ENABLE_HTTPS_MODE: false
+  MIN_LOG_LEVEL: DEBUG
+  MINIO_BUCKET_NAME: model-registry
+  MINIO_HOSTNAME: mraas-minio 
+  MINIO_SERVER_PORT: "8000"
+  MLFLOW_S3_ENDPOINT_URL: http://127.0.0.1:8000
+  SERVER_CERT: /run/secrets/modelregistry-server/public.crt
+  SERVER_PORT: "8111"
+  SERVER_PRIVATE_KEY: /run/secrets/modelregistry-server/private.key 
+  no_proxy: mraas-minio
+  NO_PROXY: mraas-minio
+  MR_USER_NAME: mruser
+  MR_UID: 2025
+  POSTGRES_DB: model_registry_db
+  
+  POSTGRES_USER: postgres
+images:
+  # Please provide the suffix for the image version you want to use like rc1, rc2, git hash id etc.
+  image_suffix: "weekly"
+  time_series_analytics_image: intel/ia-time-series-analytics-microservice:1.1.0
+  opcua_server_image: intel/ia-opcua-server:1.0.0
+  mqtt_publisher_image: intel/ia-mqtt-publisher:1.1.0
+  model_registry: intel/model-registry:1.0.3
+config:
+  influx_db_server:
+    name: influxdb
+    influx_http: 8086
+  grafana:
+    name: grafana
+    int:
+      port: "3000"
+    ext:
+      port: "30001"
+  telegraf:
+    name: telegraf
+    MQTT_BROKER_HOST: "ia-mqtt-broker"
+  time_series_analytics_microservice:
+    name: time-series-analytics-microservice
+    kapacitor_port: 9092
+  time_series_analytics_microservice_rest_api:
+    name: time-series-analytics-microservice-rest-api
+    rest_api_port: 5000
+    int:
+      port: "5000"
+    ext:
+      port: "30002"
+  mqttbroker:
+    name: ia-mqtt-broker
+    int:
+      port: 1883
+    ext:
+      port: 30006
+  opcuaserver:
+    name: ia-opcua-server
+    int:
+      port: 4840
+    ext:
+      port: 30003
+  mqttpublisher:
+      name: mqttpublisher
+  model_registry:
+    name: model-registry
+    int:
+      port: "8111"
+    ext:
+      port: "32002"

@@ -1,4 +1,6 @@
-# Overview
+# Overview 
+
+<!--Please add the introduction section in the index.rst file-->
 
 Unified analytics of a traffic intersection
 
@@ -23,6 +25,8 @@ The key benefits are as follows:
 - **Reduced TCO**: Works with existing cameras, simplifies business logic development, and future-proofs the solution by enabling additional sensors and cameras as needed without changing the business logic.
 
 ## How it Works
+
+<!--If you are updating this section. Please update in the how-it-works.rst file-->
 This section provides a high-level view of how the application integrates with a typical system architecture.
 
 ![High-Level System Diagram](./_images/architecture.png)

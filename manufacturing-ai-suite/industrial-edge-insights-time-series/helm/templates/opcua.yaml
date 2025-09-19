@@ -1,0 +1,74 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+{{ if eq .Values.env.TELEGRAF_INPUT_PLUGIN "opcua"}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.config.opcuaserver.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  type: NodePort
+  selector:
+    app: ia-opcua-server
+  ports:
+    - name: opcua-port
+      port: {{ .Values.config.opcuaserver.int.port }}
+      targetPort: {{ .Values.config.opcuaserver.int.port }}
+      nodePort: {{ .Values.config.opcuaserver.ext.port }}
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ia-opcua-server
+  name: deployment-opcua-server
+  namespace: {{ .Values.namespace }}
+
+spec:
+  selector:
+    matchLabels:
+      app: ia-opcua-server
+  template:
+    metadata:
+      labels:
+        app: ia-opcua-server
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: ia-opcua-server
+        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.opcua_server_image }}{{ if .Values.images.image_suffix }}-{{ .Values.images.image_suffix }}{{ end }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        env:
+        - name: LOG_LEVEL
+          value: '{{ .Values.env.LOG_LEVEL }}'
+        - name: TS_MS_SERVER
+          value: "time-series-analytics-microservice"
+        - name: TS_MS_PORT
+          value: '{{ .Values.config.time_series_analytics_microservice.kapacitor_port }}'
+        - name: CONTINUOUS_SIMULATOR_INGESTION
+          value: '{{ .Values.env.CONTINUOUS_SIMULATOR_INGESTION }}'
+        volumeMounts:
+        - name: ingestor-{{ .Values.env.SAMPLE_APP }}
+          mountPath: /app/{{ .Values.env.SAMPLE_APP }}.csv
+          subPath: {{ .Values.env.SAMPLE_APP }}.csv
+      volumes:
+      - name: ingestor-{{ .Values.env.SAMPLE_APP }}
+        configMap:
+          name: ingestor-{{ .Values.env.SAMPLE_APP }}
+{{ end }}

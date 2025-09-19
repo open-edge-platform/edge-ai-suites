@@ -36,6 +36,8 @@
 #include <fmt/format.h>
 using namespace InferenceBackend;
 
+static hce::ai::inference::OpenVINOContextPtr _openvino_context;
+std::mutex ovExclusiveMtx;
 template <>
 struct fmt::formatter<InferenceBackend::ImagePreprocessorType> : formatter<string_view> {
     auto format(InferenceBackend::ImagePreprocessorType t, format_context &ctx) const {
@@ -451,7 +453,10 @@ class OpenVinoNewApiImpl {
 
         configure_model(config);
         // GVA_INFO("Model was configured");
-        create_remote_context();
+	static int theOnlyOne;
+	if(0 == __sync_val_compare_and_swap(&theOnlyOne, 0, 1)){
+	    create_remote_context();
+	}
         // GVA_INFO("Remote context was created");
         // check config
         // GVA_INFO("image_format %s", config.image_format().c_str());
@@ -948,7 +953,6 @@ class OpenVinoNewApiImpl {
     std::string _device;
     std::string _image_input_name;
     hce::ai::inference::ContextPtr _app_context;
-    hce::ai::inference::OpenVINOContextPtr _openvino_context;
     ov::CompiledModel _compiled_model;
     MemoryType _memory_type;
     int _nireq = 0;
@@ -1757,7 +1761,9 @@ void OpenVINOImageInference::SubmitImage(
     try {
         // start inference asynchronously if enough buffers for batching
         if (request->buffers.size() >= safe_convert<size_t>(batch_size)) {
+	    std::unique_lock<std::mutex> lk(ovExclusiveMtx);
             request->start_async();
+	    lk.unlock();
         } else {
             freeRequests.push_front(request);
         }
@@ -1824,8 +1830,9 @@ void OpenVINOImageInference::Flush() {
                         input_idx++;
                     }
                 }
-
-                request->start_async();
+		std::unique_lock<std::mutex> lk(ovExclusiveMtx);
+		request->start_async();
+		lk.unlock();
             } catch (const std::exception &e) {
                 GVA_ERROR("Couldn't start inferece on flush: %s", e.what());
                 this->handleError(request->buffers);

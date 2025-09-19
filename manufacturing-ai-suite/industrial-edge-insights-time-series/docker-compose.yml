@@ -1,0 +1,395 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+version: '3.6'
+services:
+  ia-telegraf:
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    container_name: ia-telegraf
+    hostname: ia-telegraf
+    image: telegraf:1.34.3
+    restart: unless-stopped
+    depends_on:
+      - ia-influxdb
+    security_opt:
+    - no-new-privileges
+    read_only: true
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    environment:
+      no_proxy: "ia-influxdb,ia-mqtt-broker,ia-opcua-server,ia-time-series-analytics-microservice,${no_proxy}"
+      NO_PROXY: "ia-influxdb,ia-mqtt-broker,ia-opcua-server,ia-time-series-analytics-microservice,${no_proxy}"
+      MQTT_BROKER_HOST: "ia-mqtt-broker"
+      INFLUX_SERVER: "ia-influxdb"
+      INFLUXDB_PORT: 8086
+      INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
+      INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
+      INFLUXDB_DBNAME: datain
+      TELEGRAF_CONFIG_PATH: /etc/telegraf/Telegraf.conf
+      OPCUA_SERVER: opc.tcp://ia-opcua-server:4840/freeopcua/server/
+      LOG_LEVEL: ${LOG_LEVEL}
+      TELEGRAF_INPUT_PLUGIN: ${TELEGRAF_INPUT_PLUGIN:-opcua}
+      # The Telegraf metric_batch_size specifies the number of metrics or data points 
+      # that are grouped together and sent in a single batch to the InfluxDB.
+      TELEGRAF_METRIC_BATCH_SIZE: 100
+      TS_MS_SERVER_URL: http://ia-time-series-analytics-microservice:${KAPACITOR_PORT}
+    entrypoint: ["/bin/sh", "-c", "/entrypoint.sh"]
+    networks:
+    - timeseries_network
+    volumes:
+    - ./telegraf/entrypoint.sh:/entrypoint.sh
+    - "./apps/${SAMPLE_APP}/telegraf-config/:/etc/telegraf"   
+
+  ia-influxdb:
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    image: influxdb:1.11.8
+    container_name: ia-influxdb
+    hostname: ia-influxdb
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+    - no-new-privileges
+    networks:
+    - timeseries_network
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    environment:
+      INFLUXDB_DB: datain
+      INFLUXDB_ADMIN_USER: admin
+      INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_PASSWORD}
+      INFLUXDB_USER : ${INFLUXDB_USERNAME}
+      INFLUXDB_USER_PASSWORD: ${INFLUXDB_PASSWORD}
+      # The InfluxDB retention policy durations can be configured using a combination 
+      # of time units such as hours(h), minutes(m), and seconds(s), eg., 1h0m0s for 1 hour.
+      RETENTION_DURATION: 1h0m0s
+      no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
+      NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
+      INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb.conf"
+      INFLUXDB_LOGGING_LEVEL: ${LOG_LEVEL}
+      INFLUXDB_TLS_CIPHERS: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+    volumes:
+      # Mount for influxdb data directory and configuration
+    - vol_influxdb_conf:/var/lib/influxdb:rw
+    - ./influxdb/config:/etc/influxdb
+    - ./influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
+  
+  ia-time-series-analytics-microservice:
+    container_name: ia-time-series-analytics-microservice
+    hostname: ia-time-series-analytics-microservice
+    image: ${DOCKER_REGISTRY}${TIME_SERIES_ANALYTICS_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
+    restart: unless-stopped
+    depends_on:
+      - ia-influxdb
+      - ia-mqtt-broker
+    security_opt:
+    - no-new-privileges
+    read_only: true
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9092/kapacitor/v1/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    environment:
+      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry,${no_proxy}"
+      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry,${no_proxy}"
+      KAPACITOR_PORT: ${KAPACITOR_PORT}
+      INFLUX_SERVER: "ia-influxdb"
+      KAPACITOR_INFLUXDB_0_USERNAME: ${INFLUXDB_USERNAME}
+      KAPACITOR_INFLUXDB_0_PASSWORD: ${INFLUXDB_PASSWORD}
+      PROFILING_MODE: "false"
+      KAPACITOR_URL: http://ia-time-series-analytics-microservice:$KAPACITOR_PORT/
+      KAPACITOR_UNSAFE_SSL: "true"
+      KAPACITOR_INFLUXDB_0_URLS_0: http://ia-influxdb:8086/
+      INFLUXDB_PORT: 8086
+      KAPACITOR_LOGGING_LEVEL: ${LOG_LEVEL}
+      INFLUXDB_DBNAME: datain
+      PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
+      SSL_CERT_FILE: /run/secrets/ca_certificate.pem
+      MODEL_REGISTRY_URL: http://model-registry:8111
+      SAMPLE_APP: ${SAMPLE_APP}
+      REST_API_ROOT_PATH: "/ts-api"
+    networks:
+    - timeseries_network
+    volumes:
+    - "vol_temp_time_series_analytics_microservice:/tmp/"
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/udfs/:/tmp/${SAMPLE_APP}/udfs/
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/tick_scripts/:/tmp/${SAMPLE_APP}/tick_scripts/
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/config.json:/app/config.json
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/models/:/tmp/${SAMPLE_APP}/models/
+    - /dev/dri:/dev/dri
+    - "/run/udev:/run/udev:ro"
+    group_add:
+    # render group ID for ubuntu 20.04 host OS
+    - "109"
+    # render group ID for ubuntu 22.04 host OS
+    - "110"
+    # render group ID for ubuntu 24.04 host OS
+    - "992"
+    devices:
+      # Following devices under /dev filesystem will be needed based on usecase
+      # dri - GPU
+    - "/dev/dri:/dev/dri"
+
+  ia-grafana:
+    image: grafana/grafana-oss:12.0.0-ubuntu
+    container_name: ia-grafana
+    hostname: ia-grafana
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    restart: unless-stopped
+    read_only: true
+    depends_on:
+      - ia-influxdb
+    security_opt:
+    - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    environment:
+      no_proxy: "ia-influxdb,${no_proxy}"
+      NO_PROXY: "ia-influxdb,${no_proxy}"
+      INFLUX_SERVER: "ia-influxdb"
+      GRAFANA_SERVER: '0.0.0.0'
+      INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
+      INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
+      INFLUXDB_DB: datain
+      GF_SECURITY_ADMIN_USER: ${VISUALIZER_GRAFANA_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${VISUALIZER_GRAFANA_PASSWORD}
+      GF_PROVISIONING_ENABLE: "true"
+      GF_PROVISIONING_DASHBOARDS: /etc/grafana/provisioning/dashboards
+      GF_SERVER_PROTOCOL: http
+      GF_LOG_LEVEL: ${LOG_LEVEL}
+    networks:
+    - timeseries_network
+    volumes:
+    - "vol_temp_grafana:/tmp"
+    - vol_grafana_data:/var/lib/grafana
+    - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    - ./grafana/dashboards/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    - ./apps/${SAMPLE_APP}/grafana-dashboard/dashboard.json:/etc/grafana/provisioning/dashboards/dashboard.json
+    - ./grafana/entrypoint.sh:/entrypoint.sh
+    
+  ia-mqtt-broker:
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    container_name: ia-mqtt-broker
+    hostname: ia-mqtt-broker
+    read_only: true
+    image: eclipse-mosquitto:2.0.21
+    restart: unless-stopped
+    depends_on:
+      - ia-influxdb
+    security_opt:
+    - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    networks:
+    - timeseries_network
+    volumes:
+    - ./mqtt-broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+  ia-opcua-server:
+    build:
+      context: $PWD/simulator
+      dockerfile: $PWD/simulator/opcua-server/Dockerfile
+      args:
+        TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
+        TIMESERIES_UID: ${TIMESERIES_UID}
+        http_proxy:
+        https_proxy:
+        no_proxy:
+    hostname: ia-opcua-server
+    read_only: true
+    image: ${DOCKER_REGISTRY}${OPC_UA_SERVER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL}
+      no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
+      NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
+      TS_MS_SERVER: "ia-time-series-analytics-microservice"
+      TS_MS_PORT: ${KAPACITOR_PORT}
+      CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    networks:
+    - timeseries_network
+    ports:
+    - ${OPCUA_SERVER_PORT}:4840
+    volumes:
+    - ./apps/${SAMPLE_APP}/ingestor-data/${SAMPLE_APP}.csv:/app/${SAMPLE_APP}.csv
+
+  ia-mqtt-publisher:
+    build:
+      context: $PWD/simulator
+      dockerfile: $PWD/simulator/mqtt-publisher/Dockerfile
+      args:
+        TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
+        TIMESERIES_UID: ${TIMESERIES_UID}
+        http_proxy:
+        https_proxy:
+        no_proxy:
+    container_name: ia-mqtt-publisher
+    hostname: ia-mqtt-publisher
+    read_only: true
+    image: ${DOCKER_REGISTRY}${MQTT_PUBLISHER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+      interval: 5m
+    environment:
+      AppName: "mqtt-publisher"
+      HOST_IP: ia-mqtt-broker
+      no_proxy: "ia-mqtt-broker,ia-time-series-analytics-microservice,${no_proxy}"
+      NO_PROXY: "ia-mqtt-broker,ia-time-series-analytics-microservice,${no_proxy}"
+      TS_MS_SERVER: "ia-time-series-analytics-microservice"
+      TS_MS_PORT: ${KAPACITOR_PORT}
+      CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
+      SAMPLE_APP: ${SAMPLE_APP}
+    networks:
+    - timeseries_network
+    volumes:
+    - ./apps/${SAMPLE_APP}/ingestor-data/${SAMPLE_APP}.csv:/${SAMPLE_APP}.csv
+
+# Model Registry Service
+  model-registry:
+    image: ${MODEL_REGISTRY_IMAGE}
+    container_name: model-registry
+    hostname: model-registry
+    ipc: "none"
+    ports:
+    - "${MR_SERVER_PORT}:8111"
+    restart: unless-stopped
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "exit", "0"]
+    environment:
+      AppName: "ModelRegistry"
+      MIN_LOG_LEVEL: ${LOG_LEVEL}
+      ENABLE_DEV_MODE: ${ENABLE_DEV_MODE:-false}
+      ENABLE_HTTPS_MODE: false
+      GETI_HOST: ${GETI_HOST:-""}
+      GETI_TOKEN: ${GETI_TOKEN:-""}
+      GETI_SERVER_API_VERSION: ${GETI_SERVER_API_VERSION:-""}
+      GETI_ORGANIZATION_ID: ${GETI_ORGANIZATION_ID:-""}
+      GETI_WORKSPACE_ID: ${GETI_WORKSPACE_ID:-""}
+      GETI_SERVER_SSL_VERIFY: ${GETI_SERVER_SSL_VERIFY:-False}
+      MLFLOW_TRACKING_URI: postgresql+psycopg2://${MR_USER_NAME}:${MR_PSQL_PASSWORD}@mr_postgres:5432/model_registry_db
+      MLFLOW_S3_ENDPOINT_URL: ${MR_MLFLOW_S3_ENDPOINT_URL}
+      MINIO_HOSTNAME: mr_minio
+      MINIO_SERVER_PORT: 8000
+      MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
+      MINIO_BUCKET_NAME: model-registry
+      SERVER_PORT: 8111
+      LSHOST: host.docker.internal
+      SERVER_CERT: /run/secrets/ModelRegistry_Server/public.crt
+      CA_CERT: /run/secrets/ModelRegistry_Server/server-ca.crt
+      SERVER_PRIVATE_KEY: /run/secrets/ModelRegistry_Server/private.key
+      no_proxy: "mr_postgres,mr_minio,${no_proxy}"
+      NO_PROXY: "mr_postgres,mr_minio,${no_proxy}"
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - timeseries_network
+  mr_postgres:
+    image: postgres:13
+    container_name: mr_postgres
+    hostname: mr_postgres
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    environment:
+      AppName: "ModelRegistry"
+      POSTGRES_USER: ${MR_USER_NAME}
+      POSTGRES_PASSWORD: ${MR_PSQL_PASSWORD}
+      POSTGRES_DB: model_registry_db
+    volumes:
+      - mr_postgres_data:/var/lib/postgresql/data:rw
+    networks:
+      - timeseries_network
+  mr_minio:
+    image: minio/minio:RELEASE.2020-12-12T08-39-07Z
+    container_name: mr_minio
+    hostname: mr_minio
+    ipc: "none"
+    volumes:
+      - mr_minio_data:/data
+    networks:
+      - timeseries_network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    environment:
+      MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
+    command: server --address ":8000" --certs-dir /certs /data
+
+
+  nginx:
+    image: bitnami/nginx:1.29-debian-12
+    container_name: nginx_proxy
+    environment:
+      no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
+      NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
+    ports:
+      - "${GRAFANA_PORT}:443"   # HTTPS for Grafana and TS MS Rest API 
+      - "1883:1883" # MQTT TCP Proxy
+    volumes:
+      - ./nginx/nginx.conf:/opt/bitnami/nginx/conf/nginx.conf:ro
+      - ./nginx/ssl:/opt/bitnami/nginx/conf/bitnami/certs:ro
+    networks:
+      - timeseries_network
+    depends_on:
+      - ia-grafana
+      - ia-time-series-analytics-microservice
+      - ia-mqtt-broker
+networks:
+  timeseries_network:
+    driver: bridge
+
+volumes:
+  vol_influxdb_conf:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_temp_time_series_analytics_microservice:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_temp_grafana:
+    name: "visualization_grafana_vol"
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_grafana_data:
+    name: "visualization_var_grafana_vol"
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  mr_minio_data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  mr_postgres_data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

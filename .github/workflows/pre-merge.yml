@@ -21,14 +21,15 @@ jobs:
     outputs:
       hmi-augmented-worker_changed: ${{ steps.filter.outputs.hmi-augmented-worker }}
       image-based-video-search_changed: ${{ steps.filter.outputs.image-based-video-search }}
+      industrial-edge-insights-time-series_changed: ${{ steps.filter.outputs.industrial-edge-insights-time-series }}
       loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
       pallet-defect-detection_changed: ${{ steps.filter.outputs.pallet-defect-detection }}
       pcb-anomaly-detection_changed: ${{ steps.filter.outputs.pcb-anomaly-detection }}
       robotics-ai-suite_changed: ${{ steps.filter.outputs.robotics-ai-suite }}
       smart-intersection_changed: ${{ steps.filter.outputs.smart-intersection }}
       smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
+      visual-search-question-and-answering_changed: ${{ steps.filter.outputs.visual-search-question-and-answering }}
       weld-porosity_changed: ${{ steps.filter.outputs.weld-porosity }}
-      wind-turbine-anomaly-detection_changed: ${{ steps.filter.outputs.wind-turbine-anomaly-detection }}
       worker-safety-gear-detection_changed: ${{ steps.filter.outputs.worker-safety-gear-detection }}
     steps:
       - uses: actions/checkout@v4
@@ -43,6 +44,8 @@ jobs:
               - 'manufacturing-ai-suite/hmi-augmented-worker/docs/**'
             image-based-video-search:
               - 'metro-ai-suite/image-based-video-search/docs/**'
+            industrial-edge-insights-time-series:
+              - 'manufacturing-ai-suite/industrial-edge-insights-time-series/docs/**'
             loitering-detection:
               - 'metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/docs/**'
             pallet-defect-detection:
@@ -55,10 +58,10 @@ jobs:
               - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/**'
             smart-parking:
               - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/**'
+            visual-search-question-and-answering:
+              - 'metro-ai-suite/visual-search-question-and-answering/docs/**'
             weld-porosity:
               - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity/docs/**'
-            wind-turbine-anomaly-detection:
-              - 'manufacturing-ai-suite/wind-turbine-anomaly-detection/docs/**'
             worker-safety-gear-detection:
               - 'manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection/docs/**'
 
@@ -67,20 +70,21 @@ jobs:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.hmi-augmented-worker_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/hmi-augmented-worker
+      exclude_patterns: "**user-guide/overview.md"
 
   build_image-based-video-search:
     permissions:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.image-based-video-search_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -88,12 +92,26 @@ jobs:
     with:
       docs_directory: metro-ai-suite/image-based-video-search
 
+  build_industrial-edge-insights-time-series:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.industrial-edge-insights-time-series_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-time-series
+      exclude_patterns: "**/Overview.md"
+
   build_loitering-detection:
     permissions:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.loitering-detection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -106,33 +124,35 @@ jobs:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.pallet-defect-detection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection
+      exclude_patterns: "**user-guide/Overview.md"
 
   build_pcb-anomaly-detection:
     permissions:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.pcb-anomaly-detection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection
+      exclude_patterns: "**user-guide/Overview.md"
 
   build_robotics-ai-suite:
     permissions:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.robotics-ai-suite_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -146,7 +166,7 @@ jobs:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.smart-intersection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -159,7 +179,7 @@ jobs:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.smart-parking_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
@@ -167,41 +187,44 @@ jobs:
     with:
       docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/smart-parking
 
+  build_visual-search-question-and-answering:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.visual-search-question-and-answering_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: metro-ai-suite/visual-search-question-and-answering
+      exclude_patterns: "**user-guide/Overview.md"
+
   build_weld-porosity:
     permissions:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.weld-porosity_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity
-
-  build_wind_turbine_anomaly_detection:
-    permissions:
-      contents: read          # needed for actions/checkout
-    needs: filter
-    if: ${{ needs.filter.outputs.wind-turbine-anomaly-detection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
-    secrets:
-      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
-      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
-      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
-    with:
-      docs_directory: manufacturing-ai-suite/wind-turbine-anomaly-detection
+      exclude_patterns: "**user-guide/Overview.md"
 
   build_worker-safety-gear-detection:
     permissions:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.worker-safety-gear-detection_changed == 'true' }}
-    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@a77655e8fbb08f0d8e500a451aa0025bec249803
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection
+      exclude_patterns: "**user-guide/Overview.md"

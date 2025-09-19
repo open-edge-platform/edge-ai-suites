@@ -102,12 +102,13 @@ _install_openvino()
   set +e
   pushd ${THIRD_PARTY_BUILD_DIR}
 
-  if [ ! -f l_openvino_toolkit_ubuntu22_2024.6.0.17404.4c0f47d2335_x86_64.tgz ];then
-      wget https://storage.openvinotoolkit.org/repositories/openvino/packages/2024.6/linux/l_openvino_toolkit_ubuntu22_2024.6.0.17404.4c0f47d2335_x86_64.tgz
+  if [ ! -f openvino_toolkit_ubuntu22_2025.2.0.19140.c01cd93e24d_x86_64.tgz ];then
+      wget https://storage.openvinotoolkit.org/repositories/openvino/packages/2025.2/linux/openvino_toolkit_ubuntu22_2025.2.0.19140.c01cd93e24d_x86_64.tgz
   fi
-  tar -xvf l_openvino_toolkit_ubuntu22_2024.6.0.17404.4c0f47d2335_x86_64.tgz
-  sudo mkdir -p /opt/intel && sudo mv l_openvino_toolkit_ubuntu22_2024.6.0.17404.4c0f47d2335_x86_64 /opt/intel/openvino_2024
+  tar -xvf openvino_toolkit_ubuntu22_2025.2.0.19140.c01cd93e24d_x86_64.tgz
+  sudo mkdir -p /opt/intel && sudo mv openvino_toolkit_ubuntu22_2025.2.0.19140.c01cd93e24d_x86_64/* /opt/intel/openvino_2025
   sudo -E apt install -y libgdal-dev libpugixml-dev libopencv-dev
+  sudo -E apt install -y opencl-headers ocl-icd-opencl-dev
   sudo usermod -a -G render $USER
   popd
   set -e

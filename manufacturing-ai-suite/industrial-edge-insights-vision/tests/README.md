@@ -1,6 +1,6 @@
 # Automation Framework for Industrial Edge Insights Vision
 
-This directory contains happy path test scripts and utility functions required for automation testing.
+This directory contains test scripts and utility functions required for automation testing.
 
 ### Installation Steps:
 

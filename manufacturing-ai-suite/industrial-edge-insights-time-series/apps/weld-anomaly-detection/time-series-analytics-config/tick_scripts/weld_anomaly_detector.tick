@@ -1,0 +1,14 @@
+        dbrp "datain"."autogen"
+
+var data0 = stream
+        |from()
+                .database('datain')
+                .retentionPolicy('autogen')
+                .measurement('weld-data')
+        @weld_anomaly_detector()
+data0
+        |influxDBOut()
+                .buffer(0)
+                .database('datain')
+                .measurement('weld-analytics-data')
+                .retentionPolicy('autogen')

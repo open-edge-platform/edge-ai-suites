@@ -1,0 +1,103 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: telegraf-conf-input
+data:
+  Telegraf.conf: |-
+{{ .Files.Get "Telegraf.conf" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: influxdb-conf-input
+data:
+  influxdb.conf: |-
+{{ .Files.Get "influxdb.conf" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: init-influxdb
+data:
+  init-influxdb.sh: |-
+{{ .Files.Get "init-influxdb.sh" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: mosquitto-conf
+data:
+  mosquitto.conf: |-
+{{ .Files.Get "mosquitto.conf" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: grafana-dashboard-json
+data:
+  dashboard.json: |-
+{{ .Files.Get "dashboard.json" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: grafana-datasource
+data:
+  datasources.yml: |-
+{{ .Files.Get "datasources.yml" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: grafana-entrypoint
+data:
+  entrypoint.sh: |-
+{{ .Files.Get "grafana_entrypoint.sh" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: telegraf-entrypoint
+data:
+  entrypoint.sh: |-
+{{ .Files.Get "telegraf_entrypoint.sh" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: time-series-analytics-microservice-config
+data:
+  config.json: |-
+{{ .Files.Get "config.json" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: grafana-dashboard-yml
+data:
+  dashboards.yml: |-
+{{ .Files.Get "dashboards.yml" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: ingestor-{{ .Values.env.SAMPLE_APP }}
+data:
+  {{ .Values.env.SAMPLE_APP }}.csv: |-
+{{ .Files.Get (printf "%s.csv" .Values.env.SAMPLE_APP) | indent 4 }}
