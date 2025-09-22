@@ -106,7 +106,7 @@ To copy your own or existing model into Time Series Analytics Microservice in or
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection # path relative to git clone folder
     cd time-series-analytics-config
     mkdir -p $SAMPLE_APP
-    cp -r models tick_scripts udfs $SAMPLE_APP.
+    cp -r models tick_scripts udfs $SAMPLE_APP/.
 
     POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
 
@@ -119,8 +119,8 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 
 Run the following command to activate the UDF deployment package:
 ```sh
-curl -X 'GET' \
-  'http://<HOST_IP>:30002/config?restart=true' \
+curl -k -X 'GET' \
+  'https://<HOST_IP>:30001/ts-api/config?restart=true' \
   -H 'accept: application/json'
 ```
 

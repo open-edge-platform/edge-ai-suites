@@ -349,7 +349,7 @@ services:
       - "1883:1883" # MQTT TCP Proxy
     volumes:
       - ./nginx/nginx.conf:/opt/bitnami/nginx/conf/nginx.conf:ro
-      - ./nginx/ssl:/opt/bitnami/nginx/conf/bitnami/certs:ro
+      - ./nginx/nginx-cert-gen.sh:/docker-entrypoint-initdb.d/nginx-cert-gen.sh:ro
     networks:
       - timeseries_network
     depends_on:
