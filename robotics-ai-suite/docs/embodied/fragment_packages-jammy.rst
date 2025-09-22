@@ -15,7 +15,7 @@
          * - `Linux firmware <https://eci.intel.com/docs/3.3/development/tutorials/enable-graphics.html>`__
            - linux-firmware
            - |Linux| firmware with Ultra iGPU firmware
-         * - :ref:`EtherCAT Master Stack <ethercat>`
+         * - `EtherCAT Master Stack <https://github.com/open-edge-platform/edge-ai-libraries/tree/main/libraries/edge-control-libraries/fieldbus/ethercat-masterstack>`__
            - | ighethercat
              | ighethercat-dpdk
              | ighethercat-dkms
@@ -89,6 +89,5 @@
    :hidden:
 
    packages/linuxbsp
-   packages/ethercat
    packages/mc_gateway
    
