@@ -63,7 +63,6 @@ and place industrial problems.
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
    
    getstarted
    components

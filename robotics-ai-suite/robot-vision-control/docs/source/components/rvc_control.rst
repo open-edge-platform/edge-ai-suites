@@ -31,7 +31,6 @@ tasks.
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
 
    rvc_control/parameters
    rvc_control/motion_controller_plugin
