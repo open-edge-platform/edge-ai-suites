@@ -72,6 +72,26 @@ spec:
         resources:
           {{ .Values.streaming.resources | toYaml | nindent 10 }}
         {{- end }}
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - {{ .Values.streaming.healthcheck.command | quote }}
+          initialDelaySeconds: 90
+          periodSeconds: {{ .Values.streaming.healthcheck.interval }}
+          timeoutSeconds: {{ .Values.streaming.healthcheck.timeout }}
+          failureThreshold: {{ .Values.streaming.healthcheck.failureThreshold }}
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - {{ .Values.streaming.healthcheck.command | quote }}
+          initialDelaySeconds: 90
+          periodSeconds: {{ .Values.streaming.healthcheck.interval }}
+          timeoutSeconds: {{ .Values.streaming.healthcheck.timeout }}
+          failureThreshold: {{ .Values.streaming.healthcheck.failureThreshold }}
       {{- if .Values.pullSecrets }}
       imagePullSecrets:
       {{- .Values.pullSecrets | toYaml | nindent 6 }}
