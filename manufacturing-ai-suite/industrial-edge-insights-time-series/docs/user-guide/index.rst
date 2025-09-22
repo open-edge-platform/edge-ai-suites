@@ -29,4 +29,4 @@ operational efficiency.
    how-to-enable-system-metrics
    how-to-update-config
    how-to-create-a-new-sample-app
-   release_notes/Overview
+   release_notes/toc

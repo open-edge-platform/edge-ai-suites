@@ -7,7 +7,7 @@ PROJ_DIR=$PWD
 exec &> ${LOG_FILE}
 
 if [ -d "/opt/intel/media" ]; then
-    source /opt/intel/openvino_2024/setupvars.sh
+    source /opt/intel/openvino_2025/setupvars.sh
     source /opt/intel/oneapi/setvars.sh
     source /opt/intel/media/etc/vpl/vars.sh
     export HVA_NODE_DIR=$PROJ_DIR/build/lib
@@ -34,7 +34,7 @@ if [ -d "/opt/intel/media" ]; then
     cd $PROJ_DIR/build/
     ./bin/HceAILLInfServer -C ../ai_inference/source/low_latency_server/AiInference.config
 else
-    source /opt/intel/openvino_2024/setupvars.sh
+    source /opt/intel/openvino_2025/setupvars.sh
     source /opt/intel/oneapi/setvars.sh
     source /etc/vpl/vars.sh
     export HVA_NODE_DIR=$PROJ_DIR/build/lib

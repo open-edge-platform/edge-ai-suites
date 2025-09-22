@@ -22,7 +22,7 @@ set(JSON_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/json)
 # set(DLSTREAMER_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/dlstreamer)
 
 find_package(OpenVINO REQUIRED COMPONENTS Runtime)
-set(OpenVINO_DIR "/opt/intel/openvino_2024")
+set(OpenVINO_DIR "/opt/intel/openvino_2025")
 message("OpenVINO_INCLUDE_DIRS: ${OpenVINO_INCLUDE_DIRS}")
 include_directories(${OpenVINO_INCLUDE_DIRS})
 set(INFERENCE_BACKEND_INC_DIR ${PROJECT_SOURCE_DIR}/ai_inference/inference_backend/include)

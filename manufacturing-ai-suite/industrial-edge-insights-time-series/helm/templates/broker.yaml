@@ -15,9 +15,7 @@ spec:
     app: ia-mqtt-broker
   ports:
     - name: broker-port
-      port: {{ .Values.config.mqttbroker.int.port }}
-      targetPort: {{ .Values.config.mqttbroker.int.port }}
-      nodePort: {{ .Values.config.mqttbroker.ext.port }}
+      port: {{ .Values.config.mqttbroker.mqttbroker_port }}
 ---
 apiVersion: apps/v1
 kind: Deployment

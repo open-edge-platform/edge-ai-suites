@@ -4,7 +4,7 @@ set -x
 PROJ_DIR=$PWD
 
 if [ -d "/opt/intel/media" ]; then
-    source /opt/intel/openvino_2024/setupvars.sh
+    source /opt/intel/openvino_2025/setupvars.sh
     source /opt/intel/oneapi/setvars.sh
     # source /opt/intel/oneVPL_v2023.3.0/etc/vpl/vars.sh
     source /opt/intel/media/etc/vpl/vars.sh
@@ -37,7 +37,7 @@ if [ -d "/opt/intel/media" ]; then
     # gdb --args ./bin/HceAILLInfServer -C ../ai_inference/source/low_latency_server/AiInference.config
     ./bin/HceAILLInfServer -C ../ai_inference/source/low_latency_server/AiInference.config
 else
-    source /opt/intel/openvino_2024/setupvars.sh
+    source /opt/intel/openvino_2025/setupvars.sh
     source /opt/intel/oneapi/setvars.sh
     source /usr/local/etc/vpl/vars.sh
 

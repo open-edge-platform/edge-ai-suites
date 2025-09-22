@@ -37,7 +37,7 @@ message("OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
 # find_package(InferenceEngine REQUIRED)
 find_package(OpenVINO REQUIRED COMPONENTS Runtime)
 find_package(fmt REQUIRED)
-set(OpenVINO_DIR "/opt/intel/openvino_2024")
+set(OpenVINO_DIR "/opt/intel/openvino_2025")
 message("InferenceEngine_INCLUDE_DIRS: ${InferenceEngine_INCLUDE_DIRS}")
 message("InferenceEngine_LIBRARIES: ${InferenceEngine_LIBRARIES}")
 
@@ -76,7 +76,7 @@ target_link_libraries(ClassificationNode ${Boost_LIBRARIES})
 
 # target_include_directories(ClassificationNode PUBLIC "${InferenceEngine_INCLUDE_DIRS}")
 # target_link_libraries(ClassificationNode "${InferenceEngine_LIBRARIES}")
-target_include_directories(ClassificationNode PUBLIC /opt/intel/openvino_2024/runtime/include)
+target_include_directories(ClassificationNode PUBLIC /opt/intel/openvino_2025/runtime/include)
 target_include_directories(ClassificationNode PUBLIC "${OpenVINO_INCLUDE_DIRS}")
 target_link_libraries(ClassificationNode openvino::runtime)
 
@@ -112,7 +112,7 @@ target_link_libraries(DetectionNode ${Boost_LIBRARIES})
 
 # target_include_directories(DetectionNode PUBLIC "${InferenceEngine_INCLUDE_DIRS}")
 # target_link_libraries(DetectionNode "${InferenceEngine_LIBRARIES}")
-target_include_directories(DetectionNode PUBLIC /opt/intel/openvino_2024/runtime/include)
+target_include_directories(DetectionNode PUBLIC /opt/intel/openvino_2025/runtime/include)
 target_include_directories(DetectionNode PUBLIC "${OpenVINO_INCLUDE_DIRS}")
 target_link_libraries(DetectionNode openvino::runtime)
 
@@ -151,7 +151,7 @@ target_link_libraries(FeatureExtractionNode ${Boost_LIBRARIES})
 
 # target_include_directories(FeatureExtractionNode PUBLIC "${InferenceEngine_INCLUDE_DIRS}")
 # target_link_libraries(FeatureExtractionNode "${InferenceEngine_LIBRARIES}")
-target_include_directories(FeatureExtractionNode PUBLIC /opt/intel/openvino_2024/runtime/include)
+target_include_directories(FeatureExtractionNode PUBLIC /opt/intel/openvino_2025/runtime/include)
 target_include_directories(FeatureExtractionNode PUBLIC "${OpenVINO_INCLUDE_DIRS}")
 target_link_libraries(FeatureExtractionNode openvino::runtime)
 
@@ -190,7 +190,7 @@ target_include_directories(ObjectQualityNode PUBLIC ${Boost_INCLUDE_DIRS})
 # target_include_directories(ObjectQualityNode PUBLIC "${InferenceEngine_INCLUDE_DIRS}")
 # target_link_libraries(ObjectQualityNode "${InferenceEngine_LIBRARIES}")
 
-# target_include_directories(ObjectQualityNode PUBLIC /opt/intel/openvino_2024/runtime/include)
+# target_include_directories(ObjectQualityNode PUBLIC /opt/intel/openvino_2025/runtime/include)
 target_include_directories(ObjectQualityNode PUBLIC "${OpenVINO_INCLUDE_DIRS}")
 target_link_libraries(ObjectQualityNode openvino::runtime)
 

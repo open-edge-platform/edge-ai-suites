@@ -58,7 +58,7 @@ spec:
         - name: LOG_LEVEL
           value: '{{ .Values.env.LOG_LEVEL }}'
         - name: TS_MS_SERVER
-          value: "time-series-analytics-microservice"
+          value: "ia-time-series-analytics-microservice"
         - name: TS_MS_PORT
           value: '{{ .Values.config.time_series_analytics_microservice.kapacitor_port }}'
         - name: CONTINUOUS_SIMULATOR_INGESTION
