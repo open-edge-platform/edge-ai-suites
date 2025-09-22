@@ -20,7 +20,6 @@ to derive a non real time pose of an object standing still a fixed distance surf
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
    
    rvc_vision/dynamic_vision
    rvc_vision/2.5d_vision/2.5d_vision
