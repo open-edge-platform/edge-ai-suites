@@ -6,7 +6,7 @@
 #
 
 # Set working directory for SSL certificates
-SSL_DIR="/opt/bitnami/nginx/conf/bitnami/certs"
+SSL_DIR="/opt/intel/certs"
 mkdir -p "$SSL_DIR"
 
 # Set default values for SSL parameters if not provided
@@ -15,7 +15,7 @@ DAYS=365
 SHA_ALGO="sha384"
 
 echo "Generating SSL certificates for Nginx..."
-if [ -d $SSL_DIR ]; then rm -rf $SSL_DIR; fi
+if [ -d $SSL_DIR ]; then rm -rf $SSL_DIR/*; fi
 	mkdir -p $SSL_DIR
 	openssl req -x509 -nodes -days ${DAYS} -${SHA_ALGO} -newkey rsa:${KEY_LENGTH} -keyout $SSL_DIR/key.pem -out $SSL_DIR/cert.pem -subj "/CN=localhost"
 	chmod 640 $SSL_DIR/key.pem $SSL_DIR/cert.pem
