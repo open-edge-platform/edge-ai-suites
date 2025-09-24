@@ -80,6 +80,6 @@ spec:
       - name: nginx-cert-gen
         configMap:
           name: nginx-cert-gen
-          defaultMode: 0777
+          defaultMode: 0705
       - name: vol-temp-nginx
         emptyDir: {}
