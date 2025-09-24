@@ -4,9 +4,9 @@
             {
                 "name": "intersection-cam1",
                 "source": "gstreamer",
-                "queue_maxsize": 50,
+                "queue_maxsize": 5,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122north.ts name=source ! decodebin3 ! timecodestamper set=always ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect device=GPU model-instance-id=detect1 inference-interval=1 model=/home/pipeline-server/models/intersection/openvino.xml pre-process-backend=va-surface-sharing ! queue ! gvafpscounter interval=1 starting-frame=1000 print-latency=true ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink sync=false",
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122north.ts name=source ! decodebin3 ! timecodestamper set=always ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect scheduling-policy=latency batch-size=1 device=GPU model-instance-id=detect1 inference-interval=1 model=/home/pipeline-server/models/intersection/openvino.xml pre-process-backend=va-surface-sharing ! queue ! gvafpscounter interval=1 starting-frame=1000 ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink sync=false",
                 "parameters": {
                     "type": "object",
                     "properties": {

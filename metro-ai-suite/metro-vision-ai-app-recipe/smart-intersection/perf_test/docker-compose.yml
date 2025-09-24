@@ -15,11 +15,14 @@ services:
     restart: on-failure:5
 
   dlstreamer-pipeline-server:
-    image: intel/dlstreamer-pipeline-server:3.1.0-ubuntu24
+    image: intel/dlstreamer-pipeline-server:3.1.0-extended-ubuntu24
     container_name: dlstreamer-pipeline-server
     ports:
       - 8554:8554
     environment:
+#      - GST_DEBUG=GST_TRACER:7
+#      - GST_TRACERS=latency(flags=pipeline+element)
+#      - GST_DEBUG_FILE=/home/pipeline-server/output/trace.log
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},${HOST_IP},mediamtx-server
@@ -34,8 +37,7 @@ services:
       - SERVICE_NAME=dlstreamer-pipeline-server
       - MQTT_HOST=broker
       - MQTT_PORT=1883
-      - GST_DEBUG="2,GST_TRACER:7"
-      - GST_TRACERS="latency_tracer(flags=pipeline)"
+      - GST_DEBUG=3
     volumes:
       - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999
       - "${ROOT_DIR}/src/dlstreamer-pipeline-server/user_scripts:/home/pipeline-server/user_scripts"

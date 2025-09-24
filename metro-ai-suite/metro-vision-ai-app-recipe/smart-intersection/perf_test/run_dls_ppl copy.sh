@@ -43,17 +43,18 @@ for i in "${!INPUT_ARRAY[@]}"; do
     INPUT=${INPUT_ARRAY[$i]}
     
     echo "Starting pipeline ${PPL_ID} with input: ${INPUT}"
-    
+
+
     docker run --rm -v ${VIDEOS_DIR}:/data -v ${MODELS_DIR}:/models \
     -e GST_DEBUG="GST_TRACER:7" \
-    -e GST_TRACERS="latency_tracer(flags=pipeline,interval=1000)" \
+    -e GST_TRACERS="latency_tracer(flags=pipeline)" \
     --device /dev/dri \
     --group-add $(stat -c "%g" /dev/dri/render*) \
     --device /dev/accel \
     --group-add $(stat -c "%g" /dev/accel/accel*) \
     intel/dlstreamer:2025.1.2-ubuntu24 \
     gst-launch-1.0 multifilesrc loop=true location=/data/${INPUT} name=source ! decodebin3 ! timecodestamper set=always ! vapostproc ! "video/x-raw(memory:VAMemory)" \
-     ! gvadetect batch-size=8 device=GPU model-instance-id=detect${PPL_ID} inference-interval=1 model=/models/intersection/openvino.xml pre-process-backend=va-surface-sharing ! queue \
+     ! gvadetect  scheduling-policy=latency device=GPU model-instance-id=detect1 inference-interval=1 model=/models/intersection/openvino.xml pre-process-backend=va-surface-sharing ! queue \
      ! gvafpscounter interval=1 starting-frame=1000 print-latency=true ! appsink sync=false > logs/run_dls_ppl_${PPL_ID}.log 2>&1 &
 
     echo "Pipeline ${PPL_ID} started with PID: $!"
