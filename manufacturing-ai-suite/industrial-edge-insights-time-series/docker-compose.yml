@@ -342,6 +342,7 @@ services:
     image: nginx:1.29.1-bookworm-perl
     container_name: nginx_proxy
     read_only: true
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     environment:
       no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
       NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"

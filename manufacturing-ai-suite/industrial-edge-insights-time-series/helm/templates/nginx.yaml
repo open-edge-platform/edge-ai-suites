@@ -42,10 +42,13 @@ spec:
     spec:
       containers:
       - name: nginx-proxy
-        image: bitnami/nginx:1.29-debian-12
+        image: nginx:1.29.1-bookworm-perl
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
+          runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+          runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
@@ -63,6 +66,12 @@ spec:
         - name: nginx-cert-gen
           mountPath: /docker-entrypoint-initdb.d/nginx-cert-gen.sh
           subPath: nginx-cert-gen.sh
+        - name: vol-temp-nginx
+          mountPath: /opt/intel/certs
+        - name: vol-temp-nginx
+          mountPath: /var/cache/nginx
+        - name: vol-temp-nginx
+          mountPath: /run
       volumes:
       - name: nginx-conf
         configMap:
@@ -70,3 +79,5 @@ spec:
       - name: nginx-cert-gen
         configMap:
           name: nginx-cert-gen
+      - name: vol-temp-nginx
+        emptyDir: {}
