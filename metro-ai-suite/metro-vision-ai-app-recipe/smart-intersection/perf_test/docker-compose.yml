@@ -34,11 +34,14 @@ services:
       - SERVICE_NAME=dlstreamer-pipeline-server
       - MQTT_HOST=broker
       - MQTT_PORT=1883
+      - GST_DEBUG="2,GST_TRACER:7"
+      - GST_TRACERS="latency_tracer(flags=pipeline)"
     volumes:
       - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999
       - "${ROOT_DIR}/src/dlstreamer-pipeline-server/user_scripts:/home/pipeline-server/user_scripts"
       - "${ROOT_DIR}/src/dlstreamer-pipeline-server/models:/home/pipeline-server/models"
       - "${ROOT_DIR}/src/dlstreamer-pipeline-server/videos:/home/pipeline-server/videos"
+      - "${ROOT_DIR}/perf_test/output:/home/pipeline-server/output"
       - "${ROOT_DIR}/perf_test/config.json:/home/pipeline-server/config.json"
       - "/run/udev:/run/udev:ro"
       - "/dev:/dev"

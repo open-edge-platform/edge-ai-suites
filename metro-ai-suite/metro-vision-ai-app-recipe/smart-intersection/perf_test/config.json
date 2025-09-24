@@ -6,7 +6,7 @@
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122north.ts name=source ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect device=GPU model-instance-id=detect1 inference-interval=1 model=/home/pipeline-server/models/intersection/openvino.xml pre-process-backend=va-surface-sharing ! queue ! gvafpscounter ! appsink sync=true",
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122north.ts name=source ! decodebin3 ! timecodestamper set=always ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect device=GPU model-instance-id=detect1 inference-interval=1 model=/home/pipeline-server/models/intersection/openvino.xml pre-process-backend=va-surface-sharing ! queue ! gvafpscounter interval=1 starting-frame=1000 print-latency=true ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink sync=false",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -55,6 +55,11 @@
                 },
                 "payload": {
                     "destination":{
+                        "metadata": {
+                            "type": "file",
+                            "path": "/home/pipeline-server/output/results.jsonl",
+                            "format": "json-lines"
+                        },
                         "frame": {
                             "type": "rtsp",
                             "path": "camera1"
