@@ -4,13 +4,8 @@
 |rvc_full|
 ##########
 
-About Intel\ |reg| RVC
-#########################################
-
-
 .. image:: images/html/robotic-arm-graphic.png
 
-============================================
 Robotics Pick and Place in Industrial Fields
 ============================================
 
@@ -63,7 +58,7 @@ and place industrial problems.
 
 
 |rvc_full| Resources
---------------------
+====================
 
 - :doc:`Get Started <getstarted>`
 
