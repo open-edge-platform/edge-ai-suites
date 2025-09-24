@@ -352,7 +352,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro
-      - vol_nginx_tmpfs:/opt/intel/certs:rw
+      - vol_nginx_tmpfs:/opt/nginx/certs:rw
       - vol_nginx_tmpfs:/var/cache/nginx:rw
       - vol_nginx_tmpfs:/run:rw
     command: >

@@ -6,7 +6,7 @@
 #
 
 # Set working directory for SSL certificates
-SSL_DIR="/opt/intel/certs"
+SSL_DIR="/opt/nginx/certs"
 mkdir -p "$SSL_DIR"
 
 # Set default values for SSL parameters if not provided

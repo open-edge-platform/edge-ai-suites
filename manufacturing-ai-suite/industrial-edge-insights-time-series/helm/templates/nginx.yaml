@@ -68,7 +68,7 @@ spec:
           mountPath: /usr/local/bin/nginx-cert-gen.sh
           subPath: nginx-cert-gen.sh
         - name: vol-temp-nginx
-          mountPath: /opt/intel/certs
+          mountPath: /opt/nginx/certs
         - name: vol-temp-nginx
           mountPath: /var/cache/nginx
         - name: vol-temp-nginx
