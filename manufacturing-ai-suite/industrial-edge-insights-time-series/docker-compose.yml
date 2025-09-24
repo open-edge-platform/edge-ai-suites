@@ -361,7 +361,7 @@ services:
     security_opt:
     - no-new-privileges
     healthcheck:
-      test: ["CMD-SHELL", "exit", "0"]
+      test: ["CMD-SHELL", "curl -f https://localhost/ -k ||  exit 1"]
       interval: 5m
     networks:
       - timeseries_network
