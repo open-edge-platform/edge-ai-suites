@@ -5,6 +5,7 @@
 - [March 2025](./march-2025.md)
 - [February 2025](./february-2025.md)
 
+<!--hide_directive
 ```{toctree}
 :maxdepth: 5
 :hidden:
@@ -13,3 +14,4 @@ march-2025.md
 april-2025.md
 august-2025.md
 ```
+hide_directive-->
