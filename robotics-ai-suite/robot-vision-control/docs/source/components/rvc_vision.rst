@@ -18,8 +18,18 @@ The latter is using Computer vision 2.5D space recognition based solely on RGB s
 to derive a non real time pose of an object standing still a fixed distance surface.
 
 
+Vision Framework Resources
+--------------------------
+
+- :doc:`Dynamic Vision <rvc_vision/dynamic_vision>`
+
+- :doc:`2.5D Vision <rvc_vision/2.5d_vision/2.5d_vision>`
+
+- :doc:`RVC Vision Messages <rvc_vision/rvc_vision_messages>`
+
 .. toctree::
    :maxdepth: 1
+   :hidden:
    
    rvc_vision/dynamic_vision
    rvc_vision/2.5d_vision/2.5d_vision

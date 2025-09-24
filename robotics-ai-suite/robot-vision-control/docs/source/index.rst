@@ -61,8 +61,27 @@ and place industrial problems.
 
 .. image:: images/html/RobotBackground.png
 
+
+|rvc_full| Resources
+--------------------
+
+- :doc:`Get Started <getstarted>`
+
+- :doc:`Components and Features of RVC <components>`
+
+- :doc:`Exemplary Use Cases <use_cases>`
+
+- :doc:`Developer Resources <development>`
+
+- :doc:`Release Notes <releasenotes>`
+
+- :doc:`Troubleshootings <troubleshooting>`
+
+- :doc:`Notices and Disclaimers <legal>`
+
 .. toctree::
    :maxdepth: 2
+   :hidden:
    
    getstarted
    components
