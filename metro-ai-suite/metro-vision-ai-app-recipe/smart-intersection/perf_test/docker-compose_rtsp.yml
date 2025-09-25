@@ -1,0 +1,35 @@
+services:
+
+  mediaserver:
+    image: bluenviron/mediamtx:1.14.0
+    networks:
+      scenescape:
+        aliases:
+          - mediaserver
+    #  ports:
+    #    - "8554:8554"
+    restart: always
+    pids_limit: 1000
+
+  queuing-cams:
+    image: linuxserver/ffmpeg:version-8.0-cli
+    command: -nostdin -re -stream_loop -1 -i /workspace/media/qcam1.ts -re -stream_loop -1 -i /workspace/media/qcam2.ts -map 0:v -c copy -f rtsp -rtsp_transport tcp rtsp://mediaserver:8554/queuing-cam1 -map 1:v -c copy -f rtsp -rtsp_transport tcp rtsp://mediaserver:8554/queuing-cam2
+    volumes:
+      - /home/labrat/tdorau/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/videos:/data
+    networks:
+      scenescape:
+    depends_on:
+      - mediaserver
+    restart: always
+    pids_limit: 1000
+
+networks:
+  app_network:
+    driver: "bridge"
+
+volumes:
+  dlstreamer-pipeline-server-pipeline-root:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
