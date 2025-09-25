@@ -29,5 +29,5 @@ docker run --rm -v ${VIDEOS_DIR}:/data -v ${MODELS_DIR}:/models \
 intel/dlstreamer:2025.1.2-ubuntu24 \
 gst-launch-1.0 \
 multifilesrc loop=true location=/data/${INPUT} ! decodebin3  ! timecodestamper set=always ! vapostproc ! "video/x-raw(memory:VAMemory)" \
- ! gvadetect batch-size=4 scheduling-policy=latency device=GPU model-instance-id=detect1 inference-interval=1 model=/models/intersection/openvino.xml pre-process-backend=va-surface-sharing ! queue \
+ ! gvadetect batch-size=1 scheduling-policy=latency device=GPU model-instance-id=detect1 inference-interval=1 model=/models/intersection/openvino.xml pre-process-backend=va-surface-sharing ! queue \
  ! gvafpscounter interval=1 starting-frame=1000 print-latency=true ! appsink sync=false > logs/run_dls_1ppl.log 2>&1 &
