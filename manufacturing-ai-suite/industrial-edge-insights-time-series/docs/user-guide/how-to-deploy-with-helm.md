@@ -98,10 +98,10 @@ Use the following command to verify if all the application resources got install
 
 To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
-1. The following udf package is placed in the repository under `time_series_analytics_microservice`. 
+1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config`. 
 
     ```
-    - time_series_analytics_microservice/
+    - time-series-analytics-config/
         - models/
             - windturbine_anomaly_detector.pkl
         - tick_scripts/
