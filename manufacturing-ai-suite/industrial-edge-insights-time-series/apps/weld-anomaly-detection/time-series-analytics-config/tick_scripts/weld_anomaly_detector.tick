@@ -5,7 +5,7 @@ var data0 = stream
                 .database('datain')
                 .retentionPolicy('autogen')
                 .measurement('weld-detection-data')
-        @weld_defect_detection()
+        @weld_anomaly_detector()
 data0
         |influxDBOut()
                 .buffer(0)
