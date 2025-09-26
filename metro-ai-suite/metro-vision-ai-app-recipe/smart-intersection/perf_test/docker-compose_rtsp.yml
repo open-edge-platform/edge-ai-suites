@@ -6,16 +6,16 @@ services:
       scenescape:
         aliases:
           - mediaserver
-    #  ports:
-    #    - "8554:8554"
+    ports:
+      - "8554:8554"
     restart: always
     pids_limit: 1000
 
-  queuing-cams:
+  cams:
     image: linuxserver/ffmpeg:version-8.0-cli
-    command: -nostdin -re -stream_loop -1 -i /workspace/media/qcam1.ts -re -stream_loop -1 -i /workspace/media/qcam2.ts -map 0:v -c copy -f rtsp -rtsp_transport tcp rtsp://mediaserver:8554/queuing-cam1 -map 1:v -c copy -f rtsp -rtsp_transport tcp rtsp://mediaserver:8554/queuing-cam2
+    command: -nostdin -re -stream_loop -1 -i /data/1122east.ts -map 0:v -c copy -f rtsp -rtsp_transport udp ${INPUT_RTSP}
     volumes:
-      - /home/labrat/tdorau/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/videos:/data
+      - ${ROOT_DIR}/src/dlstreamer-pipeline-server/videos:/data
     networks:
       scenescape:
     depends_on:
@@ -24,7 +24,7 @@ services:
     pids_limit: 1000
 
 networks:
-  app_network:
+  scenescape:
     driver: "bridge"
 
 volumes:

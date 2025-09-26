@@ -9,14 +9,21 @@
 # ! gvametapublish name=destination ! appsink sync=true
 
 INPUT_VIDEO=1122east.ts
-INPUT_RTSP=rtsp://localhost:8554
+INPUT_RTSP=rtsp://localhost:8554/cam1
 
 VIDEOS_DIR=./src/dlstreamer-pipeline-server/videos
 MODELS_DIR=./src/dlstreamer-pipeline-server/models
 OUTPUT_DIR=./perf_test/output
 
+echo "ROOT_DIR=$(pwd)" > perf_test/.env
+echo "INPUT_RTSP=${INPUT_RTSP}" >> perf_test/.env
+
 # Create logs directory if it doesn't exist
 mkdir -p logs
+
+docker compose -f perf_test/docker-compose_rtsp.yml up -d
+echo "Started RTSP server and camera stream in Docker containers."
+echo "Run to stop: docker compose -f perf_test/docker-compose_rtsp.yml down"
 
 # docker run --rm -v ${VIDEOS_DIR}:/data \
 # -e GST_DEBUG=3 \
