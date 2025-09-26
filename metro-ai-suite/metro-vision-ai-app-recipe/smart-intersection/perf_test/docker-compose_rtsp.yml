@@ -3,7 +3,7 @@ services:
   mediaserver:
     image: bluenviron/mediamtx:1.14.0
     networks:
-      scenescape:
+      perf_test_net:
         aliases:
           - mediaserver
     ports:
@@ -13,23 +13,17 @@ services:
 
   cams:
     image: linuxserver/ffmpeg:version-8.0-cli
-    command: -nostdin -re -stream_loop -1 -i /data/1122east.ts -map 0:v -c copy -f rtsp -rtsp_transport udp ${INPUT_RTSP}
+    command: -nostdin -re -stream_loop -1 -i /data/1122east.ts -map 0:v -c copy -f rtsp -rtsp_transport udp rtsp://mediaserver:8554/cam1
     volumes:
       - ${ROOT_DIR}/src/dlstreamer-pipeline-server/videos:/data
     networks:
-      scenescape:
+      perf_test_net:
     depends_on:
-      - mediaserver
+      mediaserver:
+        condition: service_started
     restart: always
     pids_limit: 1000
 
 networks:
-  scenescape:
+  perf_test_net:
     driver: "bridge"
-
-volumes:
-  dlstreamer-pipeline-server-pipeline-root:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
