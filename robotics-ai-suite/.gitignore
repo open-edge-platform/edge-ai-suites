@@ -1,0 +1,6 @@
+__pycache__/
+*/__pycache__/*
+
+venv_robotics-ai-suite-docs/
+docs/docconf/docconf.egg-info/
+robot-vision-control/docs/build/
