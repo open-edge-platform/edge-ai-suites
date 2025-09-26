@@ -112,6 +112,7 @@ class AnomalyDetectorHandler(Handler):
         """ A point has arrived.
         """
         server = None
+        start_time = time.time_ns()
         for point_tag in point.tags:
             if point_tag.key == "source":
                 server = point_tag.value
@@ -136,12 +137,18 @@ class AnomalyDetectorHandler(Handler):
             defect_likelihood_main = self.model.predict_proba(point_series)
             bad_defect = defect_likelihood_main[0]*100
             good_defect = defect_likelihood_main[1]*100
+            if bad_defect > 50:
+                point.fieldsDouble.add(key = "anomaly_status", value = 1.0)
             logger.info(f"Good Weld: {good_defect:.2f}%, Defective Weld: {bad_defect:.2f}%")
         else:
             logger.info("Good Weld: N/A, Defective Weld: N/A") 
 
         point.fieldsDouble.add(key = "Good Weld", value = round(good_defect, 2) if "good_defect" in locals() else 0.0)
         point.fieldsDouble.add(key = "Defective Weld", value = round(bad_defect,2) if "bad_defect" in locals() else 0.0)
+        time_now = time.time_ns()
+        point.fieldsDouble.add(key = 'processing_time', value = time_now-start_time)
+
+        point.fieldsDouble.add(key = 'end_end_time', value = time_now-point.time)
 
         logger.info("Processing point %s %s for source %s", point.time, time.time(), server)
 
@@ -150,6 +157,11 @@ class AnomalyDetectorHandler(Handler):
             point.fieldsDouble.add(key = "anomaly_status", value = 0.0)
         response.point.CopyFrom(point)
         self._agent.write_response(response, True)
+
+        end_time = time.time_ns()
+        process_time = (end_time - start_time)/1000
+        logger.debug("Function point took %.4f milliseconds to complete.", process_time)
+
 
     def end_batch(self, end_req):
         """ The batch is complete.
