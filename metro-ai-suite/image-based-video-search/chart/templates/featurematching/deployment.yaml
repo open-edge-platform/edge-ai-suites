@@ -53,6 +53,12 @@ spec:
         resources:
           {{ .Values.featurematching.resources | toYaml | nindent 10 }}
         {{- end }}
+        {{- if .Values.featurematching.healthcheck.enabled }}
+        livenessProbe:
+          {{- toYaml .Values.featurematching.healthcheck.livenessProbe | nindent 8 }}
+        readinessProbe:
+          {{- toYaml .Values.featurematching.healthcheck.readinessProbe | nindent 8 }}
+        {{- end }}
       volumes:
       - name: static-data
         emptyDir: {}

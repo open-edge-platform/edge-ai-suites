@@ -57,6 +57,8 @@ class AnomalyDetectorHandler(Handler):
         model_path = os.path.abspath(model_path)
         self.rf = load_model(model_path)
 
+        self.device = os.getenv('DEVICE', 'auto').lower()
+
         # wind speed and active power field name in the influxdb measurements
         self.x_name = "wind_speed"
         self.y_name = "grid_active_power"
@@ -173,7 +175,7 @@ class AnomalyDetectorHandler(Handler):
                     x_feat = np.reshape(x_feat, (-1,1))
                     y_feat = list(zip(*self.last_anomalies))[1]
 
-                    with config_context(target_offload="auto", allow_fallback_to_host=True):
+                    with config_context(target_offload=self.device, allow_fallback_to_host=True):
                         lm = LinearRegression()
                         lm.fit(x_feat, y_feat)
 

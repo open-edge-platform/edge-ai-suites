@@ -339,8 +339,10 @@ services:
 
 
   nginx:
-    image: bitnami/nginx:1.29-debian-12
+    image: nginx:1.29.1-bookworm-perl
     container_name: nginx_proxy
+    read_only: true
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     environment:
       no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
       NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
@@ -348,8 +350,19 @@ services:
       - "${GRAFANA_PORT}:443"   # HTTPS for Grafana and TS MS Rest API 
       - "1883:1883" # MQTT TCP Proxy
     volumes:
-      - ./nginx/nginx.conf:/opt/bitnami/nginx/conf/nginx.conf:ro
-      - ./nginx/ssl:/opt/bitnami/nginx/conf/bitnami/certs:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro
+      - vol_nginx_tmpfs:/opt/nginx/certs:rw
+      - vol_nginx_tmpfs:/var/cache/nginx:rw
+      - vol_nginx_tmpfs:/run:rw
+    command: >
+      /bin/bash -c "/usr/local/bin/nginx-cert-gen.sh && exec nginx -g 'daemon off;'"
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f https://localhost/ -k ||  exit 1"]
+      interval: 5m
     networks:
       - timeseries_network
     depends_on:
@@ -389,6 +402,11 @@ volumes:
       type: tmpfs
       device: tmpfs
   mr_postgres_data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_nginx_tmpfs:
     driver: local
     driver_opts:
       type: tmpfs

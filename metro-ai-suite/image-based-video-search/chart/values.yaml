@@ -21,6 +21,43 @@ broker:
   replicas: 1
   # key: broker.nodeSelector
   nodeSelector: {}
+  # key: broker.healthcheck
+  healthcheck:
+    enabled: true
+    livenessProbe:
+      exec:
+        command:
+          - mosquitto_sub
+          - -t
+          - "$$SYS/#"
+          - -C
+          - "1"
+          - -i
+          - "healthcheck"
+          - -W
+          - "3"
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+      successThreshold: 1
+    readinessProbe:
+      exec:
+        command:
+          - mosquitto_sub
+          - -t
+          - "$$SYS/#"
+          - -C
+          - "1"
+          - -i
+          - "healthcheck"
+          - -W
+          - "3"
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+      successThreshold: 1
   # Resources allows you to specify the resource requests and limits for a service.
   # Resources are used to specify the amount of CPU and memory that
   # a container needs.
@@ -131,6 +168,25 @@ milvusdb:
   replicas: 1
   # key: milvusdb.nodeSelector
   nodeSelector: {}
+  # key: milvusdb.healthcheck
+  healthcheck:
+    enabled: true
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 9091
+      initialDelaySeconds: 90   # start_period
+      periodSeconds: 30         # interval
+      timeoutSeconds: 20        # timeout
+      failureThreshold: 3       # retries
+    readinessProbe:
+      httpGet:
+        path: /healthz
+        port: 9091
+      initialDelaySeconds: 90
+      periodSeconds: 30
+      timeoutSeconds: 20
+      failureThreshold: 3
   # Resources allows you to specify the resource requests and limits for a service.
   # Resources are used to specify the amount of CPU and memory that
   # a container needs.
@@ -198,11 +254,18 @@ streaming:
     # key: streaming.repository.image
     image: docker.io/intel/streaming-pipeline
     # key: streaming.repository.tag
-    tag: v1.0.1
+    tag: v1.0.2-pre-RC1
   # key: streaming.replicas
   replicas: 1
   # key: streaming.nodeSelector
   nodeSelector: {}
+  # key: streaming.healthcheck
+  healthcheck:
+    command: "ffprobe -v error -rtsp_transport tcp rtsp://ibvs-mediamtx:8554/stream -show_streams || exit 1"
+    interval: 30
+    timeout: 10
+    failureThreshold: 3
+  restartPolicy: OnFailure
   # Resources allows you to specify the resource requests and limits for a service.
   # Resources are used to specify the amount of CPU and memory that
   # a container needs.
@@ -234,11 +297,32 @@ app:
     # key: app.repository.image
     image: docker.io/intel/image-based-video-search
     # key: app.repository.tag
-    tag: v1.0.1
+    tag: v1.0.2-pre-RC1
   # key: app.replicas
   replicas: 1
   # key: app.nodeSelector
   nodeSelector: {}
+  # key: app.healthcheck
+  healthcheck:
+    enabled: true
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 3000
+      initialDelaySeconds: 20
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+      successThreshold: 1
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 3000
+      initialDelaySeconds: 20
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+      successThreshold: 1
   # Resources allows you to specify the resource requests and limits for a service.
   # Resources are used to specify the amount of CPU and memory that
   # a container needs.
@@ -270,11 +354,30 @@ featurematching:
     # key: featurematching.repository.image
     image: docker.io/intel/feature-matching
     # key: featurematching.repository.tag
-    tag: v1.0.1
+    tag: v1.0.2-pre-RC1
   # key: featurematching.replicas
   replicas: 1
   # key: featurematching.nodeSelector
   nodeSelector: {}
+  # key: featurematching.healthcheck
+  healthcheck:
+    enabled: true
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8000
+      initialDelaySeconds: 10   # like start_period
+      periodSeconds: 30         # interval
+      timeoutSeconds: 5         # timeout
+      failureThreshold: 3       # retries
+    readinessProbe:
+      httpGet:
+        path: /healthz
+        port: 8000
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
   # Resources allows you to specify the resource requests and limits for a service.
   # Resources are used to specify the amount of CPU and memory that
   # a container needs.

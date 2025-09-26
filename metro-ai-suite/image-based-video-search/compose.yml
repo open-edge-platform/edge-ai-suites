@@ -51,7 +51,7 @@ services:
         condition: service_healthy
 
   feature-matching:
-    image: ${DOCKER_REGISTRY}intel/feature-matching:v1.0.1
+    image: ${DOCKER_REGISTRY}intel/feature-matching:v1.0.2-pre-RC1
     ports:
       - "9000:8000"
     container_name: ibvs-featurematching
@@ -87,7 +87,7 @@ services:
       start_period: 10s
     restart: on-failure:5
   streaming-pipeline:
-    image: ${DOCKER_REGISTRY}intel/streaming-pipeline:v1.0.1
+    image: ${DOCKER_REGISTRY}intel/streaming-pipeline:v1.0.2-pre-RC1
     build:
       context: src/streaming-pipeline
       dockerfile: Dockerfile
@@ -217,7 +217,7 @@ services:
         condition: service_started
     restart: on-failure:5
   app:
-    image: ${DOCKER_REGISTRY}intel/image-based-video-search:v1.0.1
+    image: ${DOCKER_REGISTRY}intel/image-based-video-search:v1.0.2-pre-RC1
     container_name: ibvs-app
     ports:
       - "3000:3000"

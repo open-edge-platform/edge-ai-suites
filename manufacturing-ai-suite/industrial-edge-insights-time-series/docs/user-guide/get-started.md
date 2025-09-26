@@ -91,10 +91,11 @@ The `task` section defines the settings for the Kapacitor task and User-Defined 
 
 The `udfs` section specifies the details of the UDFs used in the task.
 
-| Key     | Description                                                                 | Example Value                          |
-|---------|-----------------------------------------------------------------------------|----------------------------------------|
-| `name`  | The name of the UDF script.                                                 | `"windturbine_anomaly_detector"`       |
-| `models`| The name of the model file used by the UDF.                                 | `"windturbine_anomaly_detector.pkl"`   |
+| Key     | Description                                                                                 | Example Value                          |
+|---------|---------------------------------------------------------------------------------------------|----------------------------------------|
+| `name`  | The name of the UDF script.                                                                 | `"windturbine_anomaly_detector"`       |
+| `models`| The name of the model file used by the UDF.                                                 | `"windturbine_anomaly_detector.pkl"`   |
+| `device`| Specifies the hardware `CPU` or `GPU` for executing the UDF model inference.Default is `cpu`| `cpu`                                  |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 ---
@@ -178,6 +179,19 @@ Use the following command to verify that all containers are active and error-fre
 make status
 ```
 
+### Running UDF inference on GPU
+
+To trigger the UDF inference on GPU in Time Series Analytics Microservice, run the following command:
+
+```sh
+ curl -k -X 'POST' \
+ 'https://<HOST_IP>:30001/ts-api/config' \
+ -H 'accept: application/json' \
+ -H 'Content-Type: application/json' \
+ -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json with device
+     value updated to gpu from cpu>'
+```
+
 ## Verify the Wind Turbine Anomaly Detection Results
 
 1. Get into the InfluxDB* container:
@@ -211,7 +225,7 @@ make status
 
     - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably, chrome browser)
       
-      > **Note**: Use link `http://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
+      > **Note**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
     
     - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
       in `.env` file and select **Wind Turbine Dashboard**.

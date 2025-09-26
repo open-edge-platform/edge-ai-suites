@@ -1,0 +1,189 @@
+name: "[image-based-video-search] PR workflow"
+run-name: "[image-based-video-search] PR  workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'metro-ai-suite/image-based-video-search/**'
+  pull_request:
+    paths:
+      - 'metro-ai-suite/image-based-video-search/**'
+  
+  workflow_dispatch:    
+      
+  workflow_call:
+permissions: {}
+
+jobs:
+  Build-DBS-Trivy:
+    name: Build IBVS App and run scans DBS, trivy image fs config
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - name: Check out edge-ai-suites repository
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+      with:
+        persist-credentials: false
+        path: edge-ai-suites-repo
+    - name: Build
+      run: |
+        cd edge-ai-suites-repo/metro-ai-suite/image-based-video-search
+        docker compose build --pull --no-cache
+        docker compose up -d
+        docker ps 
+    - name: Checkout docker/docker-bench-security (master)
+      uses: actions/checkout@v4
+      with:
+        repository: docker/docker-bench-security
+        ref: master
+        path: docker-bench-security
+        persist-credentials: false
+    
+    - name: Build Docker Bench Security
+      run: |
+        cd docker-bench-security
+        docker build --no-cache -t docker-bench-security .
+    - name: DBS download and scan for Wind Turbine Sample App
+      run: |
+        cd docker-bench-security
+        docker run --rm --net host --pid host --userns host --cap-add audit_control \
+        -e DOCKER_CONTENT_TRUST=$DOCKER_CONTENT_TRUST \
+        -v /etc:/etc:ro \
+        -v /usr/bin/containerd:/usr/bin/containerd:ro \
+        -v /usr/bin/runc:/usr/bin/runc:ro \
+        -v /usr/lib/systemd:/usr/lib/systemd:ro \
+        -v /var/lib:/var/lib:ro \
+        -v /var/run/docker.sock:/var/run/docker.sock:ro \
+        --label docker_bench_security \
+        docker-bench-security > dbs_scan_ibvs_app.txt
+    - name: Upload DBS Scan artifact to Github
+      uses: actions/upload-artifact@v4
+      with:
+        name: DBS_Scan_Results
+        path: docker-bench-security/dbs_scan_*
+    - name: Install Trivy from Aqua Security APT repo
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gnupg lsb-release wget apt-transport-https curl jq
+        curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+        echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | \
+        sudo tee /etc/apt/sources.list.d/trivy.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y trivy
+    - name: Configure Trivy
+      continue-on-error: true
+      shell: bash
+      run: |
+        pwd
+        cd edge-ai-suites-repo/metro-ai-suite/image-based-video-search/
+        trivy --version
+        which trivy
+        trivy image --download-db-only
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o trivy-html.tpl
+        cat << 'EOF' > csv.tpl
+        {{ range . }}
+        Trivy Vulnerability Scan Results ({{- .Target -}})
+        VulnerabilityID,Severity,CVSS Score,Title,Library,Vulnerable Version,Fixed Version,Information URL,Triage Information
+        {{ range .Vulnerabilities }}
+            {{- .VulnerabilityID }},
+            {{- .Severity }},
+            {{- range $key, $value := .CVSS }}
+                {{- if (eq $key "nvd") }}
+                    {{- .V3Score -}}
+                {{- end }}
+            {{- end }},
+            {{- quote .Title }},
+            {{- quote .PkgName }},
+            {{- quote .InstalledVersion }},
+            {{- quote .FixedVersion }},
+            {{- .PrimaryURL }}
+        {{ else -}}
+            No vulnerabilities found at this time.
+        {{ end }}
+        Trivy Dependency Scan Results ({{ .Target }})
+        ID,Name,Version,Notes
+        {{ range .Packages -}}
+            {{- quote .ID }},
+            {{- quote .Name }},
+            {{- quote .Version }}
+        {{ else -}}
+            No dependencies found at this time.
+        {{ end }}
+        {{ end }}
+        EOF
+        
+    - name: Trivy Image Scans
+      run: |
+        cd edge-ai-suites-repo/metro-ai-suite/image-based-video-search
+        mkdir -p ${{ github.workspace }}/reports/Trivy
+        VERSION=$(grep "feature-matching:" compose.yml | awk -F: '{print $3}'| tr -d '[:space:]')
+        trivy image intel/feature-matching:$VERSION  -s HIGH,CRITICAL --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy-image-scan-feature-matching-ignore-unfixed.html
+        trivy image intel/feature-matching:$VERSION  -s HIGH,CRITICAL --ignore-unfixed --format template --template "@csv.tpl" -o trivy-image-scan-feature-matching-ignore-unfixed.csv
+        trivy image --quiet --format spdx-json --output trivy-image-scan-feature-matching.spdx.json intel/feature-matching:$VERSION 
+        VERSION=$(grep "streaming-pipeline:" compose.yml | awk -F: '{print $3}'| tr -d '[:space:]')
+        trivy image intel/streaming-pipeline:$VERSION  -s HIGH,CRITICAL --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy-image-scan-streaming-pipeline-ignore-unfixed.html
+        trivy image intel/streaming-pipeline:$VERSION  -s HIGH,CRITICAL --ignore-unfixed --format template --template "@csv.tpl" -o trivy-image-scan-streaming-pipeline-ignore-unfixed.csv
+        trivy image --quiet --format spdx-json --output trivy-image-scan-streaming-pipeline.spdx.json intel/streaming-pipeline:$VERSION 
+        VERSION=$(grep "image-based-video-search:" compose.yml | awk -F: '{print $3}'| tr -d '[:space:]')
+        trivy image intel/image-based-video-search:$VERSION  -s HIGH,CRITICAL --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy-image-scan-image-based-video-search-ignore-unfixed.html
+        trivy image intel/image-based-video-search:$VERSION  -s HIGH,CRITICAL --ignore-unfixed --format template --template "@csv.tpl" -o trivy-image-scan-image-based-video-search-ignore-unfixed.csv
+        trivy image --quiet --format spdx-json --output trivy-image-scan-image-based-video-search.spdx.json intel/image-based-video-search:$VERSION
+
+        mv trivy-image* ${{ github.workspace }}/reports/Trivy
+
+    - name: Trivy Config Scan
+      run: |
+        cd edge-ai-suites-repo/metro-ai-suite/image-based-video-search
+        trivy config . -s HIGH,CRITICAL -o trivy-config.txt
+        mv trivy-config.txt ${{ github.workspace }}/reports/Trivy
+    - name: Trivy FS Scan
+      run: |
+        cd edge-ai-suites-repo/metro-ai-suite/image-based-video-search
+        trivy fs .  --format template --template "@trivy-html.tpl" -o "trivy-fs-full-report-code-scan.html" 
+        trivy fs --list-all-pkgs --format template --template "@csv.tpl" --output trivy-fs-full-report.csv .
+        trivy fs -s HIGH,CRITICAL --ignore-unfixed . | tee trivy-fs-full-report-ignore-unfixed.txt
+        mv trivy-fs* ${{ github.workspace }}/reports/Trivy
+    - name: Upload Trivy Scan Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: Trivy-report
+        path: reports/Trivy/
+  virus-bandit-scan:
+    name: Run Bandit Virus Scans
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - name: Check out edge-ai-suites repository
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+      with:
+        persist-credentials: false
+        path: edge-ai-suites-repo
+        
+    - name: Run Virus Scan
+      run: |
+        mkdir -p reports
+        docker pull clamav/clamav
+        echo "### Virus Scan Results" >> $GITHUB_STEP_SUMMARY
+        docker run --rm -v "${{ github.workspace }}:/src" clamav/clamav clamscan -r  /src/edge-ai-suites-repo/metro-ai-suite/image-based-video-search/ > ./reports/clamav-report.txt || true
+        echo "Please find full report in clamav-report.txt" >> $GITHUB_STEP_SUMMARY
+    - name: Run Bandit Scan
+      run: |
+        mkdir -p reports
+        docker pull ghcr.io/pycqa/bandit/bandit
+        echo "### Bandit Scan Results" >> $GITHUB_STEP_SUMMARY
+        docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/edge-ai-suites-repo/metro-ai-suite/image-based-video-search/ -f txt -o /src/reports/bandit-report.txt || true >> $GITHUB_STEP_SUMMARY
+        echo "Please find full report in bandit-report.txt" >> $GITHUB_STEP_SUMMARY 
+    - name: Upload Scan Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: virus-bandit-report
+        path: reports/
+    - name: Clean up
+      if: always()
+      run: |
+        if [ -n "$(docker images -aq)" ]; then
+               docker rmi -f $(docker images -aq) || true
+        fi

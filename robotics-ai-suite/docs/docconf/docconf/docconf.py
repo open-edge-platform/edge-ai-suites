@@ -150,7 +150,9 @@ if os.path.isfile(switcher_data_file):
     html_theme_options.update(html_theme_options_append)
 
 # common theme options
-html_baseurl = "https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/"
+html_baseurl = (
+    "https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/"
+)
 html_favicon = "_static/logo.svg"
 html_show_sourcelink = True  # Show source link
 html_show_sphinx = False  # Hide "Built with Sphinx"

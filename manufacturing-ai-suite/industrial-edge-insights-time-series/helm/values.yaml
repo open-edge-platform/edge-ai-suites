@@ -46,7 +46,7 @@ env:
   TELEGRAF_INPUT_PLUGIN: mqtt_consumer
   TIMESERIES_USER_NAME: timeseries_user
   TIMESERIES_UID: 1999
-  TIMESERIES_NO_PROXY: influxdb,time-series-analytics-microservice,mqttbroker,ia-mqtt-broker,ia-opcua-server 
+  TIMESERIES_NO_PROXY: influxdb,ia-time-series-analytics-microservice,mqttbroker,ia-mqtt-broker,ia-opcua-server 
   # For proxy environment, please append IP addresses or Range IP addresses of each node of the cluster to no_proxy
   # e.q. timeseries_no_proxy=localhost,127.0.0.1,10.223.109.130,10.223.109.170
   timeseries_no_proxy: localhost,127.0.0.1,.intel.com
@@ -81,35 +81,26 @@ images:
   opcua_server_image: intel/ia-opcua-server:1.0.0
   mqtt_publisher_image: intel/ia-mqtt-publisher:1.1.0
   model_registry: intel/model-registry:1.0.3
+privileged_access_required: false
 config:
   influx_db_server:
     name: influxdb
     influx_http: 8086
   grafana:
-    name: grafana
-    int:
-      port: "3000"
-    ext:
-      port: "30001"
+    name: ia-grafana
+    grafana_port: "3000"
   telegraf:
     name: telegraf
     MQTT_BROKER_HOST: "ia-mqtt-broker"
   time_series_analytics_microservice:
-    name: time-series-analytics-microservice
+    name: ia-time-series-analytics-microservice
     kapacitor_port: 9092
   time_series_analytics_microservice_rest_api:
     name: time-series-analytics-microservice-rest-api
     rest_api_port: 5000
-    int:
-      port: "5000"
-    ext:
-      port: "30002"
   mqttbroker:
     name: ia-mqtt-broker
-    int:
-      port: 1883
-    ext:
-      port: 30006
+    mqttbroker_port: 1883
   opcuaserver:
     name: ia-opcua-server
     int:
@@ -124,3 +115,11 @@ config:
       port: "8111"
     ext:
       port: "32002"
+  nginx:
+    name: nginx
+    int:
+      https_port: "443"
+      mqtt_port: "1883"
+    ext:
+      https_port: "30001"
+      mqtt_port: "30002"

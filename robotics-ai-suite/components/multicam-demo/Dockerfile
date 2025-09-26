@@ -24,7 +24,7 @@ RUN apt update -y
 RUN apt install -y intel-basekit intel-oneapi-python
 
 RUN source /opt/intel/oneapi/setvars.sh && \
-        pip3 install imutils protobuf==3.20.3 Pillow psutil cython  \
+        pip3 install imutils protobuf>=4.25.8 Pillow psutil cython  \
         screeninfo dpnp onnx ultralytics==8.0.43 openvino-dev
 
 # Build and Install librealsense from source

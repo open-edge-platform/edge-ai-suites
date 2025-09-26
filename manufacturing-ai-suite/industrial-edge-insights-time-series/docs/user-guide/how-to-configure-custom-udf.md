@@ -73,8 +73,8 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
 
 3. Make the following REST API call to the Time Series Analytics microservice for the updated custom UDF:
     ```sh
-    curl -X 'POST' \
-    'http://<HOST_IP>:30002/config' \
+    curl -k -X 'POST' \
+    'https://<HOST_IP>:30001/ts-api/config' \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -d '{
@@ -84,7 +84,8 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
       },
       "udfs": {
           "name": "<custom_UDF>",
-          "models": "<custom_UDF>.pkl"
+          "models": "<custom_UDF>.pkl",
+          "device"": "cpu|gpu"
       },
       "alerts": {
           "mqtt": {
@@ -153,11 +154,11 @@ to the Model Registry microservice.
 
 
 1. Run the following command, to update the configuration in `Time Series Analytics` microservice. 
-   Please note, the default of `<PORT>` value is `3000/ts-api` for docker compose deployment and `30002` for helm based deployment.
+   Please note, the default of `<PORT>` value is `3000` for docker compose deployment and `30001` for helm based deployment.
 
     ```bash
-    curl -X 'POST' \
-    'https://<HOST_IP>:<PORT>/config' \
+    curl -k -X 'POST' \
+    'https://<HOST_IP>:<PORT>/ts-api/config' \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -d '{
@@ -167,7 +168,8 @@ to the Model Registry microservice.
         },
         "udfs": {
             "name": "windturbine_anomaly_detector",
-            "models": "windturbine_anomaly_detector.pkl"
+            "models": "windturbine_anomaly_detector.pkl",
+            "device": "cpu"
         },
         "alerts": {
             "mqtt": {

@@ -16,27 +16,25 @@ spec:
     name: kapacitor-port
   - name: rest-api-port
     port: {{ .Values.config.time_series_analytics_microservice_rest_api.rest_api_port }}
-    targetPort: {{ .Values.config.time_series_analytics_microservice_rest_api.int.port }}
-    nodePort: {{ .Values.config.time_series_analytics_microservice_rest_api.ext.port }}
   selector:
-    app: time-series-analytics-microservice
+    app: ia-time-series-analytics-microservice
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: time-series-analytics-microservice
+    app: ia-time-series-analytics-microservice
   name: deployment-time-series-analytics-microservice
   namespace: {{ .Values.namespace }}
 
 spec:
   selector:
     matchLabels:
-      app: time-series-analytics-microservice
+      app: ia-time-series-analytics-microservice
   template:
     metadata:
       labels:
-        app: time-series-analytics-microservice
+        app: ia-time-series-analytics-microservice
     spec:
       {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
       imagePullSecrets:
@@ -49,9 +47,14 @@ spec:
         image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.time_series_analytics_image }}{{ if .Values.images.image_suffix }}-{{ .Values.images.image_suffix }}{{ end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
-          # privileged: true # Required for /dev/dri access, if using GPU devices
-          readOnlyRootFilesystem: true
+          {{- if .Values.privileged_access_required }}
+          privileged: true # Required for /dev/dri access, if using GPU devices
+          allowPrivilegeEscalation: true
+          {{- else }}
+          privileged: false
           allowPrivilegeEscalation: false
+          {{- end }}
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
@@ -76,7 +79,7 @@ spec:
         - name: HTTPS_PROXY
           value: '{{ .Values.env.HTTPS_PROXY }}'
         - name: NO_PROXY
-          value: "influxdb,time-series-analytics-microservice,ia-mqtt-broker,ia-opcua-server,localhost,model-registry"
+          value: "influxdb,ia-time-series-analytics-microservice,ia-mqtt-broker,ia-opcua-server,localhost,model-registry"
         - name: TIMESERIES_NO_PROXY
           value: '{{ .Values.env.TIMESERIES_NO_PROXY }}'
         - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
@@ -88,7 +91,7 @@ spec:
         - name: KAPACITOR_INFLUXDB_0_PASSWORD
           value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
         - name: KAPACITOR_URL
-          value: "http://time-series-analytics-microservice:{{ .Values.config.time_series_analytics_microservice.kapacitor_port }}/"
+          value: "http://ia-time-series-analytics-microservice:{{ .Values.config.time_series_analytics_microservice.kapacitor_port }}/"
         - name: KAPACITOR_UNSAFE_SSL
           value: "true"
         - name: KAPACITOR_INFLUXDB_0_URLS_0
@@ -109,6 +112,8 @@ spec:
           value: "http://model-registry:8111"
         - name: SAMPLE_APP
           value: '{{ .Values.env.SAMPLE_APP }}'
+        - name: REST_API_ROOT_PATH
+          value: "/ts-api"
       volumes:
       - name: vol-temp-time-series-analytics-microservice
         emptyDir: {}

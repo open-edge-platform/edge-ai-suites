@@ -45,3 +45,4 @@
 .. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
 .. |TM| unicode:: U+2122 .. TRADEMARK SIGN
 .. |UR5e| replace:: Universal Robots UR5e
+.. |moveit2| replace:: `MoveIt 2 <https://moveit.picknik.ai/main/index.html>`__

@@ -76,7 +76,7 @@ data0
         .crit(lambda: "anomaly_status" > 0)
         .message('Anomaly detected: Wind Speed: {{ index .Fields "wind_speed" }}, Grid Active Power: {{ index .Fields "grid_active_power" }}, Anomaly Status: {{ index .Fields "anomaly_status" }}')
         .noRecoveries()
-        .post('https://localhost:3000/ts-api/opcua_alerts')
+        .post('http://localhost:5000/opcua_alerts')
         .timeout(30s)
 ```
 > **Note**:
@@ -88,7 +88,7 @@ data0
 Make the following REST API call to the Time Series Analytics microservice. Note that the `mqtt` alerts key is replaced with the `opcua` key and its specific details:
 
 ```sh
-curl -X 'POST' \
+curl -k -X 'POST' \
 'https://<HOST_IP>:3000/ts-api/config' \
 -H 'accept: application/json' \
 -H 'Content-Type: application/json' \
@@ -99,7 +99,8 @@ curl -X 'POST' \
     },
     "udfs": {
         "name": "windturbine_anomaly_detector",
-        "models": "windturbine_anomaly_detector.pkl"
+        "models": "windturbine_anomaly_detector.pkl",
+        "device": "cpu"
     },
     "alerts": {
         "opcua": {
@@ -188,14 +189,15 @@ Configure the tick script by following [these instructions](#1-configure-opc-ua-
 Copy the TICK script using the following command:
 
 ```sh
-cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection # path relative to git clone folder
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection # path relative to git clone folder
 cd time-series-analytics-config
-mkdir -p windturbine_anomaly_detector
-cp -r models tick_scripts udfs windturbine_anomaly_detector/.
+export SAMPLE_APP="wind-turbine-anomaly-detection"
+mkdir -p $SAMPLE_APP
+cp -r models tick_scripts udfs $SAMPLE_APP/.
 
 POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
 
-kubectl cp windturbine_anomaly_detector $POD_NAME:/tmp/ -n ts-sample-app
+kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
 ```
 
 3. Configuring OPC-UA Alert in config.json
@@ -203,8 +205,8 @@ kubectl cp windturbine_anomaly_detector $POD_NAME:/tmp/ -n ts-sample-app
 Make the following REST API call to the Time Series Analytics microservice. Note that the `mqtt` alerts key is replaced with the `opcua` key and its specific details:
 
 ```sh
-curl -X 'POST' \
-'http://<HOST_IP>:30002/config' \
+curl -k -X 'POST' \
+'https://<HOST_IP>:30001/ts-api/config' \
 -H 'accept: application/json' \
 -H 'Content-Type: application/json' \
 -d '{
@@ -214,7 +216,8 @@ curl -X 'POST' \
     },
     "udfs": {
         "name": "windturbine_anomaly_detector",
-        "models": "windturbine_anomaly_detector.pkl"
+        "models": "windturbine_anomaly_detector.pkl",
+        "device": "cpu"
     },
     "alerts": {
         "opcua": {
