@@ -9,7 +9,7 @@
 # ! gvametapublish name=destination ! appsink sync=true
 
 INPUT_VIDEO=1122east.ts
-INPUT_RTSP=rtsp://localhost:8554/cam1
+INPUT_RTSP=rtsp://127.0.0.1:8554/cam1
 
 VIDEOS_DIR=./src/dlstreamer-pipeline-server/videos
 MODELS_DIR=./src/dlstreamer-pipeline-server/models
@@ -24,22 +24,18 @@ mkdir -p logs
 docker compose -f perf_test/docker-compose_rtsp.yml up -d
 echo "Started RTSP server and camera stream in Docker containers."
 echo "Run to stop: docker compose -f perf_test/docker-compose_rtsp.yml down"
+echo "Waiting for the RTSP stream to initialize..."
 
-# docker run --rm -v ${VIDEOS_DIR}:/data \
-# -e GST_DEBUG=3 \
-# -p 8554:8554 \
-# intel/dlstreamer:2025.1.2-ubuntu24 \
-# gst-launch-1.0 multifilesrc loop=true location=/data/${INPUT_VIDEO} ! queue max-size-buffers=1 ! decodebin3 ! videorate ! video/x-raw,framerate=30/1 ! \
-# x264enc tune=zerolatency bitrate=2000 speed-preset=ultrafast ! h264parse ! rtph264pay config-interval=1 pt=96 ! \
-# tcpserversink host=0.0.0.0 port=8554
-
-# --- ffmpeg RTSP publishing example ---
-# Requires an RTSP server running at ${INPUT_RTSP} (e.g., rtsp-simple-server)
-# You can run rtsp-simple-server in another terminal/container for testing
-# docker run --rm -it -p 8554:8554 aler9/rtsp-simple-server
+# Wait until the RTSP stream is available
+until gst-discoverer-1.0 ${INPUT_RTSP} > /dev/null 2>&1; do
+    echo "Waiting for RTSP stream at ${INPUT_RTSP} to become available..."
+    sleep 2
+done
+echo "RTSP stream at ${INPUT_RTSP} is now available."
 
 docker run --rm -v ${VIDEOS_DIR}:/data -v ${MODELS_DIR}:/models \
--e GST_DEBUG="GST_TRACER:7" \
+--network=host \
+-e GST_DEBUG="3,GST_TRACER:7" \
 -e GST_TRACERS="latency_tracer(flags=pipeline)" \
 --device /dev/dri \
 --group-add $(stat -c "%g" /dev/dri/render*) \
