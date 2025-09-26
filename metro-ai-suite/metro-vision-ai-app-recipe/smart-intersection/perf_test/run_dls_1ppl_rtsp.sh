@@ -43,6 +43,6 @@ docker run --rm -v ${VIDEOS_DIR}:/data -v ${MODELS_DIR}:/models \
 --group-add $(stat -c "%g" /dev/accel/accel*) \
 intel/dlstreamer:2025.1.2-ubuntu24 \
 gst-launch-1.0 \
-rtspsrc location=${INPUT_RTSP} latency=100 protocols=udp ! decodebin3 ! timecodestamper set=always ! vapostproc ! "video/x-raw(memory:VAMemory)" \
+rtspsrc location=${INPUT_RTSP} latency=1 protocols=udp ! decodebin3 ! timecodestamper set=always ! vapostproc ! "video/x-raw(memory:VAMemory)" \
  ! gvadetect batch-size=1 scheduling-policy=latency device=GPU model-instance-id=detect1 inference-interval=1 model=/models/intersection/openvino.xml pre-process-backend=va-surface-sharing ! queue \
- ! gvafpscounter interval=1 starting-frame=1000 print-latency=true ! appsink sync=false > logs/run_dls_1ppl_rtsp.log 2>&1 &
+ ! gvafpscounter interval=1 starting-frame=1000 print-latency=true ! appsink > logs/run_dls_1ppl_rtsp.log 2>&1 &
