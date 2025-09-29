@@ -6,7 +6,7 @@ monitoring:
   logs_dir: ./monitoring/logs
   interval: 2
   socwatch_path: monitoring/tools/socwatch_windows_v2025.5.1/64/socwatch.exe
-  npu_exe_path: tools/level-zero/build/npu_utilization.exe
+  npu_exe_path: tools/level-zero/build/bin/Release/npu_utilization.exe
   execution_logs: monitoring/executionlogs
 models:
   asr:
