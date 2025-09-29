@@ -43,7 +43,7 @@
             "axisColorMode": "text",
             "axisGridShow": true,
             "axisLabel": "",
-            "axisPlacement": "left",
+            "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "points",
@@ -55,7 +55,7 @@
               "viz": false
             },
             "insertNulls": false,
-            "lineInterpolation": "linear",
+            "lineInterpolation": "stepBefore",
             "lineStyle": {
               "fill": "solid"
             },
@@ -68,7 +68,7 @@
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "normal"
+              "mode": "none"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -89,30 +89,22 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Time"
+              "options": " Anomaly 1"
             },
             "properties": [
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "dark-blue",
+                  "fixedColor": "dark-red",
                   "mode": "fixed"
                 }
-              },
-              {
-                "id": "custom.axisPlacement",
-                "value": "auto"
-              },
-              {
-                "id": "custom.drawStyle",
-                "value": "line"
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 20,
+        "h": 15,
         "w": 20,
         "x": 0,
         "y": 0
@@ -123,7 +115,7 @@
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": false
         },
         "timezone": [
           "Asia/Kolkata"
@@ -137,29 +129,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "alias": "",
-          "columns": [],
-          "datasource": {
-            "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
-          },
-          "filters": [],
-          "format": "table",
-          "global_query_id": "",
-          "query": "SELECT \"Pressure\", \"CO2 Weld Flow\", \"Primary Weld Current\" from \"weld-detection-anomaly-data\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "root_selector": "",
-          "source": "url",
-          "type": "json",
-          "url": "https://github.com/yesoreyeram/grafana-infinity-datasource/blob/main/testdata/users.json",
-          "url_options": {
-            "data": "",
-            "method": "GET"
-          }
-        },
-        {
+          "alias": "Anomaly 0",
           "datasource": {
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
@@ -179,18 +149,18 @@
             }
           ],
           "hide": false,
-          "measurement": "wind_turbine_anomaly_data",
+          "measurement": "weld-sensor-anomaly-data",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT \"Defective Weld\" FROM \"weld-detection-anomaly-data\" where anomaly_status>= 1",
+          "query": "SELECT \"CO2 Weld Flow\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 0) AND $timeFilter",
           "rawQuery": true,
-          "refId": "B",
+          "refId": "A",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "anomaly_status"
+                  "CO2 Weld Flow"
                 ],
                 "type": "field"
               },
@@ -200,10 +170,68 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "anomaly_status::field",
+              "operator": "=",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "alias": " Anomaly 1",
+          "columns": [],
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "groupBy": [
+            {
+              "params": [
+                "host::tag"
+              ],
+              "type": "tag"
+            }
+          ],
+          "hide": false,
+          "measurement": "weld-sensor-anomaly-data",
+          "orderByTime": "ASC",
+          "policy": "autogen",
+          "query": "SELECT \"CO2 Weld Flow\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 1) AND $timeFilter",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "root_selector": "",
+          "select": [
+            [
+              {
+                "params": [
+                  "CO2 Weld Flow"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "source": "url",
+          "tags": [
+            {
+              "key": "anomaly_status::field",
+              "operator": "=",
+              "value": "1"
+            }
+          ],
+          "type": "json",
+          "url": "https://github.com/yesoreyeram/grafana-infinity-datasource/blob/main/testdata/users.json",
+          "url_options": {
+            "data": "",
+            "method": "GET"
+          }
         }
       ],
-      "title": "Anomaly Prediction for Grid Active Power",
+      "title": "Anomaly Prediction for Weld Sensor Data (CO2)",
       "type": "timeseries"
     },
     {
@@ -240,7 +268,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 5,
         "w": 4,
         "x": 20,
         "y": 0
@@ -283,7 +311,7 @@
           "measurement": "wind_turbine_anomaly_data",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT count(\"Pressure\") FROM \"weld-detection-anomaly-data\" where anomaly_status>0",
+          "query": "SELECT count(\"Pressure\") FROM \"weld-sensor-anomaly-data\" where anomaly_status>0",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -330,10 +358,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 5,
         "w": 4,
         "x": 20,
-        "y": 6
+        "y": 5
       },
       "id": 8,
       "options": {
@@ -356,7 +384,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "query": "SELECT count(Feed) AS mean_value FROM \"weld-detection-data\"\n",
+          "query": "SELECT count(Feed) AS mean_value FROM \"weld-sensor-data\"\n",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
@@ -388,10 +416,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 5,
         "w": 4,
         "x": 20,
-        "y": 13
+        "y": 10
       },
       "id": 9,
       "options": {
@@ -431,7 +459,7 @@
           "measurement": "weld-analytics-data",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT count(\"Feed\") FROM \"weld-detection-anomaly-data\" ",
+          "query": "SELECT count(\"Feed\") FROM \"weld-sensor-anomaly-data\" ",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -481,7 +509,7 @@
         "h": 6,
         "w": 5,
         "x": 0,
-        "y": 20
+        "y": 15
       },
       "id": 10,
       "options": {
@@ -504,7 +532,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "query": "SELECT mean(mean_value) FROM (SELECT count(\"Pressure\") AS mean_value FROM \"weld-detection-anomaly-data\"  WHERE time > now() - 3m GROUP BY time(1m))\n",
+          "query": "SELECT mean(mean_value) FROM (SELECT count(\"Pressure\") AS mean_value FROM \"weld-sensor-data\"  WHERE time > now() - 3m GROUP BY time(1m))\n",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
@@ -539,7 +567,7 @@
         "h": 6,
         "w": 5,
         "x": 5,
-        "y": 20
+        "y": 15
       },
       "id": 11,
       "options": {
@@ -562,7 +590,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "query": "SELECT mean(mean_value) FROM (SELECT count(\"Pressure\") AS mean_value FROM \"weld-detection-anomaly-data\" WHERE time > now() - 3m GROUP BY time(1m))\n",
+          "query": "SELECT mean(mean_value) FROM (SELECT count(\"Pressure\") AS mean_value FROM \"weld-sensor-anomaly-data\" WHERE time > now() - 3m GROUP BY time(1m))\n",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
@@ -601,7 +629,7 @@
         "h": 6,
         "w": 6,
         "x": 10,
-        "y": 20
+        "y": 15
       },
       "id": 12,
       "options": {
@@ -628,7 +656,7 @@
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "query": "SELECT mean(mean_value) FROM (SELECT mean(end_end_time)/1000000 AS mean_value FROM \"weld-detection-anomaly-data\" WHERE  time > now() - 3m GROUP BY time(1m))\n",
+          "query": "SELECT mean(mean_value) FROM (SELECT mean(end_end_time)/1000000 AS mean_value FROM \"weld-sensor-anomaly-data\" WHERE  time > now() - 3m GROUP BY time(1m))\n",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
@@ -667,7 +695,7 @@
         "h": 6,
         "w": 6,
         "x": 16,
-        "y": 20
+        "y": 15
       },
       "id": 13,
       "options": {
@@ -690,7 +718,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "query": " select mean(processing_time)/1000000 from \"weld-detection-anomaly-data\" order by time desc",
+          "query": " select mean(processing_time)/1000000 from \"weld-sensor-anomaly-data\" order by time desc",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
@@ -708,12 +736,12 @@
     "list": []
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Weld Anomaly Detection Dashboard",
+  "title": "Weld Sensor Anomaly Detection Dashboard",
   "uid": "ff7b8081-d0f0-4469-9210-9daf1bd148fd",
   "version": 1
 }

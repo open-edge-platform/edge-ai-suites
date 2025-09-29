@@ -4,13 +4,13 @@ var data0 = stream
         |from()
                 .database('datain')
                 .retentionPolicy('autogen')
-                .measurement('weld-detection-data')
+                .measurement('weld-sensor-data')
         @weld_anomaly_detector()
 data0
         |influxDBOut()
                 .buffer(0)
                 .database('datain')
-                .measurement('weld-detection-anomaly-data')
+                .measurement('weld-sensor-anomaly-data')
                 .retentionPolicy('autogen')
 data0
         |alert()

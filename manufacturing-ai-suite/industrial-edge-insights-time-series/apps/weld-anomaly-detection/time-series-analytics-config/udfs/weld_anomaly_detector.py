@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-""" Custom user defined function for anomaly detection for weld_defect_detection. """
+""" Custom user defined function for anomaly detection in weld sensor data. """
 
 import os
 import logging
@@ -39,10 +39,10 @@ logging.basicConfig(
 
 logger = logging.getLogger()
 
-# Anomaly detection on the windturbine speed and generated power data
+# Anomaly detection on the weld sensor data
 class AnomalyDetectorHandler(Handler):
     """ Handler for the anomaly detection UDF. It processes incoming points
-    and detects anomalies based on the wind speed and generated power data.
+    and detects anomalies based on the weld sensor data.
     """
     def __init__(self, agent):
         self._agent = agent
@@ -58,13 +58,14 @@ class AnomalyDetectorHandler(Handler):
         model_path = os.path.abspath(model_path)
         # self.rf = load_model(model_path)
 
+        # Initialize a CatBoostClassifier model for anomaly detection
         self.model = cb.CatBoostClassifier(
-            depth=10,
-            iterations=2000,
-            learning_rate=0.1,
-            task_type="CPU",
-            devices="1:2",
-            random_seed=40,
+            depth=10,            # Set the depth of each tree to 10
+            iterations=2000,     # Number of boosting iterations (trees)
+            learning_rate=0.1,   # Step size for each iteration
+            task_type="CPU",     # Specify to use CPU for training/inference
+            devices="1:2",       # Specify device IDs (not used for CPU, but kept for config compatibility)
+            random_seed=40,      # Set random seed for reproducibility
         )
 
         self.model.load_model(model_path)
