@@ -163,16 +163,16 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 
 ### Deploying Wind Turbine Anomaly Detection
 
-   - **Using OPC-UA ingestion**:
+  - **Using OPC-UA ingestion**:
     ```bash
     make up_opcua_ingestion app="wind-turbine-anomaly-detection"
     ```
-   - **Using MQTT ingestion**:
+  - **Using MQTT ingestion**:
     ```bash
     make up_mqtt_ingestion app="wind-turbine-anomaly-detection"
     ```
 
-### Deploying Wind Turbine Anomaly Detection
+### Deploying Weld Anomaly Detection
 
   ```bash
   make up_mqtt_ingestion app="weld-anomaly-detection"
