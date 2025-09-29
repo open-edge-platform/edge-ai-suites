@@ -70,6 +70,7 @@
       "loadingConfiguration": "Loading configuration data...",
       "cpuUtilization": "CPU Utilization",
       "gpuUtilization": "GPU Utilization",
+      "npuUtilization": "NPU Utilization",
       "memoryUtilization": "Memory Utilization",
       "powerUtilization": "Power Utilization",
       "loadingResource": "Loading resource data...",

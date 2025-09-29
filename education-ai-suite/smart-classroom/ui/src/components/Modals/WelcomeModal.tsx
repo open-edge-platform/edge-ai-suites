@@ -11,13 +11,8 @@ interface WelcomeModalProps {
 
 const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose, projectName, setProjectName }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} >
-      <SettingsForm 
-        onClose={onClose} 
-        projectName={projectName} 
-        setProjectName={setProjectName} 
-        setCanClose={() => true} // Provide a default setCanClose function
-      />
+    <Modal isOpen={isOpen}  >
+      <SettingsForm onClose={onClose} projectName={projectName} setProjectName={setProjectName} />
     </Modal>
   );
 };

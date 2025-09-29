@@ -12,7 +12,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 DELETE_CHUNK_AFTER_USE =  config.pipeline.delete_chunks_after_use
-THREADS_LIMIT = config.models.asr.threads_limit
+threads_limit = config.models.asr.threads_limit
+THREADS_LIMIT = threads_limit if threads_limit and threads_limit > 0 else None
 class ASRComponent(PipelineComponent):
 
     _model = None

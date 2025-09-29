@@ -190,7 +190,20 @@ const ResourceUtilizationAccordion: React.FC = () => {
                 )}
               </div>
             </div>
-
+              {/* NPU Utilization */}
+              <div className="chart-section">
+                <h4>{t('accordion.npuUtilization') || "NPU Utilization"}</h4>
+                <div style={{ height: '200px' }}>
+                  {resourceData.npu_utilization && resourceData.npu_utilization.length > 0 ? (
+                    <Line 
+                      data={createSimpleChartData(resourceData.npu_utilization, 'NPU %', 'rgba(255, 159, 64, 1)')} 
+                      options={simpleChartOptions} 
+                    />
+                  ) : (
+                    <p>{t('accordion.noData') || "No data available"}</p>
+                  )}
+                </div>
+              </div>
             {/* Memory Usage */}
             <div className="chart-section">
               <h4>{t('accordion.memoryUtilization') || "Memory Usage"}</h4>

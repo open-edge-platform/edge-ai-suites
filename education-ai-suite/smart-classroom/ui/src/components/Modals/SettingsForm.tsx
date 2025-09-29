@@ -10,10 +10,9 @@ interface SettingsFormProps {
   onClose: () => void;
   projectName: string;
   setProjectName: (name: string) => void;
-  setCanClose: (canClose: () => boolean) => void; // Add setCanClose to props
 }
 
-const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setProjectName, setCanClose }) => {
+const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setProjectName}) => {
   const [selectedMicrophone, setSelectedMicrophone] = useState('');
   const [projectLocation, setProjectLocation] = useState('storage/');
   const [nameError, setNameError] = useState<string | null>(null);
@@ -39,11 +38,6 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
     }
     return true;
   };
-
-  // Pass validation logic to Modal
-  useEffect(() => {
-    setCanClose(validateProjectName); // Pass validation logic to Modal
-  }, [projectName, setCanClose]);
 
   const handleSave = async () => {
     if (!validateProjectName()) {
