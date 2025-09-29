@@ -1,0 +1,10 @@
+^C:\USERS\INTEL\DESKTOP\EDUCATION\EDUCATION-AI-SUITE\SMART-CLASSROOM\MONITORING\TOOLS\LEVEL-ZERO\BUILD\CMAKEFILES\B7143E590144811DC847D2C9B4301541\PACKAGE_FORCE.RULE
+setlocal
+cd .
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\samples\zello_world\zello_world.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\samples\zello_world\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{049E6B6B-2931-3F2B-95F3-0921D6788BCA}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

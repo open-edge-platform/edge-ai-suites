@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\tracing\ze_tracing_layer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\tracing\ze_trcddi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\tracing\tracing_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\tracing\ze_tracing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\tracing\ze_tracing_register_cb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\tracing\windows\tracing_init.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\tracing\ze_tracing_layer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\tracing\tracing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\tracing\tracing_imp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\tracing\ze_tracing_cb_structs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\tracing\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\source\layers\tracing\ZeTracingLayerVersion.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{0484B384-B5EA-39AB-92A4-49C60C4CE023}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{049E6B6B-2931-3F2B-95F3-0921D6788BCA}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

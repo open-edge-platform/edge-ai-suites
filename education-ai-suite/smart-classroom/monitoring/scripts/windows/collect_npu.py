@@ -64,7 +64,6 @@ def start_npu_monitoring(interval_seconds, stop_event, output_dir=None):
                     writer.writerow([timestamp, utilization])
                     file.flush()
                 except subprocess.TimeoutExpired:
-                    logger.warning("NPU exe timed out, skipping this interval")
                     writer.writerow([timestamp, 0.0])
                     file.flush()
                 except Exception as e:
