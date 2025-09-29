@@ -158,15 +158,25 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 >    set this variable to `false`.
 >  - If `CONTINUOUS_SIMULATOR_INGESTION` is set to `false`, you may see the `[inputs.opcua] status not OK for node` message in the `telegraf` 
 >    logs for OPC-UA ingestion after a single data ingestion loop. This message can be ignored.
+>  - `make up_opcua_ingestion` is supported only for `Wind Turbine Anomaly Detection`
 
-   - **Using OPC-UA ingestion**:
-     ```bash
-     make up_opcua_ingestion
-     ```
-   - **Using MQTT ingestion**:
-     ```bash
-     make up_mqtt_ingestion
-     ```
+
+### Deploying Wind Turbine Anomaly Detection
+
+  - **Using OPC-UA ingestion**:
+    ```bash
+    make up_opcua_ingestion app="wind-turbine-anomaly-detection"
+    ```
+  - **Using MQTT ingestion**:
+    ```bash
+    make up_mqtt_ingestion app="wind-turbine-anomaly-detection"
+    ```
+
+### Deploying Weld Anomaly Detection
+
+  ```bash
+  make up_mqtt_ingestion app="weld-anomaly-detection"
+  ```
    
 Use the following command to verify that all containers are active and error-free.
 
@@ -191,6 +201,8 @@ To trigger the UDF inference on GPU in Time Series Analytics Microservice, run t
  -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json with device
      value updated to gpu from cpu>'
 ```
+
+> **Note:** GPU Inferencing is supported only for `Wind Turbine Anomaly Detection` sample app
 
 ## Verify the Wind Turbine Anomaly Detection Results
 
@@ -241,6 +253,56 @@ To trigger the UDF inference on GPU in Time Series Analytics Microservice, run t
     - One will see the below output.
   
       ![Anomaly prediction in grid active power](./_images/anomaly_power_prediction.png)
+
+## Verify the Weld Anomaly Detection Results
+
+1. Get into the InfluxDB* container:
+
+   > **Note**: Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
+   > where for <namespace> replace with namespace name where the application was deployed and
+   > for <influxdb-pod-name> replace with InfluxDB pod name.
+
+   ``` bash
+    docker exec -it ia-influxdb bash
+   ```
+
+2. Run following commands to see the data in InfluxDB*:
+
+    > **NOTE**:
+    > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
+    > This does not affect any functionality while working with the InfluxDB commands
+
+    ``` bash
+    # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
+    # for docker compose deployment and `values.yml` for helm deployment
+    influx -username <username> -password <passwd> 
+    use datain # database access
+    show measurements
+    # Run below query to check and output measurement processed
+    # by Time Series Analytics microservice
+    select * from "weld-sensor-anomaly-data"
+    ```
+
+2. To check the output in Grafana:
+
+    - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably, chrome browser)
+      
+      > **Note**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
+    
+    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
+      in `.env` file and select **Wind Turbine Dashboard**.
+
+      ![Grafana login](./_images/login_wt.png)
+
+    - After login, click on Dashboard 
+      ![Menu view](./_images/dashboard.png)
+
+    - Select the `Weld Anomaly Detection Dashboard`.
+      ![Weld Anomaly Detection dashboard](./_images/weld_anomaly_detection.png)
+
+    - One will see the below output.
+  
+      ![Anomaly prediction in weld sensor data](./_images/anomaly_detection_weld.png)
 
 ## Bring down the sample app
 
