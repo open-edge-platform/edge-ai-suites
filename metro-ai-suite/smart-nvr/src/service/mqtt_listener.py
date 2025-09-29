@@ -1,100 +1,200 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-from cProfile import label
 import json
-import paho.mqtt.client as mqtt
-from service.rule_engine import process_event
-from config import MQTT_BROKER, MQTT_PORT, MQTT_TOPIC, MQTT_USER, MQTT_PASSWORD
 import logging
 import threading
+import ssl
+import time
+import paho.mqtt.client as mqtt
+from service.rule_engine import process_event
+from datetime import datetime
+from datetime import timedelta
+from config import (
+    MQTT_BROKER, MQTT_PORT, MQTT_TOPIC, MQTT_USER, MQTT_PASSWORD,
+    SCENESCAPE_MQTT_BROKER, SCENESCAPE_MQTT_PORT, SCENESCAPE_MQTT_TOPIC,
+    SCENESCAPE_MQTT_USER, SCENESCAPE_MQTT_PASSWORD,
+    SCENESCAPE_CA_CERT_PATH, SCENESCAPE_CLIENT_CERT_PATH, SCENESCAPE_CLIENT_KEY_PATH
+)
 
-# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("mqtt-listener")
 
-# Create and run an asyncio event loop in a separate thread
 event_loop = asyncio.new_event_loop()
-
 
 def start_event_loop(loop):
     asyncio.set_event_loop(loop)
     loop.run_forever()
 
-
 threading.Thread(target=start_event_loop, args=(event_loop,), daemon=True).start()
+# Convert ISO 8601 timestamp to float seconds since epoch
+def iso_to_frigate_timestamp(iso_timestamp: str) -> str:
+    try:
+        dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
+        #dt_ist = dt + timedelta(hours=5, minutes=30)
+        return f"{dt.timestamp():.6f}"
+    except Exception as e:
+        logger.warning(f"Failed to parse timestamp {iso_timestamp}: {e}")
+        return iso_timestamp  
 
+SCENESCAPE_TO_FRIGATE_CAM_MAP = {
+    "camera4": "camera4",
+    "camera3": "camera3",
+    "camera2": "camera2",
+    "camera1": "camera1",
+}
 
+last_scenescape_processed = 0    
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
-        logger.info("✅ Connected to MQTT broker")
-        client.subscribe(MQTT_TOPIC)
-        logger.info(f"📡 Subscribed to topic: {MQTT_TOPIC}")
+        if userdata == "frigate":
+            client.subscribe(MQTT_TOPIC)
+            logger.info(f" Subscribed to Frigate topic: {MQTT_TOPIC}")
+        elif userdata == "scenescape":
+            client.subscribe(SCENESCAPE_MQTT_TOPIC, qos=1)  # QoS 1 subscription
+            logger.info(f" Subscribed to Scenescape topic: {SCENESCAPE_MQTT_TOPIC}")
     else:
-        logger.error(f"❌ Failed to connect to MQTT broker, code: {rc}")
-
+        logger.error(f" Failed to connect to MQTT broker ({userdata}), code: {rc}")
 
 def on_message(client, userdata, msg):
-    logger.info(f"📥 Received message on topic: {msg.topic}")
+    # logger.info(f" Message received on topic: {msg.topic}")  # Commented out to reduce noise
+    global last_scenescape_processed
     try:
-        payload = json.loads(msg.payload)
+        payload = json.loads(msg.payload.decode("utf-8", errors="ignore"))
 
-        # Prefer 'after' values, fallback to 'before'
-        event_data = payload.get("after") or payload.get("before") or {}
+        if msg.topic.startswith("frigate/"):
+            event_data = payload.get("after") or payload.get("before") or {}
+            logger.info(f" Message received on topic: {msg.topic} at {event_data.get("frame_time")}")
+            label = event_data.get("label")
+            camera_name = event_data.get("camera")
+            start_time = event_data.get("start_time")
+            end_time = event_data.get("end_time")
 
-        label = event_data.get("label")
-        camera_name = event_data.get("camera")
-        start_time = event_data.get("start_time")
-        end_time = event_data.get("end_time")
-
-        # Proceed only if all required fields are present AND duration >= 3 seconds
-        if (
-            label
-            and camera_name
-            and start_time
-            and end_time
-            and (end_time - start_time) >= 10
-        ):
-            logger.info(f"🔍 Event label: {label} | 🎥 Camera: {camera_name} | ⏱ Start Time: {start_time} | ⏱ End Time: {end_time}")
-
-            logger.info("🚀 Submitting event to process_event coroutine")
-            future = asyncio.run_coroutine_threadsafe(
-                process_event(
-                    event_data, context={"source": "mqtt", "topic": msg.topic}
-                ),
-                event_loop,
-            )
-            # Optional: log completion/failure if needed
-            future.add_done_callback(
-                lambda fut: (
-                    logger.info(f"✅ process_event completed: {fut.result()}")
-                    if not fut.exception()
-                    else logger.error(
-                        f"❌ process_event failed: {fut.exception()}", exc_info=True
+            if label and camera_name and start_time and end_time and (end_time - start_time) >= 10:
+                logger.info(
+                    f" Event label: {label} |  Camera: {camera_name} |  Start: {start_time} |  End: {end_time}"
+                )
+                future = asyncio.run_coroutine_threadsafe(
+                    process_event(event_data, context={"source": "frigate", "topic": msg.topic}),
+                    event_loop,
+                )
+                future.add_done_callback(
+                    lambda fut: (
+                        logger.info(f" process_event completed: {fut.result()}")
+                        if not fut.exception()
+                        else logger.error(f" process_event failed: {fut.exception()}", exc_info=True)
                     )
                 )
-            )
+            else:
+                return
+                #logger.warning(
+                    #" Skipping Frigate summary due to missing fields or short duration (<10s)."
+                #)
+
+        elif msg.topic.startswith("scenescape/"):
+            # Throttling: only process once every 2 seconds
+            now = time.time()
+            if now - last_scenescape_processed < 2:
+                return
+            last_scenescape_processed = now
+
+            objects = payload.get("objects", {})
+            vehicle_list = []
+            if isinstance(objects, dict):
+                vehicle_list = objects.get("vehicle", [])
+            num_vehicles = len(vehicle_list)
+            if num_vehicles > 3:
+                iso_timestamp = payload.get("timestamp", "")
+                logger.info(f" Scenescape raw timestamp: {iso_timestamp}")
+                formatted_timestamp = iso_to_frigate_timestamp(iso_timestamp)
+                scenescape_camera = payload.get("id")
+                logger.info(f" Fetching events every 3 seconds for Scenescape")
+                logger.info(f" Message received on topic for vehicle more than 3: {msg.topic}")
+                logger.info(f" Scenescape message timestamp: {formatted_timestamp} |  Camera: {scenescape_camera} |  Number of vehicles: {num_vehicles} ")
+
+                start_time = float(formatted_timestamp) - 15
+                #end_time = float(formatted_timestamp)
+                end_time = float(formatted_timestamp) - 5
+
+                frigate_camera = SCENESCAPE_TO_FRIGATE_CAM_MAP.get(scenescape_camera)
+
+                if not frigate_camera:
+                    logger.warning(f"No mapping found for Scenescape camera '{scenescape_camera}'. Skipping clip fetch.")
+                    return
+
+                logger.info(
+                    f" Mapping Scenescape camera '{scenescape_camera}' to Frigate camera '{frigate_camera}'. "
+                    f"Fetching scenescape clip for time {start_time} to {end_time}."
+                )
+                for obj_type, obj_list in objects.items():
+                    if isinstance(obj_list, list) and obj_list:
+                        event_data = {
+                            "label": obj_type,
+                            "camera": frigate_camera,
+                            "start_time": start_time,
+                            "end_time": end_time,
+                        }
+                        logger.info(f" Scenescape generated event: {event_data}")
+
+                        future = asyncio.run_coroutine_threadsafe(
+                            process_event(event_data, context={"source": "scenescape", "topic": msg.topic}),
+                            event_loop,
+                        )
+                        future.add_done_callback(
+                            lambda fut: (
+                                logger.info(f" process_event completed for {obj_type}: {fut.result()}")
+                                if not fut.exception()
+                                else logger.error(f" process_event failed for {obj_type}: {fut.exception()}", exc_info=True)
+                            )
+                        )
+            else:
+                return
+
         else:
-            logger.warning(
-                "⚠️ Skipping event due to missing required fields or short duration (< 10s)."
-            )
+            logger.warning(f" Unknown topic: {msg.topic}")
 
     except json.JSONDecodeError as e:
-        logger.error(f"❌ Failed to decode MQTT message: {e}")
+        logger.error(f" Failed to decode MQTT message: {e}")
     except Exception as e:
-        logger.error(f"❌ Exception while processing MQTT message: {e}", exc_info=True)
+        logger.error(f" Exception processing MQTT message: {e}", exc_info=True)
 
-
-async def start_mqtt():
-    client = mqtt.Client()
-    client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
+def start_mqtt(broker, port, user, password, userdata,
+               ca_cert=None, client_cert=None, client_key=None):
+    client = mqtt.Client(userdata=userdata)
+    if user and password:
+        client.username_pw_set(user, password)
+    if ca_cert:
+        client.tls_set(
+            ca_certs=ca_cert,
+            certfile=client_cert,
+            keyfile=client_key,
+            tls_version=ssl.PROTOCOL_TLS_CLIENT,
+        )
+        client.tls_insecure_set(True) 
     client.on_connect = on_connect
     client.on_message = on_message
+    client.connect(broker, port)
+    client.loop_start()
+    logger.info(f" Connecting to MQTT broker {userdata} at {broker}:{port}")
 
-    try:
-        client.connect(MQTT_BROKER, MQTT_PORT)
-        logger.info(f"${MQTT_BROKER}  ${MQTT_PORT}  ${MQTT_USER}  ${MQTT_PASSWORD}")
-        logger.info(f"🚀 Connecting to MQTT broker at {MQTT_BROKER}:{MQTT_PORT}...")
-        client.loop_start()
-    except Exception as e:
-        logger.error(f"❌ Error connecting to MQTT: {e}")
+async def start_mqtt_clients():
+    await asyncio.to_thread(
+        start_mqtt,
+        MQTT_BROKER,
+        MQTT_PORT,
+        MQTT_USER,
+        MQTT_PASSWORD,
+        "frigate"
+    )
+    await asyncio.to_thread(
+        start_mqtt,
+        SCENESCAPE_MQTT_BROKER,
+        SCENESCAPE_MQTT_PORT,
+        SCENESCAPE_MQTT_USER,
+        SCENESCAPE_MQTT_PASSWORD,
+        "scenescape",
+        ca_cert=SCENESCAPE_CA_CERT_PATH,
+        client_cert=SCENESCAPE_CLIENT_CERT_PATH,
+        client_key=SCENESCAPE_CLIENT_KEY_PATH,
+    )
+

@@ -267,7 +267,7 @@ def wrapper_fn(
     if action == "Summarize":
         raw_summary = result_dict.get("summary_id")
         summary_id = extract_summary_id(raw_summary)
-        logger.info("Extracted Summary ID:", summary_id)
+        logger.info(f"Extracted Summary ID: {summary_id}")
 
         return (
             result_dict,
@@ -545,10 +545,36 @@ def create_ui():
             # Tab 3: Auto-Route Rules
             with gr.TabItem("Auto-Route Events"):
                 with gr.Row():
+                    source_dropdown = gr.Dropdown(
+                        choices=["frigate", "scenescape"],
+                        label="Select Source",
+                        value="frigate",
+                    )
+
+                    vehicle_count = gr.Number(
+                        label="Vehicle Count",
+                        value=0,
+                        precision=0,
+                        interactive=True,
+                        visible=False,  
+                    )
+
                     camera_dropdown = gr.Dropdown(
                         choices=camera_list,
                         value=camera_list[0] if camera_list else None,
                         label="Select Camera"
+                    )
+
+                    def toggle_vehicle_count_visibility(source):
+                        if source == "scenescape":
+                            return gr.update(visible=True)
+                        else:
+                            return gr.update(visible=False, value=0)
+
+                    source_dropdown.change(
+                        fn=toggle_vehicle_count_visibility,
+                        inputs=[source_dropdown],
+                        outputs=[vehicle_count],
                     )
 
                     label_filter = gr.Dropdown(

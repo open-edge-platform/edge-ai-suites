@@ -9,16 +9,16 @@ logger = logging.getLogger(__name__)
 
 
 async def process_event(event: dict, context: dict = None):
-    logger.info(f"📌 Processing Event.")
+    logger.info(f"--- Processing Event.")
     if context:
-        logger.info(f"📌 Event context: {context}")
+        logger.info(f"--- Event context: {context}")
 
-    logger.info(f"📌 Detected label: {event.get('label')}")
+    logger.info(f"--- Detected label: {event.get('label')}")
     rules = await get_rules()
-    logger.info(f"📌 Loaded {len(rules)} rules")
+    logger.info(f"--- Loaded {len(rules)} rules")
 
     for rule in rules:
-        logger.info(f"🔁 Evaluating rule: {rule}")
+        logger.info(f"--- Evaluating rule: {rule}")
         if rule["label"] == event.get("label") and (
             not rule.get("camera") or rule["camera"] == event.get("camera")
         ):
@@ -27,4 +27,4 @@ async def process_event(event: dict, context: dict = None):
             response = await dispatch_action(rule["action"], event)
             await store_response(rule["id"], response)
         else:
-            logger.info("❌ Rule did not match.")
+            logger.info("--- Rule did not match.")
