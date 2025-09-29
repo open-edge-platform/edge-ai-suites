@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "PVC_ROOT_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>PVC_ROOT</TELEM:name>
+	<TELEM:description>Ponte Vecchio Root PMT Telemetry samples definition and transformation rules</TELEM:description>
+	<TELEM:uniqueid>41fe79a4</TELEM:uniqueid>
+	<TELEM:productid>PVC_ROOT</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x464000</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PackageTemperature_L" datatypeIDREF="tU8.0" sampleID="PackageTemperature_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>PackageTemperature_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PackageTemperature_H" datatypeIDREF="tU8.0" sampleID="PackageTemperature_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>PackageTemperature_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x464008</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PackageThermMargin_L" datatypeIDREF="tS7.8" sampleID="PackageThermMargin_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>PackageThermMargin_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PackageThermMargin_H" datatypeIDREF="tS7.8" sampleID="PackageThermMargin_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>PackageThermMargin_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x464010</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PL1_RAPL_LIMIT" datatypeIDREF="tU12.3" sampleID="PL1_RAPL_LIMIT">
+			<TELC:description>PL1_RAPL_LIMIT</TELC:description>
+			<TELC:sampleSubGroup>PackageRAPLLimit_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>15</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>14</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PL1Enable" datatypeIDREF="tbool" sampleID="PL1Enable">
+			<TELC:description>PL1 Enable Bit</TELC:description>
+			<TELC:sampleSubGroup>PackageRAPLLimit_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>1</TELC:size>
+			<TELC:lsb>15</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PL1_TIME_WINDOW" datatypeIDREF="tU7.0" sampleID="PL1_TIME_WINDOW">
+			<TELC:description>PL1 Time Window</TELC:description>
+			<TELC:sampleSubGroup>PackageRAPLLimit_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>7</TELC:size>
+			<TELC:lsb>17</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PL2_Limit" datatypeIDREF="tU12.3" sampleID="PL2_Limit">
+			<TELC:description>PL2 Limit</TELC:description>
+			<TELC:sampleSubGroup>PackageRAPLLimit_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>15</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>46</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PL2Enable" datatypeIDREF="tbool" sampleID="PL2Enable">
+			<TELC:description>PL2 Enable Bit</TELC:description>
+			<TELC:sampleSubGroup>PackageRAPLLimit_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>1</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>48</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PL2_TIME_WINDOW" datatypeIDREF="tU7.0" sampleID="PL2_TIME_WINDOW">
+			<TELC:description>PL2 Time Window</TELC:description>
+			<TELC:sampleSubGroup>PackageRAPLLimit_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>7</TELC:size>
+			<TELC:lsb>49</TELC:lsb>
+			<TELC:msb>55</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_3" sampleID="3" sampleGroupID="Container_3">
+		<TELC:description>Groupname 0x464018</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PackagePowerSKU_L" datatypeIDREF="tU12.3" sampleID="PackagePowerSKU_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>PackagePowerSKU_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PackagePowerSKU_H" datatypeIDREF="tU7.0" sampleID="PackagePowerSKU_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>PackagePowerSKU_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_4" sampleID="4" sampleGroupID="Container_4">
+		<TELC:description>Groupname 0x464020</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="Reserved_0" datatypeIDREF="tU8.0" sampleID="Reserved_0">
+			<TELC:description>Reserved Field</TELC:description>
+			<TELC:sampleSubGroup>PackagePowerSKUUnit_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>7</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="EnergyUnit" datatypeIDREF="tU5.0" sampleID="EnergyUnit">
+			<TELC:description>Energy Unit</TELC:description>
+			<TELC:sampleSubGroup>PackagePowerSKUUnit_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>5</TELC:size>
+			<TELC:lsb>8</TELC:lsb>
+			<TELC:msb>12</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TimeUnit" datatypeIDREF="tU4.0" sampleID="TimeUnit">
+			<TELC:description>Time Unit</TELC:description>
+			<TELC:sampleSubGroup>PackagePowerSKUUnit_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>4</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>19</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PackagePowerSKUUnit_H" datatypeIDREF="tU4.0" sampleID="PackagePowerSKUUnit_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>PackagePowerSKUUnit_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_5" sampleID="5" sampleGroupID="Container_5">
+		<TELC:description>Groupname 0x464028</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PackageThermStatus_L" datatypeIDREF="tU1.0" sampleID="PackageThermStatus_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>PackageThermStatus_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PackageThermStatus_H" datatypeIDREF="tU1.0" sampleID="PackageThermStatus_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>PackageThermStatus_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_6" sampleID="6" sampleGroupID="Container_6">
+		<TELC:description>Groupname 0x464030</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PackagePower_L" datatypeIDREF="tU29.3" sampleID="PackagePower_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>PackagePower_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PackagePower_H" datatypeIDREF="tU29.3" sampleID="PackagePower_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>PackagePower_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_7" sampleID="7" sampleGroupID="Container_7">
+		<TELC:description>Groupname 0x464038</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CardEnergy" datatypeIDREF="tU18.14" sampleID="CardEnergy">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>CardEnergy</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

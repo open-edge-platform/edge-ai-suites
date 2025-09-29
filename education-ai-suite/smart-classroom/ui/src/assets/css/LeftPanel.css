@@ -1,0 +1,63 @@
+.left-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  /* padding: 12px 8px; */
+  background: #f8f8f8;
+}
+
+.tabs {
+  display: flex;
+  justify-content: flex-start;
+  background: transparent;
+  border-bottom: 1px solid #e6e7e8;
+  margin-bottom: 4px;
+  gap: 2px;
+}
+
+.tabs button {
+  flex: 1;
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-gray-700);
+  background: none;
+  border: none;
+  padding: 10px 0;
+  border-radius: 0;
+  transition: color 0.2s, background 0.2s;
+}
+
+.tabs button.active {
+  color: var(--color-dark);
+  background: #e6e7e8;
+  border-bottom: 2px solid var(--color-theme);
+}
+  
+.tabs button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tab-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #c5d7f0;
+  border-top-color: #3b5bdb;
+  border-radius: 50%;
+  animation: tab-spin 0.8s linear infinite;
+}
+
+@keyframes tab-spin {
+  to { transform: rotate(360deg); }
+}
+
+.tab-content {
+  flex: 1;
+  overflow-y: auto;
+  background: none;
+  padding: 0;
+}
+

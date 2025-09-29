@@ -1,0 +1,259 @@
+.right-panel {
+  flex: 1;
+  position: relative;
+  background: #f9f9f9;
+  border-left: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-x: hidden;
+  padding: 12px 8px; 
+}
+
+
+.platform-configuration,
+.software-performance {
+  flex: 1;
+}
+
+.platform-configuration h3,
+.software-performance h3 {
+  margin-bottom: 16px;
+}
+
+.platform-configuration p,
+.software-performance p {
+  margin: 4px 0;
+}
+
+.dropdown-container {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.dropdown-section {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.dropdown-section:last-child {
+  margin-right: 0;
+}
+
+h3 {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.dropdown {
+  width: 100%;
+  padding: 5px;
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  left: calc(50% - 10px); 
+  transform: translateY(-50%);
+  cursor: pointer;
+  z-index: 100;
+  color: #0071c5;
+  background: #fff;
+  border-radius: 50%;
+  border: 1px solid #e6e7e8;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  transition: left 0.3s ease;
+}
+
+.arrow.collapsed {
+  left: calc(100% - 38px); 
+}
+
+
+.charts-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.chart-row {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+}
+
+.chart-container-half {
+  flex: 1;
+  min-height: 250px;
+  position: relative;
+  min-width: 0; 
+}
+
+.chart-title {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+}
+
+.chart-wrapper {
+  height: 200px;
+}
+
+
+.gpu-header {
+  margin-bottom: 10px;
+}
+
+.gpu-header .chart-title {
+  margin: 0 0 5px 0;
+}
+
+.gpu-metrics-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.gpu-metric-checkbox {
+  display: flex;
+  align-items: center;
+  font-size: 10px;
+  cursor: pointer;
+  gap: 3px;
+}
+
+.checkbox-input {
+  width: 12px;
+  height: 12px;
+  accent-color: var(--metric-color);
+}
+
+.checkbox-label {
+  color: var(--metric-color);
+  font-weight: bold;
+}
+
+.metrics-selector button:hover {
+  opacity: 0.8;
+}
+
+.metrics-selector button:active {
+  transform: scale(0.95);
+}
+
+.configuration-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 1rem;
+  margin-left: 2rem;
+  margin-top: 1rem;
+  padding: 0.5rem 1;
+}
+
+
+.configuration-metrics h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+  color: #2d3748; 
+}
+
+
+.configuration-metrics p {
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin: 0.2rem 0;
+  line-height: 1.4;
+}
+
+
+.accordion-subtitle {
+  font-size: 0.85rem;
+  color: #718096;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+
+.software-performance h3 {
+  margin-top: 1.2rem; 
+}
+
+.software-performance h3:first-of-type {
+  margin-top: 0; 
+}
+
+.configuration-metrics p {
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin: 0.2rem 0;
+  line-height: 1.4;
+}
+
+.configuration-metrics p strong {
+  font-weight: 600;   
+  color: #2d3748;     
+  margin-right: 0.3rem;
+}
+@media (max-width: 768px) {
+  .configuration-metrics {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+@media (max-width: 768px) {
+  .chart-row {
+    flex-direction: column;
+  }
+  
+  .chart-container-half {
+    min-height: 230px;
+  }
+  
+  .chart-wrapper {
+    height: 180px;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .chart-container-half {
+    min-height: 200px;
+  }
+  
+  .chart-wrapper {
+    height: 150px;
+  }
+  
+  .gpu-metrics-checkboxes {
+    font-size: 9px;
+    gap: 5px;
+  }
+  
+  .gpu-metric-checkbox {
+    font-size: 9px;
+    gap: 2px;
+  }
+  
+  .checkbox-input {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .chart-row {
+    gap: 10px;
+  }
+  
+  .charts-grid {
+    gap: 15px;
+  }
+}

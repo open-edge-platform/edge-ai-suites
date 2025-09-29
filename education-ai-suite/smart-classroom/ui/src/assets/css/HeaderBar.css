@@ -1,0 +1,129 @@
+.header-bar {
+  position: sticky;
+  top: 64px;
+  left: 0;
+  right: 0;
+  z-index: 29;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  height: 56px;
+  width:100%;
+  background-color: #fff;
+  font-family: "IntelOne Display", var(--font-display), system-ui, sans-serif;
+  border-bottom: 1px solid #e6e7e8;
+}
+
+.text-button {
+  font-family: "IntelOne Text", var(--font-text), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0071c5;
+  background: none;
+  border: 3px solid #e6e7e8;
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin-right: 12px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.navbar-left {
+  display: flex;
+  align-items: center; 
+  gap: 12px; 
+}
+.record-icon,
+.side-record-icon {
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0;
+  padding: 0;
+}
+.text-button:hover {
+  background: #e6e7e8;
+  color: #0054AE;
+  vertical-align: middle;
+}
+.error-banner {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  text-align: center;
+  font-family: "IntelOne Text", var(--font-text), system-ui, sans-serif;
+  font-size: 14px;
+}
+
+.upload-button {
+  font-family: "IntelOne Text", var(--font-text), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0071c5;
+  background: none;
+  border: 2px solid #82b6df; 
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin-right: 12px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  display: inline-block;
+  text-align: center;
+}
+
+
+.upload-button:hover {
+  background: #0071c5;
+  color: #fff;
+  border-color: #6da5e0;
+}
+
+
+.upload-button:disabled,
+.upload-button[disabled] {
+  color: #bbbaba;
+  background: #f9f6f6;
+  border: 2px solid #e6e7e8;
+  cursor: not-allowed;
+}
+
+
+.text-button:disabled {
+  color: #bbbaba;
+  background: #f9f6f6;
+  border: 3px solid #e6e7e8;
+  cursor: not-allowed;
+}
+
+.timer {
+  font-family: "IntelOne Text", var(--font-text), system-ui, sans-serif;
+  font-size: 14px;
+  color: #2B2C30;
+  margin-right: 12px;
+  vertical-align: middle;
+}
+
+.notifications-display {
+  font-family: "IntelOne Text", var(--font-text), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #2B2C30;
+  background: none;
+  line-height: 16px;
+  gap: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.project-name-display {
+  font-family: "IntelOne Text", var(--font-text), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2B2C30;
+  line-height: 20px;
+  background: none;
+  margin-left: 16px;
+}

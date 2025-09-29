@@ -1,0 +1,103 @@
+:root {
+  --font-display: "IntelOne Display", "Inter", system-ui, sans-serif;
+  --font-text: "IntelOne Text", "Inter", system-ui, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --color-dark: #2B2C30;
+  --color-light: #FFF;
+  --color-gray-700: #6A6D75;
+  --color-gray-900: #2B2C30;
+  --color-theme: #0071c5;
+
+  font-family: var(--font-text);
+  color: var(--color-dark);
+  background-color: #f5f7fa;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--color-dark);
+  background: #f5f7fa;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--color-dark);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+button, .text-button {
+  font-family: var(--font-text);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-dark);
+  background: #FFF;
+  border-radius: 4px;
+  border: none;
+  padding: 6px 16px;
+  line-height: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:disabled, .text-button:disabled {
+  color: var(--color-gray-700);
+  background: #f9f6f6;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tabs button {
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--color-gray-700);
+  background: none;
+  border: none;
+  padding: 10px 0;
+  transition: color 0.2s, background 0.2s;
+}
+
+.tabs button.active {
+  color: var(--color-dark);
+  background: #e6e7e8;
+  border-bottom: 2px solid var(--color-theme);
+}
+
+.tab-content {
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-dark);
+  line-height: 20px;
+  background: none;
+  padding: 0;
+}
+
+.notification {
+  font-family: var(--font-text);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-dark);
+  background: none;
+  line-height: 16px;
+}
+
+.project-name-display {
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-dark);
+  line-height: 20px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: var(--color-dark);
+    background-color: #f5f7fa;
+  }
+}
