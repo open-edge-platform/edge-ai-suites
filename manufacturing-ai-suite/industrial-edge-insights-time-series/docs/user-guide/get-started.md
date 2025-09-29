@@ -297,7 +297,7 @@ To trigger the UDF inference on GPU in Time Series Analytics Microservice, run t
     - After login, click on Dashboard 
       ![Menu view](./_images/dashboard.png)
 
-    - Select the `Wind Turbine Dashboard`.
+    - Select the `Weld Anomaly Detection Dashboard`.
       ![Weld Anomaly Detection dashboard](./_images/weld_anomaly_detection.png)
 
     - One will see the below output.
