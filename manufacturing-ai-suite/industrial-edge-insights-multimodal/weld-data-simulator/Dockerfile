@@ -6,11 +6,6 @@
 
 FROM python:3.13.4-slim
 
-COPY requirements.txt /
-RUN pip3 install --no-cache-dir -r requirements.txt
-COPY publisher.py /
-COPY simulation-data /simulation-data
-
 # Install OpenCV dependencies
 RUN apt-get update && apt-get install -y \
     libgl1 \
@@ -41,6 +36,11 @@ RUN  if [ "$COPYLEFT_SOURCES" = "true" ]; then \
     fi
 
 RUN apt-get remove --purge -y --allow-remove-essential perl-base
+
+COPY requirements.txt /
+RUN pip3 install --no-cache-dir -r requirements.txt
+COPY publisher.py /
+COPY simulation-data /simulation-data
 
 USER ${TIMESERIES_USER_NAME}
 
