@@ -4,8 +4,8 @@
         "version": "1.0"
     },
     "udfs": {
-        "name": "weld_defect_detection",
-        "models": "weld_defect_detection.cb"
+        "name": "weld_anomaly_detector",
+        "models": "weld_anomaly_detector.cb"
     },
     "alerts": {
         "mqtt": {

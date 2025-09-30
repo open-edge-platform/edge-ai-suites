@@ -17,11 +17,14 @@ MEDIAMTX_SERVER = os.getenv("MEDIAMTX_SERVER", "mediamtx")
 MEDIAMTX_PORT = os.getenv("MEDIAMTX_PORT", "8554")
 RTSP_STREAM_NAME = os.getenv("RTSP_STREAM_NAME", "live.stream")
 VIDEO_TOPIC = os.getenv("VIDEO_TOPIC", "weld/video")
-DATA_TOPIC = os.getenv("DATA_TOPIC", "ts_welding_data")
+DATA_TOPIC = os.getenv("DATA_TOPIC", "weld-data")
 RTSP_URL = f"rtsp://{MEDIAMTX_SERVER}:{MEDIAMTX_PORT}/{RTSP_STREAM_NAME}"
 ffmpeg_proc = None
 client = None
 
+FRAME_RATE = 30  # Frames per second for video streaming
+FRAME_WIDTH = 960
+FRAME_HEIGHT = 600
 published_data = []
 
 
@@ -217,13 +220,20 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
     # client.disconnect()
 
 
-def demo_available_files():
+def check_and_load_files():
     """
-    Demonstrate the available simulation files and how to use them.
+    Check and load the available simulation files.
     """
     print("Available simulation file pairs:")
     available_files = get_available_simulation_files()
-    
+
+    continuous_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true").lower() == "true"
+    while True:
+        for i, filename in enumerate(available_files, 1):
+            print(f"  {i}. {filename}")
+            stream_video_and_csv(filename)
+        if not continuous_ingestion:
+            break
     for i, filename in enumerate(available_files, 1):
         print(f"  {i}. {filename}")
         stream_video_and_csv(available_files[i])
@@ -246,8 +256,8 @@ if __name__ == "__main__":
     "-re",
     "-f", "rawvideo",
     "-pix_fmt", "bgr24",
-    "-s", f"{960}x{600}",
-    "-r", str(int(30)),
+    "-s", f"{FRAME_WIDTH}x{FRAME_HEIGHT}",
+    "-r", str(FRAME_RATE),
     "-i", "-",  # Read from stdin
     "-c:v", "libx264",
     "-preset", "ultrafast",
@@ -256,11 +266,5 @@ if __name__ == "__main__":
     ]
     
     ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
-    demo_available_files()
+    check_and_load_files()
     
-    # Default behavior (backward compatibility)
-    # stream_video_and_csv()
-    
-    # Example of using specific simulation files:
-    # stream_video_and_csv("good_weld_02-16-23-0081-00")
-    # stream_video_and_csv("crater_cracks_03-20-23-0122-11")

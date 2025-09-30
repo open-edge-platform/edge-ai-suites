@@ -42,11 +42,32 @@ generated_ssl_certs_nginx:
 	@mkdir -p ./nginx/ssl
 	@openssl req -x509 -nodes -days ${DAYS} -${SHA_ALGO} -newkey rsa:${KEY_LENGTH} -keyout ./nginx/ssl/key.pem -out ./nginx/ssl/cert.pem -subj "/CN=localhost"
 	@chmod 644 ./nginx/ssl/key.pem ./nginx/ssl/cert.pem
+
+.PHONY: validate_host_ip
+validate_host_ip:
+	@echo "Validating HOST_IP in .env..."
+	@host_ip=$$(grep -E "^HOST_IP=" $(ENV_FILE) | cut -d'=' -f2); \
+	if [ -z "$$host_ip" ]; then \
+		echo "HOST_IP is not set in $(ENV_FILE)."; \
+		exit 1; \
+	fi; \
+	if ! echo "$$host_ip" | grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$$'; then \
+		echo "HOST_IP ($$host_ip) is not a valid IPv4 address format."; \
+		exit 1; \
+	fi; \
+	for octet in $$(echo "$$host_ip" | tr '.' ' '); do \
+		if [ "$$octet" -lt 0 ] || [ "$$octet" -gt 255 ]; then \
+			echo "HOST_IP ($$host_ip) has an invalid octet: $$octet"; \
+			exit 1; \
+		fi; \
+	done; \
+	echo "HOST_IP ($$host_ip) is valid."
+
 # Check if multiple particular variables in .env are assigned with values
 .PHONY: check_env_variables
 check_env_variables:
 	@echo "Checking if username/password in .env are matching the rules set..."
-	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD"; \
+	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD MTX_WEBRTCICESERVERS2_0_USERNAME MTX_WEBRTCICESERVERS2_0_PASSWORD"; \
 	for variable_name in $$variables; do \
 		value=$$(grep -E "^$$variable_name=" $(ENV_FILE) | cut -d'=' -f2); \
 		if [ -z "$$value" ]; then \
@@ -86,7 +107,7 @@ check_env_variables:
 	done
 
 .PHONY: up
-up: check_env_variables down generated_ssl_certs_nginx
+up: check_env_variables validate_host_ip down generated_ssl_certs_nginx
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
 	echo "Starting Docker containers..."; \
 	if [ $(INCLUDE) = 'validation' ]; then \

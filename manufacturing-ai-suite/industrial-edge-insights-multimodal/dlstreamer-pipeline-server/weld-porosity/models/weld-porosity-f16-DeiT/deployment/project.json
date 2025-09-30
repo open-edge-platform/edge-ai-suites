@@ -1,0 +1,191 @@
+{
+   "id": "68d3faba58d480889b5d9af7",
+   "name": "Vision Weld Use Case Classification",
+   "creation_time": "2025-09-24T14:05:46.966000+00:00",
+   "creator_id": "9358e5f4-7e47-4c4a-9ca8-053216c9d774",
+   "pipeline": {
+      "tasks": [
+         {
+            "id": "68d3faba58d480889b5d9af8",
+            "title": "Dataset",
+            "task_type": "dataset"
+         },
+         {
+            "id": "68d3faba58d480889b5d9afa",
+            "title": "Classification",
+            "task_type": "classification",
+            "labels": [
+               {
+                  "id": "68d3faba58d480889b5d9afc",
+                  "name": "Porosity with Excessive Penetration",
+                  "is_anomalous": false,
+                  "color": "#ff7d00ff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___Porosity with Excessive Penetration",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9afd",
+                  "name": "Excessive Convexity",
+                  "is_anomalous": false,
+                  "color": "#00a5cfff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___Excessive Convexity",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9afe",
+                  "name": "Warping",
+                  "is_anomalous": false,
+                  "color": "#81407bff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___Warping",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9aff",
+                  "name": "Undercut",
+                  "is_anomalous": false,
+                  "color": "#00f5d4ff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___Undercut",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9b00",
+                  "name": "Spatter",
+                  "is_anomalous": false,
+                  "color": "#c9e649ff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___Spatter",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9b01",
+                  "name": "Porosity",
+                  "is_anomalous": false,
+                  "color": "#ff5662ff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___Porosity",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9b02",
+                  "name": "Overlap",
+                  "is_anomalous": false,
+                  "color": "#26518eff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___Overlap",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9b03",
+                  "name": "Lack of Fusion",
+                  "is_anomalous": false,
+                  "color": "#708541ff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___Lack of Fusion",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9b04",
+                  "name": "Excessive Penetration",
+                  "is_anomalous": false,
+                  "color": "#e96115ff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___Excessive Penetration",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9b05",
+                  "name": "Crater Cracks",
+                  "is_anomalous": false,
+                  "color": "#edb200ff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___Crater Cracks",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9b06",
+                  "name": "Burnthrough",
+                  "is_anomalous": false,
+                  "color": "#d7bc5eff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___Burnthrough",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9b07",
+                  "name": "No Weld",
+                  "is_anomalous": false,
+                  "color": "#9d3b1aff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___No Weld",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9b08",
+                  "name": "Good Weld",
+                  "is_anomalous": false,
+                  "color": "#5b69ffff",
+                  "hotkey": "",
+                  "is_empty": false,
+                  "group": "Classification labels___Good Weld",
+                  "parent_id": null
+               },
+               {
+                  "id": "68d3faba58d480889b5d9b18",
+                  "name": "No class",
+                  "is_anomalous": false,
+                  "color": "#000000ff",
+                  "hotkey": "",
+                  "is_empty": true,
+                  "group": "No class",
+                  "parent_id": null
+               }
+            ],
+            "label_schema_id": "68d3faba58d480889b5d9b1a"
+         }
+      ],
+      "connections": [
+         {
+            "from": "68d3faba58d480889b5d9af8",
+            "to": "68d3faba58d480889b5d9afa"
+         }
+      ]
+   },
+   "thumbnail": "/api/v1/organizations/7b7f8cda-a50c-47e6-b4ef-aa6df8144545/workspaces/5d4eee04-685d-4b22-bf58-e0e4fbbd44ff/projects/68d3faba58d480889b5d9af7/thumbnail",
+   "performance": {
+      "score": 0.6775,
+      "task_performances": [
+         {
+            "task_id": "68d3faba58d480889b5d9afa",
+            "score": {
+               "value": 0.6775,
+               "metric_type": "Accuracy"
+            }
+         }
+      ]
+   },
+   "storage_info": {},
+   "datasets": [
+      {
+         "id": "68d3faba58d480889b5d9b09",
+         "name": "Dataset",
+         "use_for_training": true,
+         "creation_time": "2025-09-24T14:05:46.965000+00:00"
+      }
+   ]
+}

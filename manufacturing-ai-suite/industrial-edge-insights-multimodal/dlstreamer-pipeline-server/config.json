@@ -5,28 +5,34 @@
                 "name": "weld_defect_detection",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "rtspsrc location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! video/x-raw,format=RGB ! appsink name=destination",
+                "pipeline": "rtspsrc location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "detection-properties": {
-                             "element": {
-                                "name": "detection",
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
                                 "format": "element-properties"
-                              }
+                            }
                         }
                     }
                 },
                 "auto_start": true,
-                 "payload": {
+                "payload": {
                     "destination": {
-                        "metadata": {
+						"metadata": {
                             "type": "mqtt",
                             "topic": "weld_defect_detection"
                         },
                         "frame": {
-                            "type": "rtsp",
-                            "path": "weld_defect_detection"
+                            "type": "webrtc",
+                            "peer-id": "samplestream"
+                        }
+                    },
+                    "parameters": {
+                        "classification-properties": {
+                            "model": "/home/pipeline-server/resources/weld-porosity/models/weld-porosity-f16-DeiT/deployment/Classification/model/model.xml",
+                            "device": "CPU"
                         }
                     }
                 }

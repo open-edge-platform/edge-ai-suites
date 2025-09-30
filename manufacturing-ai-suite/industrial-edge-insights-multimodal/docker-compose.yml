@@ -116,10 +116,10 @@ services:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
-    - ./time_series_analytics_microservice/udfs/:/tmp/weld_defect_detection/udfs/
-    - ./time_series_analytics_microservice/tick_scripts/:/tmp/weld_defect_detection/tick_scripts/
+    - ./time_series_analytics_microservice/udfs/:/tmp/weld_anomaly_detector/udfs/
+    - ./time_series_analytics_microservice/tick_scripts/:/tmp/weld_anomaly_detector/tick_scripts/
     - ./time_series_analytics_microservice/config.json:/app/config.json
-    - ./time_series_analytics_microservice/models/:/tmp/weld_defect_detection/models/
+    - ./time_series_analytics_microservice/models/:/tmp/weld_anomaly_detector/models/
     - /dev/dri:/dev/dri
     - "/run/udev:/run/udev:ro"
     group_add:
@@ -160,6 +160,9 @@ services:
       GF_PROVISIONING_DASHBOARDS: /etc/grafana/provisioning/dashboards
       GF_SERVER_PROTOCOL: http
       GF_LOG_LEVEL: ${LOG_LEVEL}
+      GF_SERVER_SERVE_FROM_SUB_PATH: true
+      GF_PANELS_DISABLE_SANITIZE_HTML: true
+      GF_SECURITY_ALLOW_EMBEDDING: true
     networks:
     - timeseries_network
     volumes:
@@ -216,7 +219,7 @@ services:
       MEDIAMTX_SERVER: mediamtx
       MEDIAMTX_PORT: 8554
       VIDEO_TOPIC: weld/video
-      DATA_TOPIC: ts_welding_data
+      DATA_TOPIC: "weld-data"
       RTSP_STREAM_NAME: live.stream
       no_proxy: "ia-mqtt-broker,ia-time-series-analytics-microservice,mediamtx,${no_proxy}"
       NO_PROXY: "ia-mqtt-broker,ia-time-series-analytics-microservice,mediamtx,${no_proxy}"
@@ -227,23 +230,36 @@ services:
     - timeseries_network
 
   nginx:
-    image: bitnami/nginx:1.29-debian-12
+    image: nginx:1.29.1-bookworm-perl
     container_name: nginx_proxy
+    read_only: true
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    # entrypoint: ["sleep", "infinity"]
+    command: >
+     /bin/sh -c "/usr/local/bin/nginx-cert-gen.sh && exec nginx -g 'daemon off;'"
     environment:
-      no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
-      NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
+      no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP}"
+      NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP}"
+      HOST_IP: ${HOST_IP}
+      WHIP_SERVER_PORT: ${WHIP_SERVER_PORT}
     ports:
-      - "${GRAFANA_PORT}:443"   # HTTPS for Grafana and TS MS Rest API 
+      - "${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API
       - "1883:1883" # MQTT TCP Proxy
     volumes:
-      - ./nginx/nginx.conf:/opt/bitnami/nginx/conf/nginx.conf:ro
-      - ./nginx/ssl:/opt/bitnami/nginx/conf/bitnami/certs:ro
+      - ./nginx/nginx.conf:/tmp/default.conf.template:ro
+      - ./nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro
+      - vol_nginx_tmpfs:/opt/nginx/certs:rw
+      - vol_nginx_tmpfs:/var/cache/nginx:rw
+      - vol_nginx_tmpfs:/run:rw
+      - vol_nginx_tmpfs:/etc/nginx/:rw
     networks:
       - timeseries_network
     depends_on:
       - ia-grafana
       - ia-time-series-analytics-microservice
       - ia-mqtt-broker
+      - mediamtx
+      - coturn
   
   dlstreamer-pipeline-server:
     image: intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
@@ -262,7 +278,7 @@ services:
     environment:
       AppName: "DLStreamerPipelineServer"
       ENABLE_WEBRTC: true
-      WEBRTC_SIGNALING_SERVER: http://mediamtx:${WHIP_SERVER_PORT}
+      WEBRTC_SIGNALING_SERVER: http://mediamtx:8889
       ENABLE_RTSP: true
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
@@ -293,7 +309,7 @@ services:
     volumes:
     - vol_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
     - /var/tmp:/var/tmp
-    - ./resources/dlstreamer-pipeline-server/:/home/pipeline-server/resources/
+    - ./dlstreamer-pipeline-server/weld-porosity:/home/pipeline-server/resources/weld-porosity
     - ./dlstreamer-pipeline-server/config.json:/home/pipeline-server/config.json
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
@@ -331,22 +347,37 @@ services:
     container_name: mediamtx
     restart: unless-stopped
     ports:
-      - "9554:8554"   # RTSP
-      - "8888:8888"   # HTTP API / Web UI
-      - "8889:8889"   # WebRTC
-      - "8890:8890"   # RTMP
+      - ${WHIP_SERVER_PORT}:8889   # WebRTC
+      - 9554:8554   # RTSP
+      # - "8888:8888"   # HTTP API / Web UI
+      # - "8890:8890"   # RTMP
     environment:
       - MTX_LOGLEVEL=info
       - MTX_RTSP=yes
       - MTX_RTMP=no
       - MTX_HLS=no
-      - MTX_WEBRTC=no
-
+      - NO_PROXY=mediamtx,coturn,${no_proxy},${HOST_IP}
+      - no_proxy=mediamtx,coturn,${no_proxy},${HOST_IP}
       # Path settings for cam1
       - MTX_PATHS_CAM1_PUBLISHUSER=publisher
       - MTX_PATHS_CAM1_PUBLISHPASS=pubpass
       - MTX_PATHS_CAM1_READUSER=viewer
       - MTX_PATHS_CAM1_READPASS=viewpass
+      - MTX_WEBRTCTRACKGATHERTIMEOUT=20s
+      - MTX_WEBRTC=yes
+      - MTX_WEBRTCICESERVERS2_0_URL=turn:${HOST_IP}:${COTURN_UDP_PORT}
+      - MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME}
+      - MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}
+    networks:
+    - timeseries_network
+  
+  coturn:
+    image: coturn/coturn:latest
+    container_name: coturn
+    ports:
+      - "${COTURN_UDP_PORT}:3478"
+      - "${COTURN_UDP_PORT}:3478/udp"
+    command: ["-v"]  # Verbose mode for logging
     networks:
     - timeseries_network
 networks:
@@ -377,6 +408,12 @@ volumes:
       type: tmpfs
       device: tmpfs
   vol_pipeline_root:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+
+  vol_nginx_tmpfs:
     driver: local
     driver_opts:
       type: tmpfs

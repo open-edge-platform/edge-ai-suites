@@ -1,0 +1,27 @@
+{
+   "id": "68d4ed285044230c1e58545b",
+   "name": "DeiT-Tiny OpenVINO FP16",
+   "version": 1,
+   "creation_date": "2025-09-25T07:20:08.022000+00:00",
+   "model_format": "OpenVINO",
+   "precision": [
+      "FP16"
+   ],
+   "has_xai_head": false,
+   "target_device": "CPU",
+   "target_device_type": null,
+   "performance": {
+      "score": 0.8610315186246418
+   },
+   "size": 11428231,
+   "latency": 0,
+   "fps_throughput": 0,
+   "optimization_type": "MO",
+   "optimization_objectives": {},
+   "model_status": "SUCCESS",
+   "configurations": [],
+   "lifecycle_stage": "active",
+   "previous_revision_id": "68d4ed285044230c1e585458",
+   "previous_trained_revision_id": "68d4ed285044230c1e585458",
+   "optimization_methods": []
+}

@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-""" Custom user defined function for anomaly detection for weld_defect_detection. """
+""" Custom user defined function for anomaly detection in weld sensor data. """
 
 import os
 import logging
@@ -39,10 +39,10 @@ logging.basicConfig(
 
 logger = logging.getLogger()
 
-# Anomaly detection on the windturbine speed and generated power data
+# Anomaly detection on the weld sensor data
 class AnomalyDetectorHandler(Handler):
     """ Handler for the anomaly detection UDF. It processes incoming points
-    and detects anomalies based on the wind speed and generated power data.
+    and detects anomalies based on the weld sensor data.
     """
     def __init__(self, agent):
         self._agent = agent
@@ -58,13 +58,14 @@ class AnomalyDetectorHandler(Handler):
         model_path = os.path.abspath(model_path)
         # self.rf = load_model(model_path)
 
+        # Initialize a CatBoostClassifier model for anomaly detection
         self.model = cb.CatBoostClassifier(
-            depth=10,
-            iterations=2000,
-            learning_rate=0.1,
-            task_type="CPU",
-            devices="1:2",
-            random_seed=40,
+            depth=10,            # Set the depth of each tree to 10
+            iterations=2000,     # Number of boosting iterations (trees)
+            learning_rate=0.1,   # Step size for each iteration
+            task_type="CPU",     # Specify to use CPU for training/inference
+            devices="1:2",       # Specify device IDs (not used for CPU, but kept for config compatibility)
+            random_seed=40,      # Set random seed for reproducibility
         )
 
         self.model.load_model(model_path)
@@ -112,6 +113,7 @@ class AnomalyDetectorHandler(Handler):
         """ A point has arrived.
         """
         server = None
+        start_time = time.time_ns()
         for point_tag in point.tags:
             if point_tag.key == "source":
                 server = point_tag.value
@@ -136,12 +138,18 @@ class AnomalyDetectorHandler(Handler):
             defect_likelihood_main = self.model.predict_proba(point_series)
             bad_defect = defect_likelihood_main[0]*100
             good_defect = defect_likelihood_main[1]*100
+            if bad_defect > 50:
+                point.fieldsDouble.add(key = "anomaly_status", value = 1.0)
             logger.info(f"Good Weld: {good_defect:.2f}%, Defective Weld: {bad_defect:.2f}%")
         else:
             logger.info("Good Weld: N/A, Defective Weld: N/A") 
 
         point.fieldsDouble.add(key = "Good Weld", value = round(good_defect, 2) if "good_defect" in locals() else 0.0)
         point.fieldsDouble.add(key = "Defective Weld", value = round(bad_defect,2) if "bad_defect" in locals() else 0.0)
+        time_now = time.time_ns()
+        point.fieldsDouble.add(key = 'processing_time', value = time_now-start_time)
+
+        point.fieldsDouble.add(key = 'end_end_time', value = time_now-point.time)
 
         logger.info("Processing point %s %s for source %s", point.time, time.time(), server)
 
@@ -150,6 +158,11 @@ class AnomalyDetectorHandler(Handler):
             point.fieldsDouble.add(key = "anomaly_status", value = 0.0)
         response.point.CopyFrom(point)
         self._agent.write_response(response, True)
+
+        end_time = time.time_ns()
+        process_time = (end_time - start_time)/1000
+        logger.debug("Function point took %.4f milliseconds to complete.", process_time)
+
 
     def end_batch(self, end_req):
         """ The batch is complete.
