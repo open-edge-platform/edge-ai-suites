@@ -37,13 +37,6 @@ def iso_to_frigate_timestamp(iso_timestamp: str) -> str:
         logger.warning(f"Failed to parse timestamp {iso_timestamp}: {e}")
         return iso_timestamp  
 
-SCENESCAPE_TO_FRIGATE_CAM_MAP = {
-    "camera4": "camera4",
-    "camera3": "camera3",
-    "camera2": "camera2",
-    "camera1": "camera1",
-}
-
 last_scenescape_processed = 0    
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
@@ -113,24 +106,16 @@ def on_message(client, userdata, msg):
                 logger.info(f" Scenescape message timestamp: {formatted_timestamp} |  Camera: {scenescape_camera} |  Number of vehicles: {num_vehicles} ")
 
                 start_time = float(formatted_timestamp) - 15
-                #end_time = float(formatted_timestamp)
                 end_time = float(formatted_timestamp) - 5
 
-                frigate_camera = SCENESCAPE_TO_FRIGATE_CAM_MAP.get(scenescape_camera)
-
-                if not frigate_camera:
-                    logger.warning(f"No mapping found for Scenescape camera '{scenescape_camera}'. Skipping clip fetch.")
-                    return
-
                 logger.info(
-                    f" Mapping Scenescape camera '{scenescape_camera}' to Frigate camera '{frigate_camera}'. "
                     f"Fetching scenescape clip for time {start_time} to {end_time}."
                 )
                 for obj_type, obj_list in objects.items():
                     if isinstance(obj_list, list) and obj_list:
                         event_data = {
                             "label": obj_type,
-                            "camera": frigate_camera,
+                            "camera": scenescape_camera,
                             "start_time": start_time,
                             "end_time": end_time,
                         }
