@@ -12,18 +12,18 @@ models:
   asr:
     provider: openvino # openvino, funasr and openai supported
     name: whisper-tiny  # can be (whisper-base, whisper-small etc) or paraformer-zh
-    device: CPU
+    device: CPU # CPU Recommended
     temperature: 0.0
     models_base_path: "models"
     threads_limit: Null # applied only if > 0 (else defaults are used); value can be tuned based on CPU specifications
 
   summarizer:
     provider: openvino # ipex or openvino
-    name: Qwen/Qwen2-7B-Instruct # Qwen/Qwen1.5-7B-Chat, Qwen/Qwen2-7B-Instruct or Qwen/Qwen2.5-7B-Instruct
+    name: Qwen/Qwen2-7B-Instruct # Qwen/Qwen2-7B-Instruct or Qwen/Qwen2.5-7B-Instruct
     device: GPU # GPU or CPU
-    weight_format: int8 # supports fp16, fp32, int4, int8
+    weight_format: int8 # supports fp16, int4, int8 (Recommended)
     max_new_tokens: 1024
-    temperature: 0.5 # 0.7 default
+    temperature: 0.5 # 0.5 default
     use_cache: True
     models_base_path: "models"
     language: en # en or zh
