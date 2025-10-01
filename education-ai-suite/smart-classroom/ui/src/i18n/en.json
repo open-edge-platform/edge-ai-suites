@@ -18,7 +18,9 @@
       "streamingSummary": "Streaming summary…",
       "loadingTranscript": "Loading transcript…",
       "analyzingAudio": "Analyzing audio…",
-      "summaryReady": "Summary ready"
+      "summaryReady": "Summary ready",
+      "uploadSuccess": "File uploaded successfully!",
+      "uploadFailed": "Failed to upload file."
     },
     "settings": {
       "title": "Settings",

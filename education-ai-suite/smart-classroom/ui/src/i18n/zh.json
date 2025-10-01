@@ -18,7 +18,9 @@
     "streamingSummary": "正在流式摘要…",
     "loadingTranscript": "正在加载转录…",
     "analyzingAudio": "正在分析音频…",
-    "summaryReady": "摘要已准备好"
+    "summaryReady": "摘要已准备好",
+    "uploadSuccess": "文件上传成功！",
+    "uploadFailed": "文件上传失败。"
   },
   "settings": {
     "title": "设置",

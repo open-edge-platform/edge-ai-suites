@@ -38,7 +38,7 @@ const TranscriptsTab: React.FC = () => {
             if (!sentFirst) { dispatch(startTranscript()); sentFirst = true; }
             dispatch(appendTranscript(ev.token));
           } else if (ev.type === 'error') {
-            window.dispatchEvent(new CustomEvent('global-error', { detail: ev.message || 'Transcription error' })); // NEW
+            window.dispatchEvent(new CustomEvent('global-error', { detail: ev.message || 'Transcription error' }));
             dispatch(finishTranscript());
             break;
           } else if (ev.type === 'done') {
