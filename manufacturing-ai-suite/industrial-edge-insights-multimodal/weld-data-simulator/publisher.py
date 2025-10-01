@@ -119,7 +119,7 @@ def load_simulation_data(base_filename: str, simulation_data_dir: str = "/simula
 
 
 
-def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simulation-data"):
+def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simulation-data", target_fps: float = None):
     """
     Stream video and CSV data via MQTT and RTSP.
     
@@ -127,6 +127,8 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
         base_filename: Base name of the files to stream (without extension).
                       If None, uses default hardcoded paths.
         simulation_data_dir: Directory containing simulation data files
+        target_fps: Target FPS for streaming. If None, uses original video FPS.
+                   If provided, will downsample the video to this FPS rate.
     """
     if base_filename:
         
@@ -148,12 +150,31 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
         return
         
     fps = cap.get(cv2.CAP_PROP_FPS)
+    original_fps = fps
+    
+    # Apply FPS downframing if specified
+    if target_fps is not None and target_fps > 0:
+        if target_fps > fps:
+            print(f"Warning: Target FPS ({target_fps}) is higher than original FPS ({fps}). Using original FPS.")
+            effective_fps = fps
+        else:
+            effective_fps = target_fps
+            print(f"Downframing from {fps:.2f} FPS to {effective_fps:.2f} FPS")
+    else:
+        effective_fps = fps
+    
+    # Calculate frame skip ratio for downframing
+    frame_skip_ratio = int(fps / effective_fps) if effective_fps < fps else 1
+    
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration_sec = total_frames / fps if fps > 0 else 0
 
     print(f"Video duration: {duration_sec:.2f} seconds")
-    print(f"Video FPS: {fps:.2f}")
+    print(f"Original FPS: {original_fps:.2f}")
+    print(f"Effective FPS: {effective_fps:.2f}")
     print(f"Total frames: {total_frames}")
+    if frame_skip_ratio > 1:
+        print(f"Frame skip ratio: {frame_skip_ratio} (showing every {frame_skip_ratio} frames)")
 
     # Correlate each CSV row to a time window in the video
     # Each row covers duration_sec / num_rows seconds
@@ -161,30 +182,35 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
     print(f"Row time window: {row_time_window:.2f} seconds")
     # MQTT setup
     global client
-    
+    client = mqtt.Client()
+    client.connect(MQTT_BROKER)
 
-    
     start_ffmpeg = False
+    global ffmpeg_proc
 
     frame_count = 0
+    processed_frame_count = 0  # Count of frames actually processed/streamed
+    
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             # Reset video to beginning for looping
             cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             frame_count = 0
+            processed_frame_count = 0
             global published_data
             published_data = []
             return
-            # continue
-        
-        global ffmpeg_proc
             
-        # Calculate which CSV row this frame belongs to
+        # Skip frames for downframing
+        if frame_count % frame_skip_ratio != 0:
+            frame_count += 1
+            continue
             
-        current_time = frame_count / fps if fps > 0 else 0
+        # Calculate which CSV row this frame belongs to (based on original timing)
+        current_time = frame_count / original_fps if original_fps > 0 else 0
         row_idx = int(current_time / row_time_window) if row_time_window > 0 else 0
-        print(f"Current time: {current_time:.2f} seconds, Row index: {row_idx} for base '{base_filename}'")
+        print(f"Frame {frame_count}, Time: {current_time:.2f}s, Row: {row_idx}, Processed: {processed_frame_count} for '{base_filename}'")
         
         if row_idx >= num_rows:
             row_idx = num_rows - 1
@@ -214,57 +240,74 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
         client.publish(DATA_TOPIC, str(csv_row))
         frame_id += 1
         frame_count += 1
-        time.sleep(1 / fps)  # Simulate real-time streaming
-        # time.sleep(1)  # Simulate real-time streaming
+        processed_frame_count += 1
+        time.sleep(1 / effective_fps)  # Use effective FPS for timing
+        
     cap.release()
-    # client.disconnect()
 
 
-def check_and_load_files():
+def check_and_load_simulation_files(target_fps):
     """
-    Check and load the available simulation files.
+    Display the available simulation file pairs and provide usage examples.
     """
     print("Available simulation file pairs:")
     available_files = get_available_simulation_files()
 
     continuous_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true").lower() == "true"
+    
     while True:
         for i, filename in enumerate(available_files, 1):
             print(f"  {i}. {filename}")
-            stream_video_and_csv(filename)
+            stream_video_and_csv(filename, target_fps=target_fps)
         if not continuous_ingestion:
             break
-    for i, filename in enumerate(available_files, 1):
-        print(f"  {i}. {filename}")
-        stream_video_and_csv(available_files[i])
 
     if not available_files:
+        print("No simulation file pairs found!")
+    
+    for i, filename in enumerate(available_files, 1):
+        print(f"  {i}. {filename}")
+        stream_video_and_csv(available_files[0], target_fps=10)
+    
+    if available_files:
+        print(f"\nExample usage:")
+        print(f"  stream_video_and_csv('{available_files[0]}')")
+        print(f"  stream_video_and_csv('{available_files[0]}', target_fps=10)  # Downsample to 10 FPS")
+    else:
         print("No simulation file pairs found!")
 
 
 if __name__ == "__main__":
     # Uncomment the line below to see available files
-    # global ffmpeg_proc
-    # global client
-
+    # demo_available_files()
+    
+    # Example of using specific simulation files with FPS downframing:
+    # stream_video_and_csv("good_weld_02-16-23-0081-00")  # Original FPS
+    # stream_video_and_csv("good_weld_02-16-23-0081-00", target_fps=10)  # Downsample to 10 FPS
+    # stream_video_and_csv("crater_cracks_03-20-23-0122-11", target_fps=5)  # Downsample to 5 FPS
+    
+    # Default behavior - process all available files
     client = mqtt.Client()
     client.connect(MQTT_BROKER)
-
-    start_ffmpeg = True
+    target_fps = int(os.getenv("SIMULATION_TARGET_FPS", "10"))
     ffmpeg_cmd = [
     "ffmpeg",
     "-re",
     "-f", "rawvideo",
     "-pix_fmt", "bgr24",
     "-s", f"{FRAME_WIDTH}x{FRAME_HEIGHT}",
-    "-r", str(FRAME_RATE),
+    "-r", str(target_fps),
     "-i", "-",  # Read from stdin
     "-c:v", "libx264",
     "-preset", "ultrafast",
     "-f", "rtsp",
     RTSP_URL
     ]
-    
+
     ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
-    check_and_load_files()
-    
+    check_and_load_simulation_files(target_fps)
+
+    if 'ffmpeg_proc' in locals():
+        ffmpeg_proc.stdin.close()
+        ffmpeg_proc.wait()
+    client.disconnect()
