@@ -105,7 +105,7 @@
       },
       "gridPos": {
         "h": 15,
-        "w": 16,
+        "w": 13,
         "x": 0,
         "y": 0
       },
@@ -241,8 +241,8 @@
       },
       "gridPos": {
         "h": 15,
-        "w": 8,
-        "x": 16,
+        "w": 11,
+        "x": 13,
         "y": 0
       },
       "id": 15,
@@ -766,7 +766,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Weld Anomaly Detection Dashboard",
+  "title": "Multimodal Vision & TS Anomaly Detection Dashboard",
   "uid": "ff7b8081-d0f0-4469-9210-9daf1bd148fd",
   "version": 1
 }

@@ -34,15 +34,6 @@ build_copyleft_sources:
 	@echo "Building Docker containers including copyleft licensed sources..."
 	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true;
 
-# This section generates an SSL certificate for secure communication.
-.PHONY: generated_ssl_certs_nginx
-generated_ssl_certs_nginx:
-	@echo "Generating SSL certificates for Nginx..."
-	@if [ -d "./nginx/ssl" ]; then rm -rf ./nginx/ssl; fi
-	@mkdir -p ./nginx/ssl
-	@openssl req -x509 -nodes -days ${DAYS} -${SHA_ALGO} -newkey rsa:${KEY_LENGTH} -keyout ./nginx/ssl/key.pem -out ./nginx/ssl/cert.pem -subj "/CN=localhost"
-	@chmod 644 ./nginx/ssl/key.pem ./nginx/ssl/cert.pem
-
 .PHONY: validate_host_ip
 validate_host_ip:
 	@echo "Validating HOST_IP in .env..."
@@ -107,7 +98,7 @@ check_env_variables:
 	done
 
 .PHONY: up
-up: check_env_variables validate_host_ip down generated_ssl_certs_nginx
+up: check_env_variables validate_host_ip down
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
 	echo "Starting Docker containers..."; \
 	if [ $(INCLUDE) = 'validation' ]; then \

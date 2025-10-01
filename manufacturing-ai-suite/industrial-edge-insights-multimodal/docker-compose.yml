@@ -261,7 +261,33 @@ services:
       - ia-mqtt-broker
       - mediamtx
       - coturn
-  
+  ia-fusion-module:
+    build: fusion-module/.
+    container_name: ia-fusion-module
+    image: ${DOCKER_REGISTRY}${FUSION_MODULE_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
+    restart: unless-stopped
+    environment:
+      # MQTT Configuration
+      MQTT_BROKER: ia-mqtt-broker
+      MQTT_PORT: 1883
+      no_proxy: "ia-mqtt-broker,${no_proxy}"
+      NO_PROXY: "ia-mqtt-broker,${no_proxy}"
+      # Topic Configuration
+      VISION_TOPIC: pallet_defect_detection
+      TS_TOPIC: alerts/wind_turbine
+      FUSION_TOPIC: fusion/anomaly      
+      # Performance Configuration
+      BUFFER_SIZE: 100
+      
+      # Logging Configuration
+      PYTHONUNBUFFERED: 1
+    depends_on:
+      - ia-mqtt-broker
+    
+    volumes:
+      - ./fusion-module/fusion.py:/app/fusion.py:ro
+    networks:
+      - timeseries_network
   dlstreamer-pipeline-server:
     image: intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
     container_name: dlstreamer-pipeline-server
