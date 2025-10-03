@@ -33,9 +33,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const transcriptStatus = useAppSelector((s) => s.transcript.status);
   const sessionId = useAppSelector((state) => state.ui.sessionId);
   const projectLocation = useAppSelector((state) => state.ui.projectLocation);
-  const handleSummaryComplete = () => {
-    setShowToast(true); 
-  };
+
   const handleCopy = () => {
     const location = `${projectLocation}/${projectName}/${sessionId}`;
     navigator.clipboard.writeText(location);

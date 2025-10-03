@@ -13,12 +13,10 @@ export interface UIState {
   sessionId: string | null;
   uploadedAudioPath: string | null;
   shouldStartSummary: boolean;
-  backendAvailable: boolean; 
   projectLocation: string;
 }
 
 const initialState: UIState = {
-  backendAvailable: true,
   aiProcessing: false,
   summaryEnabled: false,
   summaryLoading: false,
@@ -34,9 +32,6 @@ const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    setBackendAvailable(state, action: PayloadAction<boolean>) {
-      state.backendAvailable = action.payload;
-    },
     startProcessing(state) {
       state.aiProcessing = true;
       state.summaryEnabled = false;
@@ -92,7 +87,6 @@ const uiSlice = createSlice({
 });
 
 export const {
-  setBackendAvailable,
   startProcessing,
   processingFailed,
   transcriptionComplete,

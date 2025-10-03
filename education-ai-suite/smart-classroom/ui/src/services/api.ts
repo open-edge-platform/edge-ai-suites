@@ -10,8 +10,6 @@ const env = (import.meta as any).env ?? {};
 const BASE_URL: string = env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 const HEALTH_TIMEOUT_MS = 2000;
 
-let isBackendHealthy = true; // Cache the backend health status
-
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     promise,
@@ -30,19 +28,16 @@ export async function pingBackend(): Promise<boolean> {
   }
 }
 
-async function ensureBackendHealth(): Promise<void> {
-  if (!isBackendHealthy) {
-    const isHealthy = await pingBackend();
-    if (!isHealthy) {
-      throw new Error('Backend is not healthy. Please try again later.');
-    }
-    isBackendHealthy = true; // Update the cached status
-  }
-}
-
 export async function safeApiCall<T>(apiCall: () => Promise<T>): Promise<T> {
-  await ensureBackendHealth(); // Ensure backend health before making the API call
-  return apiCall();
+  try {
+    return await apiCall();
+  } catch (error) {
+    // Check if it's a network error or backend unavailable
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Backend server is unavailable. Please ensure the backend is running.');
+    }
+    throw error;
+  }
 }
 
 export async function getSettings(): Promise<Settings> {
@@ -115,11 +110,8 @@ return res.json();
 });
 }
 
-function safeParse(line: string): any | null {
-  try { return JSON.parse(line); } catch { return null; }
-}
+
 export async function* streamTranscript(audioPath: string, opts: StreamOptions = {}): AsyncGenerator<StreamEvent> {
-  await ensureBackendHealth();
   const res = await fetch(`${BASE_URL}/transcribe`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -155,7 +147,6 @@ export async function* streamTranscript(audioPath: string, opts: StreamOptions =
 
 
 export async function* streamSummary(sessionId: string, opts: StreamOptions = {}): AsyncGenerator<StreamEvent> {
-  await ensureBackendHealth();
   const res = await fetch(`${BASE_URL}/summarize`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
