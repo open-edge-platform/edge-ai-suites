@@ -2,11 +2,10 @@
 This folder contains the React UI for the Smart Classroom Application.
 
 ## Quick start
-1. Install **Node 20+**
-2. `cd frontend`
-3. `npm install`
-4. `npm run dev` 
-5. `npm run build` → static files in `dist/`
+1. Install **Node 18+**
+2. `npm install`
+3. `npm run dev` 
+4. `npm run build` → static files in `dist/`
 
 ## Core dependencies
 

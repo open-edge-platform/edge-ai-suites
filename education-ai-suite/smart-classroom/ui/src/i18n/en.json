@@ -49,7 +49,7 @@
       "resource": "Resource Utilization",
       "models": "Pre-validated Models",
       "subtitle_configuration": "Platform and software configuration details",
-      "subtitle_resource": "CPU, GPU, Memory, and Power usage over time",
+      "subtitle_resource": "CPU, GPU, NPU, Memory, and Power usage over time",
       "subtitle_models": "Select models for transcripts and summary",
       "platformConfiguration": "Platform Configuration",
       "processor": "Processor",
