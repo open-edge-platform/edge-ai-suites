@@ -272,7 +272,7 @@ services:
       no_proxy: "ia-mqtt-broker,${no_proxy}"
       NO_PROXY: "ia-mqtt-broker,${no_proxy}"
       # Topic Configuration
-      VISION_TOPIC: weld_defect_classification
+      VISION_TOPIC: vision_weld_defect_classification
       TS_TOPIC: ts_weld_defect_detection
       FUSION_TOPIC: fusion/anomaly      
       # Performance Configuration

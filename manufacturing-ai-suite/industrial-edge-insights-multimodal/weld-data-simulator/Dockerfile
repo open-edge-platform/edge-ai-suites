@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-FROM python:3.9-slim
+FROM python:3.13-slim
 
 # Install OpenCV dependencies
 RUN apt-get update && apt-get install -y \
