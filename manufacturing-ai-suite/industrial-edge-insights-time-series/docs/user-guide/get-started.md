@@ -160,7 +160,6 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 >    logs for OPC-UA ingestion after a single data ingestion loop. This message can be ignored.
 >  - `make up_opcua_ingestion` is supported only for `Wind Turbine Anomaly Detection`
 
-
 ### Deploying Wind Turbine Anomaly Detection
 
   - **Using OPC-UA ingestion**:
@@ -171,6 +170,23 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
     ```bash
     make up_mqtt_ingestion app="wind-turbine-anomaly-detection"
     ```
+
+#### Multi-Stream Ingestion
+
+Multi-stream ingestion allows you to process multiple data streams in parallel. This feature is available only for the Wind Turbine Anomaly Detection sample app.
+
+To enable multi-stream ingestion, specify the desired number of parallel streams using the `num_of_streams` parameter:
+
+```bash
+# OPC-UA Multi-Stream Ingestion
+make up_opcua_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
+
+# MQTT Multi-Stream Ingestion
+make up_mqtt_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
+```
+
+- `<NUMBER_OF_STREAMS>`: Replace with the number of parallel streams you want to run (e.g., `3` for three streams).
+
 
 ### Deploying Weld Anomaly Detection
 

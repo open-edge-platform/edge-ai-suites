@@ -18,7 +18,9 @@
     "streamingSummary": "正在流式摘要…",
     "loadingTranscript": "正在加载转录…",
     "analyzingAudio": "正在分析音频…",
-    "summaryReady": "摘要已准备好"
+    "summaryReady": "摘要已准备好",
+    "uploadSuccess": "文件上传成功！",
+    "uploadFailed": "文件上传失败。"
   },
   "settings": {
     "title": "设置",
@@ -48,7 +50,7 @@
     "resource": "资源利用率",
     "models": "预验证模型",
     "subtitle_configuration": "平台和软件配置详情",
-    "subtitle_resource": "中央处理器、图形处理器、内存与功耗随时间变化",
+    "subtitle_resource": "中央处理器、图形处理器、神经处理器、内存与功耗随时间变化",
     "subtitle_models": "选择用于转录和摘要的模型",
     "platformConfiguration": "平台配置",
     "processor": "处理器",
@@ -69,7 +71,7 @@
     "loadingConfiguration": "正在加载配置数据...",
     "cpuUtilization": "中央处理器利用率",
     "gpuUtilization": "图形处理器利用率",
-    "npuUtilization": "NPU 使用率",
+    "npuUtilization": "神经处理器利用率",
     "memoryUtilization": "内存利用率",
     "powerUtilization": "功耗利用率",
     "loadingResource": "正在加载资源数据...",
