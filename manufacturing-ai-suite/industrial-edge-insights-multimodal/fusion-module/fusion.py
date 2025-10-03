@@ -12,9 +12,11 @@ ts_buffer = deque(maxlen=100)
 
 BROKER = os.getenv("MQTT_BROKER", "localhost")
 # BROKER = "localhost"
-VISION_TOPIC = "weld_defect_detection"
-TS_TOPIC = "alerts/weld_defects"
-FUSION_TOPIC = "fusion/anomaly"
+
+VISION_TOPIC = os.getenv("VISION_TOPIC", "vision_weld_defect_classification")
+TS_TOPIC = os.getenv("TS_TOPIC", "ts_weld_defect_detection")
+FUSION_TOPIC = os.getenv("FUSION_TOPIC", "fusion/anomaly")
+
 # 50 ms tolerance (in ns)
 TOLERANCE_NS = int(50e6)
 

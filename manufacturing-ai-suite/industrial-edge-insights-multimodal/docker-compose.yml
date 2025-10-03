@@ -168,9 +168,8 @@ services:
     volumes:
     - "vol_temp_grafana:/tmp"
     - vol_grafana_data:/var/lib/grafana
-    - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
-    - ./grafana/dashboards/datasources_dev.yml:/etc/grafana/provisioning/datasources/datasources.yml
-    - ./grafana/entrypoint.sh:/entrypoint.sh
+    - ./grafana/:/etc/grafana/provisioning/dashboards
+    - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
     
   ia-mqtt-broker:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -273,8 +272,8 @@ services:
       no_proxy: "ia-mqtt-broker,${no_proxy}"
       NO_PROXY: "ia-mqtt-broker,${no_proxy}"
       # Topic Configuration
-      VISION_TOPIC: pallet_defect_detection
-      TS_TOPIC: alerts/wind_turbine
+      VISION_TOPIC: weld_defect_classification
+      TS_TOPIC: ts_weld_defect_detection
       FUSION_TOPIC: fusion/anomaly      
       # Performance Configuration
       BUFFER_SIZE: 100
