@@ -1,3 +1,9 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
 import cv2
 import pandas as pd
 import paho.mqtt.client as mqtt
@@ -9,15 +15,11 @@ import os
 import glob
 from typing import Tuple, Optional
 
-AVI_PATH = "/simulation-data/welding_good.avi"
-CSV_PATH = "/simulation-data/welding_good.csv"
-
 MQTT_BROKER = os.getenv("MQTT_BROKER", "ia-mqtt-broker")
 MEDIAMTX_SERVER = os.getenv("MEDIAMTX_SERVER", "mediamtx")
 MEDIAMTX_PORT = os.getenv("MEDIAMTX_PORT", "8554")
 RTSP_STREAM_NAME = os.getenv("RTSP_STREAM_NAME", "live.stream")
-VIDEO_TOPIC = os.getenv("VIDEO_TOPIC", "weld/video")
-DATA_TOPIC = os.getenv("DATA_TOPIC", "weld-data")
+TS_TOPIC = os.getenv("TS_TOPIC", "weld-data")
 RTSP_URL = f"rtsp://{MEDIAMTX_SERVER}:{MEDIAMTX_PORT}/{RTSP_STREAM_NAME}"
 ffmpeg_proc = None
 client = None
@@ -237,7 +239,7 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
         
         # global published_data
         
-        client.publish(DATA_TOPIC, str(csv_row))
+        client.publish(TS_TOPIC, str(csv_row))
         frame_id += 1
         frame_count += 1
         processed_frame_count += 1

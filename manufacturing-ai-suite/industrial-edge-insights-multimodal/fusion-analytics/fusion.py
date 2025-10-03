@@ -18,7 +18,7 @@ TS_TOPIC = os.getenv("TS_TOPIC", "ts_weld_defect_detection")
 FUSION_TOPIC = os.getenv("FUSION_TOPIC", "fusion/anomaly")
 
 # 50 ms tolerance (in ns)
-TOLERANCE_NS = int(50e6)
+TOLERANCE_NS = int(float(os.getenv("TOLERANCE_NS", 50e6)))
 
 def find_nearest(buf, ts, type):
     """Find message in buffer with nearest timestamp"""
@@ -46,10 +46,6 @@ def diff_timestamps_ns(t1: int, t2: int) -> dict:
         "ms": diff_ns / 1_000_000,
         "s": diff_ns / 1_000_000_000,
     }
-
-    # Example usage
-    t1 = 1757405965894928834
-    t2 = 1757405965841666048
 
     # delta = diff_timestamps_ns(t1, t2)
     # print(f"Δ ns: {delta['ns']}")
@@ -85,17 +81,6 @@ def on_message(client, userdata, msg):
     elif msg.topic == VISION_TOPIC:
         queues["vision"].append(payload)
         # print(f"Received from module2: {payload}")
-
-# # ----------------- HELPER FUNCTIONS -----------------
-# def find_nearest(target_ts: float, queue: deque) -> Optional[int]:
-#     """Return index of nearest timestamp entry in queue."""
-#     if not queue:
-#         return None
-#     nearest_index, _ = min(
-#         enumerate(queue),
-#         key=lambda x: abs(x[1]["timestamp"] - target_ts)
-#     )
-#     return nearest_index
 
 def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any]]:
     """
@@ -160,7 +145,7 @@ client.on_connect = on_connect
 client.on_message = on_message
 client.connect(BROKER, 1883, 60)
 
-print("Fusion service running...")
+print("Fusion Analytics running...")
 
 client.loop_start()
 

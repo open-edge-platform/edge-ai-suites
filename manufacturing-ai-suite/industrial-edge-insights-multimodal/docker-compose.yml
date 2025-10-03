@@ -217,8 +217,7 @@ services:
       MQTT_BROKER: ia-mqtt-broker
       MEDIAMTX_SERVER: mediamtx
       MEDIAMTX_PORT: 8554
-      VIDEO_TOPIC: weld/video
-      DATA_TOPIC: "weld-data"
+      TS_TOPIC: "weld-data"
       RTSP_STREAM_NAME: live.stream
       no_proxy: "ia-mqtt-broker,ia-time-series-analytics-microservice,mediamtx,${no_proxy}"
       NO_PROXY: "ia-mqtt-broker,ia-time-series-analytics-microservice,mediamtx,${no_proxy}"
@@ -260,9 +259,9 @@ services:
       - ia-mqtt-broker
       - mediamtx
       - coturn
-  ia-fusion-module:
-    build: fusion-module/.
-    container_name: ia-fusion-module
+  ia-fusion-analytics:
+    build: fusion-analytics/.
+    container_name: ia-fusion-analytics
     image: ${DOCKER_REGISTRY}${FUSION_MODULE_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
     restart: unless-stopped
     environment:
@@ -277,6 +276,7 @@ services:
       FUSION_TOPIC: fusion/anomaly      
       # Performance Configuration
       BUFFER_SIZE: 100
+      TOLERANCE_NS: 50e6
       
       # Logging Configuration
       PYTHONUNBUFFERED: 1
@@ -284,7 +284,7 @@ services:
       - ia-mqtt-broker
     
     volumes:
-      - ./fusion-module/fusion.py:/app/fusion.py:ro
+      - ./fusion-analytics/fusion.py:/app/fusion.py:ro
     networks:
       - timeseries_network
   dlstreamer-pipeline-server:
