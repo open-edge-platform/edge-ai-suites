@@ -27,6 +27,7 @@ from collections import deque
 from typing import Dict, Optional, Any, Literal
 import json
 import time
+from influxdb import InfluxDBClient as Influx1Client
 # ===================== CONFIGURATION =====================
 # Buffers to store recent messages for timestamp matching
 vision_buffer = deque(maxlen=100)     # Keep last 100 vision messages
@@ -209,8 +210,8 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     # Check if a matching message was found within tolerance
     if target_index is None:
         # No matching entry found, return partial result
-        return {"from": source_entry, "nearest": None, "fused": None}
-    
+        return {"from": source_entry, "nearest": None, "mode": mode, "fused_decision": None}
+
     print(f"Found nearest message at index: {target_index}")
     
     # Remove the matching message from the target queue
@@ -262,6 +263,13 @@ def main():
         print(f"Fusion Analytics starting... Connected to {BROKER}")
         print(f"Tolerance: {TOLERANCE_NS/1e6:.1f} ms")
         print(f"Fusion mode: AND (both systems must agree)")
+        INFLUX_HOST = os.getenv("INFLUXDB_HOST")
+        INFLUX_PORT = int(os.getenv("INFLUXDB_PORT", "8086"))
+        INFLUX_DB = os.getenv("INFLUXDB_DB", "datain")
+
+        INFLUX_USER = os.getenv("INFLUXDB_USERNAME")
+        INFLUX_PASS = os.getenv("INFLUXDB_PASSWORD")
+        influx_client = Influx1Client(host=INFLUX_HOST, port=INFLUX_PORT, username=INFLUX_USER, password=INFLUX_PASS, database=INFLUX_DB)
     except Exception as e:
         print(f"Failed to connect to MQTT broker: {e}")
         exit(1)
@@ -274,20 +282,34 @@ def main():
         while True:
             # Small delay to prevent excessive CPU usage
             time.sleep(1e-3)  # 1 millisecond
-
+            
             # Attempt to fuse available messages
             result = fuse_firstcome(mode="AND")  # Can also try mode="OR"
-
             if result:
                 print("=" * 60)
                 print("FUSED RESULT:", result)
                 print("=" * 60)
+                # Write fused result to InfluxDB (InfluxDB v1.11.8)
+
+                ts = result["from"]["time"] if "time" in result["from"] else result["from"]["metadata"]["time"]
+                json_body = [{
+                    "measurement": "fusion_result",
+                    "time": pd.to_datetime(ts, unit="ns").isoformat(),
+                    "fields": {
+                        "fused_decision": int(result["fused_decision"] if result["fused_decision"] is not None else -1),
+                        "mode": str(result["mode"])
+                    }
+                }]
+                influx_client.write_points(json_body)
+                
+                
 
                 # TODO: Publish fused result to FUSION_TOPIC if needed
                 # client.publish(FUSION_TOPIC, json.dumps(result))
 
     except KeyboardInterrupt:
         print("\nShutting down Fusion Analytics...")
+        influx_client.close()
         client.loop_stop()
         client.disconnect()
         print("Disconnected from MQTT broker.")
