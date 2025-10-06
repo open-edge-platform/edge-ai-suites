@@ -1,8 +1,5 @@
 # Overview
 
-Time Series predictive maintenance use case to detect the anomalous power generation patterns relative to wind speed for the wind turbines.
+This application performs defect detection by integrating both vision and time series analytics. It utilizes camera-based visual inspection and sensor data analysis to identify anomalies in welding data. 
 
-In the Energy Sector, such as wind turbines for power generation, unexpected equipment failures result in costly downtime and operational inefficiencies. Using AI-driven predictive analytics, edge devices can monitor equipment health through sensor data (For example, power generation and wind speed), detect anomalous trends indicative of wear or failure, and alert operators to schedule maintenance proactively. This enhances productivity, reduces costs, and extends equipment lifespan.
-
-This sample application demonstrates a time series use case by detecting the anomalous power generation patterns relative to wind speed. By identifying deviations, it helps optimize maintenance schedules and prevent potential turbine failures, enhancing operational efficiency. 
-
+By combining results from image-based defect detection and time series anomaly detection using logical "AND" or "OR" operations, the system provides more robust and accurate identification of potential defects. This multimodal approach enhances reliability, reduces false positives, and supports smarter decision-making for maintenance.

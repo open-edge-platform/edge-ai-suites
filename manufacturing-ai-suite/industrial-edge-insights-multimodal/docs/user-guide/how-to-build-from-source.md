@@ -1,7 +1,7 @@
 # Build from source
 
 This guide provides step-by-step instructions for building the `Time Series Analytics`
-microservice and `Wind Turbine Anomaly Detection` Sample Application from source.
+microservice and `industrial-edge-insights-multimodal` Sample Application from source.
 Please follow [prerequisites](./get-started.md#configure-docker) and understand [data flow explanation](./get-started.md#data-flow-explanation)
 before proceeding with the below steps.
 
@@ -28,10 +28,10 @@ before proceeding with the below steps.
 
     ```bash
     git clone https://github.com/open-edge-platform/edge-ai-suites.git
-    cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
     # build
-    make build # builds only data simulator (OPC-UA server and MQTT publisher) docker images
+    make build # builds only data simulator docker images
     ```
 
     > **Note:**  

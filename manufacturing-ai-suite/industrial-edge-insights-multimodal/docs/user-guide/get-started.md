@@ -45,7 +45,7 @@ To configure Docker:
 
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 ```
 ## Data flow explanation
 
@@ -55,37 +55,27 @@ OPC-UA simulator and publishing the anomaly alerts to MQTT broker.
 
 ### **Data Sources**
 
-Using the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/simulator/simulation_data/windturbine_data.csv` which is a normalized version of open source data wind turbine dataset (`edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/training/T1.csv`) from <https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset>.
-This data is being ingested into **Telegraf** using the **OPC-UA** protocol using the **OPC-UA** data simulator.
+Using the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator/simulation-data/` which is a normalized version of open source data welding dataset from <https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset>.
+
+Timeseries data is being ingested into **Telegraf** using the **MQTT** protocol using the **weld-data-simulator** data simulator
+Vision data is being ingested into **dlstreamer-pipeline-server** using the **RTSP** protocol using the **weld-data-simulator** data simulator
   
 ### **Data Ingestion**
 
-**Telegraf** through its input plugins (**OPC-UA** OR **MQTT**) gathers the data and sends this input data to both **InfluxDB** and **Time Series Analytics Microservice**.
+**Telegraf** through its input plugins (**MQTT**) gathers the data and sends this input data to both **InfluxDB** and **Time Series Analytics Microservice**.
+**dlstreamer-pipeline-server** gathers the data through RTSP Stream using **mediamxt** as the **RTSP Server**.
+
 
 ### **Data Storage**
 
-**InfluxDB** stores the incoming data coming from **Telegraf**.
+**InfluxDB** stores the incoming data coming from **Telegraf**, **Time Series Analytics Microservice** and **Fusion Analytics** .
 
 ### **Data Processing**
 
 **Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) which is already built-in to the container image. The UDF deployment package is available
-at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice`. Directory details is as below:
+at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/config/time_series_analytics_microservice`. Directory details is as below:
   
 #### **`config.json`**:
-
-The `task` section defines the settings for the Kapacitor task and User-Defined Functions (UDFs).
-
-| Key                     | Description                                                                                     | Example Value                          |
-|-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
-| `model_registry` | Configuration for the Model Registry microservice.       | See below for details.                      |
-| `udfs`                  | Configuration for the User-Defined Functions (UDFs).                                           | See below for details.                 |
-
-**Model Registry Configuration**:
-
-| Key                     | Description                                                                                     | Example Value                          |
-|-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
-| `enable` | Boolean flag to enable fetching UDFs and models from the Model Registry microservice.       | `true` or `false`                      |
-| `version`               | Specifies the version of the task or model to use.                                             | `"1.0"`                                |
 
 **UDFs Configuration**:
 
@@ -131,7 +121,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
    
 #### **`models/`**:
    - The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo.
-     More details on how it is built is accessible at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/training/windturbine/README.md`
+     More details on how it is built is accessible at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/training/windturbine/README.md`
 
 ## Deploy with Docker Compose
 
@@ -140,32 +130,24 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
    - `INFLUXDB_PASSWORD`
    - `VISUALIZER_GRAFANA_USER`
    - `VISUALIZER_GRAFANA_PASSWORD`
-   - `MR_PSQL_PASSWORD`
-   - `MR_MINIO_ACCESS_KEY`
-   - `MR_MINIO_SECRET_KEY`
+   - `MTX_WEBRTCICESERVERS2_0_USERNAME`
+   - `MTX_WEBRTCICESERVERS2_0_PASSWORD`
 
 2. Deploy the sample app, use only one of the following options:
 
 > **NOTE**:
->  - The below `make up_opcua_ingestion` or `make up_mqtt_ingestion` fails if the above required fields are not populated
+>  - The below `make up` fails if the above required fields are not populated
 >    as per the rules called out in `.env` file.
 >  - The sample app is deployed by pulling the pre-built container images of the sample app 
 >    from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY`
->    env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection`)
+>    env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal`)
 >  - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) and in `helm/values.yaml` (for Helm deployments) 
 >    is set to `true` by default, enabling continuous looping of simulator data. To ingest the simulator data only once (without looping), 
 >    set this variable to `false`.
->  - If `CONTINUOUS_SIMULATOR_INGESTION` is set to `false`, you may see the `[inputs.opcua] status not OK for node` message in the `telegraf` 
->    logs for OPC-UA ingestion after a single data ingestion loop. This message can be ignored.
 
-   - **Using OPC-UA ingestion**:
-     ```bash
-     make up_opcua_ingestion
-     ```
-   - **Using MQTT ingestion**:
-     ```bash
-     make up_mqtt_ingestion
-     ```
+    ```bash
+    make up
+    ```
    
 Use the following command to verify that all containers are active and error-free.
 
@@ -204,7 +186,7 @@ make status
     show measurements
     # Run below query to check and output measurement processed
     # by Time Series Analytics microservice
-    select * from wind_turbine_anomaly_data
+    select * from "weld-sensor-anomaly-data"
     ```
 
 2. To check the output in Grafana:
@@ -214,19 +196,19 @@ make status
       > **Note**: Use link `http://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
     
     - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-      in `.env` file and select **Wind Turbine Dashboard**.
+      in `.env` file and select **Multimodal Vision & TS Anomaly Detection Dashboard**.
 
       ![Grafana login](./_images/login_wt.png)
 
     - After login, click on Dashboard 
       ![Menu view](./_images/dashboard.png)
 
-    - Select the `Wind Turbine Dashboard`.
-      ![Windturbine dashboard](./_images/wind_turbine_dashboard.png)
+    - Select the `Multimodal Vision & TS Anomaly Detection Dashboard`.
+      ![Multimodal Vision & TS Anomaly Detection Dashboard](./_images/grafana_dashboard_selection.png)
 
     - One will see the below output.
   
-      ![Anomaly prediction in grid active power](./_images/anomaly_power_prediction.png)
+      ![Anomaly prediction for weld data](./_images/anomaly_prediction.png)
 
 ## Bring down the sample app
 
