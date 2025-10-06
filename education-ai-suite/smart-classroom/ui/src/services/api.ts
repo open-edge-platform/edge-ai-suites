@@ -8,7 +8,7 @@ export type StartSessionResponse = { sessionId: string };
 
 const env = (import.meta as any).env ?? {};
 const BASE_URL: string = env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
-const HEALTH_TIMEOUT_MS = 2000;
+const HEALTH_TIMEOUT_MS = 10000;
 
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([

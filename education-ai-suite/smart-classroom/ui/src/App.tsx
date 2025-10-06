@@ -13,6 +13,7 @@ const App: React.FC = () => {
   const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
   const [retryCount, setRetryCount] = useState(0);
   const [showConnectionLostBanner, setShowConnectionLostBanner] = useState(false);
+  const [consecutiveFailures, setConsecutiveFailures] = useState(0);
 
   const backendStatusRef = useRef(backendStatus);
   useEffect(() => {
@@ -32,8 +33,10 @@ const App: React.FC = () => {
           setShowConnectionLostBanner(false);
           loadSettings();
         }
+        setConsecutiveFailures(0);
       } else {
-        if (backendStatusRef.current !== 'unavailable') {
+        setConsecutiveFailures(prev => prev + 1);
+        if (consecutiveFailures >= 2 && backendStatusRef.current !== 'unavailable') {
           console.warn('Backend health check failed - switching to unavailable');
           setBackendStatus('unavailable');
           setShowConnectionLostBanner(true);
@@ -41,7 +44,8 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.error('Backend health check error:', error);
-      if (backendStatusRef.current !== 'unavailable') {
+      setConsecutiveFailures(prev => prev + 1);
+      if (consecutiveFailures >= 2 && backendStatusRef.current !== 'unavailable') {
         console.warn('Switching to unavailable due to error');
         setBackendStatus('unavailable');
         setShowConnectionLostBanner(true);
@@ -62,24 +66,25 @@ const App: React.FC = () => {
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
+    setConsecutiveFailures(0);
     checkBackendHealth();
   };
 
   useEffect(() => {
     checkBackendHealth();
     const interval = setInterval(() => {
-      console.log('Health check every 5s...');
+      console.log('Health check every 10s...');
       checkBackendHealth();
-    }, 5000);
+    }, 10000); 
 
     return () => clearInterval(interval);
-  }, []); 
+  }, [consecutiveFailures]); 
 
   useEffect(() => {
     if (backendStatus === 'unavailable') {
       const timer = setTimeout(() => {
         setRetryCount(prev => prev + 1);
-      }, 5000);
+      }, 8000); 
 
       return () => clearTimeout(timer);
     }
@@ -106,7 +111,7 @@ const App: React.FC = () => {
         <div className="error-content">
           <h1>Backend Connection Lost</h1>
           <p>The connection to the backend server has been interrupted.</p>
-          <p>Automatically attempting to reconnect every 5 seconds...</p>
+          <p>Automatically attempting to reconnect every 8 seconds...</p>
           {showConnectionLostBanner && (
             <div className="connection-lost-info">
               <p>⚠️ Connection was lost during operation. Any ongoing tasks have been interrupted.</p>
