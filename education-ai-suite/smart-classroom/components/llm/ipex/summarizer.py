@@ -2,12 +2,13 @@ from components.llm.base_summarizer import BaseSummarizer
 from ipex_llm.transformers import AutoModelForCausalLM
 import torch
 import threading
-
+from utils.locks import audio_pipeline_lock
 from utils.config_loader import config
 import logging
 logger = logging.getLogger(__name__)
 
 from transformers import TextIteratorStreamer
+
 
 class Summarizer(BaseSummarizer):
     def __init__(self, model_name, device="xpu", temperature=0.7):
@@ -29,7 +30,7 @@ class Summarizer(BaseSummarizer):
             device = "xpu"
         elif device.startswith("gpu.") and device[4:].isdigit():
             device = f"xpu:{device[4:]}"
-                
+
         # Load model
         if config.models.summarizer.use_cache is not None:
             use_cache = config.models.summarizer.use_cache
@@ -94,31 +95,34 @@ class Summarizer(BaseSummarizer):
                     logger.error(f"Error during generation: {e}")
                     return None
             else:
-                try:
+                class CountingTextIteratorStreamer(TextIteratorStreamer):
+                    def __init__(self, tokenizer, skip_special_tokens=True, skip_prompt=True):
+                        super().__init__(tokenizer, skip_special_tokens=skip_special_tokens, skip_prompt=skip_prompt)
+                        self.total_tokens = 0
 
-                    class CountingTextIteratorStreamer(TextIteratorStreamer):
-                        def __init__(self, tokenizer, skip_special_tokens=True, skip_prompt=True):
-                            super().__init__(tokenizer, skip_special_tokens=skip_special_tokens, skip_prompt=skip_prompt)
-                            self.total_tokens = 0
+                    def put(self, value):
+                        self.total_tokens += 1
+                        super().put(value)
 
-                        def put(self, value):
-                            self.total_tokens += 1
-                            super().put(value)
+                streamer = CountingTextIteratorStreamer(self.tokenizer, skip_special_tokens=True, skip_prompt=True)
 
-                    streamer = CountingTextIteratorStreamer(self.tokenizer, skip_special_tokens=True, skip_prompt=True)
-                    gen_kwargs = dict(
-                        input_ids=model_inputs.input_ids,
-                        max_new_tokens=max_new_tokens,
-                        temperature=self.temperature,
-                        streamer=streamer
-                    )
+                def run_generation():
+                    try:
+                        audio_pipeline_lock.acquire()
+                        gen_kwargs = dict(
+                            input_ids=model_inputs.input_ids,
+                            max_new_tokens=max_new_tokens,
+                            temperature=self.temperature,
+                            streamer=streamer
+                        )
 
-                    torch.xpu.empty_cache()
-                    torch.xpu.synchronize()
-                    
-                    thread = threading.Thread(target=self.model.generate, kwargs=gen_kwargs)
-                    thread.start()
-                    return streamer
-                except Exception as e:
-                    logger.error(f"Error during streaming generation: {e}")
-                    return None
+                        torch.xpu.empty_cache()
+                        torch.xpu.synchronize()
+
+                        self.model.generate(**gen_kwargs)
+                    finally:
+                        audio_pipeline_lock.release()
+                        streamer.end()
+
+                threading.Thread(target=run_generation, daemon=True).start()
+                return streamer

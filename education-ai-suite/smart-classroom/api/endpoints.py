@@ -1,3 +1,4 @@
+import asyncio
 from typing import Optional
 from fastapi import Header, UploadFile
 from fastapi.responses import JSONResponse
@@ -13,9 +14,10 @@ from utils.platform_info import get_platform_and_model_info
 from dto.project_settings import ProjectSettings
 from monitoring.monitor import start_monitoring, stop_monitoring, get_metrics
 from utils.audio_util import save_audio_file
+from utils.locks import audio_pipeline_lock
 import logging
 logger = logging.getLogger(__name__)
-router = APIRouter()
+
 router = APIRouter()
 
 @router.get("/health")
@@ -25,6 +27,10 @@ def health():
 @router.post("/upload-audio")
 def upload_audio(file: UploadFile = File(...)):
     status_code = status.HTTP_201_CREATED
+    
+    if audio_pipeline_lock.locked():
+        raise HTTPException(status_code=429, detail="Session Active, Try Later")
+    
     try:
         filename, filepath = save_audio_file(file)
         return JSONResponse(
@@ -50,16 +56,21 @@ def upload_audio(file: UploadFile = File(...)):
 
 
 @router.post("/transcribe")
-async def transcribe_audio(
+def transcribe_audio(
     request: TranscriptionRequest,
     x_session_id: Optional[str] = Header(None)
 ):
+    
+    if audio_pipeline_lock.locked():
+        raise HTTPException(status_code=429, detail="Session Active, Try Later")
+    
     pipeline = Pipeline(x_session_id)
     audio_path = request.audio_filename
-
+    
     def stream_transcription():
         for chunk_data in pipeline.run_transcription(audio_path):
             yield json.dumps(chunk_data) + "\n"
+                
 
     response = StreamingResponse(stream_transcription(), media_type="application/json")
     response.headers["X-Session-ID"] = pipeline.session_id
@@ -67,10 +78,13 @@ async def transcribe_audio(
 
 
 @router.post("/summarize")
-def summarize_audio(request: SummaryRequest):
+async def summarize_audio(request: SummaryRequest):
+    if audio_pipeline_lock.locked():
+        raise HTTPException(status_code=429, detail="Session Active, Try Later")
+    
     pipeline = Pipeline(request.session_id)
-
-    def event_stream():
+    
+    async def event_stream():
         for token in pipeline.run_summarizer():
             if token.startswith("[ERROR]:"):
                 logger.error(f"Error while summarizing: {token}")
@@ -78,6 +92,7 @@ def summarize_audio(request: SummaryRequest):
                 break
             else:
                 yield json.dumps({"token": token, "error": ""}) + "\n"
+            await asyncio.sleep(0)
 
     return StreamingResponse(event_stream(), media_type="application/json")
 

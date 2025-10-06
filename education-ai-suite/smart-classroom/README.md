@@ -28,12 +28,14 @@ The goal is to transform raw classroom recordings into concise, structured summa
   - Recommended: `whisper-small` or lower for CPU efficiency  
   - Runs on **CPU** (Whisper is CPU-centric)  
 - **FunASR (Paraformer)**  
-  - Recommended for **Chinese transcription** (`paraformer-zh`)  
+  - Recommended for **Chinese transcription** (`paraformer-zh`)
+- ✅ Supports transcription of audio files up to 45 minutes
 
 #### 🧠 Summarization (LLMs)  
 - **Qwen Models (OpenVINO / IPEX)**  
   - ✅ `Qwen2.0-7B-Instruct`  
-  - ✅ `Qwen2.5-7B-Instruct`  
+  - ✅ `Qwen2.5-7B-Instruct`
+- 💡 Summarization supports up to 7,500 tokens (≈ 45 minutes of audio) on GPU
 
 #### ⚖️ Supported Weight Formats  
 - **int8** → Recommended for lower-end CPUs (fast + efficient)  
@@ -54,7 +56,7 @@ The goal is to transform raw classroom recordings into concise, structured summa
 **b. Install Python dependencies:**
 
 ```bash
-pip install -r requirements.txt
+pip install --upgrade -r requirements.txt
 ```
 
 **c. [Optional] Install IPEX-LLM to use IPEX-based LLM model for summarization:**
@@ -111,6 +113,7 @@ python main.py
 
 Bring Up Frontend:
 ```bash
+cd ui
 npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
