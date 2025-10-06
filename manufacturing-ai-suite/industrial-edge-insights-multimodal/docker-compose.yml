@@ -268,8 +268,8 @@ services:
       # MQTT Configuration
       MQTT_BROKER: ia-mqtt-broker
       MQTT_PORT: 1883
-      no_proxy: "ia-mqtt-broker,${no_proxy}"
-      NO_PROXY: "ia-mqtt-broker,${no_proxy}"
+      no_proxy: "ia-mqtt-broker,ia-influxdb,${no_proxy}"
+      NO_PROXY: "ia-mqtt-broker,ia-influxdb,${no_proxy}"
       # Topic Configuration
       VISION_TOPIC: vision_weld_defect_classification
       TS_TOPIC: ts_weld_defect_detection
@@ -277,7 +277,11 @@ services:
       # Performance Configuration
       BUFFER_SIZE: 100
       TOLERANCE_NS: 50e6
-      
+      INFLUXDB_HOST: ia-influxdb
+      INFLUXDB_PORT: 8086
+      INFLUXDB_DB: datain
+      INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
+      INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
       # Logging Configuration
       PYTHONUNBUFFERED: 1
     depends_on:
