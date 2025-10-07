@@ -45,6 +45,14 @@ FUSION_TOPIC = os.getenv("FUSION_TOPIC", "fusion/anomaly")
 # Timestamp Matching Configuration
 # 50 ms tolerance (in nanoseconds) for matching messages by timestamp
 TOLERANCE_NS = int(float(os.getenv("TOLERANCE_NS", 50e6)))
+# Fusion Logic Configuration
+# "AND" means both systems must detect anomaly to raise alert
+# "OR" means either system detecting anomaly raises alert
+FUSION_MODE = str(os.getenv("FUSION_MODE", "AND"))  # "AND" or "OR"
+print(type(FUSION_MODE), FUSION_MODE)
+
+if FUSION_MODE not in ["AND", "OR"]:
+    raise ValueError(f"FUSION_MODE must be 'AND' or 'OR' given value is {FUSION_MODE}mhhvmhvmh")
 
 # ===================== UTILITY FUNCTIONS =====================
 
@@ -284,7 +292,7 @@ def main():
             time.sleep(1e-3)  # 1 millisecond
             
             # Attempt to fuse available messages
-            result = fuse_firstcome(mode="AND")  # Can also try mode="OR"
+            result = fuse_firstcome(mode=FUSION_MODE)  # Can also try mode="OR"
             if result:
                 print("=" * 60)
                 print("FUSED RESULT:", result)

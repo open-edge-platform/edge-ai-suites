@@ -196,9 +196,6 @@ services:
       args:
         TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
         TIMESERIES_UID: ${TIMESERIES_UID}
-        http_proxy:
-        https_proxy:
-        no_proxy:
     depends_on:
       - ia-mqtt-broker
       - mediamtx
@@ -216,14 +213,14 @@ services:
       MQTT_BROKER: ia-mqtt-broker
       MEDIAMTX_SERVER: mediamtx
       MEDIAMTX_PORT: 8554
-      TS_TOPIC: "weld-data"
+      TS_TOPIC: "${TS_TOPIC}"
       RTSP_STREAM_NAME: live.stream
       no_proxy: "ia-mqtt-broker,ia-time-series-analytics-microservice,mediamtx,${no_proxy}"
       NO_PROXY: "ia-mqtt-broker,ia-time-series-analytics-microservice,mediamtx,${no_proxy}"
       TS_MS_SERVER: "ia-time-series-analytics-microservice"
       TS_MS_PORT: ${KAPACITOR_PORT}
       CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
-      SIMULATION_TARGET_FPS: 10
+      SIMULATION_TARGET_FPS: ${SIMULATION_TARGET_FPS}
     networks:
     - timeseries_network
 
@@ -259,7 +256,12 @@ services:
       - mediamtx
       - coturn
   ia-fusion-analytics:
-    build: fusion-analytics/.
+    build:
+      context: $PWD/fusion-analytics
+      dockerfile: $PWD/fusion-analytics/Dockerfile
+      args:
+        TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
+        TIMESERIES_UID: ${TIMESERIES_UID}
     container_name: ia-fusion-analytics
     image: ${DOCKER_REGISTRY}${FUSION_MODULE_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
     restart: unless-stopped
@@ -275,20 +277,20 @@ services:
       FUSION_TOPIC: fusion/anomaly      
       # Performance Configuration
       BUFFER_SIZE: 100
-      TOLERANCE_NS: 50e6
+      TOLERANCE_NS: ${TOLERANCE_NS}
       INFLUXDB_HOST: ia-influxdb
       INFLUXDB_PORT: 8086
       INFLUXDB_DB: datain
       INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
       INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
-      # Logging Configuration
       PYTHONUNBUFFERED: 1
+      FUSION_MODE: ${FUSION_MODE}
     depends_on:
       - ia-mqtt-broker
     networks:
       - timeseries_network
   dlstreamer-pipeline-server:
-    image: intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
+    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
     container_name: dlstreamer-pipeline-server
     hostname: dlstreamer-pipeline-server
     networks:

@@ -29,5 +29,13 @@ ENV PYTHONUNBUFFERED=1
 # Expose any necessary ports (if needed for debugging/monitoring)
 EXPOSE 8080
 
+ARG TIMESERIES_UID
+ARG TIMESERIES_USER_NAME
+
+RUN groupadd $TIMESERIES_USER_NAME -g $TIMESERIES_UID && \
+    useradd -r -u $TIMESERIES_UID -g $TIMESERIES_USER_NAME $TIMESERIES_USER_NAME
+
+USER $TIMESERIES_USER_NAME
+
 # Run the fusion service
 CMD ["python", "fusion.py"]
