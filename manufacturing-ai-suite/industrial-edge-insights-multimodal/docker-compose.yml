@@ -40,8 +40,8 @@ services:
     networks:
     - timeseries_network
     volumes:
-    - ./config/telegraf/entrypoint.sh:/entrypoint.sh
-    - "./config/telegraf/config/:/etc/telegraf"
+    - ./configs/telegraf/entrypoint.sh:/entrypoint.sh
+    - "./configs/telegraf/config/:/etc/telegraf"
 
   ia-influxdb:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -74,8 +74,8 @@ services:
     volumes:
       # Mount for influxdb data directory and configuration
     - vol_influxdb_conf:/var/lib/influxdb:rw
-    - ./config/influxdb/config:/etc/influxdb
-    - ./config/influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
+    - ./configs/influxdb/config:/etc/influxdb
+    - ./configs/influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
   
   ia-time-series-analytics-microservice:
     container_name: ia-time-series-analytics-microservice
@@ -115,10 +115,10 @@ services:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
-    - ./config/time-series-analytics-microservice/udfs/:/tmp/weld_anomaly_detector/udfs/
-    - ./config/time-series-analytics-microservice/tick_scripts/:/tmp/weld_anomaly_detector/tick_scripts/
-    - ./config/time-series-analytics-microservice/config.json:/app/config.json
-    - ./config/time-series-analytics-microservice/models/:/tmp/weld_anomaly_detector/models/
+    - ./configs/time-series-analytics-microservice/udfs/:/tmp/weld_anomaly_detector/udfs/
+    - ./configs/time-series-analytics-microservice/tick_scripts/:/tmp/weld_anomaly_detector/tick_scripts/
+    - ./configs/time-series-analytics-microservice/config.json:/app/config.json
+    - ./configs/time-series-analytics-microservice/models/:/tmp/weld_anomaly_detector/models/
     - /dev/dri:/dev/dri
     - "/run/udev:/run/udev:ro"
     group_add:
@@ -167,8 +167,8 @@ services:
     volumes:
     - "vol_temp_grafana:/tmp"
     - vol_grafana_data:/var/lib/grafana
-    - ./config/grafana/:/etc/grafana/provisioning/dashboards
-    - ./config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    - ./configs/grafana/:/etc/grafana/provisioning/dashboards
+    - ./configs/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
     
   ia-mqtt-broker:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -187,7 +187,7 @@ services:
     networks:
     - timeseries_network
     volumes:
-    - ./config/mqtt-broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    - ./configs/mqtt-broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
 
   ia-weld-data-simulator:
     build:
@@ -241,8 +241,8 @@ services:
       - "${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API
       - "1883:1883" # MQTT TCP Proxy
     volumes:
-      - ./config/nginx/nginx.conf:/tmp/default.conf.template:ro
-      - ./config/nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro
+      - ./configs/nginx/nginx.conf:/tmp/default.conf.template:ro
+      - ./configs/nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro
       - vol_nginx_tmpfs:/opt/nginx/certs:rw
       - vol_nginx_tmpfs:/var/cache/nginx:rw
       - vol_nginx_tmpfs:/run:rw
@@ -337,8 +337,8 @@ services:
     volumes:
     - vol_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
     - /var/tmp:/var/tmp
-    - ./config/dlstreamer-pipeline-server/weld-porosity:/home/pipeline-server/resources/weld-porosity
-    - ./config/dlstreamer-pipeline-server/config.json:/home/pipeline-server/config.json
+    - ./configs/dlstreamer-pipeline-server/weld-porosity:/home/pipeline-server/resources/weld-porosity
+    - ./configs/dlstreamer-pipeline-server/config.json:/home/pipeline-server/config.json
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
       # USB camera devices
