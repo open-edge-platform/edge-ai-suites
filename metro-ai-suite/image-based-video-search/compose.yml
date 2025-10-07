@@ -58,6 +58,9 @@ services:
     build:
       context: src/feature-matching
       dockerfile: Dockerfile
+    read_only: true
+    tmpfs:
+    - /usr/src/app/static
     environment:
       MILVUS_ENDPOINT: http://milvus-db:19530
       COLLECTION_NAME: my_image_collection
@@ -222,6 +225,7 @@ services:
       dockerfile: Dockerfile
     expose:
       - "3000"
+    read_only: true   
     environment:
       - CHOKIDAR_USEPOLLING=true
     depends_on:
@@ -244,6 +248,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "8554:8554"
     build:
       context: src/nginx
       dockerfile: Dockerfile
