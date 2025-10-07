@@ -31,7 +31,7 @@ before proceeding with the below steps.
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
     # build
-    make build # builds only data simulator docker images
+    make build # builds only data simulator and fusion analytics docker images
     ```
 
     > **Note:**  
