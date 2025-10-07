@@ -25,6 +25,8 @@ spec:
       - image: '{{ tpl .Values.app.repository.image $ }}:{{ tpl .Values.app.repository.tag $ | default "latest" }}'
         imagePullPolicy: {{ .Values.app.imagePullPolicy }}
         name: app
+        command: ["npm", "run", "dev"]
+        args: ["--", "--host", "0.0.0.0", "--port", "3000"]
         {{- if .Values.app.resources }}
         resources:
           {{ .Values.app.resources | toYaml | nindent 10 }}

@@ -402,18 +402,6 @@ featurematching:
   # key: milvusui.serviceAccount
   serviceAccount: ""
 
-nginx:
-  enabled: true
-  replicas: 1
-  image:
-    repository: docker.io/library/nginx  # change this
-    tag: 1.27-alpine 
-    pullPolicy: IfNotPresent
-  service:
-    type: ClusterIP
-    portHttp: 80
-    portHttps: 443
-  resources: {}
 
 # imagePullSecrets allows you to specify a name of an image pull secret.
 # You must provide a list of object with the name field set to the name of the
