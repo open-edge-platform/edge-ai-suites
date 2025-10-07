@@ -8,7 +8,7 @@ This section provides instructions for setting up alerts in **Time Series Analyt
 
 #### Configure MQTT Alerts
 
-By default, the following MQTT alerts is configured in `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/config.json` file.
+By default, the following MQTT alerts is configured in `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time-series-analytics-microservice/config.json` file.
 
   ```json
     "alerts": {
@@ -23,10 +23,10 @@ By default, the following MQTT alerts is configured in `edge-ai-suites/manufactu
 #### Configure MQTT Alert in TICK Script
 
 The following snippet shows how to add the MQTT if not 
-already added. By default, the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time_series_analytics_microservice/tick_scripts/windturbine_anomaly_detector.tick` TICK Script has the following configuration done by default.
+already added. By default, the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick` TICK Script has the following configuration done by default.
 
 ```bash
-@windturbine_anomaly_detector()
+@weld_anomaly_detector()
 |alert()
     .crit(lambda: "anomaly_status" > 0)
     .message('Anomaly detected: Wind Speed: {{ index .Fields "wind_speed" }}, Grid Active Power: {{ index .Fields "grid_active_power" }}, Anomaly Status: {{ index .Fields "anomaly_status" }}')

@@ -50,8 +50,8 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 ## Data flow explanation
 
 The data flow remains same as that explained in the [High-Level Architecture](./how-it-works.md).
-Let's specifically talk about the wind turbine anomaly detection use case here by ingesting the data using the
-OPC-UA simulator and publishing the anomaly alerts to MQTT broker.
+Let's specifically talk about the weld defect detection use case here by ingesting the data using the
+RTSP stream and csv data over mqtt using simulator and publishing the anomaly results to MQTT broker for fusion analytics to process it.
 
 ### **Data Sources**
 
@@ -73,7 +73,7 @@ Vision data is being ingested into **dlstreamer-pipeline-server** using the **RT
 ### **Data Processing**
 
 **Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) which is already built-in to the container image. The UDF deployment package is available
-at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/config/time_series_analytics_microservice`. Directory details is as below:
+at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/config/time-series-analytics-microservice`. Directory details is as below:
   
 #### **`config.json`**:
 
@@ -83,8 +83,8 @@ The `udfs` section specifies the details of the UDFs used in the task.
 
 | Key     | Description                                                                 | Example Value                          |
 |---------|-----------------------------------------------------------------------------|----------------------------------------|
-| `name`  | The name of the UDF script.                                                 | `"windturbine_anomaly_detector"`       |
-| `models`| The name of the model file used by the UDF.                                 | `"windturbine_anomaly_detector.pkl"`   |
+| `name`  | The name of the UDF script.                                                 | `"weld_anomaly_detector"`       |
+| `models`| The name of the model file used by the UDF.                                 | `"weld_anomaly_detector.cb"`   |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 ---
@@ -115,13 +115,12 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
      to run on CPU to detect the anomalous power generation data points relative to wind speed.
 
 #### **`tick_scripts/`**:
-   - The TICKScript `windturbine_anomaly_detector.tick` determines processing of the input data coming in.
+   - The TICKScript `weld_anomaly_detector.tick` determines processing of the input data coming in.
      Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts. 
      By default, it is configured to publish the alerts to **MQTT**.
    
 #### **`models/`**:
-   - The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo.
-     More details on how it is built is accessible at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/training/windturbine/README.md`
+   - The `weld_anomaly_detector.cb` is a model built using the Catboost machine learning library.
 
 ## Deploy with Docker Compose
 
