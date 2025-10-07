@@ -225,9 +225,7 @@ services:
       dockerfile: Dockerfile
     expose:
       - "3000"
-    read_only: true   
-    environment:
-      - CHOKIDAR_USEPOLLING=true
+    read_only: true
     depends_on:
       streaming-pipeline:
         condition: service_healthy
