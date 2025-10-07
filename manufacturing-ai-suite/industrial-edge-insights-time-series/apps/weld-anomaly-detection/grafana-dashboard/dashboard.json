@@ -43,7 +43,7 @@
             "axisColorMode": "text",
             "axisGridShow": true,
             "axisLabel": "",
-            "axisPlacement": "left",
+            "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "points",
@@ -55,7 +55,7 @@
               "viz": false
             },
             "insertNulls": false,
-            "lineInterpolation": "linear",
+            "lineInterpolation": "stepBefore",
             "lineStyle": {
               "fill": "solid"
             },
@@ -68,7 +68,7 @@
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "normal"
+              "mode": "none"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -81,22 +81,6 @@
             "steps": [
               {
                 "color": "green"
-              },
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "#EAB839",
-                "value": 0.3
-              },
-              {
-                "color": "#6ED0E0",
-                "value": 0.6
-              },
-              {
-                "color": "dark-red",
-                "value": 1
               }
             ]
           }
@@ -105,30 +89,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Time"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "auto"
-              },
-              {
-                "id": "custom.drawStyle",
-                "value": "line"
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "dark-blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "wind_turbine_anomaly_data.anomaly_status"
+              "options": " Anomaly 1"
             },
             "properties": [
               {
@@ -137,92 +98,13 @@
                   "fixedColor": "dark-red",
                   "mode": "fixed"
                 }
-              },
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              },
-              {
-                "id": "custom.drawStyle",
-                "value": "points"
-              },
-              {
-                "id": "custom.spanNulls",
-                "value": false
-              },
-              {
-                "id": "custom.showPoints",
-                "value": "never"
-              },
-              {
-                "id": "custom.lineInterpolation",
-                "value": "linear"
-              },
-              {
-                "id": "custom.pointSize",
-                "value": 7
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "wind_turbine_anomaly_data.wind_speed"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "super-light-yellow",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "wind_turbine_anomaly_data.grid_active_power"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "dark-green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "__systemRef": "hideSeriesFrom",
-            "matcher": {
-              "id": "byNames",
-              "options": {
-                "mode": "exclude",
-                "names": [
-                  "wind_turbine_anomaly_data.anomaly_status",
-                  "wind_turbine_anomaly_data.grid_active_power"
-                ],
-                "prefix": "All except:",
-                "readOnly": true
-              }
-            },
-            "properties": [
-              {
-                "id": "custom.hideFrom",
-                "value": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": true
-                }
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 20,
+        "h": 15,
         "w": 20,
         "x": 0,
         "y": 0
@@ -233,7 +115,7 @@
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": false
         },
         "timezone": [
           "Asia/Kolkata"
@@ -247,29 +129,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "alias": "",
-          "columns": [],
-          "datasource": {
-            "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
-          },
-          "filters": [],
-          "format": "table",
-          "global_query_id": "",
-          "query": "SELECT grid_active_power,wind_speed from wind_turbine_anomaly_data",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "root_selector": "",
-          "source": "url",
-          "type": "json",
-          "url": "https://github.com/yesoreyeram/grafana-infinity-datasource/blob/main/testdata/users.json",
-          "url_options": {
-            "data": "",
-            "method": "GET"
-          }
-        },
-        {
+          "alias": "Anomaly 0",
           "datasource": {
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
@@ -289,18 +149,18 @@
             }
           ],
           "hide": false,
-          "measurement": "wind_turbine_anomaly_data",
+          "measurement": "weld-sensor-anomaly-data",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT anomaly_status FROM wind_turbine_anomaly_data where anomaly_status>0",
+          "query": "SELECT \"CO2 Weld Flow\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 0) AND $timeFilter",
           "rawQuery": true,
-          "refId": "B",
+          "refId": "A",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "anomaly_status"
+                  "CO2 Weld Flow"
                 ],
                 "type": "field"
               },
@@ -310,239 +170,69 @@
               }
             ]
           ],
-          "tags": []
-        }
-      ],
-      "title": "Anomaly Prediction for Grid Active Power",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "fieldMinMax": false,
-          "mappings": [
+          "tags": [
             {
-              "options": {
-                "match": "null",
-                "result": {
-                  "index": 0,
-                  "text": "0"
-                }
-              },
-              "type": "special"
+              "key": "anomaly_status::field",
+              "operator": "=",
+              "value": "0"
             }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          }
+          ]
         },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 2,
-        "x": 20,
-        "y": 0
-      },
-      "id": 7,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
         {
-          "alias": "Low Anomaly",
+          "alias": " Anomaly 1",
+          "columns": [],
           "datasource": {
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "groupBy": [
+            {
+              "params": [
+                "host::tag"
+              ],
+              "type": "tag"
+            }
+          ],
           "hide": false,
-          "query": "SELECT count(anomaly_status)  FROM \"wind_turbine_anomaly_data\" WHERE (\"anomaly_status\" =  0.3) ",
+          "measurement": "weld-sensor-anomaly-data",
+          "orderByTime": "ASC",
+          "policy": "autogen",
+          "query": "SELECT \"CO2 Weld Flow\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 1) AND $timeFilter",
           "rawQuery": true,
           "refId": "B",
-          "resultFormat": "time_series"
-        }
-      ],
-      "title": "Low Anomaly",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "fieldMinMax": false,
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "index": 0,
-                  "text": "0"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
+          "resultFormat": "time_series",
+          "root_selector": "",
+          "select": [
+            [
               {
-                "color": "green"
+                "params": [
+                  "CO2 Weld Flow"
+                ],
+                "type": "field"
               }
             ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 2,
-        "x": 22,
-        "y": 0
-      },
-      "id": 15,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
           ],
-          "fields": "",
-          "values": true
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "alias": "Medium Anomaly",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
-          },
-          "hide": false,
-          "query": "SELECT count(anomaly_status) FROM \"wind_turbine_anomaly_data\" WHERE (\"anomaly_status\" =  0.6) ",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series"
-        }
-      ],
-      "title": "Medium Anomaly",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "fieldMinMax": false,
-          "mappings": [
+          "source": "url",
+          "tags": [
             {
-              "options": {
-                "match": "null",
-                "result": {
-                  "index": 0,
-                  "text": "0"
-                }
-              },
-              "type": "special"
+              "key": "anomaly_status::field",
+              "operator": "=",
+              "value": "1"
             }
           ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
+          "type": "json",
+          "url": "https://github.com/yesoreyeram/grafana-infinity-datasource/blob/main/testdata/users.json",
+          "url_options": {
+            "data": "",
+            "method": "GET"
           }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 2,
-        "x": 20,
-        "y": 3
-      },
-      "id": 16,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "alias": "High Anomaly",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
-          },
-          "hide": false,
-          "query": "SELECT count(anomaly_status) FROM \"wind_turbine_anomaly_data\" WHERE (\"anomaly_status\" =  1) ",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series"
         }
       ],
-      "title": "High Anomaly",
-      "type": "stat"
+      "title": "Anomaly Prediction for Weld Sensor Data (CO2)",
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -578,10 +268,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 3,
-        "w": 2,
-        "x": 22,
-        "y": 3
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 0
       },
       "id": 14,
       "options": {
@@ -621,7 +311,7 @@
           "measurement": "wind_turbine_anomaly_data",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT count(\"wind_speed\") FROM \"wind_turbine_anomaly_data\" where anomaly_status>0",
+          "query": "SELECT count(\"Pressure\") FROM \"weld-sensor-anomaly-data\" where anomaly_status>0",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -668,10 +358,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 5,
         "w": 4,
         "x": 20,
-        "y": 6
+        "y": 5
       },
       "id": 8,
       "options": {
@@ -694,7 +384,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "query": "SELECT count(Feed) AS mean_value FROM \"weld-data\"\n",
+          "query": "SELECT count(Feed) AS mean_value FROM \"weld-sensor-data\"\n",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
@@ -726,10 +416,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 5,
         "w": 4,
         "x": 20,
-        "y": 13
+        "y": 10
       },
       "id": 9,
       "options": {
@@ -769,7 +459,7 @@
           "measurement": "weld-analytics-data",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT count(\"Feed\") FROM \"weld-analytics-data\" ",
+          "query": "SELECT count(\"Feed\") FROM \"weld-sensor-anomaly-data\" ",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -819,7 +509,7 @@
         "h": 6,
         "w": 5,
         "x": 0,
-        "y": 20
+        "y": 15
       },
       "id": 10,
       "options": {
@@ -842,7 +532,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "query": "SELECT mean(mean_value) FROM (SELECT count(wind_speed) AS mean_value FROM \"weld-data\"  WHERE time > now() - 3m GROUP BY time(1m))\n",
+          "query": "SELECT mean(mean_value) FROM (SELECT count(\"Pressure\") AS mean_value FROM \"weld-sensor-data\"  WHERE time > now() - 3m GROUP BY time(1m))\n",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
@@ -877,7 +567,7 @@
         "h": 6,
         "w": 5,
         "x": 5,
-        "y": 20
+        "y": 15
       },
       "id": 11,
       "options": {
@@ -900,7 +590,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "query": "SELECT mean(mean_value) FROM (SELECT count(wind_speed) AS mean_value FROM wind_turbine_anomaly_data  WHERE time > now() - 3m GROUP BY time(1m))\n",
+          "query": "SELECT mean(mean_value) FROM (SELECT count(\"Pressure\") AS mean_value FROM \"weld-sensor-anomaly-data\" WHERE time > now() - 3m GROUP BY time(1m))\n",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
@@ -939,7 +629,7 @@
         "h": 6,
         "w": 6,
         "x": 10,
-        "y": 20
+        "y": 15
       },
       "id": 12,
       "options": {
@@ -966,13 +656,13 @@
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "query": "SELECT mean(mean_value) FROM (\n  SELECT mean(end_end_time)/1000000000 AS mean_value FROM wind_turbine_anomaly_data\n  WHERE analytic=1 and time > now() - 3m\n  GROUP BY time(1m)\n)\n",
+          "query": "SELECT mean(mean_value) FROM (SELECT mean(end_end_time)/1000000 AS mean_value FROM \"weld-sensor-anomaly-data\" WHERE  time > now() - 3m GROUP BY time(1m))\n",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
         }
       ],
-      "title": "Average Time to Process a point E2E (Seconds)",
+      "title": "Average Time to Process a point E2E (ms)",
       "type": "stat"
     },
     {
@@ -1005,7 +695,7 @@
         "h": 6,
         "w": 6,
         "x": 16,
-        "y": 20
+        "y": 15
       },
       "id": 13,
       "options": {
@@ -1028,13 +718,13 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "query": " select mean(processing_time)/1000000000 from wind_turbine_anomaly_data where analytic=1 order by time desc",
+          "query": " select mean(processing_time)/1000000 from \"weld-sensor-anomaly-data\" order by time desc",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
         }
       ],
-      "title": "Analytics Processing Time (Seconds)",
+      "title": "Analytics Processing Time (ms)",
       "type": "stat"
     }
   ],
@@ -1046,12 +736,12 @@
     "list": []
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Weld Dashboard",
+  "title": "Weld Anomaly Detection Dashboard",
   "uid": "ff7b8081-d0f0-4469-9210-9daf1bd148fd",
   "version": 1
 }

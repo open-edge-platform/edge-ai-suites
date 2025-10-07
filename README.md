@@ -24,7 +24,10 @@ These suites accelerate the development of custom AI solutions by offering:
 
 •	[The Retail AI Suite](retail-ai-suite) accelerates hardware decisions for Retail AI workloads at the edge, featuring use cases such as self-checkout and loss prevention. 
 
+
 •	[The Robotics AI Suite](robotics-ai-suite) provides ready to use samples leveraging AI to help solve common robotics problems such as perception, navigation, simulation, and planning. 
+
+•	[The Education AI Suite](education-ai-suite) is a preview collection of education-focused AI applications, libraries, and benchmarking tools to help developers build solutions faster. 
 
 
 ## Contribute

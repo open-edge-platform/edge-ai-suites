@@ -1,0 +1,3209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "mtl_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>MTL</TELEM:name>
+	<TELEM:description>MTL M/P PMT Normal telemetry in DMU samples definition and transformation rules</TELEM:description>
+	<TELEM:uniqueid>0x1A067002</TELEM:uniqueid>
+	<TELEM:productid>MTL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x160c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LOCAL_VERSION" datatypeIDREF="tgeneric_sample" sampleID="LOCAL_VERSION">
+			<TELC:description>revision of the xml</TELC:description>
+			<TELC:sampleSubGroup>GLOBAL_ID</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>7</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PRODUCT_ID" datatypeIDREF="tgeneric_sample" sampleID="PRODUCT_ID">
+			<TELC:description>product id</TELC:description>
+			<TELC:sampleSubGroup>GLOBAL_ID</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>12</TELC:size>
+			<TELC:lsb>12</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="SOURCEID" datatypeIDREF="tgeneric_sample" sampleID="SOURCEID">
+			<TELC:description>source id for data provider</TELC:description>
+			<TELC:sampleSubGroup>GLOBAL_ID</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>6</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>29</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="reserved" datatypeIDREF="tgeneric_sample" sampleID="reserved">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>GLOBAL_ID</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>2</TELC:size>
+			<TELC:lsb>30</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="XTAL_FREQ" datatypeIDREF="tgeneric_sample" sampleID="XTAL_FREQ">
+			<TELC:description>Represents the clock rate of the XTAL on this silicon.1: 19.2MHz - 19.2e60: 24MHz - 24e63: 25MHz - 25e62: 38.4MHz - 38.4e6</TELC:description>
+			<TELC:sampleSubGroup>STRAPS</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>2</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>33</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="reserved" datatypeIDREF="tgeneric_sample" sampleID="reserved_1">
+			<TELC:description></TELC:description>
+			<TELC:sampleSubGroup>STRAPS</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>6</TELC:size>
+			<TELC:lsb>34</TELC:lsb>
+			<TELC:msb>39</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x160d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VOLTAGE" datatypeIDREF="twp_volts" sampleID="VOLTAGE">
+			<TELC:description>Voltage, to be sent as-is to Internal VR, linear, in steps of 2.5mV. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>11</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>10</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CURRENT" datatypeIDREF="ticc" sampleID="CURRENT">
+			<TELC:description>Current, in U7.3 amps. This is the maximal virus current at state. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>10</TELC:size>
+			<TELC:lsb>11</TELC:lsb>
+			<TELC:msb>20</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PS_OVERRIDE" datatypeIDREF="tgeneric_sample" sampleID="PS_OVERRIDE">
+			<TELC:description>Internal VR power state (PS). valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>21</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FREQ" datatypeIDREF="tratio_100" sampleID="FREQ">
+			<TELC:description>IA Module clock ratio, in units of 100MHz.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VOLTAGE" datatypeIDREF="twp_volts" sampleID="VOLTAGE_1">
+			<TELC:description>Voltage, to be sent as-is to Internal VR, linear, in steps of 2.5mV. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>11</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>42</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CURRENT" datatypeIDREF="ticc" sampleID="CURRENT_1">
+			<TELC:description>Current, in U7.3 amps. This is the maximal virus current at state. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>10</TELC:size>
+			<TELC:lsb>43</TELC:lsb>
+			<TELC:msb>52</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PS_OVERRIDE" datatypeIDREF="tgeneric_sample" sampleID="PS_OVERRIDE_1">
+			<TELC:description>Internal VR power state (PS). valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>53</TELC:lsb>
+			<TELC:msb>55</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FREQ" datatypeIDREF="tratio_100" sampleID="FREQ_1">
+			<TELC:description>IA Module clock ratio, in units of 100MHz.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>56</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x160d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VOLTAGE" datatypeIDREF="twp_volts" sampleID="VOLTAGE_2">
+			<TELC:description>Voltage, to be sent as-is to Internal VR, linear, in steps of 2.5mV. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>11</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>10</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CURRENT" datatypeIDREF="ticc" sampleID="CURRENT_2">
+			<TELC:description>Current, in U7.3 amps. This is the maximal virus current at state. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>10</TELC:size>
+			<TELC:lsb>11</TELC:lsb>
+			<TELC:msb>20</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PS_OVERRIDE" datatypeIDREF="tgeneric_sample" sampleID="PS_OVERRIDE_2">
+			<TELC:description>Internal VR power state (PS). valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>21</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FREQ" datatypeIDREF="tratio_100" sampleID="FREQ_2">
+			<TELC:description>IA Module clock ratio, in units of 100MHz.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VOLTAGE" datatypeIDREF="twp_volts" sampleID="VOLTAGE_3">
+			<TELC:description>Voltage, to be sent as-is to Internal VR, linear, in steps of 2.5mV. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>11</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>42</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CURRENT" datatypeIDREF="ticc" sampleID="CURRENT_3">
+			<TELC:description>Current, in U7.3 amps. This is the maximal virus current at state. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>10</TELC:size>
+			<TELC:lsb>43</TELC:lsb>
+			<TELC:msb>52</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PS_OVERRIDE" datatypeIDREF="tgeneric_sample" sampleID="PS_OVERRIDE_3">
+			<TELC:description>Internal VR power state (PS). valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>53</TELC:lsb>
+			<TELC:msb>55</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FREQ" datatypeIDREF="tratio_100" sampleID="FREQ_3">
+			<TELC:description>IA Module clock ratio, in units of 100MHz.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>56</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_3" sampleID="3" sampleGroupID="Container_3">
+		<TELC:description>Groupname 0x160e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VOLTAGE" datatypeIDREF="twp_volts" sampleID="VOLTAGE_4">
+			<TELC:description>Voltage, to be sent as-is to Internal VR, linear, in steps of 2.5mV. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>11</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>10</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CURRENT" datatypeIDREF="ticc" sampleID="CURRENT_4">
+			<TELC:description>Current, in U7.3 amps. This is the maximal virus current at state. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>10</TELC:size>
+			<TELC:lsb>11</TELC:lsb>
+			<TELC:msb>20</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PS_OVERRIDE" datatypeIDREF="tgeneric_sample" sampleID="PS_OVERRIDE_4">
+			<TELC:description>Internal VR power state (PS). valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>21</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FREQ" datatypeIDREF="tratio_100" sampleID="FREQ_4">
+			<TELC:description>IA Module clock ratio, in units of 100MHz.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VOLTAGE" datatypeIDREF="twp_volts" sampleID="VOLTAGE_5">
+			<TELC:description>Voltage, to be sent as-is to Internal VR, linear, in steps of 2.5mV. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>11</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>42</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CURRENT" datatypeIDREF="ticc" sampleID="CURRENT_5">
+			<TELC:description>Current, in U7.3 amps. This is the maximal virus current at state. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>10</TELC:size>
+			<TELC:lsb>43</TELC:lsb>
+			<TELC:msb>52</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PS_OVERRIDE" datatypeIDREF="tgeneric_sample" sampleID="PS_OVERRIDE_5">
+			<TELC:description>Internal VR power state (PS). valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>53</TELC:lsb>
+			<TELC:msb>55</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FREQ" datatypeIDREF="tratio_100" sampleID="FREQ_5">
+			<TELC:description>IA Module clock ratio, in units of 100MHz.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>56</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_4" sampleID="4" sampleGroupID="Container_4">
+		<TELC:description>Groupname 0x160e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VOLTAGE" datatypeIDREF="twp_volts" sampleID="VOLTAGE_6">
+			<TELC:description>Voltage, to be sent as-is to Internal VR, linear, in steps of 2.5mV. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>11</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>10</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CURRENT" datatypeIDREF="ticc" sampleID="CURRENT_6">
+			<TELC:description>Current, in U7.3 amps. This is the maximal virus current at state. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>10</TELC:size>
+			<TELC:lsb>11</TELC:lsb>
+			<TELC:msb>20</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PS_OVERRIDE" datatypeIDREF="tgeneric_sample" sampleID="PS_OVERRIDE_6">
+			<TELC:description>Internal VR power state (PS). valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>21</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FREQ" datatypeIDREF="tratio_100" sampleID="FREQ_6">
+			<TELC:description>IA Module clock ratio, in units of 100MHz.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VOLTAGE" datatypeIDREF="twp_volts" sampleID="VOLTAGE_7">
+			<TELC:description>Voltage, to be sent as-is to Internal VR, linear, in steps of 2.5mV. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT7</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>11</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>42</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CURRENT" datatypeIDREF="ticc" sampleID="CURRENT_7">
+			<TELC:description>Current, in U7.3 amps. This is the maximal virus current at state. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT7</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>10</TELC:size>
+			<TELC:lsb>43</TELC:lsb>
+			<TELC:msb>52</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PS_OVERRIDE" datatypeIDREF="tgeneric_sample" sampleID="PS_OVERRIDE_7">
+			<TELC:description>Internal VR power state (PS). valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT7</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>53</TELC:lsb>
+			<TELC:msb>55</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FREQ" datatypeIDREF="tratio_100" sampleID="FREQ_7">
+			<TELC:description>IA Module clock ratio, in units of 100MHz.</TELC:description>
+			<TELC:sampleSubGroup>CCP_WORKPOINT7</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>56</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_5" sampleID="5" sampleGroupID="Container_5">
+		<TELC:description>Groupname 0x160f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VOLTAGE" datatypeIDREF="twp_volts" sampleID="VOLTAGE_8">
+			<TELC:description>Voltage, to be sent as-is to Internal VR, linear, in steps of 2.5mV. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>LLC_WORKPOINT</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>11</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>10</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CURRENT" datatypeIDREF="ticc" sampleID="CURRENT_8">
+			<TELC:description>Current, in U7.3 amps. This is the maximal virus current at state. valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>LLC_WORKPOINT</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>10</TELC:size>
+			<TELC:lsb>11</TELC:lsb>
+			<TELC:msb>20</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PS_OVERRIDE" datatypeIDREF="tgeneric_sample" sampleID="PS_OVERRIDE_8">
+			<TELC:description>Internal VR power state (PS). valid only if IA modules are supplied by internal VR, otherwise value should be ignored.</TELC:description>
+			<TELC:sampleSubGroup>LLC_WORKPOINT</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>21</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FREQ" datatypeIDREF="tratio_100" sampleID="FREQ_8">
+			<TELC:description>Ring clock ratio, in units of 100MHz.</TELC:description>
+			<TELC:sampleSubGroup>LLC_WORKPOINT</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="BETA" datatypeIDREF="tbeta" sampleID="BETA">
+			<TELC:description>beta value</TELC:description>
+			<TELC:sampleSubGroup>CEP_WORKPOINT_IA</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CEP_THRESHOLD" datatypeIDREF="tcep_volts" sampleID="CEP_THRESHOLD">
+			<TELC:description>CEP theshold</TELC:description>
+			<TELC:sampleSubGroup>CEP_WORKPOINT_IA</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_6" sampleID="6" sampleGroupID="Container_6">
+		<TELC:description>Groupname 0x160f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VID" datatypeIDREF="tvid" sampleID="VID">
+			<TELC:description>VID Code. Encoding is based on SVID spec.</TELC:description>
+			<TELC:sampleSubGroup>SVID_WORKPOINT</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>7</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PS" datatypeIDREF="tgeneric_sample" sampleID="PS">
+			<TELC:description>VR Power state.0: PS0 - 01: PS1 - 12: PS2 - 23: PS3 - 34: PS4 - 4</TELC:description>
+			<TELC:sampleSubGroup>SVID_WORKPOINT</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>8</TELC:lsb>
+			<TELC:msb>10</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FAST" datatypeIDREF="tgeneric_sample" sampleID="FAST">
+			<TELC:description>Issue FAST ramp, instead of SLOW ramp.</TELC:description>
+			<TELC:sampleSubGroup>SVID_WORKPOINT</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>1</TELC:size>
+			<TELC:lsb>11</TELC:lsb>
+			<TELC:msb>11</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DECAY" datatypeIDREF="tgeneric_sample" sampleID="DECAY">
+			<TELC:description>Issue DECAY ramp, instead of SLOW ramp. Only going down.</TELC:description>
+			<TELC:sampleSubGroup>SVID_WORKPOINT</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>1</TELC:size>
+			<TELC:lsb>12</TELC:lsb>
+			<TELC:msb>12</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="reserved" datatypeIDREF="tgeneric_sample" sampleID="reserved_2">
+			<TELC:description></TELC:description>
+			<TELC:sampleSubGroup>SVID_WORKPOINT</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>13</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="AMPS" datatypeIDREF="tvr_icc" sampleID="AMPS">
+			<TELC:description>Last current sample, in amps.</TELC:description>
+			<TELC:sampleSubGroup>SVID_ICC</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_7" sampleID="7" sampleGroupID="Container_7">
+		<TELC:description>Groupname 0x16100</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CORE0" datatypeIDREF="tgeneric_sample" sampleID="CORE0">
+			<TELC:description>IA Core C-state of BigCore0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>2</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE1" datatypeIDREF="tgeneric_sample" sampleID="CORE1">
+			<TELC:description>IA Core C-state of BigCore0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>3</TELC:lsb>
+			<TELC:msb>5</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE2" datatypeIDREF="tgeneric_sample" sampleID="CORE2">
+			<TELC:description>IA Core C-state of BigCore0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>6</TELC:lsb>
+			<TELC:msb>8</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE3" datatypeIDREF="tgeneric_sample" sampleID="CORE3">
+			<TELC:description>IA Core C-state of BigCore0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>9</TELC:lsb>
+			<TELC:msb>11</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE4" datatypeIDREF="tgeneric_sample" sampleID="CORE4">
+			<TELC:description>IA Core C-state of BigCore0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>12</TELC:lsb>
+			<TELC:msb>14</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE5" datatypeIDREF="tgeneric_sample" sampleID="CORE5">
+			<TELC:description>IA Core C-state of BigCore0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>15</TELC:lsb>
+			<TELC:msb>17</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="Atom Core0" datatypeIDREF="tgeneric_sample" sampleID="Atom Core0">
+			<TELC:description>IA Core C-state of Atom core0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>18</TELC:lsb>
+			<TELC:msb>20</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="Atom Core1" datatypeIDREF="tgeneric_sample" sampleID="Atom Core1">
+			<TELC:description>IA Core C-state of Atom core0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>21</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="Atom Core2" datatypeIDREF="tgeneric_sample" sampleID="Atom Core2">
+			<TELC:description>IA Core C-state of Atom core0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>26</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="Atom Core3" datatypeIDREF="tgeneric_sample" sampleID="Atom Core3">
+			<TELC:description>IA Core C-state of Atom core0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>27</TELC:lsb>
+			<TELC:msb>29</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="Atom Core4" datatypeIDREF="tgeneric_sample" sampleID="Atom Core4">
+			<TELC:description>IA Core C-state of Atom core0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>30</TELC:lsb>
+			<TELC:msb>32</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="Atom Core5" datatypeIDREF="tgeneric_sample" sampleID="Atom Core5">
+			<TELC:description>IA Core C-state of Atom core0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>33</TELC:lsb>
+			<TELC:msb>35</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="Atom Core6" datatypeIDREF="tgeneric_sample" sampleID="Atom Core6">
+			<TELC:description>IA Core C-state of Atom core0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>36</TELC:lsb>
+			<TELC:msb>38</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="Atom Core7" datatypeIDREF="tgeneric_sample" sampleID="Atom Core7">
+			<TELC:description>IA Core C-state of Atom core0: C01: C13: C67: CRST</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>39</TELC:lsb>
+			<TELC:msb>41</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="Ring" datatypeIDREF="tgeneric_sample" sampleID="Ring">
+			<TELC:description>LLC/Ring C-state0: C0 - 02: C3 - 23: C6 - 37: RST - 7</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>3</TELC:size>
+			<TELC:lsb>42</TELC:lsb>
+			<TELC:msb>44</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="reserved" datatypeIDREF="tgeneric_sample" sampleID="reserved_3">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>IA_RING_CSTATES</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>19</TELC:size>
+			<TELC:lsb>45</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_8" sampleID="8" sampleGroupID="Container_8">
+		<TELC:description>Groupname 0x16108</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CORE0" datatypeIDREF="tgeneric_sample" sampleID="CORE0_1">
+			<TELC:description>Cdyn level granted</TELC:description>
+			<TELC:sampleSubGroup>CDYN_LEVEL</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>4</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>3</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE1" datatypeIDREF="tgeneric_sample" sampleID="CORE1_1">
+			<TELC:description>Cdyn level granted</TELC:description>
+			<TELC:sampleSubGroup>CDYN_LEVEL</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>4</TELC:size>
+			<TELC:lsb>4</TELC:lsb>
+			<TELC:msb>7</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE2" datatypeIDREF="tgeneric_sample" sampleID="CORE2_1">
+			<TELC:description>Cdyn level granted</TELC:description>
+			<TELC:sampleSubGroup>CDYN_LEVEL</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>4</TELC:size>
+			<TELC:lsb>8</TELC:lsb>
+			<TELC:msb>11</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE3" datatypeIDREF="tgeneric_sample" sampleID="CORE3_1">
+			<TELC:description>Cdyn level granted</TELC:description>
+			<TELC:sampleSubGroup>CDYN_LEVEL</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>4</TELC:size>
+			<TELC:lsb>12</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE4" datatypeIDREF="tgeneric_sample" sampleID="CORE4_1">
+			<TELC:description>Cdyn level granted</TELC:description>
+			<TELC:sampleSubGroup>CDYN_LEVEL</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>4</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>19</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE5" datatypeIDREF="tgeneric_sample" sampleID="CORE5_1">
+			<TELC:description>Cdyn level granted</TELC:description>
+			<TELC:sampleSubGroup>CDYN_LEVEL</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>4</TELC:size>
+			<TELC:lsb>20</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="reserved" datatypeIDREF="tgeneric_sample" sampleID="reserved_4">
+			<TELC:description></TELC:description>
+			<TELC:sampleSubGroup>CDYN_LEVEL</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS0" datatypeIDREF="ttemperature" sampleID="DTS0">
+			<TELC:description>Min temp</TELC:description>
+			<TELC:sampleSubGroup>ATOM_MODULE_TEMPERATURE0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>39</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS1" datatypeIDREF="ttemperature" sampleID="DTS1">
+			<TELC:description>Max temp</TELC:description>
+			<TELC:sampleSubGroup>ATOM_MODULE_TEMPERATURE0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>40</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS2" datatypeIDREF="tgeneric_sample" sampleID="DTS2">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>ATOM_MODULE_TEMPERATURE0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>55</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS3" datatypeIDREF="tgeneric_sample" sampleID="DTS3">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>ATOM_MODULE_TEMPERATURE0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>56</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_9" sampleID="9" sampleGroupID="Container_9">
+		<TELC:description>Groupname 0x16110</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DTS0" datatypeIDREF="ttemperature" sampleID="DTS0_1">
+			<TELC:description>Min temp</TELC:description>
+			<TELC:sampleSubGroup>ATOM_MODULE_TEMPERATURE1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>7</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS1" datatypeIDREF="ttemperature" sampleID="DTS1_1">
+			<TELC:description>Max temp</TELC:description>
+			<TELC:sampleSubGroup>ATOM_MODULE_TEMPERATURE1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>8</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS2" datatypeIDREF="tgeneric_sample" sampleID="DTS2_1">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>ATOM_MODULE_TEMPERATURE1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS3" datatypeIDREF="tgeneric_sample" sampleID="DTS3_1">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>ATOM_MODULE_TEMPERATURE1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS0" datatypeIDREF="ttemperature" sampleID="DTS0_2">
+			<TELC:description>Min temp</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>39</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS1" datatypeIDREF="ttemperature" sampleID="DTS1_2">
+			<TELC:description>Max temp</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>40</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS2" datatypeIDREF="tgeneric_sample" sampleID="DTS2_2">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>55</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS3" datatypeIDREF="tgeneric_sample" sampleID="DTS3_2">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>56</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_10" sampleID="10" sampleGroupID="Container_10">
+		<TELC:description>Groupname 0x16118</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DTS0" datatypeIDREF="ttemperature" sampleID="DTS0_3">
+			<TELC:description>Min temp</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>7</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS1" datatypeIDREF="ttemperature" sampleID="DTS1_3">
+			<TELC:description>Max temp</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>8</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS2" datatypeIDREF="tgeneric_sample" sampleID="DTS2_3">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS3" datatypeIDREF="tgeneric_sample" sampleID="DTS3_3">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS0" datatypeIDREF="ttemperature" sampleID="DTS0_4">
+			<TELC:description>Min temp</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>39</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS1" datatypeIDREF="ttemperature" sampleID="DTS1_4">
+			<TELC:description>Max temp</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>40</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS2" datatypeIDREF="tgeneric_sample" sampleID="DTS2_4">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>55</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS3" datatypeIDREF="tgeneric_sample" sampleID="DTS3_4">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>56</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_11" sampleID="11" sampleGroupID="Container_11">
+		<TELC:description>Groupname 0x16120</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DTS0" datatypeIDREF="ttemperature" sampleID="DTS0_5">
+			<TELC:description>Min temp</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>7</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS1" datatypeIDREF="ttemperature" sampleID="DTS1_5">
+			<TELC:description>Max temp</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>8</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS2" datatypeIDREF="tgeneric_sample" sampleID="DTS2_5">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS3" datatypeIDREF="tgeneric_sample" sampleID="DTS3_5">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS0" datatypeIDREF="ttemperature" sampleID="DTS0_6">
+			<TELC:description>Min temp</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>39</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS1" datatypeIDREF="ttemperature" sampleID="DTS1_6">
+			<TELC:description>Max temp</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>40</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS2" datatypeIDREF="tgeneric_sample" sampleID="DTS2_6">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>55</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS3" datatypeIDREF="tgeneric_sample" sampleID="DTS3_6">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>56</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_12" sampleID="12" sampleGroupID="Container_12">
+		<TELC:description>Groupname 0x16128</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DTS0" datatypeIDREF="ttemperature" sampleID="DTS0_7">
+			<TELC:description>Min temp</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>7</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS1" datatypeIDREF="ttemperature" sampleID="DTS1_7">
+			<TELC:description>Max temp</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>8</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS2" datatypeIDREF="tgeneric_sample" sampleID="DTS2_7">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DTS3" datatypeIDREF="tgeneric_sample" sampleID="DTS3_7">
+			<TELC:description>NA - not updated by Pcode</TELC:description>
+			<TELC:sampleSubGroup>CORE_TEMPERATURE5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_1">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_13" sampleID="13" sampleGroupID="Container_13">
+		<TELC:description>Groupname 0x16130</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_2">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_3">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_4">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_5">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_14" sampleID="14" sampleGroupID="Container_14">
+		<TELC:description>Groupname 0x16138</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_6">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_7">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE7</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_8">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE8</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_9">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE9</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_15" sampleID="15" sampleGroupID="Container_15">
+		<TELC:description>Groupname 0x16140</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_10">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE10</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_11">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE11</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_12">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE12</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE" datatypeIDREF="tscalability" sampleID="CORE_13">
+			<TELC:description>Current atom module scalability measurement. Calculated as unstalled clocks divided by total active clocks.</TELC:description>
+			<TELC:sampleSubGroup>IA_SCALABILITY_CORE13</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_16" sampleID="16" sampleGroupID="Container_16">
+		<TELC:description>Groupname 0x16148</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO">
+			<TELC:description>P_alpha calculation. This represents the maximum allowed clock frequency on that core.</TELC:description>
+			<TELC:sampleSubGroup>IA_P_ALPHA_TARGET_CCP0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>7</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_1">
+			<TELC:description>P_alpha calculation. This represents the maximum allowed clock frequency on that core.</TELC:description>
+			<TELC:sampleSubGroup>IA_P_ALPHA_TARGET_CCP1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>8</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_2">
+			<TELC:description>P_alpha calculation. This represents the maximum allowed clock frequency on that core.</TELC:description>
+			<TELC:sampleSubGroup>IA_P_ALPHA_TARGET_CCP2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_3">
+			<TELC:description>P_alpha calculation. This represents the maximum allowed clock frequency on that core.</TELC:description>
+			<TELC:sampleSubGroup>IA_P_ALPHA_TARGET_CCP3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_4">
+			<TELC:description>P_alpha calculation. This represents the maximum allowed clock frequency on that core.</TELC:description>
+			<TELC:sampleSubGroup>IA_P_ALPHA_TARGET_CCP4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>39</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_5">
+			<TELC:description>P_alpha calculation. This represents the maximum allowed clock frequency on that core.</TELC:description>
+			<TELC:sampleSubGroup>IA_P_ALPHA_TARGET_CCP5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>40</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_6">
+			<TELC:description>P_alpha calculation. This represents the maximum allowed clock frequency on that core.</TELC:description>
+			<TELC:sampleSubGroup>IA_P_ALPHA_TARGET_CCP6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>55</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_7">
+			<TELC:description>P_alpha calculation. This represents the maximum allowed clock frequency on that core.</TELC:description>
+			<TELC:sampleSubGroup>IA_P_ALPHA_TARGET_CCP7</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>56</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_17" sampleID="17" sampleGroupID="Container_17">
+		<TELC:description>Groupname 0x16150</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_8">
+			<TELC:description>Current autonomous frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_AUTONOMOUS_TARGET_CCP0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>7</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_9">
+			<TELC:description>Current autonomous frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_AUTONOMOUS_TARGET_CCP1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>8</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_10">
+			<TELC:description>Current autonomous frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_AUTONOMOUS_TARGET_CCP2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_11">
+			<TELC:description>Current autonomous frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_AUTONOMOUS_TARGET_CCP3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_12">
+			<TELC:description>Current autonomous frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_AUTONOMOUS_TARGET_CCP4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>39</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_13">
+			<TELC:description>Current autonomous frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_AUTONOMOUS_TARGET_CCP5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>40</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_14">
+			<TELC:description>Current autonomous frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_AUTONOMOUS_TARGET_CCP6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>55</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RATIO" datatypeIDREF="tratio_100" sampleID="RATIO_15">
+			<TELC:description>Current autonomous frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_AUTONOMOUS_TARGET_CCP7</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>56</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_18" sampleID="18" sampleGroupID="Container_18">
+		<TELC:description>Groupname 0x16158</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="IA_PE" datatypeIDREF="tratio_100" sampleID="IA_PE">
+			<TELC:description>Current efficient frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_EFFICIENT_FREQUENCY_CCP0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>7</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="IA_PE" datatypeIDREF="tratio_100" sampleID="IA_PE_1">
+			<TELC:description>Current efficient frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_EFFICIENT_FREQUENCY_CCP1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>8</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="IA_PE" datatypeIDREF="tratio_100" sampleID="IA_PE_2">
+			<TELC:description>Current efficient frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_EFFICIENT_FREQUENCY_CCP2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>23</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="IA_PE" datatypeIDREF="tratio_100" sampleID="IA_PE_3">
+			<TELC:description>Current efficient frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_EFFICIENT_FREQUENCY_CCP3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>24</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="IA_PE" datatypeIDREF="tratio_100" sampleID="IA_PE_4">
+			<TELC:description>Current efficient frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_EFFICIENT_FREQUENCY_CCP4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>39</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="IA_PE" datatypeIDREF="tratio_100" sampleID="IA_PE_5">
+			<TELC:description>Current efficient frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_EFFICIENT_FREQUENCY_CCP5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>40</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="IA_PE" datatypeIDREF="tratio_100" sampleID="IA_PE_6">
+			<TELC:description>Current efficient frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_EFFICIENT_FREQUENCY_CCP6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>55</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="IA_PE" datatypeIDREF="tratio_100" sampleID="IA_PE_7">
+			<TELC:description>Current efficient frequency target for that IA module</TELC:description>
+			<TELC:sampleSubGroup>IA_EFFICIENT_FREQUENCY_CCP7</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>8</TELC:size>
+			<TELC:lsb>56</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_19" sampleID="19" sampleGroupID="Container_19">
+		<TELC:description>Groupname 0x16160</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PEAK_CURRENT" datatypeIDREF="tsirp_icc" sampleID="PEAK_CURRENT">
+			<TELC:description>Peak current observed</TELC:description>
+			<TELC:sampleSubGroup>SIRP_TELEMETRY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>11</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>10</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="SIRP_CURRENT_INPUT_TOTAL_IMON" datatypeIDREF="tsirp_icc" sampleID="SIRP_CURRENT_INPUT_TOTAL_IMON">
+			<TELC:description>Sample current Global IMON Summation input</TELC:description>
+			<TELC:sampleSubGroup>SIRP_TELEMETRY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>11</TELC:size>
+			<TELC:lsb>11</TELC:lsb>
+			<TELC:msb>21</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="THROTTLE_ACCUM" datatypeIDREF="tgeneric_sample" sampleID="THROTTLE_ACCUM">
+			<TELC:description>Upper 10 bits of a 16 bit counter, incremented for each 2.5ns clock cycle Throttle is asserted. 16 bit counter incr @ 2.5n = 163 us with ~150 ns granularity due to lower 6 bits hidden.</TELC:description>
+			<TELC:sampleSubGroup>SIRP_TELEMETRY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>10</TELC:size>
+			<TELC:lsb>22</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="IMON_LOW_THRESHOLD" datatypeIDREF="tsirp_icc" sampleID="IMON_LOW_THRESHOLD">
+			<TELC:description>Low Threshold for Global IMON Sum</TELC:description>
+			<TELC:sampleSubGroup>SIRP_THRESHOLD_CONFIG</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>13</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>44</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="IMON_HIGH_THRESHOLD" datatypeIDREF="tsirp_icc" sampleID="IMON_HIGH_THRESHOLD">
+			<TELC:description>High Threshold for Global IMON Sum</TELC:description>
+			<TELC:sampleSubGroup>SIRP_THRESHOLD_CONFIG</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>13</TELC:size>
+			<TELC:lsb>45</TELC:lsb>
+			<TELC:msb>57</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="res" datatypeIDREF="tgeneric_sample" sampleID="res">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SIRP_THRESHOLD_CONFIG</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>6</TELC:size>
+			<TELC:lsb>58</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_20" sampleID="20" sampleGroupID="Container_20">
+		<TELC:description>Groupname 0x16168</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RESERVED[0]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_21" sampleID="21" sampleGroupID="Container_21">
+		<TELC:description>Groupname 0x16170</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_1">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[0]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_22" sampleID="22" sampleGroupID="Container_22">
+		<TELC:description>Groupname 0x16178</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_2">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[1]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_23" sampleID="23" sampleGroupID="Container_23">
+		<TELC:description>Groupname 0x16180</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_3">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[2]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_24" sampleID="24" sampleGroupID="Container_24">
+		<TELC:description>Groupname 0x16188</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_4">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[3]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_25" sampleID="25" sampleGroupID="Container_25">
+		<TELC:description>Groupname 0x16190</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_5">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[4]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_26" sampleID="26" sampleGroupID="Container_26">
+		<TELC:description>Groupname 0x16198</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_6">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[5]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_27" sampleID="27" sampleGroupID="Container_27">
+		<TELC:description>Groupname 0x161a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_7">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[6]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_28" sampleID="28" sampleGroupID="Container_28">
+		<TELC:description>Groupname 0x161a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_8">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[7]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_29" sampleID="29" sampleGroupID="Container_29">
+		<TELC:description>Groupname 0x161b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_9">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[8]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_30" sampleID="30" sampleGroupID="Container_30">
+		<TELC:description>Groupname 0x161b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_10">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[9]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_31" sampleID="31" sampleGroupID="Container_31">
+		<TELC:description>Groupname 0x161c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_11">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[10]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_32" sampleID="32" sampleGroupID="Container_32">
+		<TELC:description>Groupname 0x161c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_12">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[11]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_33" sampleID="33" sampleGroupID="Container_33">
+		<TELC:description>Groupname 0x161d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_13">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[12]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_34" sampleID="34" sampleGroupID="Container_34">
+		<TELC:description>Groupname 0x161d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_14">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[13]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_35" sampleID="35" sampleGroupID="Container_35">
+		<TELC:description>Groupname 0x161e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_15">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[14]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_36" sampleID="36" sampleGroupID="Container_36">
+		<TELC:description>Groupname 0x161e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="rsvd" datatypeIDREF="tgeneric_sample" sampleID="rsvd_16">
+			<TELC:description>reserved</TELC:description>
+			<TELC:sampleSubGroup>SMPL_RSVD_1_to_16[15]</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_37" sampleID="37" sampleGroupID="Container_37">
+		<TELC:description>Groupname 0x161f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_RESIDENCY_CCP_0" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_THERM_RESIDENCY_CCP_0">
+			<TELC:description>slow limit THERM has limited performance for CCP0</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_RESIDENCY_CCP_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_38" sampleID="38" sampleGroupID="Container_38">
+		<TELC:description>Groupname 0x161f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_RESIDENCY_CCP_1" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_THERM_RESIDENCY_CCP_1">
+			<TELC:description>slow limit THERM has limited performance for CCP1</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_RESIDENCY_CCP_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_39" sampleID="39" sampleGroupID="Container_39">
+		<TELC:description>Groupname 0x16200</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_RESIDENCY_CCP_2" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_THERM_RESIDENCY_CCP_2">
+			<TELC:description>slow limit THERM has limited performance for CCP2</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_RESIDENCY_CCP_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_40" sampleID="40" sampleGroupID="Container_40">
+		<TELC:description>Groupname 0x16208</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_RESIDENCY_CCP_3" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_THERM_RESIDENCY_CCP_3">
+			<TELC:description>slow limit THERM has limited performance for CCP3</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_RESIDENCY_CCP_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_41" sampleID="41" sampleGroupID="Container_41">
+		<TELC:description>Groupname 0x16210</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_RESIDENCY_CCP_4" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_THERM_RESIDENCY_CCP_4">
+			<TELC:description>slow limit THERM has limited performance for CCP4</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_RESIDENCY_CCP_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_42" sampleID="42" sampleGroupID="Container_42">
+		<TELC:description>Groupname 0x16218</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_RESIDENCY_CCP_5" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_THERM_RESIDENCY_CCP_5">
+			<TELC:description>slow limit THERM has limited performance for CCP5</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_RESIDENCY_CCP_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_43" sampleID="43" sampleGroupID="Container_43">
+		<TELC:description>Groupname 0x16220</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_RESIDENCY_CCP_6" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_THERM_RESIDENCY_CCP_6">
+			<TELC:description>slow limit THERM has limited performance for CCP6</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_RESIDENCY_CCP_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_44" sampleID="44" sampleGroupID="Container_44">
+		<TELC:description>Groupname 0x16228</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_RESIDENCY_CCP_7" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_THERM_RESIDENCY_CCP_7">
+			<TELC:description>slow limit THERM has limited performance for CCP7</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_RESIDENCY_CCP_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_45" sampleID="45" sampleGroupID="Container_45">
+		<TELC:description>Groupname 0x16230</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_LLC_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_THERM_LLC_RESIDENCY">
+			<TELC:description>slow limit THERM has limited performance for LLC.</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_LLC_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_46" sampleID="46" sampleGroupID="Container_46">
+		<TELC:description>Groupname 0x16238</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_POWER_RESIDENCY_CCP_0" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_POWER_RESIDENCY_CCP_0">
+			<TELC:description>slow limit POWER has limited performance for CCP0</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_RESIDENCY_CCP_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_47" sampleID="47" sampleGroupID="Container_47">
+		<TELC:description>Groupname 0x16240</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_POWER_RESIDENCY_CCP_1" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_POWER_RESIDENCY_CCP_1">
+			<TELC:description>slow limit POWER has limited performance for CCP1</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_RESIDENCY_CCP_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_48" sampleID="48" sampleGroupID="Container_48">
+		<TELC:description>Groupname 0x16248</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_POWER_RESIDENCY_CCP_2" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_POWER_RESIDENCY_CCP_2">
+			<TELC:description>slow limit POWER has limited performance for CCP2</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_RESIDENCY_CCP_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_49" sampleID="49" sampleGroupID="Container_49">
+		<TELC:description>Groupname 0x16250</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_POWER_RESIDENCY_CCP_3" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_POWER_RESIDENCY_CCP_3">
+			<TELC:description>slow limit POWER has limited performance for CCP3</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_RESIDENCY_CCP_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_50" sampleID="50" sampleGroupID="Container_50">
+		<TELC:description>Groupname 0x16258</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_POWER_RESIDENCY_CCP_4" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_POWER_RESIDENCY_CCP_4">
+			<TELC:description>slow limit POWER has limited performance for CCP4</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_RESIDENCY_CCP_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_51" sampleID="51" sampleGroupID="Container_51">
+		<TELC:description>Groupname 0x16260</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_POWER_RESIDENCY_CCP_5" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_POWER_RESIDENCY_CCP_5">
+			<TELC:description>slow limit POWER has limited performance for CCP5</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_RESIDENCY_CCP_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_52" sampleID="52" sampleGroupID="Container_52">
+		<TELC:description>Groupname 0x16268</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_POWER_RESIDENCY_CCP_6" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_POWER_RESIDENCY_CCP_6">
+			<TELC:description>slow limit POWER has limited performance for CCP6</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_RESIDENCY_CCP_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_53" sampleID="53" sampleGroupID="Container_53">
+		<TELC:description>Groupname 0x16270</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_POWER_RESIDENCY_CCP_7" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_POWER_RESIDENCY_CCP_7">
+			<TELC:description>slow limit POWER has limited performance for CCP7</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_RESIDENCY_CCP_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_54" sampleID="54" sampleGroupID="Container_54">
+		<TELC:description>Groupname 0x16278</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_RESIDENCY_CCP_0" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_EDP_RESIDENCY_CCP_0">
+			<TELC:description>slow limit EDP has limited performance for CCP0</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_RESIDENCY_CCP_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_55" sampleID="55" sampleGroupID="Container_55">
+		<TELC:description>Groupname 0x16280</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_RESIDENCY_CCP_1" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_EDP_RESIDENCY_CCP_1">
+			<TELC:description>slow limit EDP has limited performance for CCP1</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_RESIDENCY_CCP_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_56" sampleID="56" sampleGroupID="Container_56">
+		<TELC:description>Groupname 0x16288</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_RESIDENCY_CCP_2" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_EDP_RESIDENCY_CCP_2">
+			<TELC:description>slow limit EDP has limited performance for CCP2</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_RESIDENCY_CCP_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_57" sampleID="57" sampleGroupID="Container_57">
+		<TELC:description>Groupname 0x16290</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_RESIDENCY_CCP_3" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_EDP_RESIDENCY_CCP_3">
+			<TELC:description>slow limit EDP has limited performance for CCP3</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_RESIDENCY_CCP_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_58" sampleID="58" sampleGroupID="Container_58">
+		<TELC:description>Groupname 0x16298</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_RESIDENCY_CCP_4" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_EDP_RESIDENCY_CCP_4">
+			<TELC:description>slow limit EDP has limited performance for CCP4</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_RESIDENCY_CCP_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_59" sampleID="59" sampleGroupID="Container_59">
+		<TELC:description>Groupname 0x162a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_RESIDENCY_CCP_5" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_EDP_RESIDENCY_CCP_5">
+			<TELC:description>slow limit EDP has limited performance for CCP5</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_RESIDENCY_CCP_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_60" sampleID="60" sampleGroupID="Container_60">
+		<TELC:description>Groupname 0x162a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_RESIDENCY_CCP_6" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_EDP_RESIDENCY_CCP_6">
+			<TELC:description>slow limit EDP has limited performance for CCP6</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_RESIDENCY_CCP_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_61" sampleID="61" sampleGroupID="Container_61">
+		<TELC:description>Groupname 0x162b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_RESIDENCY_CCP_7" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_EDP_RESIDENCY_CCP_7">
+			<TELC:description>slow limit EDP has limited performance for CCP7</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_RESIDENCY_CCP_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_62" sampleID="62" sampleGroupID="Container_62">
+		<TELC:description>Groupname 0x162b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_LLC_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_EDP_LLC_RESIDENCY">
+			<TELC:description>slow limit EDP has limited performance for LLC.</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_LLC_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_63" sampleID="63" sampleGroupID="Container_63">
+		<TELC:description>Groupname 0x162c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_RESIDENCY_CCP_0" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_OTHER_RESIDENCY_CCP_0">
+			<TELC:description>slow limit OTHER has limited performance for CCP0</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_RESIDENCY_CCP_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_64" sampleID="64" sampleGroupID="Container_64">
+		<TELC:description>Groupname 0x162c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_RESIDENCY_CCP_1" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_OTHER_RESIDENCY_CCP_1">
+			<TELC:description>slow limit OTHER has limited performance for CCP1</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_RESIDENCY_CCP_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_65" sampleID="65" sampleGroupID="Container_65">
+		<TELC:description>Groupname 0x162d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_RESIDENCY_CCP_2" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_OTHER_RESIDENCY_CCP_2">
+			<TELC:description>slow limit OTHER has limited performance for CCP2</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_RESIDENCY_CCP_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_66" sampleID="66" sampleGroupID="Container_66">
+		<TELC:description>Groupname 0x162d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_RESIDENCY_CCP_3" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_OTHER_RESIDENCY_CCP_3">
+			<TELC:description>slow limit OTHER has limited performance for CCP3</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_RESIDENCY_CCP_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_67" sampleID="67" sampleGroupID="Container_67">
+		<TELC:description>Groupname 0x162e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_RESIDENCY_CCP_4" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_OTHER_RESIDENCY_CCP_4">
+			<TELC:description>slow limit OTHER has limited performance for CCP4</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_RESIDENCY_CCP_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_68" sampleID="68" sampleGroupID="Container_68">
+		<TELC:description>Groupname 0x162e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_RESIDENCY_CCP_5" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_OTHER_RESIDENCY_CCP_5">
+			<TELC:description>slow limit OTHER has limited performance for CCP5</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_RESIDENCY_CCP_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_69" sampleID="69" sampleGroupID="Container_69">
+		<TELC:description>Groupname 0x162f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_RESIDENCY_CCP_6" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_OTHER_RESIDENCY_CCP_6">
+			<TELC:description>slow limit OTHER has limited performance for CCP6</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_RESIDENCY_CCP_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_70" sampleID="70" sampleGroupID="Container_70">
+		<TELC:description>Groupname 0x162f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_RESIDENCY_CCP_7" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_OTHER_RESIDENCY_CCP_7">
+			<TELC:description>slow limit OTHER has limited performance for CCP7</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_RESIDENCY_CCP_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_71" sampleID="71" sampleGroupID="Container_71">
+		<TELC:description>Groupname 0x16300</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_LLC_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PERF_LIMIT_OTHER_LLC_RESIDENCY">
+			<TELC:description>slow limit OTHER has limited performance for LLC.</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_LLC_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_72" sampleID="72" sampleGroupID="Container_72">
+		<TELC:description>Groupname 0x16308</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PROCHOT_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PROCHOT_RESIDENCY">
+			<TELC:description>prochot assertions.</TELC:description>
+			<TELC:sampleSubGroup>PROCHOT_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_73" sampleID="73" sampleGroupID="Container_73">
+		<TELC:description>Groupname 0x16310</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VCCIA_VRHOT_RESIDENCY" datatypeIDREF="txtal_time" sampleID="VCCIA_VRHOT_RESIDENCY">
+			<TELC:description>VCCIA VR asserted VRHOT.</TELC:description>
+			<TELC:sampleSubGroup>VCCIA_VRHOT_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_74" sampleID="74" sampleGroupID="Container_74">
+		<TELC:description>Groupname 0x16318</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE0" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE0">
+			<TELC:description>C6 residency counter for Core0</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_75" sampleID="75" sampleGroupID="Container_75">
+		<TELC:description>Groupname 0x16320</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE1" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE1">
+			<TELC:description>C6 residency counter for Core1</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_76" sampleID="76" sampleGroupID="Container_76">
+		<TELC:description>Groupname 0x16328</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE2" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE2">
+			<TELC:description>C6 residency counter for Core2</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_77" sampleID="77" sampleGroupID="Container_77">
+		<TELC:description>Groupname 0x16330</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE3" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE3">
+			<TELC:description>C6 residency counter for Core3</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_78" sampleID="78" sampleGroupID="Container_78">
+		<TELC:description>Groupname 0x16338</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE4" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE4">
+			<TELC:description>C6 residency counter for Core4</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_79" sampleID="79" sampleGroupID="Container_79">
+		<TELC:description>Groupname 0x16340</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE5" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE5">
+			<TELC:description>C6 residency counter for Core5</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_80" sampleID="80" sampleGroupID="Container_80">
+		<TELC:description>Groupname 0x16348</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE6" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE6">
+			<TELC:description>C6 residency counter for Core6</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_81" sampleID="81" sampleGroupID="Container_81">
+		<TELC:description>Groupname 0x16350</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE7" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE7">
+			<TELC:description>C6 residency counter for Core7</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_82" sampleID="82" sampleGroupID="Container_82">
+		<TELC:description>Groupname 0x16358</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE8" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE8">
+			<TELC:description>C6 residency counter for Core8</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE8</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_83" sampleID="83" sampleGroupID="Container_83">
+		<TELC:description>Groupname 0x16360</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE9" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE9">
+			<TELC:description>C6 residency counter for Core9</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE9</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_84" sampleID="84" sampleGroupID="Container_84">
+		<TELC:description>Groupname 0x16368</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE10" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE10">
+			<TELC:description>C6 residency counter for Core10</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE10</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_85" sampleID="85" sampleGroupID="Container_85">
+		<TELC:description>Groupname 0x16370</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE11" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE11">
+			<TELC:description>C6 residency counter for Core11</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE11</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_86" sampleID="86" sampleGroupID="Container_86">
+		<TELC:description>Groupname 0x16378</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE12" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE12">
+			<TELC:description>C6 residency counter for Core12</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE12</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_87" sampleID="87" sampleGroupID="Container_87">
+		<TELC:description>Groupname 0x16380</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C6_RESIDENCY_CORE13" datatypeIDREF="txtal_time" sampleID="C6_RESIDENCY_CORE13">
+			<TELC:description>C6 residency counter for Core13</TELC:description>
+			<TELC:sampleSubGroup>C6_RESIDENCY_CORE13</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_88" sampleID="88" sampleGroupID="Container_88">
+		<TELC:description>Groupname 0x16388</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RING_C3_RESIDENCY" datatypeIDREF="txtal_time" sampleID="RING_C3_RESIDENCY">
+			<TELC:description>LLC retention</TELC:description>
+			<TELC:sampleSubGroup>RING_C3_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_89" sampleID="89" sampleGroupID="Container_89">
+		<TELC:description>Groupname 0x16390</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RING_C6_RESIDENCY" datatypeIDREF="txtal_time" sampleID="RING_C6_RESIDENCY">
+			<TELC:description>LLC flushed and off</TELC:description>
+			<TELC:sampleSubGroup>RING_C6_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_90" sampleID="90" sampleGroupID="Container_90">
+		<TELC:description>Groupname 0x16398</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C0_RESIDENCY_CORE0" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE0">
+			<TELC:description>C0 residency counter - Core0</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="C0_RESIDENCY_CORE1" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE1">
+			<TELC:description>C0 residency counter - Core1</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_91" sampleID="91" sampleGroupID="Container_91">
+		<TELC:description>Groupname 0x163a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C0_RESIDENCY_CORE2" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE2">
+			<TELC:description>C0 residency counter - Core2</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="C0_RESIDENCY_CORE3" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE3">
+			<TELC:description>C0 residency counter - Core3</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_92" sampleID="92" sampleGroupID="Container_92">
+		<TELC:description>Groupname 0x163a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C0_RESIDENCY_CORE4" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE4">
+			<TELC:description>C0 residency counter - Core4</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="C0_RESIDENCY_CORE5" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE5">
+			<TELC:description>C0 residency counter - Core5</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_93" sampleID="93" sampleGroupID="Container_93">
+		<TELC:description>Groupname 0x163b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C0_RESIDENCY_CORE6" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE6">
+			<TELC:description>C0 residency counter - Core6</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="C0_RESIDENCY_CORE7" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE7">
+			<TELC:description>C0 residency counter - Core7</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_94" sampleID="94" sampleGroupID="Container_94">
+		<TELC:description>Groupname 0x163b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C0_RESIDENCY_CORE8" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE8">
+			<TELC:description>C0 residency counter - Core8</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE8</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="C0_RESIDENCY_CORE9" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE9">
+			<TELC:description>C0 residency counter - Core9</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE9</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_95" sampleID="95" sampleGroupID="Container_95">
+		<TELC:description>Groupname 0x163c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C0_RESIDENCY_CORE10" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE10">
+			<TELC:description>C0 residency counter - Core10</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE10</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="C0_RESIDENCY_CORE11" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE11">
+			<TELC:description>C0 residency counter - Core11</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE11</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_96" sampleID="96" sampleGroupID="Container_96">
+		<TELC:description>Groupname 0x163c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="C0_RESIDENCY_CORE12" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE12">
+			<TELC:description>C0 residency counter - Core12</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE12</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="C0_RESIDENCY_CORE13" datatypeIDREF="txtal_time" sampleID="C0_RESIDENCY_CORE13">
+			<TELC:description>C0 residency counter - Core13</TELC:description>
+			<TELC:sampleSubGroup>C0_RESIDENCY_CORE13</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_97" sampleID="97" sampleGroupID="Container_97">
+		<TELC:description>Groupname 0x163d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_COUNTER_CCP_0" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_THERM_COUNTER_CCP_0">
+			<TELC:description>Transition counter for when slow limit THERM has limited performance for CCP0</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_COUNTER_CCP_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_THERM_COUNTER_CCP_1" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_THERM_COUNTER_CCP_1">
+			<TELC:description>Transition counter for when slow limit THERM has limited performance for CCP1</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_COUNTER_CCP_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_98" sampleID="98" sampleGroupID="Container_98">
+		<TELC:description>Groupname 0x163d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_COUNTER_CCP_2" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_THERM_COUNTER_CCP_2">
+			<TELC:description>Transition counter for when slow limit THERM has limited performance for CCP2</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_COUNTER_CCP_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_THERM_COUNTER_CCP_3" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_THERM_COUNTER_CCP_3">
+			<TELC:description>Transition counter for when slow limit THERM has limited performance for CCP3</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_COUNTER_CCP_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_99" sampleID="99" sampleGroupID="Container_99">
+		<TELC:description>Groupname 0x163e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_COUNTER_CCP_4" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_THERM_COUNTER_CCP_4">
+			<TELC:description>Transition counter for when slow limit THERM has limited performance for CCP4</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_COUNTER_CCP_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_THERM_COUNTER_CCP_5" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_THERM_COUNTER_CCP_5">
+			<TELC:description>Transition counter for when slow limit THERM has limited performance for CCP5</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_COUNTER_CCP_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_100" sampleID="100" sampleGroupID="Container_100">
+		<TELC:description>Groupname 0x163e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_COUNTER_CCP_6" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_THERM_COUNTER_CCP_6">
+			<TELC:description>Transition counter for when slow limit THERM has limited performance for CCP6</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_COUNTER_CCP_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_THERM_COUNTER_CCP_7" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_THERM_COUNTER_CCP_7">
+			<TELC:description>Transition counter for when slow limit THERM has limited performance for CCP7</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_COUNTER_CCP_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_101" sampleID="101" sampleGroupID="Container_101">
+		<TELC:description>Groupname 0x163f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_THERM_LLC_COUNTER" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_THERM_LLC_COUNTER">
+			<TELC:description>Transition counter for when slow limit THERM has limited performance for LLC.</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_THERM_LLC_COUNTER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_POWER_COUNTER_CCP_0" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_POWER_COUNTER_CCP_0">
+			<TELC:description>Transition counter for when slow limit POWER has limited performance for CCP0</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_COUNTER_CCP_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_102" sampleID="102" sampleGroupID="Container_102">
+		<TELC:description>Groupname 0x163f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_POWER_COUNTER_CCP_1" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_POWER_COUNTER_CCP_1">
+			<TELC:description>Transition counter for when slow limit POWER has limited performance for CCP1</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_COUNTER_CCP_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_POWER_COUNTER_CCP_2" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_POWER_COUNTER_CCP_2">
+			<TELC:description>Transition counter for when slow limit POWER has limited performance for CCP2</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_COUNTER_CCP_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_103" sampleID="103" sampleGroupID="Container_103">
+		<TELC:description>Groupname 0x16400</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_POWER_COUNTER_CCP_3" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_POWER_COUNTER_CCP_3">
+			<TELC:description>Transition counter for when slow limit POWER has limited performance for CCP3</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_COUNTER_CCP_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_POWER_COUNTER_CCP_4" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_POWER_COUNTER_CCP_4">
+			<TELC:description>Transition counter for when slow limit POWER has limited performance for CCP4</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_COUNTER_CCP_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_104" sampleID="104" sampleGroupID="Container_104">
+		<TELC:description>Groupname 0x16408</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_POWER_COUNTER_CCP_5" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_POWER_COUNTER_CCP_5">
+			<TELC:description>Transition counter for when slow limit POWER has limited performance for CCP5</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_COUNTER_CCP_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_POWER_COUNTER_CCP_6" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_POWER_COUNTER_CCP_6">
+			<TELC:description>Transition counter for when slow limit POWER has limited performance for CCP6</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_COUNTER_CCP_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_105" sampleID="105" sampleGroupID="Container_105">
+		<TELC:description>Groupname 0x16410</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_POWER_COUNTER_CCP_7" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_POWER_COUNTER_CCP_7">
+			<TELC:description>Transition counter for when slow limit POWER has limited performance for CCP7</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_COUNTER_CCP_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_POWER_LLC_COUNTER" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_POWER_LLC_COUNTER">
+			<TELC:description>Transition counter for when slow limit POWER has limited performance for LLC.</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_POWER_LLC_COUNTER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_106" sampleID="106" sampleGroupID="Container_106">
+		<TELC:description>Groupname 0x16418</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_COUNTER_CCP_0" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_EDP_COUNTER_CCP_0">
+			<TELC:description>Transition counter for when slow limit EDP has limited performance for CCP0</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_COUNTER_CCP_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_EDP_COUNTER_CCP_1" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_EDP_COUNTER_CCP_1">
+			<TELC:description>Transition counter for when slow limit EDP has limited performance for CCP1</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_COUNTER_CCP_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_107" sampleID="107" sampleGroupID="Container_107">
+		<TELC:description>Groupname 0x16420</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_COUNTER_CCP_2" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_EDP_COUNTER_CCP_2">
+			<TELC:description>Transition counter for when slow limit EDP has limited performance for CCP2</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_COUNTER_CCP_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_EDP_COUNTER_CCP_3" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_EDP_COUNTER_CCP_3">
+			<TELC:description>Transition counter for when slow limit EDP has limited performance for CCP3</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_COUNTER_CCP_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_108" sampleID="108" sampleGroupID="Container_108">
+		<TELC:description>Groupname 0x16428</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_COUNTER_CCP_4" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_EDP_COUNTER_CCP_4">
+			<TELC:description>Transition counter for when slow limit EDP has limited performance for CCP4</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_COUNTER_CCP_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_EDP_COUNTER_CCP_5" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_EDP_COUNTER_CCP_5">
+			<TELC:description>Transition counter for when slow limit EDP has limited performance for CCP5</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_COUNTER_CCP_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_109" sampleID="109" sampleGroupID="Container_109">
+		<TELC:description>Groupname 0x16430</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_COUNTER_CCP_6" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_EDP_COUNTER_CCP_6">
+			<TELC:description>Transition counter for when slow limit EDP has limited performance for CCP6</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_COUNTER_CCP_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_EDP_COUNTER_CCP_7" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_EDP_COUNTER_CCP_7">
+			<TELC:description>Transition counter for when slow limit EDP has limited performance for CCP7</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_COUNTER_CCP_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_110" sampleID="110" sampleGroupID="Container_110">
+		<TELC:description>Groupname 0x16438</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_EDP_LLC_COUNTER" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_EDP_LLC_COUNTER">
+			<TELC:description>Transition counter for when slow limit EDP has limited performance for LLC.</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_EDP_LLC_COUNTER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_OTHER_COUNTER_CCP_0" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_OTHER_COUNTER_CCP_0">
+			<TELC:description>Transition counter for when slow limit OTHER has limited performance for CCP0</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_COUNTER_CCP_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_111" sampleID="111" sampleGroupID="Container_111">
+		<TELC:description>Groupname 0x16440</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_COUNTER_CCP_1" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_OTHER_COUNTER_CCP_1">
+			<TELC:description>Transition counter for when slow limit OTHER has limited performance for CCP1</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_COUNTER_CCP_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_OTHER_COUNTER_CCP_2" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_OTHER_COUNTER_CCP_2">
+			<TELC:description>Transition counter for when slow limit OTHER has limited performance for CCP2</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_COUNTER_CCP_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_112" sampleID="112" sampleGroupID="Container_112">
+		<TELC:description>Groupname 0x16448</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_COUNTER_CCP_3" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_OTHER_COUNTER_CCP_3">
+			<TELC:description>Transition counter for when slow limit OTHER has limited performance for CCP3</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_COUNTER_CCP_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_OTHER_COUNTER_CCP_4" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_OTHER_COUNTER_CCP_4">
+			<TELC:description>Transition counter for when slow limit OTHER has limited performance for CCP4</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_COUNTER_CCP_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_113" sampleID="113" sampleGroupID="Container_113">
+		<TELC:description>Groupname 0x16450</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_COUNTER_CCP_5" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_OTHER_COUNTER_CCP_5">
+			<TELC:description>Transition counter for when slow limit OTHER has limited performance for CCP5</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_COUNTER_CCP_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_OTHER_COUNTER_CCP_6" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_OTHER_COUNTER_CCP_6">
+			<TELC:description>Transition counter for when slow limit OTHER has limited performance for CCP6</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_COUNTER_CCP_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_114" sampleID="114" sampleGroupID="Container_114">
+		<TELC:description>Groupname 0x16458</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PERF_LIMIT_OTHER_COUNTER_CCP_7" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_OTHER_COUNTER_CCP_7">
+			<TELC:description>Transition counter for when slow limit OTHER has limited performance for CCP7</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_COUNTER_CCP_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PERF_LIMIT_OTHER_LLC_COUNTER" datatypeIDREF="tevent_counter" sampleID="PERF_LIMIT_OTHER_LLC_COUNTER">
+			<TELC:description>Transition counter for when slow limit OTHER has limited performance for LLC.</TELC:description>
+			<TELC:sampleSubGroup>PERF_LIMIT_OTHER_LLC_COUNTER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_115" sampleID="115" sampleGroupID="Container_115">
+		<TELC:description>Groupname 0x16460</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VCCIA_ENERGY" datatypeIDREF="tvr_energy" sampleID="VCCIA_ENERGY">
+			<TELC:description>IA VR energy</TELC:description>
+			<TELC:sampleSubGroup>VCCIA_ENERGY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_116" sampleID="116" sampleGroupID="Container_116">
+		<TELC:description>Groupname 0x16468</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_READS_0" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_READS_0">
+			<TELC:description>Total LLC read bandwidth from CCP0</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_READS_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_117" sampleID="117" sampleGroupID="Container_117">
+		<TELC:description>Groupname 0x16470</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_READS_1" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_READS_1">
+			<TELC:description>Total LLC read bandwidth from CCP1</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_READS_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_118" sampleID="118" sampleGroupID="Container_118">
+		<TELC:description>Groupname 0x16478</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_READS_2" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_READS_2">
+			<TELC:description>Total LLC read bandwidth from CCP2</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_READS_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_119" sampleID="119" sampleGroupID="Container_119">
+		<TELC:description>Groupname 0x16480</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_READS_3" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_READS_3">
+			<TELC:description>Total LLC read bandwidth from CCP3</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_READS_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_120" sampleID="120" sampleGroupID="Container_120">
+		<TELC:description>Groupname 0x16488</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_READS_4" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_READS_4">
+			<TELC:description>Total LLC read bandwidth from CCP4</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_READS_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_121" sampleID="121" sampleGroupID="Container_121">
+		<TELC:description>Groupname 0x16490</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_READS_5" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_READS_5">
+			<TELC:description>Total LLC read bandwidth from CCP5</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_READS_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_122" sampleID="122" sampleGroupID="Container_122">
+		<TELC:description>Groupname 0x16498</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_READS_6" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_READS_6">
+			<TELC:description>Total LLC read bandwidth from CCP6</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_READS_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_123" sampleID="123" sampleGroupID="Container_123">
+		<TELC:description>Groupname 0x164a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_READS_7" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_READS_7">
+			<TELC:description>Total LLC read bandwidth from CCP7</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_READS_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_124" sampleID="124" sampleGroupID="Container_124">
+		<TELC:description>Groupname 0x164a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_WRITES_0" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_WRITES_0">
+			<TELC:description>Total LLC write bandwidth from CCP0</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_WRITES_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_125" sampleID="125" sampleGroupID="Container_125">
+		<TELC:description>Groupname 0x164b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_WRITES_1" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_WRITES_1">
+			<TELC:description>Total LLC write bandwidth from CCP1</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_WRITES_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_126" sampleID="126" sampleGroupID="Container_126">
+		<TELC:description>Groupname 0x164b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_WRITES_2" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_WRITES_2">
+			<TELC:description>Total LLC write bandwidth from CCP2</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_WRITES_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_127" sampleID="127" sampleGroupID="Container_127">
+		<TELC:description>Groupname 0x164c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_WRITES_3" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_WRITES_3">
+			<TELC:description>Total LLC write bandwidth from CCP3</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_WRITES_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_128" sampleID="128" sampleGroupID="Container_128">
+		<TELC:description>Groupname 0x164c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_WRITES_4" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_WRITES_4">
+			<TELC:description>Total LLC write bandwidth from CCP4</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_WRITES_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_129" sampleID="129" sampleGroupID="Container_129">
+		<TELC:description>Groupname 0x164d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_WRITES_5" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_WRITES_5">
+			<TELC:description>Total LLC write bandwidth from CCP5</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_WRITES_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_130" sampleID="130" sampleGroupID="Container_130">
+		<TELC:description>Groupname 0x164d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_WRITES_6" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_WRITES_6">
+			<TELC:description>Total LLC write bandwidth from CCP6</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_WRITES_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_131" sampleID="131" sampleGroupID="Container_131">
+		<TELC:description>Groupname 0x164e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CCP_LLC_WRITES_7" datatypeIDREF="tbw_64B" sampleID="CCP_LLC_WRITES_7">
+			<TELC:description>Total LLC write bandwidth from CCP7</TELC:description>
+			<TELC:sampleSubGroup>CCP_LLC_WRITES_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_132" sampleID="132" sampleGroupID="Container_132">
+		<TELC:description>Groupname 0x164e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LLC_CLOCKS_ACTIVE" datatypeIDREF="tevent_counter" sampleID="LLC_CLOCKS_ACTIVE">
+			<TELC:description>Total active LLC clocks, simple counter in UCLK</TELC:description>
+			<TELC:sampleSubGroup>LLC_CLOCKS_ACTIVE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_133" sampleID="133" sampleGroupID="Container_133">
+		<TELC:description>Groupname 0x164f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PROCHOT_COUNTER" datatypeIDREF="tevent_counter" sampleID="PROCHOT_COUNTER">
+			<TELC:description>prochot assertions.</TELC:description>
+			<TELC:sampleSubGroup>PROCHOT_COUNTER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VCCIA_VRHOT_COUNTER" datatypeIDREF="tevent_counter" sampleID="VCCIA_VRHOT_COUNTER">
+			<TELC:description>counts VCCIA VR asserted VRHOT occasions</TELC:description>
+			<TELC:sampleSubGroup>VCCIA_VRHOT_COUNTER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_134" sampleID="134" sampleGroupID="Container_134">
+		<TELC:description>Groupname 0x164f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CORE_CSTATE_C6_COUNTER_0" datatypeIDREF="tevent_counter" sampleID="CORE_CSTATE_C6_COUNTER_0">
+			<TELC:description>C6 entry transition counter - Core0</TELC:description>
+			<TELC:sampleSubGroup>CORE_CSTATE_C6_COUNTER_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE_CSTATE_C6_COUNTER_1" datatypeIDREF="tevent_counter" sampleID="CORE_CSTATE_C6_COUNTER_1">
+			<TELC:description>C6 entry transition counter - Core1</TELC:description>
+			<TELC:sampleSubGroup>CORE_CSTATE_C6_COUNTER_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_135" sampleID="135" sampleGroupID="Container_135">
+		<TELC:description>Groupname 0x16500</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CORE_CSTATE_C6_COUNTER_2" datatypeIDREF="tevent_counter" sampleID="CORE_CSTATE_C6_COUNTER_2">
+			<TELC:description>C6 entry transition counter - Core2</TELC:description>
+			<TELC:sampleSubGroup>CORE_CSTATE_C6_COUNTER_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE_CSTATE_C6_COUNTER_3" datatypeIDREF="tevent_counter" sampleID="CORE_CSTATE_C6_COUNTER_3">
+			<TELC:description>C6 entry transition counter - Core3</TELC:description>
+			<TELC:sampleSubGroup>CORE_CSTATE_C6_COUNTER_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_136" sampleID="136" sampleGroupID="Container_136">
+		<TELC:description>Groupname 0x16508</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CORE_CSTATE_C6_COUNTER_4" datatypeIDREF="tevent_counter" sampleID="CORE_CSTATE_C6_COUNTER_4">
+			<TELC:description>C6 entry transition counter - Core4</TELC:description>
+			<TELC:sampleSubGroup>CORE_CSTATE_C6_COUNTER_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CORE_CSTATE_C6_COUNTER_5" datatypeIDREF="tevent_counter" sampleID="CORE_CSTATE_C6_COUNTER_5">
+			<TELC:description>C6 entry transition counter - Core5</TELC:description>
+			<TELC:sampleSubGroup>CORE_CSTATE_C6_COUNTER_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_137" sampleID="137" sampleGroupID="Container_137">
+		<TELC:description>Groupname 0x16510</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RING_C3_COUNTER" datatypeIDREF="tevent_counter" sampleID="RING_C3_COUNTER">
+			<TELC:description>RING retention counter</TELC:description>
+			<TELC:sampleSubGroup>RING_C3_COUNTER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RING_C6_COUNTER" datatypeIDREF="tevent_counter" sampleID="RING_C6_COUNTER">
+			<TELC:description>RING flushed and off counter</TELC:description>
+			<TELC:sampleSubGroup>RING_C6_COUNTER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_138" sampleID="138" sampleGroupID="Container_138">
+		<TELC:description>Groupname 0x16518</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_COUNTS_LLC_FLUSHED" datatypeIDREF="tevent_counter" sampleID="DIE_CSTATE_COUNTS_LLC_FLUSHED">
+			<TELC:description>Counts the number of transitions (entry) to Die C-state with LLC_FLUSHED.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_COUNTS_LLC_FLUSHED</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DIE_CSTATE_COUNTS_C2p1" datatypeIDREF="tevent_counter" sampleID="DIE_CSTATE_COUNTS_C2p1">
+			<TELC:description>Measures the number of transitions to DC2.1</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_COUNTS_C2p1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_139" sampleID="139" sampleGroupID="Container_139">
+		<TELC:description>Groupname 0x16520</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_COUNTS_C2p2" datatypeIDREF="tevent_counter" sampleID="DIE_CSTATE_COUNTS_C2p2">
+			<TELC:description>Measures the number of transitions to DCC2.2</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_COUNTS_C2p2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DIE_CSTATE_COUNTS_C3p1" datatypeIDREF="tevent_counter" sampleID="DIE_CSTATE_COUNTS_C3p1">
+			<TELC:description>Measures the number of transitions to DC3.1.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_COUNTS_C3p1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_140" sampleID="140" sampleGroupID="Container_140">
+		<TELC:description>Groupname 0x16528</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_COUNTS_C3p2" datatypeIDREF="tevent_counter" sampleID="DIE_CSTATE_COUNTS_C3p2">
+			<TELC:description>Measures the number of transitions to DC3.2</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_COUNTS_C3p2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DIE_CSTATE_COUNTS_C6" datatypeIDREF="tevent_counter" sampleID="DIE_CSTATE_COUNTS_C6">
+			<TELC:description>Measures the number of transitions to DC6</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_COUNTS_C6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_141" sampleID="141" sampleGroupID="Container_141">
+		<TELC:description>Groupname 0x16530</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CEP_IA_RESIDENCY_COUNTER" datatypeIDREF="tcycle_count" sampleID="CEP_IA_RESIDENCY_COUNTER">
+			<TELC:description>CEP EVENT1 counter: Counts the x4 (400MHz) clocks spent in throttling</TELC:description>
+			<TELC:sampleSubGroup>CEP_IA_RESIDENCY_COUNTER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DLVR_IA_CORE_OUT_ACCUMULATOR_0" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_ACCUMULATOR_0">
+			<TELC:description>DLVR OUT accumulator - ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_ACCUMULATOR_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_142" sampleID="142" sampleGroupID="Container_142">
+		<TELC:description>Groupname 0x16538</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DLVR_IA_CORE_OUT_ACCUMULATOR_1" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_ACCUMULATOR_1">
+			<TELC:description>DLVR OUT accumulator - ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_ACCUMULATOR_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DLVR_IA_CORE_OUT_ACCUMULATOR_2" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_ACCUMULATOR_2">
+			<TELC:description>DLVR OUT accumulator- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_ACCUMULATOR_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_143" sampleID="143" sampleGroupID="Container_143">
+		<TELC:description>Groupname 0x16540</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DLVR_IA_CORE_OUT_ACCUMULATOR_3" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_ACCUMULATOR_3">
+			<TELC:description>DLVR OUT accumulator- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_ACCUMULATOR_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DLVR_IA_CORE_OUT_ACCUMULATOR_4" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_ACCUMULATOR_4">
+			<TELC:description>DLVR OUT accumulator- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_ACCUMULATOR_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_144" sampleID="144" sampleGroupID="Container_144">
+		<TELC:description>Groupname 0x16548</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DLVR_IA_CORE_OUT_ACCUMULATOR_5" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_ACCUMULATOR_5">
+			<TELC:description>DLVR OUT accumulator- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_ACCUMULATOR_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DLVR_IA_CORE_OUT_ACCUMULATOR_6" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_ACCUMULATOR_6">
+			<TELC:description>DLVR OUT accumulator- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_ACCUMULATOR_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_145" sampleID="145" sampleGroupID="Container_145">
+		<TELC:description>Groupname 0x16550</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DLVR_IA_CORE_OUT_ACCUMULATOR_7" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_ACCUMULATOR_7">
+			<TELC:description>DLVR OUT accumulator- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_ACCUMULATOR_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DLVR_IA_CORE_OUT_NUM_SAMPLES_0" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_NUM_SAMPLES_0">
+			<TELC:description>DLVR OUT num samples- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_NUM_SAMPLES_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_146" sampleID="146" sampleGroupID="Container_146">
+		<TELC:description>Groupname 0x16558</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DLVR_IA_CORE_OUT_NUM_SAMPLES_1" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_NUM_SAMPLES_1">
+			<TELC:description>DLVR OUT num samples- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_NUM_SAMPLES_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DLVR_IA_CORE_OUT_NUM_SAMPLES_2" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_NUM_SAMPLES_2">
+			<TELC:description>DLVR OUT num samples- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_NUM_SAMPLES_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_147" sampleID="147" sampleGroupID="Container_147">
+		<TELC:description>Groupname 0x16560</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DLVR_IA_CORE_OUT_NUM_SAMPLES_3" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_NUM_SAMPLES_3">
+			<TELC:description>DLVR OUT num samples- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_NUM_SAMPLES_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DLVR_IA_CORE_OUT_NUM_SAMPLES_4" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_NUM_SAMPLES_4">
+			<TELC:description>DLVR OUT num samples- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_NUM_SAMPLES_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_148" sampleID="148" sampleGroupID="Container_148">
+		<TELC:description>Groupname 0x16568</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DLVR_IA_CORE_OUT_NUM_SAMPLES_5" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_NUM_SAMPLES_5">
+			<TELC:description>DLVR OUT num samples- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_NUM_SAMPLES_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DLVR_IA_CORE_OUT_NUM_SAMPLES_6" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_NUM_SAMPLES_6">
+			<TELC:description>DLVR OUT num samples- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_NUM_SAMPLES_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_149" sampleID="149" sampleGroupID="Container_149">
+		<TELC:description>Groupname 0x16570</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DLVR_IA_CORE_OUT_NUM_SAMPLES_7" datatypeIDREF="tevent_counter" sampleID="DLVR_IA_CORE_OUT_NUM_SAMPLES_7">
+			<TELC:description>DLVR OUT num samples- ** NOT IMPLEMENTED ZBBed**</TELC:description>
+			<TELC:sampleSubGroup>DLVR_IA_CORE_OUT_NUM_SAMPLES_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FAST_VMODE_IA_COUNTER" datatypeIDREF="tevent_counter" sampleID="FAST_VMODE_IA_COUNTER">
+			<TELC:description>Event counter which count the number of fastvmode excursions</TELC:description>
+			<TELC:sampleSubGroup>FAST_VMODE_IA_COUNTER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_150" sampleID="150" sampleGroupID="Container_150">
+		<TELC:description>Groupname 0x16578</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CNTR_RESERVED_0" datatypeIDREF="tgeneric_counter" sampleID="CNTR_RESERVED_0">
+			<TELC:description>Reserved for future expansion</TELC:description>
+			<TELC:sampleSubGroup>CNTR_RESERVED_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_151" sampleID="151" sampleGroupID="Container_151">
+		<TELC:description>Groupname 0x16580</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CNTR_RESERVED_1_to_1" datatypeIDREF="tgeneric_counter" sampleID="CNTR_RESERVED_1_to_1">
+			<TELC:description>Reserved for future expansion</TELC:description>
+			<TELC:sampleSubGroup>CNTR_RESERVED_1_to_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

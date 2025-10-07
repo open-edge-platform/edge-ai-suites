@@ -1,0 +1,199 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  overflow-x: hidden; 
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100%; 
+  background: #f5f7fa;
+  overflow-x: hidden; 
+}
+
+.main-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-wrap: nowrap; 
+  overflow-y: auto;  
+  overflow-x: hidden; 
+  padding: 0;
+}
+/* App loading state - when checking backend health */
+.app-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+/* App error state - when backend is unavailable */
+.app-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+.loading-content, .error-content {
+  padding: 2rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+}
+
+.loading-content h2, .error-content h1 {
+  font-size: 28px;
+  margin-bottom: 12px;
+  font-weight: 300;
+}
+
+.loading-content p, .error-content p {
+  font-size: 16px;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+.error-actions {
+  margin-top: 20px;
+}
+
+.retry-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.retry-info {
+  font-size: 14px;
+  opacity: 0.7;
+  margin-top: 12px;
+  font-style: italic;
+}
+
+.connection-lost-info {
+  background: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.5);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 16px 0;
+  color: #fff3cd;
+}
+
+.connection-lost-info p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Spinner styles */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin: 0 auto 20px;
+}
+
+.spinner.small {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Auto-retry indicator */
+.auto-retry-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.retry-info {
+  margin-top: 12px;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.error-actions {
+  margin: 20px 0;
+}
+
+.retry-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.retry-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.main-content > * {
+  max-width: 100%;
+  flex-shrink: 1; 
+}
+
+@media (max-width: 900px) {
+  .main-content {
+    flex-direction: column; 
+    flex-wrap: nowrap;
+  }
+
+  .main-content > * {
+    width: 100%; 
+  }
+}

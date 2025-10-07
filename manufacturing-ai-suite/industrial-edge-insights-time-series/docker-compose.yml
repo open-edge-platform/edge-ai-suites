@@ -28,7 +28,7 @@ services:
       INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
       INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
       INFLUXDB_DBNAME: datain
-      TELEGRAF_CONFIG_PATH: /etc/telegraf/Telegraf.conf
+      TELEGRAF_CONFIG_PATH: ${TELEGRAF_CONFIG_PATH:-/etc/telegraf/Telegraf.conf}
       OPCUA_SERVER: opc.tcp://ia-opcua-server:4840/freeopcua/server/
       LOG_LEVEL: ${LOG_LEVEL}
       TELEGRAF_INPUT_PLUGIN: ${TELEGRAF_INPUT_PLUGIN:-opcua}
@@ -112,6 +112,8 @@ services:
       MODEL_REGISTRY_URL: http://model-registry:8111
       SAMPLE_APP: ${SAMPLE_APP}
       REST_API_ROOT_PATH: "/ts-api"
+      ENABLE_BENCHMARKING: ${ENABLE_BENCHMARKING:-false}
+      BENCHMARK_TOTAL_PTS: ${BENCHMARK_TOTAL_PTS:-100}
     networks:
     - timeseries_network
     volumes:
@@ -220,7 +222,7 @@ services:
     networks:
     - timeseries_network
     ports:
-    - ${OPCUA_SERVER_PORT}:4840
+    - ${OPCUA_SERVER_PORT}-30048:4840
     volumes:
     - ./apps/${SAMPLE_APP}/ingestor-data/${SAMPLE_APP}.csv:/app/${SAMPLE_APP}.csv
 
@@ -234,7 +236,6 @@ services:
         http_proxy:
         https_proxy:
         no_proxy:
-    container_name: ia-mqtt-publisher
     hostname: ia-mqtt-publisher
     read_only: true
     image: ${DOCKER_REGISTRY}${MQTT_PUBLISHER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}

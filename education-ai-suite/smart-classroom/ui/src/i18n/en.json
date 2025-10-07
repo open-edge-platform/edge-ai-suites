@@ -1,0 +1,91 @@
+{
+    "header": {
+      "title": "Smart Classroom Sample App",
+      "startRecording": "Start Recording",
+      "stopRecording": "Stop Recording",
+      "uploadFile": "Upload File",
+      "timer": "Timer"
+    },
+    "footer": {
+      "copyright": "© 2025 Smart Classroom Sample App"
+    },
+    "notifications": {
+      "start": "Upload an audio file to begin a new session",
+      "stop": "Stop recording to get AI summary",
+      "recording": "Recording…",
+      "uploading": "Uploading transcript…",
+      "generatingSummary": "Generating summary…",
+      "streamingSummary": "Streaming summary…",
+      "loadingTranscript": "Loading transcript…",
+      "analyzingAudio": "Analyzing audio…",
+      "summaryReady": "Summary ready",
+      "uploadSuccess": "File uploaded successfully!",
+      "uploadFailed": "Failed to upload file."
+    },
+    "settings": {
+      "title": "Settings",
+      "projectName": "Project Name",
+      "projectLocation": "Project Location",
+      "microphone": "Microphone",
+      "ok": "OK",
+      "projectNamePlaceholder": "Enter project name",
+      "projectLocationPlaceholder": "Select project folder",
+      "ipMicrophone": "IP Microphone"
+    },
+    "menu": {
+      "settings": "Settings",
+      "help": "Help",
+      "about": "About"
+    },
+    "tabs": {
+      "transcripts": "Transcripts",
+      "summary": "AI Summary"
+    },
+  
+  "accordion": {
+      "noData": "No data available",
+      "noSessionActive": "No active session. Upload an audio file and start transcription to begin monitoring.",
+      "lastUpdated": "Last updated",
+      "resourceUtilization": "Resource Utilization",
+      "configuration": "Configuration & Metrics",
+      "resource": "Resource Utilization",
+      "models": "Pre-validated Models",
+      "subtitle_configuration": "Platform and software configuration details",
+      "subtitle_resource": "CPU, GPU, NPU, Memory, and Power usage over time",
+      "subtitle_models": "Select models for transcripts and summary",
+      "platformConfiguration": "Platform Configuration",
+      "processor": "Processor",
+      "npu": "NPU",
+      "igpu": "iGPU",
+      "memory": "Memory",
+      "storage": "Storage",
+      "softwareConfiguration": "Software Configuration",
+      "llm": "LLM",
+      "asr": "ASR",
+      "performanceMetrics": "Performance Metrics",
+      "ttft": "TTFT",
+      "tpot": "TPOT",
+      "tps":"Tokens Per Second",
+      "totalTokensProcessed": "Total tokens processed",
+      "timeToGenerateSummary": "Time taken to generate summary",
+      "totalTimeTaken":"Total Time Taken",
+      "loadingConfiguration": "Loading configuration data...",
+      "cpuUtilization": "CPU Utilization",
+      "gpuUtilization": "GPU Utilization",
+      "npuUtilization": "NPU Utilization",
+      "memoryUtilization": "Memory Utilization",
+      "powerUtilization": "Power Utilization",
+      "loadingResource": "Loading resource data...",
+      "transcriptsModel": "Transcripts Model",
+      "summaryModel": "Summary",
+      "whisper": "paraformer-zh",
+      "model1": "Model 1",
+      "model2": "Model 2",
+      "gpt-4": "Qwen/Qwen2.5-7B-Instruct",
+      "model3": "Model 3",
+      "model4": "Model 4"
+    },
+    "errors": {
+      "projectNameRequired": "Project name is required"
+    }
+  }

@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\x64\Release\ZERO_CHECK</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\bin\Release\ze_loader.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\bin\Release\npu_utilization.exe</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\bin\Release\ze_null.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\bin\Release\ze_tracing_layer.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\bin\Release\ze_validation_layer.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\bin\Release\zello_world.exe</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\x64\Release\ALL_BUILD</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles />
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
+</Project>

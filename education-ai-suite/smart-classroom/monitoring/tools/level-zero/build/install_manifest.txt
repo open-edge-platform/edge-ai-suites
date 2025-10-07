@@ -1,0 +1,26 @@
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/lib/ze_validation_layer.lib
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/lib/ze_validation_layer.dll
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/lib/ze_tracing_layer.lib
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/lib/ze_tracing_layer.dll
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/lib/ze_loader.lib
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/bin/ze_loader.dll
+C:/Program Files (x86)/level-zero/include/level_zero/ze_api.h
+C:/Program Files (x86)/level-zero/include/level_zero/ze_ddi.h
+C:/Program Files (x86)/level-zero/include/level_zero/zes_api.h
+C:/Program Files (x86)/level-zero/include/level_zero/zes_ddi.h
+C:/Program Files (x86)/level-zero/include/level_zero/zet_api.h
+C:/Program Files (x86)/level-zero/include/level_zero/zet_ddi.h
+C:/Program Files (x86)/level-zero/include/level_zero/layers/zel_tracing_api.h
+C:/Program Files (x86)/level-zero/include/level_zero/layers/zel_tracing_ddi.h
+C:/Program Files (x86)/level-zero/include/level_zero/layers/zel_tracing_register_cb.h
+C:/Program Files (x86)/level-zero/include/level_zero/loader/ze_loader.h
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/include/level_zero/layers/zel_tracing_api.h
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/include/level_zero/layers/zel_tracing_ddi.h
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/include/level_zero/layers/zel_tracing_register_cb.h
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/include/level_zero/loader/ze_loader.h
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/include/level_zero/zes_api.h
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/include/level_zero/zes_ddi.h
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/include/level_zero/zet_api.h
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/include/level_zero/zet_ddi.h
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/include/level_zero/ze_api.h
+C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/_CPack_Packages/win64/ZIP/level-zero-1.15.0-win64/include/level_zero/ze_ddi.h

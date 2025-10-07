@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\lib\ze_libapi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\lib\ze_libddi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\lib\zet_libapi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\lib\zet_libddi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\lib\zes_libapi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\lib\zes_libddi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\lib\zel_tracing_libapi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\lib\zel_tracing_libddi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\lib\ze_lib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\lib\ze_tracing_register_cb_libapi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\lib\windows\lib_init.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\ze_loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\ze_loader_api.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\ze_ldrddi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\zet_ldrddi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\zes_ldrddi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\zel_tracing_ldrddi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\windows\driver_discovery_win.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\windows\loader_init.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\lib\ze_lib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\ze_object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\ze_loader_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\ze_ldrddi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\zet_ldrddi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\zes_ldrddi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\loader\driver_discovery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\source\ZeLoaderVersion.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{0484B384-B5EA-39AB-92A4-49C60C4CE023}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{049E6B6B-2931-3F2B-95F3-0921D6788BCA}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
