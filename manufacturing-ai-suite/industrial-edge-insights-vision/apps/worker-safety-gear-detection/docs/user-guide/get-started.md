@@ -30,6 +30,11 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     ```bash
     HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.
 
+    MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
+
+    MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
+    MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+
     MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
 
@@ -115,14 +120,14 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     Extracting payload for pipeline: worker_safety_gear_detection
     Found 1 payload(s) for pipeline: worker_safety_gear_detection
     Payload for pipeline 'worker_safety_gear_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"worker_safety"}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml","device":"CPU"}}}
-    Posting payload to REST server at http://10.223.23.156:8080/pipelines/user_defined_pipelines/worker_safety_gear_detection
+    Posting payload to REST server at https://<HOST_IP>/api/pipelines/user_defined_pipelines/worker_safety_gear_detection
     Payload for pipeline 'worker_safety_gear_detection' posted successfully. Response: "784b87b45d1511f08ab0da88aa49c01e"
     ```
 
     NOTE: This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following url:
 
     ```sh
-    http://<HOST_IP>:8889/worker_safety/
+    https://<HOST_IP>/mediamtx/worker_safety/
     ```
 
 8.  Get the status of running pipeline instance(s).

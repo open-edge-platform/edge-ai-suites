@@ -31,7 +31,7 @@ be seen on Prometheus UI. Any desired AI model from the Model Registry Microserv
 (which can interact with Postgres, Minio and Geti Server for getting the model) can be
 pulled into DL Streamer Pipeline Server and used for inference in the sample application.
 
-.. figure:: ./images/defect-detection-arch-diagram.png
+.. figure:: ./images/industrial-edge-insights-vision-architecture.drawio.svg
    :alt: Architecture and high-level representation of the flow of data through the architecture
 
    Figure 1: Architecture diagram
