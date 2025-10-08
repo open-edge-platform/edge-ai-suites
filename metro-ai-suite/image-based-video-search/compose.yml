@@ -229,11 +229,10 @@ services:
       - "80:80"
       - "443:443"
       - "8554:8554"
-    build:
-      context: src/nginx
-      dockerfile: Dockerfile
     volumes:
-      - "./src/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - ./src/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./src/nginx/generate_certs.sh:/usr/local/bin/generate_certs.sh:ro
+    entrypoint: ["/usr/local/bin/generate_certs.sh"]
     depends_on:
       - app
     environment:
@@ -242,6 +241,12 @@ services:
       - no_proxy=
       - NO_PROXY=
     restart: on-failure:5
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/nginx_healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   milvus-data:
