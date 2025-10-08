@@ -94,8 +94,8 @@ services:
       timeout: 5s
       retries: 20
     environment:
-      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry,${no_proxy}"
-      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry,${no_proxy}"
+      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,${no_proxy}"
+      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,${no_proxy}"
       KAPACITOR_PORT: ${KAPACITOR_PORT}
       INFLUX_SERVER: "ia-influxdb"
       KAPACITOR_INFLUXDB_0_USERNAME: ${INFLUXDB_USERNAME}
