@@ -14,7 +14,7 @@ from config import (
     MQTT_BROKER, MQTT_PORT, MQTT_TOPIC, MQTT_USER, MQTT_PASSWORD,
     SCENESCAPE_MQTT_BROKER, SCENESCAPE_MQTT_PORT, SCENESCAPE_MQTT_TOPIC,
     SCENESCAPE_MQTT_USER, SCENESCAPE_MQTT_PASSWORD,
-    SCENESCAPE_CA_CERT_PATH, SCENESCAPE_CLIENT_CERT_PATH, SCENESCAPE_CLIENT_KEY_PATH
+    SCENESCAPE_CA_CERT_PATH, SCENESCAPE_CLIENT_CERT_PATH, SCENESCAPE_CLIENT_KEY_PATH, NVR_SCENESCAPE_ENABLED
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -177,15 +177,17 @@ async def start_mqtt_clients():
         MQTT_PASSWORD,
         "frigate"
     )
-    await asyncio.to_thread(
-        start_mqtt,
-        SCENESCAPE_MQTT_BROKER,
-        SCENESCAPE_MQTT_PORT,
-        SCENESCAPE_MQTT_USER,
-        SCENESCAPE_MQTT_PASSWORD,
-        "scenescape",
-        ca_cert=SCENESCAPE_CA_CERT_PATH,
-        client_cert=SCENESCAPE_CLIENT_CERT_PATH,
-        client_key=SCENESCAPE_CLIENT_KEY_PATH,
-    )
+    logger.info(f" Scenescape is enabled {NVR_SCENESCAPE_ENABLED}, starting Scenescape MQTT client")
+    if NVR_SCENESCAPE_ENABLED:
+        await asyncio.to_thread(
+            start_mqtt,
+            SCENESCAPE_MQTT_BROKER,
+            SCENESCAPE_MQTT_PORT,
+            SCENESCAPE_MQTT_USER,
+            SCENESCAPE_MQTT_PASSWORD,
+            "scenescape",
+            ca_cert=SCENESCAPE_CA_CERT_PATH,
+            client_cert=SCENESCAPE_CLIENT_CERT_PATH,
+            client_key=SCENESCAPE_CLIENT_KEY_PATH,
+        )
 

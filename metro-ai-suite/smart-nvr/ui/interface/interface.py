@@ -329,6 +329,7 @@ def auto_refresh_summary_status(summary_id):
 
 def create_ui():
     show_genai_tab = os.getenv("NVR_GENAI", "false").lower() == "true"
+    show_scenescape_source = os.getenv("NVR_SCENESCAPE", "false").lower() == "true"
     time.sleep(5)  # Ensure the environment is fully initialized
     camera_data = fetch_cameras()
     camera_list = list(camera_data.keys())
@@ -546,7 +547,7 @@ def create_ui():
             with gr.TabItem("Auto-Route Events"):
                 with gr.Row():
                     source_dropdown = gr.Dropdown(
-                        choices=["frigate", "scenescape"],
+                        choices=["frigate"] + (["scenescape"] if show_scenescape_source else []),
                         label="Select Source",
                         value="frigate",
                     )
@@ -679,27 +680,31 @@ def create_ui():
                 # Rules Table Section
                 gr.Markdown("### Current Rules")
                 delete_status = gr.Textbox(label="Deletion Status", visible=False)
+                headers = ["ID", "Source"]
+                datatypes = ["str", "str"]
+                if show_scenescape_source:
+                    headers.append("Vehicle Count")
+                    datatypes.append("str")
+                headers.extend(["Camera", "Label", "Action", "Delete"])
+                datatypes.extend(["str", "str", "str", "str"])
+
                 rules_table = gr.Dataframe(
-                    headers=["ID", "Source", "Vehicle Count", "Camera", "Label", "Action", "Delete"],
-                    datatype=["str", "str", "str", "str", "str", "str", "str"],
+                    headers=headers,
+                    datatype=datatypes,
                     interactive=False,
                 )
                 refresh_rules_btn = gr.Button("🔄 Refresh Rules")
 
                 def load_rules():
                     rules = fetch_rules()
-                    return [
-                        [
-                            r["id"],
-                            r.get("source", "frigate"),
-                            str(r.get("vehicle_count", "-")),
-                            r.get("camera", "-"),
-                            r.get("label", "-"),
-                            r.get("action", "-"),
-                            "🗑️ Delete",
-                        ]
-                        for r in rules
-                    ]
+                    rows = []
+                    for r in rules:
+                        row = [r["id"], r.get("source", "frigate")]
+                        if show_scenescape_source:
+                            row.append(str(r.get("vehicle_count", "-")))
+                        row.extend([r.get("camera", "-"), r.get("label", "-"), r.get("action", "-"), "🗑️ Delete"])
+                        rows.append(row)
+                    return rows
 
                 def delete_selected_rule(evt: gr.SelectData):
 

@@ -23,6 +23,7 @@ MQTT_USER = os.getenv("MQTT_USER")
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD")
 
 # Scenescape MQTT Configuration
+NVR_SCENESCAPE_ENABLED = os.getenv("NVR_SCENESCAPE", "false").lower() == "true"
 SCENESCAPE_MQTT_BROKER = os.getenv("HOST_IP", "mqtt-broker")
 SCENESCAPE_MQTT_PORT = int(os.getenv("SCENESCAPE_MQTT_PORT", 1883))
 SCENESCAPE_MQTT_TOPIC = os.getenv("SCENESCAPE_MQTT_TOPIC", "scenescape/data/camera/#")  

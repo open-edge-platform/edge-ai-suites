@@ -82,7 +82,11 @@ validate_environment() {
         print_info "Please set it to 'true' or 'false' to enable/disable NVR GenAI features"
         return 1
     fi
-    
+    if [ -z "${NVR_SCENESCAPE}" ]; then
+        print_error "NVR_SCENESCAPE environment variable is required"
+        print_info "Please set it to 'true' or 'false' to enable/disable NVR SceneScape features"
+        return 1
+    fi    
     # Check for VSS IP and port
     if [ -z "${VSS_SUMMARY_IP}" ]; then
         print_error "VSS_SUMMARY_IP environment variable is required"
@@ -122,7 +126,20 @@ validate_environment() {
             return 1
         fi
     fi
-    
+    # Check for SceneScape MQTT settings if enabled
+    if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
+        if [ -z "${SCENESCAPE_MQTT_USER}" ]; then
+            print_error "SCENESCAPE_MQTT_USER environment variable is required when NVR_SCENESCAPE is enabled"
+            print_info "Please set it to the MQTT username for SceneScape"
+            return 1
+        fi
+
+        if [ -z "${SCENESCAPE_MQTT_PASSWORD}" ]; then
+            print_error "SCENESCAPE_MQTT_PASSWORD environment variable is required when NVR_SCENESCAPE is enabled"
+            print_info "Please set it to the MQTT password for SceneScape"
+            return 1
+        fi
+    fi    
     # Check for MQTT user and password
     if [ -z "${MQTT_USER}" ]; then
         print_error "MQTT_USER environment variable is required"
