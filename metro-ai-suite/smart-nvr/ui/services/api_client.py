@@ -32,11 +32,24 @@ def fetch_events(camera_name):
         return []
 
 
-def add_rule(camera: str, label: str, action: str) -> Dict:
-    # Create a consistent rule ID based on camera, label, and action
-    rule_content = f"{camera}-{label}-{action.lower()}"
+def add_rule(
+    camera: str,
+    label: str,
+    action: str,
+    source: Optional[str] = None,
+    vehicle_count: Optional[int] = None,
+) -> Dict:
+    # Normalize inputs
+    normalized_action = action.lower()
+    normalized_source = (source or "frigate").lower()
+
+    # Create a consistent rule ID based on camera, label, source, action, and vehicle count
+    rule_content = f"{camera}-{label}-{normalized_source}-{normalized_action}"
+    if vehicle_count is not None:
+        rule_content += f"-{vehicle_count}"
+
     hash = hashlib.md5(rule_content.encode(), usedforsecurity=False).hexdigest()[:8]  # 8-char hash
-    rule_id = camera + "-" + label + "-" + action + "-" + hash
+    rule_id = f"{camera}-{label}-{normalized_source}-{normalized_action}-{hash}"
     # First check if rule already exists
     try:
         check_response = requests.get(f"{API_BASE_URL}/rules/{rule_id}")
@@ -54,8 +67,12 @@ def add_rule(camera: str, label: str, action: str) -> Dict:
         "id": rule_id,
         "camera": camera,
         "label": label,
-        "action": action.lower(),
+        "action": normalized_action,
+        "source": normalized_source,
     }
+
+    if vehicle_count is not None:
+        payload["vehicle_count"] = vehicle_count
 
     try:
         response = requests.post(f"{API_BASE_URL}/rules/", json=payload)

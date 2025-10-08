@@ -102,11 +102,17 @@ class Rule(BaseModel):
     label: str
     action: str
     camera: str | None = None
+    source: str | None = None
+    vehicle_count: int | None = None
 
 
 @router.post("/rules/")
 async def add_rule(rule: Rule, request: Request):
-    success = await redis_store.add_rule(request, rule.id, rule.dict())
+    success = await redis_store.add_rule(
+        request,
+        rule.id,
+        rule.dict(exclude_none=True),
+    )
     if not success:
         raise HTTPException(status_code=400, detail="Rule ID already exists")
     return {"message": "Rule added", "rule": rule}

@@ -96,44 +96,50 @@ def on_message(client, userdata, msg):
             if isinstance(objects, dict):
                 vehicle_list = objects.get("vehicle", [])
             num_vehicles = len(vehicle_list)
-            if num_vehicles > 3:
-                iso_timestamp = payload.get("timestamp", "")
-                logger.info(f" Scenescape raw timestamp: {iso_timestamp}")
-                formatted_timestamp = iso_to_frigate_timestamp(iso_timestamp)
-                scenescape_camera = payload.get("id")
-                logger.info(f" Fetching events every 3 seconds for Scenescape")
-                logger.info(f" Message received on topic for vehicle more than 3: {msg.topic}")
-                logger.info(f" Scenescape message timestamp: {formatted_timestamp} |  Camera: {scenescape_camera} |  Number of vehicles: {num_vehicles} ")
+            if num_vehicles <= 0:
+                return
+            
+            iso_timestamp = payload.get("timestamp", "")
+            logger.info(f" Scenescape raw timestamp: {iso_timestamp}")
+            formatted_timestamp = iso_to_frigate_timestamp(iso_timestamp)
+            scenescape_camera = payload.get("id")
+            logger.info(f" Fetching events every 2 seconds for Scenescape")
+            logger.info(f" Message received on topic for vehicle count {num_vehicles}: {msg.topic}")
+            logger.info(
+                f" Scenescape message timestamp: {formatted_timestamp} |  Camera: {scenescape_camera} |  Number of vehicles: {num_vehicles} "
+            )
 
-                start_time = float(formatted_timestamp) - 15
-                end_time = float(formatted_timestamp) - 5
+            start_time = float(formatted_timestamp) - 15
+            end_time = float(formatted_timestamp) - 5
 
-                logger.info(
-                    f"Fetching scenescape clip for time {start_time} to {end_time}."
-                )
-                for obj_type, obj_list in objects.items():
-                    if isinstance(obj_list, list) and obj_list:
-                        event_data = {
-                            "label": obj_type,
-                            "camera": scenescape_camera,
-                            "start_time": start_time,
-                            "end_time": end_time,
-                        }
-                        logger.info(f" Scenescape generated event: {event_data}")
+            logger.info(
+                f"Fetching scenescape clip for time {start_time} to {end_time}."
+            )
+            for obj_type, obj_list in objects.items():
+                if isinstance(obj_list, list) and obj_list:
+                    event_data = {
+                        "label": obj_type,
+                        "camera": scenescape_camera,
+                        "start_time": start_time,
+                        "end_time": end_time,
+                        "num_vehicles": num_vehicles,
+                    }
+                    logger.info(f" Scenescape generated event: {event_data}")
 
-                        future = asyncio.run_coroutine_threadsafe(
-                            process_event(event_data, context={"source": "scenescape", "topic": msg.topic}),
-                            event_loop,
-                        )
-                        future.add_done_callback(
-                            lambda fut: (
-                                logger.info(f" process_event completed for {obj_type}: {fut.result()}")
-                                if not fut.exception()
-                                else logger.error(f" process_event failed for {obj_type}: {fut.exception()}", exc_info=True)
+                    future = asyncio.run_coroutine_threadsafe(
+                        process_event(event_data, context={"source": "scenescape", "topic": msg.topic}),
+                        event_loop,
+                    )
+                    future.add_done_callback(
+                        lambda fut: (
+                            logger.info(f" process_event completed for {obj_type}: {fut.result()}")
+                            if not fut.exception()
+                            else logger.error(
+                                f" process_event failed for {obj_type}: {fut.exception()}",
+                                exc_info=True,
                             )
                         )
-            else:
-                return
+                    )
 
         else:
             logger.warning(f" Unknown topic: {msg.topic}")

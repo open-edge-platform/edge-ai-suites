@@ -609,8 +609,14 @@ def create_ui():
                     add_rule_alert = gr.Textbox(label="Status", visible=False)
 
                 # 🔘 Callback to add rule and show alert
-                def add_rule_callback(camera, label, action):
-                    resp = add_rule(camera, label, action)
+                def add_rule_callback(camera, label, action, source, vehicle_count_value):
+                    resp = add_rule(
+                        camera,
+                        label,
+                        action,
+                        source,
+                        vehicle_count_value if source == "scenescape" else None,
+                    )
                     message = resp
                     return gr.update(value=message, visible=True)
 
@@ -621,8 +627,29 @@ def create_ui():
 
                 # 🚀 Show alert on rule add
                 # 🔘 Combined logic: show message, sleep, hide
-                def add_rule_with_auto_hide(camera, label, action):
-                    resp = add_rule(camera, label, action)
+                def add_rule_with_auto_hide(source, vehicle_count_value, camera, label, action):
+                    vehicle_threshold = None
+                    if source == "scenescape":
+                        try:
+                            vehicle_threshold = int(vehicle_count_value)
+                            if vehicle_threshold < 0:
+                                raise ValueError
+                        except (TypeError, ValueError):
+                            yield gr.update(
+                                value="❌ Vehicle count must be a non-negative integer.",
+                                visible=True,
+                            )
+                            time.sleep(3)
+                            yield gr.update(visible=False)
+                            return
+
+                    resp = add_rule(
+                        camera,
+                        label,
+                        action,
+                        source,
+                        vehicle_threshold,
+                    )
                     message = (
                         resp.get("message") if isinstance(resp, dict) else str(resp)
                     )
@@ -638,7 +665,7 @@ def create_ui():
 
                 add_rule_btn.click(
                     fn=add_rule_with_auto_hide,
-                    inputs=[camera_dropdown, label_filter, action_dropdown_auto],
+                    inputs=[source_dropdown, vehicle_count, camera_dropdown, label_filter, action_dropdown_auto],
                     outputs=[add_rule_alert],
                 )
 
@@ -653,8 +680,8 @@ def create_ui():
                 gr.Markdown("### Current Rules")
                 delete_status = gr.Textbox(label="Deletion Status", visible=False)
                 rules_table = gr.Dataframe(
-                    headers=["ID", "Camera", "Label", "Action", "Delete"],
-                    datatype=["str", "str", "str", "str", "str"],
+                    headers=["ID", "Source", "Vehicle Count", "Camera", "Label", "Action", "Delete"],
+                    datatype=["str", "str", "str", "str", "str", "str", "str"],
                     interactive=False,
                 )
                 refresh_rules_btn = gr.Button("🔄 Refresh Rules")
@@ -662,7 +689,15 @@ def create_ui():
                 def load_rules():
                     rules = fetch_rules()
                     return [
-                        [r["id"], r["camera"], r["label"], r["action"], "🗑️ Delete"]
+                        [
+                            r["id"],
+                            r.get("source", "frigate"),
+                            str(r.get("vehicle_count", "-")),
+                            r.get("camera", "-"),
+                            r.get("label", "-"),
+                            r.get("action", "-"),
+                            "🗑️ Delete",
+                        ]
                         for r in rules
                     ]
 
