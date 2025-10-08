@@ -19,9 +19,6 @@ services:
       - milvus-data:/var/lib/milvus
       - ./src/milvus-db/embedEtcd.yaml:/milvus/configs/embedEtcd.yaml
       - ./src/milvus-db/user.yaml:/milvus/configs/user.yaml
-    expose:
-      - "19530"
-      - "9091"
       # This port conflicts with etcd when exposed, so it is commented out:
       # - "2379:2379"
     healthcheck:
@@ -43,8 +40,6 @@ services:
       - http_proxy=
       - https_proxy=
       - no_proxy=
-    expose:
-      - "3000"
     restart: on-failure:5
     depends_on:
       milvus-db:
@@ -52,8 +47,6 @@ services:
 
   feature-matching:
     image: ${DOCKER_REGISTRY}intel/feature-matching:v1.0.2-pre-RC1
-    expose:
-      - "8000"
     container_name: ibvs-featurematching
     build:
       context: src/feature-matching
@@ -126,19 +119,12 @@ services:
       - http_proxy=
       - https_proxy=
       - no_proxy=
-    expose:
-      - "8554"
-      - "1935"
-      - "8888"
-      - "8889"
     restart: on-failure:5
   broker:
     image: docker.io/library/eclipse-mosquitto:2.0.20
     container_name: ibvs-broker
     volumes:
       - ./src/broker:/mosquitto/config
-    expose:
-      - "1883"
     restart: unless-stopped
     healthcheck:
       test:  ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
@@ -155,8 +141,6 @@ services:
     privileged: false
     tty: true
     entrypoint: ["./run.sh"]
-    expose:
-      - '8080'
       # - '8554:8554'
     environment:
       - ENABLE_RTSP=true
@@ -223,8 +207,6 @@ services:
     build:
       context: src/app
       dockerfile: Dockerfile
-    expose:
-      - "3000"
     read_only: true
     depends_on:
       streaming-pipeline:
