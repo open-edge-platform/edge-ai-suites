@@ -1,0 +1,31 @@
+dbrp "datain"."autogen"
+
+var data0 = stream
+        |from()
+                .database('datain')
+                .retentionPolicy('autogen')
+                .measurement('weld-sensor-data')
+        @weld_anomaly_detector()
+data0
+        |influxDBOut()
+                .buffer(0)
+                .database('datain')
+                .measurement('weld-sensor-anomaly-data')
+                .retentionPolicy('autogen')
+data0
+        |alert()
+                .crit(lambda: "anomaly_status" >= 0)
+                .message('{"time": "{{ index .Time }}", "Pressure": {{ index .Fields "Pressure" }}, "CO2 Weld Flow": {{ index .Fields "CO2 Weld Flow" }}, "anomaly_status": {{ index .Fields "anomaly_status" }} } ')
+                .noRecoveries()
+                .mqtt('my_mqtt_broker')
+                .topic('ts_weld_defect_detection')
+                .qos(1)
+
+data0
+        |alert()
+                .crit(lambda: "anomaly_status" > 0)
+                .message('{"time": "{{ index .Time }}", "Pressure": {{ index .Fields "Pressure" }}, "CO2 Weld Flow": {{ index .Fields "CO2 Weld Flow" }}, "anomaly_status": {{ index .Fields "anomaly_status" }} } ')
+                .noRecoveries()
+                .mqtt('my_mqtt_broker')
+                .topic('alerts/weld_defect_detection')
+                .qos(1)

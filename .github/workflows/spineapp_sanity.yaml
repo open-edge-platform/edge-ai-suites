@@ -1,0 +1,94 @@
+name: "[industrial-edge-insights-vision] Sanity Workflow"
+
+on:
+  workflow_dispatch:      # allows manual trigger
+    inputs:
+      branch:
+        description: "Branch to run job on"
+        required: false
+        default: "main"
+
+  workflow_call:          # allows being called from another workflow
+    inputs:
+      branch:
+        description: "Branch to run job on"
+        required: false
+        type: string
+
+jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ubuntu_version: ubuntu22 
+    steps:
+    - name: Determine branch
+      id: get_branch
+      run: |
+        if [ -n "${{ inputs.branch }}" ]; then
+          echo "branch=${{ inputs.branch }}" >> $GITHUB_OUTPUT
+        elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "branch=${{ github.event.inputs.branch }}" >> $GITHUB_OUTPUT
+        else
+          echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+        fi
+    - name: Check out edge-ai-suites repository
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+      with:
+        persist-credentials: false
+        path: edge-ai-suites-repo
+        ref: ${{ steps.get_branch.outputs.branch }}
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 #3.4.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Sanity Test 
+      run: | 
+       sudo apt-get update
+       sudo pip install robotframework
+       lspci | grep -i vga
+       sudo apt install -y python3-nose libxml2-utils vlc
+       cd edge-ai-suites-repo/manufacturing-ai-suite/industrial-edge-insights-vision/tests/robot_files
+       robot test.robot || true  &
+       sleep 480
+       docker logs dlstreamer-pipeline-server >> dlsps_logs.txt &
+       wait
+       mkdir -p /tmp/test_results
+       cp -r report.html log.html output.xml dlsps_logs.txt /tmp/test_results/
+       passed=$(xmllint --xpath "//return/status[@status='PASS']" ./output.xml | wc -l) || true
+       failed=$(xmllint --xpath "//return/status[@status='FAIL']" ./output.xml | wc -l) || true
+       not_run=$(xmllint --xpath "//return/status[@status='NOT RUN']" ./output.xml | wc -l) || true
+       total=$((passed + failed + not_run))
+       echo "### Sanity Test Summary" >> $GITHUB_STEP_SUMMARY
+       echo "- Total: $total" >> $GITHUB_STEP_SUMMARY
+       echo "- ✅ Passed: $passed" >> $GITHUB_STEP_SUMMARY
+       echo "- ❌ Failed: $failed" >> $GITHUB_STEP_SUMMARY
+       echo "- ⏭️ Not Run: $not_run" >> $GITHUB_STEP_SUMMARY
+       echo "- 📄 [Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+    - name: Upload Scan artifact to Github
+      uses: actions/upload-artifact@v4
+      with:
+        name: Sanity_Reports
+        path: /tmp/test_results/*
+    - name: Clean up
+      if: always()
+      run: |
+        sudo rm -rf edge-ai-libraries-repo
+        if [ -n "$(docker images -aq)" ]; then
+               docker rmi -f $(docker images -aq) || true
+        fi
+        sudo rm -rf /tmp/test_results/*
+
+
+
