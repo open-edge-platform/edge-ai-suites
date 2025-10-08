@@ -1,8 +1,4 @@
 {
-    "model_registry": {
-        "enable": false,
-        "version": "1.0"
-    },
     "udfs": {
         "name": "weld_anomaly_detector",
         "models": "weld_anomaly_detector.cb"

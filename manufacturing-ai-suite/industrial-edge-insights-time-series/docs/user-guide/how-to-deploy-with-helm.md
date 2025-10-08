@@ -247,10 +247,6 @@ To configure alerts in Time Series Analytics Microservice, follow the steps [her
 
 To deploy the application with a custom UDF, follow the steps [here](./how-to-configure-custom-udf.md#helm-deployment).
 
-## Deploy the Application with a Custom UDF by Uploading to the Model Registry
-
-To deploy a custom UDF by uploading it to the Model Registry, follow the steps [here](./how-to-configure-custom-udf.md#with-model-registry).
-
 ## Troubleshooting
 
 - Check pod details or container logs to diagnose failures:

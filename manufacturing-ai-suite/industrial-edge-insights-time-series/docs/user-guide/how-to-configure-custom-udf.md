@@ -78,10 +78,6 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -d '{
-      "model_registry": {
-          "enable": false,
-          "version": "1.0"
-      },
       "udfs": {
           "name": "<custom_UDF>",
           "models": "<custom_UDF>.pkl",
@@ -102,84 +98,5 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
     POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
     kubectl logs -f -n ts-sample-app $POD_NAME
     ```
-
-## With Model Registry
-
-> **Note**:
-> 1. If doing docker based deployment, ensure the Wind Turbine Anomaly Detection sample app is deployed by following [getting started](./get-started.md)
-> 2. If doing Helm based deployment on Kubernetes cluster, ensure the Wind Turbine Anomaly Detection sample app is deployed by following [how to deploy with helm](./how-to-deploy-with-helm.md)
-
-This approach facilitates the updates to `Time Series Analytics` microservice at runtime by updating the configuration and UDF deployment
-package using its REST APIs.
-
-### 1. UDF Deployment Package structure
-
-If one wants to create a separate UDF deployment package, just ensure to have the following structure
-before zipping and uploading it to Model Registry.
-
-> **NOTE**: Ensure to have the same name for udf python script, TICK script, and model name.
-
-```
-udfs/
-    ├── requirements.txt
-    ├── <name.py>
-tick_scripts/
-    ├── <name.tick>
-models/
-    ├── <name.pkl>
-```
-
-### 2. Uploading Models to the Model Registry
-
-Below steps show how to create and upload the wind turbine anomaly detection UDF deployment package
-to the Model Registry microservice.
-
-1. The following step demonstrates how to create a sample model file from an existing model folder for uploading to the Model Registry. If you already have a model zip file, you can skip this step.
-   ```bash
-   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/
-   zip -r windturbine_anomaly_detector.zip udfs models tick_scripts
-   ```
-   You can utilize the generated `windturbine_anomaly_detector.zip` absolute path as `<udf_deployment_package_path.zip>` in the next step
-
-2. Upload a model file to Model Registry
-    ```bash
-   curl -L -X POST "http://<HOST_IP>:32002/models" \
-   -H 'Content-Type: multipart/form-data' \
-   -F 'name="windturbine_anomaly_detector"' \
-   -F 'version="1.0"' \
-   -F 'file=@<udf_deployment_package_path.zip>;type=application/zip'
-    ```
-
-### 3. Update Time Series Analytics Microservice config for Model Registry usage
-
-
-1. Run the following command, to update the configuration in `Time Series Analytics` microservice. 
-   Please note, the default of `<PORT>` value is `3000` for docker compose deployment and `30001` for helm based deployment.
-
-    ```bash
-    curl -k -X 'POST' \
-    'https://<HOST_IP>:<PORT>/ts-api/config' \
-    -H 'accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -d '{
-        "model_registry": {
-            "enable": true,
-            "version": "1.0"
-        },
-        "udfs": {
-            "name": "windturbine_anomaly_detector",
-            "models": "windturbine_anomaly_detector.pkl",
-            "device": "cpu"
-        },
-        "alerts": {
-            "mqtt": {
-                "mqtt_broker_host": "ia-mqtt-broker",
-                "mqtt_broker_port": 1883,
-                "name": "my_mqtt_broker"
-            }
-        }
-    }
-    '
-    ```
-
+    
 For more details, refer `Time Series Analytics` microservice API docs [here](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice).
