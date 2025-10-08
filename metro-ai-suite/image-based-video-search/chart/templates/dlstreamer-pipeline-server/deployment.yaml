@@ -21,6 +21,8 @@ spec:
         {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
         katenary.v3/component: dlstreamer-pipeline-server
     spec:
+      securityContext:
+        supplementalGroups: [109, 110, 992]
       initContainers:
       - name: openvino-container
         image: openvino/ubuntu22_dev:2024.6.0
@@ -66,33 +68,43 @@ spec:
         - configMapRef:
             name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-env'
         image: '{{ tpl .Values.dlstreamerpipelineserver.repository.image $ }}:{{ tpl .Values.dlstreamerpipelineserver.repository.tag $ | default "latest" }}'
+        {{- if eq .Values.dlstreamerpipelineserver.pipeline "config.gpu.json" }}
         securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-          fsGroup: 0
-          {{- if eq .Values.dlstreamerpipelineserver.pipeline "config.gpu.json" }}
           privileged: true
-          supplementalGroups: [109, 110]
-          {{- end }}
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: true
+          capabilities:
+            drop:
+              - ALL
+        {{- else}}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1999
+          capabilities:
+            drop:
+              - ALL
+        {{- end }}
         imagePullPolicy: {{ .Values.dlstreamerpipelineserver.imagePullPolicy }}
         name: dlstreamer-pipeline-server
         command: ["/bin/bash", "-c"]
         args: 
-          - |
-            cp /tmp/pipeline/{{ .Values.dlstreamerpipelineserver.pipeline }} config.json &&
-            cp /tmp/pipeline/person-vehicle-bike-detection-2004.json . &&
-            chown 1999 -R /home/pipeline-server &&
-            {{- if eq .Values.dlstreamerpipelineserver.pipeline "config.gpu.json" }}
-            ./run.sh
-            {{- else }}
-            runuser -u intelmicroserviceuser ./run.sh
-            {{- end }}
+            - |
+              ./run.sh
         ports:
         - containerPort: 8080
           name: port-8080
         volumeMounts:
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline'
-          mountPath: /tmp/pipeline
+          mountPath: /home/pipeline-server/config.json
+          subPath: config.cpu.json
+        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline'
+          mountPath: /home/pipeline-server/config.gpu.json
+          subPath: config.gpu.json
+        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline'
+          mountPath: /home/pipeline-server/person-vehicle-bike-detection-2004.json
+          subPath: person-vehicle-bike-detection-2004.json
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline-root'
           mountPath: /var/cache/pipeline_root
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-tmp'
