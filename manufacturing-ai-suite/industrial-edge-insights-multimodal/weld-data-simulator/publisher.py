@@ -14,6 +14,7 @@ import json
 import os
 import glob
 from typing import Tuple, Optional
+import logging
 
 MQTT_BROKER = os.getenv("MQTT_BROKER", "ia-mqtt-broker")
 MEDIAMTX_SERVER = os.getenv("MEDIAMTX_SERVER", "mediamtx")
@@ -29,6 +30,17 @@ FRAME_WIDTH = 960
 FRAME_HEIGHT = 600
 published_data = []
 
+# Configure logging
+
+log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
+logging_level = getattr(logging, log_level, logging.INFO)
+
+# Configure logging
+logging.basicConfig(
+    level=logging_level,  # Set the log level to DEBUG
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Log format
+)
+logger = logging.getLogger(__name__)
 
 def read_simulation_files(base_filename: str, simulation_data_dir: str = "/simulation-data") -> Tuple[Optional[str], Optional[str]]:
     """
@@ -46,16 +58,16 @@ def read_simulation_files(base_filename: str, simulation_data_dir: str = "/simul
     
     # Check if both files exist
     if os.path.exists(video_path) and os.path.exists(csv_path):
-        print(f"Found paired files:")
-        print(f"  Video: {video_path}")
-        print(f"  CSV: {csv_path}")
+        logger.info(f"Found paired files:")
+        logger.info(f"  Video: {video_path}")
+        logger.info(f"  CSV: {csv_path}")
         return video_path, csv_path
     else:
-        print(f"Could not find both files for base name '{base_filename}'")
+        logger.info(f"Could not find both files for base name '{base_filename}'")
         if not os.path.exists(video_path):
-            print(f"  Missing video file: {video_path}")
+            logger.info(f"  Missing video file: {video_path}")
         if not os.path.exists(csv_path):
-            print(f"  Missing CSV file: {csv_path}")
+            logger.info(f"  Missing CSV file: {csv_path}")
         return None, None
 
 
@@ -103,19 +115,17 @@ def load_simulation_data(base_filename: str, simulation_data_dir: str = "/simula
         # Load video
         video_cap = cv2.VideoCapture(video_path)
         if not video_cap.isOpened():
-            print(f"Error: Could not open video file {video_path}")
+            logger.error(f"Error: Could not open video file {video_path}")
             return None, None
         
         # Load CSV
         df = pd.read_csv(csv_path)
-        print(f"Successfully loaded:")
-        print(f"  Video frames: {int(video_cap.get(cv2.CAP_PROP_FRAME_COUNT))}")
-        print(f"  CSV rows: {len(df)}")
-        
+        logger.debug(f"Successfully loaded:")
+        logger.info(f"  Video frames: {int(video_cap.get(cv2.CAP_PROP_FRAME_COUNT))} CSV rows: {len(df)}")        
         return video_cap, df
         
     except Exception as e:
-        print(f"Error loading simulation data: {e}")
+        logger.error(f"Error loading simulation data: {e}")
         return None, None
 
 
@@ -137,10 +147,10 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
         # Use the new function to load paired files
         cap, df = load_simulation_data(base_filename, simulation_data_dir)
         if cap is None or df is None:
-            print(f"Failed to load simulation data for '{base_filename}'")
+            logger.error(f"Failed to load simulation data for '{base_filename}'")
             return
     else:
-        print("No base filename provided, skipping streaming.")
+        logger.error("No base filename provided, skipping streaming.")
         return
         
     num_rows = len(df)
@@ -148,7 +158,7 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
 
     # Open video (if not already opened by load_simulation_data)
     if not cap.isOpened():
-        print("Error: Could not open video file")
+        logger.error("Error: Could not open video file")
         return
         
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -157,11 +167,11 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
     # Apply FPS downframing if specified
     if target_fps is not None and target_fps > 0:
         if target_fps > fps:
-            print(f"Warning: Target FPS ({target_fps}) is higher than original FPS ({fps}). Using original FPS.")
+            logger.fatal(f"Warning: Target FPS ({target_fps}) is higher than original FPS ({fps}). Using original FPS.")
             effective_fps = fps
         else:
             effective_fps = target_fps
-            print(f"Downframing from {fps:.2f} FPS to {effective_fps:.2f} FPS")
+            logger.info(f"Downframing from {fps:.2f} FPS to {effective_fps:.2f} FPS")
     else:
         effective_fps = fps
     
@@ -171,17 +181,17 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration_sec = total_frames / fps if fps > 0 else 0
 
-    print(f"Video duration: {duration_sec:.2f} seconds")
-    print(f"Original FPS: {original_fps:.2f}")
-    print(f"Effective FPS: {effective_fps:.2f}")
-    print(f"Total frames: {total_frames}")
+    logger.info(f"Video duration: {duration_sec:.2f} seconds")
+    logger.info(f"Original FPS: {original_fps:.2f}")
+    logger.info(f"Effective FPS: {effective_fps:.2f}")
+    logger.info(f"Total frames: {total_frames}")
     if frame_skip_ratio > 1:
-        print(f"Frame skip ratio: {frame_skip_ratio} (showing every {frame_skip_ratio} frames)")
+        logger.info(f"Frame skip ratio: {frame_skip_ratio} (showing every {frame_skip_ratio} frames)")
 
     # Correlate each CSV row to a time window in the video
     # Each row covers duration_sec / num_rows seconds
     row_time_window = duration_sec / num_rows if num_rows > 0 else 0
-    print(f"Row time window: {row_time_window:.2f} seconds")
+    logger.info(f"Row time window: {row_time_window:.2f} seconds")
     # MQTT setup
     global client
     client = mqtt.Client()
@@ -212,7 +222,7 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
         # Calculate which CSV row this frame belongs to (based on original timing)
         current_time = frame_count / original_fps if original_fps > 0 else 0
         row_idx = int(current_time / row_time_window) if row_time_window > 0 else 0
-        print(f"Frame {frame_count}, Time: {current_time:.2f}s, Row: {row_idx}, Processed: {processed_frame_count} for '{base_filename}'")
+        logger.info(f"Frame {frame_count}, Time: {current_time:.2f}s, Row: {row_idx}, Processed: {processed_frame_count} for '{base_filename}'")
         
         if row_idx >= num_rows:
             row_idx = num_rows - 1
@@ -252,31 +262,23 @@ def check_and_load_simulation_files(target_fps):
     """
     Display the available simulation file pairs and provide usage examples.
     """
-    print("Available simulation file pairs:")
     available_files = get_available_simulation_files()
+    if available_files:
+        logger.info("simulation file pairs found!")
+    else:
+        logger.info("No simulation file pairs found!")
+        return
 
     continuous_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true").lower() == "true"
     
     while True:
         for i, filename in enumerate(available_files, 1):
-            print(f"  {i}. {filename}")
+            logger.info(f"  {i}. {filename}")
             stream_video_and_csv(filename, target_fps=target_fps)
         if not continuous_ingestion:
             break
-
-    if not available_files:
-        print("No simulation file pairs found!")
     
-    for i, filename in enumerate(available_files, 1):
-        print(f"  {i}. {filename}")
-        stream_video_and_csv(available_files[0], target_fps=10)
     
-    if available_files:
-        print(f"\nExample usage:")
-        print(f"  stream_video_and_csv('{available_files[0]}')")
-        print(f"  stream_video_and_csv('{available_files[0]}', target_fps=10)  # Downsample to 10 FPS")
-    else:
-        print("No simulation file pairs found!")
 
 
 if __name__ == "__main__":
