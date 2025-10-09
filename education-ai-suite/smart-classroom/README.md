@@ -106,7 +106,7 @@ asr:
   name: paraformer-zh
 ```
 
-* (Optional) If you want to use IPEX-based summarization, make sure IPEX-LLM is installed and set:
+* (Optional) If you want to use IPEX-based summarization, make sure IPEX-LLM is installed, conda env for ipex is activated and set following in `config`:
 
 ```bash
 summarizer:
@@ -118,14 +118,19 @@ summarizer:
 ---
 
 ### ✅ 3. **Run the Application**
+Activate **either** of the environments before running the application:
 
-Bring Up Backend:
+- If using base environment:
+```bash
+conda activate smartclassroom # OR smartclassroom_ipex
+```
+- Bring Up Backend:
 ```bash
 python main.py
 ```
 **To monitor power usage, run your shell with admin privileges before starting the application.**
 
-Bring Up Frontend:
+- Bring Up Frontend:
 ```bash
 cd ui
 npm install
