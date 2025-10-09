@@ -52,30 +52,34 @@ The goal is to transform raw classroom recordings into concise, structured summa
 
 - On **Windows**:  
   Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html), and add the `ffmpeg/bin` folder to your system `PATH`.
-
 ---
 
 **b. Install Python dependencies**  
-It’s recommended to create a **dedicated Conda environment** named `smartclassroom` for the base dependencies.
+It’s recommended to create a **dedicated Python virtual environment** for the base dependencies.
 
 ```bash
-conda create -n smartclassroom python=3.12
-conda activate smartclassroom
+python -m venv smartclassroom
+# On Windows:
+smartclassroom\Scripts\activate
+
+pip install --upgrade pip
+pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
 pip install --upgrade -r requirements.txt
 ```
-
 ---
 
-**c. [Optional] Install IPEX-LLM for IPEX-based LLM summarization**  
-If you plan to use IPEX, create a separate Conda environment named `smartclassroom_ipex` for steps **b + c** to keep the setup clean and avoid conflicts.
+**c. [Optional] Create Python Venv for Ipex Based Summarizer**  
+If you plan to use IPEX, create a separate virtual environment.
 
 ```bash
-conda create -n smartclassroom_ipex python=3.12
-conda activate smartclassroom_ipex
+python -m venv smartclassroom_ipex
+# On Windows:
+smartclassroom_ipex\Scripts\activate
+
+pip install --upgrade pip
 pip install --upgrade -r requirements.txt
 pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
 ```
-
 > 💡 *Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.*
 
 ---
@@ -106,7 +110,7 @@ asr:
   name: paraformer-zh
 ```
 
-* (Optional) If you want to use IPEX-based summarization, make sure IPEX-LLM is installed, conda env for ipex is activated and set following in `config`:
+* (Optional) If you want to use IPEX-based summarization, make sure IPEX-LLM is installed, env for ipex is activated and set following in `config`:
 
 ```bash
 summarizer:
@@ -118,13 +122,12 @@ summarizer:
 ---
 
 ### ✅ 3. **Run the Application**
-Activate **either** of the environments before running the application:
+Activate the environment before running the application:
 
-- If using base environment:
 ```bash
-conda activate smartclassroom # OR smartclassroom_ipex
+smartclassroom\Scripts\activate  # or smartclassroom_ipex
 ```
-- Bring Up Backend:
+Run the backend:
 ```bash
 python main.py
 ```
