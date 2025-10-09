@@ -185,7 +185,7 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 2. Copy your new UDF package (using the windturbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
     ```sh
     export SAMPLE_APP="weld-anomaly-detection"
-    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-confi # path relative to git clone folder
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config # path relative to git clone folder
     mkdir -p $SAMPLE_APP
     cp -r models tick_scripts udfs $SAMPLE_APP/.
 
