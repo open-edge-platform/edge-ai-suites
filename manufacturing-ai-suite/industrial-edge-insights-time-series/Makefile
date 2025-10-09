@@ -76,7 +76,7 @@ build_copyleft_sources:
 .PHONY: check_env_variables
 check_env_variables:
 	@echo "Checking if username/password in .env are matching the rules set..."
-	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD MR_PSQL_PASSWORD MR_MINIO_ACCESS_KEY MR_MINIO_SECRET_KEY"; \
+	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD"; \
 	for variable_name in $$variables; do \
 		value=$$(grep -E "^$$variable_name=" $(ENV_FILE) | cut -d'=' -f2); \
 		if [ -z "$$value" ]; then \
