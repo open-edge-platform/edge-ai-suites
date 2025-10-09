@@ -50,20 +50,34 @@ The goal is to transform raw classroom recordings into concise, structured summa
 
 **a. Install [FFmpeg](https://ffmpeg.org/download.html)** (required for audio processing):
 
-* On **Windows**:
+- On **Windows**:  
   Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html), and add the `ffmpeg/bin` folder to your system `PATH`.
 
-**b. Install Python dependencies:**
+---
+
+**b. Install Python dependencies**  
+It’s recommended to create a **dedicated Conda environment** named `smartclassroom` for the base dependencies.
 
 ```bash
+conda create -n smartclassroom python=3.12
+conda activate smartclassroom
 pip install --upgrade -r requirements.txt
 ```
 
-**c. [Optional] Install IPEX-LLM to use IPEX-based LLM model for summarization:**
+---
+
+**c. [Optional] Install IPEX-LLM for IPEX-based LLM summarization**  
+If you plan to use IPEX, create a separate Conda environment named `smartclassroom_ipex` for steps **b + c** to keep the setup clean and avoid conflicts.
 
 ```bash
+conda create -n smartclassroom_ipex python=3.12
+conda activate smartclassroom_ipex
+pip install --upgrade -r requirements.txt
 pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
 ```
+
+> 💡 *Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.*
+
 ---
 ### ⚙️ 2. Default Configuration
 
