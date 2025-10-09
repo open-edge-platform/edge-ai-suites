@@ -16,7 +16,7 @@ The DLStreamer Pipeline Server config supports multiple pipelines that you can u
 2. Start the pallet defect detection pipeline with the following Client URL (cURL) command by replacing the `<peer-str-id>` with a string id eg: `pdd` and `<HOST_IP>` with the system IP. This pipeline is configured to run in a loop forever. This REST/cURL request will return a pipeline instance ID, which can be used as an identifier to query later the pipeline status or stop the pipeline instance. For example, a6d67224eacc11ec9f360242c0a86003.
 
     ``` sh
-    curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/pallet_defect_detection_mlops -X POST -H 'Content-Type: application/json' -d '{
+    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection_mlops -X POST -H 'Content-Type: application/json' -d '{
         "destination": {
             "frame": {
                 "type": "webrtc",
@@ -35,7 +35,7 @@ The DLStreamer Pipeline Server config supports multiple pipelines that you can u
 3. Start another pallet defect detection pipeline with the following Client URL (cURL) command by replacing the `<different-peer-str-id>` with a different string id than the one in above step. eg: `pddstream` and `<HOST_IP>` with the system IP. This pipeline is not configured to run in a loop forever. This REST/cURL request will return a pipeline instance ID, which can be used as an identifier to query later the pipeline status or stop the pipeline instance. For example, a6d67224eacc11ec9f360242c0a86003.
 
     ``` sh
-    curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/pallet_defect_detection -X POST -H 'Content-Type: application/json' -d '{
+    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection -X POST -H 'Content-Type: application/json' -d '{
         "source": {
             "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
             "type": "uri"
@@ -56,9 +56,9 @@ The DLStreamer Pipeline Server config supports multiple pipelines that you can u
     ```
     **Note the instance ID of this pipeline**
 
-4. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` and `http://<HOST_IP>:<mediamtx-port>/<different-peer-str-id>`. `mediamtx-port` in this case would be 8889 as configured in .env file
+4. View the WebRTC streaming on `https://<HOST_IP>/mediamtx/<peer-str-id>/` and `https://<HOST_IP>/mediamtx/<different-peer-str-id>/`.
 
-   ![Example of a WebRTC streaming using default mediamtx-port 8889](./images/webrtc-streaming.png)
+   ![Example of WebRTC streaming using mediamtx](./images/webrtc-streaming.png)
 
    Figure 1: WebRTC streaming
 
@@ -68,5 +68,5 @@ The DLStreamer Pipeline Server config supports multiple pipelines that you can u
 
 5. Stop the 2nd pipeline using the instance ID noted in point #3 above, before proceeding with this documentation.
    ```shell
-   curl --location -X DELETE http://<HOST_IP>:8080/pipelines/{instance_id}
+   curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
    ```

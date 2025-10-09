@@ -5,7 +5,7 @@ This Sample Application enables real-time safety gear monitoring of workers by r
 ## Architecture Overview
 
 ### High-Level Architecture Diagram
-![Architecture Diagram](./images/defect-detection-arch-diagram.png)
+![Architecture Diagram](./images/industrial-edge-insights-vision-architecture.drawio.svg)
 *Figure 1: Architecture Diagram for Worker Safety Gear Detection Reference Impementation.*
 
 ## Supporting Resources

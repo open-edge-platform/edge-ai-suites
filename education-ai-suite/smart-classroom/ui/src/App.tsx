@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import TopPanel from './components/TopPanel/TopPanel';
 import HeaderBar from './components/Header/Header';
 import Body from './components/common/Body';
@@ -13,26 +13,43 @@ const App: React.FC = () => {
   const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
   const [retryCount, setRetryCount] = useState(0);
   const [showConnectionLostBanner, setShowConnectionLostBanner] = useState(false);
+  const [consecutiveFailures, setConsecutiveFailures] = useState(0);
+
+  const backendStatusRef = useRef(backendStatus);
+  useEffect(() => {
+    backendStatusRef.current = backendStatus;
+  }, [backendStatus]);
 
   const checkBackendHealth = async () => {
     console.log('Checking backend health...');
-    setBackendStatus('checking');
-
     try {
       const isHealthy = await pingBackend();
+
       if (isHealthy) {
-        console.log('Backend is healthy');
-        setBackendStatus('available');
-        setRetryCount(0);
-        // Load settings only after confirming backend is available
-        loadSettings();
+        if (backendStatusRef.current !== 'available') {
+          console.log('Backend is healthy - switching to available');
+          setBackendStatus('available');
+          setRetryCount(0);
+          setShowConnectionLostBanner(false);
+          loadSettings();
+        }
+        setConsecutiveFailures(0);
       } else {
-        console.warn('Backend health check failed');
-        setBackendStatus('unavailable');
+        setConsecutiveFailures(prev => prev + 1);
+        if (consecutiveFailures >= 2 && backendStatusRef.current !== 'unavailable') {
+          console.warn('Backend health check failed - switching to unavailable');
+          setBackendStatus('unavailable');
+          setShowConnectionLostBanner(true);
+        }
       }
     } catch (error) {
       console.error('Backend health check error:', error);
-      setBackendStatus('unavailable');
+      setConsecutiveFailures(prev => prev + 1);
+      if (consecutiveFailures >= 2 && backendStatusRef.current !== 'unavailable') {
+        console.warn('Switching to unavailable due to error');
+        setBackendStatus('unavailable');
+        setShowConnectionLostBanner(true);
+      }
     }
   };
 
@@ -49,58 +66,30 @@ const App: React.FC = () => {
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
+    setConsecutiveFailures(0);
     checkBackendHealth();
   };
 
   useEffect(() => {
-    // Always check backend health first on app load
     checkBackendHealth();
+    const interval = setInterval(() => {
+      console.log('Health check every 10s...');
+      checkBackendHealth();
+    }, 10000); 
 
-    // Set up continuous health monitoring every 5 seconds throughout app lifecycle
-    const healthCheckInterval = setInterval(() => {
-      console.log('Continuous health check (every 5s)...');
+    return () => clearInterval(interval);
+  }, [consecutiveFailures]); 
 
-      // Only update status if we detect a change to avoid unnecessary re-renders
-      pingBackend().then(isHealthy => {
-        if (isHealthy && backendStatus === 'unavailable') {
-          console.log('Backend recovered - switching to available');
-          setBackendStatus('available');
-          setRetryCount(0);
-          setShowConnectionLostBanner(false); // Clear the banner
-          loadSettings();
-        } else if (!isHealthy && backendStatus === 'available') {
-          console.log('Backend went down - switching to unavailable');
-          setBackendStatus('unavailable');
-          setShowConnectionLostBanner(true);
-        }
-      }).catch(error => {
-        console.warn('Health check failed:', error);
-        if (backendStatus === 'available') {
-          console.log('Backend went down due to error - switching to unavailable');
-          setBackendStatus('unavailable');
-          setShowConnectionLostBanner(true);
-        }
-      });
-    }, 5000); // Check every 5 seconds always
-
-    return () => {
-      clearInterval(healthCheckInterval);
-    };
-  }, [backendStatus]); // Re-run when backendStatus changes
-
-  // Additional retry logic for manual retries when unavailable
   useEffect(() => {
     if (backendStatus === 'unavailable') {
-      // This is just for counting retry attempts, the actual checking is handled above
       const timer = setTimeout(() => {
         setRetryCount(prev => prev + 1);
-      }, 5000);
+      }, 8000); 
 
       return () => clearTimeout(timer);
     }
   }, [backendStatus, retryCount]);
 
-  // Show loading state while checking backend health
   if (backendStatus === 'checking') {
     return (
       <div className="app-loading">
@@ -116,14 +105,13 @@ const App: React.FC = () => {
     );
   }
 
-  // Show error state if backend is unavailable
   if (backendStatus === 'unavailable') {
     return (
       <div className="app-error">
         <div className="error-content">
           <h1>Backend Connection Lost</h1>
           <p>The connection to the backend server has been interrupted.</p>
-          <p>Automatically attempting to reconnect every 5 seconds...</p>
+          <p>Automatically attempting to reconnect every 8 seconds...</p>
           {showConnectionLostBanner && (
             <div className="connection-lost-info">
               <p>⚠️ Connection was lost during operation. Any ongoing tasks have been interrupted.</p>
@@ -142,7 +130,6 @@ const App: React.FC = () => {
     );
   }
 
-  // Render normal app only when backend is available
   return (
     <div className="app">
       <MetricsPoller /> 

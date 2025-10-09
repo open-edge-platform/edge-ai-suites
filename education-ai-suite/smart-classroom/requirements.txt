@@ -7,8 +7,8 @@ pydub==0.25.1
 python-multipart==0.0.20
 pywin32==311
 PyYAML==6.0.2
-torch==2.6.0+xpu
-torchaudio==2.6.0+xpu
+torch==2.8.0
+torchaudio==2.8.0
 transformers==4.53.3
 uvicorn==0.35.0
 WMI==1.5.1

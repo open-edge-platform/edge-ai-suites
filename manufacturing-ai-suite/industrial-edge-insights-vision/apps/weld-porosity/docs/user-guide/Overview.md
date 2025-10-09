@@ -12,7 +12,7 @@ This sample application consists of the following microservices: DL Streamer Pip
 
 You start the weld porosity classification pipeline with a REST request using Client URL (cURL). The REST request will return a pipeline instance ID. DL Streamer Pipeline Server then sends the images with overlaid bounding boxes through webrtc protocol to webrtc browser client. This is done via the MediaMTX server used for signalling. Coturn server is used to facilitate NAT traversal and ensure that the webrtc stream is accessible on a non-native browser client and helps in cases where firewall is enabled. DL Streamer Pipeline Server also sends the images to S3 compliant storage. The Open Telemetry Data exported by DL Streamer Pipeline Server to Open Telemetry Collector is scraped by Prometheus and can be seen on Prometheus UI. Any desired AI model from the Model Registry Microservice (which can interact with Postgres, Minio and Geti Server for getting the model) can be pulled into DL Streamer Pipeline Server and used for inference in the sample application.
 
-![Architecture and high-level representation of the flow of data through the architecture](./images/defect-detection-arch-diagram.png)
+![Architecture and high-level representation of the flow of data through the architecture](./images/industrial-edge-insights-vision-architecture.drawio.svg)
 
 Figure 1: Architecture diagram
 

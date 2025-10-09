@@ -5,7 +5,7 @@ This Sample Application enables real-time pallet condition monitoring by running
 ## Architecture Overview
 
 ### High-Level Architecture Diagram
-![Architecture Diagram](./images/defect-detection-arch-diagram.png)
+![Architecture Diagram](./images/industrial-edge-insights-vision-architecture.drawio.svg)
 *Figure 1: Architecture Diagram for Pallet Defect Detection Reference Impementation.*
 
 ## Supporting Resources

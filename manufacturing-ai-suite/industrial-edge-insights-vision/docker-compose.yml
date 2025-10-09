@@ -11,9 +11,6 @@ services:
     restart: unless-stopped
     security_opt:
     - no-new-privileges
-    ports:
-    - '8080:8080'
-    - '8554:8554'
     environment:
       AppName: "DLStreamerPipelineServer"
       ENABLE_WEBRTC: true
@@ -38,6 +35,8 @@ services:
       OPCUA_SERVER_PORT: ${OPCUA_SERVER_PORT}
       OPCUA_SERVER_USERNAME: ${OPCUA_SERVER_USERNAME}
       OPCUA_SERVER_PASSWORD: ${OPCUA_SERVER_PASSWORD}
+      MQTT_HOST: nginx-reverse-proxy
+      MQTT_PORT: 1883
       # Model Registry Microservice
       MR_URL: ${MR_URL}
       MR_SAVED_MODELS_DIR: ${MR_SAVED_MODELS_DIR}
@@ -91,10 +90,8 @@ services:
       - MTX_WEBRTCICESERVERS2_0_URL=turn:${HOST_IP}:${COTURN_UDP_PORT}
       - MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME}
       - MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}
-    ports:
-      - "${WHIP_SERVER_PORT}:8889"
-      - "8189:8189"
-      - "9997:9997"
+      - MTX_WEBRTCTRACKGATHERTIMEOUT=10s
+      - MTX_WEBRTCLOCALTCPADDRESS=:8189
     networks:
     - mraas
 
@@ -102,19 +99,49 @@ services:
     image: coturn/coturn:latest
     container_name: coturn
     ports:
-      - "${COTURN_UDP_PORT}:3478"
       - "${COTURN_UDP_PORT}:3478/udp"
-    command: ["-v"]  # Verbose mode for logging
     networks:
       - mraas
+
+  mqtt-broker:
+    image: eclipse-mosquitto
+    container_name: mqtt-broker
+    networks:
+      - mraas
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./apps/${SAMPLE_APP}/configs/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nginx-reverse-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./apps/${SAMPLE_APP}/configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./apps/${SAMPLE_APP}/configs/nginx/ssl:/etc/nginx/ssl:ro"
+    networks:
+      - mraas
+    depends_on:
+      - dlstreamer-pipeline-server
+      - mediamtx
+      - prometheus
+      - mraas-minio
+      - mqtt-broker
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},${HOST_IP}
+      - NO_PROXY=${no_proxy},${HOST_IP}
+    restart: on-failure:5
 
   model_registry:
     image: ${DOCKER_REGISTRY}intel/model-registry:1.0.3
     container_name: model_registry
     hostname: model_registry
     ipc: "none"
-    ports:
-    - "${HOST_IP}:32002:${MR_SERVER_PORT}"
     restart: unless-stopped
     deploy:
       resources:
@@ -188,12 +215,13 @@ services:
     security_opt:
       - no-new-privileges
     ports:
-    - '8000:8000'
+      - '8000:8000'
     environment:
       AppName: "ModelRegistry"
       MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
       ENABLE_HTTPS_MODE: ${ENABLE_HTTPS_MODE}
+      MINIO_BROWSER_REDIRECT_URL: https://${HOST_IP}/minio/
     command: server --address ":8000" --certs-dir /certs /data
 
   prometheus:
@@ -203,10 +231,14 @@ services:
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
       - NO_PROXY=$no_proxy,otel-collector,localhost,127.0.0.1
-    ports:
-      - "${PROMETHEUS_PORT}:9090"
     volumes:
       - ./apps/${SAMPLE_APP}/configs/open_telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command: >
+      --config.file=/etc/prometheus/prometheus.yml
+      --storage.tsdb.path=/prometheus
+      --web.route-prefix=/prometheus
+      --web.external-url=https://${HOST_IP}/prometheus
     networks:
       - mraas
 
@@ -217,9 +249,6 @@ services:
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
       NO_PROXY: $no_proxy,prometheus,dlstreamer-pipeline-server,localhost,127.0.0.1
-    ports:
-      - "4317:4317"  # OTLP gRPC receiver (default for metrics)
-      - "4318:4318"  # Prometheus scrape target
     volumes:
       - ./apps/${SAMPLE_APP}/configs/open_telemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml  # OpenTelemetry Collector config
     restart: always
@@ -239,4 +268,6 @@ volumes:
   vol_minio_data:
     driver: local
   mr_postgres_data:
+    driver: local
+  prometheus_data:
     driver: local

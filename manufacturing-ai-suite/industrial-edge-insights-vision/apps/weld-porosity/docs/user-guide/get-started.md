@@ -30,6 +30,11 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     ```bash
     HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.
 
+    MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
+
+    MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
+    MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+
     MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
 
@@ -121,7 +126,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     Extracting payload for pipeline: weld_porosity_classification
     Found 1 payload(s) for pipeline: weld_porosity_classification
     Payload for pipeline 'weld_porosity_classification' {"source":{"uri":"file:///home/pipeline-server/resources/videos/welding.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"weld"}},"parameters":{"classification-properties":{"model":"/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml","device":"CPU"}}}
-    Posting payload to REST server at http://<HOST_IP>:8080/pipelines/user_defined_pipelines/weld_porosity_classification
+    Posting payload to REST server at https://<HOST_IP>/api/pipelines/user_defined_pipelines/weld_porosity_classification
     Payload for pipeline 'weld_porosity_classification' posted successfully. Response: "6d06422c5c7511f091f03266c7df2abf"
 
     ```
@@ -129,7 +134,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     > **NOTE:** This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following url:
     
     ```bash
-    http://<HOST_IP>:8889/weld/
+    https://<HOST_IP>/mediamtx/weld/
     ```
 
 8.  Get status of pipeline instance(s) running.

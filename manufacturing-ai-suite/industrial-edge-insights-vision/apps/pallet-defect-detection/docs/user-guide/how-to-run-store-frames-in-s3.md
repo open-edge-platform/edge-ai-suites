@@ -63,7 +63,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 5. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
 
     ```sh
-    curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/pallet_defect_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
+    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
         "source": {
             "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
             "type": "uri"
@@ -83,6 +83,6 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     }'
     ```
 
-6. Go to MinIO console on `http://<HOST_IP>:8000/` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `.env` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
+6. Go to MinIO console on `https://<HOST_IP>/minio` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `.env` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
    ![S3 minio image storage](./images/s3-minio-storage.png)

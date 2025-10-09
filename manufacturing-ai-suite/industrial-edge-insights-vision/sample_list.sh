@@ -41,7 +41,7 @@ list_pipelines() {
     # check if dlstreamer-pipeline-server is running
     get_status
     # get loaded pipelines
-    response=$(curl -s -w "\n%{http_code}" http://$HOST_IP:$REST_SERVER_PORT/pipelines)
+    response=$(curl -s -k -w "\n%{http_code}" https://$HOST_IP/api/pipelines)
     # Split response and status
     body=$(echo "$response" | sed '$d')
     status=$(echo "$response" | tail -n1)
@@ -57,7 +57,7 @@ list_pipelines() {
 }
 
 get_status() {
-    response=$(curl -s -w "\n%{http_code}" http://$HOST_IP:$REST_SERVER_PORT/pipelines/status)
+    response=$(curl -s -k -w "\n%{http_code}" https://$HOST_IP/api/pipelines/status)
     # Split response and status
     body=$(echo "$response" | sed '$d')
     status=$(echo "$response" | tail -n1)
