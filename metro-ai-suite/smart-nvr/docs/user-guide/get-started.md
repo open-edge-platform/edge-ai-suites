@@ -71,7 +71,9 @@ export VSS_SEARCH_PORT=<vss-search-port>          # Default: 12345
 export MQTT_USER=<mqtt-username>
 export MQTT_PASSWORD=<mqtt-password>
 
-export NVR_GENAI=false                  
+# Feature Toggles
+export NVR_GENAI=false                  # Set to 'true' to enable AI-powered event descriptions  
+export NVR_SCENESCAPE=false             # Set to 'true' to enable Scenescape integration                  
 ```
 
 ### Step 3: Launch Application
