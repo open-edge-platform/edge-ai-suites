@@ -31,6 +31,11 @@ ifeq ($(origin ingestion_interval), undefined)
 ingestion_interval := "1s"
 endif
 
+# Assign default value to version and appVersion if not provided for helm deployment
+ifeq ($(origin version), undefined)
+version := "1.1.0-weekly"
+endif
+
 export SAMPLE_APP
 
 # Example: Run a shell if-else block before starting containers
@@ -39,7 +44,7 @@ define multi_stream_check
 		if [ "$(SAMPLE_APP)" = "$(DEFAULT_SAMPLE_APP)" ]; then \
 			TELEGRAF_METRIC_BATCH_SIZE=$$(grep -m1 TELEGRAF_METRIC_BATCH_SIZE $(DOCKER_COMPOSE_FILE) | awk -F ': ' '{print $$2}' | xargs); \
 			LOG_LEVEL=$$(grep -E "^LOG_LEVEL=" $(ENV_FILE) | cut -d'=' -f2); \
-			python3 telegraf/generate_telegraf_config.py $(num_of_streams) $$LOG_LEVEL $$TELEGRAF_METRIC_BATCH_SIZE $(ingestion_interval) $(1); \
+			python3 configs/telegraf/generate_telegraf_config.py $(num_of_streams) $$LOG_LEVEL $$TELEGRAF_METRIC_BATCH_SIZE $(ingestion_interval) $(1); \
 		else \
 			echo "Multi-stream ingestion is only supported for the 'Wind Turbine Anomaly Detection' sample app."; \
 			exit 1; \
@@ -224,19 +229,21 @@ push_images: build
 gen_helm_charts:
 	@echo "Generating Helm packages"
 	@echo "Packaging Helm chart for ${SAMPLE_APP}"
-	@cp -f grafana/dashboards/*.yml helm/
-	@cp -f apps/${SAMPLE_APP}/grafana-dashboard/dashboard.json helm/
-	@cp -f influxdb/config/*.conf helm/
-	@cp -f influxdb/init-influxdb.sh helm/
-	@cp -f mqtt-broker/*.conf helm/
-	@cp -f apps/${SAMPLE_APP}/ingestor-data/${SAMPLE_APP}.csv helm/
+	@cp -f configs/grafana/dashboards/*.yml helm/
+	@cp -f apps/${SAMPLE_APP}/grafana-dashboard.json helm/
+	@cp -f configs/influxdb/config/*.conf helm/
+	@cp -f configs/influxdb/init-influxdb.sh helm/
+	@cp -f configs/mqtt-broker/*.conf helm/
+	@cp -f apps/${SAMPLE_APP}/${SAMPLE_APP}.csv helm/
 	@cp -f apps/${SAMPLE_APP}/telegraf-config/*.conf helm
-	@cp -f grafana/entrypoint.sh helm/grafana_entrypoint.sh
 	@cp -f apps/${SAMPLE_APP}/time-series-analytics-config/config.json helm/
-	@cp -f telegraf/entrypoint.sh helm/telegraf_entrypoint.sh
-	@cp -f nginx/nginx-cert-gen.sh helm/nginx-cert-gen.sh
-	@cp -f nginx/nginx.conf helm/nginx.conf
+	@cp -f configs/telegraf/entrypoint.sh helm/telegraf_entrypoint.sh
+	@cp -f configs/nginx/nginx-cert-gen.sh helm/nginx-cert-gen.sh
+	@cp -f configs/nginx/nginx.conf helm/nginx.conf
 	@sed -i "s/name: .*/name: ${SAMPLE_APP}-sample-app/" "helm/Chart.yaml"
+	@sed -i "s/description: .*/description: Helm charts for ${SAMPLE_APP} sample app/" "helm/Chart.yaml"
+	@sed -i "s/version: .*/version: ${version}/" "helm/Chart.yaml"
+	@sed -i "s/appVersion: .*/appVersion: \"${version}\"/" "helm/Chart.yaml"
 	@sed -i "s/SAMPLE_APP: .*/SAMPLE_APP: ${SAMPLE_APP}/" "helm/values.yaml"
 	@echo "Helm packages generated"
 

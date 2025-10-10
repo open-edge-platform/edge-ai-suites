@@ -40,7 +40,7 @@ services:
     networks:
     - timeseries_network
     volumes:
-    - ./telegraf/entrypoint.sh:/entrypoint.sh
+    - ./configs/telegraf/entrypoint.sh:/entrypoint.sh
     - "./apps/${SAMPLE_APP}/telegraf-config/:/etc/telegraf"   
 
   ia-influxdb:
@@ -74,8 +74,8 @@ services:
     volumes:
       # Mount for influxdb data directory and configuration
     - vol_influxdb_conf:/var/lib/influxdb:rw
-    - ./influxdb/config:/etc/influxdb
-    - ./influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
+    - ./configs/influxdb/config:/etc/influxdb
+    - ./configs/influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
   
   ia-time-series-analytics-microservice:
     container_name: ia-time-series-analytics-microservice
@@ -169,11 +169,10 @@ services:
     volumes:
     - "vol_temp_grafana:/tmp"
     - vol_grafana_data:/var/lib/grafana
-    - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
-    - ./grafana/dashboards/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-    - ./apps/${SAMPLE_APP}/grafana-dashboard/dashboard.json:/etc/grafana/provisioning/dashboards/dashboard.json
-    - ./grafana/entrypoint.sh:/entrypoint.sh
-    
+    - ./configs/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    - ./configs/grafana/dashboards/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    - ./apps/${SAMPLE_APP}/grafana-dashboard.json:/etc/grafana/provisioning/dashboards/grafana-dashboard.json
+
   ia-mqtt-broker:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-mqtt-broker
@@ -191,7 +190,7 @@ services:
     networks:
     - timeseries_network
     volumes:
-    - ./mqtt-broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    - ./configs/mqtt-broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
 
   ia-opcua-server:
     build:
@@ -224,7 +223,7 @@ services:
     ports:
     - ${OPCUA_SERVER_PORT}-30048:4840
     volumes:
-    - ./apps/${SAMPLE_APP}/ingestor-data/${SAMPLE_APP}.csv:/app/${SAMPLE_APP}.csv
+    - ./apps/${SAMPLE_APP}/${SAMPLE_APP}.csv:/app/${SAMPLE_APP}.csv
 
   ia-mqtt-publisher:
     build:
@@ -257,7 +256,7 @@ services:
     networks:
     - timeseries_network
     volumes:
-    - ./apps/${SAMPLE_APP}/ingestor-data/${SAMPLE_APP}.csv:/${SAMPLE_APP}.csv
+    - ./apps/${SAMPLE_APP}/${SAMPLE_APP}.csv:/${SAMPLE_APP}.csv
 
   nginx:
     image: nginx:1.29.1-bookworm-perl
@@ -271,8 +270,8 @@ services:
       - "${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API 
       - "1883:1883" # MQTT TCP Proxy
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro
+      - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./configs/nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro
       - vol_nginx_tmpfs:/opt/nginx/certs:rw
       - vol_nginx_tmpfs:/var/cache/nginx:rw
       - vol_nginx_tmpfs:/run:rw
