@@ -156,8 +156,7 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 2. Copy your new UDF package (using the windturbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
     ```sh
     export SAMPLE_APP="wind-turbine-anomaly-detection"
-    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection # path relative to git clone folder
-    cd time-series-analytics-config
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config # path relative to git clone folder
     mkdir -p $SAMPLE_APP
     cp -r models tick_scripts udfs $SAMPLE_APP/.
 
@@ -186,8 +185,7 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 2. Copy your new UDF package (using the windturbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
     ```sh
     export SAMPLE_APP="weld-anomaly-detection"
-    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection # path relative to git clone folder
-    cd time-series-analytics-config
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config # path relative to git clone folder
     mkdir -p $SAMPLE_APP
     cp -r models tick_scripts udfs $SAMPLE_APP/.
 
@@ -246,10 +244,6 @@ To configure alerts in Time Series Analytics Microservice, follow the steps [her
 ## Deploy the Application with a Custom UDF
 
 To deploy the application with a custom UDF, follow the steps [here](./how-to-configure-custom-udf.md#helm-deployment).
-
-## Deploy the Application with a Custom UDF by Uploading to the Model Registry
-
-To deploy a custom UDF by uploading it to the Model Registry, follow the steps [here](./how-to-configure-custom-udf.md#with-model-registry).
 
 ## Troubleshooting
 

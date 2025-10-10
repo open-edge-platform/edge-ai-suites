@@ -221,6 +221,7 @@ services:
       TS_MS_PORT: ${KAPACITOR_PORT}
       CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
       SIMULATION_TARGET_FPS: ${SIMULATION_TARGET_FPS}
+      LOG_LEVEL: ${LOG_LEVEL}
     networks:
     - timeseries_network
 
@@ -285,6 +286,7 @@ services:
       INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
       PYTHONUNBUFFERED: 1
       FUSION_MODE: ${FUSION_MODE}
+      LOG_LEVEL: ${LOG_LEVEL}
     depends_on:
       - ia-mqtt-broker
     networks:

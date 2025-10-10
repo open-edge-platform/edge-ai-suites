@@ -14,10 +14,10 @@ The goal is to transform raw classroom recordings into concise, structured summa
 ### 💻 System Requirements
 
 - **OS:** Windows 11  
-- **Processor:** Intel® Meteor Lake (with integrated GPU support)  
+- **Processor:** Intel® Core Ultra Series 1 (with integrated GPU support)  
 - **Memory:** 32 GB RAM (minimum recommended)  
 - **Storage:** At least 50 GB free (for models and logs)  
-- **GPU/Accelerator:** Intel® iGPU (Meteor Lake, Arc GPU, or higher) for summarization acceleration  
+- **GPU/Accelerator:** Intel® iGPU (Intel® Core Ultra Series 1, Arc GPU, or higher) for summarization acceleration  
 - **Python:** 3.12 or above  
 - **Node.js:** v18+ (for frontend) 
 ---
@@ -50,20 +50,38 @@ The goal is to transform raw classroom recordings into concise, structured summa
 
 **a. Install [FFmpeg](https://ffmpeg.org/download.html)** (required for audio processing):
 
-* On **Windows**:
+- On **Windows**:  
   Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html), and add the `ffmpeg/bin` folder to your system `PATH`.
+---
 
-**b. Install Python dependencies:**
+**b. Install Python dependencies**  
+It’s recommended to create a **dedicated Python virtual environment** for the base dependencies.
 
 ```bash
+python -m venv smartclassroom
+# On Windows:
+smartclassroom\Scripts\activate
+
+pip install --upgrade pip
+pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
 pip install --upgrade -r requirements.txt
 ```
+---
 
-**c. [Optional] Install IPEX-LLM to use IPEX-based LLM model for summarization:**
+**c. [Optional] Create Python Venv for Ipex Based Summarizer**  
+If you plan to use IPEX, create a separate virtual environment.
 
 ```bash
+python -m venv smartclassroom_ipex
+# On Windows:
+smartclassroom_ipex\Scripts\activate
+
+pip install --upgrade pip
+pip install --upgrade -r requirements.txt
 pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
 ```
+> 💡 *Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.*
+
 ---
 ### ⚙️ 2. Default Configuration
 
@@ -92,7 +110,7 @@ asr:
   name: paraformer-zh
 ```
 
-* (Optional) If you want to use IPEX-based summarization, make sure IPEX-LLM is installed and set:
+* (Optional) If you want to use IPEX-based summarization, make sure IPEX-LLM is installed, env for ipex is activated and set following in `config`:
 
 ```bash
 summarizer:
@@ -104,14 +122,18 @@ summarizer:
 ---
 
 ### ✅ 3. **Run the Application**
+Activate the environment before running the application:
 
-Bring Up Backend:
+```bash
+smartclassroom\Scripts\activate  # or smartclassroom_ipex
+```
+Run the backend:
 ```bash
 python main.py
 ```
 **To monitor power usage, run your shell with admin privileges before starting the application.**
 
-Bring Up Frontend:
+- Bring Up Frontend:
 ```bash
 cd ui
 npm install
