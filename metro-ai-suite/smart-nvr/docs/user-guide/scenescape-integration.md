@@ -23,8 +23,6 @@ Intel Scenescape integration adds advanced traffic analytics to your Smart NVR s
 
 **Prerequisites:** First, ensure Smart Intersection application is running following the setup guide.
 
-![Smart Intersection Folder Structure](_images/Smart_intersection_structure.png)
-
 **1.1 Locate Certificate Files:**
 ```bash
 # Navigate to Smart Intersection secrets directory  
