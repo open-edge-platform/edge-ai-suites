@@ -131,6 +131,32 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
     ```
 
+    ```bash
+    ./sample_start.sh -p weld_porosity_classification_gpu
+    ```
+
+    This command will look for the payload for the pipeline specified in `-p` argument above, inside the `payload_gpu.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available.
+
+    Output:
+
+    ```bash
+
+    Environment variables loaded from /home/intel/OEP/new/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/.env
+    Running sample app: weld-porosity
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Using GPU payload file based on DEVICE=GPU
+    Loading payload from /home/intel/OEP/new/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity/payload_gpu.json
+    Payload loaded successfully.
+    Starting pipeline: weld_porosity_classification_gpu
+    Launching pipeline: weld_porosity_classification_gpu
+    Extracting payload for pipeline: weld_porosity_classification_gpu
+    Found 1 payload(s) for pipeline: weld_porosity_classification_gpu
+    Payload for pipeline 'weld_porosity_classification_gpu' {"source":{"uri":"file:///home/pipeline-server/resources/videos/welding.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"weld"}},"parameters":{"classification-properties":{"model":"/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml","device":"GPU"}}}
+    Posting payload to REST server at https://10.107.248.78/api/pipelines/user_defined_pipelines/weld_porosity_classification_gpu
+    Payload for pipeline 'weld_porosity_classification_gpu' posted successfully. Response: "e978a766a5c511f0b5ed5abd6f584899"
+    ```
+
     > **NOTE:** This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following url:
     
     ```bash

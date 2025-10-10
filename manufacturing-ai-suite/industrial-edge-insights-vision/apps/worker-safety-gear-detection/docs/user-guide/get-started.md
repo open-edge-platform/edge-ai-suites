@@ -124,6 +124,33 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     Payload for pipeline 'worker_safety_gear_detection' posted successfully. Response: "784b87b45d1511f08ab0da88aa49c01e"
     ```
 
+    ```bash
+    ./sample_start.sh -p worker_safety_gear_detection_gpu
+    ```
+
+    This command will look for the payload for the pipeline specified in the `-p` argument above, inside the `payload_gpu.json` file and launch a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different available options.
+
+    Output:
+
+    ```bash
+    # Example output for Worker Safety gear detection
+    Environment variables loaded from [WORKDIR]/manufacturing-ai-suite/industrial-edge-insights-vision/.env
+    Running sample app: worker-safety-gear-detection
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Using GPU payload file based on DEVICE=GPU
+    Loading payload from [WORKDIR]/manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection/payload_gpu.json
+    Payload loaded successfully.
+    Starting pipeline: worker_safety_gear_detection_gpu
+    Launching pipeline: worker_safety_gear_detection_gpu
+    Extracting payload for pipeline: worker_safety_gear_detection_gpu
+    Found 1 payload(s) for pipeline: worker_safety_gear_detection_gpu
+    Payload for pipeline 'worker_safety_gear_detection_gpu' {"source":{"uri":"file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"worker_safety"}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml","device":"GPU"}}}
+    Posting payload to REST server at https://10.107.248.78/api/pipelines/user_defined_pipelines/worker_safety_gear_detection_gpu
+    Payload for pipeline 'worker_safety_gear_detection_gpu' posted successfully. Response: "04fca2f8a5cb11f0bfae5a85c03cd2f6"
+        ```
+
+
     NOTE: This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following url:
 
     ```sh
