@@ -12,7 +12,7 @@ Intel Scenescape integration adds advanced traffic analytics to your Smart NVR s
 
 ## Prerequisites
 
-- **Smart Intersection Application**: The Intel Smart Intersection application must be running and configured on your machine. Follow the setup guide at: https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md
+- **Smart Intersection Application**: The Intel Smart Intersection application must be running and configured on your machine. Follow the [Smart Intersection User Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md).
 - Access to Intel Scenescape traffic analytics platform
 - MQTT broker with SSL/TLS support
 - Valid Scenescape certificates and credentials
@@ -58,9 +58,6 @@ export NVR_SCENESCAPE=true
 export SCENESCAPE_MQTT_USER="<user>"                    # "user" field from JSON
 export SCENESCAPE_MQTT_PASSWORD="<password>"       # "password" field from JSON
 
-# Optional: Override defaults if needed
-export SCENESCAPE_MQTT_PORT=1883
-export SCENESCAPE_MQTT_TOPIC="scenescape/data/camera/#"
 ```
 
 ### Step 3: Install SSL Certificates
@@ -87,7 +84,7 @@ ls -la /path/to/smart-nvr/resources/mqtt-certs/
 ### Step 4: Start Scenescape-Enabled Application
 
 ```bash
-# Start the application (environment variables already set in Step 2)
+# Start the application 
 ./setup.sh start
 
 # Or restart with new configuration
