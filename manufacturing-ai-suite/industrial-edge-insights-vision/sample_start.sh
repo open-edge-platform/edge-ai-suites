@@ -42,8 +42,16 @@ init() {
 }
 
 load_payload() {
-    # Load all pipelines payload
-    PAYLOAD_FILE="$APP_DIR/payload.json"
+    # Load all pipelines payload based on DEVICE environment variable
+    # Use payload_gpu.json if DEVICE=GPU, otherwise use payload.json (default for CPU)
+    if [[ "$DEVICE" == "GPU" ]]; then
+        PAYLOAD_FILE="$APP_DIR/payload_gpu.json"
+        echo "Using GPU payload file based on DEVICE=$DEVICE"
+    else
+        PAYLOAD_FILE="$APP_DIR/payload.json"
+        echo "Using CPU payload file (DEVICE=${DEVICE:-CPU})" 
+    fi
+
     if [[ -f "$PAYLOAD_FILE" ]]; then
         echo "Loading payload from $PAYLOAD_FILE"
         if command -v jq &>/dev/null; then

@@ -128,6 +128,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     Posting payload to REST server at https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection
     Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "4b36b3ce52ad11f0ad60863f511204e2"
     ```
+    
      ```bash
     ./sample_start.sh -p pallet_defect_detection_gpu
     ```
@@ -142,15 +143,16 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     Running sample app: pallet-defect-detection
     Checking status of dlstreamer-pipeline-server...
     Server reachable. HTTP Status Code: 200
+    Using GPU payload file based on DEVICE=GPU
     Loading payload from /home/intel/OEP/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection/payload_gpu.json
     Payload loaded successfully.
     Starting pipeline: pallet_defect_detection_gpu
     Launching pipeline: pallet_defect_detection_gpu
     Extracting payload for pipeline: pallet_defect_detection_gpu
     Found 1 payload(s) for pipeline: pallet_defect_detection_gpu
-    Payload for pipeline 'pallet_defect_detection_gpu' {"source":{"uri":"file:///home/pipeline-server/resources/videos/warehouse.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"pdd"}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/pallet-defect-detection/model.xml","device":"GPU"}}}
-    Posting payload to REST server at https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection_gpu
-    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "4b36b3ce52ad11f0ad60863f511204e2"
+    Payload for pipeline 'pallet_defect_detection_gpu' {"source":{"uri":"file:///home/pipeline-server/resources/videos/warehouse.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"pdd"}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml","device":"GPU"}}}
+    Posting payload to REST server at https://10.107.248.78/api/pipelines/user_defined_pipelines/pallet_defect_detection_gpu
+    Payload for pipeline 'pallet_defect_detection_gpu' posted successfully. Response: "32d21dc2a5bf11f0bdcd3e9cdb54fa68"
     ```
 
     > **NOTE:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to https://<HOST_IP>/mediamtx/pdd/ for Pallet Defect Detection
