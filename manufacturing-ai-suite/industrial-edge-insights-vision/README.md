@@ -36,6 +36,7 @@ Following directory structure consisting of generic deployment code as well as p
                 pipeline-server-config.json
             setup.sh
             payload.json
+            payload_gpu.json
     helm/
         apps/
             application_name/
@@ -67,6 +68,8 @@ Following directory structure consisting of generic deployment code as well as p
             pre-requisite installer to setup envs, download artificats such as models/videos to `resources/` directory. It also sets executable permissions for scripts.
     - *payload.json*: 
             A JSON array file containing one or more request(s) to be sent to DLStreamer Pipeline Server to launch GStreamer pipeline(s). The payload data is associated with the *configs/pipeline-server-config.json* provided for that application. Each JSON inside the array has two keys- `pipeline` and `payload` that refers to the pipeline it belongs to and the payload used to launch an instance of the pipeline.
+    - *payload_gpu.json*:
+            A JSON array file containing one or more request(s) to be sent to DLStreamer Pipeline Server to launch GStreamer pipeline(s). The payload data is associated with the *configs/pipeline-server-config.json* provided for that application. Each JSON inside the array has two keys- `pipeline` and `payload` that refers to the pipeline it belongs to and the payload used to launch an instance of the pipeline. The device used here is GPU.
             
  - **helm**: contains helm charts and application specific pre-requisite installers, configurations and runtime data. The configs and data within it are similar to **apps** but are kept here for easy packaging.
 
@@ -98,7 +101,7 @@ Please ensure that you have the correct version of the DL Streamer Pipeline Serv
 
 General instructions for docker based deployment is as follows.
 
-1. Prepare the `.env` file for compose to source during deployment. This chosen env file defines the application you would be running.
+1. Prepare the `.env` file for compose to source during deployment. This chosen env file defines the application you would be running. Please set the device type (CPU, GPU and NPU) here.
 2. Run `setup.sh` to setup pre-requisites, download artifacts, etc.
 3. Bring the services up with `docker compose up`.
 4. Run `sample_start.sh` to start pipeline. This sends curl request with pre-defined payload to the running DLStreamer Pipeline Server.
