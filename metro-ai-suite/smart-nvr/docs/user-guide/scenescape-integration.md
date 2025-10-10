@@ -17,50 +17,84 @@ Intel Scenescape integration adds advanced traffic analytics to your Smart NVR s
 - MQTT broker with SSL/TLS support
 - Valid Scenescape certificates and credentials
 
-## Environment Variables
-
-### Required Scenescape Configuration
-
-Add these environment variables to enable Scenescape integration:
-
-```bash
-# Enable/Disable Scenescape Integration
-export NVR_SCENESCAPE=true                    # Set to 'false' to disable
-
-# Scenescape MQTT Configuration
-export SCENESCAPE_MQTT_USER="your_username"   # MQTT username
-export SCENESCAPE_MQTT_PASSWORD="your_password"  # MQTT password
-
-```
-
 ## Installation and Setup
 
-### 1. Install SSL Certificates
+### Step 1: Obtain Certificates and Credentials from Smart Intersection
 
-**From Smart Intersection Application:**
-- Take certificates from: `smart-intersection/src/secrets/certs/`
-- Take MQTT username/password from: `smart-intersection/src/secrets/browser.auth`
+**Prerequisites:** First, ensure Smart Intersection application is running following the setup guide.
 
-Place your Scenescape certificates in the `resources/mqtt-certs/` directory:
+![Smart Intersection Folder Structure](_images/Smart_intersection_structure.png)
 
+**1.1 Locate Certificate Files:**
 ```bash
-cp your-root-cert resources/mqtt-certs/root-cert
-cp your-broker-cert resources/mqtt-certs/broker-cert  
-cp your-broker-key resources/mqtt-certs/broker-key
+# Navigate to Smart Intersection secrets directory  
+cd /path/to/smart-intersection/src/secrets/
+
+# Check certificate files structure - you should see:
+ls -la certs/
+# Expected files:
+# scenescape-ca.pem       (root certificate)
+# scenescape-broker.crt   (broker certificate) 
+# scenescape-broker.key   (broker private key)
 ```
 
-### 2. Start Scenescape-Enabled Application
+**1.2 Get MQTT Credentials:**
+```bash
+# Check browser.auth file for MQTT credentials
+cat secrets/browser.auth
+# Expected JSON format:
+# {"user": "<user>", "password": "<password>"}
+```
+
+### Step 2: Configure Environment Variables
+
+Using the credentials obtained from Step 1, set these environment variables:
 
 ```bash
-# Set environment and start
+# Enable Scenescape Integration
 export NVR_SCENESCAPE=true
+
+# MQTT Configuration (from browser.auth JSON file)
+export SCENESCAPE_MQTT_USER="<user>"                    # "user" field from JSON
+export SCENESCAPE_MQTT_PASSWORD="<password>"       # "password" field from JSON
+
+# Optional: Override defaults if needed
+export SCENESCAPE_MQTT_PORT=1883
+export SCENESCAPE_MQTT_TOPIC="scenescape/data/camera/#"
+```
+
+### Step 3: Install SSL Certificates
+
+Copy the certificates obtained in Step 1 to Smart NVR:
+
+```bash
+# From Smart Intersection directory, copy certificates to Smart NVR
+# Adjust paths according to your installation directories
+
+cp /path/to/smart-intersection/src/secrets/certs/scenescape-ca.pem \
+   /path/to/smart-nvr/resources/mqtt-certs/root-cert
+
+cp /path/to/smart-intersection/src/secrets/certs/scenescape-broker.crt \
+   /path/to/smart-nvr/resources/mqtt-certs/broker-cert
+
+cp /path/to/smart-intersection/src/secrets/certs/scenescape-broker.key \
+   /path/to/smart-nvr/resources/mqtt-certs/broker-key
+
+# Verify certificates are installed correctly
+ls -la /path/to/smart-nvr/resources/mqtt-certs/
+```
+
+### Step 4: Start Scenescape-Enabled Application
+
+```bash
+# Start the application (environment variables already set in Step 2)
 ./setup.sh start
 
 # Or restart with new configuration
 ./setup.sh restart
 ```
 
-### 3. Verify Integration
+### Step 5: Verify Integration
 
 Check logs to confirm Scenescape connection:
 

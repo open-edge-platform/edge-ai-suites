@@ -134,6 +134,10 @@ Re-run the application after [configuring](./get-started.md#step-2-configure-env
 > - Requires VLM microservice to be running
 > - Disabled by default for system stability
 
+### Scenescape Integration
+
+For traffic analytics capabilities with Intel Scenescape (vehicle counting, traffic flow analysis), see the **[Scenescape Integration Guide](./scenescape-integration.md)**.
+
 ### Custom Build Configuration
 
 If using custom [build flags](./how-to-build-from-source.md#customizing-the-build), ensure the same environment variables are set before running the setup script.
