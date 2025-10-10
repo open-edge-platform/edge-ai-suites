@@ -26,6 +26,12 @@ spec:
           value: "yesoreyeram-infinity-datasource,ryantxu-ajax-panel,grafana-mqtt-datasource"
         - name: GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS
           value: "intel-custom-panel"
+        - name: GF_FEATURE_TOGGLES_ENABLE
+          value: "angularDeprecationUI"
+        - name: GF_ANGULAR_SUPPORT_ENABLED
+          value: "true"
+        - name: GF_PANELS_DISABLE_SANITIZE_HTML
+          value: "true"
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
         - name: https_proxy
@@ -39,9 +45,6 @@ spec:
         - name: datasources-config
           mountPath: /etc/grafana/provisioning/datasources/datasources.yml
           subPath: datasources.yml
-        - name: grafana-config
-          mountPath: /etc/grafana/grafana.ini
-          subPath: grafana.ini
         - name: grafana-visualizer
           mountPath: /var/lib/grafana/dashboards/visualizer.json
           subPath: visualizer.json
@@ -64,9 +67,6 @@ spec:
       - name: datasources-config
         configMap:
           name: grafana-datasources
-      - name: grafana-config
-        configMap:
-          name: grafana-config
       - name: grafana-visualizer
         configMap:
           name: grafana-visualizer
@@ -118,15 +118,6 @@ metadata:
 data:
   datasources.yml: |
     {{ .Files.Get "config/grafana/datasources.yml" | nindent 4 }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-config
-  namespace: {{ $.Values.namespace }}
-data:
-  grafana.ini: |
-    {{ .Files.Get "config/grafana/grafana.ini" | nindent 4 }}
 ---
 apiVersion: v1
 kind: ConfigMap

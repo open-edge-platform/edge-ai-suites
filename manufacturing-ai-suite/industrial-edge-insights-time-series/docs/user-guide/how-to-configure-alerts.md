@@ -103,10 +103,6 @@ curl -k -X 'POST' \
 -H 'accept: application/json' \
 -H 'Content-Type: application/json' \
 -d '{
-    "model_registry": {
-        "enable": false,
-        "version": "1.0"
-    },
     "udfs": {
         "name": "windturbine_anomaly_detector",
         "models": "windturbine_anomaly_detector.pkl",
@@ -220,10 +216,6 @@ curl -k -X 'POST' \
 -H 'accept: application/json' \
 -H 'Content-Type: application/json' \
 -d '{
-    "model_registry": {
-        "enable": false,
-        "version": "1.0"
-    },
     "udfs": {
         "name": "windturbine_anomaly_detector",
         "models": "windturbine_anomaly_detector.pkl",

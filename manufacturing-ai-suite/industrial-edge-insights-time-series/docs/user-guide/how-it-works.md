@@ -1,7 +1,7 @@
 
 # Architecture
 
-As seen in the following architecture diagram, the sample app at a high-level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana. The Model Registry microservice helps to achieve the MLOps flow by uploading the **UDF deployment package**(comprises of UDF, TICKScripts, models).
+As seen in the following architecture diagram, the sample app at a high-level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana.
 
 ![Time Series AI Stack Architecture Diagram](./_images/time-series-ai-stack-architecture.png)
 
@@ -55,8 +55,6 @@ Time Series Analytics Microservice has the Intel® Extension for Scikit-learn* p
   - Processed data is stored back in **InfluxDB** by default.
 - **Use Case**: Detect anomalies, trigger alerts, and perform advanced analytics.
 - **Documentation**: Refer to the [Kapacitor Anomaly Detection Guide](https://docs.influxdata.com/kapacitor/v1/guides/anomaly_detection/) for details on writing UDFs.
-
-The Time Series Analytics microservice allows customization by reading the UDF deployment package consisting of the UDF scripts, models and TICKScripts from the Model Registry microservice.
 
 ---
 

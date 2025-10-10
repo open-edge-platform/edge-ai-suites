@@ -28,15 +28,8 @@ env:
   # The VISUALIZER_GRAFANA_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit
   VISUALIZER_GRAFANA_PASSWORD:
 
-  # MR_PSQL_PASSWORD length must be a minimum of 10 alphanumeric characters with atleast one digit
-  POSTGRES_PASSWORD:
-
-  # MINIO_ACCESS_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit
-  MINIO_ACCESS_KEY:
-
-  # MINIO_SECRET_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit
-  MINIO_SECRET_KEY:
-
+  # If your environment requires a proxy to access external resources, please set the following variables.
+  # If no proxy is required, please leave them empty.
   HTTP_PROXY: 
   HTTPS_PROXY: 
   # If CONTINUOUS_SIMULATOR_INGESTION is set to true (default), continuous looping of simulator data is enabled.
@@ -55,32 +48,13 @@ env:
   # The Telegraf metric_batch_size specifies the number of metrics or data points that are grouped together and sent in a single batch to the InfluxDB.
   TELEGRAF_METRIC_BATCH_SIZE: 100
   LOG_LEVEL: INFO
-  # Model Registry Environment Variables
-  AppName: ModelRegistry
-  CA_CERT: /run/secrets/modelregistry-server/server-ca.crt
-  ENABLE_HTTPS_MODE: false
-  MIN_LOG_LEVEL: DEBUG
-  MINIO_BUCKET_NAME: model-registry
-  MINIO_HOSTNAME: mraas-minio 
-  MINIO_SERVER_PORT: "8000"
-  MLFLOW_S3_ENDPOINT_URL: http://127.0.0.1:8000
-  SERVER_CERT: /run/secrets/modelregistry-server/public.crt
-  SERVER_PORT: "8111"
-  SERVER_PRIVATE_KEY: /run/secrets/modelregistry-server/private.key 
-  no_proxy: mraas-minio
-  NO_PROXY: mraas-minio
-  MR_USER_NAME: mruser
-  MR_UID: 2025
-  POSTGRES_DB: model_registry_db
-  
-  POSTGRES_USER: postgres
+
 images:
   # Please provide the suffix for the image version you want to use like rc1, rc2, git hash id etc.
   image_suffix: "weekly"
   time_series_analytics_image: intel/ia-time-series-analytics-microservice:1.1.0
   opcua_server_image: intel/ia-opcua-server:1.0.0
   mqtt_publisher_image: intel/ia-mqtt-publisher:1.1.0
-  model_registry: intel/model-registry:1.0.3
 privileged_access_required: false
 config:
   influx_db_server:
@@ -109,12 +83,6 @@ config:
       port: 30003
   mqttpublisher:
       name: mqttpublisher
-  model_registry:
-    name: model-registry
-    int:
-      port: "8111"
-    ext:
-      port: "32002"
   nginx:
     name: nginx
     int:
