@@ -48,15 +48,14 @@ RUN apt update && \
     rm -rf /tmp/*
 
 WORKDIR /tmp/gpu_deps
-RUN curl -L -O https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17791.9/intel-igc-core_1.0.17791.9_amd64.deb && \
+RUN apt install -y libigdgmm12 && \
+    curl -L -O https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17791.9/intel-igc-core_1.0.17791.9_amd64.deb && \
     curl -L -O https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17791.9/intel-igc-opencl_1.0.17791.9_amd64.deb && \
     curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/intel-level-zero-gpu-dbgsym_1.6.31294.12_amd64.ddeb && \
     curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/intel-level-zero-gpu_1.6.31294.12_amd64.deb && \
     curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/intel-opencl-icd-dbgsym_24.39.31294.12_amd64.ddeb && \
     curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/intel-opencl-icd_24.39.31294.12_amd64.deb && \
-    curl -L -O https://github.com/intel/compute-runtime/releases/download/24.39.31294.12/libigdgmm12_22.5.2_amd64.deb && \
-    dpkg -i ./*.deb && rm -rf /tmp/gpu_deps && \
-    apt install -y libigdgmm12=22.7.1-1120~22.04
+    dpkg -i ./*.deb && rm -rf /tmp/gpu_deps
 
 ## Install Linux NPU Driver v1.16.0 on Ubuntu 22.04
 WORKDIR /tmp/npu_deps

@@ -1,7 +1,7 @@
 /*
  * INTEL CONFIDENTIAL
  * 
- * Copyright (C) 2021-2023 Intel Corporation.
+ * Copyright (C) 2021-2025 Intel Corporation.
  * 
  * This software and the related documents are Intel copyrighted materials, and your use of
  * them is governed by the express license under which they were provided to you (License).
@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <fstream>
+#include "inc/util/hvaUtil.hpp"
 
 #include <boost/beast/http.hpp>
 
