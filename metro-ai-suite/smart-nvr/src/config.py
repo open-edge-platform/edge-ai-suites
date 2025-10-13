@@ -35,3 +35,6 @@ SCENESCAPE_CA_CERT_PATH = os.getenv("SCENESCAPE_CA_CERT_PATH", "/mosquitto/secre
 SCENESCAPE_CLIENT_CERT_PATH = os.getenv("SCENESCAPE_CLIENT_CERT_PATH", "/mosquitto/secrets/broker-cert")
 SCENESCAPE_CLIENT_KEY_PATH = os.getenv("SCENESCAPE_CLIENT_KEY_PATH", "/mosquitto/secrets/broker-key")
 
+# Scenescape throttling configuration
+SCENESCAPE_THROTTLE_INTERVAL = float(os.getenv("SCENESCAPE_THROTTLE_INTERVAL", 2.0))
+

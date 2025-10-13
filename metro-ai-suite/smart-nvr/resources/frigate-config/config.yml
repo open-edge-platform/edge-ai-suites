@@ -8,7 +8,7 @@ mqtt:
   password: '{FRIGATE_MQTT_PASSWORD}'
 
 genai:
-  enabled: true
+  enabled: false
   provider: openai
   model: Qwen/Qwen2.5-VL-3B-Instruct
 

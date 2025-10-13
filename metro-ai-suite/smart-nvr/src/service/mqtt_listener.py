@@ -14,7 +14,8 @@ from config import (
     MQTT_BROKER, MQTT_PORT, MQTT_TOPIC, MQTT_USER, MQTT_PASSWORD,
     SCENESCAPE_MQTT_BROKER, SCENESCAPE_MQTT_PORT, SCENESCAPE_MQTT_TOPIC,
     SCENESCAPE_MQTT_USER, SCENESCAPE_MQTT_PASSWORD,
-    SCENESCAPE_CA_CERT_PATH, SCENESCAPE_CLIENT_CERT_PATH, SCENESCAPE_CLIENT_KEY_PATH, NVR_SCENESCAPE_ENABLED
+    SCENESCAPE_CA_CERT_PATH, SCENESCAPE_CLIENT_CERT_PATH, SCENESCAPE_CLIENT_KEY_PATH, NVR_SCENESCAPE_ENABLED,  
+    SCENESCAPE_THROTTLE_INTERVAL
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -27,17 +28,47 @@ def start_event_loop(loop):
     loop.run_forever()
 
 threading.Thread(target=start_event_loop, args=(event_loop,), daemon=True).start()
+
+def process_scenescape_objects(objects, scenescape_camera, start_time, end_time, num_vehicles, msg_topic):
+    """Process scenescape objects and trigger events for each object type."""
+    for obj_type, obj_list in objects.items():
+        if isinstance(obj_list, list) and obj_list:
+            event_data = {
+                "label": obj_type,
+                "camera": scenescape_camera,
+                "start_time": start_time,
+                "end_time": end_time,
+                "num_vehicles": num_vehicles,
+            }
+            logger.info(f" Scenescape generated event: {event_data}")
+
+            future = asyncio.run_coroutine_threadsafe(
+                process_event(event_data, context={"source": "scenescape", "topic": msg_topic}),
+                event_loop,
+            )
+            future.add_done_callback(
+                lambda fut: (
+                    logger.info(f" process_event completed for {obj_type}: {fut.result()}")
+                    if not fut.exception()
+                    else logger.error(
+                        f" process_event failed for {obj_type}: {fut.exception()}",
+                        exc_info=True,
+                    )
+                )
+            )
+
 # Convert ISO 8601 timestamp to float seconds since epoch
 def iso_to_frigate_timestamp(iso_timestamp: str) -> str:
     try:
         dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
-        #dt_ist = dt + timedelta(hours=5, minutes=30)
         return f"{dt.timestamp():.6f}"
     except Exception as e:
         logger.warning(f"Failed to parse timestamp {iso_timestamp}: {e}")
         return iso_timestamp  
 
-last_scenescape_processed = 0    
+# Store last processed time for scenescape throttling
+throttle_state = {"last_processed": 0}
+
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         if userdata == "frigate":
@@ -50,14 +81,12 @@ def on_connect(client, userdata, flags, rc):
         logger.error(f" Failed to connect to MQTT broker ({userdata}), code: {rc}")
 
 def on_message(client, userdata, msg):
-    # logger.info(f" Message received on topic: {msg.topic}")  # Commented out to reduce noise
-    global last_scenescape_processed
     try:
         payload = json.loads(msg.payload.decode("utf-8", errors="ignore"))
 
         if msg.topic.startswith("frigate/"):
             event_data = payload.get("after") or payload.get("before") or {}
-            logger.info(f" Message received on topic: {msg.topic} at {event_data.get("frame_time")}")
+            logger.info(f" Message received on topic: {msg.topic} at {event_data.get('frame_time')}")
             label = event_data.get("label")
             camera_name = event_data.get("camera")
             start_time = event_data.get("start_time")
@@ -85,11 +114,10 @@ def on_message(client, userdata, msg):
                 #)
 
         elif msg.topic.startswith("scenescape/"):
-            # Throttling: only process once every 2 seconds
             now = time.time()
-            if now - last_scenescape_processed < 2:
+            if now - throttle_state["last_processed"] < SCENESCAPE_THROTTLE_INTERVAL:
                 return
-            last_scenescape_processed = now
+            throttle_state["last_processed"] = now
 
             objects = payload.get("objects", {})
             vehicle_list = []
@@ -103,8 +131,8 @@ def on_message(client, userdata, msg):
             logger.info(f" Scenescape raw timestamp: {iso_timestamp}")
             formatted_timestamp = iso_to_frigate_timestamp(iso_timestamp)
             scenescape_camera = payload.get("id")
-            logger.info(f" Fetching events every 2 seconds for Scenescape")
-            logger.info(f" Message received on topic for vehicle count {num_vehicles}: {msg.topic}")
+            logger.info(f" Fetching events every {SCENESCAPE_THROTTLE_INTERVAL} seconds for Scenescape")
+            logger.info(f" Message received on topic : : {msg.topic} for vehicle count {num_vehicles}")
             logger.info(
                 f" Scenescape message timestamp: {formatted_timestamp} |  Camera: {scenescape_camera} |  Number of vehicles: {num_vehicles} "
             )
@@ -115,31 +143,7 @@ def on_message(client, userdata, msg):
             logger.info(
                 f"Fetching scenescape clip for time {start_time} to {end_time}."
             )
-            for obj_type, obj_list in objects.items():
-                if isinstance(obj_list, list) and obj_list:
-                    event_data = {
-                        "label": obj_type,
-                        "camera": scenescape_camera,
-                        "start_time": start_time,
-                        "end_time": end_time,
-                        "num_vehicles": num_vehicles,
-                    }
-                    logger.info(f" Scenescape generated event: {event_data}")
-
-                    future = asyncio.run_coroutine_threadsafe(
-                        process_event(event_data, context={"source": "scenescape", "topic": msg.topic}),
-                        event_loop,
-                    )
-                    future.add_done_callback(
-                        lambda fut: (
-                            logger.info(f" process_event completed for {obj_type}: {fut.result()}")
-                            if not fut.exception()
-                            else logger.error(
-                                f" process_event failed for {obj_type}: {fut.exception()}",
-                                exc_info=True,
-                            )
-                        )
-                    )
+            process_scenescape_objects(objects, scenescape_camera, start_time, end_time, num_vehicles, msg.topic)
 
         else:
             logger.warning(f" Unknown topic: {msg.topic}")

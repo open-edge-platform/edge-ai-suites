@@ -4,7 +4,7 @@ This guide covers the integration of Intel Scenescape with Smart NVR for enhance
 
 ## Overview
 
-Intel Scenescape integration adds advanced traffic analytics to your Smart NVR system, enabling:
+Smart NVR system integrates with Intel Scenescape to enable:
 - Real-time vehicle counting and tracking
 - Traffic flow analysis
 - Automated event routing based on vehicle thresholds
@@ -12,74 +12,27 @@ Intel Scenescape integration adds advanced traffic analytics to your Smart NVR s
 
 ## Prerequisites
 
-- **Smart Intersection Application**: The Intel Smart Intersection application must be running and configured on your machine. Follow the [Smart Intersection User Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md).
+- **Smart Intersection Application**: Must be running in `../metro-vision-ai-app-recipe/smart-intersection/` following the [Smart Intersection User Guide](../../../metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md)
 - Access to Intel Scenescape traffic analytics platform
-- MQTT broker with SSL/TLS support
-- Valid Scenescape certificates and credentials
 
 ## Installation and Setup
 
-### Step 1: Obtain Certificates and Credentials from Smart Intersection
-
-**Prerequisites:** First, ensure Smart Intersection application is running following the setup guide.
-
-**1.1 Locate Certificate Files:**
 ```bash
-# Navigate to Smart Intersection secrets directory  
-cd /path/to/smart-intersection/src/secrets/
-
-# Check certificate files structure - you should see:
-ls -la certs/
-# Expected files:
-# scenescape-ca.pem       (root certificate)
-# scenescape-broker.crt   (broker certificate) 
-# scenescape-broker.key   (broker private key)
+# Get MQTT credentials from Smart Intersection
+cat ../metro-vision-ai-app-recipe/smart-intersection/src/secrets/browser.auth
+# Expected: {"user": "<user>", "password": "<password>"}
 ```
-
-**1.2 Get MQTT Credentials:**
-```bash
-# Check browser.auth file for MQTT credentials
-cat secrets/browser.auth
-# Expected JSON format:
-# {"user": "<user>", "password": "<password>"}
-```
-
-### Step 2: Configure Environment Variables
-
-Using the credentials obtained from Step 1, set these environment variables:
 
 ```bash
 # Enable Scenescape Integration
 export NVR_SCENESCAPE=true
 
-# MQTT Configuration (from browser.auth JSON file)
-export SCENESCAPE_MQTT_USER="<user>"                    # "user" field from JSON
-export SCENESCAPE_MQTT_PASSWORD="<password>"       # "password" field from JSON
-
+# MQTT Configuration (from browser.auth JSON)
+export SCENESCAPE_MQTT_USER="<user>"
+export SCENESCAPE_MQTT_PASSWORD="<password>"
 ```
 
-### Step 3: Install SSL Certificates
-
-Copy the certificates obtained in Step 1 to Smart NVR:
-
-```bash
-# From Smart Intersection directory, copy certificates to Smart NVR
-# Adjust paths according to your installation directories
-
-cp /path/to/smart-intersection/src/secrets/certs/scenescape-ca.pem \
-   /path/to/smart-nvr/resources/mqtt-certs/root-cert
-
-cp /path/to/smart-intersection/src/secrets/certs/scenescape-broker.crt \
-   /path/to/smart-nvr/resources/mqtt-certs/broker-cert
-
-cp /path/to/smart-intersection/src/secrets/certs/scenescape-broker.key \
-   /path/to/smart-nvr/resources/mqtt-certs/broker-key
-
-# Verify certificates are installed correctly
-ls -la /path/to/smart-nvr/resources/mqtt-certs/
-```
-
-### Step 4: Start Scenescape-Enabled Application
+### Step 3: Start Smart NVR
 
 ```bash
 # Start the application 
@@ -89,7 +42,9 @@ ls -la /path/to/smart-nvr/resources/mqtt-certs/
 ./setup.sh restart
 ```
 
-### Step 5: Verify Integration
+**Note:** The setup script automatically copies Scenescape certificates from Smart Intersection if available. If certificates are missing, setup will fail with an error message.
+
+### Step 4: Verify Integration
 
 Check logs to confirm Scenescape connection:
 
@@ -155,7 +110,7 @@ When Scenescape is disabled in environment variables:
 **Scenescape Rule Example:**
 ```
 Source: scenescape
-Camera: backyard
+Camera: camera1
 Vehicle Count: 5
 Label: vehicle
 Action: Summarize
@@ -210,11 +165,11 @@ docker logs nvr-event-router | grep "Scenescape MQTT client"
 ## Support
 
 For Scenescape integration issues:
-1. Verify environment variables are properly set
-2. Check that Scenescape/Smart intersection application is running
-3. Ensure MQTT broker is accessible and certificates are valid
-4. Review logs using debug commands above
-5. Contact support with relevant log excerpts
+1. **Certificate Error**: Ensure Smart Intersection application is running and has generated certificates
+2. **Environment Variables**: Verify `NVR_SCENESCAPE=true` and MQTT credentials are set  
+3. **MQTT Connection**: Check logs for "Scenescape MQTT client started" message
+4. **Smart Intersection**: Confirm Smart Intersection application is accessible at expected path
+5. Review logs using debug commands above and contact support with relevant excerpts
 
 For general Smart NVR issues, see the [main documentation](get-started.md).
 

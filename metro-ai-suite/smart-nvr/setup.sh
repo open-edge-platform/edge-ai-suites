@@ -73,6 +73,22 @@ get_host_ip() {
     
     echo "$HOST_IP"
 }
+copy_scenescape_certs() {
+    if [ "${NVR_SCENESCAPE}" = "true" ]; then
+        SMART_INTERSECTION_CERTS="../metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs"
+        if [ -f "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" ]; then
+            mkdir -p ./resources/mqtt-certs
+            cp "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" "./resources/mqtt-certs/root-cert"
+            cp "${SMART_INTERSECTION_CERTS}/scenescape-broker.crt" "./resources/mqtt-certs/broker-cert"
+            cp "${SMART_INTERSECTION_CERTS}/scenescape-broker.key" "./resources/mqtt-certs/broker-key"
+            print_success "Scenescape certificates copied successfully"
+        else
+            print_error "Scenescape is enabled but certificates not found at ${SMART_INTERSECTION_CERTS}"
+            print_info "Please ensure Smart Intersection application is running and certificates are generated"
+            return 1
+        fi
+    fi
+}
 
 # Function to validate required environment variables
 validate_environment() {    
@@ -160,6 +176,11 @@ start_services() {
     # Validate environment variables and exit if validation fails
     if ! validate_environment; then
         print_error "Environment validation failed. Please set the required variables."
+        return 1
+    fi
+    
+    # Copy Scenescape certificates if available
+    if ! copy_scenescape_certs; then
         return 1
     fi
     
