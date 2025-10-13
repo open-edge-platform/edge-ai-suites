@@ -132,6 +132,49 @@ Re-run the application after [configuring](./get-started.md#step-2-configure-env
 > - Requires VLM microservice to be running
 > - Disabled by default for system stability
 
+## Running Tests and Generating Coverage Report
+
+To ensure the functionality of the microservice and measure test coverage, follow these steps:
+
+1. **Install Dependencies**  
+   Install the required dependencies, including development dependencies, using:
+
+   ```bash
+   poetry install --with test
+   ```
+
+2. **Run Tests with Poetry**  
+   Use the following command to run all tests:
+
+   ```bash
+   poetry run pytest
+   ```
+
+3. **Run Tests with Coverage**  
+   To collect coverage data while running tests, use:
+
+   ```bash
+   poetry run pytest --cov=src --cov=ui --cov-report=term-missing:skip-covered
+   ```
+
+4. **Generate Coverage Report**  
+   After running the tests, generate a coverage report:
+
+   ```bash
+   poetry run coverage report -m
+   ```
+
+5. **Generate HTML Coverage Report (Optional)**  
+   For a detailed view, generate an HTML report:
+
+   ```bash
+   poetry run coverage html
+   ```
+
+   Open the `htmlcov/index.html` file in your browser to view the report.
+
+These steps will help you verify the functionality of the microservice and ensure adequate test coverage.
+
 ### Custom Build Configuration
 
 If using custom [build flags](./how-to-build-from-source.md#customizing-the-build), ensure the same environment variables are set before running the setup script.

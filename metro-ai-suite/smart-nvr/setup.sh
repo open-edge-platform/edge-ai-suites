@@ -147,11 +147,70 @@ start_services() {
     fi
     
     print_info "Starting Docker Compose services..."
-    # Run the Docker Compose stack with all services
-    docker compose -f docker/compose.yaml up -d 
-    sleep 5
-    print_success "Services are starting up..."
-    print_info "UI will be available at: ${CYAN}http://${HOST_IP}:7860${NC}"
+    docker compose -f docker/compose.yaml up -d || { print_error "docker compose up failed"; return 1; }
+
+    # Wait & verify all expected services come to running/healthy state
+    # Expected logical service keys; map to actual container_name when overridden
+    local expected=(frigate nvr-event-router nvr-event-router-ui mqtt-broker redis)
+    # Associative mapping (bash 4+) from logical name -> actual container name
+    declare -A name_map
+    name_map[frigate]="frigate-vms"
+    # others keep same name as service
+    local max_attempts=12 # ~60s at 5s interval
+    local attempt=1
+    local unhealthy_reason=""
+
+    print_info "Checking container states (timeout ~60s)..."
+    while [ $attempt -le $max_attempts ]; do
+        sleep 5
+        all_ok=true
+        unhealthy_reason=""
+        for svc in "${expected[@]}"; do
+            container_name="$svc"
+            if [[ -n "${name_map[$svc]:-}" ]]; then
+                container_name="${name_map[$svc]}"
+            fi
+            # get status (State.Status) and health (State.Health.Status) if present
+            if ! docker inspect "$container_name" >/dev/null 2>&1; then
+                all_ok=false
+                unhealthy_reason+="\n - $svc ($container_name): container not found"
+                continue
+            fi
+            status=$(docker inspect -f '{{.State.Status}}' "$container_name" 2>/dev/null || echo unknown)
+            health=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$container_name" 2>/dev/null || echo none)
+            case "$status" in
+                running)
+                    if [ "$health" != "" ] && [ "$health" != "none" ] && [ "$health" != "healthy" ]; then
+                        all_ok=false
+                        unhealthy_reason+="\n - $svc ($container_name): running but health=$health"
+                    fi
+                    ;;
+                exit*) all_ok=false; unhealthy_reason+="\n - $svc ($container_name): exited" ;;
+                created|restarting|paused|dead)
+                    all_ok=false
+                    unhealthy_reason+="\n - $svc ($container_name): status=$status"
+                    ;;
+                *)
+                    all_ok=false
+                    unhealthy_reason+="\n - $svc ($container_name): status=$status (unknown)"
+                    ;;
+            esac
+        done
+        if $all_ok; then
+            print_success "All services are healthy.";
+            print_info "UI will be available at: ${CYAN}http://${HOST_IP}:7860${NC}";
+            return 0
+        fi
+        print_info "Attempt ${attempt}/${max_attempts}: waiting for services..."
+        attempt=$((attempt+1))
+    done
+
+    print_error "One or more services failed to become healthy:${unhealthy_reason}"
+    print_info "Next steps:"
+    echo -e "  - Check logs: docker compose -f docker/compose.yaml logs --tail=200 -f"
+    echo -e "  - Inspect a container: docker inspect <name> | jq '.State'"
+    echo -e "  - Re-run after fixing the issue."    
+    return 1
 }
 
 # Function to stop the services

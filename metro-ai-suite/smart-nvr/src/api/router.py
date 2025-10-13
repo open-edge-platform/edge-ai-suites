@@ -1,11 +1,20 @@
+
+# --- Camera Watcher API (moved to end for formatting) ---
+
+from typing import List, Dict
+from service.directory_watcher import set_camera_watcher_mapping, get_enabled_cameras
+
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Body
 from pydantic import BaseModel
 from api.endpoints.frigate_api import FrigateService
 from api.endpoints.summarization_api import SummarizationService
 from service.vms_service import VmsService
 from service import redis_store
+
+class CameraWatcherRequest(BaseModel):
+    cameras: List[Dict[str, bool]]
 
 router = APIRouter()
 frigate_service = FrigateService()
@@ -131,3 +140,51 @@ async def delete_rule(rule_id: str, request: Request):
     if not deleted:
         raise HTTPException(status_code=404, detail="Rule not found")
     return {"message": f"Rule {rule_id} deleted"}
+
+@router.post("/watchers/enable", summary="Enable/disable directory watcher for cameras")
+async def set_camera_watchers(
+    req: CameraWatcherRequest = Body(...),
+    request: Request = None
+):
+    # Convert list of dicts to a single mapping
+    mapping = {k: v for d in req.cameras for k, v in d.items()}
+    debounce_time = 5  # You can make this configurable if needed
+    from service.directory_watcher import upload_videos_to_dataprep
+    updated = await set_camera_watcher_mapping(mapping, debounce_time, upload_videos_to_dataprep, request)
+    return {
+        "mapping": updated,
+        "enabled": [k for k, v in updated.items() if v],
+        "disabled": [k for k, v in updated.items() if not v],
+    }
+
+
+@router.get("/watchers/mapping", summary="Get current camera watcher enable/disable mapping")
+async def get_camera_watcher_mapping(request: Request = None):
+    """Return merged camera watcher mapping.
+
+    Priority order:
+      1. In-memory runtime mapping (reflects changes since process start)
+      2. Persisted Redis mapping (authoritative across restarts)
+
+    If Redis is unavailable, fall back to in-memory only.
+    """
+    runtime_mapping = get_enabled_cameras() or {}
+    merged = runtime_mapping
+    try:
+        from service.redis_store import load_camera_watcher_mapping
+        persisted = await load_camera_watcher_mapping(request)
+        if persisted:
+            # Merge so that any runtime changes override persisted values
+            merged = {**persisted, **runtime_mapping}
+    except Exception as e:
+        # Include error info but still return something useful
+        return {"mapping": merged, "warning": f"Redis load failed: {e}"}
+    return {"mapping": merged}
+
+
+@router.get("/watchers/enable", summary="Alias to fetch current watcher mapping (GET)")
+async def get_camera_watcher_mapping_alias(request: Request = None):
+    """Provide a GET alias on /watchers/enable so users who query that endpoint directly
+    (expecting state) receive the same response as /watchers/mapping.
+    """
+    return await get_camera_watcher_mapping(request)
