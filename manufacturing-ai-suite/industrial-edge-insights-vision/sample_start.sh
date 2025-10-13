@@ -41,9 +41,15 @@ init() {
 
 }
 
-load_payload() {
-    # Load all pipelines payload
-    PAYLOAD_FILE="$APP_DIR/payload.json"
+load_payload() {   
+    # Check for DEVICE_TYPE=GPU and use appropriate payload file
+    if [[ "$DEVICE_TYPE" == "GPU" ]]; then
+        PAYLOAD_FILE="$APP_DIR/payload_gpu_benchmarking.json"
+        echo "GPU device type detected. Using GPU benchmarking payload."
+    else
+        PAYLOAD_FILE="$APP_DIR/payload.json"
+    fi
+    
     if [[ -f "$PAYLOAD_FILE" ]]; then
         echo "Loading payload from $PAYLOAD_FILE"
         if command -v jq &>/dev/null; then

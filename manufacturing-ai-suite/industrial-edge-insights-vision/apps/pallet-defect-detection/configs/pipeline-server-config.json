@@ -117,6 +117,24 @@
                     }
                 },
                 "auto_start": false
+            },
+            {
+                "name": "pallet_defect_detection_gpu_benchmarking",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/warehouse_looped.avi loop=true ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect pre-process-backend=va-surface-sharing model-instance-id=inst0 name=detection ! queue ! gvafpscounter ! appsink name=appsink sync=false async=false",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                            "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
             }
         ]
     }
