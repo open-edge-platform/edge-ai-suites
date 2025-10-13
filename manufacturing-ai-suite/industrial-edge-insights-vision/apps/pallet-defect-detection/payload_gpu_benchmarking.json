@@ -9,7 +9,10 @@
             "parameters": {
                 "detection-properties": {
                     "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
-                    "device": "GPU"
+                    "device": "GPU",
+                    "batch-size": 8,
+                    "nireq": 2,
+                    "ie-config": "NUM_STREAMS=2"
                 }
             }
         }
