@@ -233,7 +233,9 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     # Check if a matching message was found within tolerance
     if target_index is None:
         # No matching entry found, return partial result
-        return {"from": source_entry, "nearest": None, "mode": mode, "fused_decision": None}
+        return {"from": source_entry, "nearest": None, "mode": mode, "fused_decision": None, 
+        "source_queue": "",
+        "target_queue": "" }
 
     logger.debug(f"Found nearest message at index: {target_index}")
     
@@ -268,7 +270,9 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
         "from": source_entry,
         "nearest": target_entry,
         "mode": mode,
-        "fused_decision": fused_decision
+        "fused_decision": fused_decision,
+        "source_queue": source_queue,
+        "target_queue": target_queue
     }
 
 
@@ -314,21 +318,34 @@ def main():
                 logger.debug("=" * 60)
                 # Write fused result to InfluxDB (InfluxDB v1.11.8)
 
-                ts = result["from"]["time"] if "time" in result["from"] else result["from"]["metadata"]["time"]
-                json_body = [{
-                    "measurement": "fusion_result",
-                    "time": pd.to_datetime(ts, unit="ns").isoformat(),
-                    "fields": {
-                        "fused_decision": int(result["fused_decision"] if result["fused_decision"] is not None else -1),
-                        "mode": str(result["mode"])
-                    }
-                }]
-                influx_client.write_points(json_body)
-                
-                
+                if result["fused_decision"] is not None:
+                    ts = result["from"]["time"] if "time" in result["from"] else result["from"]["metadata"]["time"]
+                    vision_classification = "No Label"
+                    if "metadata" in result["from"] and "label" in result["from"]["metadata"]["objects"][0]["classification_layer_name:output1"]:
+                        vision_classification = str(result["from"]["metadata"]["objects"][0]["classification_layer_name:output1"]["label"])
+                    elif "metadata" in result["nearest"] and "label" in result["nearest"]["metadata"]["objects"][0]["classification_layer_name:output1"]:
+                        vision_classification = str(result["nearest"]["metadata"]["objects"][0]["classification_layer_name:output1"]["label"])
 
-                # TODO: Publish fused result to FUSION_TOPIC if needed
-                # client.publish(FUSION_TOPIC, json.dumps(result))
+                    json_body = [{
+                        "measurement": "fusion_result",
+                        "time": pd.to_datetime(ts, unit="ns").isoformat(),
+                        "fields": {
+                            "fused_decision": int(result["fused_decision"]),
+                            "mode": str(result["mode"]),
+                            "vision_classification": vision_classification,
+                            "ts_anomaly": (
+                                str(result["nearest"]["anomaly_status"])
+                                if "anomaly_status" in result["nearest"]
+                                else str(result["from"]["anomaly_status"])
+                            )
+                        }
+                    }]
+                    influx_client.write_points(json_body)
+                    
+                    
+
+                    # Publish fused result to FUSION_TOPIC if needed
+                    # client.publish(FUSION_TOPIC, json.dumps(result))
 
     except KeyboardInterrupt:
         logger.info("\nShutting down Fusion Analytics...")
