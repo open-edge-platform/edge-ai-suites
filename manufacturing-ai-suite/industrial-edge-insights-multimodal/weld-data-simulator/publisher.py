@@ -243,6 +243,10 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
             del csv_row["Remarks "]
         if "Part No " in csv_row:   
             del csv_row["Part No"]
+        now_ns = time.time_ns()
+        seconds = now_ns // 1_000_000_000
+        nanoseconds = now_ns % 1_000_000_000
+        csv_row["time"] = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(seconds)) + f".{nanoseconds:09d}Z"
         # csv_row["frame_id"] = frame_id
         csv_row = json.dumps(csv_row)
         # Publish each CSV row only once
