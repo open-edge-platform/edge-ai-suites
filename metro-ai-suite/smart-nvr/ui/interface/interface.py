@@ -440,8 +440,8 @@ def create_ui():
                 )
 
             # Tab 2: Configure Camera Streaming (enable/disable watcher per camera)
-            with gr.TabItem("Configure Camera Streaming"):
-                gr.Markdown("### Enable / Disable Cameras for Continuous Streaming ")
+            with gr.TabItem("Configure Cameras"):
+                gr.Markdown("### Enable or disable cameras for sending NVR video feeds to VSS Search. ")
                 gr.Markdown("Select the cameras you want the backend watcher to process.")
                 # Fetch and normalize mapping (strip whitespace in keys for safety)
                 current_mapping = fetch_camera_watcher_mapping()
