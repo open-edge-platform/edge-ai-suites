@@ -54,8 +54,8 @@ BROKER = os.getenv("MQTT_BROKER", "localhost")
 
 # MQTT Topic Configuration
 VISION_TOPIC = os.getenv("VISION_TOPIC", "vision_weld_defect_classification")
-TS_TOPIC = os.getenv("TS_TOPIC", "ts_weld_defect_detection")
-FUSION_TOPIC = os.getenv("FUSION_TOPIC", "fusion/anomaly")
+TS_TOPIC = os.getenv("TS_TOPIC", "ts_weld_anomaly_detection")
+FUSION_TOPIC = os.getenv("FUSION_TOPIC", "fusion/anomaly_detection_results")
 
 # Timestamp Matching Configuration
 # 50 ms tolerance (in nanoseconds) for matching messages by timestamp
@@ -252,20 +252,23 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     del queues[target_queue][target_index]
 
     vision_classification = "No Label"
-    
+
+    data_dict = {}
+
     # Extract anomaly decisions from both messages
     if source_queue == "vision":
         # Vision message processed first
         vision_confidence = source_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["confidence"]
         timeseries_anomaly = target_entry["anomaly_status"]
-        if "metadata" in source_entry and "label" in source_entry["metadata"]["objects"][0]["classification_layer_name:output1"]:
-            vision_classification = str(source_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["label"])
+        data_dict = source_entry
     else:
         # Time-series message processed first
         vision_confidence = target_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["confidence"]
         timeseries_anomaly = source_entry["anomaly_status"]
-        if "metadata" in target_entry and "label" in target_entry["metadata"]["objects"][0]["classification_layer_name:output1"]:
-            vision_classification = str(target_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["label"])
+        data_dict = target_entry
+        
+    if "metadata" in data_dict and "label" in data_dict["metadata"]["objects"][0]["classification_layer_name:output1"]:
+            vision_classification = str(data_dict["metadata"]["objects"][0]["classification_layer_name:output1"]["label"])
     
     # Convert vision confidence to binary decision (threshold at 0.5)
     vision_anomaly = 1 if vision_confidence > 0.5 else 0
@@ -356,11 +359,10 @@ def main():
                         }
                     }]
                     influx_client.write_points(json_body)
-                    
-                    
 
+                    json_body[0]["fields"]["time"] = json_body[0]["time"]
                     # Publish fused result to FUSION_TOPIC if needed
-                    # client.publish(FUSION_TOPIC, json.dumps(result))
+                    client.publish(FUSION_TOPIC, json.dumps(json_body[0]["fields"]))
 
     except KeyboardInterrupt:
         logger.info("\nShutting down Fusion Analytics...")

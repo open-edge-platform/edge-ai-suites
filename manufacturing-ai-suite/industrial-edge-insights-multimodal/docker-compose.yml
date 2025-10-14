@@ -274,8 +274,8 @@ services:
       NO_PROXY: "ia-mqtt-broker,ia-influxdb,${no_proxy}"
       # Topic Configuration
       VISION_TOPIC: vision_weld_defect_classification
-      TS_TOPIC: ts_weld_defect_detection
-      FUSION_TOPIC: fusion/anomaly      
+      TS_TOPIC: ts_weld_anomaly_detection
+      FUSION_TOPIC: fusion/anomaly_detection_results
       # Performance Configuration
       BUFFER_SIZE: 100
       TOLERANCE_NS: ${TOLERANCE_NS}
