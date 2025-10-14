@@ -71,7 +71,9 @@ export VSS_SEARCH_PORT=<vss-search-port>          # Default: 12345
 export MQTT_USER=<mqtt-username>
 export MQTT_PASSWORD=<mqtt-password>
 
-export NVR_GENAI=false                  
+# Feature Toggles
+export NVR_GENAI=false                  # Set to 'true' to enable AI-powered event descriptions  
+export NVR_SCENESCAPE=false             # Set to 'true' to enable Scenescape integration                  
 ```
 
 ### Step 3: Launch Application
@@ -174,6 +176,10 @@ To ensure the functionality of the microservice and measure test coverage, follo
    Open the `htmlcov/index.html` file in your browser to view the report.
 
 These steps will help you verify the functionality of the microservice and ensure adequate test coverage.
+
+### Scenescape Integration
+
+For traffic analytics capabilities with Intel Scenescape (vehicle counting, traffic flow analysis), see the **[Scenescape Integration Guide](./scenescape-integration.md)**.
 
 ### Custom Build Configuration
 

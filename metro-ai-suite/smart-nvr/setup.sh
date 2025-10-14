@@ -73,6 +73,22 @@ get_host_ip() {
     
     echo "$HOST_IP"
 }
+copy_scenescape_certs() {
+    if [ "${NVR_SCENESCAPE}" = "true" ]; then
+        SMART_INTERSECTION_CERTS="../metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs"
+        if [ -f "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" ]; then
+            mkdir -p ./resources/mqtt-certs
+            cp "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" "./resources/mqtt-certs/root-cert"
+            cp "${SMART_INTERSECTION_CERTS}/scenescape-broker.crt" "./resources/mqtt-certs/broker-cert"
+            cp "${SMART_INTERSECTION_CERTS}/scenescape-broker.key" "./resources/mqtt-certs/broker-key"
+            print_success "Scenescape certificates copied successfully"
+        else
+            print_error "Scenescape is enabled but certificates not found at ${SMART_INTERSECTION_CERTS}"
+            print_info "Please ensure Smart Intersection application is running and certificates are generated"
+            return 1
+        fi
+    fi
+}
 
 # Function to validate required environment variables
 validate_environment() {    
@@ -82,7 +98,11 @@ validate_environment() {
         print_info "Please set it to 'true' or 'false' to enable/disable NVR GenAI features"
         return 1
     fi
-    
+    if [ -z "${NVR_SCENESCAPE}" ]; then
+        print_error "NVR_SCENESCAPE environment variable is required"
+        print_info "Please set it to 'true' or 'false' to enable/disable NVR SceneScape features"
+        return 1
+    fi    
     # Check for VSS IP and port
     if [ -z "${VSS_SUMMARY_IP}" ]; then
         print_error "VSS_SUMMARY_IP environment variable is required"
@@ -122,7 +142,20 @@ validate_environment() {
             return 1
         fi
     fi
-    
+    # Check for SceneScape MQTT settings if enabled
+    if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
+        if [ -z "${SCENESCAPE_MQTT_USER}" ]; then
+            print_error "SCENESCAPE_MQTT_USER environment variable is required when NVR_SCENESCAPE is enabled"
+            print_info "Please set it to the MQTT username for SceneScape"
+            return 1
+        fi
+
+        if [ -z "${SCENESCAPE_MQTT_PASSWORD}" ]; then
+            print_error "SCENESCAPE_MQTT_PASSWORD environment variable is required when NVR_SCENESCAPE is enabled"
+            print_info "Please set it to the MQTT password for SceneScape"
+            return 1
+        fi
+    fi    
     # Check for MQTT user and password
     if [ -z "${MQTT_USER}" ]; then
         print_error "MQTT_USER environment variable is required"
@@ -143,6 +176,11 @@ start_services() {
     # Validate environment variables and exit if validation fails
     if ! validate_environment; then
         print_error "Environment validation failed. Please set the required variables."
+        return 1
+    fi
+    
+    # Copy Scenescape certificates if available
+    if ! copy_scenescape_certs; then
         return 1
     fi
     

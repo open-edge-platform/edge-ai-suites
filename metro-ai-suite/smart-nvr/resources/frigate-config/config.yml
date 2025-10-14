@@ -27,6 +27,71 @@ record:
     mode: all
 
 cameras:
+  camera1:
+    ffmpeg:
+      inputs:
+        - path: /videos/driver-action-recognition.mp4
+          input_args: -re -stream_loop -1 -fflags +genpts
+          roles:
+            - detect
+            - record
+    detect:
+      enabled: true
+      max_disappeared: 30
+    objects:
+      track: [vehicle,pedestrian, car]
+      filters:
+        car:
+          min_score: 0.6
+          threshold: 0.70
+    record:
+      enabled: true
+      retain:
+        days: 1
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+    genai:
+      enabled: true
+      use_snapshot: true
+      objects:
+        - vehicle
+        - pedestrian
+        - car
+
+  camera2:
+    ffmpeg:
+      inputs:
+        - path: /videos/driver-action-recognition.mp4
+          input_args: -re -stream_loop -1 -fflags +genpts
+          roles:
+            - detect
+            - record
+    detect:
+      enabled: true
+      max_disappeared: 30
+    objects:
+      track: [vehicle,pedestrian, car]
+      filters:
+        car:
+          min_score: 0.6
+          threshold: 0.80
+    record:
+      enabled: true
+      retain:
+        days: 1
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+    genai:
+      enabled: true
+      use_snapshot: true
+      objects:
+        - vehicle
+        - pedestrian
+        - car
   backyard:
     ffmpeg:
       inputs:
@@ -39,7 +104,7 @@ cameras:
       enabled: true
       max_disappeared: 30
     objects:
-      track: [bicycle, car, motorcycle, person]
+      track: [bicycle, car, motorcycle, person, vehicle]
       filters:
         person:
           min_score: 0.6
@@ -75,6 +140,7 @@ cameras:
       retain:
         days: 1
     objects:
+      track: [person, vehicle]
       filters:
         person:
           min_score: 0.6
@@ -88,6 +154,7 @@ cameras:
       use_snapshot: true
       objects:
         - person
+        - vehicle
 
   # office:
   #   ffmpeg:
@@ -131,6 +198,7 @@ cameras:
       retain:
         days: 1
     objects:
+      track: [person, vehicle]
       filters:
         person:
           min_score: 0.6
@@ -144,4 +212,5 @@ cameras:
       use_snapshot: true
       objects:
         - person
+        - vehicle
 version: 0.15-1
