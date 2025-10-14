@@ -2,6 +2,13 @@
 set -e
 
 SSL_DIR="/etc/nginx/ssl"
+mkdir -p "$SSL_DIR"
+
+# Install openssl if missing
+if ! command -v openssl >/dev/null 2>&1; then
+    echo "Installing openssl..."
+    apk add --no-cache openssl
+fi
 
 # Generate self-signed cert if not present
 if [ ! -f "$SSL_DIR/server.crt" ] || [ ! -f "$SSL_DIR/server.key" ]; then
