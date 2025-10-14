@@ -73,8 +73,19 @@ get_host_ip() {
     
     echo "$HOST_IP"
 }
-copy_scenescape_certs() {
-    if [ "${NVR_SCENESCAPE}" = "true" ]; then
+
+# Function to configure Scenescape settings
+configure_scenescape_setup() {
+    print_info "Configuring Scenescape setup based on NVR_SCENESCAPE setting"
+    
+    if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
+        print_info "NVR_SCENESCAPE is enabled - configuring Scenescape mode"
+        
+        # Configure Frigate with Scenescape cameras
+        cp "./resources/frigate-config/config-scenescape.yml" "./resources/frigate-config/config.yml"
+        print_success "Scenescape Frigate configuration activated"
+        
+        # Copy Scenescape certificates
         SMART_INTERSECTION_CERTS="../metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs"
         if [ -f "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" ]; then
             mkdir -p ./resources/mqtt-certs
@@ -87,6 +98,10 @@ copy_scenescape_certs() {
             print_info "Please ensure Smart Intersection application is running and certificates are generated"
             return 1
         fi
+    else
+        print_info "NVR_SCENESCAPE is disabled - using default configuration"
+        cp "./resources/frigate-config/config-default.yml" "./resources/frigate-config/config.yml"
+        print_success "Default Frigate configuration activated"
     fi
 }
 
@@ -179,8 +194,8 @@ start_services() {
         return 1
     fi
     
-    # Copy Scenescape certificates if available
-    if ! copy_scenescape_certs; then
+    # Configure Scenescape setup (config and certificates)
+    if ! configure_scenescape_setup; then
         return 1
     fi
     
