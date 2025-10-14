@@ -152,7 +152,7 @@
           "measurement": "weld-sensor-anomaly-data",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT \"CO2 Weld Flow\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 0) AND $timeFilter",
+          "query": "SELECT \"Primary Weld Current\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 0) AND $timeFilter",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -160,7 +160,7 @@
             [
               {
                 "params": [
-                  "CO2 Weld Flow"
+                  "Primary Weld Current"
                 ],
                 "type": "field"
               },
@@ -200,7 +200,7 @@
           "measurement": "weld-sensor-anomaly-data",
           "orderByTime": "ASC",
           "policy": "autogen",
-          "query": "SELECT \"CO2 Weld Flow\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 1) AND $timeFilter",
+          "query": "SELECT \"Primary Weld Current\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 1) AND $timeFilter",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -209,7 +209,7 @@
             [
               {
                 "params": [
-                  "CO2 Weld Flow"
+                  "Primary Weld Current"
                 ],
                 "type": "field"
               }
@@ -231,7 +231,7 @@
           }
         }
       ],
-      "title": "Anomaly Prediction for Weld Sensor Data (CO2)",
+      "title": "Anomaly Prediction for Weld Sensor Data (Primary Weld Current)",
       "type": "timeseries"
     },
     {
@@ -736,7 +736,7 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},
