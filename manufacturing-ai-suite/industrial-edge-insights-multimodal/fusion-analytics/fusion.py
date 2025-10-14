@@ -241,7 +241,8 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
             "source_queue": source_queue,
             "target_queue": target_queue,
             "vision_anomaly": 0,
-            "timeseries_anomaly": 0
+            "timeseries_anomaly": 0,
+            "vision_classification": ""
         }
 
     logger.debug(f"Found nearest message at index: {target_index}")
@@ -251,9 +252,7 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     del queues[target_queue][target_index]
 
     vision_classification = "No Label"
-   
     
-
     # Extract anomaly decisions from both messages
     if source_queue == "vision":
         # Vision message processed first
@@ -271,10 +270,8 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     # Convert vision confidence to binary decision (threshold at 0.5)
     vision_anomaly = 1 if vision_confidence > 0.5 else 0
     
-
-    if vision_classification == "No_Weld" or vision_classification == "Goold_Weld":
+    if vision_classification == "No_Weld" or vision_classification == "Good_Weld":
         vision_anomaly = 0
-    
     
     # Apply fusion logic based on selected mode
     if mode == "AND":
@@ -292,7 +289,8 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
         "source_queue": source_queue,
         "target_queue": target_queue,
         "vision_anomaly": vision_anomaly,
-        "timeseries_anomaly": timeseries_anomaly
+        "timeseries_anomaly": timeseries_anomaly,
+        "vision_classification": vision_classification
     }
 
 
@@ -340,19 +338,14 @@ def main():
 
                 if result["fused_decision"] is not None:
                     ts = result["from"]["time"] if "time" in result["from"] else result["from"]["metadata"]["time"]
-                    vision_classification = "No Label"
-                    if "metadata" in result["from"] and "label" in result["from"]["metadata"]["objects"][0]["classification_layer_name:output1"]:
-                        vision_classification = str(result["from"]["metadata"]["objects"][0]["classification_layer_name:output1"]["label"])
-                    elif "metadata" in result["nearest"] and "label" in result["nearest"]["metadata"]["objects"][0]["classification_layer_name:output1"]:
-                        vision_classification = str(result["nearest"]["metadata"]["objects"][0]["classification_layer_name:output1"]["label"])
-
+                    
                     json_body = [{
                         "measurement": "fusion_result",
                         "time": pd.to_datetime(ts, unit="ns").isoformat(),
                         "fields": {
                             "fused_decision": int(result["fused_decision"]),
                             "mode": str(result["mode"]),
-                            "vision_classification": vision_classification,
+                            "vision_classification": result["vision_classification"],
                             "ts_anomaly": (
                                 str(result["nearest"]["anomaly_status"])
                                 if "anomaly_status" in result["nearest"]
