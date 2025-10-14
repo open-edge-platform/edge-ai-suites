@@ -1,0 +1,29 @@
+services:
+
+  mediaserver:
+    image: bluenviron/mediamtx:1.14.0
+    networks:
+      perf_test_net:
+        aliases:
+          - mediaserver
+    ports:
+      - "8554:8554"
+    restart: always
+    pids_limit: 1000
+
+  cams:
+    image: linuxserver/ffmpeg:version-8.0-cli
+    command: -nostdin -re -stream_loop -1 -i /data/1122east.ts -map 0:v -r 30 -c copy -f rtsp -rtsp_transport udp rtsp://mediaserver:8554/cam1
+    volumes:
+      - ${ROOT_DIR}/src/dlstreamer-pipeline-server/videos:/data
+    networks:
+      perf_test_net:
+    depends_on:
+      mediaserver:
+        condition: service_started
+    restart: always
+    pids_limit: 1000
+
+networks:
+  perf_test_net:
+    driver: "bridge"
