@@ -63,11 +63,11 @@ TOLERANCE_NS = int(float(os.getenv("TOLERANCE_NS", 50e6)))
 # Fusion Logic Configuration
 # "AND" means both systems must detect anomaly to raise alert
 # "OR" means either system detecting anomaly raises alert
-FUSION_MODE = str(os.getenv("FUSION_MODE", "AND"))  # "AND" or "OR"
+FUSION_MODE = str(os.getenv("FUSION_MODE", "OR"))  # "AND" or "OR"
 logger.debug(type(FUSION_MODE), FUSION_MODE)
 
 if FUSION_MODE not in ["AND", "OR"]:
-    raise ValueError(f"FUSION_MODE must be 'AND' or 'OR' given value is {FUSION_MODE}mhhvmhvmh")
+    raise ValueError(f"FUSION_MODE must be 'AND' or 'OR' given value is {FUSION_MODE}")
 
 # ===================== UTILITY FUNCTIONS =====================
 
@@ -233,9 +233,16 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     # Check if a matching message was found within tolerance
     if target_index is None:
         # No matching entry found, return partial result
-        return {"from": source_entry, "nearest": None, "mode": mode, "fused_decision": None, 
-        "source_queue": "",
-        "target_queue": "" }
+        return {
+            "from": source_entry, 
+            "nearest": None, 
+            "mode": mode, 
+            "fused_decision": None, 
+            "source_queue": source_queue,
+            "target_queue": target_queue,
+            "vision_anomaly": 0,
+            "timeseries_anomaly": 0
+        }
 
     logger.debug(f"Found nearest message at index: {target_index}")
     
@@ -243,19 +250,30 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     target_entry = queues[target_queue][target_index]
     del queues[target_queue][target_index]
 
+    vision_classification = "No Label"
+   
+    
+
     # Extract anomaly decisions from both messages
     if source_queue == "vision":
         # Vision message processed first
         vision_confidence = source_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["confidence"]
         timeseries_anomaly = target_entry["anomaly_status"]
+        if "metadata" in source_entry and "label" in source_entry["metadata"]["objects"][0]["classification_layer_name:output1"]:
+            vision_classification = str(source_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["label"])
     else:
         # Time-series message processed first
         vision_confidence = target_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["confidence"]
         timeseries_anomaly = source_entry["anomaly_status"]
+        if "metadata" in target_entry and "label" in target_entry["metadata"]["objects"][0]["classification_layer_name:output1"]:
+            vision_classification = str(target_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["label"])
     
     # Convert vision confidence to binary decision (threshold at 0.5)
     vision_anomaly = 1 if vision_confidence > 0.5 else 0
     
+
+    if vision_classification == "No_Weld" or vision_classification == "Goold_Weld":
+        vision_anomaly = 0
     
     
     # Apply fusion logic based on selected mode
@@ -265,14 +283,16 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     else:  # mode == "OR"
         # Either system detecting anomaly triggers alert
         fused_decision = vision_anomaly | timeseries_anomaly
-    logger.info(f"Vision anomaly: {vision_anomaly}, TS anomaly: {timeseries_anomaly} fused decision: {fused_decision}")
+    logger.info(f"Vision_Anomaly Type: {vision_classification}, Vision anomaly: {vision_anomaly}, TS anomaly: {timeseries_anomaly} fused decision: {fused_decision}")
     return {
         "from": source_entry,
         "nearest": target_entry,
         "mode": mode,
         "fused_decision": fused_decision,
         "source_queue": source_queue,
-        "target_queue": target_queue
+        "target_queue": target_queue,
+        "vision_anomaly": vision_anomaly,
+        "timeseries_anomaly": timeseries_anomaly
     }
 
 
@@ -337,7 +357,9 @@ def main():
                                 str(result["nearest"]["anomaly_status"])
                                 if "anomaly_status" in result["nearest"]
                                 else str(result["from"]["anomaly_status"])
-                            )
+                            ),
+                            "vision_anomaly": int(result["vision_anomaly"]),
+                            "timeseries_anomaly": int(result["timeseries_anomaly"])
                         }
                     }]
                     influx_client.write_points(json_body)

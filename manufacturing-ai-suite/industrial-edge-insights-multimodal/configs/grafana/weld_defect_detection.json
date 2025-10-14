@@ -276,7 +276,23 @@
             },
             "inspect": false
           },
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "No Anomaly"
+                },
+                "1": {
+                  "color": "semi-dark-red",
+                  "index": 1,
+                  "text": "Anomaly"
+                }
+              },
+              "type": "value"
+            }
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -311,7 +327,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "query": "SELECT ts_anomaly as \"Timeseries Analytics\", vision_classification as \"Vision Analytics\", fused_decision as \"Fusion Analytics Decision\"   from fusion_result order by time desc limit 10",
+          "query": "SELECT ts_anomaly as \"Timeseries Analytics\", vision_classification as \"Vision Analytics\", fused_decision as \"Fusion Analytics\"   from fusion_result order by time desc limit 10",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table"
@@ -329,7 +345,7 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},
