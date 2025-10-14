@@ -31,6 +31,11 @@ ifeq ($(origin ingestion_interval), undefined)
 ingestion_interval := "1s"
 endif
 
+# Assign default value to version and appVersion if not provided for helm deployment
+ifeq ($(origin version), undefined)
+version := "1.1.0-weekly"
+endif
+
 export SAMPLE_APP
 
 # Example: Run a shell if-else block before starting containers
@@ -39,7 +44,8 @@ define multi_stream_check
 		if [ "$(SAMPLE_APP)" = "$(DEFAULT_SAMPLE_APP)" ]; then \
 			TELEGRAF_METRIC_BATCH_SIZE=$$(grep -m1 TELEGRAF_METRIC_BATCH_SIZE $(DOCKER_COMPOSE_FILE) | awk -F ': ' '{print $$2}' | xargs); \
 			LOG_LEVEL=$$(grep -E "^LOG_LEVEL=" $(ENV_FILE) | cut -d'=' -f2); \
-			python3 telegraf/generate_telegraf_config.py $(num_of_streams) $$LOG_LEVEL $$TELEGRAF_METRIC_BATCH_SIZE $(ingestion_interval) $(1); \
+			python3 -m pip install -r requirements.txt; \
+			python3 generate_telegraf_config.py $(num_of_streams) $$LOG_LEVEL $$TELEGRAF_METRIC_BATCH_SIZE $(ingestion_interval) $(1); \
 		else \
 			echo "Multi-stream ingestion is only supported for the 'Wind Turbine Anomaly Detection' sample app."; \
 			exit 1; \
@@ -76,7 +82,7 @@ build_copyleft_sources:
 .PHONY: check_env_variables
 check_env_variables:
 	@echo "Checking if username/password in .env are matching the rules set..."
-	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD MR_PSQL_PASSWORD MR_MINIO_ACCESS_KEY MR_MINIO_SECRET_KEY"; \
+	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD"; \
 	for variable_name in $$variables; do \
 		value=$$(grep -E "^$$variable_name=" $(ENV_FILE) | cut -d'=' -f2); \
 		if [ -z "$$value" ]; then \
@@ -224,19 +230,21 @@ push_images: build
 gen_helm_charts:
 	@echo "Generating Helm packages"
 	@echo "Packaging Helm chart for ${SAMPLE_APP}"
-	@cp -f grafana/dashboards/*.yml helm/
-	@cp -f apps/${SAMPLE_APP}/grafana-dashboard/dashboard.json helm/
-	@cp -f influxdb/config/*.conf helm/
-	@cp -f influxdb/init-influxdb.sh helm/
-	@cp -f mqtt-broker/*.conf helm/
-	@cp -f apps/${SAMPLE_APP}/ingestor-data/${SAMPLE_APP}.csv helm/
+	@cp -f configs/grafana/dashboards/*.yml helm/
+	@cp -f apps/${SAMPLE_APP}/grafana-dashboard.json helm/
+	@cp -f configs/influxdb/config/*.conf helm/
+	@cp -f configs/influxdb/init-influxdb.sh helm/
+	@cp -f configs/mqtt-broker/*.conf helm/
+	@cp -f apps/${SAMPLE_APP}/${SAMPLE_APP}.csv helm/
 	@cp -f apps/${SAMPLE_APP}/telegraf-config/*.conf helm
-	@cp -f grafana/entrypoint.sh helm/grafana_entrypoint.sh
 	@cp -f apps/${SAMPLE_APP}/time-series-analytics-config/config.json helm/
-	@cp -f telegraf/entrypoint.sh helm/telegraf_entrypoint.sh
-	@cp -f nginx/nginx-cert-gen.sh helm/nginx-cert-gen.sh
-	@cp -f nginx/nginx.conf helm/nginx.conf
+	@cp -f configs/telegraf/entrypoint.sh helm/telegraf_entrypoint.sh
+	@cp -f configs/nginx/nginx-cert-gen.sh helm/nginx-cert-gen.sh
+	@cp -f configs/nginx/nginx.conf helm/nginx.conf
 	@sed -i "s/name: .*/name: ${SAMPLE_APP}-sample-app/" "helm/Chart.yaml"
+	@sed -i "s/description: .*/description: Helm charts for ${SAMPLE_APP} sample app/" "helm/Chart.yaml"
+	@sed -i "s/version: .*/version: ${version}/" "helm/Chart.yaml"
+	@sed -i "s/appVersion: .*/appVersion: \"${version}\"/" "helm/Chart.yaml"
 	@sed -i "s/SAMPLE_APP: .*/SAMPLE_APP: ${SAMPLE_APP}/" "helm/values.yaml"
 	@echo "Helm packages generated"
 
@@ -244,13 +252,30 @@ gen_helm_charts:
 .PHONY: help
 help:
 	@echo "Makefile commands:"
-	@echo "  make build    - Build Docker containers"
-	@echo "  make build_copyleft_sources - Build Docker containers including copyleft licensed sources"
-	@echo "  make up_mqtt_ingestion     - Start Docker containers using mqtt ingestion"
-	@echo "  make up_opcua_ingestion    - Start Docker containers using opcua ingestion"
-	@echo "  make down     - Stop Docker containers"
-	@echo "  make restart  - Restart Docker containers"
-	@echo "  make clean    - Remove all stopped containers and unused images"
-	@echo "  make push_images     - Push the images to docker registry"
-	@echo "  make gen_helm_charts	- Generate helm packages"
-	@echo "  make help     - Display this help message"
+	@echo "  make build                        - Build Docker containers"
+	@echo "      No parameters required."
+	@echo "  make build_copyleft_sources       - Build Docker containers including copyleft licensed sources"
+	@echo "      No parameters required."
+	@echo "  make up_mqtt_ingestion            - Start Docker containers using MQTT ingestion"
+	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
+	@echo "      Optional: num_of_streams (default: 1), number_of_data_points_per_stream, ingestion_interval"
+	@echo "      Example: make up_mqtt_ingestion app=wind-turbine-anomaly-detection num_of_streams=2"
+	@echo "  make up_opcua_ingestion           - Start Docker containers using OPC UA ingestion"
+	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
+	@echo "      Optional: num_of_streams (default: 1), number_of_data_points_per_stream, ingestion_interval"
+	@echo "      Example: make up_opcua_ingestion app=wind-turbine-anomaly-detection num_of_streams=2"
+	@echo "  make down                         - Stop Docker containers and remove volumes"
+	@echo "      No parameters required."
+	@echo "  make status                       - Show status of deployed containers and check for errors"
+	@echo "      No parameters required."
+	@echo "  make check_env_variables          - Validate required .env variables"
+	@echo "      No parameters required."
+	@echo "  make push_images                  - Push the images to docker registry"
+	@echo "      Mandatory: DOCKER_REGISTRY (set in .env or as param)"
+	@echo "      Example: make push_images DOCKER_REGISTRY=myregistry"
+	@echo "  make gen_helm_charts              - Generate Helm packages for the selected sample app"
+	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
+	@echo "      Optional: version (default: 1.1.0-weekly)"
+	@echo "      Example: make gen_helm_charts app=weld-anomaly-detection version=1.2.0"
+	@echo "  make help                         - Display this help message"
+	@echo "      No parameters required."

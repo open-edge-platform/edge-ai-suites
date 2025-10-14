@@ -4,7 +4,9 @@ import torch
 import threading
 from utils.locks import audio_pipeline_lock
 from utils.config_loader import config
+from utils import ensure_model
 import logging
+import os
 logger = logging.getLogger(__name__)
 
 from transformers import TextIteratorStreamer
@@ -50,6 +52,11 @@ class Summarizer(BaseSummarizer):
             logger.info("Loading model in full precision mode.")
             load_in_low_bit = None
 
+        model_dir = ensure_model.get_model_path()
+        local_files_only=False
+        if os.path.exists(model_dir):
+            local_files_only=True
+
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
             # load_in_4bit=True,
@@ -57,7 +64,9 @@ class Summarizer(BaseSummarizer):
             optimize_model=True,
             trust_remote_code=True,
             use_cache=use_cache,
-            model_hub=model_hub
+            model_hub=model_hub,
+            cache_dir=model_dir,
+            local_files_only=local_files_only
         )
         self.device = device
         self.model = self.model.to(self.device)

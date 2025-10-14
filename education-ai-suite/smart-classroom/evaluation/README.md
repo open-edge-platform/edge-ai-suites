@@ -46,6 +46,15 @@ The script does transcription -> summarization -> summary evaluation. To skip st
 python .\evaluation\evaluate.py --audio_file <audio_file> --skip_transcribe
 ```
 
+**Note**: if evaluation fails, it might be due to the default model is not available. Try accessing `https://deepseek.intel.com/`, check which models are available, and use a valid one with `--eval_model`. 
+
+E.g.
+```
+python .\evaluation\evaluate.py ... --eval_model "gnr./models/DeepSeek-R1-Channel-INT8"
+```
+
+To find out the correct model name, first select a model on the web page, then try sending a simple message, press `F12` to enter browser dev tools, check `Network` and select a `completed` request, you can find the model name in its `Payload`
+
 
 ### Evaluate ASR performance
 Skip summarization and evaluation to save time. Bind process to certain CPU core to limit CPU utilization.

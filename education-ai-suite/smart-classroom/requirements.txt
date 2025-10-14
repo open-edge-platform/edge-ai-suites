@@ -9,6 +9,7 @@ pywin32==311
 PyYAML==6.0.2
 torch==2.8.0
 torchaudio==2.8.0
+torchvision== 0.23.0
 transformers==4.53.3
 uvicorn==0.35.0
 WMI==1.5.1

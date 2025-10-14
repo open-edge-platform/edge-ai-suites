@@ -60,21 +60,3 @@ designated destination.
     .. code-block:: bash
 
         ros2 service call /ipc/hrc_perception_ros/start_follow_service_service std_srvs/srv/Empty {}
-
-checklist_robot.png
-convertWaypoint.png
-homeposition.png
-RobotBackground.png
-robotic-arm-graphic.png
-RVCControl.png
-RVC.png
-RVCVisionHighLevel.png
-RvizDynamicUseCase1.png
-sethomeposition.png
-setremotecontrol.png
-TCPOffset.png
-tftree.svg
-URCreateProgram.png
-URExternalControl.png
-URRobotiqGripper.png
-YoloDetection.png

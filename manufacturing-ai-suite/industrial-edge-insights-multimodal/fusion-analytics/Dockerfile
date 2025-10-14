@@ -9,11 +9,6 @@ FROM python:3.13-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy requirements file
 COPY requirements.txt .
 
@@ -25,6 +20,22 @@ COPY fusion.py .
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
+
+ARG COPYLEFT_SOURCES=false
+
+# Download sources for Debian and Python packages with specific licenses if requested
+RUN  if [ "$COPYLEFT_SOURCES" = "true" ]; then \
+      mkdir -p /python-licenses && \
+      cd /python-licenses && \
+      # Download python package sources with relevant licenses
+      pip3 freeze | cut -d= -f1 | while read pkg; do \
+        meta=$(pip3 show $pkg 2>/dev/null); \
+        lic=$(echo "$meta" | grep -i '^License:' | grep -Ei 'MPL|GPL|General Public License|EPL|Eclipse Public License|CDDL|LGPL'); \
+        if [ ! -z "$lic" ]; then \
+          pip3 download --no-binary :all: $pkg || true; \
+        fi; \
+      done; \
+    fi
 
 # Expose any necessary ports (if needed for debugging/monitoring)
 EXPOSE 8080

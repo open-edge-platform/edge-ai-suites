@@ -40,7 +40,7 @@ services:
     networks:
     - timeseries_network
     volumes:
-    - ./telegraf/entrypoint.sh:/entrypoint.sh
+    - ./configs/telegraf/entrypoint.sh:/entrypoint.sh
     - "./apps/${SAMPLE_APP}/telegraf-config/:/etc/telegraf"   
 
   ia-influxdb:
@@ -74,8 +74,8 @@ services:
     volumes:
       # Mount for influxdb data directory and configuration
     - vol_influxdb_conf:/var/lib/influxdb:rw
-    - ./influxdb/config:/etc/influxdb
-    - ./influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
+    - ./configs/influxdb/config:/etc/influxdb
+    - ./configs/influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
   
   ia-time-series-analytics-microservice:
     container_name: ia-time-series-analytics-microservice
@@ -94,8 +94,8 @@ services:
       timeout: 5s
       retries: 20
     environment:
-      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry,${no_proxy}"
-      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry,${no_proxy}"
+      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,${no_proxy}"
+      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,${no_proxy}"
       KAPACITOR_PORT: ${KAPACITOR_PORT}
       INFLUX_SERVER: "ia-influxdb"
       KAPACITOR_INFLUXDB_0_USERNAME: ${INFLUXDB_USERNAME}
@@ -169,11 +169,10 @@ services:
     volumes:
     - "vol_temp_grafana:/tmp"
     - vol_grafana_data:/var/lib/grafana
-    - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
-    - ./grafana/dashboards/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-    - ./apps/${SAMPLE_APP}/grafana-dashboard/dashboard.json:/etc/grafana/provisioning/dashboards/dashboard.json
-    - ./grafana/entrypoint.sh:/entrypoint.sh
-    
+    - ./configs/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    - ./configs/grafana/dashboards/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    - ./apps/${SAMPLE_APP}/grafana-dashboard.json:/etc/grafana/provisioning/dashboards/grafana-dashboard.json
+
   ia-mqtt-broker:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-mqtt-broker
@@ -191,7 +190,7 @@ services:
     networks:
     - timeseries_network
     volumes:
-    - ./mqtt-broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    - ./configs/mqtt-broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
 
   ia-opcua-server:
     build:
@@ -224,7 +223,7 @@ services:
     ports:
     - ${OPCUA_SERVER_PORT}-30048:4840
     volumes:
-    - ./apps/${SAMPLE_APP}/ingestor-data/${SAMPLE_APP}.csv:/app/${SAMPLE_APP}.csv
+    - ./apps/${SAMPLE_APP}/${SAMPLE_APP}.csv:/app/${SAMPLE_APP}.csv
 
   ia-mqtt-publisher:
     build:
@@ -257,87 +256,7 @@ services:
     networks:
     - timeseries_network
     volumes:
-    - ./apps/${SAMPLE_APP}/ingestor-data/${SAMPLE_APP}.csv:/${SAMPLE_APP}.csv
-
-# Model Registry Service
-  model-registry:
-    image: ${MODEL_REGISTRY_IMAGE}
-    container_name: model-registry
-    hostname: model-registry
-    ipc: "none"
-    ports:
-    - "${MR_SERVER_PORT}:8111"
-    restart: unless-stopped
-    tmpfs:
-      - /tmp
-    security_opt:
-      - no-new-privileges
-    healthcheck:
-      test: ["CMD-SHELL", "exit", "0"]
-    environment:
-      AppName: "ModelRegistry"
-      MIN_LOG_LEVEL: ${LOG_LEVEL}
-      ENABLE_DEV_MODE: ${ENABLE_DEV_MODE:-false}
-      ENABLE_HTTPS_MODE: false
-      GETI_HOST: ${GETI_HOST:-""}
-      GETI_TOKEN: ${GETI_TOKEN:-""}
-      GETI_SERVER_API_VERSION: ${GETI_SERVER_API_VERSION:-""}
-      GETI_ORGANIZATION_ID: ${GETI_ORGANIZATION_ID:-""}
-      GETI_WORKSPACE_ID: ${GETI_WORKSPACE_ID:-""}
-      GETI_SERVER_SSL_VERIFY: ${GETI_SERVER_SSL_VERIFY:-False}
-      MLFLOW_TRACKING_URI: postgresql+psycopg2://${MR_USER_NAME}:${MR_PSQL_PASSWORD}@mr_postgres:5432/model_registry_db
-      MLFLOW_S3_ENDPOINT_URL: ${MR_MLFLOW_S3_ENDPOINT_URL}
-      MINIO_HOSTNAME: mr_minio
-      MINIO_SERVER_PORT: 8000
-      MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
-      MINIO_BUCKET_NAME: model-registry
-      SERVER_PORT: 8111
-      LSHOST: host.docker.internal
-      SERVER_CERT: /run/secrets/ModelRegistry_Server/public.crt
-      CA_CERT: /run/secrets/ModelRegistry_Server/server-ca.crt
-      SERVER_PRIVATE_KEY: /run/secrets/ModelRegistry_Server/private.key
-      no_proxy: "mr_postgres,mr_minio,${no_proxy}"
-      NO_PROXY: "mr_postgres,mr_minio,${no_proxy}"
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - timeseries_network
-  mr_postgres:
-    image: postgres:13
-    container_name: mr_postgres
-    hostname: mr_postgres
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges
-    environment:
-      AppName: "ModelRegistry"
-      POSTGRES_USER: ${MR_USER_NAME}
-      POSTGRES_PASSWORD: ${MR_PSQL_PASSWORD}
-      POSTGRES_DB: model_registry_db
-    volumes:
-      - mr_postgres_data:/var/lib/postgresql/data:rw
-    networks:
-      - timeseries_network
-  mr_minio:
-    image: minio/minio:RELEASE.2020-12-12T08-39-07Z
-    container_name: mr_minio
-    hostname: mr_minio
-    ipc: "none"
-    volumes:
-      - mr_minio_data:/data
-    networks:
-      - timeseries_network
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges
-    environment:
-      MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
-    command: server --address ":8000" --certs-dir /certs /data
-
+    - ./apps/${SAMPLE_APP}/${SAMPLE_APP}.csv:/${SAMPLE_APP}.csv
 
   nginx:
     image: nginx:1.29.1-bookworm-perl
@@ -351,8 +270,8 @@ services:
       - "${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API 
       - "1883:1883" # MQTT TCP Proxy
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro
+      - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./configs/nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro
       - vol_nginx_tmpfs:/opt/nginx/certs:rw
       - vol_nginx_tmpfs:/var/cache/nginx:rw
       - vol_nginx_tmpfs:/run:rw
@@ -393,16 +312,6 @@ volumes:
       device: tmpfs
   vol_grafana_data:
     name: "visualization_var_grafana_vol"
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-  mr_minio_data:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-  mr_postgres_data:
     driver: local
     driver_opts:
       type: tmpfs

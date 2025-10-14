@@ -147,6 +147,8 @@ _install_mtl_gpu_driver()
   # # Install all packages as root
   # sudo dpkg -i *deb
 
+  sudo -E apt install libigdgmm12
+
   rm -f ww39.sum && wget ${neo_download_url}/intel/compute-runtime/releases/download/24.39.31294.12/ww39.sum
   sha256sum -c ww39.sum
   if [ $? -ne 0 ] ; then
@@ -157,7 +159,6 @@ _install_mtl_gpu_driver()
       wget ${neo_download_url}/intel/compute-runtime/releases/download/24.39.31294.12/intel-level-zero-gpu_1.6.31294.12_amd64.deb
       wget ${neo_download_url}/intel/compute-runtime/releases/download/24.39.31294.12/intel-opencl-icd-dbgsym_24.39.31294.12_amd64.ddeb
       wget ${neo_download_url}/intel/compute-runtime/releases/download/24.39.31294.12/intel-opencl-icd_24.39.31294.12_amd64.deb
-      wget ${neo_download_url}/intel/compute-runtime/releases/download/24.39.31294.12/libigdgmm12_22.5.2_amd64.deb
 
       set -e
       sha256sum -c ww39.sum
@@ -165,7 +166,6 @@ _install_mtl_gpu_driver()
 
   # Install all packages as root
   sudo dpkg -i *deb
-  sudo -E apt install libigdgmm12=22.7.1-1120~22.04
 
   popd
 }
