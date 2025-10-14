@@ -28,6 +28,31 @@
   "links": [],
   "panels": [
     {
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 15,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<iframe id=\"myframe\" style=\"width:100%; height:500px;\" \n  allow=\"autoplay; encrypted-media\"\n  sandbox=\"allow-scripts allow-same-origin allow-forms allow-popups\">\n</iframe>\n\n<script>\n  const host = window.location.hostname;   // gets IP or domain of the current page\n  document.getElementById(\"myframe\").src = `https://${host}:3000/samplestream/`;\n</script>",
+        "mode": "html"
+      },
+      "pluginVersion": "12.0.0",
+      "title": "Vision Analytics Result",
+      "type": "text"
+    },
+    {
       "datasource": {
         "type": "influxdb",
         "uid": "P951FEA4DE68E13C5"
@@ -76,6 +101,7 @@
           },
           "fieldMinMax": false,
           "mappings": [],
+          "max": 400,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -105,8 +131,8 @@
       },
       "gridPos": {
         "h": 15,
-        "w": 13,
-        "x": 0,
+        "w": 12,
+        "x": 12,
         "y": 0
       },
       "id": 5,
@@ -152,7 +178,7 @@
           "measurement": "weld-sensor-anomaly-data",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT \"CO2 Weld Flow\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 0) AND $timeFilter",
+          "query": "SELECT \"Primary Weld Current\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 0) AND $timeFilter",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -160,7 +186,7 @@
             [
               {
                 "params": [
-                  "CO2 Weld Flow"
+                  "Primary Weld Current"
                 ],
                 "type": "field"
               },
@@ -200,7 +226,7 @@
           "measurement": "weld-sensor-anomaly-data",
           "orderByTime": "ASC",
           "policy": "autogen",
-          "query": "SELECT \"CO2 Weld Flow\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 1) AND $timeFilter",
+          "query": "SELECT \"Primary Weld Current\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 1) AND $timeFilter",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -209,7 +235,7 @@
             [
               {
                 "params": [
-                  "CO2 Weld Flow"
+                  "Primary Weld Current"
                 ],
                 "type": "field"
               }
@@ -231,37 +257,11 @@
           }
         }
       ],
-      "title": "Anomaly Prediction for Weld Sensor Data (CO2)",
+      "title": "Timeseries Analytics Result",
       "type": "timeseries"
     },
     {
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 15,
-        "w": 11,
-        "x": 13,
-        "y": 0
-      },
-      "id": 15,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<iframe id=\"myframe\" style=\"width:100%; height:500px;\" \n  allow=\"autoplay; encrypted-media\"\n  sandbox=\"allow-scripts allow-same-origin allow-forms allow-popups\">\n</iframe>\n\n<script>\n  const host = window.location.hostname;   // gets IP or domain of the current page\n  document.getElementById(\"myframe\").src = `https://${host}:3000/samplestream/`;\n</script>",
-        "mode": "html"
-      },
-      "pluginVersion": "12.0.0",
-      "title": "Vision Analytics Result",
-      "type": "text"
-    },
-    {
       "datasource": {
-        "type": "influxdb",
         "uid": "P951FEA4DE68E13C5"
       },
       "fieldConfig": {
@@ -269,198 +269,28 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 5,
-        "x": 0,
-        "y": 15
-      },
-      "id": 10,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "query": "SELECT mean(mean_value) FROM (SELECT count(\"Pressure\") AS mean_value FROM \"weld-sensor-data\"  WHERE time > now() - 3m GROUP BY time(1m))\n",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series"
-        }
-      ],
-      "title": "Ingestion Rate (Points Per Minute)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 5,
-        "x": 5,
-        "y": 15
-      },
-      "id": 11,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "query": "SELECT mean(mean_value) FROM (SELECT count(\"Pressure\") AS mean_value FROM \"weld-sensor-anomaly-data\" WHERE time > now() - 3m GROUP BY time(1m))\n",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series"
-        }
-      ],
-      "title": "Analytics Processing Rate (Points Per Minute)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 10,
-        "y": 15
-      },
-      "id": 12,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
-          },
-          "query": "SELECT mean(mean_value) FROM (SELECT mean(end_end_time)/1000000 AS mean_value FROM \"weld-sensor-anomaly-data\" WHERE  time > now() - 3m GROUP BY time(1m))\n",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series"
-        }
-      ],
-      "title": "Average Time to Process a point E2E (ms)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
           },
           "mappings": [
             {
               "options": {
-                "match": "null+nan",
-                "result": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "No Anomaly"
+                },
+                "1": {
+                  "color": "semi-dark-red",
                   "index": 1,
-                  "text": "0"
+                  "text": "Anomaly"
                 }
               },
-              "type": "special"
+              "type": "value"
             }
           ],
           "thresholds": {
@@ -475,282 +305,36 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 16,
+        "h": 8,
+        "w": 24,
+        "x": 0,
         "y": 15
       },
-      "id": 14,
+      "id": 16,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
           "fields": "",
-          "values": false
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "frameIndex": 1,
+        "showHeader": true
       },
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "wind_turbine_anomaly_data",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT count(\"Pressure\") FROM \"weld-sensor-anomaly-data\" where anomaly_status>0",
+          "query": "SELECT ts_anomaly as \"Timeseries Analytics\", vision_classification as \"Vision Analytics\", fused_decision as \"Fusion Analytics\"   from fusion_result order by time desc limit 10",
           "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
+          "resultFormat": "table"
         }
       ],
-      "title": "Total Anomaly Detected",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 20,
-        "y": 15
-      },
-      "id": 8,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "query": "SELECT count(Feed) AS mean_value FROM \"weld-sensor-data\"\n",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series"
-        }
-      ],
-      "title": "Total Ingested Points",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 16,
-        "y": 18
-      },
-      "id": 13,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "query": " select mean(processing_time)/1000000 from \"weld-sensor-anomaly-data\" order by time desc",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series"
-        }
-      ],
-      "title": "Analytics Processing Time (ms)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 20,
-        "y": 18
-      },
-      "id": 9,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "weld-analytics-data",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT count(\"Feed\") FROM \"weld-sensor-anomaly-data\" ",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "title": "Total Processed Points",
-      "type": "stat"
+      "title": "Fusion Analytics Result",
+      "type": "table"
     }
   ],
   "preload": false,
@@ -761,12 +345,12 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Multimodal Vision & TS Anomaly Detection Dashboard",
+  "title": "Multimodal Weld Defect Detection Dashboard",
   "uid": "ff7b8081-d0f0-4469-9210-9daf1bd148fd",
   "version": 1
 }
