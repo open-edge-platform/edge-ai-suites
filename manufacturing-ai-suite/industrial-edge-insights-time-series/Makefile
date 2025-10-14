@@ -44,8 +44,8 @@ define multi_stream_check
 		if [ "$(SAMPLE_APP)" = "$(DEFAULT_SAMPLE_APP)" ]; then \
 			TELEGRAF_METRIC_BATCH_SIZE=$$(grep -m1 TELEGRAF_METRIC_BATCH_SIZE $(DOCKER_COMPOSE_FILE) | awk -F ': ' '{print $$2}' | xargs); \
 			LOG_LEVEL=$$(grep -E "^LOG_LEVEL=" $(ENV_FILE) | cut -d'=' -f2); \
-			python3 -m venv ~/.ts_venv; \
-			. ~/.ts_venv/bin/activate; \
+			python3 -m venv ./venv; \
+			. ./venv/bin/activate; \
 			python3 -m pip install -r requirements.txt; \
 			python generate-telegraf-config.py $(num_of_streams) $$LOG_LEVEL $$TELEGRAF_METRIC_BATCH_SIZE $(ingestion_interval) $(1); \
 			deactivate; \
