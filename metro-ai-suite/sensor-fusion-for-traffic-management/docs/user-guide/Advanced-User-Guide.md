@@ -1,7 +1,5 @@
 # Advanced User Guide
 
-## Overview
-
 This document introduces an Intel® software reference implementation (SW RI) for Metro AI Suite Sensor Fusion in Traffic Management. It combines camera and mmWave radar data—referred to as ISF "C+R" or AIO "C+R"—and runs on the NEPRA base platform.
 
 The internal project code name is **Garnet Park**.
@@ -34,194 +32,22 @@ All these tasks run on single Intel SoC processor which provides all the require
 
 <center> Figure 1. E2E SW pipelines of 4 use cases of sensor fusion C+R(Camera+Radar).</center>
 
-### Prerequisites
+For prerequisites and system requirements, see [prerequisites.md](./prerequisites.md) and [system-req.md](./system-req.md).
 
-- Operating System: [Ubuntu 22.04.1 Desktop LTS](https://old-releases.ubuntu.com/releases/22.04.1/ubuntu-22.04.1-desktop-amd64.iso) (fresh installation) on target system
-
-- Platform
-
-    - Intel® Celeron® Processor 7305E (1C+1R/2C+1R usecase)
-    - Intel® Core™ Ultra 7 Processor 165H (4C+4R usecase)
-    - Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics (16C+4R usecase)
-
-- Intel® OpenVINO™ Toolkit
-
-    - Version Type: 2025.2
-
-- RADDet Dataset
-
-    - https://github.com/ZhangAoCanada/RADDet#Dataset
-
-    - A processed data snippet is provided in [demo](../../ai_inference/test/demo/raddet_bin_files)
-
-    - If you want to generate the data independently, refer to this guide: [how_to_get_RADDet_datasets.md](How-To-Get-RADDET-Dataset.md)
-
-        Upon success, bin files will be extracted, save to $RADDET_DATASET_ROOT/bin_files_{VERSION}:
-
-        > NOTE: latest converted dataset version should be: v1.0
-
-- Ensure that proxy settings are configured if target system is within proxy environment
-
-    ```bash
-    export http_proxy=<Your-Proxy>
-    export https_proxy=<Your-Proxy>
-    ```
-
-    ```bash
-    sudo vim /etc/environment
-    # set proxy in /etc/environment
-    # http_proxy=<Your-Proxy>
-    # https_proxy=<Your-Proxy>
-    ```
-
-
-
-### Modules
-
--   AI Inference Service:
-
-    -   Media Processing (Camera)
-
-    -   Radar Processing (mmWave Radar)
-
-    -   Sensor Fusion
-
--   Demo Application
-
-#### AI Inference Service
-
-AI Inference Service is based on the HVA pipeline framework. In this SW RI, it includes the functions of DL inference, radar signal processing, and data fusion.
-
-AI Inference Service exposes both RESTful API and gRPC API to clients, so that a pipeline defined and requested by a client can be run within this service.
-
--   RESTful API: listens to port 50051
-
--   gRPC API: listens to port 50052
-```bash
-vim $PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config
-...
-[HTTP]
-address=0.0.0.0
-RESTfulPort=50051
-gRPCPort=50052
-```
-
-
-#### Demo Application
-![Demo-1C1R](./_images/Demo-1C1R.png)
-<center>Figure 2. Visualization of 1C+1R results</center>
-
-Currently we support four display types: media, radar, media_radar, media_fusion. 
-
-
-
-
-
-##	System Requirements
-
-### Hardware requirements
-
-- Platform
-
-    - Intel® Celeron® Processor 7305E (1C+1R/2C+1R usecase)
-    - Intel® Core™ Ultra 7 Processor 165H (4C+4R usecase)
-
-    - Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics (16C+4R usecase)
-
-- BIOS setting
-
-    - MTL
-
-        | Setting                                          | Step                                                         |
-        | ------------------------------------------------ | ------------------------------------------------------------ |
-        | Enable the Hidden BIOS Setting in Seavo Platform | "Right Shift+F7" Then Change Enabled Debug Setup Menu from [Enabled] to [Disable] |
-        | Disable VT-d in BIOS                             | Intel Advanced Menu → System Agent (SA) Configuration → VT-d setup menu → VT-d<Disabled>    <br>Note: If VT-d can’t be disabled, please disable Intel Advanced Menu → CPU Configuration → X2APIC |
-        | Disable SAGV in BIOS                             | Intel Advanced Menu → [System Agent (SA) Configuration]  →  Memory configuration →  SAGV <Disabled> |
-        | Enable NPU Device                                | Intel Advanced Menu → CPU Configuration → Active SOC-North Efficient-cores <ALL>   <br>Intel Advanced Menu → System Agent (SA) Configuration → NPU Device <Enabled> |
-        | TDP Configuration                                | SOC TDP configuration is very important for performance. Suggestion: TDP = 45W. For extreme heavy workload, TDP = 64W <br>---TDP = 45W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations → Power Limit 1 <45000> <br>---TDP = 64W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations →  Configurable TDP Boot Mode [Level2] |
-
-    - RPL-S+A770
-
-        | Setting                  | Step                                                         |
-        | ------------------------ | ------------------------------------------------------------ |
-        | Enable ResizeBar in BIOS | Intel Advanced Menu -> System Agent (SA) Configuration -> PCI Express Configuration -> PCIE Resizable BAR Support <Enabled> |
-
-
-
-### Software requirements
-
-| Software           | Version                |
-| ------------------ | ---------------------- |
-| Intel  OpenVINO    | 2025.2.0               |
-| Intel  oneMKL      | 2025.1.0               |
-| NEO OpenCL         | Release/23.22.26516.25 |
-| cmake              | 3.21.2                 |
-| boost              | 1.83.0                 |
-| spdlog             | 1.8.2                  |
-| thrift             | 0.18.1                 |
-| gRPC               | 1.58.1                 |
-| zlib               | 1.3.1                 |
-| oneAPI Level  Zero | 1.17.19                |
-
-
-
-## Install Dependencies and Build Project
-
-* install driver related libs
-
-  Update kernel, install GPU and NPU(MTL only) driver.
-
-  ```bash
-  bash install_driver_related_libs.sh
-  ```
-
-  Note that this step may restart the machine several times. Please rerun this script after each restart until you see the output of `All driver libs installed successfully`.
-
-* install project related libs
-
-  Install Boost, Spdlog, Thrift, MKL, OpenVINO, GRPC, Level Zero, oneVPL etc.
-
-  ```bash
-  bash install_project_related_libs.sh
-  ```
-
-- set $PROJ_DIR
-  ```bash
-  cd metro-ai-suite/sensor-fusion-for-traffic-management
-  export PROJ_DIR=$PWD
-  ```
-- prepare global radar configs in folder: /opt/datasets
-    ```bash
-    sudo ln -s $PROJ_DIR/ai_inference/deployment/datasets /opt/datasets
-    ```
-
-- prepare models in folder: /opt/models
-    ```bash
-    sudo ln -s $PROJ_DIR/ai_inference/deployment/models /opt/models
-    ```
-- prepare offline radar results for 4C4R/16C4R:
-    ```bash
-    sudo cp $PROJ_DIR/ai_inference/deployment/datasets/radarResults.csv /opt
-    ```
-- build project
-    ```bash
-    bash -x build.sh
-    ```
-
-## How it works
+## Architecture Overview
 
 In this section, we describe how to run Intel® Metro AI Suite Sensor Fusion for Traffic Management application.
 
-Intel® Metro AI Suite Sensor Fusion for Traffic Management application can support different pipeline using topology JSON files to describe the pipeline topology. The defined pipeline topology can be found at [sec 4.1 Resources Summary](#41-resources-summary)
+Intel® Metro AI Suite Sensor Fusion for Traffic Management application can support different pipeline using topology JSON files to describe the pipeline topology. The defined pipeline topology can be found at [Resources](#resources)
 
 There are two steps required for running the sensor fusion application:
-- Start AI Inference service, more details can be found at [sec 4.2 Start Service](#42-start-service)
-- Run the application entry program, more details can be found at [sec 4.3 Run Entry Program](#43-run-entry-program)
+- Start AI Inference service, more details can be found at [Service Start ](#service-start)
+- Run the application entry program, more details can be found at [Entry Program](#entry-program)
 
-Besides, users can test each component (without display) following the guides at [sec 4.3.2 1C1R Unit Tests](#432-1c+1r-unit-tests), [sec 4.3.4 4C4R Unit Tests](#434-4c+4r-unit-tests), [sec 4.3.6 2C1R Unit Tests](#436-2c+1r-unit-tests), [sec 4.3.8 16C4R Unit Tests](#438-16c+4r-unit-tests)
+Besides, you can test each component (without display) following the guides at [1C+1R Unit Tests](#1c+1r-unit-tests), [4C+4R Unit Tests](#4c+4r-unit-tests), [2C+1R Unit Tests](#2c+1r-unit-tests), [16C+4R Unit Tests](#16c+4r-unit-tests)
 
 
-### Resources Summary
+### Resources 
 - Local File Pipeline for Media pipeline
   - Json File: localMediaPipeline.json
     `File location: ai_inference/test/configs/raddet/1C1R/localMediaPipeline.json`
@@ -307,7 +133,8 @@ Besides, users can test each component (without display) following the guides at
                |              -> radarOfflineResults ->                           |                                    |
         ```
 
-### Start Service
+### Service Start
+
 Open a terminal, run the following commands:
 
 ```bash
@@ -341,7 +168,8 @@ sudo pkill Hce
 ```
 
 
-### Run Entry Program
+### Entry Program
+
 #### 1C+1R
 
 **The target platform is Intel® Celeron® Processor 7305E.**
@@ -564,7 +392,7 @@ First, set the offline radar CSV file path in both localFusionPipeline.json `Fil
   "Configure String": "......;RadarDataFilePath=(STRING)/opt/radarResults.csv"
 },
 ```
-The method for generating offline radar files is described in [5.3.2.7 Save radar pipeline tracking results](#5327-save-radar-pipeline-tracking-results). Or you can use a pre-prepared data with the command below:
+The method for generating offline radar files is described in [Save radar pipeline tracking results](#save-radar-pipeline-tracking-results). Or you can use a pre-prepared data with the command below:
 ```bash
 sudo cp $PROJ_DIR/ai_inference/deployment/datasets/radarResults.csv /opt
 ```
@@ -784,7 +612,7 @@ First, set the offline radar CSV file path in both localFusionPipeline.json `Fil
 },
 ```
 
-The method for generating offline radar files is described in [5.3.2.7 Save radar pipeline tracking results](#5327-save-radar-pipeline-tracking-results). Or you can use a pre-prepared data with the command below:
+The method for generating offline radar files is described in [Save radar pipeline tracking results](#save-radar-pipeline-tracking-results). Or you can use a pre-prepared data with the command below:
 
 ```bash
 sudo cp $PROJ_DIR/ai_inference/deployment/datasets/radarResults.csv /opt
@@ -1149,9 +977,11 @@ docker cp /path/to/dataset docker-tfcc-1:/path/to/dataset
 
 Enter the project directory `/home/openvino/metro-2.0` then run `bash -x build.sh` to build the project. Then following the guides [sec 4. How it works](#4-how-it-works) to run sensor fusion application.
 
-## Code Reference
+## Code References
 
 Some of the code is referenced from the following projects:
 - [IGT GPU Tools](https://gitlab.freedesktop.org/drm/igt-gpu-tools) (MIT License)
 - [Intel DL Streamer](https://github.com/dlstreamer/dlstreamer) (MIT License)
 - [Open Model Zoo](https://github.com/openvinotoolkit/open_model_zoo) (Apache-2.0 License)
+
+

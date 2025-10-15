@@ -1,0 +1,19 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/cmake_install.cmake",
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/cmake_install.cmake",
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/lib/cmake_install.cmake",
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/loader/cmake_install.cmake",
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/layers/cmake_install.cmake",
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/layers/validation/cmake_install.cmake",
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/layers/validation/parameter_validation/cmake_install.cmake",
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/layers/validation/handle_lifetime_tracking/cmake_install.cmake",
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/layers/tracing/cmake_install.cmake",
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/drivers/cmake_install.cmake",
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/drivers/null/cmake_install.cmake",
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/samples/cmake_install.cmake",
+		"C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/samples/zello_world/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

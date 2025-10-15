@@ -1,0 +1,8 @@
+{
+    "task_type": "classification",
+    "model_type": "Classification",
+    "model_parameters": {
+        "labels": "Porosity_with_Excessive_Penetration Excessive_Convexity Warping Undercut Spatter Porosity Overlap Lack_of_Fusion Excessive_Penetration Crater_Cracks Burnthrough No_Weld Good_Weld",
+        "labels_ids": "68d3faba58d480889b5d9afc 68d3faba58d480889b5d9afd 68d3faba58d480889b5d9afe 68d3faba58d480889b5d9aff 68d3faba58d480889b5d9b00 68d3faba58d480889b5d9b01 68d3faba58d480889b5d9b02 68d3faba58d480889b5d9b03 68d3faba58d480889b5d9b04 68d3faba58d480889b5d9b05 68d3faba58d480889b5d9b06 68d3faba58d480889b5d9b07 68d3faba58d480889b5d9b08"
+    }
+}

@@ -84,7 +84,7 @@ With this feature, during runtime, you can download a new model from the registr
 
 2.  Run the following curl command to upload the local model. 
     ```sh
-    curl -L -X POST "http://<HOST_IP>:32002/models" \
+    curl -k -L -X POST "https://<HOST_IP>/registry/models" \
     -H 'Content-Type: multipart/form-data' \
     -F 'name="YOLO_Test_Model"' \
     -F 'precision="fp32"' \
@@ -100,27 +100,26 @@ With this feature, during runtime, you can download a new model from the registr
 3. Check if the model is uploaded successfully.
 
     ```sh
-    curl 'http://<HOST_IP>:32002/models'
+    curl -k 'https://<HOST_IP>/registry/models'
     ```
 
 ### Steps to use the new model
 
 1. List all the registered models in the model registry
     ```sh
-    curl 'http://<HOST_IP>:32002/models'
+    curl -k 'https://<HOST_IP>/registry/models'
     ```
     If you do not have a model available, follow the steps [here](#upload-a-model-to-model-registry) to upload a sample model in Model Registry
 
 2. Check the instance ID of the currently running pipeline to use it for the next step.
    ```sh
-   curl --location -X GET http://<HOST_IP>:8080/pipelines/status
+   curl -k --location -X GET https://<HOST_IP>/api/pipelines/status
    ```
-   > NOTE- Replace the port in the curl request according to the deployment method i.e. default 8080 for compose based.
 
 3. Restart the model with a new model from Model Registry.
     The following curl command downloads the model from Model Registry using the specs provided in the payload. Upon download, the running pipeline is restarted with replacing the older model with this new model. Replace the `<instance_id_of_currently_running_pipeline>` in the URL below with the id of the pipeline instance currently running.
     ```sh
-    curl 'http://<HOST_IP>:8080/pipelines/user_defined_pipelines/pcb_anomaly_detection_mlops/{instance_id_of_currently_running_pipeline}/models' \
+    curl -k 'https://<HOST_IP>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_mlops/{instance_id_of_currently_running_pipeline}/models' \
     --header 'Content-Type: application/json' \
     --data '{
     "project_name": "pcb-anomaly-detection",
@@ -143,5 +142,5 @@ With this feature, during runtime, you can download a new model from the registr
 
 5. You can also stop any running pipeline by using the pipeline instance "id"
    ```sh
-   curl --location -X DELETE http://<HOST_IP>:8080/pipelines/{instance_id}
+   curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
    ```

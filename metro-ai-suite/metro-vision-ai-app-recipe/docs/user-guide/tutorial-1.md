@@ -157,7 +157,7 @@ cat > ./ai-tolling/src/dlstreamer-pipeline-server/config.json << 'EOF'
                 "name": "car_plate_recognition_1",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! gvadetect model=/home/pipeline-server/models/public/yolov10s/FP32/yolov10s.xml device=CPU pre-process-backend=ie ! queue ! gvaclassify model=/home/pipeline-server/models/public/license-plate-recognition-barrier-0007/FP16/license-plate-recognition-barrier-0007.xml model_proc=/home/pipeline-server/models/public/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json device=CPU pre-process-backend=ie ! queue ! gvaclassify model=/home/pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/FP16-INT8/vehicle-attributes-recognition-barrier-0039.xml model_proc=/home/pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json device=CPU pre-process-backend=ie ! queue ! gvawatermark ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! gvafpscounter ! appsink name=appsink",
+                "pipeline": "{auto_source} name=source ! decodebin ! gvadetect model=/home/pipeline-server/models/public/yolov10s/FP32/yolov10s.xml device=CPU pre-process-backend=ie ! queue ! gvaclassify model=/home/pipeline-server/models/public/license-plate-recognition-barrier-0007/FP16/license-plate-recognition-barrier-0007.xml model_proc=/home/pipeline-server/models/public/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json device=CPU pre-process-backend=ie ! queue ! gvaclassify model=/home/pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/FP16-INT8/vehicle-attributes-recognition-barrier-0039.xml model_proc=/home/pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json device=CPU pre-process-backend=ie ! queue ! gvawatermark ! gvametaconvert add-empty-results=true name=metaconvert ! gvafpscounter ! appsink name=destination",
                 "description": "Car plate recognition with license-plate-recognition-barrier-0007",
                 "parameters": {
                     "type": "object",
@@ -218,6 +218,16 @@ sed -i 's/^SAMPLE_APP=.*/SAMPLE_APP=ai-tolling/' .env
 sed -i "s/^HOST_IP=.*/HOST_IP=$(hostname -I | cut -f1 -d' ')/" .env
 
 
+# Create self signed certificate for nginx
+mkdir -p ai-tolling/src/nginx/ssl
+cd ai-tolling/src/nginx/ssl
+if [ ! -f server.key ] || [ ! -f server.crt ]; then
+    echo "Generate self-signed certificate..."
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout server.key -out server.crt -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"
+    chown -R "$(id -u):$(id -g)" server.key server.crt 2>/dev/null || true
+
+fi
+
 # Verify the configuration
 grep SAMPLE_APP= .env
 grep HOST_IP= .env
@@ -263,10 +273,10 @@ Expected output should show containers for:
 ### 2. **Access the Application Interface**
 
 Open your web browser and navigate to:
-- **Main Dashboard**: `http://localhost:3000` (Grafana)
+- **Main Dashboard**: `https://localhost/grafana` (Grafana)
     - Username: admin
     - Password: admin
-- **Node-RED Flow Editor**: `http://localhost:1880`
+- **Node-RED Flow Editor**: `https://localhost/nodered/`
 
 ### 3. **Test Video Processing**
 
@@ -274,7 +284,7 @@ Start the AI pipeline and process the sample video:
 
 ```bash
 # Start the AI tolling pipeline with the sample video
-curl http://localhost:8080/pipelines/user_defined_pipelines/car_plate_recognition_1 -X POST -H 'Content-Type: application/json' -d '
+curl -k -s https://localhost/api/pipelines/user_defined_pipelines/car_plate_recognition_1 -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/cars_extended.mp4",
@@ -283,7 +293,6 @@ curl http://localhost:8080/pipelines/user_defined_pipelines/car_plate_recognitio
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "host": "broker:1883",
             "topic": "object_detection_1",
             "timeout": 1000
         },
@@ -305,10 +314,10 @@ Access the processed video stream with AI annotations through WebRTC:
 ```bash
 # Open in your web browser (replace <HOST_IP> with your actual IP address)
 # For local testing, typically use localhost or 127.0.0.1
-http://<HOST_IP>:8889/object_detection_1
+http://localhost/mediamtx/object_detection_1/
 ```
 
-For local testing, you can use: `http://localhost:8889/object_detection_1`
+For local testing, you can use: `http://localhost/mediamtx/object_detection_1/`
 
 ![Vehicle Live Detection](_images/car_live_detection.jpg)
 

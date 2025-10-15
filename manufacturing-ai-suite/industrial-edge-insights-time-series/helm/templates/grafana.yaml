@@ -57,17 +57,14 @@ spec:
         - name: vol-grafana-data
           mountPath: /var/lib/grafana
         - name: grafana-dashboard-json
-          mountPath: /etc/grafana/provisioning/dashboards/dashboard.json
-          subPath: dashboard.json
+          mountPath: /etc/grafana/provisioning/dashboards/grafana-dashboard.json
+          subPath: grafana-dashboard.json
         - name: grafana-dashboard-yml
           mountPath: /etc/grafana/provisioning/dashboards/dashboards.yml
           subPath: dashboards.yml
         - name: grafana-datasource
           mountPath: /etc/grafana/provisioning/datasources/datasources.yml
           subPath: datasources.yml
-        - name: grafana-entrypoint
-          mountPath: /entrypoint.sh
-          subPath: entrypoint.sh
         env:
         - name: GF_SERVER_PROTOCOL
           value: "http"
@@ -102,9 +99,6 @@ spec:
       - name: grafana-datasource
         configMap:
           name: grafana-datasource
-      - name: grafana-entrypoint
-        configMap:
-          name: grafana-entrypoint
       - name: grafana-dashboard-yml
         configMap:
           name: grafana-dashboard-yml

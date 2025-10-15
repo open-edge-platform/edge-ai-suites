@@ -66,9 +66,9 @@ post_payload() {
     local PIPELINE="$1"
     local PAYLOAD="$2"
     # Post the payload to the REST server
-    echo "Posting payload to REST server at http://$HOST_IP:$REST_SERVER_PORT/pipelines/$PIPELINE_ROOT/$PIPELINE"
+    echo "Posting payload to REST server at https://$HOST_IP/api/pipelines/$PIPELINE_ROOT/$PIPELINE"
     # Use curl to post the payload
-    response=$(curl -s -w "\n%{http_code}" http://$HOST_IP:$REST_SERVER_PORT/pipelines/$PIPELINE_ROOT/$PIPELINE -X POST -H "Content-Type: application/json" -d "$PAYLOAD")
+    response=$(curl -s -k -w "\n%{http_code}" https://$HOST_IP/api/pipelines/$PIPELINE_ROOT/$PIPELINE -X POST -H "Content-Type: application/json" -d "$PAYLOAD")
 
     # Split response and status
     body=$(echo "$response" | sed '$d')
@@ -155,7 +155,7 @@ start_piplines() {
 }
 
 get_status() {
-    response=$(curl -s -w "\n%{http_code}" http://$HOST_IP:$REST_SERVER_PORT/pipelines/status)
+    response=$(curl -s -k -w "\n%{http_code}" https://$HOST_IP/api/pipelines/status)
     # Split response and status
     body=$(echo "$response" | sed '$d')
     status=$(echo "$response" | tail -n1)

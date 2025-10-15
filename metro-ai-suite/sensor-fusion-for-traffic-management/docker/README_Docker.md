@@ -226,3 +226,7 @@ copy dataset
 ```bash
 docker cp /path/to/dataset docker-tfcc-1:/path/to/dataset
 ```
+
+### Running inside docker
+
+Enter the project directory `/home/openvino/metro-2.0` then run `bash -x build.sh` to build the project. Then following the guides [How it works](../docs/user-guide/Advanced-User-Guide.md#how-it-works) to run sensor fusion application.

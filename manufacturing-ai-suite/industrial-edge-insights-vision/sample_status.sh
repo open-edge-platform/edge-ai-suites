@@ -37,7 +37,7 @@ get_status_instance() {
     local instance_id="$1"
     echo "Getting status of pipeline instance with ID: $instance_id"
     # Use curl to get the status of the pipeline instance
-    response=$(curl -s -w "\n%{http_code}" http://$HOST_IP:$REST_SERVER_PORT/pipelines/$instance_id/status)
+    response=$(curl -s -k -w "\n%{http_code}" https://$HOST_IP/api/pipelines/$instance_id/status)
 
     # Split response and status
     body=$(echo "$response" | sed '$d')
@@ -54,7 +54,7 @@ get_status_instance() {
 
 get_status_all() {
     init
-    response=$(curl -s -w "\n%{http_code}" http://$HOST_IP:$REST_SERVER_PORT/pipelines/status)
+    response=$(curl -s -k -w "\n%{http_code}" https://$HOST_IP/api/pipelines/status)
     # Split response and status
     body=$(echo "$response" | sed '$d')
     status=$(echo "$response" | tail -n1)

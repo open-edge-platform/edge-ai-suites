@@ -1,0 +1,1081 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "PVC_TILE_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>PVC_TILE</TELEM:name>
+	<TELEM:description>Ponte Vecchio Tile PMT Telemetry samples definition and transformation rules</TELEM:description>
+	<TELEM:uniqueid>b15a0ede</TELEM:uniqueid>
+	<TELEM:productid>PVC_TILE</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x4000</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RAPL_PL_Violations_L" datatypeIDREF="tU22.10" sampleID="RAPL_PL_Violations_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>RAPL_PL_Violations_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RAPL_PL_Violations_H" datatypeIDREF="tU22.10" sampleID="RAPL_PL_Violations_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>RAPL_PL_Violations_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x4008</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="Tile_Energy_Status_L" datatypeIDREF="tU18.14" sampleID="Tile_Energy_Status_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>Tile_Energy_Status_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="Tile_Energy_Status_H" datatypeIDREF="tU18.14" sampleID="Tile_Energy_Status_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>Tile_Energy_Status_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x4010</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TelemSnapshotCntr_L" datatypeIDREF="tU32.0" sampleID="TelemSnapshotCntr_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>TelemSnapshotCntr_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TelemSnapshotCntr_H" datatypeIDREF="tU31.0" sampleID="TelemSnapshotCntr_H">
+			<TELC:description>Telem Snapshot Cntr High</TELC:description>
+			<TELC:sampleSubGroup>TelemSnapshotCntr_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>31</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>62</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="Valid" datatypeIDREF="tU1.0" sampleID="Valid">
+			<TELC:description>Counter is Valid</TELC:description>
+			<TELC:sampleSubGroup>TelemSnapshotCntr_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>1</TELC:size>
+			<TELC:lsb>63</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_3" sampleID="3" sampleGroupID="Container_3">
+		<TELC:description>Groupname 0x4018</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="HBM0MaxTemperatures" datatypeIDREF="tU32.0" sampleID="HBM0MaxTemperatures">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>HBM0MaxTemperatures</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="HBM0MaxDeviceTemperature" datatypeIDREF="tU32.0" sampleID="HBM0MaxDeviceTemperature">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>HBM0MaxDeviceTemperature</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_4" sampleID="4" sampleGroupID="Container_4">
+		<TELC:description>Groupname 0x4020</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="HBM1MaxTemperatures" datatypeIDREF="tU32.0" sampleID="HBM1MaxTemperatures">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>HBM1MaxTemperatures</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="HBM1MaxDeviceTemperature" datatypeIDREF="tU32.0" sampleID="HBM1MaxDeviceTemperature">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>HBM1MaxDeviceTemperature</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_5" sampleID="5" sampleGroupID="Container_5">
+		<TELC:description>Groupname 0x4028</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TileMinTemperature" datatypeIDREF="tU7.0" sampleID="TileMinTemperature">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>TileMinTemperature</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TileMaxTemperature" datatypeIDREF="tU7.0" sampleID="TileMaxTemperature">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>TileMaxTemperature</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_6" sampleID="6" sampleGroupID="Container_6">
+		<TELC:description>Groupname 0x4030</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GTMinTemperature" datatypeIDREF="tU7.0" sampleID="GTMinTemperature">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>GTMinTemperature</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GTMaxTemperature" datatypeIDREF="tU7.0" sampleID="GTMaxTemperature">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>GTMaxTemperature</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_7" sampleID="7" sampleGroupID="Container_7">
+		<TELC:description>Groupname 0x4038</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="MDFTxBandwidth_L" datatypeIDREF="tU32.0" sampleID="MDFTxBandwidth_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>MDFTxBandwidth_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="MDFTxBandwidth_H" datatypeIDREF="tU32.0" sampleID="MDFTxBandwidth_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>MDFTxBandwidth_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_8" sampleID="8" sampleGroupID="Container_8">
+		<TELC:description>Groupname 0x4040</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="MDFRxBandwidth_L" datatypeIDREF="tU32.0" sampleID="MDFRxBandwidth_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>MDFRxBandwidth_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="MDFRxBandwidth_H" datatypeIDREF="tU32.0" sampleID="MDFRxBandwidth_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>MDFRxBandwidth_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_9" sampleID="9" sampleGroupID="Container_9">
+		<TELC:description>Groupname 0x4048</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="MDFRWTxBandwidth_L" datatypeIDREF="tU32.0" sampleID="MDFRWTxBandwidth_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>MDFRWTxBandwidth_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="MDFRWTxBandwidth_H" datatypeIDREF="tU32.0" sampleID="MDFRWTxBandwidth_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>MDFRWTxBandwidth_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_10" sampleID="10" sampleGroupID="Container_10">
+		<TELC:description>Groupname 0x4050</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="MDFRWRxBandwidth_L" datatypeIDREF="tU32.0" sampleID="MDFRWRxBandwidth_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>MDFRWRxBandwidth_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="MDFRWRxBandwidth_H" datatypeIDREF="tU32.0" sampleID="MDFRWRxBandwidth_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>MDFRWRxBandwidth_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_11" sampleID="11" sampleGroupID="Container_11">
+		<TELC:description>Groupname 0x4058</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_VFID" datatypeIDREF="tU32.0" sampleID="VF0_VFID">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_VFID</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_HBM0_READ" datatypeIDREF="tU32.0" sampleID="VF0_HBM0_READ">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM0_READ</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_12" sampleID="12" sampleGroupID="Container_12">
+		<TELC:description>Groupname 0x4060</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_HBM0_WRITE" datatypeIDREF="tU32.0" sampleID="VF0_HBM0_WRITE">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM0_WRITE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_HBM0_ENERGY" datatypeIDREF="tU18.14" sampleID="VF0_HBM0_ENERGY">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM0_ENERGY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_13" sampleID="13" sampleGroupID="Container_13">
+		<TELC:description>Groupname 0x4068</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_HBM1_READ" datatypeIDREF="tU32.0" sampleID="VF0_HBM1_READ">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM1_READ</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_HBM1_WRITE" datatypeIDREF="tU32.0" sampleID="VF0_HBM1_WRITE">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM1_WRITE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_14" sampleID="14" sampleGroupID="Container_14">
+		<TELC:description>Groupname 0x4070</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_HBM1_ENERGY" datatypeIDREF="tU18.14" sampleID="VF0_HBM1_ENERGY">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM1_ENERGY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_PC2_ENTRANCE" datatypeIDREF="tU32.0" sampleID="VF0_PC2_ENTRANCE">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_PC2_ENTRANCE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_15" sampleID="15" sampleGroupID="Container_15">
+		<TELC:description>Groupname 0x4078</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_PC6_ENTRANCE" datatypeIDREF="tU32.0" sampleID="VF0_PC6_ENTRANCE">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_PC6_ENTRANCE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_PC6_ENTRANCE_DUMMY" datatypeIDREF="tU32.0" sampleID="VF0_PC6_ENTRANCE_DUMMY">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_PC6_ENTRANCE_DUMMY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_16" sampleID="16" sampleGroupID="Container_16">
+		<TELC:description>Groupname 0x4080</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_PC2_RESIDENCY_L" datatypeIDREF="tU32.0" sampleID="VF0_PC2_RESIDENCY_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_PC2_RESIDENCY_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_PC2_RESIDENCY_H" datatypeIDREF="tU32.0" sampleID="VF0_PC2_RESIDENCY_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_PC2_RESIDENCY_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_17" sampleID="17" sampleGroupID="Container_17">
+		<TELC:description>Groupname 0x4088</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_PC6_RESIDENCY_L" datatypeIDREF="tU32.0" sampleID="VF0_PC6_RESIDENCY_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_PC6_RESIDENCY_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_PC6_RESIDENCY_H" datatypeIDREF="tU32.0" sampleID="VF0_PC6_RESIDENCY_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_PC6_RESIDENCY_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_18" sampleID="18" sampleGroupID="Container_18">
+		<TELC:description>Groupname 0x4090</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_GT_THROTTLE_TDP" datatypeIDREF="tU22.10" sampleID="VF0_GT_THROTTLE_TDP">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_GT_THROTTLE_TDP</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_GT_THROTTLE_TDP_DUMMY" datatypeIDREF="tU22.10" sampleID="VF0_GT_THROTTLE_TDP_DUMMY">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_GT_THROTTLE_TDP_DUMMY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_19" sampleID="19" sampleGroupID="Container_19">
+		<TELC:description>Groupname 0x4098</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_GT_PC6_RESIDENCY_L" datatypeIDREF="tU32.0" sampleID="VF0_GT_PC6_RESIDENCY_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_GT_PC6_RESIDENCY_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_GT_PC6_RESIDENCY_H" datatypeIDREF="tU32.0" sampleID="VF0_GT_PC6_RESIDENCY_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_GT_PC6_RESIDENCY_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_20" sampleID="20" sampleGroupID="Container_20">
+		<TELC:description>Groupname 0x40a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_GT_ENERGY" datatypeIDREF="tU18.14" sampleID="VF0_GT_ENERGY">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_GT_ENERGY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_GT_ENERGY_TOTAL" datatypeIDREF="tU18.14" sampleID="VF0_GT_ENERGY_TOTAL">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_GT_ENERGY_TOTAL</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_21" sampleID="21" sampleGroupID="Container_21">
+		<TELC:description>Groupname 0x40a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_TIMESTAMP_L" datatypeIDREF="tU32.0" sampleID="VF0_TIMESTAMP_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_TIMESTAMP_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_TIMESTAMP_H" datatypeIDREF="tU32.0" sampleID="VF0_TIMESTAMP_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_TIMESTAMP_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_22" sampleID="22" sampleGroupID="Container_22">
+		<TELC:description>Groupname 0x40b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_VFID" datatypeIDREF="tU32.0" sampleID="VF1_VFID">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_VFID</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_HBM0_READ" datatypeIDREF="tU32.0" sampleID="VF1_HBM0_READ">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM0_READ</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_23" sampleID="23" sampleGroupID="Container_23">
+		<TELC:description>Groupname 0x40b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_HBM0_WR" datatypeIDREF="tU32.0" sampleID="VF1_HBM0_WR">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM0_WR</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_HBM0_ENERGY" datatypeIDREF="tU18.14" sampleID="VF1_HBM0_ENERGY">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM0_ENERGY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_24" sampleID="24" sampleGroupID="Container_24">
+		<TELC:description>Groupname 0x40c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_HBM1_READ" datatypeIDREF="tU32.0" sampleID="VF1_HBM1_READ">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM1_READ</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_HBM1_WRITE" datatypeIDREF="tU32.0" sampleID="VF1_HBM1_WRITE">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM1_WRITE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_25" sampleID="25" sampleGroupID="Container_25">
+		<TELC:description>Groupname 0x40c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_HBM1_ENERGY" datatypeIDREF="tU18.14" sampleID="VF1_HBM1_ENERGY">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM1_ENERGY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_PC2_ENTRANCE" datatypeIDREF="tU32.0" sampleID="VF1_PC2_ENTRANCE">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_PC2_ENTRANCE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_26" sampleID="26" sampleGroupID="Container_26">
+		<TELC:description>Groupname 0x40d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_PC6_ENTRANCE" datatypeIDREF="tU32.0" sampleID="VF1_PC6_ENTRANCE">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_PC6_ENTRANCE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_PC6_ENTRANCE_DUMMY" datatypeIDREF="tU32.0" sampleID="VF1_PC6_ENTRANCE_DUMMY">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_PC6_ENTRANCE_DUMMY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_27" sampleID="27" sampleGroupID="Container_27">
+		<TELC:description>Groupname 0x40d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_PC2_RESIDENCY_L" datatypeIDREF="tU32.0" sampleID="VF1_PC2_RESIDENCY_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_PC2_RESIDENCY_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_PC2_RESIDENCY_H" datatypeIDREF="tU32.0" sampleID="VF1_PC2_RESIDENCY_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_PC2_RESIDENCY_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_28" sampleID="28" sampleGroupID="Container_28">
+		<TELC:description>Groupname 0x40e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_PC6_RESIDENCY_L" datatypeIDREF="tU32.0" sampleID="VF1_PC6_RESIDENCY_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_PC6_RESIDENCY_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_PC6_RESIDENCY_H" datatypeIDREF="tU32.0" sampleID="VF1_PC6_RESIDENCY_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_PC6_RESIDENCY_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_29" sampleID="29" sampleGroupID="Container_29">
+		<TELC:description>Groupname 0x40e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_GT_THROTTLE_TDP" datatypeIDREF="tU22.10" sampleID="VF1_GT_THROTTLE_TDP">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_GT_THROTTLE_TDP</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_GT_THROTTLE_TDP_DUMMY" datatypeIDREF="tU22.10" sampleID="VF1_GT_THROTTLE_TDP_DUMMY">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_GT_THROTTLE_TDP_DUMMY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_30" sampleID="30" sampleGroupID="Container_30">
+		<TELC:description>Groupname 0x40f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_GT_PC6_RESIDENCY_L" datatypeIDREF="tU32.0" sampleID="VF1_GT_PC6_RESIDENCY_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_GT_PC6_RESIDENCY_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_GT_PC6_RESIDENCY_H" datatypeIDREF="tU32.0" sampleID="VF1_GT_PC6_RESIDENCY_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_GT_PC6_RESIDENCY_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_31" sampleID="31" sampleGroupID="Container_31">
+		<TELC:description>Groupname 0x40f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_GT_ENERGY" datatypeIDREF="tU18.14" sampleID="VF1_GT_ENERGY">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_GT_ENERGY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_GT_ENERGY_TOTAL" datatypeIDREF="tU18.14" sampleID="VF1_GT_ENERGY_TOTAL">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_GT_ENERGY_TOTAL</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_32" sampleID="32" sampleGroupID="Container_32">
+		<TELC:description>Groupname 0x4100</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_TIMESTAMP_L" datatypeIDREF="tU32.0" sampleID="VF1_TIMESTAMP_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_TIMESTAMP_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_TIMESTAMP_H" datatypeIDREF="tU32.0" sampleID="VF1_TIMESTAMP_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_TIMESTAMP_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_33" sampleID="33" sampleGroupID="Container_33">
+		<TELC:description>Groupname 0x4108</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GT0_PKG_GT_C0_ANY_L" datatypeIDREF="tU32.0" sampleID="GT0_PKG_GT_C0_ANY_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>GT0_PKG_GT_C0_ANY_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GT0_PKG_GT_C0_ANY_H" datatypeIDREF="tU32.0" sampleID="GT0_PKG_GT_C0_ANY_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>GT0_PKG_GT_C0_ANY_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_34" sampleID="34" sampleGroupID="Container_34">
+		<TELC:description>Groupname 0x4110</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GT0_PKG_GT_C0_ANY_SLICE_L" datatypeIDREF="tU32.0" sampleID="GT0_PKG_GT_C0_ANY_SLICE_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>GT0_PKG_GT_C0_ANY_SLICE_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GT0_PKG_GT_C0_ANY_SLICE_H" datatypeIDREF="tU32.0" sampleID="GT0_PKG_GT_C0_ANY_SLICE_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>GT0_PKG_GT_C0_ANY_SLICE_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_35" sampleID="35" sampleGroupID="Container_35">
+		<TELC:description>Groupname 0x4118</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GT0_PKG_GT_C0_ANY_MEDIA_L" datatypeIDREF="tU32.0" sampleID="GT0_PKG_GT_C0_ANY_MEDIA_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>GT0_PKG_GT_C0_ANY_MEDIA_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GT0_PKG_GT_C0_ANY_MEDIA_H" datatypeIDREF="tU32.0" sampleID="GT0_PKG_GT_C0_ANY_MEDIA_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>GT0_PKG_GT_C0_ANY_MEDIA_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_36" sampleID="36" sampleGroupID="Container_36">
+		<TELC:description>Groupname 0x4120</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FrequencyInterChipLink" datatypeIDREF="tU9.0" sampleID="FrequencyInterChipLink">
+			<TELC:description>Frequency of inter-chiplet link in multiples of 16.66MHz</TELC:description>
+			<TELC:sampleSubGroup>GT0_PERF_STATUS</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>9</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>8</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="BaseFrequency" datatypeIDREF="tU9.0" sampleID="BaseFrequency">
+			<TELC:description>Frequency of Base in multiples of 16.66MHz</TELC:description>
+			<TELC:sampleSubGroup>GT0_PERF_STATUS</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>9</TELC:size>
+			<TELC:lsb>11</TELC:lsb>
+			<TELC:msb>19</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="ComputeChipletFrequency" datatypeIDREF="tU9.0" sampleID="ComputeChipletFrequency">
+			<TELC:description>Frequency of Compute Chiplet in multiples of 16.66MHz</TELC:description>
+			<TELC:sampleSubGroup>GT0_PERF_STATUS</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>9</TELC:size>
+			<TELC:lsb>20</TELC:lsb>
+			<TELC:msb>28</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GT0_PERF_STATUS_DUMMY" datatypeIDREF="tU9.0" sampleID="GT0_PERF_STATUS_DUMMY">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>GT0_PERF_STATUS_DUMMY</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_37" sampleID="37" sampleGroupID="Container_37">
+		<TELC:description>Groupname 0x4128</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="HBM2MaxTemperatures" datatypeIDREF="tU32.0" sampleID="HBM2MaxTemperatures">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>HBM2MaxTemperatures</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="HBM2MaxDeviceTemperature" datatypeIDREF="tU32.0" sampleID="HBM2MaxDeviceTemperature">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>HBM2MaxDeviceTemperature</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_38" sampleID="38" sampleGroupID="Container_38">
+		<TELC:description>Groupname 0x4130</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="HBM3MaxTemperatures" datatypeIDREF="tU32.0" sampleID="HBM3MaxTemperatures">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>HBM3MaxTemperatures</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="HBM3MaxDeviceTemperature" datatypeIDREF="tU32.0" sampleID="HBM3MaxDeviceTemperature">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>HBM3MaxDeviceTemperature</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_39" sampleID="39" sampleGroupID="Container_39">
+		<TELC:description>Groupname 0x4138</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_HBM2_READ" datatypeIDREF="tU32.0" sampleID="VF0_HBM2_READ">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM2_READ</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_HBM2_WRITE" datatypeIDREF="tU32.0" sampleID="VF0_HBM2_WRITE">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM2_WRITE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_40" sampleID="40" sampleGroupID="Container_40">
+		<TELC:description>Groupname 0x4140</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_HBM2_ENERGY_L" datatypeIDREF="tU18.14" sampleID="VF0_HBM2_ENERGY_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM2_ENERGY_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_HBM2_ENERGY_H" datatypeIDREF="tU18.14" sampleID="VF0_HBM2_ENERGY_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM2_ENERGY_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_41" sampleID="41" sampleGroupID="Container_41">
+		<TELC:description>Groupname 0x4148</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_HBM3_READ" datatypeIDREF="tU32.0" sampleID="VF0_HBM3_READ">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM3_READ</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_HBM3_WRITE" datatypeIDREF="tU32.0" sampleID="VF0_HBM3_WRITE">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM3_WRITE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_42" sampleID="42" sampleGroupID="Container_42">
+		<TELC:description>Groupname 0x4150</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_HBM3_ENERGY_L" datatypeIDREF="tU18.14" sampleID="VF0_HBM3_ENERGY_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM3_ENERGY_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_HBM3_ENERGY_H" datatypeIDREF="tU18.14" sampleID="VF0_HBM3_ENERGY_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF0_HBM3_ENERGY_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_43" sampleID="43" sampleGroupID="Container_43">
+		<TELC:description>Groupname 0x4158</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_HBM2_READ" datatypeIDREF="tU32.0" sampleID="VF1_HBM2_READ">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM2_READ</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_HBM2_WRITE" datatypeIDREF="tU32.0" sampleID="VF1_HBM2_WRITE">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM2_WRITE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_44" sampleID="44" sampleGroupID="Container_44">
+		<TELC:description>Groupname 0x4160</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_HBM2_ENERGY_L" datatypeIDREF="tU18.14" sampleID="VF1_HBM2_ENERGY_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM2_ENERGY_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_HBM2_ENERGY_H" datatypeIDREF="tU18.14" sampleID="VF1_HBM2_ENERGY_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM2_ENERGY_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_45" sampleID="45" sampleGroupID="Container_45">
+		<TELC:description>Groupname 0x4168</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_HBM3_READ" datatypeIDREF="tU32.0" sampleID="VF1_HBM3_READ">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM3_READ</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_HBM3_WRITE" datatypeIDREF="tU32.0" sampleID="VF1_HBM3_WRITE">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM3_WRITE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_46" sampleID="46" sampleGroupID="Container_46">
+		<TELC:description>Groupname 0x4170</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_HBM3_ENERGY_L" datatypeIDREF="tU18.14" sampleID="VF1_HBM3_ENERGY_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM3_ENERGY_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_HBM3_ENERGY_H" datatypeIDREF="tU18.14" sampleID="VF1_HBM3_ENERGY_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>VF1_HBM3_ENERGY_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_47" sampleID="47" sampleGroupID="Container_47">
+		<TELC:description>Groupname 0x4178</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GT_MEDIA_FREQUENCY_L" datatypeIDREF="tU8.0" sampleID="GT_MEDIA_FREQUENCY_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>GT_MEDIA_FREQUENCY_L</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GT_MEDIA_FREQUENCY_H" datatypeIDREF="tU8.0" sampleID="GT_MEDIA_FREQUENCY_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>GT_MEDIA_FREQUENCY_H</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_48" sampleID="48" sampleGroupID="Container_48">
+		<TELC:description>Groupname 0x4180</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_HBM_READ_L" datatypeIDREF="tU32.0" sampleID="VF0_HBM_READ_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>DOMAIN_ENERGY_READ</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_HBM_READ_H" datatypeIDREF="tU32.0" sampleID="VF0_HBM_READ_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>DOMAIN_ENERGY_READ</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_49" sampleID="49" sampleGroupID="Container_49">
+		<TELC:description>Groupname 0x4188</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF0_HBM_WRITE_L" datatypeIDREF="tU32.0" sampleID="VF0_HBM_WRITE_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>DOMAIN_ENERGY_WRITE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF0_HBM_WRITE_H" datatypeIDREF="tU32.0" sampleID="VF0_HBM_WRITE_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>DOMAIN_ENERGY_WRITE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_50" sampleID="50" sampleGroupID="Container_50">
+		<TELC:description>Groupname 0x4190</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_HBM_READ_L" datatypeIDREF="tU32.0" sampleID="VF1_HBM_READ_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>RMID_ENERGY_READ</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_HBM_READ_H" datatypeIDREF="tU32.0" sampleID="VF1_HBM_READ_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>RMID_ENERGY_READ</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_51" sampleID="51" sampleGroupID="Container_51">
+		<TELC:description>Groupname 0x4198</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VF1_HBM_WRITE_L" datatypeIDREF="tU32.0" sampleID="VF1_HBM_WRITE_L">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>RMID_ENERGY_WRITE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VF1_HBM_WRITE_H" datatypeIDREF="tU32.0" sampleID="VF1_HBM_WRITE_H">
+			<TELC:description>to be defined</TELC:description>
+			<TELC:sampleSubGroup>RMID_ENERGY_WRITE</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

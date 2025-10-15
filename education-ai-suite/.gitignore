@@ -1,0 +1,15 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+
+# Ignore storage directory
+storage/
+
+# Ignore models directory
+models/
+
+# Ignore chunks directory
+chunks/
+
+#Ignore logs
+monitoring/executionlogs/

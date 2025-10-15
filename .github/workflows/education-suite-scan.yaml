@@ -1,0 +1,60 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: "Education-Suite-CI"
+run-name: "[Education-Suite-CI] PR  workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+
+
+# Only run at most 1 workflow concurrently per PR, unlimited for branches
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'education-ai-suite/**'
+
+jobs:
+   
+  trivy-scan:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      
+      - name: Run Trivy Filesystem Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-fs
+        with:
+          scan_type: "fs"  
+          scan-scope: "all"  
+          severity: "HIGH,CRITICAL" 
+          format: "json"
+          scan_target: "education-ai-suite/"
+          report_suffix: "-fs-education-ai-suite-trivy"
+
+      - name: Run trivy Scan - education-suite (SPDX SBOM)
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: videosummary-frontend-spdx
+        with:
+          scan_type: "fs"  
+          scan-scope: "all"
+          scan_target: "education-ai-suite/"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          scanners: "vuln"
+          report_suffix: "-education-ai-suite-spdx-trivy"
+          generate_sbom: "true"
+           
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: trivy-report-video-summary
+          path: security-results/trivy*

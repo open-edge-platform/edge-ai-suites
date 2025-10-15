@@ -29,6 +29,11 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     ```bash
     HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.
 
+    MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
+
+    MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
+    MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+
     MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
 
@@ -120,11 +125,11 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     Extracting payload for pipeline: pallet_defect_detection
     Found 1 payload(s) for pipeline: pallet_defect_detection
     Payload for pipeline 'pallet_defect_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/warehouse.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"pdd"}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/pallet-defect-detection/model.xml","device":"CPU"}}}
-    Posting payload to REST server at http://<HOST_IP>:8080/pipelines/user_defined_pipelines/pallet_defect_detection
+    Posting payload to REST server at https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection
     Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "4b36b3ce52ad11f0ad60863f511204e2"
     ```
 
-    > **NOTE:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to http://<HOST_IP>:8889/pdd/ for Pallet Defect Detection
+    > **NOTE:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to https://<HOST_IP>/mediamtx/pdd/ for Pallet Defect Detection
 
 8.  Get the status of running pipeline instance(s):
 

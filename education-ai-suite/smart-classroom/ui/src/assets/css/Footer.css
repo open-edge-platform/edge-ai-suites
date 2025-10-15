@@ -1,0 +1,21 @@
+.footer-bar {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: var(--color-theme);
+  color: var(--color-light);
+  text-align: center;
+  padding: 0 2rem;
+  height: 48px;
+  font-size: 1rem;
+  z-index: 10;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+  border-top: 1px solid #e6e7e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  overflow: auto;
+}

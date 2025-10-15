@@ -1,0 +1,42 @@
+{
+    "config": {
+        "pipelines": [
+            {
+                "name": "weld_defect_classification",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "rtspsrc location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": true,
+                "payload": {
+                    "destination": {
+						"metadata": {
+                            "type": "mqtt",
+                            "topic": "vision_weld_defect_classification"
+                        },
+                        "frame": {
+                            "type": "webrtc",
+                            "peer-id": "samplestream"
+                        }
+                    },
+                    "parameters": {
+                        "classification-properties": {
+                            "model": "/home/pipeline-server/resources/weld-porosity/models/weld-porosity-f16-DeiT/deployment/Classification/model/model.xml",
+                            "device": "CPU"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

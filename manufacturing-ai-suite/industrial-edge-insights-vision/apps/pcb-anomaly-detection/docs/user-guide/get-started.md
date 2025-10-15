@@ -30,6 +30,11 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     ```bash
     HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.
 
+    MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
+
+    MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
+    MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+
     MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
 
@@ -116,14 +121,14 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     Extracting payload for pipeline: pcb_anomaly_detection
     Found 1 payload(s) for pipeline: pcb_anomaly_detection
     Payload for pipeline 'pcb_anomaly_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"anomaly"}},"parameters":{"classification-properties":{"model":"/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml","device":"CPU"}}}
-    Posting payload to REST server at http://10.223.23.156:8080/pipelines/user_defined_pipelines/pcb_anomaly_detection
+    Posting payload to REST server at https://<HOST_IP>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection
     Payload for pipeline 'pcb_anomaly_detection' posted successfully. Response: "f0c0b5aa5d4911f0bca7023bb629a486"
     ```
 
     > **NOTE:** This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser at the following url:
 
     ```bash
-    http://<HOST_IP>:8889/anomaly/
+    https://<HOST_IP>/mediamtx/anomaly/
     ```
 
 8.  Get the status of running pipeline instance(s).

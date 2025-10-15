@@ -4,8 +4,7 @@ This section describes how to create custom AI pipelines for the sample applicat
 
 ## Create Pipelines
 
-The AI pipelines are defined by the `pipeline-server-config.json` file present under the configs subdirectory of a particular application directory (for docker compose deployment) and similary inside the helm directory (for helm based deployment. Please also note that the port in the cURL/REST requests needs to be changed from 8080 to 30107 for helm based deployment).
-
+The AI pipelines are defined by the `pipeline-server-config.json` file present under the configs subdirectory of a particular application directory (for docker compose deployment) and similary inside the helm directory (for helm based deployment).
 The following is an example of the weld porosity classification pipeline, which is included in the `pipeline-server-config.json` file.
 
 
@@ -55,7 +54,7 @@ Follow this procedure to start the pipeline.
 
       In this example, a pipeline included in this sample application is `weld_porosity_classification`. Start this pipeline with the following cURL command.
 
-            curl http://<HOST_IP>:31107/pipelines/user_defined_pipelines/weld_porosity_classification -X POST -H 'Content-Type: application/json' -d '{
+            curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/weld_porosity_classification -X POST -H 'Content-Type: application/json' -d '{
                 "source": {
                     "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
                     "type": "uri"
@@ -80,7 +79,7 @@ Request the pipeline statistics with this cURL command.
 
 Replace `HOST_IP` with the IP address of your system.
 
-    curl --location -X GET http://<HOST_IP>:31107/pipelines/status
+    curl -k --location -X GET https://<HOST_IP>/api/pipelines/status
 
 ## Stop the Pipeline
 
@@ -88,7 +87,7 @@ Stop the pipeline with the following cURL command.
 
 Replace `HOST_IP` with the IP address of your system and `instance_id` with the instance ID (without quotes) of the running pipeline.
 
-    curl --location -X DELETE http://<HOST_IP>:31107/pipelines/{instance_id}
+    curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
 
 > **Note**
 > The instance ID is shown in the Terminal when the [pipeline was started](#start-the-pipeline) or when [pipeline statistics were requested](#get-statistics-of-the-running-pipelines).

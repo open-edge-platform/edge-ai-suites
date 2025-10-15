@@ -43,7 +43,7 @@ For compose based deployment, the entire resources directory is volume mounted a
 
 4. Provide the model path and video file path in the REST/curl command for starting an inferencing workload. Example:
     ```sh
-        curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/worker_safety_gear_detection -X POST -H 'Content-Type: application/json' -d '{
+        curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/worker_safety_gear_detection -X POST -H 'Content-Type: application/json' -d '{
             "source": {
                 "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
                 "type": "uri"

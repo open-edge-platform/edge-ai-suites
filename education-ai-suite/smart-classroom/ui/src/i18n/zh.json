@@ -1,0 +1,90 @@
+{
+  "header": {
+    "title": "智能教室示例应用",
+    "startRecording": "开始录音",
+    "stopRecording": "停止录音",
+    "uploadFile": "上传文件",
+    "timer": "计时器"
+  },
+  "footer": {
+    "copyright": "© 2025 智能教室示例应用"
+  },
+  "notifications": {
+    "start": "上传音频文件以开始新会话",
+    "stop": "停止录音以获取人工智能摘要",
+    "recording": "正在录音…",
+    "uploading": "正在上传转录…",
+    "generatingSummary": "正在生成摘要…",
+    "streamingSummary": "正在流式摘要…",
+    "loadingTranscript": "正在加载转录…",
+    "analyzingAudio": "正在分析音频…",
+    "summaryReady": "摘要已准备好",
+    "uploadSuccess": "文件上传成功！",
+    "uploadFailed": "文件上传失败。"
+  },
+  "settings": {
+    "title": "设置",
+    "projectName": "项目名称",
+    "projectLocation": "项目位置",
+    "microphone": "麦克风",
+    "ok": "确定",
+    "projectNamePlaceholder": "请输入项目名称",
+    "projectLocationPlaceholder": "选择项目文件夹",
+    "ipMicrophone": "网络麦克风"
+  },
+  "menu": {
+    "settings": "设置",
+    "help": "帮助",
+    "about": "关于"
+  },
+  "tabs": {
+    "transcripts": "转录",
+    "summary": "人工智能摘要"
+  },
+  "accordion": {
+    "noData": "暂无数据",
+    "noSessionActive": "无活动会话。请上传音频文件并开始转录以开始监控。",
+    "lastUpdated": "最后更新",
+    "resourceUtilization": "资源利用率",
+    "configuration": "配置与指标",
+    "resource": "资源利用率",
+    "models": "预验证模型",
+    "subtitle_configuration": "平台和软件配置详情",
+    "subtitle_resource": "中央处理器、图形处理器、神经处理器、内存与功耗随时间变化",
+    "subtitle_models": "选择用于转录和摘要的模型",
+    "platformConfiguration": "平台配置",
+    "processor": "处理器",
+    "npu": "神经网络处理器",
+    "igpu": "集成显卡",
+    "memory": "内存",
+    "storage": "存储",
+    "softwareConfiguration": "软件配置",
+    "llm": "大语言模型",
+    "asr": "自动语音识别",
+    "performanceMetrics": "性能指标",
+    "ttft": "首个标记时间",
+    "tpot": "总输出时间",
+    "tps":"每秒标记数",
+    "totalTokensProcessed": "处理的总标记数",
+    "timeToGenerateSummary": "生成摘要所需时间",
+    "totalTimeTaken":"总耗时",
+    "loadingConfiguration": "正在加载配置数据...",
+    "cpuUtilization": "中央处理器利用率",
+    "gpuUtilization": "图形处理器利用率",
+    "npuUtilization": "神经处理器利用率",
+    "memoryUtilization": "内存利用率",
+    "powerUtilization": "功耗利用率",
+    "loadingResource": "正在加载资源数据...",
+    "transcriptsModel": "转录模型",
+    "summaryModel": "摘要",
+    "whisper": "中文语音识别模型",
+    "model1": "模型1",
+    "model2": "模型2",
+    "gpt-4": "通义千问2-70亿参数指令模型",
+    "model3": "模型3",
+    "model4": "模型4"
+  },
+  "errors": {
+    "projectNameRequired": "项目名称为必填项"
+  }
+}

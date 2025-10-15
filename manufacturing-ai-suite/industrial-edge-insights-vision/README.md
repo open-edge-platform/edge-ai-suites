@@ -20,7 +20,7 @@ It consists of the following microservices:
 
 
 <div style="text-align: center;">
-    <img src=defect-detection-arch-diagram.png width=800>
+    <img src=industrial-edge-insights-vision-architecture.drawio.svg width=800>
 </div>
 
 ### Directory structure

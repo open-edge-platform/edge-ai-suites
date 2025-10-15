@@ -20,7 +20,7 @@ The Manufacturing AI Suite helps you develop solutions for:
 | [PCB Anomaly Detection](./industrial-edge-insights-vision/apps/pcb-anomaly-detection)     | Real-time anomaly detection in printed circuit boards (PCB) with AI vision systems.             | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/pcb-anomaly-detection/index.html)                    |
 | [Weld Porosity](./industrial-edge-insights-vision/apps/weld-porosity)                     | Real-time detection of welding defects.                                                         | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/weld-porosity/index.html)                            |
 | [Worker Safety Gear Detection](./industrial-edge-insights-vision/apps/worker-safety-gear-detection) | Real-time visual analysis of safety gear compliance for workers.                      | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/worker-safety-gear-detection/index.html)             |
-| [Wind Turbine Anomaly Detection](./wind-turbine-anomaly-detection/)                       | A time series use case of detecting anomalous power generation patterns relative to wind speed. | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/wind-turbine-anomaly-detection/index.html)           |
+| [Wind Turbine Anomaly Detection](./industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection)                       | A time series use case of detecting anomalous power generation patterns relative to wind speed. | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/wind-turbine-anomaly-detection/index.html)           |
 
 
 **Main tools and AI Libraries the Suite uses**

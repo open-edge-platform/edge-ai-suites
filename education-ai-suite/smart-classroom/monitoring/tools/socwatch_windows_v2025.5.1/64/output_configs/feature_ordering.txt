@@ -1,0 +1,42 @@
+# ********************************************************************************
+# Copyright 2017 Intel Corporation.
+
+# This software and the related documents are Intel copyrighted materials, and
+# your use of them is governed by the express license under which they were
+# provided to you (License). Unless the License provides otherwise, you may not
+# use, modify, copy, publish, distribute, disclose or transmit this software or
+# the related documents without Intel's prior written permission.
+
+# This software and the related documents are provided as is, with no express
+# or implied warranties, other than those that are expressly stated in the
+# License.
+# ********************************************************************************
+
+#This file holds the overall feature switch ordering
+# Ideally for every new file created in the output_configs directory, the metric ordering within
+# a feature should be created for every feature switch present in that new file and the feature
+# ordering entry should be added to this file.
+
+
+# for SYSTEM
+ALL_OUTPUT-ORDER_TAG_FEATURE_ORDER=ACPI-SSTATE,S0IX-SSTATE,PCH-SLPS0,PCH-SLPS0-DBG
+
+ALL_OUTPUT-ORDER_TAG_FEATURE_ORDER=PKG-PWR,DRAM-PWR
+
+# for CPU
+ALL_OUTPUT-ORDER_TAG_FEATURE_ORDER=HW-CPU-CSTATE,CPU-CSTATE-TRACED,MODULE-CSTATE,OS-CPU-CSTATE,CPU-IGPU-CONCURRENCY,IA-THROT-RSN,HW-CPU-PSTATE,HW-CPU-HWP,OS-CPU-PSTATE
+
+# for GPU
+ALL_OUTPUT-ORDER_TAG_FEATURE_ORDER=HW-IGFX-CSTATE,OS-GFX-CSTATE,HW-DGFX-CSTATE,IGFX-THROT-RSN,HW-IGFX-PSTATE # for GPU
+
+ALL_OUTPUT-ORDER_TAG_FEATURE_ORDER=TEMP,SOC-TEMP,RING-THROT-RSN
+
+# for Device
+ALL_OUTPUT-ORDER_TAG_FEATURE_ORDER=ACPI-DSTATE
+
+ALL_OUTPUT-ORDER_TAG_FEATURE_ORDER=DDR-BW,PMT-DDR-COMP-BW,PMT-IO-BW,PMT-DISPLAY-BW,PMT-IPU-BW,PMT-PCIE-BW,PMT-TYPEC-BW,PMT-LLC-BW,DRAM-SRR
+
+ALL_OUTPUT-ORDER_TAG_FEATURE_ORDER=TIMER-RESOLUTION,CONNECTED-STANDBY
+
+# for DGFX PMT
+#ALL_OUTPUT-ORDER_TAG_FEATURE_ORDER=PMT-DGFX-PWR

@@ -1,0 +1,422 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{CF08E2DF-11E3-3503-A193-DDD7F56CB0E7}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>ze_validation_layer</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <SpectreMitigation>Spectre</SpectreMitigation>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <SpectreMitigation>Spectre</SpectreMitigation>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <SpectreMitigation>Spectre</SpectreMitigation>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <SpectreMitigation>Spectre</SpectreMitigation>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\bin\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ze_validation_layer.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ze_validation_layer</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.dll</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\bin\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ze_validation_layer.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ze_validation_layer</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.dll</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\bin\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">ze_validation_layer.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">ze_validation_layer</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.dll</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\bin\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">ze_validation_layer.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">ze_validation_layer</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.dll</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\wrapper\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\inc;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\common;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;YNAMICBASE;LOADER_VERSION_MAJOR=1;LOADER_VERSION_MINOR=15;LOADER_VERSION_PATCH=0;L0_LOADER_VERSION="1";L0_VALIDATION_LAYER_SUPPORTED_VERSION="1";CMAKE_INTDIR="Debug";ze_validation_layer_EXPORTS</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;YNAMICBASE;LOADER_VERSION_MAJOR=1;LOADER_VERSION_MINOR=15;LOADER_VERSION_PATCH=0;L0_LOADER_VERSION=\"1\";L0_VALIDATION_LAYER_SUPPORTED_VERSION=\"1\";CMAKE_INTDIR=\"Debug\";ze_validation_layer_EXPORTS</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\wrapper\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\inc;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\common;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\wrapper\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\inc;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\common;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /guard:cf</AdditionalOptions>
+      <CETCompat>true</CETCompat>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/lib/Debug/ze_validation_layer.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/bin/Debug/ze_validation_layer.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem></SubSystem>
+      <Version>1.15</Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\wrapper\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\inc;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\common;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;YNAMICBASE;NDEBUG;LOADER_VERSION_MAJOR=1;LOADER_VERSION_MINOR=15;LOADER_VERSION_PATCH=0;L0_LOADER_VERSION="1";L0_VALIDATION_LAYER_SUPPORTED_VERSION="1";CMAKE_INTDIR="Release";ze_validation_layer_EXPORTS</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;YNAMICBASE;NDEBUG;LOADER_VERSION_MAJOR=1;LOADER_VERSION_MINOR=15;LOADER_VERSION_PATCH=0;L0_LOADER_VERSION=\"1\";L0_VALIDATION_LAYER_SUPPORTED_VERSION=\"1\";CMAKE_INTDIR=\"Release\";ze_validation_layer_EXPORTS</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\wrapper\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\inc;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\common;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\wrapper\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\inc;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\common;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /guard:cf</AdditionalOptions>
+      <CETCompat>true</CETCompat>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/lib/Release/ze_validation_layer.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ProgramDataBaseFile>C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/bin/Release/ze_validation_layer.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem></SubSystem>
+      <Version>1.15</Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\wrapper\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\inc;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\common;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;YNAMICBASE;NDEBUG;LOADER_VERSION_MAJOR=1;LOADER_VERSION_MINOR=15;LOADER_VERSION_PATCH=0;L0_LOADER_VERSION="1";L0_VALIDATION_LAYER_SUPPORTED_VERSION="1";CMAKE_INTDIR="MinSizeRel";ze_validation_layer_EXPORTS</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;YNAMICBASE;NDEBUG;LOADER_VERSION_MAJOR=1;LOADER_VERSION_MINOR=15;LOADER_VERSION_PATCH=0;L0_LOADER_VERSION=\"1\";L0_VALIDATION_LAYER_SUPPORTED_VERSION=\"1\";CMAKE_INTDIR=\"MinSizeRel\";ze_validation_layer_EXPORTS</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\wrapper\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\inc;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\common;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\wrapper\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\inc;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\common;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /guard:cf</AdditionalOptions>
+      <CETCompat>true</CETCompat>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/lib/MinSizeRel/ze_validation_layer.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/bin/MinSizeRel/ze_validation_layer.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem></SubSystem>
+      <Version>1.15</Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\wrapper\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\inc;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\common;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;YNAMICBASE;NDEBUG;LOADER_VERSION_MAJOR=1;LOADER_VERSION_MINOR=15;LOADER_VERSION_PATCH=0;L0_LOADER_VERSION="1";L0_VALIDATION_LAYER_SUPPORTED_VERSION="1";CMAKE_INTDIR="RelWithDebInfo";ze_validation_layer_EXPORTS</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;YNAMICBASE;NDEBUG;LOADER_VERSION_MAJOR=1;LOADER_VERSION_MINOR=15;LOADER_VERSION_PATCH=0;L0_LOADER_VERSION=\"1\";L0_VALIDATION_LAYER_SUPPORTED_VERSION=\"1\";CMAKE_INTDIR=\"RelWithDebInfo\";ze_validation_layer_EXPORTS</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\wrapper\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\inc;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\common;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\wrapper\include;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\inc;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\common;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking;C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /guard:cf</AdditionalOptions>
+      <CETCompat>true</CETCompat>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/lib/RelWithDebInfo/ze_validation_layer.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/bin/RelWithDebInfo/ze_validation_layer.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem></SubSystem>
+      <Version>1.15</Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/source/layers/validation/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero -BC:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build --check-stamp-file C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/layers/validation/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\ZeValidationLayerVersion.rc.in;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\source\layers\validation\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/source/layers/validation/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero -BC:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build --check-stamp-file C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/layers/validation/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\ZeValidationLayerVersion.rc.in;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\source\layers\validation\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/source/layers/validation/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero -BC:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build --check-stamp-file C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/layers/validation/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\ZeValidationLayerVersion.rc.in;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\source\layers\validation\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/source/layers/validation/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero -BC:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build --check-stamp-file C:/Users/intel/Desktop/education/education-ai-suite/smart-classroom/monitoring/tools/level-zero/build/source/layers/validation/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\ZeValidationLayerVersion.rc.in;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\source\layers\validation\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\ze_validation_layer.h" />
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\ze_validation_layer.cpp" />
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\ze_valddi.cpp" />
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\zet_valddi.cpp" />
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\zes_valddi.cpp" />
+    <ResourceCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\source\layers\validation\ZeValidationLayerVersion.rc" />
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation\param_validation.h" />
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation\ze_parameter_validation.cpp" />
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation\ze_parameter_validation.h" />
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation\zes_parameter_validation.cpp" />
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation\zes_parameter_validation.h" />
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation\zet_parameter_validation.cpp" />
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\parameter_validation\zet_parameter_validation.h" />
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking\handle_lifetime.h" />
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking\ze_handle_lifetime.cpp" />
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking\ze_handle_lifetime.h" />
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking\zes_handle_lifetime.cpp" />
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking\zes_handle_lifetime.h" />
+    <ClCompile Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking\zet_handle_lifetime.cpp" />
+    <ClInclude Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\source\layers\validation\handle_lifetime_tracking\zet_handle_lifetime.h" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="C:\Users\intel\Desktop\education\education-ai-suite\smart-classroom\monitoring\tools\level-zero\build\ZERO_CHECK.vcxproj">
+      <Project>{AAD3A89D-9557-3165-AA2A-6F6CB8A1C0C3}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

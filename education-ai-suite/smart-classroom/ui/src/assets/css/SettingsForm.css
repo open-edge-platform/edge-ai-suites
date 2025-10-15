@@ -1,0 +1,94 @@
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: "IntelOne Text", system-ui, sans-serif;
+  padding: 18px;
+  background-color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  color: #2B2C30;
+  align-items: justify;
+}
+
+h2 {
+  font-family: "IntelOne Display", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 32px;
+  margin-bottom: 10px;
+  text-align: left;
+  border-bottom: none;
+  padding-bottom: 0;
+  color: #2B2C30;
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 20px;
+  width: 456px;
+  padding-top: 29px;
+  padding-right: 40px;
+  padding-bottom: 29px;
+  padding-left: 40px;
+}
+
+label {
+  color: #6A6D75;
+  font-family: "IntelOne Text", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 14px;
+  text-align: left;
+}
+
+input[type="text"],
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 0px;
+  font-family: "IntelOne Text", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #2B2C30;
+  line-height: 16px;
+  box-sizing: border-box;
+  background: #f7f7f7;
+}
+
+.button-container {
+  border-top: 2px solid #ccc;
+  padding-top: 20px; 
+  display: flex;
+  justify-content: flex-end; 
+}
+
+.submit-button {
+  font-family: "IntelOne Text", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 18px;
+  margin-top: 20px;
+  padding: 10px 24px;
+  cursor: pointer;
+  background-color: #0071c5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: auto;
+  transition: background 0.2s;
+}
+
+.submit-button:disabled {
+  background-color: #bbbaba;
+  cursor: not-allowed;
+}
+
+.settings-title-line {
+  border: none;          
+  height: 1.5px;           
+  background-color: #ccc; 
+  margin: 8px 0 16px;    
+}

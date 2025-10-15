@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "mtl_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>MTL</TELEM:name>
+	<TELEM:description>MTL M/P PMT Fixed telemetry in DMU samples definition and transformation rules</TELEM:description>
+	<TELEM:uniqueid>0x1A067102</TELEM:uniqueid>
+	<TELEM:productid>MTL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x16000</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="XTAL" datatypeIDREF="txtal_time" sampleID="XTAL">
+			<TELC:description>Crystal clock count. Used as a reference count in converting many of the counters presented in this telemetry space.</TELC:description>
+			<TELC:sampleSubGroup>XTAL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x16008</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_BLOCK_REFCNT" datatypeIDREF="tevent_counter" sampleID="DIE_CSTATE_BLOCK_REFCNT">
+			<TELC:description>Reference count for block cause counters. Counts the number of 1ms intervals during which DieCstate entry was blocked at least once by any reason. To calculate percent blocked by a specific reason, divide corresponding block reason counter by this counter value.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_BLOCK_REFCNT</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DIE_CSTATE_WAKE_REFCNT" datatypeIDREF="tevent_counter" sampleID="DIE_CSTATE_WAKE_REFCNT">
+			<TELC:description>Reference count for wake cause counters. To calculate percent for each wake reason, divide by this number.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_WAKE_REFCNT</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x16010</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_BLOCK_CAUSE_CORE" datatypeIDREF="tpkgc_block_cause" sampleID="DIE_CSTATE_BLOCK_CAUSE_CORE">
+			<TELC:description>Counts the number of 1ms intervals during which DieC entry was blocked at least once by CORE</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_BLOCK_CAUSE_CORE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DIE_CSTATE_BLOCK_CAUSE_RING" datatypeIDREF="tpkgc_block_cause" sampleID="DIE_CSTATE_BLOCK_CAUSE_RING">
+			<TELC:description>Counts the number of 1ms intervals during which DieC entry was blocked at least once by RING</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_BLOCK_CAUSE_RING</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_3" sampleID="3" sampleGroupID="Container_3">
+		<TELC:description>Groupname 0x16018</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_BLOCK_CAUSE_GPSB" datatypeIDREF="tpkgc_block_cause" sampleID="DIE_CSTATE_BLOCK_CAUSE_GPSB">
+			<TELC:description>Counts the number of 1ms intervals during which DieC entry was blocked at least once by GPSB</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_BLOCK_CAUSE_GPSB</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DIE_CSTATE_BLOCK_CAUSE_PUNIT" datatypeIDREF="tpkgc_block_cause" sampleID="DIE_CSTATE_BLOCK_CAUSE_PUNIT">
+			<TELC:description>Counts the number of 1ms intervals during which DieC entry was blocked at least once by PUNIT</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_BLOCK_CAUSE_PUNIT</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_4" sampleID="4" sampleGroupID="Container_4">
+		<TELC:description>Groupname 0x16020</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_BLOCK_CAUSE_ARAT" datatypeIDREF="tpkgc_block_cause" sampleID="DIE_CSTATE_BLOCK_CAUSE_ARAT">
+			<TELC:description>Counts the number of 1ms intervals during which DieC entry was blocked at least once by ARAT timers</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_BLOCK_CAUSE_ARAT</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DIE_CSTATE_WAKE_REASON_PUNIT" datatypeIDREF="tpkgc_wake_cause" sampleID="DIE_CSTATE_WAKE_REASON_PUNIT">
+			<TELC:description>Die C-state wake due to Punit</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_WAKE_REASON_PUNIT</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_5" sampleID="5" sampleGroupID="Container_5">
+		<TELC:description>Groupname 0x16028</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_WAKE_REASON_RING" datatypeIDREF="tpkgc_wake_cause" sampleID="DIE_CSTATE_WAKE_REASON_RING">
+			<TELC:description>Die C-state wake due to SNOOP</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_WAKE_REASON_RING</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DIE_CSTATE_WAKE_REASON_SB" datatypeIDREF="tpkgc_wake_cause" sampleID="DIE_CSTATE_WAKE_REASON_SB">
+			<TELC:description>Die C-state wake due to any SB transaction</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_WAKE_REASON_SB</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_6" sampleID="6" sampleGroupID="Container_6">
+		<TELC:description>Groupname 0x16030</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_WAKE_REASON_CORE" datatypeIDREF="tpkgc_wake_cause" sampleID="DIE_CSTATE_WAKE_REASON_CORE">
+			<TELC:description>Die C-state wake due to TIMER expiry</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_WAKE_REASON_CORE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="BLOCK_CAUSE_CATEGORY_TIMER" datatypeIDREF="tpkgc_block_cause" sampleID="BLOCK_CAUSE_CATEGORY_TIMER">
+			<TELC:description>Counts the number of 1ms intervals during which DieC entry was blocked at least once by TIMER.</TELC:description>
+			<TELC:sampleSubGroup>BLOCK_CAUSE_CATEGORY_TIMER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_7" sampleID="7" sampleGroupID="Container_7">
+		<TELC:description>Groupname 0x16038</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="BLOCK_CAUSE_CATEGORY_DEMOTION" datatypeIDREF="tpkgc_block_cause" sampleID="BLOCK_CAUSE_CATEGORY_DEMOTION">
+			<TELC:description>Counts the number of 1ms intervals during which DieC entry was blocked at least once by DEMOTION.</TELC:description>
+			<TELC:sampleSubGroup>BLOCK_CAUSE_CATEGORY_DEMOTION</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="BLOCK_CAUSE_CATEGORY_MISC" datatypeIDREF="tpkgc_block_cause" sampleID="BLOCK_CAUSE_CATEGORY_MISC">
+			<TELC:description>Counts the number of 1ms intervals during which DieC entry was blocked at least once by MISC.</TELC:description>
+			<TELC:sampleSubGroup>BLOCK_CAUSE_CATEGORY_MISC</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_8" sampleID="8" sampleGroupID="Container_8">
+		<TELC:description>Groupname 0x16040</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="BLOCK_CAUSE_CATEGORY_IP_BUSY" datatypeIDREF="tpkgc_block_cause" sampleID="BLOCK_CAUSE_CATEGORY_IP_BUSY">
+			<TELC:description>Counts the number of 1ms intervals during which DieC entry was blocked at least once by IP_BUSY.</TELC:description>
+			<TELC:sampleSubGroup>BLOCK_CAUSE_CATEGORY_IP_BUSY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="BLOCK_CAUSE_CATEGORY_HYSTERSIS" datatypeIDREF="tpkgc_block_cause" sampleID="BLOCK_CAUSE_CATEGORY_HYSTERSIS">
+			<TELC:description>Counts the number of 1ms intervals during which DieC entry was blocked at least once by HYSTERESIS.</TELC:description>
+			<TELC:sampleSubGroup>BLOCK_CAUSE_CATEGORY_HYSTERSIS</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_9" sampleID="9" sampleGroupID="Container_9">
+		<TELC:description>Groupname 0x16048</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_LTR_THRESHOLDS_DC2p1" datatypeIDREF="tltr" sampleID="DIE_CSTATE_LTR_THRESHOLDS_DC2p1">
+			<TELC:description>Die C State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_LTR_THRESHOLDS_DC2p1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DIE_CSTATE_LTR_THRESHOLDS_DC2p2" datatypeIDREF="tltr" sampleID="DIE_CSTATE_LTR_THRESHOLDS_DC2p2">
+			<TELC:description>Die C State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_LTR_THRESHOLDS_DC2p2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DIE_CSTATE_LTR_THRESHOLDS_DC3p1" datatypeIDREF="tltr" sampleID="DIE_CSTATE_LTR_THRESHOLDS_DC3p1">
+			<TELC:description>Die C State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_LTR_THRESHOLDS_DC3p1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DIE_CSTATE_LTR_THRESHOLDS_DC3p2" datatypeIDREF="tltr" sampleID="DIE_CSTATE_LTR_THRESHOLDS_DC3p2">
+			<TELC:description>Die C State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_LTR_THRESHOLDS_DC3p2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_10" sampleID="10" sampleGroupID="Container_10">
+		<TELC:description>Groupname 0x16050</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_LTR_THRESHOLDS_DC6" datatypeIDREF="tltr" sampleID="DIE_CSTATE_LTR_THRESHOLDS_DC6">
+			<TELC:description>Die C State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_LTR_THRESHOLDS_DC6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_11" sampleID="11" sampleGroupID="Container_11">
+		<TELC:description>Groupname 0x16058</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_RESIDENCY_DC2p1" datatypeIDREF="txtal_time" sampleID="DIE_CSTATE_RESIDENCY_DC2p1">
+			<TELC:description>Measures the residency in Die C-state C2. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_RESIDENCY_DC2p1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_12" sampleID="12" sampleGroupID="Container_12">
+		<TELC:description>Groupname 0x16060</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_RESIDENCY_DC2p2" datatypeIDREF="txtal_time" sampleID="DIE_CSTATE_RESIDENCY_DC2p2">
+			<TELC:description>Measures the residency in Die C-state C2.2. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_RESIDENCY_DC2p2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_13" sampleID="13" sampleGroupID="Container_13">
+		<TELC:description>Groupname 0x16068</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_RESIDENCY_DC3p1" datatypeIDREF="txtal_time" sampleID="DIE_CSTATE_RESIDENCY_DC3p1">
+			<TELC:description>Measures the residency in Die C-state C3.1. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_RESIDENCY_DC3p1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_14" sampleID="14" sampleGroupID="Container_14">
+		<TELC:description>Groupname 0x16070</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_RESIDENCY_DC3p2" datatypeIDREF="txtal_time" sampleID="DIE_CSTATE_RESIDENCY_DC3p2">
+			<TELC:description>Measures the residency in Die C-state C3.2. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_RESIDENCY_DC3p2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_15" sampleID="15" sampleGroupID="Container_15">
+		<TELC:description>Groupname 0x16078</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DIE_CSTATE_RESIDENCY_DC6" datatypeIDREF="txtal_time" sampleID="DIE_CSTATE_RESIDENCY_DC6">
+			<TELC:description>Measures the residency in Die C-state C6. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>DIE_CSTATE_RESIDENCY_DC6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_16" sampleID="16" sampleGroupID="Container_16">
+		<TELC:description>Groupname 0x16080</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LLC_FLUSHED_RESIDENCY" datatypeIDREF="txtal_time" sampleID="LLC_FLUSHED_RESIDENCY">
+			<TELC:description>Measures the residency in LLC_FLUSHED state. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>LLC_FLUSHED_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_17" sampleID="17" sampleGroupID="Container_17">
+		<TELC:description>Groupname 0x16088</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE0" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE0">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_18" sampleID="18" sampleGroupID="Container_18">
+		<TELC:description>Groupname 0x16090</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE1" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE1">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_19" sampleID="19" sampleGroupID="Container_19">
+		<TELC:description>Groupname 0x16098</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE2" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE2">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_20" sampleID="20" sampleGroupID="Container_20">
+		<TELC:description>Groupname 0x160a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE3" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE3">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_21" sampleID="21" sampleGroupID="Container_21">
+		<TELC:description>Groupname 0x160a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE4" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE4">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_22" sampleID="22" sampleGroupID="Container_22">
+		<TELC:description>Groupname 0x160b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE5" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE5">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_23" sampleID="23" sampleGroupID="Container_23">
+		<TELC:description>Groupname 0x160b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE6" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE6">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_24" sampleID="24" sampleGroupID="Container_24">
+		<TELC:description>Groupname 0x160c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE7" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE7">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

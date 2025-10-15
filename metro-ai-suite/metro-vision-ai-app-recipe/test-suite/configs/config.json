@@ -1,0 +1,77 @@
+{
+   "SP001": {
+      "app": "SP",
+      "setup-app": true
+   },
+   "SP002": {
+      "app": "SP",
+      "verify_status": true
+   },
+   "SP003": {
+      "app": "SP",
+      "sample_start": true
+   },
+   "SP004": {
+      "app": "SP",
+      "sample_status": true
+   },
+   "SP005": {
+      "app": "SP",
+      "sample_stop": true
+   },
+   "SP006": {
+      "app": "SP",
+      "dlsps_log_param" : ["height","width","channels","fps","frame_id","yolov10_1_cpu"]
+   },
+   "SP007": {
+      "app": "SP",
+      "grafana_url": true,
+      "dlsps_log_param" : ["height","width","channels","fps","frame_id"]
+   },
+   "LD001": {
+      "app": "LD",
+      "setup-app": true
+   },
+   "LD002": {
+      "app": "LD",
+      "verify_status": true
+   },
+   "LD003": {
+      "app": "LD",
+      "sample_start": true
+   },
+   "LD004": {
+      "app": "LD",
+      "sample_status": true
+   },
+   "LD005": {
+      "app": "LD",
+      "sample_stop": true
+   },
+   "LD006": {
+      "app": "LD",
+      "dlsps_log_param" : ["height","width","channels","fps","frame_id"]
+   },
+   "LD007": {
+      "app": "LD",
+      "grafana_url": true,
+      "dlsps_log_param" : ["height","width","channels","fps","frame_id"]
+   },
+   "SI001": {
+      "app": "SI",
+      "setup-app": true
+   },
+   "SI002": {
+      "app": "SI",
+      "verify_status": true
+   },
+   "SI003": {
+      "app": "SI",
+      "dlsps_log_param" : ["Created RTSP Stream for instance","State to RUNNING"]
+   },
+   "SI004": {
+      "app": "SI",
+      "grafana_url": true,
+      "dlsps_log_param" : ["Created RTSP Stream for instance","State to RUNNING"]
+   }
+}

@@ -34,7 +34,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
 6. Start the pipeline using the following cURL command. Update the `HOST_IP` and ensure the correct path to the model is provided as shown below. This example starts an AI pipeline.
 
    ```sh
-    curl http://<HOST_IP>:8080/pipelines/user_defined_pipelines/worker_safety_gear_detection_opcua -X POST -H 'Content-Type: application/json' -d '{
+    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/worker_safety_gear_detection_opcua -X POST -H 'Content-Type: application/json' -d '{
         "source": {
             "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
             "type": "uri"
