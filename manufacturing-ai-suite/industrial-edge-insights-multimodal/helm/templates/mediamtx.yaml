@@ -1,0 +1,79 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.config.mediamtx.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  type: NodePort
+  ports:
+  - port: {{ .Values.config.mediamtx.int.webrtc_port }}
+    targetPort: {{ .Values.config.mediamtx.int.webrtc_port }}
+    nodePort: {{ .Values.config.mediamtx.ext.webrtc_port }}
+    name: webrtc-port
+  - name: rtsp-port
+    port: {{ .Values.config.mediamtx.int.rtsp_port }}
+    targetPort: {{ .Values.config.mediamtx.int.rtsp_port }}
+    nodePort: {{ .Values.config.mediamtx.ext.rtsp_port }}
+  selector:
+    app: mediamtx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mediamtx
+  name: deployment-mediamtx
+  namespace: {{ .Values.namespace }}
+
+spec:
+  selector:
+    matchLabels:
+      app: mediamtx
+  template:
+    metadata:
+      labels:
+        app: mediamtx
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: mediamtx
+        image: bluenviron/mediamtx:1.11.3
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+      env:
+        - name: MTX_LOGLEVEL
+          value: 'DEBUG'
+        - name: MTX_RTSP
+          value: yes
+        - name: MTX_RTMP
+          value: no
+        - name: MTX_HLS
+          value: no
+        - name: MTX_WEBRTCTRACKGATHERTIMEOUT
+          value: 20s
+        - name: MTX_WEBRTC
+          value: no
+        - name: MTX_WEBRTCICESERVERS2_0_URL
+          value: 'turn:coturn:{{.Values.COTURN_UDP_PORT }}'
+        - name: MTX_WEBRTCICESERVERS2_0_USERNAME
+          value: "no"
+        - name: MTX_WEBRTCICESERVERS2_0_PASSWORD
+          value: "no"
+              # Added security context to restrict container privileges
+      securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1999
+          capabilities:
+            drop:
+              - ALL
+      restartPolicy: Always

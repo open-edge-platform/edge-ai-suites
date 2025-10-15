@@ -1,0 +1,62 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+{{ if eq .Values.env.TELEGRAF_INPUT_PLUGIN "mqtt_consumer"}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mqtt-publisher
+  name: deployment-mqtt-publisher
+  namespace: {{ .Values.namespace }}
+
+spec:
+  selector:
+    matchLabels:
+      app: mqtt-publisher
+  template:
+    metadata:
+      labels:
+        app: mqtt-publisher
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: mqtt-publisher
+        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.mqtt_publisher_image }}{{ if .Values.images.image_suffix }}-{{ .Values.images.image_suffix }}{{ end }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+          runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        env:
+        - name: SAMPLE_APP
+          value: '{{ .Values.env.SAMPLE_APP }}'
+        - name: HOST_IP
+          value: "ia-mqtt-broker"
+        - name: TS_MS_SERVER
+          value: "ia-time-series-analytics-microservice"
+        - name: TS_MS_PORT
+          value: '{{ .Values.config.time_series_analytics_microservice.kapacitor_port }}'
+        - name: CONTINUOUS_SIMULATOR_INGESTION
+          value: '{{ .Values.env.CONTINUOUS_SIMULATOR_INGESTION }}'
+        volumeMounts:
+        - name: ingestor-{{ .Values.env.SAMPLE_APP }}
+          mountPath: /{{ .Values.env.SAMPLE_APP }}.csv
+          subPath: {{ .Values.env.SAMPLE_APP }}.csv
+
+      volumes:
+      - name: ingestor-{{ .Values.env.SAMPLE_APP }}
+        configMap:
+          name: ingestor-{{ .Values.env.SAMPLE_APP }}
+{{ end }}
