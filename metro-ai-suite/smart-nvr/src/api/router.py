@@ -103,7 +103,7 @@ class Rule(BaseModel):
     action: str
     camera: str | None = None
     source: str | None = None
-    vehicle_count: int | None = None
+    count: int | None = None
 
 
 @router.post("/rules/")

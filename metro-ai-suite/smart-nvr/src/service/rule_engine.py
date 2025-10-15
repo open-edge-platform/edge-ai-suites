@@ -13,7 +13,7 @@ async def process_event(event: dict, context: dict = None):
     Process incoming events against configured rules and dispatch actions for matches.
     
     Args:
-        event: Event data containing label, camera, timestamps, and optional vehicle count
+        event: Event data containing label, camera, timestamps, and optional count data
         context: Optional context with source information and topic details
     
     Returns:
@@ -45,17 +45,25 @@ async def process_event(event: dict, context: dict = None):
             )
             continue
 
-        threshold = rule.get("vehicle_count")
+        threshold = rule.get("count")
         if threshold is not None:
-            event_vehicle_count = event.get("num_vehicles")
-            if event_vehicle_count is None:
+            # count based on the event_label
+            event_label = event.get("label", "").lower()
+            if event_label == "pedestrian":
+                event_count = event.get("num_pedestrians")
+                count_type = "pedestrian"
+            else:
+                event_count = event.get("num_vehicles") 
+                count_type = "vehicle"
+                
+            if event_count is None:
                 logger.info(
-                    "Rule did not match: vehicle count missing on event when rule requires it."
+                    f"Rule did not match: {count_type} count missing on event when rule requires it."
                 )
                 continue
-            if event_vehicle_count < threshold:
+            if event_count < threshold:
                 logger.info(
-                    f"Rule did not match: vehicle count {event_vehicle_count} below threshold {threshold}."
+                    f"Rule did not match: {count_type} count {event_count} below threshold {threshold}."
                 )
                 continue
 

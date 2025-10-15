@@ -5,9 +5,9 @@ This guide covers the integration of Intel Scenescape with Smart NVR for enhance
 ## Overview
 
 Smart NVR system integrates with Intel Scenescape to enable:
-- Real-time vehicle counting and tracking
+- Real-time object counting and tracking (vehicles, pedestrians)
 - Traffic flow analysis
-- Automated event routing based on vehicle thresholds
+- Automated event routing based on count thresholds
 - Enhanced surveillance for smart intersection management
 
 ## Prerequisites
@@ -30,6 +30,7 @@ export NVR_SCENESCAPE=true
 # MQTT Configuration (from browser.auth JSON)
 export SCENESCAPE_MQTT_USER="<user>"
 export SCENESCAPE_MQTT_PASSWORD="<password>"
+export SCENESCAPE_THROTTLE_INTERVAL=2.0  # Optional: throttle interval in seconds
 ```
 
 ### Step 3: Start Smart NVR
@@ -61,10 +62,10 @@ docker logs nvr-event-router -f
 
 When Scenescape is enabled (`NVR_SCENESCAPE=true`) and scenescape source is selected:
 - Source dropdown shows both **"frigate"** and **"scenescape"** options
-- **Vehicle Count** field becomes visible and editable
-- Users can set minimum vehicle threshold for rule triggering (e.g., 5, 10, 15)
-- Rules table includes "Vehicle Count" column for tracking thresholds
-- Vehicle count validation ensures non-negative integers only
+- **Count** field becomes visible and editable
+- Users can set minimum count threshold for rule triggering (e.g., 5, 10, 15)
+- Rules table includes "Count" column for tracking thresholds
+- Count validation ensures non-negative integers only
 
 ### With Scenescape Enabled but Frigate Source Selected
 
@@ -72,9 +73,9 @@ When Scenescape is enabled (`NVR_SCENESCAPE=true`) and scenescape source is sele
 
 When Scenescape is enabled but frigate source is selected:
 - Source dropdown still shows both **"frigate"** and **"scenescape"** options  
-- **Vehicle Count** field is automatically hidden (not applicable for frigate)
+- **Count** field is automatically hidden (not applicable for frigate)
 - Standard frigate rule configuration with detection labels
-- Rules table shows "Vehicle Count" column but displays "-" for frigate rules
+- Rules table shows "Count" column but displays "-" for frigate rules
 - Full frigate functionality remains available
 
 ### With Scenescape Completely Disabled (`NVR_SCENESCAPE=false`)
@@ -83,8 +84,8 @@ When Scenescape is enabled but frigate source is selected:
 
 When Scenescape is disabled in environment variables:
 - Source dropdown shows **only** "frigate" option
-- Vehicle Count field is never visible
-- Rules table **excludes** the "Vehicle Count" column entirely  
+- Count field is never visible
+- Rules table **excludes** the "Count" column entirely  
 - Pure frigate-only functionality and interface
 - Scenescape MQTT client will not start
 
@@ -95,15 +96,15 @@ When Scenescape is disabled in environment variables:
 **Steps (both sources):**
 1. Navigate to **Auto-Route Events** tab
 2. **Select Source:** "scenescape" or "frigate"
-3. **Set Vehicle Count:** (Scenescape only) Define minimum threshold (e.g., 5)
+3. **Set Count:** (Scenescape only) Define minimum threshold (e.g., 5)
 4. **Select Camera:** Choose target camera 
 5. **Choose Detection Label:** Select object type
 6. **Select Action:** "Summarize" or "Add to Search"
 7. **Click Add Rule**
 
 **Key Differences:**
-- **Scenescape:** Vehicle Count field visible when selected
-- **Frigate:** Vehicle Count field hidden
+- **Scenescape:** Count field visible when selected
+- **Frigate:** Count field hidden
 
 ### Rule Behavior Examples
 
@@ -111,11 +112,11 @@ When Scenescape is disabled in environment variables:
 ```
 Source: scenescape
 Camera: camera1
-Vehicle Count: 5
+Count: 5
 Label: vehicle
 Action: Summarize
 ```
-*Triggers video summarization when 5+ vehicles detected in backyard camera*
+*Triggers video summarization when 5+ vehicles detected in camera1*
 
 **Frigate Rule Example:**
 ```

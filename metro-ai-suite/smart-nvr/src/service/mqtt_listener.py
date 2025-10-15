@@ -29,7 +29,7 @@ def start_event_loop(loop):
 
 threading.Thread(target=start_event_loop, args=(event_loop,), daemon=True).start()
 
-def process_scenescape_objects(objects, scenescape_camera, start_time, end_time, num_vehicles, msg_topic):
+def process_scenescape_objects(objects, scenescape_camera, start_time, end_time, num_vehicles, num_pedestrians, msg_topic):
     """Process scenescape objects and trigger events for each object type."""
     for obj_type, obj_list in objects.items():
         if isinstance(obj_list, list) and obj_list:
@@ -39,6 +39,7 @@ def process_scenescape_objects(objects, scenescape_camera, start_time, end_time,
                 "start_time": start_time,
                 "end_time": end_time,
                 "num_vehicles": num_vehicles,
+                "num_pedestrians": num_pedestrians,
             }
             logger.info(f" Scenescape generated event: {event_data}")
 
@@ -121,29 +122,25 @@ def on_message(client, userdata, msg):
 
             objects = payload.get("objects", {})
             vehicle_list = []
+            pedestrian_list = []
             if isinstance(objects, dict):
                 vehicle_list = objects.get("vehicle", [])
+                pedestrian_list = objects.get("pedestrian", [])
             num_vehicles = len(vehicle_list)
-            if num_vehicles <= 0:
+            num_pedestrians = len(pedestrian_list)
+            if num_vehicles <= 0 and num_pedestrians <= 0:
                 return
             
             iso_timestamp = payload.get("timestamp", "")
             logger.info(f" Scenescape raw timestamp: {iso_timestamp}")
             formatted_timestamp = iso_to_frigate_timestamp(iso_timestamp)
             scenescape_camera = payload.get("id")
-            logger.info(f" Fetching events every {SCENESCAPE_THROTTLE_INTERVAL} seconds for Scenescape")
-            logger.info(f" Message received on topic : : {msg.topic} for vehicle count {num_vehicles}")
-            logger.info(
-                f" Scenescape message timestamp: {formatted_timestamp} |  Camera: {scenescape_camera} |  Number of vehicles: {num_vehicles} "
-            )
-
+            
             start_time = float(formatted_timestamp) - 15
             end_time = float(formatted_timestamp) - 5
 
-            logger.info(
-                f"Fetching scenescape clip for time {start_time} to {end_time}."
-            )
-            process_scenescape_objects(objects, scenescape_camera, start_time, end_time, num_vehicles, msg.topic)
+            logger.info(f" Scenescape event: {msg.topic} | Camera: {scenescape_camera} | Vehicles: {num_vehicles} | Pedestrians: {num_pedestrians} | Timestamp: {formatted_timestamp} | Clip: {start_time}-{end_time} | Throttle: {SCENESCAPE_THROTTLE_INTERVAL}s")
+            process_scenescape_objects(objects, scenescape_camera, start_time, end_time, num_vehicles, num_pedestrians, msg.topic)
 
         else:
             logger.warning(f" Unknown topic: {msg.topic}")
