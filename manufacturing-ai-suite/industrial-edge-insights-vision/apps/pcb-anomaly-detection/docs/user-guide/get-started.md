@@ -125,33 +125,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     Payload for pipeline 'pcb_anomaly_detection' posted successfully. Response: "f0c0b5aa5d4911f0bca7023bb629a486"
     ```
 
-    ```bash
-    ./sample_start.sh -p pcb_anomaly_detection_gpu
-    ```
-
-    This command will look for the payload for the pipeline specified in the `-p` argument above, inside the `payload_gpu.json` file and launch a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different available options.
-
-    Output:
-
-    ```bash
-    # Example output for PCB Anomaly Detection
-    Environment variables loaded from[WORKDIR]/manufacturing-ai-suite/industrial-edge-insights-vision/.env
-    Running sample app: pcb-anomaly-detection
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Using GPU payload file based on DEVICE=GPU
-    Loading payload from [WORKDIR]/manufacturing-ai-suite/
-    industrial-edge-insights-vision/apps/pcb-anomaly-detection/payload_gpu.json
-    Payload loaded successfully.
-    Starting pipeline: pcb_anomaly_detection_gpu
-    Launching pipeline: pcb_anomaly_detection_gpu
-    Extracting payload for pipeline: pcb_anomaly_detection_gpu
-    Found 1 payload(s) for pipeline: pcb_anomaly_detection_gpu
-    Payload for pipeline 'pcb_anomaly_detection_gpu' {"source":{"uri":"file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"anomaly"}},"parameters":{"classification-properties":{"model":"/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml","device":"GPU"}}}
-    Posting payload to REST server at https://10.107.248.78/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_gpu
-    Payload for pipeline 'pcb_anomaly_detection_gpu' posted successfully. Response: "8b20d362a5c211f0a58caedecd052c61"
-    ```
-
     > **NOTE:** This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser at the following url:
 
     ```bash
