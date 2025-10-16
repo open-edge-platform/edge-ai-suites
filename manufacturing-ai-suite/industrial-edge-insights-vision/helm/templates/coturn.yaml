@@ -5,7 +5,7 @@ metadata:
   name: coturn
   namespace: {{ .Values.namespace }}
 spec:
-  type: NodePort  # Exposes the service externally
+  type: ClusterIP  # Exposes the service externally
   selector:
     app: coturn
   ports:
@@ -13,12 +13,10 @@ spec:
       protocol: TCP
       port: {{ $.Values.config.coturn.int.coturn_tcp_port }}
       targetPort: {{ $.Values.config.coturn.int.coturn_tcp_port }}
-      nodePort: {{ $.Values.config.coturn.ext.coturn_tcp_port }}  # Exposed on the node
     - name: "coturn-udp"
       protocol: UDP
       port: {{ $.Values.config.coturn.int.coturn_udp_port }}
       targetPort: {{ $.Values.config.coturn.int.coturn_udp_port }}
-      nodePort: {{ $.Values.config.coturn.ext.coturn_udp_port }}
 ---
 apiVersion: apps/v1
 kind: Deployment
