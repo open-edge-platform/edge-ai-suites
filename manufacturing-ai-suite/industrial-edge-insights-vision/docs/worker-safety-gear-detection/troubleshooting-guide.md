@@ -115,7 +115,7 @@ For example:
 `ERROR vafilter gstvafilter.c:390:gst_va_filter_open:<vafilter0> vaCreateContext: resource allocation failed`
 
 This issue has been observed on systems with the Ultra Core 7 265K processor running Ubuntu 22.04.
-There are few options to fix this. 
+There are few options to fix this.
 
 One is updating the kernel to `6.11.11-061111-generic` in the host system.
 
