@@ -38,39 +38,12 @@ You can either generate or download the Helm charts.
     - To generate the Helm charts:
     
         ```bash
-        cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series # path relative to git clone folder
+        cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal # path relative to git clone folder
 
-        make gen_helm_charts app=wind-turbine-anomaly-detection
-
+        make gen_helm_charts 
+        
         cd helm/
         ```
-
-- Weld Anomaly Detection Sample App
-
-    - To download the Helm charts:
-
-        Follow this procedure on the target system to install the package.
-
-        1. Download Helm chart with the following command:
-
-            `helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 1.0.0-weekly`
-
-        2. Unzip the package using the following command:
-
-            `tar -xvzf weld-anomaly-detection-sample-app-1.0.0-weekly.tgz`
-
-        - Get into the Helm directory:
-
-            `cd weld-anomaly-detection-sample-app`
-
-    - To generate the Helm charts:
-      ```bash
-        cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series # path relative to git clone folder
-
-        make gen_helm_charts app=weld-anomaly-detection
-
-        cd helm/
-      ```
 
 ## Step 2: Configure and update the environment variables
 
@@ -81,11 +54,10 @@ You can either generate or download the Helm charts.
     INFLUXDB_PASSWORD:
     VISUALIZER_GRAFANA_USER:
     VISUALIZER_GRAFANA_PASSWORD:
-    POSTGRES_PASSWORD:
-    MINIO_ACCESS_KEY:  
-    MINIO_SECRET_KEY: 
     HTTP_PROXY: # example: http_proxy: http://proxy.example.com:891
     HTTPS_PROXY: # example: http_proxy: http://proxy.example.com:891
+    MTX_WEBRTCICESERVERS2_0_USERNAME:
+    MTX_WEBRTCICESERVERS2_0_PASSWORD
     ```
 
 ## Step 3: Install Helm charts 
@@ -95,19 +67,11 @@ You can either generate or download the Helm charts.
 > 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in `values.yaml` file.
 
-**Wind Turbine Anomaly Detection**
-
 To install Helm charts, use one of the following options:
 
     ```bash
     helm install multimodal-weld-defect-detection . -n multimodal-sample-app --create-namespace
     ```
-
-**Weld Anomaly Detection**
-
-```bash
-helm install ts-weld-anomaly . -n ts-sample-app --create-namespace
-```
 
 **Verify Installation:**
 Use the following command to verify if all the application resources got installed w/ their status:
