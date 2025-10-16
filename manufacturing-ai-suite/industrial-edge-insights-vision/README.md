@@ -2,14 +2,14 @@
 The industrial edge insights for vision is a template for users to create sample applications intended for industrial use cases on the edge.
 Users can refer to one of many samples built from the template as a reference.
 
-By adding minimal application specific pre-requisites, the boiler plate code this template provides can help you successfully deploy your application on the edge. 
+By adding minimal application specific pre-requisites, the boiler plate code this template provides can help you successfully deploy your application on the edge.
 
 Both compose based as well as helm based deployments are supported by this application template.
 
 ## Description
 
 ### Architecture
-It consists of the following microservices: 
+It consists of the following microservices:
 - DL Streamer Pipeline Server
 - Model Registry Microservice(MRaaS)
 - MediaMTX server, Coturn server
@@ -31,8 +31,8 @@ Following directory structure consisting of generic deployment code as well as p
 <br>
 
     apps/
-        application_name/            
-            configs/                
+        application_name/
+            configs/
                 pipeline-server-config.json
             setup.sh
             payload.json
@@ -49,10 +49,10 @@ Following directory structure consisting of generic deployment code as well as p
         application_name/
             models/
             videos/
-    
+
     .env_app_name
     docker-compose.yml
-    
+
     setup.sh
     sample_list.sh
     sample_start.sh
@@ -61,13 +61,13 @@ Following directory structure consisting of generic deployment code as well as p
 
  - **apps**: containing application specific pre-requisite installers, configurations and runtime data. Users can follow the same structure to create their own application. The data from here is used for docker based deployments.
 
-    - *configs/*: 
+    - *configs/*:
             associated container configurations such as DLStreamer Pipeline Server configuration, etc.
-    - *setup.sh*: 
+    - *setup.sh*:
             pre-requisite installer to setup envs, download artificats such as models/videos to `resources/` directory. It also sets executable permissions for scripts.
-    - *payload.json*: 
+    - *payload.json*:
             A JSON array file containing one or more request(s) to be sent to DLStreamer Pipeline Server to launch GStreamer pipeline(s). The payload data is associated with the *configs/pipeline-server-config.json* provided for that application. Each JSON inside the array has two keys- `pipeline` and `payload` that refers to the pipeline it belongs to and the payload used to launch an instance of the pipeline.
-            
+
  - **helm**: contains helm charts and application specific pre-requisite installers, configurations and runtime data. The configs and data within it are similar to **apps** but are kept here for easy packaging.
 
  - **resources**: This directory and its subdirs are created only after installation is done by running `setup.sh` for that application. It contains artificacts such as models, videos etc. Users can modify their application's `setup.sh` script to download artifacts as per their usecase requirements.
@@ -77,7 +77,7 @@ Following directory structure consisting of generic deployment code as well as p
  - **docker-compose.yml**: A generic, parameterized compose file that can launch a particular sample application defined in the environment variable `SAMPLE_APP`.
 
  ### Script description
- 
+
  | Shell Command         | Description                              | Parameters                    |
 |-----------------------|----------------------------------------|-------------------------------|
 | `./setup.sh`     | Runs pre-requisites and app specific installer                   | *(none)*                      |
@@ -94,7 +94,7 @@ Please ensure that you have the correct version of the DL Streamer Pipeline Serv
 
 ## Getting Started
 
-### Docker based deployment 
+### Docker based deployment
 
 General instructions for docker based deployment is as follows.
 
@@ -110,7 +110,7 @@ General instructions for docker based deployment is as follows.
 Using the template above, several industrial recipies have been provided for users to deploy using docker compose.
 Click on the applications below to get started.
 
-* [Pallet Defect Detection](apps/pallet-defect-detection/docs/user-guide/get-started.md)
+* [Pallet Defect Detection](./docs/pallet-defect-detection/get-started.md)
 * [PCB Anomaly Detection](apps/pcb-anomaly-detection/docs/user-guide/get-started.md)
 * [Weld Porosity Classfication](apps/weld-porosity/docs/user-guide/get-started.md)
 * [Worker Safety Gear Detection](apps/worker-safety-gear-detection/docs/user-guide/get-started.md)
