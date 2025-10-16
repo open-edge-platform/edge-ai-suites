@@ -23,10 +23,6 @@ operational efficiency.
    system-requirements
    get-started
    how-to-build-from-source
-   how-to-deploy-with-helm
-   how-to-configure-custom-udf
    how-to-configure-alerts
-   how-to-enable-system-metrics
    how-to-update-config
-   how-to-create-a-new-sample-app
    release_notes/Overview
