@@ -54,8 +54,8 @@ BROKER = os.getenv("MQTT_BROKER", "localhost")
 
 # MQTT Topic Configuration
 VISION_TOPIC = os.getenv("VISION_TOPIC", "vision_weld_defect_classification")
-TS_TOPIC = os.getenv("TS_TOPIC", "ts_weld_defect_detection")
-FUSION_TOPIC = os.getenv("FUSION_TOPIC", "fusion/anomaly")
+TS_TOPIC = os.getenv("TS_TOPIC", "ts_weld_anomaly_detection")
+FUSION_TOPIC = os.getenv("FUSION_TOPIC", "fusion/anomaly_detection_results")
 
 # Timestamp Matching Configuration
 # 50 ms tolerance (in nanoseconds) for matching messages by timestamp
@@ -63,11 +63,11 @@ TOLERANCE_NS = int(float(os.getenv("TOLERANCE_NS", 50e6)))
 # Fusion Logic Configuration
 # "AND" means both systems must detect anomaly to raise alert
 # "OR" means either system detecting anomaly raises alert
-FUSION_MODE = str(os.getenv("FUSION_MODE", "AND"))  # "AND" or "OR"
+FUSION_MODE = str(os.getenv("FUSION_MODE", "OR"))  # "AND" or "OR"
 logger.debug(type(FUSION_MODE), FUSION_MODE)
 
 if FUSION_MODE not in ["AND", "OR"]:
-    raise ValueError(f"FUSION_MODE must be 'AND' or 'OR' given value is {FUSION_MODE}mhhvmhvmh")
+    raise ValueError(f"FUSION_MODE must be 'AND' or 'OR' given value is {FUSION_MODE}")
 
 # ===================== UTILITY FUNCTIONS =====================
 
@@ -233,7 +233,17 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     # Check if a matching message was found within tolerance
     if target_index is None:
         # No matching entry found, return partial result
-        return {"from": source_entry, "nearest": None, "mode": mode, "fused_decision": None}
+        return {
+            "from": source_entry, 
+            "nearest": None, 
+            "mode": mode, 
+            "fused_decision": None, 
+            "source_queue": source_queue,
+            "target_queue": target_queue,
+            "vision_anomaly": 0,
+            "timeseries_anomaly": 0,
+            "vision_classification": ""
+        }
 
     logger.debug(f"Found nearest message at index: {target_index}")
     
@@ -241,20 +251,30 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     target_entry = queues[target_queue][target_index]
     del queues[target_queue][target_index]
 
+    vision_classification = "No Label"
+
+    data_dict = {}
+
     # Extract anomaly decisions from both messages
     if source_queue == "vision":
         # Vision message processed first
         vision_confidence = source_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["confidence"]
         timeseries_anomaly = target_entry["anomaly_status"]
+        data_dict = source_entry
     else:
         # Time-series message processed first
         vision_confidence = target_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["confidence"]
         timeseries_anomaly = source_entry["anomaly_status"]
+        data_dict = target_entry
+        
+    if "metadata" in data_dict and "label" in data_dict["metadata"]["objects"][0]["classification_layer_name:output1"]:
+            vision_classification = str(data_dict["metadata"]["objects"][0]["classification_layer_name:output1"]["label"])
     
     # Convert vision confidence to binary decision (threshold at 0.5)
     vision_anomaly = 1 if vision_confidence > 0.5 else 0
     
-    
+    if vision_classification == "No_Weld" or vision_classification == "Good_Weld":
+        vision_anomaly = 0
     
     # Apply fusion logic based on selected mode
     if mode == "AND":
@@ -263,12 +283,17 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     else:  # mode == "OR"
         # Either system detecting anomaly triggers alert
         fused_decision = vision_anomaly | timeseries_anomaly
-    logger.info(f"Vision anomaly: {vision_anomaly}, TS anomaly: {timeseries_anomaly} fused decision: {fused_decision}")
+    logger.info(f"Vision_Anomaly Type: {vision_classification}, Vision anomaly: {vision_anomaly}, TS anomaly: {timeseries_anomaly} fused decision: {fused_decision}")
     return {
         "from": source_entry,
         "nearest": target_entry,
         "mode": mode,
-        "fused_decision": fused_decision
+        "fused_decision": fused_decision,
+        "source_queue": source_queue,
+        "target_queue": target_queue,
+        "vision_anomaly": vision_anomaly,
+        "timeseries_anomaly": timeseries_anomaly,
+        "vision_classification": vision_classification
     }
 
 
@@ -314,21 +339,30 @@ def main():
                 logger.debug("=" * 60)
                 # Write fused result to InfluxDB (InfluxDB v1.11.8)
 
-                ts = result["from"]["time"] if "time" in result["from"] else result["from"]["metadata"]["time"]
-                json_body = [{
-                    "measurement": "fusion_result",
-                    "time": pd.to_datetime(ts, unit="ns").isoformat(),
-                    "fields": {
-                        "fused_decision": int(result["fused_decision"] if result["fused_decision"] is not None else -1),
-                        "mode": str(result["mode"])
-                    }
-                }]
-                influx_client.write_points(json_body)
-                
-                
+                if result["fused_decision"] is not None:
+                    ts = result["from"]["time"] if "time" in result["from"] else result["from"]["metadata"]["time"]
+                    
+                    json_body = [{
+                        "measurement": "fusion_result",
+                        "time": pd.to_datetime(ts, unit="ns").isoformat(),
+                        "fields": {
+                            "fused_decision": int(result["fused_decision"]),
+                            "mode": str(result["mode"]),
+                            "vision_classification": result["vision_classification"],
+                            "ts_anomaly": (
+                                str(result["nearest"]["anomaly_status"])
+                                if "anomaly_status" in result["nearest"]
+                                else str(result["from"]["anomaly_status"])
+                            ),
+                            "vision_anomaly": int(result["vision_anomaly"]),
+                            "timeseries_anomaly": int(result["timeseries_anomaly"])
+                        }
+                    }]
+                    influx_client.write_points(json_body)
 
-                # TODO: Publish fused result to FUSION_TOPIC if needed
-                # client.publish(FUSION_TOPIC, json.dumps(result))
+                    json_body[0]["fields"]["time"] = json_body[0]["time"]
+                    # Publish fused result to FUSION_TOPIC if needed
+                    client.publish(FUSION_TOPIC, json.dumps(json_body[0]["fields"]))
 
     except KeyboardInterrupt:
         logger.info("\nShutting down Fusion Analytics...")

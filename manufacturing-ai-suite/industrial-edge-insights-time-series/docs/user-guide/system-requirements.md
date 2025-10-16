@@ -20,9 +20,8 @@ This page provides detailed hardware, software, and platform requirements to hel
 
 ## Validation
 
-- Ensure all required software are installed and configured before proceeding to [Get Started](./get-started.md).
+- Ensure all required software is installed and configured before proceeding to [Get Started](./get-started.md).
 
 ## Supporting Resources
 
-* [Overview](Overview.md)
 * [Get Started Guide](get-started.md)

@@ -68,7 +68,7 @@ transform it to robot reference system, and these numbers give the relation betw
 .. _universal_robot_configuration:
 
 Universal Robots Configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The real robot or the simulator has to be configured to accept 
 connection from RVC and configure the RVC system for real time capabilities

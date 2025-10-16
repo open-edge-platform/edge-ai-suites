@@ -9,3 +9,5 @@ helm/*.yaml
 helm/*.conf
 helm/*.sh
 helm/*.csv
+
+.venv/

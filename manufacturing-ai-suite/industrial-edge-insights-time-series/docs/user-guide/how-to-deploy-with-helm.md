@@ -53,11 +53,11 @@ You can either generate or download the Helm charts.
 
         1. Download Helm chart with the following command:
 
-            `helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 1.1.0-weekly`
+            `helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 1.0.0-weekly`
 
         2. Unzip the package using the following command:
 
-            `tar -xvzf weld-anomaly-detection-sample-app-1.1.0-weekly.tgz`
+            `tar -xvzf weld-anomaly-detection-sample-app-1.0.0-weekly.tgz`
 
         - Get into the Helm directory:
 

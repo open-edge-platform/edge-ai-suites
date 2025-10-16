@@ -3,7 +3,7 @@
 This document describes the syntax and examples of APIs exposed by the AI Inference Service.
 
 ## RESTful API
-### Overview
+### Overview of RESTful API
 
 -   ***Verb***:
 ```
@@ -55,7 +55,7 @@ POST
 }
 
 ```
-### Request
+### RESTful Request Parameters
 | Property Name   | Value | Description                 | Notes      |
 |---|---|---|----|
 | pipelineConfig         | string     | Contains the pipeline topology that server will execute. The syntax should follow HVA pipeline framework serialized pipeline format. | Serialized from a JSON structure above|
@@ -64,7 +64,7 @@ POST
 
 <center> Table 1. Properties of Request in RESTful API. </center>
 
-#### pipelineConfig
+#### Details: pipelineConfig Parameter
 
 This parameter is serialized from a JSON structure, which contains the topology of a pipeline executed by a server. Its syntax should follow the serialized pipeline format defined in the HVA pipeline framework.
 
@@ -82,7 +82,7 @@ The part "ProcessingNode" should contain at least one node and other parts must 
 
 Besides, the link topology in pipeline topology should also be defined.
 
-#### mediaUri
+#### Details: mediaUri Parameter
 
 This property contains a list of input items. It should contain the descriptor or the actual contents in inputs to the specified pipeline. Its actual format depends on the ***InputNode*** within the pipeline parsing this value.
 
@@ -170,7 +170,7 @@ Here's a pipeline definition example for this type of ***InputNode***
     "Is Source Node": "true"
 }
 ```
-#### An Example of Request
+#### RESTful Request Example
 
 The following is an example of sending a request to AI Inference Service via RESTful API.
 ```vim
@@ -234,7 +234,7 @@ Content-Length: 81508
 }                      
 
 ```
-### Response
+### RESTful Response Format
 
 ***An example of Response JSON:***
 ```vim
@@ -288,7 +288,7 @@ The following part only exist when output node is configured as
 |result.roi_info.attribute.type_score|float|Predicted confidence for type of the detected bounding box.|Value range: [0, 1.0]|
 
 
-### Return Values
+### RESTful Return Values
 
 Upon completing the user requests, AI Inference Service will return one of the following three responses under different conditions.
 
@@ -306,7 +306,7 @@ Upon completing the user requests, AI Inference Service will return one of the f
 
 ## gRPC API
 
-### Overview
+### Overview of gRPC API
 
 ***Request Syntax***
 ```vim
@@ -333,7 +333,7 @@ Upon completing the user requests, AI Inference Service will return one of the f
 	"binary": bytes
 }
 ```
-### Request
+### gRPC Request Parameters
 | Property Name | Value | Description | Notes |
 |-----------------------|--|--|--|
 |pipelineConfig|string|Contains the pipeline topology that server will execute.The syntax should follow HVA pipeline framework serialized pipeline format.Can be optional if field “jobHandle” is not None.| Serialized from a JSON structure|
@@ -344,7 +344,7 @@ Upon completing the user requests, AI Inference Service will return one of the f
 
 <center> Table 3. Properties of Request in gRPC API. </center>
 
-#### Process Targets
+#### gRPC Process Targets
 
 -   ***target: run***
 
@@ -364,7 +364,7 @@ Upon completing the user requests, AI Inference Service will return one of the f
 
     -   Note that the jobHandle should be the existing handle, which can be fetched through target: load_pipeline.
 
-### Response
+### gRPC Response Format
 
 ***Response Syntax***
 ```vim
@@ -389,11 +389,11 @@ Upon completing the user requests, AI Inference Service will return one of the f
 
 <center> Table 4. Properties of Response in gRPC API. </center>
 
-#### Response: message
+#### gRPC Response: message
 
 This section describes the response schema for the property of ***message***. Depending on the process target field, the message contents of ***Response*** will vary accordingly. See details in the following sub-sections.
 
-##### For process target: run
+##### gRPC process target: run
 
 This section describes the response schema for the property of ***message***, when the process target is set as "run".
 
@@ -516,7 +516,7 @@ This section describes the response schema for the property of ***message***, wh
 |1|Service succeeded but no detected ROI|
 |0|Service succeeded|
 |-1|Service failed due to invalid media format|
-## 4.0 HVA Framework Pipeline Schema
+## HVA Framework Pipeline Schema
 
 ### Pipeline Configure Schema
 
