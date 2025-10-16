@@ -57,9 +57,9 @@ spec:
         command: ["/bin/bash", "-c", "/usr/local/bin/nginx-cert-gen.sh && exec nginx -g 'daemon off;'"]
         env:
         - name: no_proxy
-          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }}"
+          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }},dlstreamer-pipeline-server"
         - name: NO_PROXY
-          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }}"
+          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }},dlstreamer-pipeline-server"
         - name: HOST_IP
           value: "{{ .Values.env.HOST_IP }}"
         - name: WHIP_SERVER_PORT

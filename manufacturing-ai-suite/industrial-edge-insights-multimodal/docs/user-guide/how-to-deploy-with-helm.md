@@ -17,33 +17,32 @@ This guide provides step-by-step instructions for deploying the Wind Turbine Ano
 
 You can either generate or download the Helm charts.
 
-- Wind Turbine Anomaly Detection Sample App
 
-    - To download the Helm charts:
+- To download the Helm charts:
 
-        Follow this procedure on the target system to install the package.
+    Follow this procedure on the target system to install the package.
 
-        1. Download Helm chart with the following command:
+    1. Download Helm chart with the following command:
 
-            `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-weekly`
+        `helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 1.1.0-weekly`
 
-        2. Unzip the package using the following command:
+    2. Unzip the package using the following command:
 
-            `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-weekly.tgz`
+        `tar -xvzf multimodal-weld-defect-detection-sample-app-1.0.0-weekly.tgz`
 
-        - Get into the Helm directory:
+    - Get into the Helm directory:
 
-            `cd wind-turbine-anomaly-detection-sample-app`
+        `cd multimodal-weld-defect-detection-sample-app`
 
-    - To generate the Helm charts:
+- To generate the Helm charts:
+
+    ```bash
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal # path relative to git clone folder
+
+    make gen_helm_charts 
     
-        ```bash
-        cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal # path relative to git clone folder
-
-        make gen_helm_charts 
-        
-        cd helm/
-        ```
+    cd helm/
+    ```
 
 ## Step 2: Configure and update the environment variables
 
@@ -80,38 +79,25 @@ Use the following command to verify if all the application resources got install
    kubectl get all -n multimodal-sample-app
 ```
 
-## Step 4: Copy the udf package for helm deployment to Time Series Analytics Microservice
+## Step 4: Copy the udf package for helm deployment to 
 
-**Wind Turbine Anomaly Detection**
+**DLStreamer Pipeline Server**
 
-To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
+To copy your own or existing model into TDLStreamer Pipeline Server in order to run this sample application in Kubernetes environment:
 
-1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config`. 
+1. The following model package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server/`. 
 
-    ```
-    - time-series-analytics-config/
-        - models/
-            - windturbine_anomaly_detector.pkl
-        - tick_scripts/
-            - windturbine_anomaly_detector.tick
-        - udfs/
-            - requirements.txt
-            - windturbine_anomaly_detector.py
-    ```
+2. Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
 
-2. Copy your new UDF package (using the windturbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
     ```sh
-    export SAMPLE_APP="wind-turbine-anomaly-detection"
-    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config # path relative to git clone folder
-    mkdir -p $SAMPLE_APP
-    cp -r models tick_scripts udfs $SAMPLE_APP/.
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server/
 
-    POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
+    POD_NAME=$(kubectl get pods -n multimodal-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
-    kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
+    kubectl cp weld-porosity $POD_NAME:/home/pipeline-server/resources/ -c dlstreamer-pipeline-server -n multimodal-sample-app
     ```
 
-**Weld Anomaly Detection**
+**Time Series Analytics Microservice**
 
 To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
@@ -143,7 +129,33 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 > **Note:**
 > Run the commands only after performing the Helm install.
 
-## Step 5: Activate the New UDF Deployment Package
+## Step 5: Activate the Pipeline/UDF Deployment Package
+
+
+**DLStreamer Pipeline Server**
+
+You use a Client URL (cURL) command to start the pipeline.
+
+In this example, a pipeline included in this sample application is `pallet_defect_detection`. Start this pipeline with the following cURL command.
+
+        curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification -X POST -H 'Content-Type: application/json' -d '{
+            "destination": {
+                "metadata": {
+                    "type": "mqtt",
+                    "topic": "vision_weld_defect_classification"
+                },
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "samplestream"
+                }
+            },
+            "parameters": {
+                "classification-properties": {
+                    "model": "/home/pipeline-server/resources/weld-porosity/models/weld-porosity-f16-DeiT/deployment/Classification/model/model.xml",
+                    "device": "CPU"
+                }
+            }
+        }'
 
 > **NOTE**: To activate the UDF inferencing on GPU, additionally run the following command as a prerequisite before activating the UDF deployment package:
 > ```sh

@@ -17,11 +17,9 @@ spec:
   - name: "rest-api"
     port: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
     targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
-    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rest_api_port }}
   - name: "rtsp-output-streaming"
     port: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
     targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
-    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rtsp_output_port }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -91,15 +89,13 @@ spec:
           mountPath: /run/udev
         - name: {{ $.Values.volumes.pipelines.name }}
           mountPath: {{ $.Values.volumes.pipelines.location }}
-        - name: {{ $.Values.volumes.models.name }}
-          mountPath: {{ $.Values.volumes.models.location }}
         - name: dlstreamer-pipeline-server-input
           mountPath: /home/pipeline-server/config.json
           subPath: config.json
         - name: model-registry-temp-models
           mountPath: /home/pipeline-server/mr_models
         - name: pipeline-resources-models
-          mountPath: /home/pipeline-server/resources/models
+          mountPath: /home/pipeline-server/resources/
         - name: pipeline-resources-videos
           mountPath: /home/pipeline-server/resources/videos
         env:
@@ -185,10 +181,6 @@ spec:
         emptyDir: {}
       - name: pipeline-resources-videos
         emptyDir: {}
-      - name: {{ $.Values.volumes.models.name }}
-        hostPath:
-          path: {{ $.Values.volumes.models.hostpath }}
-          #type: DirectoryOrCreate
       - name: {{ $.Values.volumes.pipelines.name }}
         hostPath:
           path: {{ $.Values.volumes.pipelines.hostpath }}

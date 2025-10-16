@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+
 namespace: multimodal-sample-app
 # Please provide docker registry details below for docker images pull/push operations.
 # Please provide full registry url with port trail by /
@@ -18,15 +19,19 @@ env:
   # Do not set INFLUXDB_USERNAME to 'admin'.
   INFLUXDB_USERNAME: 
 
+
   # The INFLUXDB_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit
   # Do not use the following special characters in the INFLUXDB_PASSWORD "~:'+[/@^{%(-"*|,&<`}._=}!>;?#$)\"
   INFLUXDB_PASSWORD: 
 
+
   # The VISUALIZER_GRAFANA_USER must contain only alphabets and be at least 5 characters minimum
   VISUALIZER_GRAFANA_USER: 
 
+
   # The VISUALIZER_GRAFANA_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit
   VISUALIZER_GRAFANA_PASSWORD: 
+
 
   # If your environment requires a proxy to access external resources, please set the following variables.
   # If no proxy is required, please leave them empty.
@@ -55,8 +60,10 @@ env:
   HOST_IP: 10.106.147.4
   REST_SERVER_PORT: 8080
 
+
   # DL Streamer Pipeline Server
   RTSP_CAMERA_IP: mediamtx
+
 
   # Open Telemetry related config
   ENABLE_OPEN_TELEMETRY: false
@@ -65,6 +72,7 @@ env:
   OTEL_EXPORT_INTERVAL_MILLIS: 5000
   PROMETHEUS_PORT: 9999
 
+
   # Webrtc related config
   # mediamtx-port for streaming
   WHIP_SERVER_PORT: 8889
@@ -72,10 +80,12 @@ env:
   MTX_WEBRTCICESERVERS2_0_PASSWORD: 
   COTURN_UDP_PORT: 3478
 
+
   TS_TOPIC: weld-data
   SIMULATION_TARGET_FPS: "10"
   FUSION_MODE: OR
   TOLERANCE_NS: "50e6"
+
 
 gpu:
   enabled: false
@@ -147,9 +157,6 @@ config:
     int:
       rest_api_port: "8080"
       rtsp_output_port: "8554"
-    ext:
-      rest_api_port: "30107"
-      rtsp_output_port: "30125"
 
   coturn:
     name: coturn
@@ -165,8 +172,3 @@ volumes:
     size: 100Mi
     location: "/home/pipeline-server/pipelines"
     hostpath: "/opt/intel/eii/pipelines"
-  models:
-    name: vol-models
-    size: 500Mi
-    location: "/home/pipeline-server/resources/weld-porosity"
-    hostpath: "/home/ecgv-d19-l3t19/coderepo/1510/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server/weld-porosity"
