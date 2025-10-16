@@ -2,13 +2,12 @@
 
 ## Table of Contents
 
-[Pallet Defect Detection](./pallet-defect-detection/index.rst)
 [PCB Anomaly Detection](./pcb-anomaly-detection/index.rst)
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
-pallet-defect-detection/index
+pcb-anomaly-detection/index
 :::
 hide_directive-->
