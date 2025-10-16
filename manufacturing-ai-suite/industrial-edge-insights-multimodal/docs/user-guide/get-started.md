@@ -159,7 +159,7 @@ Use the following command to verify that all containers are active and error-fre
 make status
 ```
 
-## Verify the Wind Turbine Anomaly Detection Results
+## Verify the Weld Defect Detection Results
 
 1. Get into the InfluxDB* container:
 

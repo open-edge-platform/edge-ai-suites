@@ -110,8 +110,6 @@ spec:
           value: "1883" 
         - name: MODEL_REGISTRY_URL
           value: "http://model-registry:8111"
-        - name: SAMPLE_APP
-          value: '{{ .Values.env.SAMPLE_APP }}'
         - name: REST_API_ROOT_PATH
           value: "/ts-api"
       volumes:

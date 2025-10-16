@@ -53,7 +53,7 @@ spec:
         - name: VISION_TOPIC
           value: "vision_weld_defect_classification"
         - name: TS_TOPIC
-          value: "ts_weld_defect_detection"
+          value: "ts_weld_anomaly_detection"
         - name: FUSION_TOPIC
           value: "fusion/anomaly"
         # Performance Configuration

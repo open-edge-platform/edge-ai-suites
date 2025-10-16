@@ -101,10 +101,10 @@ To copy your own or existing model into TDLStreamer Pipeline Server in order to 
 
 To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
-1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config`. 
+1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice`. 
 
     ```
-    - time-series-analytics-config/
+    - time-series-analytics-microservice/
         - models/
             - weld_anomaly_detector.cb
         - tick_scripts/
@@ -116,14 +116,13 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 
 2. Copy your new UDF package (using the windturbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
     ```sh
-    export SAMPLE_APP="weld-anomaly-detection"
-    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config # path relative to git clone folder
-    mkdir -p $SAMPLE_APP
-    cp -r models tick_scripts udfs $SAMPLE_APP/.
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice # path relative to git clone folder
+    mkdir -p weld_anomaly_detector
+    cp -r models tick_scripts udfs weld_anomaly_detector/.
 
-    POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
+    POD_NAME=$(kubectl get pods -n multimodal-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
 
-    kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
+    kubectl cp weld_anomaly_detector $POD_NAME:/tmp/ -n multimodal-sample-app
     ```
 
 > **Note:**
@@ -157,10 +156,12 @@ In this example, a pipeline included in this sample application is `pallet_defec
             }
         }'
 
+**Time Series Analytics Microservice**
+
 > **NOTE**: To activate the UDF inferencing on GPU, additionally run the following command as a prerequisite before activating the UDF deployment package:
 > ```sh
 > curl -k -X 'POST' \
-> 'https://<HOST_IP>:30001/ts-api/config' \
+> 'https://localhost:30001/ts-api/config' \
 > -H 'accept: application/json' \
 > -H 'Content-Type: application/json' \
 > -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json with device
@@ -171,28 +172,21 @@ In this example, a pipeline included in this sample application is `pallet_defec
 Run the following command to activate the UDF deployment package:
 ```sh
 curl -k -X 'GET' \
-  'https://<HOST_IP>:30001/ts-api/config?restart=true' \
+  'https://localhost:30001/ts-api/config?restart=true' \
   -H 'accept: application/json'
 ```
 
 ## Step 6: Verify the Results
 
-Follow the verification steps in the [Get Started guide](get-started.md):
-- [Wind Turbine Anomaly Detection Results](get-started.md#verify-the-wind-turbine-anomaly-detection-results)
-- [Weld Anomaly Detection Results](get-started.md#verify-the-weld-anomaly-detection-results)
+Follow the verification steps in the [Get Started guide](get-started.md#verify-the-weld-defect-detection-results)
 
 ## Uninstall Helm Charts
 
 To uninstall Helm charts:
 
 ```sh
-# Wind Turbine Anomaly Detection
-helm uninstall ts-wind-turbine-anomaly -n ts-sample-app
-kubectl get all -n ts-sample-app # It may take a few minutes for all application resources to be cleaned up.
-
-# Weld Anomaly Detection
-helm uninstall ts-weld-anomaly -n ts-sample-app
-kubectl get all -n ts-sample-app # It may take a few minutes for all application resources to be cleaned up.
+helm uninstall multimodal-weld-defect-detection -n multimodal-sample-app
+kubectl get all -n multimodal-sample-app # It may take a few minutes for all application resources to be cleaned up.
 ```
 
 ## Configure Alerts in Time Series Analytics Microservice
@@ -207,7 +201,7 @@ To deploy the application with a custom UDF, follow the steps [here](./how-to-co
 
 - Check pod details or container logs to diagnose failures:
     ```sh
-    kubectl get pods -n ts-sample-app
-    kubectl describe pod <pod_name> -n ts-sample-app # Shows details of the pod
-    kubectl logs -f <pod_name> -n ts-sample-app # Shows logs of the container in the pod
+    kubectl get pods -n multimodal-sample-app
+    kubectl describe pod <pod_name> -n multimodal-sample-app # Shows details of the pod
+    kubectl logs -f <pod_name> -n multimodal-sample-app # Shows logs of the container in the pod
     ```
