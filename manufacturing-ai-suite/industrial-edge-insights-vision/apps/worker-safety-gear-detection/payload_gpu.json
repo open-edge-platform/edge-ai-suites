@@ -9,7 +9,7 @@
             "destination": {
                 "frame": {
                     "type": "webrtc",
-                    "peer-id": "worker_safety"
+                    "peer-id": "worker_safety_gpu"
                 }
             },
             "parameters": {
