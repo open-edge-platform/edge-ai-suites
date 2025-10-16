@@ -9,7 +9,7 @@
             "destination": {
                 "frame": {
                     "type": "webrtc",
-                    "peer-id": "anomaly"
+                    "peer-id": "anomalygpu"
                 }
             },
             "parameters": {
