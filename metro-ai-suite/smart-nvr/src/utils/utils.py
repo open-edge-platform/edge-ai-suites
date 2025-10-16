@@ -34,14 +34,36 @@ def upload_single_video_with_retry(file_path, max_retries=3):
         pass
     logger.info(f"[Upload] Starting upload attempts for {file_path} (sanitized='{sanitized_name}' size={file_size})")
 
+    camera_name = None
+    try:
+        parts = file_path.split(os.sep)
+        for i, part in enumerate(parts):
+            if re.match(r"^\d{4}-\d{2}-\d{2}$", part) and i + 2 < len(parts):
+                camera_name = parts[i + 2]  # date/hour/camera layout
+                break
+        if not camera_name:
+            # fallback: use parent directory name
+            camera_name = os.path.basename(os.path.dirname(file_path))
+    except Exception:
+        camera_name = "unknown"
+    tags = f"{camera_name}"
     while retry_count < max_retries:
         try:
             with open(file_path, "rb") as file:
                 logger.debug(f"Upload target base: {VSS_SEARCH_URL}")
                 # Step 1: Upload video to get ID
+
+                files = {
+                    "video": (sanitized_name, file, "video/mp4"),
+                }
+                data = {
+                    "tags": tags
+                }
+
                 upload_response = requests.post(
                     f"{VSS_SEARCH_URL}/manager/videos/",
-                    files={"video": (sanitized_name, file, "video/mp4")},
+                    files=files,
+                    data=data,
                 )
                 upload_response.raise_for_status()
 

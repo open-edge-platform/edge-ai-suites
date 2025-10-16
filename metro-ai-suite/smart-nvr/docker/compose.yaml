@@ -47,6 +47,12 @@ services:
     restart: unless-stopped
     networks:
       - nvr-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     volumes:
       - ../src:/app
       - ../frigate-clips:/media/frigate/recordings # Shared volume for watcher to access Frigate recordings
