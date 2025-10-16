@@ -170,6 +170,7 @@ gen_helm_charts:
 	@cp -f configs/time-series-analytics-microservice/config.json helm/
 	@cp -f configs/nginx/nginx-cert-gen.sh helm/nginx-cert-gen.sh
 	@cp -f configs/nginx/nginx.conf helm/nginx.conf
+	@cp -f configs/dlstreamer-pipeline-server/config.json helm/dlstreamer-pipeline-server.json
 
 	@echo "Helm packages generated"
 

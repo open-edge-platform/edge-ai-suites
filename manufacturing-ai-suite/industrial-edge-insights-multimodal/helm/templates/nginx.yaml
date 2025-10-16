@@ -57,12 +57,16 @@ spec:
         command: ["/bin/bash", "-c", "/usr/local/bin/nginx-cert-gen.sh && exec nginx -g 'daemon off;'"]
         env:
         - name: no_proxy
-          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
+          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }}"
         - name: NO_PROXY
-          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
+          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }}"
+        - name: HOST_IP
+          value: "{{ .Values.env.HOST_IP }}"
+        - name: WHIP_SERVER_PORT
+          value: "{{ .Values.config.mediamtx.ext.webrtc_port }}"
         volumeMounts:
         - name: nginx-conf
-          mountPath: /etc/nginx/nginx.conf
+          mountPath: /tmp/default.conf.template
           subPath: nginx.conf
         - name: nginx-cert-gen
           mountPath: /usr/local/bin/nginx-cert-gen.sh
@@ -73,6 +77,8 @@ spec:
           mountPath: /var/cache/nginx
         - name: vol-temp-nginx
           mountPath: /run
+        - name: vol-temp-nginx
+          mountPath: /etc/nginx/
       volumes:
       - name: nginx-conf
         configMap:

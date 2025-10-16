@@ -56,7 +56,7 @@ env:
   REST_SERVER_PORT: 8080
 
   # DL Streamer Pipeline Server
-  RTSP_CAMERA_IP:
+  RTSP_CAMERA_IP: mediamtx
 
   # Open Telemetry related config
   ENABLE_OPEN_TELEMETRY: false
@@ -68,10 +68,19 @@ env:
   # Webrtc related config
   # mediamtx-port for streaming
   WHIP_SERVER_PORT: 8889
-  MTX_WEBRTCICESERVERS2_0_USERNAME: 
-  MTX_WEBRTCICESERVERS2_0_PASSWORD: 
+  MTX_WEBRTCICESERVERS2_0_USERNAME: admin
+  MTX_WEBRTCICESERVERS2_0_PASSWORD: password12
   COTURN_UDP_PORT: 3478
 
+  TS_TOPIC: weld-data
+  SIMULATION_TARGET_FPS: "10"
+  FUSION_MODE: OR
+  TOLERANCE_NS: "50e6"
+
+gpu:
+  enabled: false
+  type: "gpu.intel.com/i915"
+  count: 1
 images:
   # Please provide the suffix for the image version you want to use like rc1, rc2, git hash id etc.
   image_suffix: "weekly"
@@ -79,6 +88,8 @@ images:
   opcua_server_image: intel/ia-opcua-server:1.0.0
   mqtt_publisher_image: intel/ia-mqtt-publisher:1.1.0
   weld_data_simulator_image: intel/ia-weld-data-simulator:1.0.0
+  dlstreamer_pipeline_server: intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
+  fusion_analytics_image: intel/ia-multimodal-fusion-analytics:1.0.0
 privileged_access_required: false
 config:
   influx_db_server:
@@ -123,3 +134,39 @@ config:
     ext:
       rtsp_port: "30003"
       webrtc_port: "30004"
+  mediamtx:
+    name: mediamtx
+    int:
+      webrtc_port: "8889"
+      rtsp_port: "8554"
+    ext:
+      rtsp_port: "31111"
+      webrtc_port: "31112"
+  dlstreamer_pipeline_server:
+    name: dlstreamer-pipeline-server
+    int:
+      rest_api_port: "8080"
+      rtsp_output_port: "8554"
+    ext:
+      rest_api_port: "30107"
+      rtsp_output_port: "30125"
+
+  coturn:
+    name: coturn
+    int:
+      coturn_tcp_port: "3478"
+      coturn_udp_port: "3478"
+    ext:
+      coturn_tcp_port: "30478"
+      coturn_udp_port: "30478"
+volumes:
+  pipelines:
+    name: vol-pipelines
+    size: 100Mi
+    location: "/home/pipeline-server/pipelines"
+    hostpath: "/opt/intel/eii/pipelines"
+  models:
+    name: vol-models
+    size: 500Mi
+    location: "/home/pipeline-server/resources/weld-porosity"
+    hostpath: "/home/ecgv-d19-l3t19/coderepo/1510/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server/weld-porosity"
