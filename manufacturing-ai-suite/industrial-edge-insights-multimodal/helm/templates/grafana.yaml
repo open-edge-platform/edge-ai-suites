@@ -88,6 +88,12 @@ spec:
           value: "/etc/grafana/provisioning/dashboards"
         - name: GF_LOG_LEVEL
           value: '{{ $.Values.env.LOG_LEVEL }}'
+        - name: GF_SERVER_SERVE_FROM_SUB_PATH
+          value: "true"
+        - name: GF_PANELS_DISABLE_SANITIZE_HTML
+          value: "true"
+        - name: GF_SECURITY_ALLOW_EMBEDDING
+          value: "true"
       volumes:
       - name: vol-temp-grafana
         emptyDir: {}
@@ -102,4 +108,3 @@ spec:
       - name: grafana-dashboard-yml
         configMap:
           name: grafana-dashboard-yml
-          
