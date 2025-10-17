@@ -1,6 +1,6 @@
 # Deploy with Helm
 
-This guide provides step-by-step instructions for deploying the Wind Turbine Anomaly Detection sample application using Helm.
+This guide provides step-by-step instructions for deploying the MultiModal - Weld Defect Detection sample application using Helm.
 
 ## Prerequisites
 
@@ -24,7 +24,7 @@ You can either generate or download the Helm charts.
 
     1. Download Helm chart with the following command:
 
-        `helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 1.1.0-weekly`
+        `helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 1.0.0-weekly`
 
     2. Unzip the package using the following command:
 
@@ -73,21 +73,25 @@ To install Helm charts, use one of the following options:
     ```
 
 **Verify Installation:**
+
+> **Note:**
+> 1. `deployment-coturn`, `deployment-fusion-analytics`, `deployment-ia-weld-data-simulator` and `deployment-telegraf` pods might restart since its depended on `deployment-mqtt-broker` and `deployment-mediamtx`
+
 Use the following command to verify if all the application resources got installed w/ their status:
 
-```bash
-   kubectl get all -n multimodal-sample-app
-```
+    ```bash
+    kubectl get all -n multimodal-sample-app
+    ```
 
 ## Step 4: Copy the udf package for helm deployment to 
 
 **DLStreamer Pipeline Server**
 
-To copy your own or existing model into TDLStreamer Pipeline Server in order to run this sample application in Kubernetes environment:
+To copy your own or existing model into DLStreamer Pipeline Server in order to run this sample application in Kubernetes environment:
 
-1. The following model package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server/`. 
+The model package is available in the repository at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server/`.
 
-2. Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
+Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
 
     ```sh
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server/
@@ -114,7 +118,7 @@ To copy your own or existing model into Time Series Analytics Microservice in or
             - weld_anomaly_detector.py
     ```
 
-2. Copy your new UDF package (using the windturbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
+2. Copy your new UDF package to the `time-series-analytics-microservice` pod:
     ```sh
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice # path relative to git clone folder
     mkdir -p weld_anomaly_detector
@@ -133,9 +137,7 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 
 **DLStreamer Pipeline Server**
 
-You use a Client URL (cURL) command to start the pipeline.
-
-In this example, a pipeline included in this sample application is `pallet_defect_detection`. Start this pipeline with the following cURL command.
+You use a Client URL (cURL) command to start the pipeline. Start this pipeline with the following cURL command.
 
         curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification -X POST -H 'Content-Type: application/json' -d '{
             "destination": {
@@ -158,22 +160,14 @@ In this example, a pipeline included in this sample application is `pallet_defec
 
 **Time Series Analytics Microservice**
 
-> **NOTE**: To activate the UDF inferencing on GPU, additionally run the following command as a prerequisite before activating the UDF deployment package:
-> ```sh
-> curl -k -X 'POST' \
-> 'https://localhost:30001/ts-api/config' \
-> -H 'accept: application/json' \
-> -H 'Content-Type: application/json' \
-> -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json with device
->     value updated to gpu from cpu>'
-> ```
-> GPU Inferencing is supported only for `Wind Turbine Anomaly Detection` sample app
+> **NOTE**: UDF inferencing on GPU is not supported.
 
 Run the following command to activate the UDF deployment package:
+
 ```sh
-curl -k -X 'GET' \
-  'https://localhost:30001/ts-api/config?restart=true' \
-  -H 'accept: application/json'
+    curl -k -X 'GET' \
+    'https://localhost:30001/ts-api/config?restart=true' \
+    -H 'accept: application/json'
 ```
 
 ## Step 6: Verify the Results
