@@ -83,7 +83,7 @@ Use the following command to verify if all the application resources got install
     kubectl get all -n multimodal-sample-app
     ```
 
-## Step 4: Copy the udf package for helm deployment to 
+## Step 4: Copy the udf package for helm deployment
 
 **DLStreamer Pipeline Server**
 
