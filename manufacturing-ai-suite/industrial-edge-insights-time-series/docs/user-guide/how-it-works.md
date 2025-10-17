@@ -73,4 +73,4 @@ Time Series Analytics Microservice has the Intel® Extension for Scikit-learn* p
 
 ## Summary
 
-This section provides an overview of the architecture for the Wind Turbine Anomaly Detection sample app. For detailed instructions on getting started, refer to [Get Started](./get-started.md).
+This section provides an overview of the architecture for the Industrial Edge Insights - Time Series sample app. For detailed instructions on getting started, refer to [Get Started](./get-started.md).
