@@ -23,6 +23,7 @@ operational efficiency.
    system-requirements
    get-started
    how-to-build-from-source
+   how-to-deploy-with-helm
    how-to-configure-alerts
    how-to-update-config
    release_notes/Overview
