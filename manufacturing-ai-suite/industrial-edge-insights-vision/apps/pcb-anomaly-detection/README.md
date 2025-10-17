@@ -13,13 +13,13 @@ models for video analysis. This sample application offers the following:
 
 To see the system requirements and other installation procedures, see the following guides:
 
-- [System Requirements](./docs/user-guide/system-requirements.md)
-- [Setup guide](./docs/user-guide/get-started.md)
-- [Overview](./docs/user-guide/overview.md)
+- [System Requirements](../../docs/pcb-anomaly-detection/system-requirements.md)
+- [Setup guide](../../docs/pcb-anomaly-detection/get-started.md)
+- [Overview](../../docs/pcb-anomaly-detection/Overview.md)
 
 ## How It Works
 
-You can read the overview of the architecture and logic of the application [here](./docs/user-guide/overview-architecture.md)
+You can read the overview of the architecture and logic of the application [here](../../docs/pcb-anomaly-detection/overview-architecture.md)
 
 The components and services are as follows:
 

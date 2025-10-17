@@ -161,7 +161,7 @@ services:
       ]
 
   dlstreamer-pipeline-server:
-    image: intel/dlstreamer-pipeline-server:3.1.0-ubuntu24
+    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
     networks:
       - scenescape
     privileged: true
