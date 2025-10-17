@@ -11,14 +11,14 @@ models for video analysis. This sample application offers the following:
 
 ## Get Started
 
-- [System Requirements](./docs/user-guide/system-requirements.md)
-- [Setup guide](./docs/user-guide/get-started.md)
-- [Overview](./docs/user-guide/overview.md)
+- [System Requirements](../../docs/pallet-defect-detection/system-requirements.md)
+- [Setup guide](../../docs/pallet-defect-detection/get-started.md)
+- [Overview](../../docs/pallet-defect-detection/Overview.md)
 
 
 ## How It Works
 
-You can read the overview of the architecture and logic of the application [here](./docs/user-guide/overview-architecture.md)
+You can read the overview of the architecture and logic of the application [here](../../docs/pallet-defect-detection/overview-architecture.md)
 
 The components and services are as follows:
 
@@ -54,4 +54,4 @@ It also consists of the following third-party microservices:
 
 ## Troubleshooting
 
-- [Troubleshooting Guide](troubleshooting-guide.md)
+- [Troubleshooting Guide](../../docs/pallet-defect-detection/troubleshooting-guide.md)

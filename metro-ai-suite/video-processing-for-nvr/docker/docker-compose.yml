@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  vppsample:
+    # build:
+    #   context: ..
+    #   dockerfile: docker/Dockerfile.sample
+    #   args:
+    #     http_proxy: ${http_proxy}
+    #     https_proxy: ${https_proxy}
+    image: vppsample:latest
+    network_mode: host
+    environment:
+      no_proxy: "localhost,127.0.0.1"
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      LD_LIBRARY_PATH: /usr/local/lib
+      # DISPLAY: ${DISPLAY}
+    # volumes:
+      # - /tmp/.X11-unix:/tmp/.X11-unix
+      # - ${HOME}/.Xauthority:/root/.Xauthority:rw
+    working_dir: /home/vpp
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - "/dev/dri:/dev/dri"
+    user: root
+    entrypoint: /home/vpp/vppsample/docker/svet.sh
