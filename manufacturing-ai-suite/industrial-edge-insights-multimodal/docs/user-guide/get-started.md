@@ -112,7 +112,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 #### **`udfs/`**:
    - Contains the python script to process the incoming data.
      Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with Intel® Extension for Scikit-learn*
-     to run on CPU to detect the anomalous power generation data points relative to wind speed.
+     to run on CPU to detect the anomalous welding using sensor.
 
 #### **`tick_scripts/`**:
    - The TICKScript `weld_anomaly_detector.tick` determines processing of the input data coming in.
@@ -131,6 +131,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
    - `VISUALIZER_GRAFANA_PASSWORD`
    - `MTX_WEBRTCICESERVERS2_0_USERNAME`
    - `MTX_WEBRTCICESERVERS2_0_PASSWORD`
+   - `HOST_IP`
 
 2. Deploy the sample app, use only one of the following options:
 
