@@ -2,11 +2,13 @@
 
 ## Table of Contents
 
+[Pallet Defect Detection](./pallet-defect-detection/index.rst)
 [Worker Safety Gear Detection](./worker-safety-gear-detection/index.rst)
 
 <!--hide_directive
 :::{toctree}
 :hidden:
+pallet-defect-detection/index
 worker-safety-gear-detection/index
 :::
 hide_directive-->
