@@ -144,6 +144,10 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 >  - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) and in `helm/values.yaml` (for Helm deployments) 
 >    is set to `true` by default, enabling continuous looping of simulator data. To ingest the simulator data only once (without looping), 
 >    set this variable to `false`.
+> - The update rate of the graph and table may lag by a few seconds and might not perfectly align with the video stream, since 
+>   Grafana’s minimum refresh interval is 5 seconds.
+> - The graph and table may initially display "No Data" because the Time Series Analytics Microservice requires some time to 
+>   install its dependency packages before it can start running.
 
     ```bash
     cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
