@@ -146,6 +146,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 >    set this variable to `false`.
 
     ```bash
+    cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
     make up
     ```
    
@@ -156,9 +157,10 @@ Use the following command to verify that all containers are active and error-fre
 > ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
 
 
-```sh
-make status
-```
+  ```sh
+  cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+  make status
+  ```
 
 ## Verify the Weld Defect Detection Results
 
@@ -213,6 +215,7 @@ make status
 ## Bring down the sample app
 
   ```sh
+  cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
   make down
   ```
 
