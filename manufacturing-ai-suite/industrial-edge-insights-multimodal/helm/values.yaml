@@ -33,6 +33,7 @@ env:
   # If no proxy is required, please leave them empty.
   HTTP_PROXY: 
   HTTPS_PROXY: 
+  
   # If CONTINUOUS_SIMULATOR_INGESTION is set to true (default), continuous looping of simulator data is enabled.
   # To ingest the simulator data only once (without looping), set this variable to false.
   CONTINUOUS_SIMULATOR_INGESTION: true
@@ -52,7 +53,7 @@ env:
   TS_TOPIC: weld-data
   SIMULATION_TARGET_FPS: 10
   # DL Streamer Pipeline Server
-  HOST_IP: 10.106.147.4
+  HOST_IP: 
   REST_SERVER_PORT: 8080
 
   # DL Streamer Pipeline Server
@@ -68,8 +69,8 @@ env:
   # Webrtc related config
   # mediamtx-port for streaming
   WHIP_SERVER_PORT: 8889
-  MTX_WEBRTCICESERVERS2_0_USERNAME: admin
-  MTX_WEBRTCICESERVERS2_0_PASSWORD: password12
+  MTX_WEBRTCICESERVERS2_0_USERNAME: 
+  MTX_WEBRTCICESERVERS2_0_PASSWORD: 
   COTURN_UDP_PORT: 3478
 
   # Fusion Analytics config

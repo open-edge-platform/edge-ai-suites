@@ -402,7 +402,7 @@ services:
     - timeseries_network
   
   coturn:
-    image: coturn/coturn:latest
+    image: coturn/coturn:4.7.0
     container_name: coturn
     ports:
       - "${COTURN_UDP_PORT}:3478"

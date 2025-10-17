@@ -116,9 +116,9 @@ spec:
         - name: NO_PROXY
           value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector,mediamtx,ia-mqtt-broker
         - name: http_proxy
-          value: {{ $.Values.env.http_proxy }}
+          value: {{ $.Values.env.HTTP_PROXY }}
         - name: https_proxy
-          value: {{ $.Values.env.https_proxy }}
+          value: {{ $.Values.env.HTTPS_PROXY }}
         - name: S3_STORAGE_HOST
           value: "{{ $.Values.env.HOST_IP }}"
         - name: S3_STORAGE_PORT

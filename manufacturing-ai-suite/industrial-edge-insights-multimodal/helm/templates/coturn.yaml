@@ -52,8 +52,7 @@ spec:
         runAsUser: 1000
       containers:
       - name: coturn
-        image: coturn/coturn:latest
-        args: ["-v"]  # Enable verbose logging
+        image: coturn/coturn:4.7.0
         ports:
         - containerPort: {{ $.Values.config.coturn.int.coturn_tcp_port }}
           protocol: TCP
