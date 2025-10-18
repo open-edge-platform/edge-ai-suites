@@ -31,7 +31,7 @@
                     },
                     "parameters": {
                         "classification-properties": {
-                            "model": "/home/pipeline-server/resources/weld-porosity/models/weld-porosity-f16-DeiT/deployment/Classification/model/model.xml",
+                            "model": "/home/pipeline-server/resources/models/weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml",
                             "device": "CPU"
                         }
                     }

@@ -339,7 +339,7 @@ services:
     volumes:
     - vol_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
     - /var/tmp:/var/tmp
-    - ./configs/dlstreamer-pipeline-server/weld-porosity:/home/pipeline-server/resources/weld-porosity
+    - ./configs/dlstreamer-pipeline-server/models:/home/pipeline-server/resources/models
     - ./configs/dlstreamer-pipeline-server/config.json:/home/pipeline-server/config.json
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
