@@ -87,7 +87,7 @@ images:
   opcua_server_image: intel/ia-opcua-server:1.0.0
   mqtt_publisher_image: intel/ia-mqtt-publisher:1.1.0
   weld_data_simulator_image: intel/ia-weld-data-simulator:1.0.0
-  dlstreamer_pipeline_server: intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
+  dlstreamer_pipeline_server: intel/dlstreamer-pipeline-server:3.1.0-ubuntu24
   fusion_analytics_image: intel/ia-multimodal-fusion-analytics:1.0.0
 privileged_access_required: false
 config:

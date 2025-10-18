@@ -98,7 +98,7 @@ Copy the resources such as video and model from local directory to the to the `d
 
     POD_NAME=$(kubectl get pods -n multimodal-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
-    kubectl cp weld-porosity $POD_NAME:/home/pipeline-server/resources/ -c dlstreamer-pipeline-server -n multimodal-sample-app
+    kubectl cp models $POD_NAME:/home/pipeline-server/resources/ -c dlstreamer-pipeline-server -n multimodal-sample-app
     ```
 
 **Time Series Analytics Microservice**
@@ -152,7 +152,7 @@ You use a Client URL (cURL) command to start the pipeline. Start this pipeline w
             },
             "parameters": {
                 "classification-properties": {
-                    "model": "/home/pipeline-server/resources/weld-porosity/models/weld-porosity-f16-DeiT/deployment/Classification/model/model.xml",
+                    "model": "/home/pipeline-server/resources/models/weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml",
                     "device": "CPU"
                 }
             }
