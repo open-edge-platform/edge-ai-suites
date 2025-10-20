@@ -1,5 +1,5 @@
 MultiModal Weld Defect Detection
-==============================
+================================
 
 The MultiModal Weld Defect Detection sample demonstrates how to use AI at the edge to identify weld 
 defects in manufacturing environments by analyzing both image and time series sensor data.
@@ -31,3 +31,4 @@ rework by enabling proactive defect detection on the factory floor.
    how-to-deploy-with-helm
    how-to-update-config
    release_notes/Overview
+
