@@ -1,0 +1,80 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: coturn
+  namespace: {{ .Values.namespace }}
+spec:
+  type: NodePort  # Exposes the service externally
+  selector:
+    app: coturn
+  ports:
+    - name: "coturn-tcp"
+      protocol: TCP
+      port: {{ $.Values.config.coturn.int.coturn_tcp_port }}
+      targetPort: {{ $.Values.config.coturn.int.coturn_tcp_port }}
+      nodePort: {{ $.Values.config.coturn.ext.coturn_tcp_port }}  # Exposed on the node
+    - name: "coturn-udp"
+      protocol: UDP
+      port: {{ $.Values.config.coturn.int.coturn_udp_port }}
+      targetPort: {{ $.Values.config.coturn.int.coturn_udp_port }}
+      nodePort: {{ $.Values.config.coturn.ext.coturn_udp_port }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: coturn
+  name: deployment-coturn
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coturn
+  template:
+    metadata:
+      labels:
+        app: coturn
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      # hostNetwork: true
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: coturn
+        image: coturn/coturn:4.7.0
+        ports:
+        - containerPort: {{ $.Values.config.coturn.int.coturn_tcp_port }}
+          protocol: TCP
+        - containerPort: {{ $.Values.config.coturn.int.coturn_udp_port }}
+          protocol: UDP
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        # Added security context to improve container hardening
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - NET_BIND_SERVICE
+      args:
+      - "--verbose"
+      - "--listening-ip=0.0.0.0"
+      - "--listening-port={{ $.Values.config.coturn.int.coturn_udp_port }}"
+      - "--tls-listening-port={{ $.Values.config.coturn.int.coturn_tcp_port }}"
+      - "--min-port=49152"
+      - "--max-port=65535"
+      restartPolicy: Always

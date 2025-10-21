@@ -100,6 +100,21 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Anomalous"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
           }
         ]
       },
@@ -115,7 +130,7 @@
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": false
+          "showLegend": true
         },
         "timezone": [
           "Asia/Kolkata"
@@ -129,7 +144,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "alias": "Anomaly 0",
+          "alias": "Non Anomalous ",
           "datasource": {
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
@@ -179,7 +194,7 @@
           ]
         },
         {
-          "alias": " Anomaly 1",
+          "alias": "Anomalous",
           "columns": [],
           "datasource": {
             "type": "influxdb",
@@ -231,7 +246,7 @@
           }
         }
       ],
-      "title": "Anomaly Prediction for Weld Sensor Data (Primary Weld Current)",
+      "title": "Anomaly Prediction for Weld Sensor Data (Primary Weld Current vs time)",
       "type": "timeseries"
     },
     {

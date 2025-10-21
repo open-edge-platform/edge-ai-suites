@@ -1,6 +1,6 @@
-# Wind Turbine Anomaly Detection Sample Application
+# Industrial Edge Insights - Time Series Sample Application
 
-Wind Turbine Anomaly Detection sample application demonstrates a time series use case by detecting the anomalous power generation patterns relative to wind speed. By identifying deviations, it helps optimize maintenance schedules and prevent potential turbine failures, enhancing operational efficiency.
+Industrial Edge Insights - Time Series sample application demonstrates a time series use case by detecting the anomalous power generation patterns relative to wind speed. By identifying deviations, it helps optimize maintenance schedules and prevent potential turbine failures, enhancing operational efficiency.
 
 ## Get Started
 
@@ -11,7 +11,7 @@ To see the system requirements and other installation, see the following guides:
 
 ## Architecture and Functionality Overview
 
-The Wind Turbine Anomaly Detection sample application comprises of data simulators, the generic Time Series AI stack based on **TICK Stack**, and Grafana. The Model Registry microservice helps to achieve the MLOps flow by uploading the **UDF deployment package**.
+The Industrial Edge Insights - Time Series sample application comprises of data simulators, the generic Time Series AI stack based on **TICK Stack**, and Grafana. The Model Registry microservice helps to achieve the MLOps flow by uploading the **UDF deployment package**.
 
 ![Time Series AI Stack Architecture Diagram](./docs/user-guide/_images/time-series-ai-stack-architecture.png)
 

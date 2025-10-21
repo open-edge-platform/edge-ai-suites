@@ -14,14 +14,14 @@ models for video analysis. This sample application offers the following features
 
 To see the system requirements and other installation, see the following guides:
 
-- [System Requirements](./docs/user-guide/system-requirements.md)
-- [Setup guide](./docs/user-guide/get-started.md)
-- [Overview](./docs/user-guide/overview.md)
+- [System Requirements](../../docs/weld-porosity/system-requirements.md)
+- [Setup guide](../../docs/weld-porosity/get-started.md)
+- [Overview](../../docs/weld-porosity/overview.md)
 
 
 ## How It Works
 
-You can read the overview of the architecture and logic of the application [here](./docs/user-guide/overview-architecture.md)
+You can read the overview of the architecture and logic of the application [here](../../docs/weld-porosity/overview-architecture.md)
 
 The components and services are as follows:
 
