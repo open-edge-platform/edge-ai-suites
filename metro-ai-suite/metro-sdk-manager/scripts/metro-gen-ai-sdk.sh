@@ -29,6 +29,7 @@
     "intel/vdms-dataprep:1.2.1"
     "intel/vlm-openvino-serving:1.2.1"
   )
+  NAME="Metro Gen AI SDK"
 
 set -euo pipefail
 
@@ -645,11 +646,11 @@ main() {
   info "Next steps:"
   info "1. Navigate to ${HOME}/metro/ to explore the cloned repositories"
   info "2. Check repository documentation for usage instructions"
-  info "3. Start developing with Metro Gen AI SDK!"
+  info "3. Start developing with ${NAME}!"
 
 }
 
 # Execute main function if script is run directly
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ "${BASH_SOURCE[0]:-}" == "${0}" ]]; then
   main "${@}"
 fi

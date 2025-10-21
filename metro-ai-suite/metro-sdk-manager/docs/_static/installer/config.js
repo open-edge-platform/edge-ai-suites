@@ -149,7 +149,7 @@ const CONFIG = {
             VERSION: "2025.2" 
           }, 
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-parking/Overview.html`
+          link: `../../user-guide/metro-vision-ai-sdk/get-started.html`
         },
         { 
           when: { 
@@ -158,7 +158,7 @@ const CONFIG = {
             VERSION: "2025.2" 
           }, 
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-parking/Overview.html`
+          link: `../../user-guide/metro-gen-ai-sdk/get-started.html`
         },
         { 
           when: { 
@@ -167,7 +167,7 @@ const CONFIG = {
             VERSION: "2025.2" 
           }, 
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-parking/Overview.html`
+          link: `../../user-guide/visual-ai-demo-kit/get-started.html`
         }
       ]
     },

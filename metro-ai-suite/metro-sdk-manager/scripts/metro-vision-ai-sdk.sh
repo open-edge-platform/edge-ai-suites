@@ -29,6 +29,9 @@
     "intel/dlstreamer-pipeline-server:3.1.0-ubuntu24"
   )
 
+  NAME="Metro Vision AI SDK"
+
+
 set -euo pipefail
 
 readonly SCRIPT_NAME="$(basename "${0}")"
@@ -644,11 +647,11 @@ main() {
   info "Next steps:"
   info "1. Navigate to ${HOME}/metro/ to explore the cloned repositories"
   info "2. Check repository documentation for usage instructions"
-  info "3. Start developing with Metro Gen AI SDK!"
+  info "3. Start developing with ${NAME}!"
 
 }
 
 # Execute main function if script is run directly
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ "${BASH_SOURCE[0]:-}" == "${0}" ]]; then
   main "${@}"
 fi

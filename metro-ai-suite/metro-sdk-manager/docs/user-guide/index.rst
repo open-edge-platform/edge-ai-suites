@@ -11,10 +11,37 @@ Built with developer productivity in mind, the SDK Manager handles cross-platfor
 
 .. toctree::
    :caption: Metro SDK Manager
-
+   
    install-sdk
 
 .. toctree::
+   :caption: Metro Vision AI SDK
+   :hidden:
+   
+   metro-vision-ai-sdk/get-started.md
+   metro-vision-ai-sdk/tutorial-1.md
+   metro-vision-ai-sdk/tutorial-2.md
+   metro-vision-ai-sdk/tutorial-3.md
+   metro-vision-ai-sdk/tutorial-4.md
+   metro-vision-ai-sdk/tutorial-5.md
+
+.. toctree::
+   :caption: Metro Gen AI SDK
+   :hidden:
+
+   metro-gen-ai-sdk/get-started.md
+
+.. toctree::
+   :caption: Visual AI Demo Kit
+   :hidden:
+
+   visual-ai-demo-kit/get-started.md
+   visual-ai-demo-kit/tutorial-1.md
+   visual-ai-demo-kit/tutorial-2.md
+   visual-ai-demo-kit/tutorial-3.md
+
+.. toctree::
    :caption: Community and Support
+   :hidden:
    
    support
