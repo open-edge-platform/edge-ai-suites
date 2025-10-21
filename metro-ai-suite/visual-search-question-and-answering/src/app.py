@@ -36,7 +36,7 @@ BACKEND_VQA_BASE_URL = os.getenv("BACKEND_VQA_BASE_URL", "http://localhost:8399"
 BACKEND_SEARCH_BASE_URL = os.getenv("BACKEND_SEARCH_BASE_URL", "http://localhost:7770")
 BACKEND_DATAPREP_BASE_URL = os.getenv("BACKEND_DATAPREP_BASE_URL", "http://localhost:9990")
 
-LOCAL_EMBED_MODEL_ID = os.getenv("LOCAL_EMBED_MODEL_ID", "CLIP-ViT-H-14")
+VCLIP_MODEL = os.getenv("VCLIP_MODEL", "openai/clip-vit-base-patch32")
 VLM_MODEL_NAME=os.getenv("VLM_MODEL_NAME", "Qwen/Qwen2.5-VL-7B-Instruct")
 
 DATA_INGEST_WITH_DETECT = os.getenv("DATA_INGEST_WITH_DETECT", "True").lower() == "true"
@@ -458,7 +458,7 @@ def query_submit():
         if len(st.session_state["ktext"]) > PROMPT_LENGTH_LIMIT:
             query_display.error(f"Please enter a prompt with less than {PROMPT_LENGTH_LIMIT} characters!")
             return
-        if not is_english(st.session_state["ktext"]) and "CN" not in LOCAL_EMBED_MODEL_ID:
+        if not is_english(st.session_state["ktext"]) and "cn" not in VCLIP_MODEL.lower():
             query_display.error("Current embedding model only supports English!")
             return
         if is_english(st.session_state["ktext"]) and is_bad_string(st.session_state["ktext"]):
