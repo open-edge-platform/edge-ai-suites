@@ -78,7 +78,6 @@ python -m venv smartclassroom
 smartclassroom\Scripts\activate
 
 python.exe -m pip install --upgrade pip
-pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
 pip install --upgrade -r requirements.txt
 ```
 ---
