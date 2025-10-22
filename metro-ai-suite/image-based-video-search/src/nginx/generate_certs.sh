@@ -19,3 +19,6 @@ if [ ! -f "$SSL_DIR/server.crt" ] || [ ! -f "$SSL_DIR/server.key" ]; then
     -out "$SSL_DIR/server.crt" \
     -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"
 fi
+
+# Start nginx
+nginx -g "daemon off;"
