@@ -45,7 +45,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<iframe id=\"myframe\" style=\"width:100%; height:500px;\" \n  allow=\"autoplay; encrypted-media\"\n  sandbox=\"allow-scripts allow-same-origin allow-forms allow-popups\">\n</iframe>\n\n<script>\n  const host = window.location.hostname;   // gets IP or domain of the current page\n  document.getElementById(\"myframe\").src = `https://${host}:3000/samplestream/`;\n</script>",
+        "content": "<iframe id=\"myframe\" style=\"width:100%; height:500px;\" \n  allow=\"autoplay; encrypted-media\"\n  sandbox=\"allow-scripts allow-same-origin allow-forms allow-popups\">\n</iframe>\n\n<script>\n  const host = window.location.hostname;\n  // Get port from current URL, or use 30001 if not present\n  const port = window.location.port || \"30001\";\n  document.getElementById(\"myframe\").src = `https://${host}:${port}/samplestream/`;\n</script>",
         "mode": "html"
       },
       "pluginVersion": "12.0.0",
@@ -126,6 +126,21 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": " Anomalous"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
           }
         ]
       },
@@ -141,7 +156,7 @@
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": false
+          "showLegend": true
         },
         "timezone": [
           "Asia/Kolkata"
@@ -155,7 +170,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "alias": "Anomaly 0",
+          "alias": "Non Anomalous ",
           "datasource": {
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
@@ -205,7 +220,7 @@
           ]
         },
         {
-          "alias": " Anomaly 1",
+          "alias": " Anomalous",
           "columns": [],
           "datasource": {
             "type": "influxdb",
@@ -257,7 +272,7 @@
           }
         }
       ],
-      "title": "Timeseries Analytics Result",
+      "title": "Timeseries Analytics Result (Primary Weld Current vs Time)",
       "type": "timeseries"
     },
     {

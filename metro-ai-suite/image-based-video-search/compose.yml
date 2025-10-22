@@ -145,7 +145,7 @@ services:
       timeout: 10s
       retries: 3
   dlstreamer-pipeline-server:
-    image: ${DOCKER_REGISTRY}intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
+    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
     hostname: dlstreamer-pipeline-server
     container_name: ibvs-dlstreamer-pipeline-server
     read_only: true

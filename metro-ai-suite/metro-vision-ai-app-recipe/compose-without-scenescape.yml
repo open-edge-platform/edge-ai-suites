@@ -14,7 +14,7 @@ services:
     restart: on-failure:5
 
   dlstreamer-pipeline-server:
-    image: intel/dlstreamer-pipeline-server:3.1.0-ubuntu24
+    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
     container_name: dlstreamer-pipeline-server
     environment:
       - http_proxy=${http_proxy}
