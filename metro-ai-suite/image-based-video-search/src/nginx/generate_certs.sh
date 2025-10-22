@@ -17,8 +17,5 @@ if [ ! -f "$SSL_DIR/server.crt" ] || [ ! -f "$SSL_DIR/server.key" ]; then
     -newkey rsa:2048 \
     -keyout "$SSL_DIR/server.key" \
     -out "$SSL_DIR/server.crt" \
-    -subj "/C=IN/ST=KA/L=Bangalore/O=MyCompany/OU=Dev/CN=localhost"
+    -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"
 fi
-
-# Start nginx
-nginx -g "daemon off;"
