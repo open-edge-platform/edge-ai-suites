@@ -1,5 +1,5 @@
-Wind Turbine Anomaly Detection
-==============================
+Industrial Edge Insights - Time Series
+======================================
 
 Time Series predictive maintenance use case to detect the anomalous power generation
 patterns relative to wind speed for the wind turbines.

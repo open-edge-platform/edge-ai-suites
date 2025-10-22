@@ -8,7 +8,7 @@ This section provides instructions for setting up alerts in **Time Series Analyt
 
 #### Configure MQTT Alerts
 
-By default, the following MQTT alerts is configured in `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time-series-analytics-microservice/config.json` file.
+By default, the following MQTT alerts are configured in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/config.json` file.
 
   ```json
     "alerts": {
@@ -23,15 +23,16 @@ By default, the following MQTT alerts is configured in `edge-ai-suites/manufactu
 #### Configure MQTT Alert in TICK Script
 
 The following snippet shows how to add the MQTT if not 
-already added. By default, the `edge-ai-suites/manufacturing-ai-suite/wind-turbine-anomaly-detection/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick` TICK Script has the following configuration done by default.
+already added. By default, the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick` TICK Script has the following configuration done by default.
 
 ```bash
 @weld_anomaly_detector()
 |alert()
     .crit(lambda: "anomaly_status" > 0)
-    .message('Anomaly detected: Wind Speed: {{ index .Fields "wind_speed" }}, Grid Active Power: {{ index .Fields "grid_active_power" }}, Anomaly Status: {{ index .Fields "anomaly_status" }}')
+    .message('{"time": "{{ index .Time }}", "Pressure": {{ index .Fields "Pressure" }}, "CO2 Weld Flow": {{ index .Fields "CO2 Weld Flow" }}, "anomaly_status": {{ index .Fields "anomaly_status" }} } ')
+    .noRecoveries()
     .mqtt('my_mqtt_broker')
-    .topic('alerts/wind_turbine')
+    .topic('alerts/weld_defect_detection')
     .qos(1)
 ```
 
@@ -47,10 +48,20 @@ Follow the steps to subscribe to the published MQTT alerts.
 docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
 ```
 
-- To subscribe to a specific MQTT topic, such as `alerts/wind_turbine`, use the following command. Note that the topic information can be found in the TICKScript:
+#### Subscribing to Time Series Analytics Microservice Alerts
+
+- To subscribe to a specific MQTT topic, such as `alerts/weld_defect_detection`, use the following command. Note that the topic information can be found in the TICKScript:
 
 ```sh
-docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
+docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/weld_defect_detection -p 1883
+```
+
+#### Subscribing to Fusion Analytics Results
+
+- To subscribe to a specific MQTT topic, such as `fusion/anomaly_detection_results`, use the following command. Note that the topic information can be found in the TICKScript:
+
+```sh
+docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t fusion/anomaly_detection_results -p 1883
 ```
 
 ## Supporting Resources

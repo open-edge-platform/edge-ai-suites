@@ -111,6 +111,6 @@ Using the template above, several industrial recipies have been provided for use
 Click on the applications below to get started.
 
 * [Pallet Defect Detection](./docs/pallet-defect-detection/get-started.md)
-* [PCB Anomaly Detection](apps/pcb-anomaly-detection/docs/user-guide/get-started.md)
-* [Weld Porosity Classfication](apps/weld-porosity/docs/user-guide/get-started.md)
-* [Worker Safety Gear Detection](apps/worker-safety-gear-detection/docs/user-guide/get-started.md)
+* [PCB Anomaly Detection](./docs/pcb-anomaly-detection/get-started.md)
+* [Weld Porosity Classfication](./docs/weld-porosity/get-started.md)
+* [Worker Safety Gear Detection](./docs/worker-safety-gear-detection/get-started.md)

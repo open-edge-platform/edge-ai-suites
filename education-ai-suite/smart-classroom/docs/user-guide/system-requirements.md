@@ -9,7 +9,7 @@ This page provides detailed hardware, software, platform requirements, and suppo
 - **Memory**: 32 GB RAM (minimum recommended)
 - **Storage**: At least 50 GB free (for models and logs)
 - **GPU/Accelerator**: Intel® iGPU (Core Ultra Series 1, Arc GPU, or higher) for summarization acceleration
-- **Python**: 3.12 or above
+- **Python**: 3.12
 - **Node.js**: v18+ (for frontend)
 
 ## Supported Models  
