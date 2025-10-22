@@ -3,7 +3,7 @@ services:
     depends_on:
       model_registry:
         condition: service_healthy
-    image: intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
+    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
     container_name: dlstreamer-pipeline-server
     hostname: dlstreamer-pipeline-server
     networks:

@@ -309,6 +309,7 @@ if __name__ == "__main__":
     "-c:v", "libx264",
     "-preset", "ultrafast",
     "-f", "rtsp",
+    "-rtsp_transport", "tcp",  # <— important, avoids UDP NAT timeouts
     RTSP_URL
     ]
 
