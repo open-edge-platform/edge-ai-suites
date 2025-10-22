@@ -9,7 +9,7 @@ industrial PC.
 Each app seamlessly combines multiple microservices to provide real-time video analysis
 enhancing quality control and compliance of manufacturing processes. Using AI-driven
 real-time analytics, edge devices can detect manufacturing defects, safety risks and
-worker compliance issues, that could risk quality, efficiency and safety of
+worker compliance issues, that could impact quality, efficiency and safety of
 manufacturing operations.
 
 ## Table of Contents
