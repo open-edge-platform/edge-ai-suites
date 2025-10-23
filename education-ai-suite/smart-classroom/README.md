@@ -95,7 +95,8 @@ python.exe -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
 pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
 ```
-> 💡 *Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.*
+> 💡 *Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.*  
+> 💡 *Note: `smartclassroom_ipex` should only be used with FunAsr and Ipex related models. Don't configure Openvino related models in `smartclassroom_ipex`*
 
 ---
 ### ⚙️ 2. Default Configuration
@@ -116,8 +117,8 @@ summarizer:
   weight_format: int8         # Supported: fp16, fp32, int4, int8
   max_new_tokens: 1024        # Maximum tokens to generate in summaries
 ```
-### 💡 Tips:
-* For Chinese audio transcription, switch to funASR with Paraformer:
+### 💡 Note:
+* For `smartclassroom_ipex` Environment or Chinese audio transcription, switch to funASR with Paraformer:
 
 ```bash
 asr:
