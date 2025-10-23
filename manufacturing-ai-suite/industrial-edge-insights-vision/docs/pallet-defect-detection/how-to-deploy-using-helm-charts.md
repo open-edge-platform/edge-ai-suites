@@ -81,7 +81,7 @@
     ```
 3.  Fetch the list of pipeline loaded available to launch
     ```sh
-    ./sample_list.sh
+    ./sample_list.sh helm
     ```
     This lists the pipeline loaded in DLStreamer Pipeline Server.
     
@@ -117,7 +117,7 @@
     ```
 4.  Start the sample application with a pipeline.
     ```sh
-    ./sample_start.sh -p pallet_defect_detection
+    ./sample_start.sh helm -p pallet_defect_detection
     ```
     This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available. 
     
@@ -142,7 +142,7 @@
 
 5.  Get status of pipeline instance(s) running.
     ```sh
-    ./sample_status.sh
+    ./sample_status.sh helm
     ```
     This command lists status of pipeline instances launched during the lifetime of sample application.
     
@@ -165,7 +165,7 @@
 
 6. Stop pipeline instance.
     ```sh
-    ./sample_stop.sh
+    ./sample_stop.sh helm
     ```
     This command will stop all instances that are currently in `RUNNING` state and respond with the last status.
     
@@ -190,7 +190,7 @@
     }
     ```
     If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.    
-    For example, `./sample_stop.sh --id 99ac50d852b511f09f7c2242868ff651`
+    For example, `./sample_stop.sh helm --id 99ac50d852b511f09f7c2242868ff651`
 
 7. Uninstall the helm chart.
      ```sh
@@ -348,7 +348,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 
 5. Start the pipeline with the above payload.
     ```
-    ./sample_start.sh -p pallet_defect_detection_mlops
+    ./sample_start.sh helm -p pallet_defect_detection_mlops
     ```
 
 6. Download and prepare the model.
