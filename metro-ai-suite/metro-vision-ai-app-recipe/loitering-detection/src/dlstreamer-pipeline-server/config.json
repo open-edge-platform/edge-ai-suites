@@ -5,7 +5,7 @@
                 "name": "object_tracking_cpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source  ! decodebin force-sw-decoders=true ! gvaattachroi roi=0,200,300,400 ! gvadetect inference-region=1 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=CPU pre-process-backend=opencv model-instance-id=inst0 name=detection ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvawatermark ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source  ! decodebin force-sw-decoders=true ! gvaattachroi roi=0,200,300,400 ! gvadetect inference-region=1 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=CPU pre-process-backend=opencv model-instance-id=inst0 name=detection ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "description": "Object detection with yolov8",
                 "parameters": {
                     "type": "object",
@@ -24,7 +24,7 @@
                 "name": "object_tracking_gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source  ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaattachroi roi=0,200,300,400 ! gvadetect inference-region=1 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=GPU pre-process-backend=va-surface-sharing model-instance-id=instgpu0 name=detection ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvawatermark ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source  ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaattachroi roi=0,200,300,400 ! gvadetect inference-region=1 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=GPU pre-process-backend=va-surface-sharing model-instance-id=instgpu0 name=detection ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "description": "Object detection with yolov8",
                 "parameters": {
                     "type": "object",
@@ -43,7 +43,7 @@
                 "name": "object_tracking_npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source  ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaattachroi roi=0,200,300,400 ! gvadetect inference-region=1 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=NPU pre-process-backend=va model-instance-id=instnpu0 name=detection ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvawatermark ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source  ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaattachroi roi=0,200,300,400 ! gvadetect inference-region=1 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=NPU pre-process-backend=va model-instance-id=instnpu0 name=detection ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "description": "Object detection with yolov8",
                 "parameters": {
                     "type": "object",
