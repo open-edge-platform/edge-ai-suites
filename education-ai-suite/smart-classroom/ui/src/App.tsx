@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import TopPanel from './components/TopPanel/TopPanel';
 import HeaderBar from './components/Header/Header';
 import Body from './components/common/Body';
@@ -11,18 +11,32 @@ const App: React.FC = () => {
   const [projectName, setProjectName] = useState<string>('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
+  const wasInitiallyUnavailableRef = useRef(false);
+  const reloadTriggeredRef = useRef(false);
 
   const checkBackendHealth = async () => {
     try {
       const isHealthy = await pingBackend();
       if (isHealthy) {
         setBackendStatus('available');
+        // reload only if backend was initially unavailable
+        if (wasInitiallyUnavailableRef.current && !reloadTriggeredRef.current) {
+          reloadTriggeredRef.current = true;
+          window.location.reload();
+          return;
+        }
         loadSettings();
       } else {
         setBackendStatus('unavailable');
+        if (!wasInitiallyUnavailableRef.current) {
+          wasInitiallyUnavailableRef.current = true;
+        }
       }
     } catch {
       setBackendStatus('unavailable');
+      if (!wasInitiallyUnavailableRef.current) {
+        wasInitiallyUnavailableRef.current = true;
+      }
     }
   };
 
@@ -36,8 +50,17 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    checkBackendHealth(); // single call on mount
+    checkBackendHealth(); // initial check
   }, []);
+
+  useEffect(() => {
+    if ((backendStatus === 'unavailable' || backendStatus === 'checking') && wasInitiallyUnavailableRef.current && !reloadTriggeredRef.current) {
+      const interval = setInterval(() => {
+        checkBackendHealth();
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [backendStatus]);
 
   if (backendStatus === 'checking') {
     return (
@@ -56,7 +79,7 @@ const App: React.FC = () => {
       <div className="app-error">
         <div className="error-content">
           <h1>Backend Connection Lost</h1>
-          <p>Please check your server and reload the page.</p>
+          <p>Please check your server. Auto reload will occur once backend is up.</p>
         </div>
       </div>
     );
