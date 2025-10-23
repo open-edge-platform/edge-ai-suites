@@ -42,6 +42,7 @@ continuously and appears in the UI as soon as the application starts.
 Processing
 ##########
 
+- **Nginx reverse proxy server**: All interactions with user happens via Nginx server. It protects IBVS app by handling SSL/TLS encryption, filtering and validating requests and making the app directly inaccessible from external access.
 - **Video analysis with Deep Learning Streamer Pipeline Server and MediaMTX**:
   Select **Analyze Stream** to start the DL Streamer Pipeline Server pipeline.
   The Pipeline Server processes video through **MediaMTX**, which simulates
