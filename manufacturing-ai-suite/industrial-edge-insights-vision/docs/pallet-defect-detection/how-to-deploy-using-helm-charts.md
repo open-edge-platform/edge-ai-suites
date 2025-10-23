@@ -290,7 +290,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     }'
     ```
 
-7. Go to MinIO console on `https://<HOST_IP>:30443/minio` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
+7. Go to MinIO console on `https://<HOST_IP>:30443/minio/` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
    ![S3 minio image storage](./images/s3-minio-storage.png)
 
@@ -404,7 +404,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 
     > NOTE- The data above assumes there is a model in the registry that contains these properties. Also, the pipeline name that follows `user_defined_pipelines/`, will affect the `deployment` folder name.
 
-11. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+11. View the WebRTC streaming on `https://<HOST_IP>:30443/webrtc/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
     ![WebRTC streaming](./images/webrtc-streaming.png)
 
