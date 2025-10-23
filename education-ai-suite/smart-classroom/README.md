@@ -157,6 +157,8 @@ npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
+> ℹ️ Open a second (new) Command Prompt / terminal window for the frontend. The backend terminal stays busy serving requests.
+
 💡 Tips: You should see backend logs similar to this:
 
 ```
@@ -171,3 +173,35 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 This means your pipeline server has started successfully and is ready to accept requests.
 
 ---
+
+### 🖥️ 4. Access the UI
+
+After starting the frontend you can open the Smart Classroom UI in a browser:
+
+Local machine:
+- http://localhost:5173
+- http://127.0.0.1:5173
+
+From another device on the same network (replace <HOST_IP> with your computer’s IP):
+- http://<HOST_IP>:5173
+
+Find your IP (Windows PowerShell):
+```
+ipconfig
+```
+Use the IPv4 Address from your active network adapter.
+
+If you changed the port, adjust the URL accordingly.
+
+---
+
+### 🔍 6. Troubleshooting (Focused)
+
+- Frontend not opening: Ensure you ran npm run dev in a second terminal after starting python main.py.
+- Backend not ready: Wait until Uvicorn shows "Application startup complete" and listening on port 8000.
+- URL fails from another device: Confirm you used --host 0.0.0.0 and replace <HOST_IP> correctly.
+- Nothing at localhost:5173: Check that the frontend terminal shows Vite server running and no port conflict.
+- Firewall blocks access: Allow inbound on ports 5173 (frontend) and 8000 (backend) on Windows.
+- Auto reload not happening: Refresh manually if backend was restarted after initial UI load.
+
+
