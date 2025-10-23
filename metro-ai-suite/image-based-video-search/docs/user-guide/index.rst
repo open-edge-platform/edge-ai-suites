@@ -25,7 +25,7 @@ How it Works
 
 The application workflow has three stages: inputs, processing, and outputs.
 
-.. figure:: ./_images/architecture_simplified.png
+.. figure:: ./_images/architecture.png
    :alt: Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.
 
    Figure 1: Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.
