@@ -67,7 +67,7 @@ You can either generate or download the Helm charts.
       ```bash
         cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series # path relative to git clone folder
 
-        make gen_helm_charts app=weld-anomaly-detection
+        make gen_helm_charts app=weld-anomaly-detection version=1.0.0-weekly
 
         cd helm/
       ```

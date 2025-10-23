@@ -1,4 +1,4 @@
-# Security Enablement for Smart Intersection Application
+# Security Enablement
 
 This guide covers security enablement for the Smart Intersection application, including:
 - dTPM (Discrete Trusted Platform Module)

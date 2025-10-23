@@ -77,8 +77,8 @@ python -m venv smartclassroom
 # On Windows:
 smartclassroom\Scripts\activate
 
+cd smart-classroom
 python.exe -m pip install --upgrade pip
-pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
 pip install --upgrade -r requirements.txt
 ```
 ---
@@ -93,10 +93,12 @@ python -m venv smartclassroom_ipex
 smartclassroom_ipex\Scripts\activate
 
 python.exe -m pip install --upgrade pip
+cd smart-classroom
 pip install --upgrade -r requirements.txt
 pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
 ```
-> 💡 *Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.*
+> 💡 *Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.*  
+> 💡 *Note: `smartclassroom_ipex` should only be used with FunAsr and Ipex related models. Don't configure Openvino related models in `smartclassroom_ipex`*
 
 ---
 ### ⚙️ 2. Default Configuration
@@ -117,8 +119,8 @@ summarizer:
   weight_format: int8         # Supported: fp16, fp32, int4, int8
   max_new_tokens: 1024        # Maximum tokens to generate in summaries
 ```
-### 💡 Tips:
-* For Chinese audio transcription, switch to funASR with Paraformer:
+### 💡 Note:
+* For `smartclassroom_ipex` Environment or Chinese audio transcription, switch to funASR with Paraformer:
 
 ```bash
 asr:
@@ -155,6 +157,8 @@ npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
+> ℹ️ Open a second (new) Command Prompt / terminal window for the frontend. The backend terminal stays busy serving requests.
+
 💡 Tips: You should see backend logs similar to this:
 
 ```
@@ -169,3 +173,35 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 This means your pipeline server has started successfully and is ready to accept requests.
 
 ---
+
+### 🖥️ 4. Access the UI
+
+After starting the frontend you can open the Smart Classroom UI in a browser:
+
+Local machine:
+- http://localhost:5173
+- http://127.0.0.1:5173
+
+From another device on the same network (replace <HOST_IP> with your computer’s IP):
+- http://<HOST_IP>:5173
+
+Find your IP (Windows PowerShell):
+```
+ipconfig
+```
+Use the IPv4 Address from your active network adapter.
+
+If you changed the port, adjust the URL accordingly.
+
+---
+
+### 🔍 6. Troubleshooting (Focused)
+
+- Frontend not opening: Ensure you ran npm run dev in a second terminal after starting python main.py.
+- Backend not ready: Wait until Uvicorn shows "Application startup complete" and listening on port 8000.
+- URL fails from another device: Confirm you used --host 0.0.0.0 and replace <HOST_IP> correctly.
+- Nothing at localhost:5173: Check that the frontend terminal shows Vite server running and no port conflict.
+- Firewall blocks access: Allow inbound on ports 5173 (frontend) and 8000 (backend) on Windows.
+- Auto reload not happening: Refresh manually if backend was restarted after initial UI load.
+
+

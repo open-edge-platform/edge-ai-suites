@@ -48,8 +48,6 @@ docker build -t visual-search-qa-app:latest --build-arg https_proxy=$https_proxy
 ### Step 2: Prepare host directories for models and data
 
 ```
-mkdir -p $HOME/.cache/huggingface
-mkdir -p $HOME/models
 mkdir -p $HOME/data
 ```
 
@@ -71,30 +69,11 @@ Note: supported media types: jpg, png, mp4
     cd deployment/docker-compose/
     ```
 
-2.  Set up environment variables with either one of the following options:
-
-    A. To use the independent multi-modal embedding service for embedding extraction, run
+2.  Set up environment variables
 
     ``` bash
-    source env_embed_service.sh 
+    source env.sh 
     ```
-
-    B. To use a local embedding model, run
-    
-    ``` bash
-    source env_local_embed_model.sh 
-    ```
-
-    When prompting `Please enter the LOCAL_EMBED_MODEL_ID`, choose one model name from table below and input
-
-    ##### Supported Local Embedding Models
-
-    | Model Name                          | Search in English | Search in Chinese | Remarks|
-    |-------------------------------------|----------------------|---------------------|---------------|
-    | CLIP-ViT-H-14                        | Yes                  | No                 |            |
-    | CN-CLIP-ViT-H-14              | Yes                  | Yes                  | Supports search text query in Chinese       | 
-
-Note: if the service is deployed with one of the options above, and later deployed again with the other option, you need to clean the local Milvus cache data by deleting `/volumes/minio/`, `/volumes/milvus/`, and `/volumes/etcd/` before the second deployment.
 
 When prompting `Please enter the VLM_MODEL_NAME`, choose one model name from table below and input
 
@@ -235,6 +214,32 @@ docker logs <container_id>
    ```
 
 **Note**: Removing the `ov-models` volume will delete any previously cached/converted models. The VLM service will automatically re-download and convert models on the next startup, which may take additional time depending on your internet connection and the model size.
+
+### Embedding Model Changed Issues
+
+**Problem**: Dataprep microservice API fails and "mismatch" is found in logs.
+
+**Cause**: If the application is re-deployed with a different embedding model set for the multimodal embedding service other than the previous deployment, it is possible that the embedding dimension has changed as well, leading to a vector dimension mismatch in vector DB.
+
+**Solution**:
+1. Stop the running application:
+   ```bash
+   docker compose -f compose_milvus.yaml down
+   ```
+
+2. Remove the existing Milvus volumes:
+   ```bash
+   sudo rm -rf /volumes/milvus
+   sudo rm -rf /volumes/minio
+   sudo rm -rf /volumes/etcd
+   ```
+
+3. Restart the application:
+   ```bash
+   source env.sh
+   docker compose -f compose_milvus.yaml up -d
+   ```
+
 
 ## Known Issues
 

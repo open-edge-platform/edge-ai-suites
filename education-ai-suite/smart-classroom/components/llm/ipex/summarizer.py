@@ -1,16 +1,20 @@
 from components.llm.base_summarizer import BaseSummarizer
-from ipex_llm.transformers import AutoModelForCausalLM
 import torch
 import threading
 from utils.locks import audio_pipeline_lock
 from utils.config_loader import config
 from utils import ensure_model
+from transformers import TextIteratorStreamer
 import logging
 import os
 logger = logging.getLogger(__name__)
-
-from transformers import TextIteratorStreamer
-
+try:
+    from ipex_llm.transformers import AutoModelForCausalLM
+except ImportError as e:
+    if(config.models.summarizer.provider == "ipex"):
+        logger.error("Error importing ipex_llm. Install required dependencies or set summarizer to OpenVINO in config.yaml.")
+        raise e
+    AutoModelForCausalLM = None
 
 class Summarizer(BaseSummarizer):
     def __init__(self, model_name, device="xpu", temperature=0.7):
