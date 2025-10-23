@@ -7,7 +7,7 @@ ENV LANG=C.UTF-8
 
 ARG ARCH="gpu"
 
-RUN apt-get update -y && apt-get install -y --no-install-recommends --fix-missing libgl1-mesa-glx libglib2.0-0 build-essential ca-certificates wget curl
+RUN apt-get update -y && apt-get install -y --no-install-recommends --fix-missing curl
 
 RUN useradd -m -s /bin/bash user && \
 mkdir -p /home/user && \

@@ -27,8 +27,6 @@ export HF_ENDPOINT=https://hf-mirror.com
 export DEVICE="GPU.1"
 export VLM_DEVICE="GPU.1"
 export HOST_DATA_PATH="$HOME/data"
-export MODEL_DIR="$HOME/models"
-# export LOCAL_EMBED_MODEL_ID="CLIP-ViT-H-14"
 # export VLM_MODEL_NAME="Qwen/Qwen2.5-VL-7B-Instruct"
 
 export DEFAULT_START_OFFSET_SEC=0

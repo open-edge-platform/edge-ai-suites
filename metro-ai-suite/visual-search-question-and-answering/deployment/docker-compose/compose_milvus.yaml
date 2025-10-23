@@ -160,8 +160,6 @@ services:
       - HF_ENDPOINT=${HF_ENDPOINT}
       - DEVICE=${DEVICE}
       - HOST_DATA_PATH=${HOST_DATA_PATH}
-      - LOCAL_EMBED_MODEL_ID=${LOCAL_EMBED_MODEL_ID}
-      - MODEL_DIR=${MODEL_DIR}
       - MILVUS_HOST=${MILVUS_HOST}
       - MILVUS_PORT=${MILVUS_PORT}
       - EMBEDDING_BASE_URL=${EMBEDDING_BASE_URL}
@@ -183,9 +181,9 @@ services:
       - default
     depends_on:
       - milvus-standalone
+      - multimodal-embedding-serving
     volumes:
-      - $HOME/.cache/huggingface:/home/user/.cache/huggingface:rw
-      - ${MODEL_DIR}:/home/user/models:rw
+      - ov-models:/home/user/models
       - ${HOST_DATA_PATH}:/home/user/data:rw
 
   retriever-milvus:
@@ -200,8 +198,6 @@ services:
       - https_proxy=${https_proxy}
       - HF_ENDPOINT=${HF_ENDPOINT}
       - DEVICE=${DEVICE}
-      - LOCAL_EMBED_MODEL_ID=${LOCAL_EMBED_MODEL_ID}
-      - MODEL_DIR=${MODEL_DIR}
       - MILVUS_HOST=${MILVUS_HOST}
       - MILVUS_PORT=${MILVUS_PORT}
       - EMBEDDING_BASE_URL=${EMBEDDING_BASE_URL}
@@ -222,10 +218,8 @@ services:
     networks:
       - default
     depends_on:
+      - multimodal-embedding-serving
       - dataprep-visualdata-milvus
-    volumes:
-      - $HOME/.cache/huggingface:/home/user/.cache/huggingface:rw
-      - ${MODEL_DIR}:/home/user/models:rw
 
   visual-search-qa-app:
     image: ${REGISTRY:-}visual-search-qa-app:${TAG:-latest}
@@ -239,8 +233,8 @@ services:
       https_proxy: ${https_proxy}
       host_ip: ${host_ip}
       HOST_DATA_PATH: ${HOST_DATA_PATH}
-      LOCAL_EMBED_MODEL_ID: ${LOCAL_EMBED_MODEL_ID}
       VLM_MODEL_NAME: ${VLM_MODEL_NAME}
+      VCLIP_MODEL: ${VCLIP_MODEL}
       BACKEND_VQA_BASE_URL: ${BACKEND_VQA_BASE_URL}
       BACKEND_SEARCH_BASE_URL: ${BACKEND_SEARCH_BASE_URL}
       BACKEND_DATAPREP_BASE_URL: ${BACKEND_DATAPREP_BASE_URL}
