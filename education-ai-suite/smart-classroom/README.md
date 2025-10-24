@@ -84,8 +84,11 @@ pip install --upgrade -r requirements.txt
 ---
 
 
-**d. [Optional] Create Python Venv for Ipex Based Summarizer**  
-If you plan to use IPEX, create a separate virtual environment.
+**d. [Optional] Create Python Venv for Ipex Based Summarizer** 
+  
+If you plan to use IPEX, create a separate virtual environment.  
+  
+**Note: `smartclassroom_ipex` should only be used with FunAsr and Ipex related models (Specified in 2nd section). Don't configure Openvino related models in `smartclassroom_ipex`**
 
 ```bash
 python -m venv smartclassroom_ipex
@@ -98,11 +101,12 @@ pip install --upgrade -r requirements.txt
 pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
 ```
 > 💡 *Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.*  
-> 💡 *Note: `smartclassroom_ipex` should only be used with FunAsr and Ipex related models. Don't configure Openvino related models in `smartclassroom_ipex`*
 
 ---
-### ⚙️ 2. Default Configuration
+### ⚙️ 2. Configuration
 
+#### a. Default Configuration  
+  
 By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file:
 
 ```bash
@@ -119,16 +123,21 @@ summarizer:
   weight_format: int8         # Supported: fp16, fp32, int4, int8
   max_new_tokens: 1024        # Maximum tokens to generate in summaries
 ```
-### 💡 Note:
-* For `smartclassroom_ipex` Environment or Chinese audio transcription, switch to funASR with Paraformer:
+#### b. Chinese Audio Transcription  
 
+For Chinese audio transcription, switch to funASR with Paraformer in your config:
 ```bash
 asr:
   provider: funasr
   name: paraformer-zh
 ```
 
-* (Optional) If you want to use IPEX-based summarization, make sure IPEX-LLM is installed, env for ipex is activated and set following in `config`:
+#### c. IPEX-based Summarization
+
+To use IPEX for summarization, ensure:
+- IPEX-LLM is installed.
+- The environment for IPEX is activated.
+- The configuration is updated as shown below:
 
 ```bash
 summarizer:
@@ -203,5 +212,10 @@ If you changed the port, adjust the URL accordingly.
 - Nothing at localhost:5173: Check that the frontend terminal shows Vite server running and no port conflict.
 - Firewall blocks access: Allow inbound on ports 5173 (frontend) and 8000 (backend) on Windows.
 - Auto reload not happening: Refresh manually if backend was restarted after initial UI load.
+- If you encounter the error “Port for tensor name cache_position was not found.” in the backend, it indicates the models were not configured as per the instructions in the README. To fix the issue, run:
+  ```bash
+  pip install --upgrade -r requirements.txt
+  ```
+  Then delete the models directory from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
 
 
