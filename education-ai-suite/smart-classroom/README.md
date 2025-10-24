@@ -80,6 +80,7 @@ smartclassroom\Scripts\activate
 cd smart-classroom
 python.exe -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
+pip install py-cpuinfo
 ```
 ---
 
