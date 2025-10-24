@@ -1,4 +1,4 @@
-# Image-Based Video Search Sample Application
+# Image-Based Video Search (IBVS) Sample Application
 
 <!--REQUIRED: Add a short description without including the name of the RI/Application/microservice in the description. Ensure it's at least 50 characters (excluding spaces) and doesn't exceed 150 characters (excluding spaces). This will enable the content to be properly displayed in the catalog's card layout.-->
 
@@ -23,7 +23,7 @@ quickly locate objects of interest across large video datasets.
 
 The application workflow has three stages: inputs, processing, and outputs.
 
-![Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.](_images/architecture_simplified.png)
+![Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.](_images/architecture.png)
 
 ### Inputs
 
@@ -35,6 +35,7 @@ continuously and appears in the UI as soon as the application starts.
 
 ### Processing
 
+- **Nginx reverse proxy server**: All interactions with user happens via Nginx server. It protects IBVS app by handling SSL/TLS encryption, filtering and validating requests and making the app directly inaccessible from external access.
 - **Video analysis with Deep Learning Streamer Pipeline Server and MediaMTX**:
   Select **Analyze Stream** to start the DL Streamer Pipeline Server pipeline.
   The Pipeline Server processes video through **MediaMTX**, which simulates
