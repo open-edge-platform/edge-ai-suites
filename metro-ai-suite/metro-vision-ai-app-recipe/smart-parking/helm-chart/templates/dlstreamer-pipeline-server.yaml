@@ -50,10 +50,10 @@ spec:
         - -c
         - |
           mkdir -p /tmp/videos
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_1.mp4 -o /tmp/videos/new_video_1.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_2.mp4 -o /tmp/videos/new_video_2.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_3.mp4 -o /tmp/videos/new_video_3.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_4.mp4 -o /tmp/videos/new_video_4.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/videos/new_video_1.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/videos/new_video_2.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/videos/new_video_3.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/videos/new_video_4.mp4
         env:
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
