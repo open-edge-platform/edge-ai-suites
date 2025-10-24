@@ -217,5 +217,8 @@ If you changed the port, adjust the URL accordingly.
   pip install --upgrade -r requirements.txt
   ```
   Then delete the models directory from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
-
-
+- If you face a tokenizer load issue like this:
+  ``` bash
+  Either openvino_tokenizer.xml was not provided or it was not loaded correctly. Tokenizer::encode is not available
+  ```
+  Delete the models folder from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
