@@ -53,6 +53,11 @@ Architecture of the Image-Based Video Search Application.*
 
 ## Key Components and Their Roles
 
+1. **Nginx reverse proxy server**
+   - **What it is**: An Nginx reverse proxy acts as an intermediary server that forwards client requests to backend servers, helping with load balancing, SSL termination, caching, and centralized access control.
+   - **How it’s used**: It acts as proxy server. All interactions to IBVS app happens via nginx server. It forwards all the requests from outside world to internal services based on routing configuration.
+   - **Benefits**: It acts as protective gateway that receives external requests and securely forwards them to internal services, keeping those backend apps hidden and inaccessible from direct external access.
+
 1. **MediaMTX (Third-Party Microservice)**
 
    - **What it is**: A service that simulates remote video cameras.

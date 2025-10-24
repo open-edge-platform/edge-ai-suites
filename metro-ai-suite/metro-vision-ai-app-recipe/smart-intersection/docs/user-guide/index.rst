@@ -27,4 +27,5 @@ This guide is designed to help developers understand the architecture, setup, an
    get-started
    how-to-deploy-helm
    how-to-deploy-with-edge-orchestrator
+   application-security-enablement
    support

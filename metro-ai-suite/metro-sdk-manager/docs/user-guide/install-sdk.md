@@ -1,4 +1,4 @@
-# Install Metro SDK
+# Installer - Metro SDK
 
 <script type="module" crossorigin src="../_static/installer/iframe-resizer.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
