@@ -290,19 +290,19 @@
     "list": [
       {
         "current": {
-          "text": "https://0.0.0.0/mediamtx/",
-          "value": "https://0.0.0.0/mediamtx/"
+          "text": "https://10.223.22.169/mediamtx/",
+          "value": "https://10.223.22.169/mediamtx/"
         },
         "description": "",
         "name": "WEBRTC_URL",
         "options": [
           {
             "selected": true,
-            "text": "https://0.0.0.0/mediamtx/",
-            "value": "https://0.0.0.0/mediamtx/"
+            "text": "https://10.223.22.169/mediamtx/",
+            "value": "https://10.223.22.169/mediamtx/"
           }
         ],
-        "query": "https://0.0.0.0/mediamtx/",
+        "query": "https://10.223.22.169/mediamtx/",
         "type": "textbox"
       }
     ]
