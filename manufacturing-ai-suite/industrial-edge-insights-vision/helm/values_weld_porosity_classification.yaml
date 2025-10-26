@@ -79,6 +79,9 @@ config:
     int:
       coturn_tcp_port: "3478"
       coturn_udp_port: "3478"
+    ext:
+      coturn_tcp_port: "30478"
+      coturn_udp_port: "30478"
   dlstreamer_pipeline_server:
     name: dlstreamer-pipeline-server
     int:
