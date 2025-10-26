@@ -23,6 +23,9 @@ grafana:
 node_red:
   image: nodered/node-red
   imageTag: 3.1
+nginx:
+  image: nginx
+  imageTag: 1.27-alpine
 env:
   ENABLE_WEBRTC: "true"
   ENABLE_RTSP: "true"
@@ -47,10 +50,6 @@ config:
       mediamtx_port: "8889"
       mediamtx_sdp_port: "8189"
       mediamtx_api_port: "9997"
-    ext:
-      mediamtx_port: "30489"
-      mediamtx_sdp_port: "30488"
-      mediamtx_api_port: "30487"
   coturn:
     name: coturn
     int:
@@ -64,27 +63,26 @@ config:
     int:
       rest_api_port: "8080"
       rtsp_output_port: "8554"
-    ext:
-      rest_api_port: "30485"
-      rtsp_output_port: "30484"
   mqtt_broker:
     name: mqtt-broker
     int:
       mqtt_port: "1883"
-    ext:
-      mqtt_port: "30483"
   grafana:
     name: grafana
     int:
       web_ui_port: "3000"
-    ext:
-      web_ui_port: "30480"
   node_red:
     name: node-red
     int:
       web_ui_port: "1880"
+  nginx:
+    name: nginx-reverse-proxy
+    int:
+      http_port: "80"
+      https_port: "443"
     ext:
-      web_ui_port: "30482"
+      http_port: "30080"
+      https_port: "30443"
 volumes:
   pipelines:
     name: vol-pipelines

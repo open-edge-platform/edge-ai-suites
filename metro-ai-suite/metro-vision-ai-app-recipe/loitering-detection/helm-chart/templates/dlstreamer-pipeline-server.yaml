@@ -5,18 +5,16 @@ metadata:
   name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
   namespace: {{ $.Values.namespace }}
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: dlstreamer-pipeline-server
   ports:
   - name: "rest-api"
     port: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
     targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
-    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rest_api_port }}
   - name: "rtsp-output-streaming"
     port: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
     targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
-    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rtsp_output_port }}
 ---
 apiVersion: apps/v1
 kind: Deployment

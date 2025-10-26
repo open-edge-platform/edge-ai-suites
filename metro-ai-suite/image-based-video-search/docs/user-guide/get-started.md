@@ -130,11 +130,11 @@ a pre-step to prepare models may be needed
 
 6. **Access the Application**:
     - Open a browser and go to the following endpoints to access the application:
-      - App UI: `http://localhost:3000`
-      - Search UI: `http://localhost:9000/docs`
-      - MilvusDB UI: `http://localhost:8000/`
-      - Stream UI: `http://localhost:8889/stream`. To access this stream remotely, open this url `rtsp://<ip-addr>:8554/stream`. Replace `<ip-addr>` with your system IP address
-    > Note: To access `App UI`, `Search UI` and `MilvusDB UI` urls remotely, replace the `localhost` with your system IP address. 
+      - App UI: `https://<ip-addr>/`
+      - Search UI: `https://<ip-addr>/docs`
+      - MilvusDB UI: `https://<ip-addr>/ibvs-milvus-ui`
+      - Stream UI: You can access https stream at `https://<ip-addr>/stream` and RTSP stream at `rtsp://<ip-addr>:8554/stream`. 
+    > Note: Replace `<ip-addr>` with your host IP address
 
 
 7. **Run the Application**:
