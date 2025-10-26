@@ -56,8 +56,14 @@ spec:
       containers:
       - name: mediamtx
         env:
+          - name: http_proxy
+            value: {{ $.Values.env.http_proxy }}
+          - name: https_proxy
+            value: {{ $.Values.env.https_proxy }}
+          - name: no_proxy
+            value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
           - name: MTX_WEBRTCICESERVERS2_0_URL
-            value: "turn:{{ $.Values.env.HOST_IP }}:{{ $.Values.config.coturn.int.coturn_udp_port }}"
+            value: "turn:{{ $.Values.env.HOST_IP }}:{{ $.Values.config.coturn.ext.coturn_udp_port }}"
           - name: MTX_WEBRTCICESERVERS2_0_USERNAME
             valueFrom:
               secretKeyRef:
