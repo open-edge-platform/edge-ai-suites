@@ -356,7 +356,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 
 7. Run the following curl command to upload the local model. 
     ```sh
-    curl -k -L -X POST "https://<HOST_IP>:30443/reigstry/models" \
+    curl -k -L -X POST "https://<HOST_IP>:30443/registry/models" \
     -H 'Content-Type: multipart/form-data' \
     -F 'name="YOLO_Test_Model"' \
     -F 'precision="fp32"' \
@@ -377,7 +377,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 
 9. Check the instance ID of the currently running pipeline to use it for the next step.
    ```sh
-   curl -k --location -X GET http://<HOST_IP>:30443/api/pipelines/status
+   curl -k --location -X GET https://<HOST_IP>:30443/api/pipelines/status
    ```
 
 10. Restart the model with a new model from Model Registry.
