@@ -1,18 +1,11 @@
 {
     "config": {
-        "logging": {
-            "C_LOG_LEVEL": "INFO",
-            "PY_LOG_LEVEL": "INFO"
-        },
-        "cert_type": [
-            "zmq"
-        ],
         "pipelines": [
             {
-                "name": "yolov10_1_cpu",
+                "name": "yolov11s_1_cpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! gvadetect model=/home/pipeline-server/models/public/yolov10s/FP32/yolov10s.xml pre-process-backend=opencv threshold=0.7 model-instance-id=inst0 name=detection ! queue ! gvaclassify model=/home/pipeline-server/models/colorcls2/colorcls2.xml model_proc=/home/pipeline-server/models/colorcls2/colorcls2.json pre-process-backend=opencv model-instance-id=inst1 name=classification ! queue ! gvapython module=/home/pipeline-server/models/colorcls2/process class=Process function=process_frame ! queue ! gvawatermark ! gvametaconvert add-empty-results=true name=metaconvert ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin force-sw-decoders=true ! videoconvert ! video/x-raw ! gvadetect model=/home/pipeline-server/models/public/yolo11s/INT8/yolo11s.xml pre-process-backend=opencv device=CPU threshold=0.7 model-instance-id=inst0 name=detection ! queue ! gvaclassify model=/home/pipeline-server/models/colorcls2/colorcls2.xml model_proc=/home/pipeline-server/models/colorcls2/colorcls2.json pre-process-backend=opencv device=CPU model-instance-id=inst1 name=classification ! queue ! gvapython module=/home/pipeline-server/models/colorcls2/process class=Process function=process_frame ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -22,39 +15,21 @@
                                 "format": "element-properties"
                             }
                         },
-                        "detection-device": {
-                            "element": {
-                                "name": "detection",
-                                "property": "device"
-                            },
-                            "type": "string",
-                            "default": "{env[DETECTION_DEVICE]}"
-                        },
                         "classification-properties": {
                             "element": {
                                 "name": "classification",
                                 "format": "element-properties"
                              }
-                        },
-                        "classification-device": {
-                            "element": {
-                                "name": "classification",
-                                "property": "device"
-                            },
-                            "type": "string",
-                            "default": "{env[DETECTION_DEVICE]}"
                         }
-
                     }
                 },
-                "auto_start": false,
-                "publish_frame": true
+                "auto_start": false
             },
             {
-                "name": "yolov10_1_gpu",
+                "name": "yolov11s_1_gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/pipeline-server/models/public/yolov10s/FP16/yolov10s.xml pre-process-backend=va-surface-sharing batch_size=8 model-instance-id=instgpu0 name=detection ! queue ! gvaclassify batch-size=8 model=/home/pipeline-server/models/colorcls2/colorcls2.xml model_proc=/home/pipeline-server/models/colorcls2/colorcls2.json pre-process-backend=va-surface-sharing model-instance-id=instgpu1 name=classification ! queue ! gvapython module=/home/pipeline-server/models/colorcls2/process class=Process function=process_frame ! queue ! gvawatermark ! videoconvertscale ! video/x-raw,format=I420 ! gvametaconvert add-empty-results=true name=metaconvert ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/pipeline-server/models/public/yolo11s/INT8/yolo11s.xml pre-process-backend=va-surface-sharing device=GPU batch_size=8 model-instance-id=instgpu0 name=detection ! queue ! gvaclassify batch-size=8 model=/home/pipeline-server/models/colorcls2/colorcls2.xml model_proc=/home/pipeline-server/models/colorcls2/colorcls2.json pre-process-backend=va-surface-sharing device=GPU model-instance-id=instgpu1 name=classification ! queue ! gvapython module=/home/pipeline-server/models/colorcls2/process class=Process function=process_frame ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -64,50 +39,39 @@
                                 "format": "element-properties"
                             }
                         },
-                        "detection-device": {
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                             }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "yolov11s_1_npu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/pipeline-server/models/public/yolo11s/INT8/yolo11s.xml pre-process-backend=va device=NPU batch_size=8 model-instance-id=instnpu0 name=detection ! queue ! gvaclassify batch-size=8 model=/home/pipeline-server/models/colorcls2/colorcls2.xml model_proc=/home/pipeline-server/models/colorcls2/colorcls2.json pre-process-backend=va device=NPU model-instance-id=instnpu1 name=classification ! queue ! gvapython module=/home/pipeline-server/models/colorcls2/process class=Process function=process_frame ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
                             "element": {
                                 "name": "detection",
-                                "property": "device"
-                            },
-                            "type": "string",
-                            "default": "{env[DETECTION_DEVICE]}"
+                                "format": "element-properties"
+                            }
                         },
                         "classification-properties": {
                             "element": {
                                 "name": "classification",
                                 "format": "element-properties"
                              }
-                        },
-                        "classification-device": {
-                            "element": {
-                                "name": "classification",
-                                "property": "device"
-                            },
-                            "type": "string",
-                            "default": "{env[DETECTION_DEVICE]}"
                         }
-
                     }
                 },
-                "auto_start": false,
-                "publish_frame": true
-            }
-        ]
-    },
-    "interfaces": {
-        "Publishers": [
-            {
-                "Name": "default",
-                "Type": "zmq_ipc",
-                "zmq_send_hwm": 50,
-                "EndPoint": "/EII/sockets",
-                "Topics": [
-                    "yolov5",
-                    "yolov5_effnet"
-                ],
-                "AllowedClients": [
-                    "*"
-                ]
+                "auto_start": false
             }
         ]
     }

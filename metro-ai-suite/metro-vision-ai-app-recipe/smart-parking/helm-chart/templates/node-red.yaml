@@ -29,10 +29,10 @@ spec:
           cp -r /tmp/edge-ai-suites-1.0.0/metro-ai-suite/smart-parking/node-red/* /tmp/data/
           rm -rf /tmp/main.zip /tmp/edge-ai-suites-1.0.0
           mkdir -p /tmp/data/public/videos/
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_1.mp4 -o /tmp/data/public/videos/new_video_1.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_2.mp4 -o /tmp/data/public/videos/new_video_2.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_3.mp4 -o /tmp/data/public/videos/new_video_3.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_4.mp4 -o /tmp/data/public/videos/new_video_4.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/data/public/videos/new_video_1.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/data/public/videos/new_video_2.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/data/public/videos/new_video_3.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/data/public/videos/new_video_4.mp4
           rm /tmp/data/flows.json
           cp -f /tmp/flows.json /tmp/data/flows.json
         env:

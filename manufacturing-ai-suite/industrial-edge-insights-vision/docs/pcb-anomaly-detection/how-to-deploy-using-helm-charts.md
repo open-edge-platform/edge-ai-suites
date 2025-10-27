@@ -352,7 +352,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 
 6. Download and prepare the model.
     ```sh
-    export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/2d63ba48e2ac3c09339f27c32267bb026e146175/models/pcb-anomaly-detection.zip'
+    export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/FP16/pcb-anomaly-detection.zip'
     
     curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
     ```

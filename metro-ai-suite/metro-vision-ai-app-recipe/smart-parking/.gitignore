@@ -20,5 +20,6 @@ node_modules
 **/src/node-red/settings.js
 **/src/node-red/package.json
 **/src/dlstreamer-pipeline-server/models/public/
+**/src/dlstreamer-pipeline-server/models/datasets/
 **/src/dlstreamer-pipeline-server/videos/
 **/src/nginx/ssl/
