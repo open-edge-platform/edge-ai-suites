@@ -44,12 +44,13 @@ echo "Waiting for services to be healthy..."
 sleep 60
 
 docker cp $(docker ps -q --filter "name=grafana"):/var/lib/grafana/plugins ./src/grafana/plugins
+docker cp $(docker ps -q --filter "name=node-red"):/usr/src/node-red/node_modules ./src/node-red/
 
 docker compose down
 
 sed -i '/datasources\.yml.*datasources\.yml/a\      - "./src/grafana/plugins:/var/lib/grafana/plugins"' docker-compose.yml
 sed -i '/GF_INSTALL_PLUGINS=grafana-mqtt-datasource/d' docker-compose.yml
-
+sed -i '/node-red:/,/^  [a-zA-Z]/ s|entrypoint: \[ "/bin/bash", "-c", "/data/install_package.sh && /usr/src/node-red/entrypoint.sh" \]|entrypoint: [ "/bin/bash", "-c", "cp -r /data/node_modules/ /usr/src/node-red/ && /usr/src/node-red/entrypoint.sh" ]|' docker-compose.yml
 # Create directory offline-package and copy all the files into it
 echo "Creating offline-package directory and copying files..."
 mkdir -p offline-package
