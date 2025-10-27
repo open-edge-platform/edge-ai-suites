@@ -30,8 +30,7 @@ cameras:
   camera1:
     ffmpeg:
       inputs:
-        - path: /videos/output1.mp4
-          input_args: -re -stream_loop -1 -fflags +genpts
+        - path: rtsp://{RTSP_STREAM_IP}:8554/camera2
           roles:
             - detect
             - record
@@ -63,8 +62,7 @@ cameras:
   camera2:
     ffmpeg:
       inputs:
-        - path: /videos/output.mp4
-          input_args: -re -stream_loop -1 -fflags +genpts
+        - path: rtsp://{RTSP_STREAM_IP}:8554/camera2
           roles:
             - detect
             - record
@@ -95,8 +93,7 @@ cameras:
   camera3:
     ffmpeg:
       inputs:
-        - path: /videos/output2.mp4
-          input_args: -re -stream_loop -1 -fflags +genpts
+        - path: rtsp://{RTSP_STREAM_IP}:8554/camera3
           roles:
             - detect
             - record
@@ -128,8 +125,7 @@ cameras:
   camera4:
     ffmpeg:
       inputs:
-        - path: /videos/output3.mp4
-          input_args: -re -stream_loop -1 -fflags +genpts
+        - path: rtsp://{RTSP_STREAM_IP}:8554/camera4
           roles:
             - detect
             - record

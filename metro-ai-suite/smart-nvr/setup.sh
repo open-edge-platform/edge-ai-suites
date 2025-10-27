@@ -83,6 +83,10 @@ configure_scenescape_setup() {
         
         # Configure Frigate with Scenescape cameras
         cp "./resources/frigate-config/config-scenescape.yml" "./resources/frigate-config/config.yml"
+        
+        # Substitute RTSP_STREAM_IP with host IP in the configuration
+        local host_ip=$(get_host_ip)
+        sed -i "s/{RTSP_STREAM_IP}/${host_ip}/g" "./resources/frigate-config/config.yml"
         print_success "Scenescape Frigate configuration activated"
         
         # Copy Scenescape certificates
