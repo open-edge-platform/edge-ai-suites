@@ -44,13 +44,12 @@ metadata:
   labels:
     app: broker
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
   - port: {{ $.Values.config.mqtt_broker.int.mqtt_port }}
     targetPort: {{ $.Values.config.mqtt_broker.int.mqtt_port }}
     name: mqtt
     protocol: TCP
-    nodePort: {{ $.Values.config.mqtt_broker.ext.mqtt_port }}
   selector:
     app: broker
 ---

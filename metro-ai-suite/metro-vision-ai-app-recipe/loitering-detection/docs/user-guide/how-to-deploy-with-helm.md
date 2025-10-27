@@ -74,7 +74,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)
 
 ``` sh
-curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_1 -X POST -H 'Content-Type: application/json' -d '
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/VIRAT_S_000101.mp4",
@@ -96,7 +96,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_1 -
     }
 }'
 
-curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_2 -X POST -H 'Content-Type: application/json' -d '
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/VIRAT_S_000102.mp4",
@@ -118,7 +118,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_2 -
     }
 }'
 
-curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_3 -X POST -H 'Content-Type: application/json' -d '
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/VIRAT_S_000103.mp4",
@@ -140,7 +140,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_3 -
     }
 }'
 
-curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_4 -X POST -H 'Content-Type: application/json' -d '
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/VIRAT_S_000104.mp4",
@@ -163,7 +163,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_4 -
 }'
 ```
 
-4. View the Grafana and WebRTC streaming on `http://<HOST_IP>:30380`.
+4. View the Grafana and WebRTC streaming on `https://<HOST_IP>:30443/grafana/`.
     - Log in with the following credentials:
         - **Username:** `admin`
         - **Password:** `admin`

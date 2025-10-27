@@ -30,6 +30,8 @@ services:
       - SERVICE_NAME=dlstreamer-pipeline-server
       - MQTT_HOST=broker
       - MQTT_PORT=1883
+      # NPU related environment variables
+      - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
     volumes:
       - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/models:/home/pipeline-server/models"

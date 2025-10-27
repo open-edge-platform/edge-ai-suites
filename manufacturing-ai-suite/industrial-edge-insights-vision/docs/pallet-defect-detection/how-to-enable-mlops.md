@@ -77,7 +77,7 @@ With this feature, during runtime, you can download a new model from the registr
 
 1.  Download and prepare the model.
     ```sh
-    export MODEL_URL='https://github.com/open-edge-platform/edge-ai-suites/raw/9b679287cb6650619b4d1dd01f993ae793f8ec04/manufacturing-ai-suite/industrial-edge-insights-vision/pallet_defect_detection.zip'
+    export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/INT8/pallet_defect_detection.zip'
     
     curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
     ```

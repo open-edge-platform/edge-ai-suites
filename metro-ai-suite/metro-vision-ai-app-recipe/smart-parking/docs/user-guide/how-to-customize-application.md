@@ -32,14 +32,14 @@ The DL Streamer Pipeline Server is a powerful tool designed to process video fee
 
 The DL Streamer Pipeline Server utilizes GStreamer pipelines to define the flow of video data through various processing elements.
 
-##### Object Detection Pipelines (YOLOv10 Series)
+##### Object Detection Pipelines (YOLOv11s Series)
 
-Pipelines like `yolov10_1`, `yolov10_2`, etc., are used to identify objects in the video frames.
+Pipelines like `yolov11s_1_cpu`, `yolov11s_1_gpu`, `yolov11s_1_npu` etc., are used to identify objects in the video frames.
 
-*   **Pipelines:** `yolov10_1`, `yolov10_2`, `yolov10_3`, `yolov10_4`
+*   **Pipelines:** `yolov11s_1_cpu`, `yolov11s_1_gpu`, `yolov11s_1_npu`
 *   **How They Work:**
     *   **Video Source:** Uses GStreamer to capture live video.
-    *   **Decoding & Detection:** The pipeline decodes the video stream and uses the `gvadetect` element with a YOLO model (located at `/home/pipeline-server/models/public/yolov10s/FP32/yolov10s.xml`) to identify objects.
+    *   **Decoding & Detection:** The pipeline decodes the video stream and uses the `gvadetect` element with a YOLO model (located at `/home/pipeline-server/models/public/yolo11s/INT8/yolo11s.xml`) to identify objects.
     *   **Post-Processing:**
         *   `gvawatermark` adds visual overlays (like bounding boxes) on detected objects.
         *   `gvametaconvert` and `gvametapublish` process and publish the metadata.
@@ -51,9 +51,9 @@ Pipelines like `yolov10_1`, `yolov10_2`, etc., are used to identify objects in t
 
 ##### Object Tracking Pipelines
 
-Pipelines like `object_tracking_1`, `object_tracking_2`, `object_tracking_3`, `object_tracking_4` are designed to track objects detected by the object detection pipelines.
+Pipelines like `object_tracking_cpu`, `object_tracking_gpu`, `object_tracking_npu` are designed to track objects detected by the object detection pipelines.
 
-*   **Pipelines:** `object_tracking_1`, `object_tracking_2`, `object_tracking_3`, `object_tracking_4`
+*   **Pipelines:** `object_tracking_cpu`, `object_tracking_gpu`, `object_tracking_npu`
 *   **How They Work:**
     *   **Detection Model:** Uses the `pedestrian-and-vehicle-detector-adas-0001` model for specialized tracking.
     *   **Tracking Element:** Incorporates `gvatrack` with the setting `tracking-type=short-term-imageless` to follow objects over time.
@@ -67,7 +67,6 @@ Pipelines like `object_tracking_1`, `object_tracking_2`, `object_tracking_3`, `o
 Each pipeline is designed to be user-friendly and customizable:
 
 *   **Detection Properties:** Configurable parameters let you adjust the model settings without writing code. Example: The "detection-properties" element defines how the object detection module should behave.
-*   **Detection Device:** The "detection-device" parameter determines which hardware (e.g., CPU) to use. It uses an environment variable (`{env[DETECTION_DEVICE]}`) to make it flexible across different setups.
 
 #### Messaging Interface (MQTT)
 
