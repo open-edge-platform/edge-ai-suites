@@ -55,7 +55,7 @@ spec:
         - name: TS_TOPIC
           value: "ts_weld_anomaly_detection"
         - name: FUSION_TOPIC
-          value: "fusion/anomaly"
+          value: "fusion/anomaly_detection_results"
         # Performance Configuration
         - name: BUFFER_SIZE
           value: "100"

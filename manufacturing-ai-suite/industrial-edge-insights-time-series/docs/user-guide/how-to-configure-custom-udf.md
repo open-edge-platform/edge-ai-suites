@@ -60,7 +60,7 @@ This guide provides instructions for setting up custom UDF deployment package (U
 
 ### Docker compose deployment Only
 
-The files at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config` representing the UDF deployment package (UDFs, TICKscripts, models)
+The files at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config` for `Wind Turbine Anomaly Detection` sample app OR `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config` for `Weld Anomaly Detection` representing the UDF deployment package (UDFs, TICKscripts, models)
 and config.json has been volume mounted for the Time Series Analytics Microservice service in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and config.json, it has to be done at this location and the time series analytics microservice container needs to be restarted manually.
 
 ### Helm Deployment
@@ -80,7 +80,7 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
     -d '{
       "udfs": {
           "name": "<custom_UDF>",
-          "models": "<custom_UDF>.pkl",
+          "models": "<custom_UDF>.pkl|<custom_UDF>.cb",
           "device"": "cpu|gpu"
       },
       "alerts": {

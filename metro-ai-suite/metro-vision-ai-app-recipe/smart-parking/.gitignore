@@ -23,3 +23,4 @@ node_modules
 **/src/dlstreamer-pipeline-server/models/datasets/
 **/src/dlstreamer-pipeline-server/videos/
 **/src/nginx/ssl/
+**/src/grafana/plugins/
