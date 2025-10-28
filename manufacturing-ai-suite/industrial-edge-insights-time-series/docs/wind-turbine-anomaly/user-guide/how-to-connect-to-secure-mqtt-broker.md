@@ -155,7 +155,7 @@ Edit your Telegraf configuration file:
 [[inputs.mqtt_consumer]]
   ## MQTT broker URLs - use ssl:// for secure connection
   servers = ["ssl://<YOUR_MQTT_BROKER_IP>:<MQTT_PORT>"]
-  
+
   ## TLS Configuration
   tls_ca = "/run/secrets/ca_certificate.pem"
 
@@ -175,10 +175,10 @@ Edit the `kapacitor.conf` file:
   enabled = true
   name = "my_mqtt_broker"
   default = true
-  
+
   # Use SSL connection
   url = "ssl://<YOUR_MQTT_BROKER_IP>:<MQTT_PORT>"
-  
+
   # TLS/SSL configuration
   ssl-ca = "/run/secrets/ca_certificate.pem"
 ```
