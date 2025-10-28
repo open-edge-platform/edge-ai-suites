@@ -48,10 +48,8 @@ The goal is to transform raw classroom recordings into concise, structured summa
 
 ### ✅ 1. **Install Dependencies**
 
-**a. Install [FFmpeg](https://ffmpeg.org/download.html)** (required for audio processing):
-
-- On **Windows**:  
-  Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html), and add the `ffmpeg/bin` folder to your system `PATH`.
+**a. Install [FFmpeg](https://ffmpeg.org/download.html)** (required for audio processing):  
+- Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html), and add the `ffmpeg/bin` folder to your system `PATH`.
 ---
 
 **Run your shell with admin privileges before starting the application**
@@ -74,7 +72,6 @@ It’s recommended to create a **dedicated Python virtual environment** for the 
 
 ```bash
 python -m venv smartclassroom
-# On Windows:
 smartclassroom\Scripts\activate
 
 cd smart-classroom
@@ -93,7 +90,6 @@ If you plan to use IPEX, create a separate virtual environment.
 
 ```bash
 python -m venv smartclassroom_ipex
-# On Windows:
 smartclassroom_ipex\Scripts\activate
 
 python.exe -m pip install --upgrade pip
@@ -108,7 +104,7 @@ pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download
 
 #### a. Default Configuration  
   
-By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file:
+By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
 
 ```bash
 asr:
@@ -126,7 +122,7 @@ summarizer:
 ```
 #### b. Chinese Audio Transcription  
 
-For Chinese audio transcription, switch to funASR with Paraformer in your config:
+For Chinese audio transcription, switch to funASR with Paraformer in your config (`smart-classroom/config.yaml`):
 ```bash
 asr:
   provider: funasr
@@ -138,7 +134,7 @@ asr:
 To use IPEX for summarization, ensure:
 - IPEX-LLM is installed.
 - The environment for IPEX is activated.
-- The configuration is updated as shown below:
+- The configuration (`smart-classroom/config.yaml`) is updated as shown below:
 
 ```bash
 summarizer:
@@ -218,5 +214,8 @@ If you changed the port, adjust the URL accordingly.
   pip install --upgrade -r requirements.txt
   ```
   Then delete the models directory from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
-
-
+- If you face a tokenizer load issue like this:
+  ``` bash
+  Either openvino_tokenizer.xml was not provided or it was not loaded correctly. Tokenizer::encode is not available
+  ```
+  Delete the models folder from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.

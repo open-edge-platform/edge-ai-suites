@@ -115,7 +115,7 @@ const CONFIG = {
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2" 
           }, 
-          text: `curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/metro-vision-ai-sdk.sh | bash`
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/metro-vision-ai-sdk.sh | bash`
         },
         
         { 
@@ -124,7 +124,7 @@ const CONFIG = {
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2" 
           }, 
-          text: `curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/metro-gen-ai-sdk.sh | bash`
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/metro-gen-ai-sdk.sh | bash`
         },
 
         { 
@@ -133,7 +133,7 @@ const CONFIG = {
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2" 
           }, 
-          text: `curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/visual-ai-demo-kit.sh | bash`
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/visual-ai-demo-kit.sh | bash`
         }
       ]
     },

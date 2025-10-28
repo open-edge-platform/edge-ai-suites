@@ -202,15 +202,15 @@ Use the following command to verify that all containers are active and error-fre
       > **Note**: Use link `http://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
     
     - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-      in `.env` file and select **Multimodal Vision & TS Anomaly Detection Dashboard**.
+      in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.
 
       ![Grafana login](./_images/login_wt.png)
 
     - After login, click on Dashboard 
       ![Menu view](./_images/dashboard.png)
 
-    - Select the `Multimodal Vision & TS Anomaly Detection Dashboard`.
-      ![Multimodal Vision & TS Anomaly Detection Dashboard](./_images/grafana_dashboard_selection.png)
+    - Select the `Multimodal Weld Defect Detection Dashboard`.
+      ![Multimodal Weld Defect Detection Dashboard](./_images/grafana_dashboard_selection.png)
 
     - One will see the below output.
   

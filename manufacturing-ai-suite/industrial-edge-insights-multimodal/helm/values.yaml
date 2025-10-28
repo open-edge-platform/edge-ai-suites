@@ -52,11 +52,11 @@ env:
   # Weld Data Simulator config
   TS_TOPIC: weld-data
   SIMULATION_TARGET_FPS: 10
-  # DL Streamer Pipeline Server
+
+  ## DL Streamer Pipeline Server
+  # HOST_IP is the IP address of server where DLStreamer Pipeline Server is running
   HOST_IP: 
   REST_SERVER_PORT: 8080
-
-  # DL Streamer Pipeline Server
   RTSP_CAMERA_IP: mediamtx
 
   # Open Telemetry related config

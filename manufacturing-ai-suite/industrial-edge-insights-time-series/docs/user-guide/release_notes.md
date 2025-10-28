@@ -2,7 +2,7 @@
 
 
 
-## Wind Turbine Anomaly Detection
+## Wind Turbine Anomaly Detection - 1.0.0
 
 
 
@@ -10,11 +10,11 @@
 
 TBD
 
-### Weld Defect Detection
+### Weld Defect Detection - 1.0.0
 
 TBD
 
-### Wind Turbine Anomaly Detection
+### Wind Turbine Anomaly Detection - 1.1.0
 
 TBD
 

@@ -5,18 +5,16 @@ metadata:
   name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
   namespace: {{ $.Values.namespace }}
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: dlstreamer-pipeline-server
   ports:
   - name: "rest-api"
     port: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
     targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
-    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rest_api_port }}
   - name: "rtsp-output-streaming"
     port: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
     targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
-    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rtsp_output_port }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -50,10 +48,10 @@ spec:
         - -c
         - |
           mkdir -p /tmp/videos
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_1.mp4 -o /tmp/videos/new_video_1.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_2.mp4 -o /tmp/videos/new_video_2.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_3.mp4 -o /tmp/videos/new_video_3.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_4.mp4 -o /tmp/videos/new_video_4.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/videos/new_video_1.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/videos/new_video_2.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/videos/new_video_3.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/videos/new_video_4.mp4
         env:
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
@@ -79,7 +77,7 @@ spec:
           cd /home/dlstreamer/dlstreamer/samples
           chmod +x download_public_models.sh
           export MODELS_PATH=/tmp/models/
-          ./download_public_models.sh yolov10s
+          ./download_public_models.sh yolo11s coco128
         env:
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
@@ -152,6 +150,8 @@ spec:
           value: "broker"
         - name: MQTT_PORT
           value: "1883"
+        - name: ZE_ENABLE_ALT_DRIVERS
+          value: "libze_intel_npu.so"
       volumes:
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}
