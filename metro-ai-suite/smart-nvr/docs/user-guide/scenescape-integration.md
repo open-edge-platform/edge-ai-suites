@@ -15,6 +15,37 @@ Smart NVR system integrates with Intel Scenescape to enable:
 - **Smart Intersection Application**: Must be running in `../metro-vision-ai-app-recipe/smart-intersection/` following the [Smart Intersection User Guide](../../../metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md)
 - Access to Intel Scenescape traffic analytics platform
 
+## Temporary Configuration Fix
+
+**Note:** This is a temporary fix required for SceneScape integration. Copy the following files from the NVR resources to the Smart Intersection application:
+
+```bash
+# From the Smart NVR directory, copy the DLStreamer configuration (enables RTSP streaming)
+cp ./resources/si-rtsp-config.json ../metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/config.json
+
+# Copy the SceneScape compose configuration
+cp ./resources/compose-scenescape-rtsp.yml ../metro-vision-ai-app-recipe/compose-scenescape.yml
+```
+
+After copying the files, restart the Smart Intersection application with the new configuration:
+
+```bash
+# Navigate to metro-vision-ai-app-recipe directory
+cd ../metro-vision-ai-app-recipe/
+
+# Restart Smart Intersection
+docker compose down
+./install.sh smart-intersection
+docker compose up -d
+
+# Navigate back to Smart NVR and run setup
+cd smart-nvr/
+```
+
+These files contain the necessary configuration for:
+- RTSP streaming support in the DLStreamer pipeline
+- SceneScape-specific Docker Compose settings
+
 ## Installation and Setup
 
 ```bash

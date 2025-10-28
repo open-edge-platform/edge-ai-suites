@@ -30,7 +30,7 @@ cameras:
   camera1:
     ffmpeg:
       inputs:
-        - path: rtsp://{RTSP_STREAM_IP}:8554/camera2
+        - path: rtsp://{RTSP_STREAM_IP}:8554/camera1
           roles:
             - detect
             - record
