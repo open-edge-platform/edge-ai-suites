@@ -45,7 +45,7 @@ spec:
             - --config.file=/etc/prometheus/prometheus.yml
             - --storage.tsdb.path=/prometheus
             - --web.route-prefix=/prometheus
-            - --web.external-url=https://{{ $.Values.env.HOST_IP }}/prometheus
+            - --web.external-url=https://{{ $.Values.env.HOST_IP }}:30443/prometheus
           ports:
             - containerPort: {{ $.Values.config.prometheus.int.prometheus_port }}
           env:
