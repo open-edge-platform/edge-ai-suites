@@ -1,3 +1,4 @@
+import sys
 from utils.logger_config import setup_logger
 setup_logger()
 
@@ -12,6 +13,7 @@ import os
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 from pathlib import Path
+from utils import system_checker
 
 logger = logging.getLogger(__name__)
 
@@ -34,4 +36,9 @@ preload_models()
 if __name__ == "__main__":
     import uvicorn
     logger.info("App started, Starting Server...")
+    if (not system_checker.check_system_requirements()) and (not system_checker.show_warning_and_prompt_user_to_continue()):
+        sys.exit(1)
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
+
+
