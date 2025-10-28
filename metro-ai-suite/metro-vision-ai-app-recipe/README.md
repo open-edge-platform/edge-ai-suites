@@ -25,7 +25,7 @@ The Metro Vision AI App Recipe suite provides an integrated AI-powered solution 
 
 The Metro Vision AI App Recipe architecture is designed to facilitate seamless integration and operation of various components involved in AI-driven video analytics for transportation and safety & security scenarios. The system processes real-time video feeds from traffic cameras, applies deep learning models for object detection and classification, and generates actionable insights for traffic management.
 
-![Architecture Diagram](docs/user-guide/_images/metro_app_arch.png)
+![Architecture Diagram](docs/user-guide/_images/metro-vision-ai-app-recipe-architecture.drawio.svg)
 
 ### Core Workflow
 
