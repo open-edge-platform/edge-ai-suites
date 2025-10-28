@@ -21,7 +21,7 @@ operational efficiency.
 ::::{grid} 1 1 1 1
 :::{grid-item-card} Wind Turbine Anomaly Detection
 :class-card: homepage-card-container-big
-:link: ./wind-turbine-anomaly/user-guide/index.html
+:link: ./wind-turbine-anomaly/index.html
 
 Monitoring power generation anomalies for preventive maintenance.
 :::
@@ -37,16 +37,16 @@ hide_directive-->
 .. toctree::
    :hidden:
 
-   wind-turbine-anomaly/user-guide/how-it-works.md
-   wind-turbine-anomaly/user-guide/system-requirements
-   wind-turbine-anomaly/user-guide/get-started
-   wind-turbine-anomaly/user-guide/how-to-build-from-source
-   wind-turbine-anomaly/user-guide/how-to-deploy-with-helm
-   wind-turbine-anomaly/user-guide/how-to-configure-custom-udf
-   wind-turbine-anomaly/user-guide/how-to-configure-alerts
-   wind-turbine-anomaly/user-guide/how-to-enable-system-metrics
-   wind-turbine-anomaly/user-guide/how-to-update-config
-   wind-turbine-anomaly/user-guide/how-to-create-a-new-sample-app
-   wind-turbine-anomaly/user-guide/how-to-connect-to-secure-mqtt-broker
-   wind-turbine-anomaly/user-guide/release_notes
+   wind-turbine-anomaly/how-it-works.md
+   wind-turbine-anomaly/system-requirements
+   wind-turbine-anomaly/get-started
+   wind-turbine-anomaly/how-to-build-from-source
+   wind-turbine-anomaly/how-to-deploy-with-helm
+   wind-turbine-anomaly/how-to-configure-custom-udf
+   wind-turbine-anomaly/how-to-configure-alerts
+   wind-turbine-anomaly/how-to-enable-system-metrics
+   wind-turbine-anomaly/how-to-update-config
+   wind-turbine-anomaly/how-to-create-a-new-sample-app
+   wind-turbine-anomaly/how-to-connect-to-secure-mqtt-broker
+   wind-turbine-anomaly/release_notes
 hide_directive-->
