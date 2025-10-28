@@ -49,14 +49,15 @@ You can either generate or download the Helm charts.
 1. Update the following fields in `values.yaml` file of the helm chart
 
     ``` sh
-    INFLUXDB_USERNAME:
-    INFLUXDB_PASSWORD:
-    VISUALIZER_GRAFANA_USER:
-    VISUALIZER_GRAFANA_PASSWORD:
-    HTTP_PROXY: # example: http_proxy: http://proxy.example.com:891
-    HTTPS_PROXY: # example: http_proxy: http://proxy.example.com:891
-    MTX_WEBRTCICESERVERS2_0_USERNAME:
-    MTX_WEBRTCICESERVERS2_0_PASSWORD
+    INFLUXDB_USERNAME: 
+    INFLUXDB_PASSWORD: 
+    VISUALIZER_GRAFANA_USER: 
+    VISUALIZER_GRAFANA_PASSWORD: 
+    HTTP_PROXY:  # example: http_proxy: http://proxy.example.com:891
+    HTTPS_PROXY:  # example: http_proxy: http://proxy.example.com:891
+    MTX_WEBRTCICESERVERS2_0_USERNAME: 
+    MTX_WEBRTCICESERVERS2_0_PASSWORD: 
+    HOST_IP:  # IP address of server where DLStreamer Pipeline Server is running
     ```
 
 ## Step 3: Install Helm charts 
@@ -186,10 +187,6 @@ kubectl get all -n multimodal-sample-app # It may take a few minutes for all app
 ## Configure Alerts in Time Series Analytics Microservice
 
 To configure alerts in Time Series Analytics Microservice, follow the steps [here](./how-to-configure-alerts.md#helm-deployment).
-
-## Deploy the Application with a Custom UDF
-
-To deploy the application with a custom UDF, follow the steps [here](./how-to-configure-custom-udf.md#helm-deployment).
 
 ## Troubleshooting
 

@@ -152,6 +152,8 @@ spec:
           value: "{{ $.Values.env.MR_REQUEST_TIMEOUT }}"
         - name: MR_VERIFY_CERT
           value: "{{ $.Values.env.MR_VERIFY_CERT }}"
+        - name: ZE_ENABLE_ALT_DRIVERS
+          value: "libze_intel_npu.so"
       initContainers:
       - name: wait-for-model-registry
         image: busybox
