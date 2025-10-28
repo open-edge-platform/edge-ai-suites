@@ -20,6 +20,9 @@ By utilizing cutting-edge technologies and pre-trained deep learning models, thi
    how-to-customize-application
    how-to-deploy-with-helm
    how-to-deploy-with-edge-orchestrator
+   how-to-use-gpu-for-inference
+   how-to-use-cpu-for-inference
+   how-to-use-npu-for-inference
 
 .. toctree::
    :caption: Source Code
@@ -28,5 +31,5 @@ By utilizing cutting-edge technologies and pre-trained deep learning models, thi
 
 .. toctree::
    :caption: Community and Support
-   
+
    support
