@@ -39,7 +39,7 @@ docker compose down
 docker compose up -d
 
 # Navigate back to Smart NVR
-cd smart-nvr/
+cd ../smart-nvr/
 ```
 
 These files provide:
