@@ -40,6 +40,12 @@ spec:
       containers:
         - name: prometheus
           image: prom/prometheus:latest
+          command:
+            - /bin/prometheus
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --web.route-prefix=/prometheus
+            - --web.external-url=https://{{ $.Values.env.HOST_IP }}/prometheus
           ports:
             - containerPort: {{ $.Values.config.prometheus.int.prometheus_port }}
           env:
