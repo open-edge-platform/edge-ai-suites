@@ -38,11 +38,11 @@ spec:
             - name: VSS_SUMMARY_URL
               value: "{{ .Values.env.VSS_SUMMARY_IP }}:{{ .Values.env.VSS_SUMMARY_PORT }}"
             - name: no_proxy
-              value: "{{ .Values.env.no_proxy }}"
+              value: "{{ .Values.global.proxy.no_proxy }}"
             - name: MQTT_USER
-              value: "{{ .Values.env.MQTT_USER }}"
+              value: "{{ .Values.global.env.FRIGATE_MQTT_USER }}"
             - name: MQTT_PASSWORD
-              value: "{{ .Values.env.MQTT_PASSWORD }}"
+              value: "{{ .Values.global.env.FRIGATE_MQTT_PASSWORD }}"
             - name: REDIS_PORT
               value: "{{ .Values.env.REDIS_PORT }}"
             - name: REDIS_HOST

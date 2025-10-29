@@ -20,9 +20,9 @@ spec:
             - containerPort: 9001
           env:
             - name: MQTT_USER
-              value: "{{ .Values.env.MQTT_USER }}"
+              value: "{{ .Values.global.env.FRIGATE_MQTT_USER }}"
             - name: MQTT_PASSWORD
-              value: "{{ .Values.env.MQTT_PASSWORD }}"
+              value: "{{ .Values.global.env.FRIGATE_MQTT_PASSWORD }}"
           volumeMounts:
             - name: config
               mountPath: /mosquitto/config/mosquitto.conf

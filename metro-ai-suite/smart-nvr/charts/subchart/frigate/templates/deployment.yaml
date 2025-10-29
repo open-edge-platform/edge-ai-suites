@@ -43,7 +43,6 @@ spec:
           securityContext:
             runAsUser: {{ .Values.initSecurityContext.runAsUser | default 0 }}
             runAsGroup: {{ .Values.initSecurityContext.runAsGroup | default 0 }}
-            fsGroup: {{ .Values.initSecurityContext.fsGroup | default 0 }}
 
         # Removed copy-frigate-config initContainer; using direct ConfigMap subPath mount instead
         - name: wait-for-mqtt
@@ -80,7 +79,6 @@ spec:
               subPath: config.yaml
             - name: videos
               mountPath: /videos
-              subPath: videos
             - name: frigate-clips
               mountPath: /media/frigate/recordings
               subPath: recordings
@@ -95,9 +93,9 @@ spec:
               value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,mqtt-broker,nvr-event-router,nvr-event-router-ui,redis,.svc.cluster.local"
             {{- end }}
             - name: FRIGATE_MQTT_USER
-              value: "{{ .Values.env.FRIGATE_MQTT_USER }}"
+              value: "{{ .Values.global.env.FRIGATE_MQTT_USER }}"
             - name: FRIGATE_MQTT_PASSWORD
-              value: "{{ .Values.env.FRIGATE_MQTT_PASSWORD }}"
+              value: "{{ .Values.global.env.FRIGATE_MQTT_PASSWORD }}"
             - name: OPENAI_BASE_URL
               value: "{{ .Values.env.OPENAI_BASE_URL }}"
             - name: OPENAI_API_KEY
