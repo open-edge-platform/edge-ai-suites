@@ -106,6 +106,11 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
     This command will look for the payload for the pipeline specified in the `-p` argument above, inside the `payload.json` file and launch a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different available options.
 
+    > **IMPORTANT**: Before you run `sample_start.sh` script, make sure that
+    > `jq` is installed on your system. See the
+    > [troubleshooting guide](./troubleshooting-guide.md#unable-to-parse-json-payload-due-to-missing-jq-package)
+    > for more details.
+
     Output:
 
     ```bash

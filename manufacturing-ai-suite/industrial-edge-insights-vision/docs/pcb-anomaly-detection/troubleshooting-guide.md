@@ -97,8 +97,10 @@ To perform inferencing on an NPU device (for platforms with NPU accelerators suc
 
 ## Unable to parse JSON payload due to missing `jq` package
 
-While running `sample_start.sh` script, you may get an error-
-`ERROR: jq is not installed. Cannot parse JSON payload.` This is due to mising `jq` package that is need to parse the payload JSON. Please follow the steps to install it.
+While running the `sample_start.sh` script, you may encounter
+`ERROR: jq is not installed. Cannot parse JSON payload.` This indicates that
+your system is missing the `jq` package, required to parse the payload JSON file.
+Use the commands below to install it.
 
 ```sh
 sudo apt update
@@ -114,8 +116,23 @@ For example:
 `ERROR vafilter gstvafilter.c:390:gst_va_filter_open:<vafilter0> vaCreateContext: resource allocation failed`
 
 This issue has been observed on systems with the Ultra Core 7 265K processor running Ubuntu 22.04.
-There are few options to fix this. 
+There are few options to fix this.
 
 One is updating the kernel to `6.11.11-061111-generic` in the host system.
 
-Alternately, install OpenCL runtime packages in the host system. Refer to the instructions from OpenVINO documentation [here](https://docs.openvino.ai/2025/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
+Alternatively, install OpenCL runtime packages in the host system. Refer to the instructions from OpenVINO documentation [here](https://docs.openvino.ai/2025/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
+
+## Deploying on Edge Microvisor Toolkit
+
+Since Edge Microvisor Toolkit OS image does not include `unzip` nor `jq`
+packages by default, you need to install them for proper operation of the
+application.
+
+To install `unzip` run:
+
+```sh
+sudo apt install unzip
+```
+
+To install `jq`, refer to the following
+[instructions](#unable-to-parse-json-payload-due-to-missing-jq-package).
