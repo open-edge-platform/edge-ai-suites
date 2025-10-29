@@ -12,8 +12,11 @@ Smart NVR system integrates with Intel Scenescape to enable:
 
 ## Prerequisites
 
-- **Smart Intersection Application**: Must be running in `../metro-vision-ai-app-recipe/smart-intersection/` following the [Smart Intersection User Guide](../../../metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md)
+- **Smart Intersection Reference Implementation**: We will use the Smart Intersection application located in `../metro-vision-ai-app-recipe/smart-intersection/` to showcase the SceneScape integration. Follow the [Smart Intersection User Guide](../../../metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md) for setup instructions.
 - Access to Intel Scenescape traffic analytics platform
+
+> **Important Note**  
+> **Please follow the below steps for Smart Intersection configuration as a temporary setup requirement.**
 
 ### Required Configuration Files
 
@@ -39,7 +42,7 @@ docker compose down
 docker compose up -d
 
 # Navigate back to Smart NVR
-cd smart-nvr/
+cd ../smart-nvr/
 ```
 
 These files provide:
