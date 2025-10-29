@@ -152,6 +152,10 @@ spec:
           value: "{{ $.Values.env.MR_VERIFY_CERT }}"
         - name: ZE_ENABLE_ALT_DRIVERS
           value: "libze_intel_npu.so"
+        - name: MQTT_HOST
+          value: mqtt-broker
+        - name: MQTT_PORT
+          value: "1883"
       initContainers:
       - name: wait-for-model-registry
         image: busybox
