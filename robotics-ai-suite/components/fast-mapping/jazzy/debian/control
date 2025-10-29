@@ -1,0 +1,56 @@
+Source: ros-jazzy-fast-mapping
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    libboost-dev,
+    libeigen3-dev,
+    libopencv-dev,
+    ros-jazzy-ament-cmake-gtest,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-auto,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-message-filters,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rosbag2-cpp,
+    ros-jazzy-rosbag2-storage,
+    ros-jazzy-rosbag2-transport,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-std-srvs,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-tf2,
+    ros-jazzy-visualization-msgs,
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-fast-mapping
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-bagfile-spinning,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-libstatistics-collector,
+    ros-jazzy-message-filters,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-rcl,
+    ros-jazzy-rclcpp-action,
+    ros-jazzy-rclcpp-lifecycle,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rcutils,
+    ros-jazzy-rviz2,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-statistics-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-std-srvs,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-tf2,
+    ros-jazzy-tracetools,
+    ros-jazzy-visualization-msgs,
+Description: Allen FastMapping, a ROS package for real-time scene modeling from sequential depth images from prerecorded ROS2 bag.

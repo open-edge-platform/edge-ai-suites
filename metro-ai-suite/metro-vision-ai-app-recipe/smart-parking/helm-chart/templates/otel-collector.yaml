@@ -1,0 +1,89 @@
+# Copyright (c) 2025 Intel Corporation.
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: {{ $.Values.namespace }}
+spec:
+  selector:
+    app: otel-collector
+  ports:
+    - name: otlp-grpc
+      protocol: TCP
+      port: {{ $.Values.config.otel_collector.int.otlp_grpc_port }}
+      targetPort: {{ $.Values.config.otel_collector.int.otlp_grpc_port }}
+    - name: otlp-http
+      protocol: TCP
+      port: {{ $.Values.config.otel_collector.int.otlp_http_port }}
+      targetPort: {{ $.Values.config.otel_collector.int.otlp_http_port }}
+    - name: otlp-prometheus-endpoint
+      port: {{ $.Values.config.otel_collector.int.otlp_prometheus_endpoint_port }}
+      targetPort: {{ $.Values.config.otel_collector.int.otlp_prometheus_endpoint_port }}
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: otel-collector
+  name: deployment-otel-collector
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.94.0
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - containerPort: {{ $.Values.config.otel_collector.int.otlp_grpc_port }}
+            - containerPort: {{ $.Values.config.otel_collector.int.otlp_http_port }}
+            - containerPort: {{ $.Values.config.otel_collector.int.otlp_prometheus_endpoint_port }}
+          env:
+            - name: HTTP_PROXY
+              value: {{ $.Values.env.http_proxy }}
+            - name: HTTPS_PROXY
+              value: {{ $.Values.env.https_proxy }}
+            - name: NO_PROXY
+              value: prometheus,dlstreamer-pipeline-server,localhost,127.0.0.1,{{ $.Values.env.HOST_IP }}
+          volumeMounts:
+            - name: otel-config-input
+              mountPath: /etc/otelcol-contrib/config.yaml
+              subPath: otel-collector-config.yaml
+          # Added security context to restrict container privileges
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+      restartPolicy: Always
+      volumes:
+        - name: otel-config-input
+          configMap:
+            name: otel-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: otel-config
+data:
+  otel-collector-config.yaml: |-
+{{ .Files.Get "otel-collector-config.yaml" | indent 4 }}

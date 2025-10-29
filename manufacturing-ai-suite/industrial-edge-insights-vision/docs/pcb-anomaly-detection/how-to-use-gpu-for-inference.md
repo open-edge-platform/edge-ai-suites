@@ -1,10 +1,12 @@
 # How to use GPU for inference
 
 ## Pre-requisites
+
 In order to benefit from hardware acceleration, pipelines can be constructed in a manner that different stages such as decoding, inference etc., can make use of these devices.
 For containerized applications built using the DL Streamer Pipeline Server, first we need to provide GPU device(s) access to the container user.
 
 ### Provide GPU access to the container
+
 This can be done by making the following changes to the docker compose file.
 
 ```yaml

@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # FastMapping
 
 A ROS project to construct and maintain a volumetric map from a moving RGB-D camera, like [octomap_mapping](https://github.com/OctoMap/octomap_mapping) but runs much faster.
@@ -57,7 +63,13 @@ As long as there is a SLAM module publishing tf properly (they should), we can g
 ros2 run fast_mapping fast_mapping_node
 ```
 
-In this way, the fast_mapping_node will request a transform from the tf tree. This transform is from the map frame, defined by the `map_frame` parameter (the default being "map"), to the optical frame of the camera. This optical frame is specified in the header of the depth image messages (for instance, `camera_color_optical_frame` if you are utilizing a RealSense camera with `rs_aligned_depth.launch`). The transforms that are published to the tf tree do not necessarily need to be in sync with the depth images. ROS tf will carry out a linear interpolation between the nearest available transforms when a transform is requested at a particular time.
+In this way, the fast_mapping_node will request a transform from the tf tree.
+This transform is from the map frame, defined by the `map_frame` parameter (the default being "map"),
+to the optical frame of the camera. This optical frame is specified in the header of the depth image messages
+(for instance, `camera_color_optical_frame` if you are utilizing a RealSense camera with `rs_aligned_depth.launch`).
+The transforms that are published to the tf tree do not necessarily need to be in sync with the depth images.
+ROS tf will carry out a linear interpolation between the nearest available transforms
+when a transform is requested at a particular time.
 
 The FastMapping algorithm will start and poll until a `CameraInfo` message will come.
 
@@ -111,5 +123,5 @@ FastMapping running with two Realsense cameras named "camera_front" and "camera_
 
 ```bash
    source /opt/ros/humble/setup.bash
-   ros2 launch fast_mapping fast_mapping.launch.py 
+   ros2 launch fast_mapping fast_mapping.launch.py
 ```

@@ -37,6 +37,8 @@ echo "Running install.sh to download models and videos..."
 # Run docker compose to pull all the images and download the grafana plugins
 mkdir -p ./src/grafana/plugins
 chown -R "$(id -u):$(id -g)" ./src/grafana/plugins 2>/dev/null || true
+mkdir -p ./src/node-red/node-modules
+chown -R "$(id -u):$(id -g)" ./src/node-red/node-modules 2>/dev/null || true
 
 echo "Pulling Docker images and downloading Grafana plugins..."
 docker compose up -d
@@ -44,13 +46,14 @@ echo "Waiting for services to be healthy..."
 sleep 60
 
 docker cp $(docker ps -q --filter "name=grafana"):/var/lib/grafana/plugins ./src/grafana/plugins
-docker cp $(docker ps -q --filter "name=node-red"):/usr/src/node-red/node_modules ./src/node-red/
+docker cp $(docker ps -q --filter "name=node-red"):/usr/src/node-red/node_modules/. ./src/node-red/node-modules/
 
 docker compose down
 
 sed -i '/datasources\.yml.*datasources\.yml/a\      - "./src/grafana/plugins:/var/lib/grafana/plugins"' docker-compose.yml
 sed -i '/GF_INSTALL_PLUGINS=grafana-mqtt-datasource/d' docker-compose.yml
-sed -i '/node-red:/,/^  [a-zA-Z]/ s|entrypoint: \[ "/bin/bash", "-c", "/data/install_package.sh && /usr/src/node-red/entrypoint.sh" \]|entrypoint: [ "/bin/bash", "-c", "cp -r /data/node_modules/ /usr/src/node-red/ && /usr/src/node-red/entrypoint.sh" ]|' docker-compose.yml
+sed -i 's#/data/install_package.sh#cp -r /data/node-modules/* /usr/src/node-red/node_modules/#' docker-compose.yml
+
 # Create directory offline-package and copy all the files into it
 echo "Creating offline-package directory and copying files..."
 mkdir -p offline-package

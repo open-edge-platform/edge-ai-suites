@@ -91,6 +91,8 @@ This sample application offers the following features:
    how-to-view-telemetry-data
    how-to-start-mqtt-publisher
    how-to-use-gpu-for-inference
+   how-to-use-cpu-for-inference
+   how-to-use-npu-for-inference
    how-to-use-opcua-publisher
    api-reference
    environment-variables
