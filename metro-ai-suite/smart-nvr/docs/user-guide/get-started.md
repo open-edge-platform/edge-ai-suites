@@ -71,7 +71,9 @@ export VSS_SEARCH_PORT=<vss-search-port>          # Default: 12345
 export MQTT_USER=<mqtt-username>
 export MQTT_PASSWORD=<mqtt-password>
 
-export NVR_GENAI=false                  
+# Feature Toggles
+export NVR_GENAI=false                  # Set to 'true' to enable AI-powered event descriptions  
+export NVR_SCENESCAPE=false             # Set to 'true' to enable Scenescape integration                  
 ```
 
 ### Step 3: Launch Application
@@ -131,6 +133,10 @@ Re-run the application after [configuring](./get-started.md#step-2-configure-env
 > - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation
 > - Requires VLM microservice to be running
 > - Disabled by default for system stability
+
+### Scenescape Integration
+
+For traffic analytics capabilities with Intel Scenescape (vehicle counting, traffic flow analysis), see the **[Scenescape Integration Guide](./scenescape-integration.md)**.
 
 ### Custom Build Configuration
 

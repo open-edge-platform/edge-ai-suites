@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from fastapi import FastAPI
 from api.router import router  # your custom route logic (rules, results, etc.)
-from service.mqtt_listener import start_mqtt
+from service.mqtt_listener import start_mqtt_clients
 import asyncio
 import logging
 from config import REDIS_HOST, REDIS_PORT
@@ -30,7 +30,7 @@ async def startup_event():
         f"redis://{REDIS_HOST}:{REDIS_PORT}", decode_responses=True
     )
     logger.info("🚀 FastAPI starting up... launching MQTT listener")
-    asyncio.create_task(start_mqtt())
+    await start_mqtt_clients()
 
 
 @app.on_event("shutdown")

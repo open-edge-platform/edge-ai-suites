@@ -3,6 +3,7 @@
 import json
 from fastapi import Request
 from config import REDIS_HOST, REDIS_PORT
+import logging
 import redis.asyncio as redis
 
 # --- RULE MANAGEMENT ---
@@ -11,7 +12,7 @@ fallback_redis_client = redis.from_url(
     f"redis://{REDIS_HOST}:{REDIS_PORT}", decode_responses=True
 )
 
-
+logger = logging.getLogger("redis-store")
 async def add_rule(request: Request, rule_id: str, rule_data: dict) -> bool:
     """Adds a new rule if it doesn't already exist. Returns True if added, False if exists."""
     redis_client = request.app.state.redis_client

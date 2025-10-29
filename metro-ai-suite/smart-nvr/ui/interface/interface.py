@@ -267,7 +267,7 @@ def wrapper_fn(
     if action == "Summarize":
         raw_summary = result_dict.get("summary_id")
         summary_id = extract_summary_id(raw_summary)
-        logger.info("Extracted Summary ID:", summary_id)
+        logger.info(f"Extracted Summary ID: {summary_id}")
 
         return (
             result_dict,
@@ -329,6 +329,7 @@ def auto_refresh_summary_status(summary_id):
 
 def create_ui():
     show_genai_tab = os.getenv("NVR_GENAI", "false").lower() == "true"
+    show_scenescape_source = os.getenv("NVR_SCENESCAPE", "false").lower() == "true"
     time.sleep(5)  # Ensure the environment is fully initialized
     camera_data = fetch_cameras()
     camera_list = list(camera_data.keys())
@@ -545,17 +546,62 @@ def create_ui():
             # Tab 3: Auto-Route Rules
             with gr.TabItem("Auto-Route Events"):
                 with gr.Row():
+                    source_dropdown = gr.Dropdown(
+                        choices=["frigate"] + (["scenescape"] if show_scenescape_source else []),
+                        label="Select Source",
+                        value="frigate",
+                    )
+
                     camera_dropdown = gr.Dropdown(
                         choices=camera_list,
                         value=camera_list[0] if camera_list else None,
                         label="Select Camera"
                     )
 
-                    label_filter = gr.Dropdown(
-                        choices=[],
-                        value=None,
-                        label="Detection Labels"
+                    if show_scenescape_source:
+                        # scenescape on detection label before the count
+                        label_filter = gr.Dropdown(
+                            choices=[],
+                            value=None,
+                            label="Detection Labels"
+                        )
+
+                        count = gr.Number(
+                            label="Count",
+                            value=0,
+                            precision=0,
+                            interactive=True,
+                            visible=False,  
+                        )
+                    else:
+                        # Original layout for frigate-only
+                        count = gr.Number(
+                            label="Count",
+                            value=0,
+                            precision=0,
+                            interactive=True,
+                            visible=False,  
+                        )
+
+                    def toggle_count_visibility(source):
+                        if source == "scenescape":
+                            return gr.update(visible=True)
+                        else:
+                            return gr.update(visible=False, value=0)
+
+                    source_dropdown.change(
+                        fn=toggle_count_visibility,
+                        inputs=[source_dropdown],
+                        outputs=[count],
                     )
+
+                    if not show_scenescape_source:
+                        # Only create label_filter for frigate-only mode
+                        label_filter = gr.Dropdown(
+                            choices=[],
+                            value=None,
+                            label="Detection Labels"
+                        )
 
                     action_dropdown_auto = gr.Dropdown(
                         choices=["Summarize", "Add to Search"],
@@ -583,8 +629,14 @@ def create_ui():
                     add_rule_alert = gr.Textbox(label="Status", visible=False)
 
                 # 🔘 Callback to add rule and show alert
-                def add_rule_callback(camera, label, action):
-                    resp = add_rule(camera, label, action)
+                def add_rule_callback(camera, label, action, source, count_value):
+                    resp = add_rule(
+                        camera,
+                        label,
+                        action,
+                        source,
+                        count_value if source == "scenescape" else None,
+                    )
                     message = resp
                     return gr.update(value=message, visible=True)
 
@@ -595,8 +647,29 @@ def create_ui():
 
                 # 🚀 Show alert on rule add
                 # 🔘 Combined logic: show message, sleep, hide
-                def add_rule_with_auto_hide(camera, label, action):
-                    resp = add_rule(camera, label, action)
+                def add_rule_with_auto_hide(source, count_value, camera, label, action):
+                    threshold = None
+                    if source == "scenescape":
+                        try:
+                            threshold = int(count_value)
+                            if threshold < 0:
+                                raise ValueError
+                        except (TypeError, ValueError):
+                            yield gr.update(
+                                value="❌ Count must be a non-negative integer.",
+                                visible=True,
+                            )
+                            time.sleep(3)
+                            yield gr.update(visible=False)
+                            return
+
+                    resp = add_rule(
+                        camera,
+                        label,
+                        action,
+                        source,
+                        threshold,
+                    )
                     message = (
                         resp.get("message") if isinstance(resp, dict) else str(resp)
                     )
@@ -612,7 +685,7 @@ def create_ui():
 
                 add_rule_btn.click(
                     fn=add_rule_with_auto_hide,
-                    inputs=[camera_dropdown, label_filter, action_dropdown_auto],
+                    inputs=[source_dropdown, count, camera_dropdown, label_filter, action_dropdown_auto],
                     outputs=[add_rule_alert],
                 )
 
@@ -626,19 +699,31 @@ def create_ui():
                 # Rules Table Section
                 gr.Markdown("### Current Rules")
                 delete_status = gr.Textbox(label="Deletion Status", visible=False)
+                headers = ["ID", "Source"]
+                datatypes = ["str", "str"]
+                if show_scenescape_source:
+                    headers.append("Count")
+                    datatypes.append("str")
+                headers.extend(["Camera", "Label", "Action", "Delete"])
+                datatypes.extend(["str", "str", "str", "str"])
+
                 rules_table = gr.Dataframe(
-                    headers=["ID", "Camera", "Label", "Action", "Delete"],
-                    datatype=["str", "str", "str", "str", "str"],
+                    headers=headers,
+                    datatype=datatypes,
                     interactive=False,
                 )
                 refresh_rules_btn = gr.Button("🔄 Refresh Rules")
 
                 def load_rules():
                     rules = fetch_rules()
-                    return [
-                        [r["id"], r["camera"], r["label"], r["action"], "🗑️ Delete"]
-                        for r in rules
-                    ]
+                    rows = []
+                    for r in rules:
+                        row = [r["id"], r.get("source", "frigate")]
+                        if show_scenescape_source:
+                            row.append(str(r.get("count", "-")))
+                        row.extend([r.get("camera", "-"), r.get("label", "-"), r.get("action", "-"), "🗑️ Delete"])
+                        rows.append(row)
+                    return rows
 
                 def delete_selected_rule(evt: gr.SelectData):
 
