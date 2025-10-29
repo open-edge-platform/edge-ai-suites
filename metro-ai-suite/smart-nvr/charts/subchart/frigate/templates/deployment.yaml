@@ -27,20 +27,23 @@ spec:
           env:
             - name: SKIP_EXISTING
               value: "1"
+            {{- if and (.Values.global) (.Values.global.proxy) }}
             - name: HTTP_PROXY
               value: "{{ .Values.global.proxy.http_proxy }}"
             - name: HTTPS_PROXY
               value: "{{ .Values.global.proxy.https_proxy }}"
             - name: NO_PROXY
               value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,mqtt-broker,nvr-event-router,nvr-event-router-ui,redis,.svc.cluster.local"
+            {{- end }}
           volumeMounts:
             - name: videos
               mountPath: /videos
             - name: init-script
               mountPath: /scripts
           securityContext:
-            runAsUser: {{ .Values.initSecurityContext.runAsUser | default 1000 }}
-            runAsGroup: {{ .Values.initSecurityContext.runAsGroup | default 1000 }}
+            runAsUser: {{ .Values.initSecurityContext.runAsUser | default 0 }}
+            runAsGroup: {{ .Values.initSecurityContext.runAsGroup | default 0 }}
+            fsGroup: {{ .Values.initSecurityContext.fsGroup | default 0 }}
 
         # Removed copy-frigate-config initContainer; using direct ConfigMap subPath mount instead
         - name: wait-for-mqtt
@@ -77,13 +80,20 @@ spec:
               subPath: config.yaml
             - name: videos
               mountPath: /videos
+              subPath: videos
+            - name: frigate-clips
+              mountPath: /media/frigate/recordings
+              subPath: recordings
+
           env:
+            {{- if and (.Values.global) (.Values.global.proxy) }}
             - name: HTTP_PROXY
               value: "{{ .Values.global.proxy.http_proxy }}"
             - name: HTTPS_PROXY
               value: "{{ .Values.global.proxy.https_proxy }}"
             - name: NO_PROXY
               value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,mqtt-broker,nvr-event-router,nvr-event-router-ui,redis,.svc.cluster.local"
+            {{- end }}
             - name: FRIGATE_MQTT_USER
               value: "{{ .Values.env.FRIGATE_MQTT_USER }}"
             - name: FRIGATE_MQTT_PASSWORD
@@ -100,7 +110,15 @@ spec:
             periodSeconds: 60
             timeoutSeconds: 20
             failureThreshold: 3
-
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: frigate
+              topologyKey: "kubernetes.io/hostname"
       volumes:
         - name: videos
           persistentVolumeClaim:
@@ -129,4 +147,7 @@ spec:
           configMap:
             name: frigate-config
 
-        # ConfigMap with frigate.yaml (already declared above)
+        - name: frigate-clips
+          persistentVolumeClaim:
+            claimName: shared-recordings-pvc
+

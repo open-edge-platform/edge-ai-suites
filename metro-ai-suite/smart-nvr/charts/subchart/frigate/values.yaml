@@ -25,14 +25,14 @@ service:
 # Security context (set runAsUser/group to non-root; enable privileged only if GPU/USB needs it)
 securityContext:
   enabled: true
-  runAsUser: 1000
-  runAsGroup: 1000
-  runAsNonRoot: true
-  fsGroup: 1000
+  runAsUser: 0
+  runAsGroup: 0
+  fsGroup: 0
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: false
 
 # Separate init container security override (may need root for ownership fixes). Set to 0/0 only if required.
 initSecurityContext:
-  runAsUser: 1000
-  runAsGroup: 1000
+  runAsUser: 0
+  runAsGroup: 0
+  fsGroup: 0

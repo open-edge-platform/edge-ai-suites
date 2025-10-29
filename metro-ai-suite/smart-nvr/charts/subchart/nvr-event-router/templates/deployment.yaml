@@ -52,22 +52,62 @@ spec:
             - name: MQTT_PORT
               value: "{{ .Values.env.MQTT_PORT }}"     
 
+          {{- if .Values.probes.readiness.enabled }}
           readinessProbe:
             httpGet:
-              path: /cameras   
+              path: {{ .Values.probes.readiness.path }}
               port: 8000
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 2
-            failureThreshold: 3
-            successThreshold: 1
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+            successThreshold: {{ .Values.probes.readiness.successThreshold }}
+          {{- end }}
+
+          {{- if .Values.probes.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: 8000
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          {{- end }}
+
+          {{- if .Values.probes.startup.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.probes.startup.path }}
+              port: 8000
+            initialDelaySeconds: {{ .Values.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+          {{- end }}
 
           volumeMounts:
             - name: {{ .Values.volumes.localtime.name }}
               mountPath: {{ .Values.volumes.localtime.mountPath }}
               readOnly: {{ .Values.volumes.localtime.readOnly }}
+            - name: frigate-clips
+              mountPath: /media/frigate/recordings
+              subPath: recordings
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: frigate
+                topologyKey: "kubernetes.io/hostname"
+
+
 
       volumes:
         - name: {{ .Values.volumes.localtime.name }}
           hostPath:
             path: {{ .Values.volumes.localtime.hostPath }}
+        - name: frigate-clips
+          persistentVolumeClaim:
+            claimName: shared-recordings-pvc

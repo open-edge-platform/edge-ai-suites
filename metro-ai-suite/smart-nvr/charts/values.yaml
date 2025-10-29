@@ -5,10 +5,10 @@ global:
   claimSize: "50Gi"  
   # keepPvc should be set to true to retain the PVC after uninstalling the chart.
   keepPvc: false
-  storageClassName: "longhorn"
+  storageClassName: 
 
   proxy:
-    no_proxy: "localhost,127.0.0.1,192.168.0.0/16,172.16.0.0/12,127.0.0.0/8,10.0.0.0/8,.svc.cluster.local"
+    no_proxy: "localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,10.223.22.72,10.223.22.75,10.223.22.68,10.223.22.67,10.223.23.95,10.223.22.176,10.223.24.120,localhost,127.0.0.1,intel.com,.intel.com,192.168.0.0/16,172.16.0.0/12,127.0.0.0/8,10.0.0.0/8,/var/run/docker.sock,*.cluster.local,*.svc,localhost,*.intel.com"
     http_proxy: "http://proxy-pilot.intel.com:916"
     https_proxy: "http://proxy-pilot.intel.com:916"
 
