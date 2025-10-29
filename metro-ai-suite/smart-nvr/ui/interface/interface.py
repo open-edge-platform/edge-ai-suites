@@ -615,37 +615,56 @@ def create_ui():
                         value="frigate",
                     )
 
-                    vehicle_count = gr.Number(
-                        label="Vehicle Count",
-                        value=0,
-                        precision=0,
-                        interactive=True,
-                        visible=False,  
-                    )
-
                     camera_dropdown = gr.Dropdown(
                         choices=camera_list,
                         value=camera_list[0] if camera_list else None,
                         label="Select Camera"
                     )
 
-                    def toggle_vehicle_count_visibility(source):
+                    if show_scenescape_source:
+                        # scenescape on detection label before the count
+                        label_filter = gr.Dropdown(
+                            choices=[],
+                            value=None,
+                            label="Detection Labels"
+                        )
+
+                        count = gr.Number(
+                            label="Count",
+                            value=0,
+                            precision=0,
+                            interactive=True,
+                            visible=False,  
+                        )
+                    else:
+                        # Original layout for frigate-only
+                        count = gr.Number(
+                            label="Count",
+                            value=0,
+                            precision=0,
+                            interactive=True,
+                            visible=False,  
+                        )
+
+                    def toggle_count_visibility(source):
                         if source == "scenescape":
                             return gr.update(visible=True)
                         else:
                             return gr.update(visible=False, value=0)
 
                     source_dropdown.change(
-                        fn=toggle_vehicle_count_visibility,
+                        fn=toggle_count_visibility,
                         inputs=[source_dropdown],
-                        outputs=[vehicle_count],
+                        outputs=[count],
                     )
 
-                    label_filter = gr.Dropdown(
-                        choices=[],
-                        value=None,
-                        label="Detection Labels"
-                    )
+                    if not show_scenescape_source:
+                        # Only create label_filter for frigate-only mode
+                        label_filter = gr.Dropdown(
+                            choices=[],
+                            value=None,
+                            label="Detection Labels"
+                        )
 
                     action_dropdown_auto = gr.Dropdown(
                         choices=["Summarize", "Add to Search"],
@@ -673,13 +692,13 @@ def create_ui():
                     add_rule_alert = gr.Textbox(label="Status", visible=False)
 
                 # 🔘 Callback to add rule and show alert
-                def add_rule_callback(camera, label, action, source, vehicle_count_value):
+                def add_rule_callback(camera, label, action, source, count_value):
                     resp = add_rule(
                         camera,
                         label,
                         action,
                         source,
-                        vehicle_count_value if source == "scenescape" else None,
+                        count_value if source == "scenescape" else None,
                     )
                     message = resp
                     return gr.update(value=message, visible=True)
@@ -691,16 +710,16 @@ def create_ui():
 
                 # 🚀 Show alert on rule add
                 # 🔘 Combined logic: show message, sleep, hide
-                def add_rule_with_auto_hide(source, vehicle_count_value, camera, label, action):
-                    vehicle_threshold = None
+                def add_rule_with_auto_hide(source, count_value, camera, label, action):
+                    threshold = None
                     if source == "scenescape":
                         try:
-                            vehicle_threshold = int(vehicle_count_value)
-                            if vehicle_threshold < 0:
+                            threshold = int(count_value)
+                            if threshold < 0:
                                 raise ValueError
                         except (TypeError, ValueError):
                             yield gr.update(
-                                value="❌ Vehicle count must be a non-negative integer.",
+                                value="❌ Count must be a non-negative integer.",
                                 visible=True,
                             )
                             time.sleep(3)
@@ -712,7 +731,7 @@ def create_ui():
                         label,
                         action,
                         source,
-                        vehicle_threshold,
+                        threshold,
                     )
                     message = (
                         resp.get("message") if isinstance(resp, dict) else str(resp)
@@ -729,7 +748,7 @@ def create_ui():
 
                 add_rule_btn.click(
                     fn=add_rule_with_auto_hide,
-                    inputs=[source_dropdown, vehicle_count, camera_dropdown, label_filter, action_dropdown_auto],
+                    inputs=[source_dropdown, count, camera_dropdown, label_filter, action_dropdown_auto],
                     outputs=[add_rule_alert],
                 )
 
@@ -746,7 +765,7 @@ def create_ui():
                 headers = ["ID", "Source"]
                 datatypes = ["str", "str"]
                 if show_scenescape_source:
-                    headers.append("Vehicle Count")
+                    headers.append("Count")
                     datatypes.append("str")
                 headers.extend(["Camera", "Label", "Action", "Delete"])
                 datatypes.extend(["str", "str", "str", "str"])
@@ -764,7 +783,7 @@ def create_ui():
                     for r in rules:
                         row = [r["id"], r.get("source", "frigate")]
                         if show_scenescape_source:
-                            row.append(str(r.get("vehicle_count", "-")))
+                            row.append(str(r.get("count", "-")))
                         row.extend([r.get("camera", "-"), r.get("label", "-"), r.get("action", "-"), "🗑️ Delete"])
                         rows.append(row)
                     return rows
