@@ -33,6 +33,8 @@ log
 *.changes
 
 # tests logs
-./tests/**.txt
-./tests/.env
+tests/**.txt
+tests/.env
+.env
+*.txt
 *.core
