@@ -12,37 +12,33 @@ Smart NVR system integrates with Intel Scenescape to enable:
 
 ## Prerequisites
 
-- **Smart Intersection Reference Implementation**: We will use the Smart Intersection application located in `../metro-vision-ai-app-recipe/smart-intersection/` to showcase the SceneScape integration. Follow the [Smart Intersection User Guide](../../../metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md) for setup instructions.
-- Access to Intel Scenescape traffic analytics platform
-
-> **Important Note**  
-> **Please follow the below steps for Smart Intersection configuration as a temporary setup requirement.**
-
-### Required Configuration Files
-
-**Important:** Copy the following files from Smart NVR resources to Smart Intersection before proceeding with installation:
+- **Smart Intersection Reference Implementation**: We will use the Smart Intersection application to showcase the SceneScape integration.
+  
+> **Please follow the below steps to run Smart Intersection Application.**
 
 ```bash
+# Clone smart intersection repository inside smart nvr directory if not already done
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b v1.2.0
+
 # From the Smart NVR directory, copy the DLStreamer configuration (enables RTSP streaming)
-cp ./resources/si-rtsp-config.json ../metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/config.json
+cp ./resources/si-rtsp-config.json edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/config.json
 
 # Copy the SceneScape compose configuration
-cp ./resources/compose-scenescape-rtsp.yml ../metro-vision-ai-app-recipe/compose-scenescape.yml
+cp ./resources/compose-scenescape-rtsp.yml edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/compose-scenescape.yml
 ```
 
-After copying the files, restart the Smart Intersection application:
+After copying the files, start the Smart Intersection application:
 
 ```bash
 # Navigate to metro-vision-ai-app-recipe directory
-cd ../metro-vision-ai-app-recipe/
+cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
-# Restart Smart Intersection
-docker compose down
+# Start Smart Intersection
 ./install.sh smart-intersection
 docker compose up -d
 
 # Navigate back to Smart NVR
-cd ../smart-nvr/
+cd ../../../../smart-nvr
 ```
 
 These files provide:
@@ -55,7 +51,7 @@ These files provide:
 
 ```bash
 # Get MQTT credentials from Smart Intersection
-cat ../metro-vision-ai-app-recipe/smart-intersection/src/secrets/browser.auth
+cat edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/browser.auth
 # Expected: {"user": "<user>", "password": "<password>"}
 ```
 

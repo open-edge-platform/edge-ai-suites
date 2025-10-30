@@ -90,7 +90,7 @@ configure_scenescape_setup() {
         print_success "Scenescape Frigate configuration activated"
         
         # Copy Scenescape certificates
-        SMART_INTERSECTION_CERTS="../metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs"
+        SMART_INTERSECTION_CERTS="edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs"
         if [ -f "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" ]; then
             mkdir -p ./resources/mqtt-certs
             cp "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" "./resources/mqtt-certs/root-cert"
