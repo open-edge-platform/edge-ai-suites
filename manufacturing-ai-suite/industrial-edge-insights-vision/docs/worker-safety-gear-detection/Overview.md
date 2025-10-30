@@ -23,6 +23,7 @@ This sample application is built with the following Intel Edge AI Stack Microser
 
 It also consists of the below Third-party microservices:
 
+- [Nginx](https://hub.docker.com/_/nginx) is a high-performance web server and reverse proxy that provides TLS termination and unified HTTPS access.
 - [MediaMTX Server](https://hub.docker.com/r/bluenviron/mediamtx) is a real-time media server and media proxy that allows to publish webrtc stream.
 - [Coturn Server](https://hub.docker.com/r/coturn/coturn) is a media traffic NAT traversal server and gateway.
 - [Open telemetry Collector](https://hub.docker.com/r/otel/opentelemetry-collector-contrib) is a set of receivers, exporters, processors, connectors for Open Telemetry.
