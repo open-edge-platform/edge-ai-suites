@@ -41,7 +41,7 @@ There are 2 options to get the charts in your workspace:
 
 Use the following command to pull the Helm chart from Docker Hub:
 ```bash
-helm pull oci://registry-1.docker.io/intel/smart-nvr --version 1.2.0
+helm pull oci://registry-1.docker.io/intel/smart-nvr --version 1.2.1
 ```
 
 Refer to the release notes for details on the latest version number to use for the sample application.
@@ -50,7 +50,7 @@ Refer to the release notes for details on the latest version number to use for t
 
 After pulling the chart, extract the `.tgz` file:
 ```bash
-tar -xvf smart-nvr-1.2.0.tgz
+tar -xvf smart-nvr-1.2.1.tgz
 ```
 
 This will create a directory named `smart-nvr` containing the chart files. Navigate to the extracted directory to access the charts.
@@ -91,18 +91,17 @@ Update or edit the values in YAML file as follows:
 | --- | ----------- | ------------- |
 | `global.pvcName` | Name for PVC to be used for storage by all components of application | `nvr-resource` |
 | `global.keepPvc` | PVC gets deleted by default once helm is uninstalled. Set this to true to persist PVC (helps avoid delay due to model re-downloads when re-installing chart). | `true` or `false` |
-| `global.storageClassName` | PVC storage class name | `<pvc-storage-class-name>` |
 | `global.proxy.http_proxy` | HTTP proxy if required | `http://proxy-example.com:000` |
 | `global.proxy.https_proxy` | HTTPS proxy if required | `http://proxy-example.com:000` |
 | `frigate.env.FRIGATE_MQTT_USER` | User name for mqtt | `<your-mqtt-username>` |
 | `frigate.env.FRIGATE_MQTT_PASSWORD` | Password for mqtt | `<your-mqtt-password>` |
-| `frigate.env.OPENAI_BASE_URL` | Open ai base url | `<your-open-ai-base-url>` |
-| `frigate.env.OPENAI_API_KEY` | Open ai api key | `<your-open-ai-api-key>` |
+| `frigate.env.OPENAI_BASE_URL` | Needed when NVR_GENAI flag is set to true | `<your-open-ai-base-url>` |
+| `frigate.env.OPENAI_API_KEY` | Needed when NVR_GENAI flag is set to true | `<your-open-ai-api-key>` |
 | `nvr-event-router.env.VSS_SEARCH_IP` | VSS Search IP | `<your-vss-search-ip>` |
 | `nvr-event-router.env.VSS_SEARCH_PORT` | VSS Search port | `<your-vss-search-port>` |
 | `nvr-event-router.env.VSS_SUMMARY_IP` | VSS summary IP | `<your-vss-summary-ip>` |
 | `nvr-event-router.env.VSS_SUMMARY_PORT` | VSS summary port | `<your-vss-summary-port>` |
-| `nvr-event-router-ui.NVR_GENAI` | Flag to enable gen ai on nvr | `true/false` |
+| `nvr-event-router-ui.NVR_GENAI` | Flag to enable GENAI on Frigate NVR  | `true/false` |
 
 ## 3. Build Helm Dependencies
 
