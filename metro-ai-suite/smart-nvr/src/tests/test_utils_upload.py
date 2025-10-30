@@ -1,6 +1,6 @@
-"""Tests for upload utility functions."""
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Tests for upload utility functions."""
 from unittest.mock import patch, MagicMock
 from utils.utils import upload_single_video_with_retry, upload_videos_to_dataprep
 

@@ -1,6 +1,6 @@
-"""Tests for Redis store helper functions using a fake in-memory implementation."""
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Tests for Redis store helper functions using a fake in-memory implementation."""
 import json
 import pytest
 from types import SimpleNamespace

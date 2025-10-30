@@ -74,6 +74,41 @@ get_host_ip() {
     echo "$HOST_IP"
 }
 
+# Function to configure Scenescape settings
+configure_scenescape_setup() {
+    print_info "Configuring Scenescape setup based on NVR_SCENESCAPE setting"
+    
+    if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
+        print_info "NVR_SCENESCAPE is enabled - configuring Scenescape mode"
+        
+        # Configure Frigate with Scenescape cameras
+        cp "./resources/frigate-config/config-scenescape.yml" "./resources/frigate-config/config.yml"
+        
+        # Substitute RTSP_STREAM_IP with host IP in the configuration
+        local host_ip=$(get_host_ip)
+        sed -i "s/{RTSP_STREAM_IP}/${host_ip}/g" "./resources/frigate-config/config.yml"
+        print_success "Scenescape Frigate configuration activated"
+        
+        # Copy Scenescape certificates
+        SMART_INTERSECTION_CERTS="edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs"
+        if [ -f "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" ]; then
+            mkdir -p ./resources/mqtt-certs
+            cp "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" "./resources/mqtt-certs/root-cert"
+            cp "${SMART_INTERSECTION_CERTS}/scenescape-broker.crt" "./resources/mqtt-certs/broker-cert"
+            cp "${SMART_INTERSECTION_CERTS}/scenescape-broker.key" "./resources/mqtt-certs/broker-key"
+            print_success "Scenescape certificates copied successfully"
+        else
+            print_error "Scenescape is enabled but certificates not found at ${SMART_INTERSECTION_CERTS}"
+            print_info "Please ensure Smart Intersection application is running and certificates are generated"
+            return 1
+        fi
+    else
+        print_info "NVR_SCENESCAPE is disabled - using default configuration"
+        cp "./resources/frigate-config/config-default.yml" "./resources/frigate-config/config.yml"
+        print_success "Default Frigate configuration activated"
+    fi
+}
+
 # Function to validate required environment variables
 validate_environment() {    
     # Check for NVR_GENAI flag

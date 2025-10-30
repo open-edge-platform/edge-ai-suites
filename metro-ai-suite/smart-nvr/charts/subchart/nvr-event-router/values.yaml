@@ -1,6 +1,6 @@
 image:
-  repository: amr-fm-registry.caas.intel.com/esh-user/egai/nvr-event-router
-  tag: rc1.2.1
+  repository: intel/nvr-event-router
+  tag: 1.2.1
 
 replicaCount: 1
 

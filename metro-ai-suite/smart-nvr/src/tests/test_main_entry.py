@@ -1,6 +1,6 @@
-"""Tests for backend main entry point (uvicorn run logic)."""
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Tests for backend main entry point (uvicorn run logic)."""
 import runpy
 from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient

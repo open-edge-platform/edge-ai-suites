@@ -1,6 +1,6 @@
-"""Tests for dispatcher action handling."""
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Tests for dispatcher action handling."""
 import pytest
 from types import SimpleNamespace
 

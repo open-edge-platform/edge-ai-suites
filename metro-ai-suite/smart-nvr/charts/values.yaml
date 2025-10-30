@@ -33,8 +33,8 @@ frigate:
 
 nvr-event-router:
   image:
-    repository: amr-fm-registry.caas.intel.com/esh-user/egai/nvr-event-router
-    tag: rc1.2.1
+    repository: intel/nvr-event-router
+    tag: 1.2.1
 
   replicaCount: 1
 
@@ -65,8 +65,8 @@ nvr-event-router:
 
 nvr-event-router-ui:
   image:
-    repository: amr-fm-registry.caas.intel.com/esh-user/egai/nvr-event-router
-    tag: rc1.2.1
+    repository: intel/nvr-event-router
+    tag: 1.2.1
   env:
     MODE: "ui"
     API_BASE_URL: "http://nvr-event-router:8000"

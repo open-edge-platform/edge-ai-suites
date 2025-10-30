@@ -1,6 +1,6 @@
-"""Retry & batch upload utility tests."""
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Retry & batch upload utility tests."""
 import os
 import requests
 import types

@@ -1,6 +1,6 @@
-"""Tests for camera watcher mapping persistence and merge logic."""
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Tests for camera watcher mapping persistence and merge logic."""
 import pytest
 from unittest.mock import patch, AsyncMock
 

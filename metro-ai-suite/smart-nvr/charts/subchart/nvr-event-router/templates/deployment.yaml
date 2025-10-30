@@ -38,7 +38,7 @@ spec:
             - name: VSS_SUMMARY_URL
               value: "{{ .Values.env.VSS_SUMMARY_IP }}:{{ .Values.env.VSS_SUMMARY_PORT }}"
             - name: no_proxy
-              value: "{{ .Values.global.proxy.no_proxy }}"
+              value: "{{ .Values.global.proxy.no_proxy }},{{ .Values.env.VSS_SEARCH_IP }},{{ .Values.env.VSS_SUMMARY_IP }}"
             - name: MQTT_USER
               value: "{{ .Values.global.env.FRIGATE_MQTT_USER }}"
             - name: MQTT_PASSWORD

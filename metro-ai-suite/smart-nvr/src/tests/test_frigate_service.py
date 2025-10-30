@@ -1,6 +1,6 @@
-"""Tests for FrigateService interactions with external Frigate API."""
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Tests for FrigateService interactions with external Frigate API."""
 import pytest
 from unittest.mock import patch, MagicMock
 from api.endpoints.frigate_api import FrigateService

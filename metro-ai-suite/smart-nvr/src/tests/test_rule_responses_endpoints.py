@@ -1,6 +1,6 @@
-"""Tests for endpoints returning rule summary and search responses."""
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Tests for endpoints returning rule summary and search responses."""
 import pytest
 from unittest.mock import AsyncMock, patch
 

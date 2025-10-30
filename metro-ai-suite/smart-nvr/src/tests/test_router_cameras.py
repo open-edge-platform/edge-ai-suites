@@ -1,6 +1,6 @@
-"""Tests for camera router endpoints."""
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Tests for camera router endpoints."""
 import pytest
 from unittest.mock import patch
 

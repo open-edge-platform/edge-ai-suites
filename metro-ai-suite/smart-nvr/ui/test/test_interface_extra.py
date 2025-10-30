@@ -1,6 +1,6 @@
-"""Additional tests for interface module functions (polling, processing)."""
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Additional tests for interface module functions (polling, processing)."""
 import pytest
 import threading
 import types

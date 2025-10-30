@@ -1,6 +1,6 @@
-"""Tests for VmsService summarization and search operations."""
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Tests for VmsService summarization and search operations."""
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
 from service.vms_service import VmsService
