@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Changes to 3rd party source
 
 This work depends on a patched open-source [navigation2](https://github.com/ros-navigation/navigation2) repository.

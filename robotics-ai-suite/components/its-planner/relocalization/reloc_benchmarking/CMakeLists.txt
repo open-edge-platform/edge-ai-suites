@@ -1,6 +1,9 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
-cmake_minimum_required(VERSION 3.5)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# https://docs.ros.org/en/humble/The-ROS2-Project/Contributing/Code-Style-Language-Versions.html#id5
+cmake_minimum_required(VERSION 3.14.4)
 project(reloc_benchmarking)
 
 set(CMAKE_CXX_STANDARD 17)

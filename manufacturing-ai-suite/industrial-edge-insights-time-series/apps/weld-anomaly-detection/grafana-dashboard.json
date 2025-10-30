@@ -671,13 +671,13 @@
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "query": "SELECT mean(mean_value) FROM (SELECT mean(end_end_time)/1000000 AS mean_value FROM \"weld-sensor-anomaly-data\" WHERE  time > now() - 3m GROUP BY time(1m))\n",
+          "query": "SELECT mean(mean_value) FROM (SELECT mean(end_end_time)/1000000000 AS mean_value FROM \"weld-sensor-anomaly-data\" WHERE  time > now() - 3m GROUP BY time(1m))\n",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
         }
       ],
-      "title": "Average Time to Process a point E2E (ms)",
+      "title": "Average Time to Process a point E2E (seconds)",
       "type": "stat"
     },
     {
@@ -733,13 +733,13 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "query": " select mean(processing_time)/1000000 from \"weld-sensor-anomaly-data\" order by time desc",
+          "query": " select mean(processing_time)/1000000000 from \"weld-sensor-anomaly-data\" order by time desc",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
         }
       ],
-      "title": "Analytics Processing Time (ms)",
+      "title": "Analytics Processing Time (seconds)",
       "type": "stat"
     }
   ],

@@ -12,7 +12,7 @@ You can use this foundation to build solutions for diverse use cases, including 
 ## How it Works
 The application workflow has three stages: inputs, processing, and outputs.
 
-![Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.](docs/user-guide/_images/architecture.png)
+![Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.](docs/user-guide/_images/architecture.svg)
 
 ### Inputs
 

@@ -19,8 +19,8 @@ services:
     environment:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
-      - no_proxy=${no_proxy},${HOST_IP},mediamtx-server
-      - NO_PROXY=${no_proxy},${HOST_IP},mediamtx-server
+      - no_proxy=${no_proxy},${HOST_IP},mediamtx-server,otel-collector
+      - NO_PROXY=${no_proxy},${HOST_IP},mediamtx-server,otel-collector
       - ENABLE_WEBRTC=true
       - WEBRTC_SIGNALING_SERVER=http://mediamtx-server:8889
       - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true
@@ -30,6 +30,10 @@ services:
       - SERVICE_NAME=dlstreamer-pipeline-server
       - MQTT_HOST=broker
       - MQTT_PORT=1883
+      - ENABLE_OPEN_TELEMETRY=true
+      - OTEL_COLLECTOR_HOST=${OTEL_COLLECTOR_HOST}
+      - OTEL_COLLECTOR_PORT=${OTEL_COLLECTOR_PORT}
+      - OTEL_EXPORT_INTERVAL_MILLIS=${OTEL_EXPORT_INTERVAL_MILLIS}
       # NPU related environment variables
       - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
     volumes:
@@ -141,6 +145,37 @@ services:
     networks:
       - app_network
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    environment:
+      - HTTP_PROXY=${http_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - NO_PROXY=$no_proxy,localhost,127.0.0.1
+    volumes:
+      - ./${SAMPLE_APP}/configs/open_telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command: >
+      --config.file=/etc/prometheus/prometheus.yml
+      --storage.tsdb.path=/prometheus
+      --web.route-prefix=/prometheus
+      --web.external-url=https://${HOST_IP}/prometheus
+    networks:
+      - app_network
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.94.0
+    container_name: otel-collector
+    environment:
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: $no_proxy,prometheus,dlstreamer-pipeline-server,localhost,127.0.0.1
+    volumes:
+      - ./${SAMPLE_APP}/configs/open_telemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml  # OpenTelemetry Collector config
+    restart: always
+    networks:
+      - app_network
+
 networks:
   app_network:
     driver: "bridge"
@@ -151,3 +186,5 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
+  prometheus_data:
+    driver: local
