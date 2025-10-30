@@ -36,6 +36,9 @@ docker build -t retriever-milvus:latest --build-arg https_proxy=$https_proxy --b
 cd vlm-openvino-serving
 docker build -t vlm-openvino-serving:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f docker/Dockerfile .
 
+cd ../multimodal-embedding-serving
+docker build -t multimodal-embedding-serving:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f docker/Dockerfile .
+
 cd ../../..
 ```
 
@@ -69,22 +72,25 @@ Note: supported media types: jpg, png, mp4
     cd deployment/docker-compose/
     ```
 
-2.  Set up environment variables
+2.  Set up environment variables, note that you need to set an embedding model first
 
     ``` bash
+    export EMBEDDING_MODEL_NAME="CLIP/clip-vit-h-14" # Replace with other models if needed
     source env.sh 
     ```
 
-When prompting `Please enter the VLM_MODEL_NAME`, choose one model name from table below and input
+    **Important**: You must set `EMBEDDING_MODEL_NAME` before running `env.sh`. See [multimodal-embedding-serving's Supported Models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/supported_models.md) for available options.
 
-##### Supported VLM Models
+   When prompting `Please enter the VLM_MODEL_NAME`, choose one model name from table below and input
 
-| Model Name                          | Single Image Support | Multi-Image Support | Video Support | Hardware Support                |
-|-------------------------------------|----------------------|---------------------|---------------|---------------------------------|
-| Qwen/Qwen2.5-VL-7B-Instruct         | Yes                  | Yes                 | Yes           | GPU                       |
+   ##### Supported VLM Models
+
+   | Model Name                          | Single Image Support | Multi-Image Support | Video Support | Hardware Support                |
+   |-------------------------------------|----------------------|---------------------|---------------|---------------------------------|
+   | Qwen/Qwen2.5-VL-7B-Instruct         | Yes                  | Yes                 | Yes           | GPU                       |
 
 
-You might want to pay some attention to `DEVICE` and `VLM_DEVICE` in `env.sh`. By default, they are both `GPU.1`, which applies to a standard hardware platform with an integrated GPU as `GPU.0` and the discrete GPU would be `GPU.1`. You can refer to [OpenVINO's query device sample](https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html) to learn more about how to identify which GPU index should be set.
+   You might want to pay some attention to `DEVICE` and `VLM_DEVICE` in `env.sh`. By default, they are both `GPU.1`, which applies to a standard hardware platform with an integrated GPU as `GPU.0` and the discrete GPU would be `GPU.1`. You can refer to [OpenVINO's query device sample](https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html) to learn more about how to identify which GPU index should be set.
 
 3.  Deploy with docker compose
 
@@ -145,9 +151,9 @@ In order to save time, only a subset of the dataset would be processed. They are
 This script only works when the `dataprep-visualdata-milvus` service is available.
 
 ### Use it on Web UI
-Go to `http://{host_ip}:17580` with a browser. Put the exact path to the subset of demo dataset (usually`/home/user/data/DAVIS/subset`, may vary according to your local username) into `file directory on host`. Click `UpdataDB`. Wait for a while and click `showInfo`. You should see that the number of processed files is 25.
+Go to `http://{host_ip}:17580` with a browser. Put the exact path to the subset of demo dataset (usually`/home/user/data/DAVIS/subset`, may vary according to your local username) into `file directory on host`. Click `UpdataDB` and wait for the uploading done.
 
-Try searching with prompt `tractor`, see if the results are correct.
+Try searching with query text `tractor`, see if the results are correct.
 
 Expected valid inputs are "car-race", "deer", "guitar-violin", "gym", "helicopter", "carousel", "monkeys-trees", "golf", "rollercoaster", "horsejump-stick", "planes-crossing", "tractor"
 
