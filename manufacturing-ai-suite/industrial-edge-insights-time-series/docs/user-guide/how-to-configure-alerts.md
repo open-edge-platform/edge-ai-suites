@@ -4,11 +4,12 @@ This section provides instructions for setting up alerts in **Time Series Analyt
 
 ## Docker Compose Deployment
 
-### Publish MQTT Alerts
+### Docker - Publish MQTT Alerts
 
 #### Configure MQTT Alerts
 
-By default, the following MQTT alerts is configured in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json` file.
+The following MQTT alerts is configured for `Wind Turbine Anomaly Detection` sample app at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json` file. The same is
+done for `Weld Anomaly Detection` sample app at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/config.json`
 
   ```json
     "alerts": {
@@ -23,7 +24,8 @@ By default, the following MQTT alerts is configured in `edge-ai-suites/manufactu
 #### Configure MQTT Alert in TICK Script
 
 The following snippet shows how to add the MQTT if not 
-already added. By default, the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick` TICK Script has the following configuration done by default.
+already added. For `Wind Turbine Anomaly Detection` sample app, the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick` TICK Script has the following configuration done by default. The MQTT alerts configuration
+for `Weld Anomaly Detection` sample app can be found at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick`
 
 ```bash
 @windturbine_anomaly_detector()
@@ -35,11 +37,9 @@ already added. By default, the `edge-ai-suites/manufacturing-ai-suite/industrial
     .qos(1)
 ```
 
-Similarly, the Weld Anomaly Detection sample app is preconfigured to publish MQTT alerts. You can find its default MQTT alert configuration in the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick` file.
-
 > **Note**: Setting **QoS** to `1` ensures messages are delivered at least once. Alerts are preserved and resent if the MQTT broker reconnects after downtime.
 
-### Subscribing to MQTT Alerts
+### Docker - Subscribe to MQTT Alerts
 
 Follow the steps to subscribe to the published MQTT alerts.
 
@@ -59,9 +59,11 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/wind_turb
 docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/weld_defects -p 1883
 ```
 
-### Publishing OPC-UA Alerts
+### Docker - Publish OPC-UA Alerts
 
-> **Note**: This section is applicable to Wind Turbine Anomaly Dection sample app only.
+> **Note**: 
+> This section is applicable to Wind Turbine Anomaly Dectection sample app only.
+> In other words, OPC UA alerts are not supported for Weld Anomaly Detection sample app.
 
 #### Prerequisite
 
@@ -69,8 +71,6 @@ Ensure that `make up_opcua_ingestion` has been executed by following the steps
 in the [getting started guide](./get-started.md#deploy-with-docker-compose) for the docker compose deployment
 
 To enable OPC-UA alerts in `Time Series Analytics Microservice`, use the following steps.
-
-> **Note**: OPC UA alerts are not supported for Weld Anomaly Detection sample app.
 
 #### Configuration
 
@@ -118,7 +118,7 @@ curl -k -X 'POST' \
 }'
 ```
 
-#### Subscribe to OPC UA Alerts using Sample OPCUA Subscriber
+### Docker - Subscribe to OPC UA Alerts using Sample OPCUA Subscriber
 
 1. Install python packages `asyncio` and `asyncua` to run the sample opc ua subscriber 
     ```bash
@@ -149,11 +149,11 @@ curl -k -X 'POST' \
 
 ## Helm Deployment
 
-- **Publish MQTT Alerts**
+### Helm - Publish MQTT Alerts
 
-For detailed instructions on configuring and publishing MQTT alerts, refer to the [Publish MQTT Alerts](#publish-mqtt-alerts) section.
+For detailed instructions on configuring and publishing MQTT alerts, refer to the [Publish MQTT Alerts](#docker---publish-mqtt-alerts) section.
 
-- **Subscribe to MQTT Alerts**
+### Helm - Subscribe to MQTT Alerts
 
 Follow the steps to subscribe to the published MQTT alerts.
 
@@ -170,13 +170,17 @@ kubectl get pods -n ts-sample-app | grep mqtt-broker
 kubectl exec -it -n ts-sample-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t '#' -p 1883
 ```
 
-- To subscribe to the `alerts/wind_turbine` topic, use the following command:
+- To subscribe to MQTT topic such as `alerts/wind_turbine`, use the following command:
 
 ```sh
+# Wind Turbine Anomaly Detection
 kubectl exec -it -n ts-sample-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
+
+# Weld Anomaly Detection
+kubectl exec -it -n ts-sample-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t alerts/weld_defects -p 1883
 ```
 
-- **Publish OPC-UA Alerts**
+### Helm - Publish OPC-UA Alerts
 
 
 > **Note:**
@@ -231,9 +235,9 @@ curl -k -X 'POST' \
 }'
 ```
 
-- **Subscribe to OPC UA Alerts using Sample OPCUA Subscriber**
+### Helm - Subscribe to OPC UA Alerts using Sample OPCUA Subscriber
 
-To subscribe to OPC-UA alerts, follow [these steps](#subscribe-to-opc-ua-alerts-using-sample-opcua-subscriber).
+To subscribe to OPC-UA alerts, follow [these steps](#docker---subscribe-to-opc-ua-alerts-using-sample-opcua-subscriber).
 
 ## Supporting Resources
 

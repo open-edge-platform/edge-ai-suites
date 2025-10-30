@@ -1,0 +1,98 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mediamtx
+  namespace: {{ $.Values.namespace }}
+spec:
+  type: NodePort
+  selector:
+    app: mediamtx
+  ports:
+    - name: "mediamtx-rtsp-port"
+      port: {{ $.Values.config.mediamtx.int.rtsp_port }}
+      targetPort: {{ $.Values.config.mediamtx.int.rtsp_port }}
+      nodePort: {{ $.Values.config.mediamtx.ext.rtsp_port }}
+    - name: "mediamtx-webrtc-port"
+      port: {{ $.Values.config.mediamtx.int.webrtc_port }}
+      targetPort: {{ $.Values.config.mediamtx.int.webrtc_port }}
+      nodePort: {{ $.Values.config.mediamtx.ext.webrtc_port }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mediamtx-secret
+  namespace: {{ .Values.namespace }}
+type: Opaque
+data:
+  MTX_WEBRTCICESERVERS2_0_USERNAME: {{ .Values.env.MTX_WEBRTCICESERVERS2_0_USERNAME | b64enc }}
+  MTX_WEBRTCICESERVERS2_0_PASSWORD: {{ .Values.env.MTX_WEBRTCICESERVERS2_0_PASSWORD | b64enc }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mediamtx
+  name: deployment-mediamtx
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mediamtx
+  template:
+    metadata:
+      labels:
+        app: mediamtx
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: mediamtx
+        env:
+          - name: MTX_WEBRTCICESERVERS2_0_URL
+            value: "turn:{{ $.Values.env.HOST_IP }}:{{ $.Values.config.coturn.ext.coturn_udp_port }}"
+          - name: MTX_WEBRTCICESERVERS2_0_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: mediamtx-secret
+                key: MTX_WEBRTCICESERVERS2_0_USERNAME
+          - name: MTX_WEBRTCICESERVERS2_0_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mediamtx-secret
+                key: MTX_WEBRTCICESERVERS2_0_PASSWORD
+          - name: MTX_LOGLEVEL
+            value: "debug"
+          - name: MTX_API
+            value: "yes"
+          - name: MTX_RTSP
+            value: "yes"
+          - name: MTX_RTMP
+            value: "no"
+          - name: MTX_SRT
+            value: "no"
+          - name: MTX_HLS
+            value: "no"
+        image: bluenviron/mediamtx:1.11.3
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        # Added security context to restrict container privileges
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
+      restartPolicy: Always

@@ -15,7 +15,8 @@ concurrency:
 on:
   workflow_call:
   workflow_dispatch:
-  
+  schedule:
+    - cron: "0 2 * * 0"  # 2 a.m. on Sunday
 permissions:
   contents: read
   
@@ -40,7 +41,7 @@ jobs:
           path: security-results/bandit*
           
   trivy-scan:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-64core-256GB
     permissions:
       contents: read
     steps:

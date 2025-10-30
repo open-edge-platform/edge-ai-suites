@@ -19,7 +19,7 @@ README.md          @xwu2intel
 /metro-ai-suite/interactive-digital-avatar/                      @senhui2intel @Junyu-B @wzq112358 @myqi @xwu2intel
 
 /metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/  @vagheshp @tjanczak @xwu2intel @ajagadi1 @rrajore
-/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/   @saratpoluri @sarthakdeva-intel @xwu2intel
+/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/   @saratpoluri @sarthakdeva-intel @xwu2intel @ajagadi1 @sajeevrajput @rrajore @vagheshp
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/        @vagheshp @tjanczak @xwu2intel @ajagadi1 @rrajore
 
 /metro-ai-suite/sensor-fusion-for-traffic-management/            @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel
@@ -60,8 +60,8 @@ README.md          @xwu2intel
 
 /metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/docs/           @vagheshp @tjanczak @xwu2intel @ajagadi1 @rrajore                 @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/README.md       @vagheshp @tjanczak @xwu2intel @ajagadi1 @rrajore                 @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/            @saratpoluri @sarthakdeva-intel @xwu2intel @ajagadi1 @rrajore       @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/README.md        @saratpoluri @sarthakdeva-intel @xwu2intel @ajagadi1 @rrajore       @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/            @saratpoluri @sarthakdeva-intel @xwu2intel @ajagadi1 @rrajore @sajeevrajput @vagheshp       @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/README.md        @saratpoluri @sarthakdeva-intel @xwu2intel @ajagadi1 @rrajore @sajeevrajput @vagheshp       @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/                 @vagheshp @tjanczak @xwu2intel @ajagadi1 @rrajore                  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/README.md             @vagheshp @tjanczak @xwu2intel @ajagadi1 @rrajore                  @open-edge-platform/open-edge-platform-docs-write
 

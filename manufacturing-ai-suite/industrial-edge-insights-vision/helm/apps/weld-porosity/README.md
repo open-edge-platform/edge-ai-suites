@@ -22,7 +22,7 @@
     ```
 3.  Edit the HOST_IP, proxy and other environment variables in `helm/values.yaml` as follows
     ```yaml
-    env:        
+    env:
         HOST_IP: <HOST_IP>   # host IP address
         MINIO_ACCESS_KEY: <DATABASE USERNAME> #  example: minioadmin
         MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
@@ -59,7 +59,7 @@
 6.  Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
     ```sh
     # Below is an example for Weld Porosity Classification. Please adjust the source path of models and videos appropriately for other sample applications.
-    
+
     POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
     kubectl cp resources/weld-porosity/videos/welding.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
@@ -71,7 +71,7 @@
     ./sample_list.sh
     ```
     This lists the pipeline loaded in DLStreamer Pipeline Server.
-    
+
     Output:
     ```sh
     # Example output for Weld Porosity Classification
@@ -106,8 +106,8 @@
     ```sh
     ./sample_start.sh -p weld_porosity_classification
     ```
-    This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available. 
-    
+    This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available.
+
     Output:
     ```sh
     # Example output for Weld Porosity Classification
@@ -132,7 +132,7 @@
     ./sample_status.sh
     ```
     This command lists status of pipeline instances launched during the lifetime of sample application.
-    
+
     Output:
     ```sh
     # Example output for Weld Porosity Classification
@@ -155,7 +155,7 @@
     ./sample_stop.sh
     ```
     This command will stop all instances that are currently in `RUNNING` state and respond with the last status.
-    
+
     Output:
     ```sh
     # Example output for Weld Porosity Classification
@@ -177,7 +177,7 @@
     }
 
     ```
-    If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.    
+    If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.
     For example, `./sample_stop.sh --id 895130405c8e11f08b78029627ef9c6b`
 
 11. Uninstall the helm chart.
@@ -187,5 +187,4 @@
 
 
 ## Troubleshooting
-- [Troubleshooting Guide](../../../apps/weld-porosity/docs/user-guide/troubleshooting-guide.md)
-    
+- [Troubleshooting Guide](../../../docs/weld-porosity/troubleshooting-guide.md)

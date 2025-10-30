@@ -15,7 +15,10 @@ RUN npm install
 COPY . .
 
 # Build the Vue.js application
-# RUN npm run build
+RUN npm run build
+
+# Install serve globally *before* switching user
+RUN npm install -g serve
 
 # Expose the port the app runs on
 EXPOSE 3000
@@ -28,5 +31,5 @@ RUN useradd -ms /bin/bash ${USER} -o -u $UID && \
 RUN mkdir -p /home/${USER}/ && chown -R ${USER}:${USER} /home/${USER}
 USER ${USER}
 
-# Start the application
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+# Serve built static files
+CMD ["serve", "-s", "dist", "-l", "3000"]

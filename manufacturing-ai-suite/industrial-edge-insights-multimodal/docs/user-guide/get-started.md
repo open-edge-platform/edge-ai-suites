@@ -112,7 +112,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 #### **`udfs/`**:
    - Contains the python script to process the incoming data.
      Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with Intel® Extension for Scikit-learn*
-     to run on CPU to detect the anomalous power generation data points relative to wind speed.
+     to run on CPU to detect the anomalous welding using sensor.
 
 #### **`tick_scripts/`**:
    - The TICKScript `weld_anomaly_detector.tick` determines processing of the input data coming in.
@@ -131,6 +131,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
    - `VISUALIZER_GRAFANA_PASSWORD`
    - `MTX_WEBRTCICESERVERS2_0_USERNAME`
    - `MTX_WEBRTCICESERVERS2_0_PASSWORD`
+   - `HOST_IP`
 
 2. Deploy the sample app, use only one of the following options:
 
@@ -143,8 +144,13 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 >  - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) and in `helm/values.yaml` (for Helm deployments) 
 >    is set to `true` by default, enabling continuous looping of simulator data. To ingest the simulator data only once (without looping), 
 >    set this variable to `false`.
+> - The update rate of the graph and table may lag by a few seconds and might not perfectly align with the video stream, since 
+>   Grafana’s minimum refresh interval is 5 seconds.
+> - The graph and table may initially display "No Data" because the Time Series Analytics Microservice requires some time to 
+>   install its dependency packages before it can start running.
 
     ```bash
+    cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
     make up
     ```
    
@@ -155,11 +161,12 @@ Use the following command to verify that all containers are active and error-fre
 > ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
 
 
-```sh
-make status
-```
+  ```sh
+  cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+  make status
+  ```
 
-## Verify the Wind Turbine Anomaly Detection Results
+## Verify the Weld Defect Detection Results
 
 1. Get into the InfluxDB* container:
 
@@ -195,15 +202,15 @@ make status
       > **Note**: Use link `http://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
     
     - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-      in `.env` file and select **Multimodal Vision & TS Anomaly Detection Dashboard**.
+      in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.
 
       ![Grafana login](./_images/login_wt.png)
 
     - After login, click on Dashboard 
       ![Menu view](./_images/dashboard.png)
 
-    - Select the `Multimodal Vision & TS Anomaly Detection Dashboard`.
-      ![Multimodal Vision & TS Anomaly Detection Dashboard](./_images/grafana_dashboard_selection.png)
+    - Select the `Multimodal Weld Defect Detection Dashboard`.
+      ![Multimodal Weld Defect Detection Dashboard](./_images/grafana_dashboard_selection.png)
 
     - One will see the below output.
   
@@ -212,6 +219,7 @@ make status
 ## Bring down the sample app
 
   ```sh
+  cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
   make down
   ```
 

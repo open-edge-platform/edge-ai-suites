@@ -1,20 +1,23 @@
-Wind Turbine Anomaly Detection
-==============================
+MultiModal Weld Defect Detection
+================================
 
-Time Series predictive maintenance use case to detect the anomalous power generation
-patterns relative to wind speed for the wind turbines.
+The MultiModal Weld Defect Detection sample demonstrates how to use AI at the edge to identify weld
+defects in manufacturing environments by analyzing both image and time series sensor data.
 
-In the Energy Sector, such as wind turbines for power generation, unexpected equipment
-failures result in costly downtime and operational inefficiencies. Using AI-driven
-predictive analytics, edge devices can monitor equipment health through sensor data
-(For example, power generation and wind speed), detect anomalous trends indicative of
-wear or failure, and alert operators to schedule maintenance proactively. This enhances
-productivity, reduces costs, and extends equipment lifespan.
+In industrial settings, weld quality is critical for safety and reliability. Manual inspection is time-consuming
+and prone to human error. This solution leverages deep learning models to automate defect detection, improving accuracy
+and efficiency.
 
-This sample application demonstrates a time series use case by detecting the anomalous
-power generation patterns relative to wind speed. By identifying deviations, it helps
-optimize maintenance schedules and prevent potential turbine failures, enhancing
-operational efficiency.
+Key features include:
+
+- Multi-modal data fusion: Combines visual inspection (images) and sensor data (such as current, voltage, and temperature)
+  for comprehensive defect detection.
+- Real-time inference: Processes data at the edge for immediate feedback and reduced latency.
+- Configurable alerts: Notifies operators of detected defects to enable timely intervention.
+- Extensible pipeline: Supports integration with additional data sources and models.
+
+This application helps manufacturers enhance product quality, reduce inspection time, and minimize costly
+rework by enabling proactive defect detection on the factory floor.
 
 .. toctree::
    :hidden:
@@ -24,9 +27,7 @@ operational efficiency.
    get-started
    how-to-build-from-source
    how-to-deploy-with-helm
-   how-to-configure-custom-udf
    how-to-configure-alerts
-   how-to-enable-system-metrics
    how-to-update-config
-   how-to-create-a-new-sample-app
    release_notes/Overview
+

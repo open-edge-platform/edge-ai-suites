@@ -10,8 +10,8 @@ Camera pose and robot calibration
 Before first RVC Execution, we have to ensure a few parameters that has to match the physical setup:
 
 - RVC must known the exact pose (i.e.: position and orientation) of the |realsense| camera as explained in :ref:`Camera pose calibration<camera_pose_calibration>`
-- Prepare the robot for communication with the |Intel| platform as in :ref:`Universal Robot configuration<universal_robot_configuration>`
-- The robot calibration parameters from the real robot must be extracted, as explained further in :ref:`Universal Robot Calibration Procedure<robot_calibration_procedure>`
+- Prepare the robot for communication with the |Intel| platform as in :ref:`Universal Robots configuration<universal_robot_configuration>`
+- The robot calibration parameters from the real robot must be extracted, as explained further in :ref:`Universal Robots Calibration Procedure<robot_calibration_procedure>`
 
 .. _camera_pose_calibration:
 
@@ -67,18 +67,18 @@ transform it to robot reference system, and these numbers give the relation betw
 
 .. _universal_robot_configuration:
 
-Universal Robot configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Universal Robots Configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The real robot or the simulator has to be configured to accept 
 connection from RVC and configure the RVC system for real time capabilities
 
 
-Set up Universal Robots  \ |tm|  UR5e
+Set up Universal Robots UR5e Robot
 --------------------------------------
  
 
-This section discusses, in brief, the steps to set up Universal Robots&trade; UR5e.
+This section discusses, in brief, the steps to set up Universal Robots UR5e robot.
 
 .. note::
     For more details, refer to the 
@@ -89,7 +89,7 @@ This section discusses, in brief, the steps to set up Universal Robots&trade; UR
 Set up Private Local Network
 -----------------------------
 
-One of the key considerations coming from Universal Robots\ |tm| is that the network connection from the controlling AI running RVC and the robot should be on a direct Ethernet connection. In this demonstration, a private local network with a dedicated switch was setup with no other traffic on this network, which worked well.
+One of the key considerations coming from Universal Robots robots is that the network connection from the controlling AI running RVC and the robot must be on a direct Ethernet connection. In this demonstration, a private local network with a dedicated switch was set up with no other traffic on this network, which worked well.
 
 Install external_control.urcap
 ------------------------------
@@ -132,7 +132,7 @@ Overwrite Model-specific Kinematics Parameters (Calibration)
 
 There might be slight differences (variance) in the physical attributes of various robots. To address this issue, the robot is calibrated at the factory and the variance in these parameters are saved on the robot controller file system. Extract the kinematics parameters specific to your robot and overwrite the distributed parameters file to avoid the robot being sent elsewhere for accumulating errors on inverse kinematics computation due to this parameter variance.
 
-For information on the Universal Robots\ |tm| calibration, refer to 
+For information on the Universal Robots robot calibration, refer to 
 `README.md <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/foxy/ur_calibration/README.md>`_
 
 .. note::
@@ -142,7 +142,7 @@ For information on the Universal Robots\ |tm| calibration, refer to
 ::
 
     [ros2_control_node-1] [INFO] [1665059043.476735447] [URPositionHardwareInterface]: Calibration checksum: 'calib_12788084448423163542'.
-    [ros2_control_node-1] [ERROR] [1665059044.504667587] [URPositionHardwareInterface]: The calibration parameters of the connected robot don't match the ones from the given kinematics config file. Please be aware that this can lead to critical inaccuracies of tcp positions. Use the ur_calibration tool to extract the correct calibration from the robot and pass that into the description. See [https://github.com/UniversalRobots/Universal_Robots_ROS_Driver#extract-calibration-information] for details.
+    [ros2_control_node-1] [ERROR] [1665059044.504667587] [URPositionHardwareInterface]: The calibration parameters of the connected robot don't match the ones from the given kinematics config file. Be aware that this can lead to critical inaccuracies of tcp positions. Use the ur_calibration tool to extract the correct calibration from the robot and pass that into the description. See [https://github.com/UniversalRobots/Universal_Robots_ROS_Driver#extract-calibration-information] for details.
 
 Calibration Example
 """""""""""""""""""""""
@@ -175,7 +175,7 @@ Notice the different checksums.
 Create Program
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To use the new URCaps, enabling the communication with the Intel Architecture RVC controller, create a new program on the teaching pendant and insert the **External Control** program node in the program tree.
+To use the new URCaps, enabling the communication with the Intel® architecture RVC controller, create a new program on the teaching pendant and insert the **External Control** program node in the program tree.
 
 .. image:: images/html//URCreateProgram.png
     :alt: Create Program
