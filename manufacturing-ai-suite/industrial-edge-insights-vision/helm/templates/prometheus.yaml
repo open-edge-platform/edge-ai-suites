@@ -11,8 +11,7 @@ spec:
     - protocol: TCP
       port: {{ $.Values.config.prometheus.int.prometheus_port }}
       targetPort: {{ $.Values.config.prometheus.int.prometheus_port }}
-      nodePort: {{ $.Values.config.prometheus.ext.prometheus_port }}
-  type: NodePort
+  type: ClusterIP
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -41,6 +40,12 @@ spec:
       containers:
         - name: prometheus
           image: prom/prometheus:latest
+          command:
+            - /bin/prometheus
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --web.route-prefix=/prometheus
+            - --web.external-url=https://{{ $.Values.env.HOST_IP }}:30443/prometheus
           ports:
             - containerPort: {{ $.Values.config.prometheus.int.prometheus_port }}
           env:

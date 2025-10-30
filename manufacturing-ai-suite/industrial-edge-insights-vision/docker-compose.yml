@@ -35,7 +35,7 @@ services:
       OPCUA_SERVER_PORT: ${OPCUA_SERVER_PORT}
       OPCUA_SERVER_USERNAME: ${OPCUA_SERVER_USERNAME}
       OPCUA_SERVER_PASSWORD: ${OPCUA_SERVER_PASSWORD}
-      MQTT_HOST: nginx-reverse-proxy
+      MQTT_HOST: mqtt-broker
       MQTT_PORT: 1883
       # Model Registry Microservice
       MR_URL: ${MR_URL}
@@ -111,8 +111,6 @@ services:
     container_name: mqtt-broker
     networks:
       - mraas
-    ports:
-      - "1883:1883"
     volumes:
       - ./apps/${SAMPLE_APP}/configs/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
       
