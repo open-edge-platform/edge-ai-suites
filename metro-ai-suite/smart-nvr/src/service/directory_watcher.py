@@ -167,10 +167,11 @@ class DebouncedHandler(FileSystemEventHandler):
         action_thread = Thread(target=run_action)
         action_thread.start()
 
+"""Start or update observer threads.
 
-# Removed upload_initial_videos as initial bulk ingest not used by current API/UI
-
-
+Creates missing root directories. If already running and debounce differs,
+updates handler debounce value.
+"""
 def _ensure_watcher_running(action: Callable[[Set[str]], None], debounce_time: int):
     """Start watchers for all configured root paths if not already active."""
     global _observer, _handler, _current_debounce

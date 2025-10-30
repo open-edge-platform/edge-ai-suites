@@ -8,38 +8,14 @@ import requests
 from typing import List, Dict, Optional, Union
 
 
-def fetch_cameras() -> List[str]:
-    """Fetch camera names from backend.
-
-    Supported backend shapes:
-      1. {"cameras": ["cam1", "cam2", ...]}
-      2. {"cameras": {"cam1": {...}, "cam2": {...}}}
-      3. Plain list ["cam1", "cam2", ...]
-      4. Mapping {"cam1": {...}, "cam2": {...}} (legacy FrigateService get_camera_names)
-    """
+def fetch_cameras() -> Dict[str, List[str]]:
     try:
         response = requests.get(f"{API_BASE_URL}/cameras", timeout=10)
         response.raise_for_status()
-        data = response.json()
-        # Shape 1 or 2
-        if isinstance(data, dict) and "cameras" in data:
-            cams = data["cameras"]
-            if isinstance(cams, list):
-                return cams
-            if isinstance(cams, dict):
-                return list(cams.keys())
-            return []
-        # Shape 3
-        if isinstance(data, list):
-            return data
-        # Shape 4 (mapping directly)
-        if isinstance(data, dict):
-            return list(data.keys())
-        logger.warning(f"Unexpected /cameras payload type: {type(data)} -> {data}")
-        return []
+        return response.json()
     except Exception as e:
         logger.error(f"Error fetching cameras: {e}")
-        return []
+        return {}
 
 
 def fetch_cameras_with_labels() -> (List[str], Dict[str, List[str]]):

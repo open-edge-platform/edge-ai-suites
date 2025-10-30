@@ -6,21 +6,8 @@ Main entry point for NVR Event Router UI.
 """
 
 import logging
-import os
-import sys
-
-# Make script executable both as module (python -m ui.main) and as a file (python main.py)
-# by ensuring parent directory is on sys.path and attempting absolute then relative imports.
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-PARENT_DIR = os.path.dirname(CURRENT_DIR)
-if PARENT_DIR not in sys.path:
-    sys.path.insert(0, PARENT_DIR)
-
-try:  # Preferred absolute imports when package context is established
-    from interface.interface import create_ui, initialize_app, stop_event_updates  # type: ignore
-except ImportError:
-    # Fallback to relative (works when executed with -m) or if layout differs
-    from .interface.interface import create_ui, initialize_app, stop_event_updates  # type: ignore
+from interface.interface import create_ui
+from interface.interface import initialize_app, stop_event_updates
 
 # Configure logging
 logging.basicConfig(

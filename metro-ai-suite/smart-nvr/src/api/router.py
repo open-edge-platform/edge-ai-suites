@@ -1,11 +1,10 @@
 
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 # --- Camera Watcher API (moved to end for formatting) ---
 
 from typing import List, Dict
 from service.directory_watcher import set_camera_watcher_mapping, get_enabled_cameras
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 from service.directory_watcher import upload_videos_to_dataprep
 from fastapi import APIRouter, Depends, HTTPException, Request, Body
 from pydantic import BaseModel
