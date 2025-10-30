@@ -127,9 +127,16 @@ void ITSPlanner::deactivate()
   marker_pub_->on_deactivate();
 }
 
+#ifdef ROS_DISTRO_HUMBLE
 nav_msgs::msg::Path ITSPlanner::createPlan(
   const geometry_msgs::msg::PoseStamped & start,
   const geometry_msgs::msg::PoseStamped & goal)
+#else
+nav_msgs::msg::Path ITSPlanner::createPlan(
+  const geometry_msgs::msg::PoseStamped & start,
+  const geometry_msgs::msg::PoseStamped & goal,
+  std::function<bool()>)
+#endif
 {
   std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*(costmap_->getMutex()));
   nav2_costmap_2d::Costmap2D * costmap = costmap_;

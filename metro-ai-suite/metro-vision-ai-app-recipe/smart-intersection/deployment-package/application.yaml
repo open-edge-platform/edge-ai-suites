@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: LicenseRef-Intel
+---
+specSchema: "Application"
+schemaVersion: "0.1"
+$schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
+
+name: si-app
+version: 0.1.0
+description: "Smart Intersection Application"
+
+helmRegistry: "docker-hub"
+chartName: "intel/smart-intersection"
+chartVersion: "0.1.0"
+
+profiles:
+  - name: "default"
+    description: "Uses CPU for inferencing"
+    valuesFileName: "si-values.yaml"
+    parameterTemplates:
+      - name: http_proxy
+        displayName: "Http proxy"
+        type: string
+        default: ""
+      - name: https_proxy
+        displayName: "Https proxy"
+        type: string
+        default: ""
+      - name: no_proxy
+        displayName: "No proxy"
+        type: string
+        default: "localhost,127.0.0.1"
