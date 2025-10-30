@@ -1,0 +1,276 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+  namespace: {{ .Values.namespace }}
+data:
+  nginx.conf: |
+    user  nginx;
+    worker_processes  auto;
+    error_log  /var/log/nginx/error.log warn;
+    pid        /var/run/nginx.pid;
+
+    events {
+        worker_connections  1024;
+    }
+
+    stream {
+      upstream rtsp_upstream {
+        server ibvs-mediamtx:8554;   # RTSP server inside Docker network
+      }
+
+      server {
+        listen 8554;                # Nginx listens for RTSP on 8554
+        proxy_pass rtsp_upstream;
+      }
+    }
+
+    http {
+        # Upstream blocks
+        upstream ibvs_app {
+            server ibvs-app:3000;
+        }
+        upstream milvus_ui {
+            server ibvs-milvusui:3000;
+        }
+        upstream feature_matching {
+            server ibvs-featurematching:8000;
+        }
+        upstream dlstreamer {
+            server ibvs-dlstreamer-pipeline-server:8080;
+        }
+        upstream milvus_db {
+            server ibvs-milvusdb:19530;
+        }
+        upstream milvus_db_http {
+            server ibvs-milvusdb:9091;
+        }
+
+        # Redirect all HTTP -> HTTPS
+        server {
+            listen 80;
+            return 301 https://$host$request_uri;
+        }
+
+        # HTTPS server block
+        server {
+            listen 443 ssl;
+            server_name localhost;
+            client_max_body_size 500M;
+
+            # SSL configuration
+            ssl_certificate     /etc/nginx/ssl/server.crt;
+            ssl_certificate_key /etc/nginx/ssl/server.key;
+
+            # SSL security settings
+            ssl_protocols TLSv1.2 TLSv1.3;
+            ssl_ciphers HIGH:!aNULL:!MD5;
+            ssl_prefer_server_ciphers on;
+
+            # Security headers
+            add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+            add_header X-Content-Type-Options nosniff;
+            add_header X-Frame-Options SAMEORIGIN;
+            add_header X-XSS-Protection "1; mode=block";
+
+            # Milvus App (Vue SPA)
+            location / {
+                proxy_pass http://ibvs_app/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Serve static assets directly
+            location /assets/ {
+                proxy_pass http://ibvs_app/assets/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Milvus UI
+            location /ibvs-milvus-ui/ {
+                proxy_pass http://milvus_ui/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+            }
+
+            # Milvus UI api requests
+            location /api/ {
+                proxy_pass http://milvus_ui/api/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Milvus UI socket.IO requests
+            location /socket.io/ {
+                proxy_pass http://milvus_ui/socket.io/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Feature Matching
+            location /ibvs-feature-matching/ {
+                proxy_pass http://feature_matching/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Feature Matching search requests
+            location /search/ {
+                proxy_pass http://feature_matching/search/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Get static images for search results
+            location /static/ {
+                proxy_pass http://feature_matching/static/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Feature Matching clear requests
+            location /clear/ {
+                proxy_pass http://feature_matching/clear/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Featurematching healthz requests
+            location /healthz {
+                proxy_pass http://feature_matching;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Feature Matching Swagger docs requests
+            location /docs {
+                proxy_pass http://feature_matching;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Feature Matching swagger docs openapi.json requests
+            location /openapi.json {
+                proxy_pass http://feature_matching/openapi.json;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # DLStreamer Pipeline Server
+            location /ibvs-dlstreamer/ {
+                proxy_pass http://dlstreamer/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+            }
+
+            # # DLStreamer Pipeline Server pipelines requests
+            location /pipelines/ {
+                proxy_pass http://dlstreamer/pipelines/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Milvus DB API
+            location /ibvs-milvus-db/ {
+                proxy_pass http://milvus_db;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+            }
+
+            # Milvus DB HTTP
+            location /ibvs-milvus-db-http/ {
+                proxy_pass http://milvus_db_http/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+            }
+
+            # Stream video
+            location /stream/ {
+                proxy_pass http://ibvs-mediamtx:8888/stream/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Health check
+            location /nginx_healthz {
+                return 200 "ok\n";
+                add_header Content-Type text/plain;
+            }
+        }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: generate-certs-script
+data:
+  generate_certs.sh: |
+    #!/bin/sh
+    set -e
+    SSL_DIR="/etc/nginx/ssl"
+    mkdir -p "$SSL_DIR"
+
+    if ! command -v openssl >/dev/null 2>&1; then
+        echo "Installing openssl..."
+        apk add --no-cache openssl
+    fi
+
+    if [ ! -f "$SSL_DIR/server.crt" ] || [ ! -f "$SSL_DIR/server.key" ]; then
+      echo "🔐 Generating self-signed SSL certificate..."
+      openssl req -x509 -nodes -days 365 \
+        -newkey rsa:2048 \
+        -keyout "$SSL_DIR/server.key" \
+        -out "$SSL_DIR/server.crt" \
+        -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"
+    fi

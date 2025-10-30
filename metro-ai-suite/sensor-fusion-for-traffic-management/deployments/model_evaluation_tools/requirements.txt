@@ -6,7 +6,7 @@ filelock==3.13.1
 fonttools==4.58.4
 fsspec==2024.6.1
 idna==3.10
-Jinja2==3.1.4
+Jinja2==3.1.6
 kiwisolver==1.4.8
 MarkupSafe==2.1.5
 matplotlib==3.10.3
@@ -37,12 +37,12 @@ pytz==2025.2
 PyYAML==6.0.2
 requests==2.32.4
 scipy==1.15.3
-setuptools==59.6.0
+setuptools==80.9.0
 six==1.17.0
 sympy==1.13.3
-torch==2.7.1+cu118
-torchaudio==2.7.1+cu118
-torchvision==0.22.1+cu118
+torch==2.7.1
+torchaudio==2.7.1
+torchvision==0.22.1
 tqdm==4.67.1
 triton==3.3.1
 typing_extensions==4.12.2

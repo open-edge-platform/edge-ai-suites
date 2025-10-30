@@ -39,7 +39,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<iframe \n  src= \"${WEBRTC_URL}/object_detection_1\" \n  style=\"width:100%;height:500px\";\n  allow=\"autoplay; encrypted-media\"\n  >\n</iframe> ",
+        "content": "<iframe \n  src= \"${WEBRTC_URL}/object_detection_1/\" \n  style=\"width:100%;height:500px\";\n  allow=\"autoplay; encrypted-media\"\n  >\n</iframe> ",
         "mode": "html"
       },
       "pluginVersion": "11.5.4",
@@ -64,7 +64,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<iframe \n  src= \"${WEBRTC_URL}/object_detection_2\" \n  style=\"width:100%;height:500px\";\n  allow=\"autoplay; encrypted-media\"\n  >\n</iframe> ",
+        "content": "<iframe \n  src= \"${WEBRTC_URL}/object_detection_2/\" \n  style=\"width:100%;height:500px\";\n  allow=\"autoplay; encrypted-media\"\n  >\n</iframe> ",
         "mode": "html"
       },
       "pluginVersion": "11.5.4",
@@ -89,7 +89,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<iframe \n  src= \"${WEBRTC_URL}/object_detection_3\" \n  style=\"width:100%;height:500px\";\n  allow=\"autoplay; encrypted-media\"\n  >\n</iframe> ",
+        "content": "<iframe \n  src= \"${WEBRTC_URL}/object_detection_3/\" \n  style=\"width:100%;height:500px\";\n  allow=\"autoplay; encrypted-media\"\n  >\n</iframe> ",
         "mode": "html"
       },
       "pluginVersion": "11.5.4",
@@ -114,7 +114,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<iframe \n  src= \"${WEBRTC_URL}/object_detection_4\" \n  style=\"width:100%;height:500px\";\n  allow=\"autoplay; encrypted-media\"\n  >\n</iframe> ",
+        "content": "<iframe \n  src= \"${WEBRTC_URL}/object_detection_4/\" \n  style=\"width:100%;height:500px\";\n  allow=\"autoplay; encrypted-media\"\n  >\n</iframe> ",
         "mode": "html"
       },
       "pluginVersion": "11.5.4",
@@ -248,18 +248,18 @@
     "list": [
       {
         "current": {
-          "text": "http://0.0.0.0:8889",
-          "value": "http://0.0.0.0:8889"
+          "text": "https://0.0.0.0/mediamtx/",
+          "value": "https://0.0.0.0/mediamtx/"
         },
         "name": "WEBRTC_URL",
         "options": [
           {
             "selected": true,
-            "text": "http://0.0.0.0:8889",
-            "value": "http://0.0.0.0:8889"
+            "text": "https://0.0.0.0/mediamtx/",
+            "value": "https://0.0.0.0/mediamtx/"
           }
         ],
-        "query": "http://0.0.0.0:8889",
+        "query": "https://0.0.0.0/mediamtx/",
         "type": "textbox"
       }
     ]

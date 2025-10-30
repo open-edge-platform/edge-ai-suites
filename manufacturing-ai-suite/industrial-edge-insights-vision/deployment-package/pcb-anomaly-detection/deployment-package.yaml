@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: LicenseRef-Intel
+---
+specSchema: "DeploymentPackage"
+schemaVersion: "0.1"
+$schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
+
+name: "pcb"
+displayName: "pcb"
+description: "PCB Anomaly Detection Deployment Package"
+version: "1.0.0"
+
+applications:
+  - name: pcb-app
+    version: 1.0.0
+
+defaultNamespaces:
+  pcb-app: pcb
+
+deploymentProfiles:
+  - name: "default"
+    description: "Uses CPU for inferencing"
+    applicationProfiles:
+      - application: "pcb-app"
+        profile: "default"
+  - name: "with-intel-gpu"
+    description: "Uses Intel GPU for inferencing, needs Intel GPU extension"
+    applicationProfiles:
+      - application: "pcb-app"
+        profile: "with-intel-gpu"

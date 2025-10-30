@@ -22,7 +22,7 @@
     ```
 3.  Edit the HOST_IP, proxy and other environment variables in `helm/values.yaml` as follows
     ```yaml
-    env:        
+    env:
         HOST_IP: <HOST_IP>   # host IP address
         MINIO_ACCESS_KEY: <DATABASE USERNAME> #  example: minioadmin
         MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
@@ -59,7 +59,7 @@
 6.  Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
     ```sh
     # Below is an example for PCB Anomaly Detection. Please adjust the source path of models and videos appropriately for other sample applications.
-    
+
     POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
     kubectl cp resources/pcb-anomaly-detection/videos/anomalib_pcb_test.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
@@ -71,7 +71,7 @@
     ./sample_list.sh
     ```
     This lists the pipeline loaded in DLStreamer Pipeline Server.
-    
+
     Output:
     ```sh
     # Example output for PCB Anomaly Detection
@@ -106,8 +106,8 @@
     ```sh
     ./sample_start.sh -p pcb_anomaly_detection
     ```
-    This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available. 
-    
+    This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available.
+
     Output:
     ```sh
     # Example output for PCB Anomaly Detection
@@ -132,7 +132,7 @@
     ./sample_status.sh
     ```
     This command lists status of pipeline instances launched during the lifetime of sample application.
-    
+
     Output:
     ```sh
     # Example output for PCB Anomaly Detection
@@ -155,7 +155,7 @@
     ./sample_stop.sh
     ```
     This command will stop all instances that are currently in `RUNNING` state and respond with the last status.
-    
+
     Output:
     ```sh
     # Example output for PCB Anomaly Detection
@@ -176,14 +176,14 @@
     "state": "RUNNING"
     }
     ```
-    If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.    
+    If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.
     For example, `./sample_stop.sh --id 99ac50d852b511f09f7c2242868ff651`
 
 11. Uninstall the helm chart.
      ```sh
      helm uninstall app-deploy -n apps
      ```
-    
+
 
 ## Troubleshooting
-- [Troubleshooting Guide](../../../apps/pcb-anomaly-detection/docs/user-guide/troubleshooting-guide.md)
+- [Troubleshooting Guide](../../../docs/pcb-anomaly-detection/troubleshooting-guide.md)

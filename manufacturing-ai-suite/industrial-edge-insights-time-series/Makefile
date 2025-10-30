@@ -44,7 +44,11 @@ define multi_stream_check
 		if [ "$(SAMPLE_APP)" = "$(DEFAULT_SAMPLE_APP)" ]; then \
 			TELEGRAF_METRIC_BATCH_SIZE=$$(grep -m1 TELEGRAF_METRIC_BATCH_SIZE $(DOCKER_COMPOSE_FILE) | awk -F ': ' '{print $$2}' | xargs); \
 			LOG_LEVEL=$$(grep -E "^LOG_LEVEL=" $(ENV_FILE) | cut -d'=' -f2); \
-			python3 configs/telegraf/generate_telegraf_config.py $(num_of_streams) $$LOG_LEVEL $$TELEGRAF_METRIC_BATCH_SIZE $(ingestion_interval) $(1); \
+			python3 -m venv ./venv; \
+			. ./venv/bin/activate; \
+			python3 -m pip install -r requirements.txt; \
+			python generate-telegraf-config.py $(num_of_streams) $$LOG_LEVEL $$TELEGRAF_METRIC_BATCH_SIZE $(ingestion_interval) $(1); \
+			deactivate; \
 		else \
 			echo "Multi-stream ingestion is only supported for the 'Wind Turbine Anomaly Detection' sample app."; \
 			exit 1; \
@@ -251,13 +255,30 @@ gen_helm_charts:
 .PHONY: help
 help:
 	@echo "Makefile commands:"
-	@echo "  make build    - Build Docker containers"
-	@echo "  make build_copyleft_sources - Build Docker containers including copyleft licensed sources"
-	@echo "  make up_mqtt_ingestion     - Start Docker containers using mqtt ingestion"
-	@echo "  make up_opcua_ingestion    - Start Docker containers using opcua ingestion"
-	@echo "  make down     - Stop Docker containers"
-	@echo "  make restart  - Restart Docker containers"
-	@echo "  make clean    - Remove all stopped containers and unused images"
-	@echo "  make push_images     - Push the images to docker registry"
-	@echo "  make gen_helm_charts	- Generate helm packages"
-	@echo "  make help     - Display this help message"
+	@echo "  make build                        - Build Docker containers"
+	@echo "      No parameters required."
+	@echo "  make build_copyleft_sources       - Build Docker containers including copyleft licensed sources"
+	@echo "      No parameters required."
+	@echo "  make up_mqtt_ingestion            - Start Docker containers using MQTT ingestion"
+	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
+	@echo "      Optional: num_of_streams (default: 1), number_of_data_points_per_stream, ingestion_interval"
+	@echo "      Example: make up_mqtt_ingestion app=wind-turbine-anomaly-detection num_of_streams=2"
+	@echo "  make up_opcua_ingestion           - Start Docker containers using OPC UA ingestion"
+	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
+	@echo "      Optional: num_of_streams (default: 1), number_of_data_points_per_stream, ingestion_interval"
+	@echo "      Example: make up_opcua_ingestion app=wind-turbine-anomaly-detection num_of_streams=2"
+	@echo "  make down                         - Stop Docker containers and remove volumes"
+	@echo "      No parameters required."
+	@echo "  make status                       - Show status of deployed containers and check for errors"
+	@echo "      No parameters required."
+	@echo "  make check_env_variables          - Validate required .env variables"
+	@echo "      No parameters required."
+	@echo "  make push_images                  - Push the images to docker registry"
+	@echo "      Mandatory: DOCKER_REGISTRY (set in .env or as param)"
+	@echo "      Example: make push_images DOCKER_REGISTRY=myregistry"
+	@echo "  make gen_helm_charts              - Generate Helm packages for the selected sample app"
+	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
+	@echo "      Optional: version (default: 1.1.0-weekly)"
+	@echo "      Example: make gen_helm_charts app=weld-anomaly-detection version=1.2.0"
+	@echo "  make help                         - Display this help message"
+	@echo "      No parameters required."
