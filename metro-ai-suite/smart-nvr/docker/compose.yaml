@@ -23,6 +23,7 @@ services:
         tmpfs:
           size: 1000000000 # 1GB cache
       - ../resources/videos:/videos # Add volume for video files
+      - ../frigate-clips:/media/frigate/recordings # Shared volume for Frigate output clips
     depends_on:
        mqtt-broker:
          condition: service_healthy
@@ -46,8 +47,15 @@ services:
     restart: unless-stopped
     networks:
       - nvr-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     volumes:
       - ../src:/app
+      - ../frigate-clips:/media/frigate/recordings # Shared volume for watcher to access Frigate recordings
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
       - ../resources/mqtt-certs:/mosquitto/secrets:ro

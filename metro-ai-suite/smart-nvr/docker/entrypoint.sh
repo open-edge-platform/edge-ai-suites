@@ -2,7 +2,7 @@
 if [ "$MODE" = "ui" ]; then
     echo "Starting in UI mode..."
     cd /app/ui
-    exec python main.py
+    exec python -m ui.main
 elif [ "$MODE" = "backend" ]; then
     echo "Starting in backend mode..."
     cd /app/backend
@@ -12,7 +12,7 @@ elif [ "$MODE" = "combined" ]; then
     cd /app/backend
     uvicorn main:app --host 0.0.0.0 --port 8000 &
     cd /app/ui
-    exec python main.py
+    exec python -m ui.main
 else
     echo "Unknown mode: $MODE. Valid options are: ui, backend, combined"
     exit 1

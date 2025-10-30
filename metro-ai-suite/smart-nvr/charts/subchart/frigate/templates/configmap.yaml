@@ -1,0 +1,145 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: init-resources-script
+data:
+  init.sh: |
+    #!/bin/sh
+    set -eu
+
+    TARGET_DIR="/videos"
+    MAX_RETRIES=${MAX_RETRIES:-3}
+    RETRY_DELAY=${RETRY_DELAY:-10}
+    MIN_SIZE_BYTES=10240  # 10KB sanity check for downloaded MP4s
+    SKIP_EXISTING=${SKIP_EXISTING:-1}  # If 1, do not re-download files that already exist and pass size/checks
+
+    echo "[init] Starting resource initialization script"
+
+    # Dependency checks
+    for bin in curl awk df; do
+      if ! command -v "$bin" >/dev/null 2>&1; then
+        echo "ERROR: Required binary '$bin' not found in PATH" >&2
+        exit 1
+      fi
+    done
+
+    # Ensure target dir
+    echo "[init] Preparing target directory $TARGET_DIR"
+    if ! mkdir -p "$TARGET_DIR"; then
+      echo "ERROR: Cannot create $TARGET_DIR" >&2
+      exit 1
+    fi
+
+    # Basic writable check
+    if ! touch "$TARGET_DIR/.write_test" 2>/dev/null; then
+      echo "ERROR: Target directory $TARGET_DIR not writable" >&2
+      exit 1
+    fi
+    rm -f "$TARGET_DIR/.write_test"
+
+    # Check available disk space (need at least 50MB)
+    AVAIL=$(df -Pm "$TARGET_DIR" | awk 'NR==2 {print $4}')
+    if [ "$AVAIL" -lt 50 ]; then
+      echo "ERROR: Not enough disk space in $TARGET_DIR (have ${AVAIL}MB, need >=50MB)" >&2
+      exit 1
+    fi
+
+    # Generic download with retries, size & integrity checks
+    download_file() {
+      url=$1
+      output=$2
+      checksum_expected=$3  # optional (sha256)
+      attempt=1
+      tmp_file="${output}.part"
+
+      if [ "$SKIP_EXISTING" = "1" ] && [ -f "$output" ]; then
+        existing_size=$(wc -c <"$output" 2>/dev/null || echo 0)
+        if [ "$existing_size" -ge $MIN_SIZE_BYTES ]; then
+          if [ -n "$checksum_expected" ] && command -v sha256sum >/dev/null 2>&1; then
+            calc_exist=$(sha256sum "$output" | awk '{print $1}')
+            if [ -n "$checksum_expected" ] && [ "$calc_exist" != "$checksum_expected" ]; then
+              echo "[init] Existing file $output checksum mismatch; re-downloading" >&2
+            else
+              echo "[init] Skipping existing file $output (size $existing_size)"
+              return 0
+            fi
+          else
+            echo "[init] Skipping existing file $output (size $existing_size)"
+            return 0
+          fi
+        fi
+      fi
+
+      # Pre-flight HEAD to log size (non-fatal on failure)
+      content_len=$(curl -fsIL "$url" | awk '/[Cc]ontent-[Ll]ength:/ {print $2}' | tail -n1 | tr -d '\r') || content_len=""
+      [ -n "$content_len" ] && echo "[init] Remote size for $url: ${content_len} bytes"
+
+      while [ $attempt -le $MAX_RETRIES ]; do
+        echo "[init] Downloading $url (attempt $attempt/$MAX_RETRIES)"
+        # -f fail on HTTP >=400, -S show errors, -L follow redirects, -o write to tmp
+        if curl -fSL --connect-timeout 15 --max-time 300 -o "$tmp_file" "$url"; then
+          # Basic size check
+            actual_size=$(wc -c <"$tmp_file" 2>/dev/null || echo 0)
+            if [ "$actual_size" -lt $MIN_SIZE_BYTES ]; then
+              echo "WARNING: File $url downloaded but size $actual_size < $MIN_SIZE_BYTES; treating as failure" >&2
+            else
+              # Optional checksum verification if provided
+              if [ -n "$checksum_expected" ]; then
+                if command -v sha256sum >/dev/null 2>&1; then
+                  calc=$(sha256sum "$tmp_file" | awk '{print $1}')
+                  if [ "$calc" != "$checksum_expected" ]; then
+                    echo "WARNING: Checksum mismatch for $url (expected $checksum_expected got $calc)" >&2
+                  else
+                    echo "[init] Checksum verified for $url"
+                  fi
+                else
+                  echo "[init] sha256sum not available; skipping checksum verification for $url"
+                fi
+              fi
+              mv "$tmp_file" "$output"
+              echo "[init] Saved $output ($actual_size bytes)"
+              return 0
+            fi
+        else
+          rc=$?
+          echo "WARNING: curl exited with code $rc for $url (attempt $attempt)" >&2
+        fi
+        attempt=$((attempt + 1))
+        echo "[init] Retrying in ${RETRY_DELAY}s..."
+        rm -f "$tmp_file"
+        sleep "$RETRY_DELAY"
+      done
+      echo "ERROR: Failed to download $url after $MAX_RETRIES attempts" >&2
+      return 1
+    }
+
+    # List of files: URL DEST_PATH (optional third column checksum not used now)
+    echo "[init] Downloading resources to $TARGET_DIR..."
+    failed=0
+    while read -r url out checksum; do
+      [ -z "$url" ] && continue
+      download_file "$url" "$out" "$checksum" || failed=$((failed+1))
+    done <<'EOF'
+    https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/main/metro-ai-suite/smart-nvr/resources/videos/backyard.mp4 /videos/backyard.mp4
+    https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/main/metro-ai-suite/smart-nvr/resources/videos/garage.mp4 /videos/garage.mp4
+    https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/main/metro-ai-suite/smart-nvr/resources/videos/livingroom.mp4 /videos/livingroom.mp4
+    EOF
+
+    if [ "$failed" -gt 0 ]; then
+      echo "ERROR: $failed file(s) failed to download." >&2
+      exit 1
+    fi
+
+    # Post-download sanity check
+    missing=0
+    for f in /videos/backyard.mp4 /videos/garage.mp4 /videos/livingroom.mp4; do
+      if [ ! -s "$f" ]; then
+        echo "WARNING: Expected file $f missing or empty." >&2
+        missing=$((missing+1))
+      fi
+    done
+    if [ "$missing" -gt 0 ]; then
+      echo "WARNING: Some video files are missing; related cameras will fail in Frigate." >&2
+    fi
+
+    echo "[init] All resources downloaded process complete for $TARGET_DIR."

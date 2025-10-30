@@ -1,6 +1,21 @@
 # Release Notes
 
 ## Current Release
+**Version**: 1.2.1 \
+**Release Date**: 30 October 2025  
+
+**New Features**
+- Continuous Video Streaming: Introduced support for uninterrupted video streaming based on user-selected cameras.
+- Helm Chart Support: Deployment via Helm charts is now supported, simplifying installation and configuration.
+- Rules Engine Integration: Enabled communication between the rules engine and Scenescape, demonstrated using the Smart Intersection RI integration.
+- Unit Testing: Added comprehensive unit test cases to improve reliability and maintainability.
+
+**Known Issues**
+- Scenescape Integration Limitation: Scenescape integration is currently not supported when deploying via Helm charts.
+- EMF and EMT are not supported yet.
+- The **AI-Powered Event Viewer** feature relies on Frigate GenAI features, which may exhibit instability or bugs, impacting event data processing reliability.
+
+## Previous Release
 **Version**: 1.2.0 \
 **Release Date**: 04 August 2025  
 

@@ -1,0 +1,4 @@
+apiVersion: v2
+name: mqtt-broker
+description: MQTT Broker service
+version: 1.2.1

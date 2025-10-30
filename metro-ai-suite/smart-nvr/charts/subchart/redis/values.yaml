@@ -1,0 +1,10 @@
+image:
+  repository: redis
+  tag: 7.0
+
+# Service configuration
+service:
+  # Name of the Service
+  name: redis
+  # Kubernetes Service type
+  type: ClusterIP
