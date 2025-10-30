@@ -12,9 +12,9 @@ Smart NVR system integrates with Intel Scenescape to enable:
 
 ## Prerequisites
 
-- **Smart Intersection Reference Implementation**: We will use the Smart Intersection application located in to showcase the SceneScape integration.
+- **Smart Intersection Reference Implementation**: We will use the Smart Intersection application to showcase the SceneScape integration.
   
-> **Please follow the below steps for Smart Intersection configuration as a temporary setup requirement.**
+> **Please follow the below steps to run Smart Intersection Application.**
 
 ```bash
 # Clone smart intersection repository inside smart nvr directory if not already done
