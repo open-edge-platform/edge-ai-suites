@@ -30,9 +30,9 @@ It’s recommended to create a **dedicated Python virtual environment** for the 
 
 ```bash
 python -m venv smartclassroom
-# On Windows:
 smartclassroom\Scripts\activate
 
+# Make sure you are using Python 3.12.x before running pip.
 python.exe -m pip install --upgrade pip
 pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
 cd smart-classroom
@@ -46,7 +46,6 @@ If you plan to use IPEX, create a separate virtual environment.
 
 ```bash
 python -m venv smartclassroom_ipex
-# On Windows:
 smartclassroom_ipex\Scripts\activate
 
 python.exe -m pip install --upgrade pip
