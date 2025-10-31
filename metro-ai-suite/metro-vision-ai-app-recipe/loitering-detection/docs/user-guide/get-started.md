@@ -137,12 +137,12 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 - **URL**: [https://localhost/nodered/](https://localhost/nodered/)
 
 ### **DL Streamer Pipeline Server** ###
-- **REST API**: [https://localhost/api/](https://localhost/api/)
+- **REST API**: [https://localhost/api/pipelines](https://localhost/api/pipelines)
   - **Check Pipeline Status**:
     ```bash
     curl -k https://localhost/api/pipelines
     ```
-- **WebRTC**: [https://localhost/mediamtx/object_tracking_1](https://localhost/mediamtx/object_tracking_1)
+- **WebRTC**: [https://localhost/mediamtx/object_tracking_1/](https://localhost/mediamtx/object_tracking_1/)
 
 ## **Stop the Application**:
 

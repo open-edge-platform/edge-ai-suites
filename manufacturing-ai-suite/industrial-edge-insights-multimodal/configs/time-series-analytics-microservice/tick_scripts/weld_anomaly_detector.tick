@@ -18,7 +18,7 @@ data0
                 .message('{"time": "{{ index .Time }}", "Pressure": {{ index .Fields "Pressure" }}, "CO2 Weld Flow": {{ index .Fields "CO2 Weld Flow" }}, "anomaly_status": {{ index .Fields "anomaly_status" }} } ')
                 .noRecoveries()
                 .mqtt('my_mqtt_broker')
-                .topic('ts_weld_defect_detection')
+                .topic('ts_weld_anomaly_detection')
                 .qos(1)
 
 data0

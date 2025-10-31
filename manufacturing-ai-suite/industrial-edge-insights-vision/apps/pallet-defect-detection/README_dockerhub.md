@@ -4,12 +4,12 @@ This Application enables real-time pallet condition monitoring by running infere
 
 ## Deploy using Docker Compose
 ---
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/pallet-defect-detection/main/user-guide/get-started.html).
- 
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/pallet-defect-detection/get-started.html).
+
 ## Deploy using Kubernetes Charts
 
 ---
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/pallet-defect-detection/main/user-guide/how-to-deploy-using-helm-charts.html).
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/pallet-defect-detection/how-to-deploy-using-helm-charts.html).
 
 ## Supported versions
 

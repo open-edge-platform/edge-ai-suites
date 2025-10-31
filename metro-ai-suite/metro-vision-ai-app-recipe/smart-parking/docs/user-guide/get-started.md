@@ -132,12 +132,12 @@ By following this guide, you will learn how to:
 - **URL**: [https://localhost/nodered/](https://localhost/nodered/)
 
 ### **DL Streamer Pipeline Server** ###
-- **REST API**: [https://localhost/api/](https://localhost/api/)
+- **REST API**: [https://localhost/api/pipelines](https://localhost/api/pipelines)
   -   - **Check Pipeline Status**:
     ```bash
     curl -k https://localhost/api/pipelines
     ```
-- **WebRTC**: [https://localhost/mediamtx/object_detection_1](https://localhost/mediamtx/object_detection_1)
+- **WebRTC**: [https://localhost/mediamtx/object_detection_1/](https://localhost/mediamtx/object_detection_1/)
 
 
 ## **Stop the Application**:

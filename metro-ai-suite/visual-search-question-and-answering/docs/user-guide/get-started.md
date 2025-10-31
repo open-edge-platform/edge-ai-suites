@@ -48,8 +48,6 @@ docker build -t visual-search-qa-app:latest --build-arg https_proxy=$https_proxy
 ### Step 2: Prepare host directories for models and data
 
 ```
-mkdir -p $HOME/.cache/huggingface
-mkdir -p $HOME/models
 mkdir -p $HOME/data
 ```
 
@@ -74,17 +72,8 @@ Note: supported media types: jpg, png, mp4
 2.  Set up environment variables
 
     ``` bash
-    source env.sh
+    source env.sh 
     ```
-
-When prompting `Please enter the LOCAL_EMBED_MODEL_ID`, choose one model name from table below and input
-
-##### Supported Local Embedding Models
-
-| Model Name                          | Search in English | Search in Chinese | Remarks|
-|-------------------------------------|----------------------|---------------------|---------------|
-| CLIP-ViT-H-14                        | Yes                  | No                 |            |
-| CN-CLIP-ViT-H-14              | Yes                  | Yes                  | Supports search text query in Chinese       | 
 
 When prompting `Please enter the VLM_MODEL_NAME`, choose one model name from table below and input
 
@@ -114,24 +103,13 @@ dataprep-visualdata-milvus   "uvicorn dataprep_vi…"   dataprep-visualdata-milv
 milvus-etcd                  "etcd -advertise-cli…"   milvus-etcd                  running (healthy)   2379-2380/tcp
 milvus-minio                 "/usr/bin/docker-ent…"   milvus-minio                 running (healthy)   0.0.0.0:9000-9001->9000-9001/tcp, :::9000-9001->9000-9001/tcp
 milvus-standalone            "/tini -- milvus run…"   milvus-standalone            running (healthy)   0.0.0.0:9091->9091/tcp, 0.0.0.0:19530->19530/tcp, :::9091->9091/tcp, :::19530->19530/tcp
+multimodal-embedding         gunicorn -b 0.0.0.0:8000 - ...   Up (unhealthy)   0.0.0.0:9777->8000/tcp,:::9777->8000/tcp                                              
 retriever-milvus             "uvicorn retriever_s…"   retriever-milvus             running (healthy)   0.0.0.0:7770->7770/tcp, :::7770->7770/tcp
 visual-search-qa-app         "streamlit run app.p…"   visual-search-qa-app         running (healthy)   0.0.0.0:17580->17580/tcp, :::17580->17580/tcp
 vlm-openvino-serving         "/bin/bash -c '/app/…"   vlm-openvino-serving         running (healthy)   0.0.0.0:9764->8000/tcp, :::9764->8000/tcp
 ```
 
-#### Option2: Deploy the application with the Milvus Server deployed separately
-If you have customized requirements for the Milvus Server, you may start the Milvus Server separately and run the commands for visual search and QA services only
-
-``` bash
-cd visual-search-question-and-answering/
-cd deployment/docker-compose/
-
-source env.sh # refer to Option 1 for model selection
-
-docker compose -f compose.yaml up -d
-```
-
-#### Option3: Deploy the application in Kubernetes
+#### Option2: Deploy the application in Kubernetes
 
 Please refer to [Deploy with helm](./deploy-with-helm.md) for details.
 
@@ -236,6 +214,32 @@ docker logs <container_id>
    ```
 
 **Note**: Removing the `ov-models` volume will delete any previously cached/converted models. The VLM service will automatically re-download and convert models on the next startup, which may take additional time depending on your internet connection and the model size.
+
+### Embedding Model Changed Issues
+
+**Problem**: Dataprep microservice API fails and "mismatch" is found in logs.
+
+**Cause**: If the application is re-deployed with a different embedding model set for the multimodal embedding service other than the previous deployment, it is possible that the embedding dimension has changed as well, leading to a vector dimension mismatch in vector DB.
+
+**Solution**:
+1. Stop the running application:
+   ```bash
+   docker compose -f compose_milvus.yaml down
+   ```
+
+2. Remove the existing Milvus volumes:
+   ```bash
+   sudo rm -rf /volumes/milvus
+   sudo rm -rf /volumes/minio
+   sudo rm -rf /volumes/etcd
+   ```
+
+3. Restart the application:
+   ```bash
+   source env.sh
+   docker compose -f compose_milvus.yaml up -d
+   ```
+
 
 ## Known Issues
 

@@ -1,182 +1,20 @@
 # Get Started Guide
-Get started guide for running on bare metal.
+This section explains how to run Sensor Fusion for Traffic Management on Bare Metal systems.
 
-## Overview
-### Prerequisites
-- Operating System: [Ubuntu 22.04.1 Desktop LTS](https://old-releases.ubuntu.com/releases/22.04.1/ubuntu-22.04.1-desktop-amd64.iso) (fresh installation) on target system
-- Platform
-  - Intel® Celeron® Processor 7305E (1C+1R/2C+1R usecase)
-  - Intel® Core™ Ultra 7 Processor 165H (4C+4R usecase)
-  - Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics (16C+4R usecase)
-- Intel® OpenVINO™ Toolkit
-  
-  - Version Type: 2025.2
-- RADDet Dataset
-  
-  - https://github.com/ZhangAoCanada/RADDet#Dataset
-  
-  - A processed data snippet is provided in [demo](../../ai_inference/test/demo/raddet_bin_files)
-  
-  - If you want to generate the data independently, please refer to this guide: [how_to_get_RADDet_datasets.md](How-To-Get-RADDET-Dataset.md)
-  
-      Upon success, bin files will be extracted, save to $RADDET_DATASET_ROOT/bin_files_{VERSION}:
-  
-      > NOTE: latest converted dataset version should be: v1.0
-- Ensure that proxy settings are configured if target system is within proxy environment
-  ```bash
-  export http_proxy=<Your-Proxy>
-  export https_proxy=<Your-Proxy>
-  ```
-  ```bash
-  sudo vim /etc/environment
-  # set proxy in /etc/environment
-  # http_proxy=<Your-Proxy>
-  # https_proxy=<Your-Proxy>
-  ```
-
-### Modules
-- AI Inference Service:
-  - Media Processing (Camera)
-  - Radar Processing (mmWave Radar)
-  - Sensor Fusion
-- Demo Application
-
-#### AI Inference Service
-
-AI Inference Service expose both RESTful API or gRPC API to clients, so as pipelines defined by clients could be requested to run within service.
-
-```bash
-vim $PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config
-
-...
-[HTTP]
-address=0.0.0.0
-RESTfulPort=50051
-gRPCPort=50052
-```
-
-- RESTful API: listen on port 50051
-- gRPC API: listen on port 50052
-
-> NOTE: 
-> - For more details about API description, please refer to file to [APIs Section](./APIs.md)
->
-> - For how to run tests through RESTful API and gRPC API, please refer to [section 4. Run Sensor Fusion Application](#4-run-sensor-fusion-application)
-
-#### Demo Application
-The media processing and sensor fusion results will be displayed. Here's an example for reference:
-
-![1C1R-Display-type-media-fusion](./_images/1C1R-Display-type-media-fusion.png)
-<center>Figure 1. 1C+1R Demo running on Intel® Celeron® Processor 7305E  </center>
-
-For more details about the display mode, please refer to [section 4.3 Run Entry Program](#43-run-entry-program)
+For prerequisites and system requirements, see [prerequisites.md](./prerequisites.md) and [system-req.md](./system-req.md).
 
 
-
-##	System Requirements
-
-### Hardware requirements
-
-- Platform
-
-    - Intel® Celeron® Processor 7305E (1C+1R/2C+1R usecase)
-    - Intel® Core™ Ultra 7 Processor 165H (4C+4R usecase)
-
-    - Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics (16C+4R usecase)
-
-- BIOS setting
-
-    - MTL
-
-        | Setting                                          | Step                                                         |
-        | ------------------------------------------------ | ------------------------------------------------------------ |
-        | Enable the Hidden BIOS Setting in Seavo Platform | "Right Shift+F7" Then Change Enabled Debug Setup Menu from [Enabled] to [Disable] |
-        | Disable VT-d in BIOS                             | Intel Advanced Menu → System Agent (SA) Configuration → VT-d setup menu → VT-d<Disabled>    <br>Note: If VT-d can’t be disabled, please disable Intel Advanced Menu → CPU Configuration → X2APIC |
-        | Disable SAGV in BIOS                             | Intel Advanced Menu → [System Agent (SA) Configuration]  →  Memory configuration →  SAGV <Disabled> |
-        | Enable NPU Device                                | Intel Advanced Menu → CPU Configuration → Active SOC-North Efficient-cores <ALL>   <br>Intel Advanced Menu → System Agent (SA) Configuration → NPU Device <Enabled> |
-        | TDP Configuration                                | SOC TDP configuration is very important for performance. Suggestion: TDP = 45W. For extreme heavy workload, TDP = 64W <br>---TDP = 45W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations → Power Limit 1 <45000> <br>---TDP = 64W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations →  Configurable TDP Boot Mode [Level2] |
-
-    - RPL-S+A770
-
-        | Setting                  | Step                                                         |
-        | ------------------------ | ------------------------------------------------------------ |
-        | Enable ResizeBar in BIOS | Intel Advanced Menu -> System Agent (SA) Configuration -> PCI Express Configuration -> PCIE Resizable BAR Support <Enabled> |
-
-
-
-### Software requirements
-
-| Software           | Version                |
-| ------------------ | ---------------------- |
-| Intel  OpenVINO    | 2025.2.0               |
-| Intel  oneMKL      | 2025.1.0               |
-| NEO OpenCL         | Release/23.22.26516.25 |
-| cmake              | 3.21.2                 |
-| boost              | 1.83.0                 |
-| spdlog             | 1.8.2                  |
-| thrift             | 0.18.1                 |
-| gRPC               | 1.58.1                 |
-| zlib               | 1.3.1                 |
-| oneAPI Level  Zero | 1.17.19                |
-
-
-
-## Install Dependencies and Build Project
-
-* install driver related libs
-
-  Update kernel, install GPU and NPU(MTL only) driver.
-
-  ```bash
-  bash install_driver_related_libs.sh
-  ```
-
-  Note that this step may restart the machine several times. Please rerun this script after each restart until you see the output of `All driver libs installed successfully`.
-
-* install project related libs
-
-  Install Boost, Spdlog, Thrift, MKL, OpenVINO, GRPC, Level Zero, oneVPL etc.
-
-  ```bash
-  bash install_project_related_libs.sh
-  ```
-
-- set $PROJ_DIR
-  ```bash
-  cd metro-ai-suite/sensor-fusion-for-traffic-management
-  export PROJ_DIR=$PWD
-  ```
-- prepare global radar configs in folder: /opt/datasets
-    ```bash
-    sudo ln -s $PROJ_DIR/ai_inference/deployment/datasets /opt/datasets
-    ```
-
-- prepare models in folder: /opt/models
-    ```bash
-    sudo ln -s $PROJ_DIR/ai_inference/deployment/models /opt/models
-    ```
-- prepare offline radar results for 4C4R/16C4R:
-    ```bash
-    sudo cp $PROJ_DIR/ai_inference/deployment/datasets/radarResults.csv /opt
-    ```
-- build project
-    ```bash
-    bash -x build.sh
-    ```
-
-
-
-## How it works
+## Run Metro AI Suite Sensor Fusion for Traffic Management Application
 
 In this section, we describe how to run Metro AI Suite Sensor Fusion for Traffic Management application.
 
-Metro AI Suite Sensor Fusion for Traffic Management application can support different pipeline using topology JSON files to describe the pipeline topology. The defined pipeline topology can be found at [section 4.1 Resources Summary](#41-resources-summary)
+Metro AI Suite Sensor Fusion for Traffic Management application can support different pipeline using topology JSON files to describe the pipeline topology. The defined pipeline topology can be found at [Resources Summary](#resources-summary)
 
 There are two steps required for running the sensor fusion application:
-- Start AI Inference service, more details can be found at [section 4.2 Start Service](#42-start-service)
-- Run the application entry program, more details can be found at [section 4.3 Run Entry Program](#43-run-entry-program)
+- Start AI Inference service, more details can be found at [Start Service](#start-service)
+- Run the application entry program, more details can be found at [Run Entry Program](#run-entry-program)
 
-Besides, users can test each component (without display) following the guides at [Advanced-User-Guide.md](./Advanced-User-Guide.md#532-1c+1r-unit-tests)
+Besides, you can test each component (without display) following the guides at [Advanced-User-Guide.md](./Advanced-User-Guide.md#532-1c+1r-unit-tests)
 
 ### Resources Summary
 - Local File Pipeline for Media pipeline
@@ -503,7 +341,7 @@ Some of the code is referenced from the following projects:
 
     <center>Figure 1: Workload constraints error</center>
 
-    This is because the maxConcurrentWorkload limitation in `AiInference.config` file. If the workloads hit the maximum, task will be canceled due to workload constrains. To solve this problem, you can kill the service with the commands below, and re-execute the command.
+    This is because the maxConcurrentWorkload limitation in `AiInference.config` file. If the workloads hit the maximum, task will be canceled due to workload constrains. To solve this problem, you can kill the service with the following commands, and re-execute the command.
 
     ```bash
     sudo pkill Hce
@@ -555,7 +393,8 @@ Some of the code is referenced from the following projects:
     The solution is either enable iGPU in BIOS, or change config `Device=(STRING)GPU.1` to `Device=(STRING)GPU` in pipeline config file `ai_inference/test/configs/raddet/16C4R/localFusionPipeline.json`.
 
 
-## Release Notes
+
+
 
 Current Version: 2.0
 - Support 2C+1R pipeline

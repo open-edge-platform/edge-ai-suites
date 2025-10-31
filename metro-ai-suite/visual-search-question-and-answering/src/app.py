@@ -36,7 +36,7 @@ BACKEND_VQA_BASE_URL = os.getenv("BACKEND_VQA_BASE_URL", "http://localhost:8399"
 BACKEND_SEARCH_BASE_URL = os.getenv("BACKEND_SEARCH_BASE_URL", "http://localhost:7770")
 BACKEND_DATAPREP_BASE_URL = os.getenv("BACKEND_DATAPREP_BASE_URL", "http://localhost:9990")
 
-LOCAL_EMBED_MODEL_ID = os.getenv("LOCAL_EMBED_MODEL_ID", "CLIP-ViT-H-14")
+VCLIP_MODEL = os.getenv("VCLIP_MODEL", "openai/clip-vit-base-patch32")
 VLM_MODEL_NAME=os.getenv("VLM_MODEL_NAME", "Qwen/Qwen2.5-VL-7B-Instruct")
 
 DATA_INGEST_WITH_DETECT = os.getenv("DATA_INGEST_WITH_DETECT", "True").lower() == "true"
@@ -157,16 +157,26 @@ def filter_output(results, de_duplicate=False):
     return filtered_results
 
 
-def send_query_request(text: str, k: int = 10, filter: dict = {}):
-    logger.info(f"Querying {text}")
-
+def send_query_request(text: str = "", image_base64: str = "", k: int = 10, filter: dict = {}):
     url = f"{BACKEND_SEARCH_BASE_URL}/v1/retrieval" 
 
-    payload = {
-        "query": text,
-        "filter": filter,  
-        "max_num_results": k
-    }
+    if text:
+        logger.info(f"Querying {text}")
+        payload = {
+            "query": text,
+            "filter": filter,  
+            "max_num_results": k
+        }
+    elif image_base64:
+        logger.info(f"Querying image")
+        payload = {
+            "image_base64": image_base64,
+            "filter": filter,  
+            "max_num_results": k
+        }
+    else:
+        logger.error("No query or image provided")
+        return None
 
     results = {}
 
@@ -417,20 +427,43 @@ def initialize_session_state():
                                     base_url=BACKEND_VQA_BASE_URL + "/v1",
                                 )
         st.session_state.latest_log = ""
+        st.session_state.file_for_search = None
         st.session_state.initialized = True
 
 def query_submit():
-    if(st.session_state["ktext"]==""):
-        return 
-    if len(st.session_state["ktext"]) > PROMPT_LENGTH_LIMIT:
-        query_display.error(f"Please enter a prompt with less than {PROMPT_LENGTH_LIMIT} characters!")
+    # Ensure only one of ktext or file_for_search is provided
+    if st.session_state["ktext"] and st.session_state.file_for_search:
+        query_display.error("Only one of 'Prompt' or 'Uploaded File' can be used for the query. Please provide only one.")
         return
-    if not is_english(st.session_state["ktext"]) and "CN" not in LOCAL_EMBED_MODEL_ID:
-        query_display.error("Current embedding model only supports English!")
-        return 
-    if is_english(st.session_state["ktext"]) and is_bad_string(st.session_state["ktext"]):
-        query_display.error("Please enter a valid prompt!")
+    if not st.session_state["ktext"] and not st.session_state.file_for_search:
+        query_display.info("Need either a query text or uploaded file for the search.")
         return
+
+    if st.session_state.file_for_search is not None:
+        # Handle the uploaded file for search
+        uploaded_file = st.session_state.file_for_search
+        try:
+            image = Image.open(uploaded_file)
+            buffered = BytesIO()
+            image.save(buffered, format="PNG")
+            img_b64_str = base64.b64encode(buffered.getvalue()).decode()
+        except Exception as e:
+            query_display.error(f"Error processing uploaded file: {e}")
+            return
+
+    else:
+        if not st.session_state["ktext"]:
+            return
+
+        if len(st.session_state["ktext"]) > PROMPT_LENGTH_LIMIT:
+            query_display.error(f"Please enter a prompt with less than {PROMPT_LENGTH_LIMIT} characters!")
+            return
+        if not is_english(st.session_state["ktext"]) and "cn" not in VCLIP_MODEL.lower():
+            query_display.error("Current embedding model only supports English!")
+            return
+        if is_english(st.session_state["ktext"]) and is_bad_string(st.session_state["ktext"]):
+            query_display.error("Please enter a valid prompt!")
+            return
     
     for option, selected in st.session_state.selectbox_keys.items():
         st.session_state[option] = False
@@ -456,7 +489,10 @@ def query_submit():
         e_time = st.session_state["f_e_time"]
         filters["timestamp_end"] = int(e_time.strftime("%Y%m%d"))
 
-    data = send_query_request(st.session_state["ktext"], st.session_state["kk"], filters)
+    if st.session_state.file_for_search is not None:
+        data = send_query_request(image_base64=img_b64_str, k=st.session_state["kk"], filter=filters)
+    else:
+        data = send_query_request(text=st.session_state["ktext"], k=st.session_state["kk"], filter=filters)
     data = filter_output(data, st.session_state.de_duplicate)
     logger.info(f"Search results: {data}")
 
@@ -666,9 +702,32 @@ if __name__ == '__main__':
                 showInfo_bd=col4_col3.button("showInfo",on_click = showInfo, key= "kshowInfo")
 
 
-        with st.container(height = 100):
-            prompt_text = st.text_input("prompt",value=text,key = "ktext")
-
+        with st.container(height=200):
+            col_prompt, col_or, col_file_uploader, col_preview, col_clear_file = st.columns([14, 1, 10, 10, 2])  # Adjust column widths
+            with col_prompt:
+                prompt_text = st.text_input("Query in text", value=text, key="ktext")
+            with col_or:
+                st.text("OR")
+            with col_file_uploader:
+                st.session_state.file_for_search = st.file_uploader(
+                    "Upload image for search",
+                    key=f"search_file_uploader_{st.session_state.uploader_key}"
+                )
+            with col_preview:
+                preview_placeholder = st.empty() 
+                if st.session_state.file_for_search:
+                    try:
+                        image = Image.open(st.session_state.file_for_search)
+                        preview_placeholder.image(image, caption="Preview")
+                    except Exception as e:
+                        preview_placeholder.error(f"Error displaying preview: {e}")
+                else:
+                    preview_placeholder.info("Image preview")
+            with col_clear_file:
+                if st.button("Clear File", key="clear_file_button"):
+                    st.session_state.file_for_search = None  # Clear the uploaded file
+                    st.session_state.uploader_key += 1  # Increment the key to reset the file uploader
+            
         col7,col8,col9 = st.columns([1.2,2.1,3.8])
 
         with col7.container():

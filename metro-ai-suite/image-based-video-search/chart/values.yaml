@@ -402,6 +402,36 @@ featurematching:
   # key: milvusui.serviceAccount
   serviceAccount: ""
 
+# nginx reverse proxy configuration
+nginx:
+  repository:
+    image: nginx
+    tag: 1.27-alpine
+  replicas: 1
+  nodeSelector: {}
+  resources: {}
+  imagePullPolicy: IfNotPresent
+  serviceAccount: ""
+  healthcheck:
+    enabled: true
+    livenessProbe:
+      httpGet:
+        path: /nginx_healthz
+        port: 80
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+      successThreshold: 1
+    readinessProbe:
+      httpGet:
+        path: /nginx_healthz
+        port: 80
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+      successThreshold: 1
 
 # imagePullSecrets allows you to specify a name of an image pull secret.
 # You must provide a list of object with the name field set to the name of the
