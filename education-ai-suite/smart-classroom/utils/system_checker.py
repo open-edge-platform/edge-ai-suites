@@ -1,13 +1,18 @@
 from utils.platform_info import get_platform_and_model_info
 import sys
 import re
+import subprocess
+import shutil
 import logging
+
 logger = logging.getLogger(__name__)
 
 MIN_MEMORY_GB = 32
 REQUIRED_OS = "Windows 11"
 REQUIRED_PYTHON_MAJOR = 3
 REQUIRED_PYTHON_MINOR = 12
+REQUIRED_NODE_MAJOR = 18  # Minimum required Node.js version
+
 
 def check_meteor_lake(processor_name: str) -> bool:
     try:
@@ -18,6 +23,7 @@ def check_meteor_lake(processor_name: str) -> bool:
     except Exception:
         return False
 
+
 def parse_memory_gb(memory_str: str) -> float:
     try:
         if not memory_str:
@@ -27,6 +33,7 @@ def parse_memory_gb(memory_str: str) -> float:
     except Exception:
         return 0
 
+
 def check_python_version() -> bool:
     try:
         major = sys.version_info.major
@@ -35,11 +42,47 @@ def check_python_version() -> bool:
     except Exception:
         return False
 
+
+def check_nodejs_version() -> bool:
+    """
+    Checks if Node.js is installed and meets the minimum version requirement.
+    Returns True if Node.js exists and version >= REQUIRED_NODE_MAJOR.
+    """
+    try:
+        node_path = shutil.which("node")
+        if node_path is None:
+            logger.error("❌ Node.js is not installed or not found in PATH.")
+            return False
+
+        version_output = subprocess.check_output(["node", "--version"], text=True).strip()
+        logger.info(f"✅ Node.js found: {version_output}")
+
+        # Parse version (e.g., v18.16.0 → 18)
+        match = re.match(r"v(\d+)", version_output)
+        if not match:
+            logger.error("⚠️ Unable to parse Node.js version output.")
+            return False
+
+        major_version = int(match.group(1))
+        if major_version < REQUIRED_NODE_MAJOR:
+            logger.error(f"⚠️ Node.js version {major_version} is too old. Please install Node.js v{REQUIRED_NODE_MAJOR}+.")
+            return False
+
+        return True
+
+    except Exception as e:
+        logger.error(f"⚠️ Node.js check failed: {e}")
+        return False
+
+
 def check_system_requirements() -> bool:
+    """
+    Checks the overall system environment for compatibility.
+    Returns True only if all major requirements are satisfied.
+    """
     try:
         info = get_platform_and_model_info()
     except Exception:
-        # If fetching info itself fails
         return False
 
     try:
@@ -49,9 +92,10 @@ def check_system_requirements() -> bool:
             return False
         if not check_python_version():
             return False
+        if not check_nodejs_version():
+            return False
         return True
     except Exception:
-        # Any unexpected failure in checks should return False
         return False
 
 
