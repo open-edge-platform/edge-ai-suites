@@ -8,8 +8,7 @@ To install dependencies, do the following:
 
 **a. Install [FFmpeg](https://ffmpeg.org/download.html)** (required for audio processing):
 
-- On **Windows**:  
-  Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html), and add the `ffmpeg/bin` folder to your system `PATH`.
+- Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html), and add the `ffmpeg/bin` folder to your system `PATH`.
 
 **Run your shell with admin privileges before starting the application**
 
