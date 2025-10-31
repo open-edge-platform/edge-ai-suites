@@ -1,8 +1,19 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # ITS Plugin for ROS2 Navigation
 
 This plugin is a global path planner module which is based on the Intelligent Sampling and Two-Way Search (ITS).  Currently, the ITS plugin does not support continuous replanning. To use this plugin, a simple behavior tree with compute path to pose and follow path should be used.
 
-The inputs for the ITS planner are global 2d_costmap (`nav2_costmap_2d::Costmap2D`), start and goal pose (`geometry_msgs::msg::PoseStamped`).  The outputs are 2D waypoints of the path.  The ITS planner gets the 2d_costmap and it converts it to either Probabilistic Road Map (PRM) or Deterministic Road Map (DRM). The generated roadmap will be saved in a txt file which could be reused in future for multiple inquiries.  Once a roadmap is generated, the ITS conducts a two-way search to find a path from the source to destination.   Either the smoothing filter or catmull spline interpolation can be used to create a smooth and continuous path.  The generated smooth path is in the form of ROS navigation message type (`nav_msgs::msg`).
+The inputs for the ITS planner are global 2d_costmap (`nav2_costmap_2d::Costmap2D`), start and goal pose (`geometry_msgs::msg::PoseStamped`).
+The outputs are 2D waypoints of the path.
+The ITS planner gets the 2d_costmap and it converts it to either Probabilistic Road Map (PRM) or Deterministic Road Map (DRM). The generated roadmap will be saved in a txt file which could be reused in future for multiple inquiries.
+Once a roadmap is generated, the ITS conducts a two-way search to find a path from the source to destination.
+Either the smoothing filter or catmull spline interpolation can be used to create a smooth and continuous path.
+The generated smooth path is in the form of ROS navigation message type (`nav_msgs::msg`).
 
 ## Component Documentation
 

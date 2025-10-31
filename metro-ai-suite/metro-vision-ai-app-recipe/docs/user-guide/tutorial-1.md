@@ -29,7 +29,7 @@ By following this guide, you will learn how to:
 <!--
 **Architecture Image Placeholder**: Add architecture diagram showing the flow from video input through AI models to toll processing output
 -->
-![AI Tolling Sytem Diagram](_images/metro_app_arch.png)
+![AI Tolling Sytem Diagram](_images/metro-vision-ai-app-recipe-architecture.drawio.svg)
 
 
 The AI Tolling system consists of several key components:

@@ -35,6 +35,8 @@ env:
   http_proxy:
   https_proxy:
   no_proxy:
+  ENABLE_OPEN_TELEMETRY: true
+  OTEL_EXPORT_INTERVAL_MILLIS: 5000
 privileged_access_required: false
 gpu:
   enabled: false
@@ -44,6 +46,16 @@ webrtcturnserver:
   username: <WEBRTC_TURN_SERVER_USERNAME>
   password: <WEBRTC_TURN_SERVER_PASSWORD>
 config:
+  prometheus:
+    name: prometheus
+    int:
+      prometheus_port: "9090"
+  otel_collector:
+    name: otel-collector
+    int:
+      otlp_grpc_port: "4317"
+      otlp_http_port: "4318"
+      otlp_prometheus_endpoint_port: "9464"
   mediamtx:
     name: mediamtx
     int:

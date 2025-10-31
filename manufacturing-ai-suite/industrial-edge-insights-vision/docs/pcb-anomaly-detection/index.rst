@@ -46,6 +46,8 @@ This sample application is built with the following Intel Edge AI Stack Microser
 
 It also consists of the below Third-party microservices:
 
+- `Nginx <https://hub.docker.com/_/nginx>`__
+  is a high-performance web server and reverse proxy that provides TLS termination and unified HTTPS access.
 - `MediaMTX Server <https://hub.docker.com/r/bluenviron/mediamtx>`__
   is a real-time media server and media proxy that allows to publish webrtc stream.
 - `Coturn Server <https://hub.docker.com/r/coturn/coturn>`__
@@ -88,6 +90,8 @@ This sample application offers the following features:
    how-to-run-store-frames-in-s3
    how-to-view-telemetry-data
    how-to-use-gpu-for-inference
+   how-to-use-cpu-for-inference
+   how-to-use-npu-for-inference
    how-to-start-mqtt-publisher
    api-reference
    environment-variables

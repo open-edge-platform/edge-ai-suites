@@ -1,11 +1,18 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 <package format="3">
   <name>its_planner</name>
   <version>1.0.0</version>
   <description>A compute and memory efficient path planning method based on intelligent sampling and two-way search</description>
   <maintainer email="eci.maintainer@intel.com">ECI Maintainer</maintainer>
-  <license>BSD-3-Clause</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

@@ -10,12 +10,15 @@ metadata:
   name: {{ .Values.config.mqttbroker.name }}
   namespace: {{ .Values.namespace }}
 spec:
-  type: NodePort
+  clusterIP: None
   selector:
     app: ia-mqtt-broker
   ports:
     - name: broker-port
       port: {{ .Values.config.mqttbroker.mqttbroker_port }}
+      targetPort: {{ .Values.config.mqttbroker.mqttbroker_port }}
+      protocol: TCP
+  publishNotReadyAddresses: false
 ---
 apiVersion: apps/v1
 kind: Deployment

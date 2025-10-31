@@ -2,7 +2,7 @@
 # How It Works
 This section provides a high-level view of how the application integrates with a typical system architecture.
 
-![High-Level System Diagram](./_images/architecture.png)
+![High-Level System Diagram](./_images/smart-intersection-architecture.drawio.svg)
 
 ## Example Content for Diagram Description
 - **Inputs**:

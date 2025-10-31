@@ -76,7 +76,7 @@ By following this guide, you will learn how to:
      </details>
 
 2. **View the Application Output**:
-   - Open a browser and go to `http://localhost:3000` to access the Grafana dashboard.
+   - Open a browser and go to `https://localhost/grafana/` to access the Grafana dashboard.
      - Change the localhost to your host IP if you are accessing it remotely.
    - Log in with the following credentials:
      - **Username**: `admin`
@@ -92,7 +92,9 @@ By following this guide, you will learn how to:
 Open a browser and go to the following endpoints to access the application. Use `<actual_ip>` instead of `localhost` for external access:
 
 > **Notes**
+> - All services are accessed through the nginx reverse proxy at `https://localhost` with appropriate paths.
 > - For passwords stored in files (e.g., `supass` or `influxdb2-admin-token`), refer to the respective secret files in your deployment under ./src/secrets (Docker) or chart/files/secrets (Helm).
+> - Since the application uses HTTPS with self-signed certificates, your browser may display a certificate warning. For the best experience, use **Google Chrome** and accept the certificate.
 
 
 - **URL**: [https://localhost](https://localhost)
@@ -104,27 +106,28 @@ Open a browser and go to the following endpoints to access the application. Use 
 > - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface. Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, use **Google Chrome**.
 
 ### **Grafana UI** ###
-- **URL**: [http://localhost:3000](http://localhost:3000)
+- **URL**: [https://localhost/grafana/](https://localhost/grafana/)
 - **Log in with credentials**:
     - **Username**: `admin`
     - **Password**: `admin` (You will be prompted to change it on first login.)
 
 ### **InfluxDB UI** ###
-- **URL**: [http://localhost:8086](http://localhost:8086)
+- **URL**: [https://localhost/influxdb/](https://localhost/influxdb/) *(Recommended for API access only since InfluxDB has limited support for sub-path proxying)*
+- **Alternative URL**: Direct access at `http://localhost:8086` *(Recommended for full UI functionality)*
 - **Log in with credentials**:
     - **Username**: `<your_influx_username>` (Check `./smart-intersection/src/secrets/influxdb2/influxdb2-admin-username`)
     - **Password**: `<your_influx_password>` (Check `./smart-intersection/src/secrets/influxdb2/influxdb2-admin-password`).
 
+
 ### **NodeRED UI** ###
-- **URL**: [http://localhost:1880](http://localhost:1880)
+- **URL**: [https://localhost/nodered/](https://localhost/nodered/)
 
 ### **DL Streamer Pipeline Server** ###
-- **REST API**: [http://localhost:8080](http://localhost:8080)
+- **REST API**: [https://localhost/api/pipelines/status/](https://localhost/api/pipelines/status)
   - **Check Pipeline Status**:
     ```bash
-    curl http://localhost:8080/pipelines
+    curl -k https://localhost/api/pipelines/status
     ```
-- **WebRTC**: [http://localhost:8555](http://localhost:8555)
 
 ## Verify the Application
 

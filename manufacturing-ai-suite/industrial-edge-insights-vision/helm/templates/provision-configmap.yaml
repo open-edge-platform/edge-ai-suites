@@ -33,4 +33,4 @@ data:
     scrape_configs:
       - job_name: 'otel-log-collector'
         static_configs:
-          - targets: ['{{ .Values.env.HOST_IP }}:{{ $.Values.config.otel_collector.ext.otlp_prometheus_endpoint_port }}']
+          - targets: ['otel-collector:{{ $.Values.config.otel_collector.int.otlp_prometheus_endpoint_port }}']

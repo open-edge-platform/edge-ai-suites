@@ -18,7 +18,7 @@ The Image-Based Video Search Application is designed to:
 
 ### Technical Architecture Diagram
 
-![Technical Architecture Diagram](_images/architecture.png) *Figure 1: Detailed
+![Technical Architecture Diagram](_images/architecture.svg) *Figure 1: Detailed
 Architecture of the Image-Based Video Search Application.*
 
 ### Data Flow

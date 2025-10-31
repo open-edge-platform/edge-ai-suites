@@ -42,7 +42,7 @@
         http_proxy: <http proxy> # proxy details if behind proxy
         https_proxy: <https proxy>
         POSTGRES_PASSWORD: <POSTGRES PASSWORD> #  example: intel1234
-        MR_URL: <PROTOCOL>://<HOST_IP>:32002 # example: http://<ip-addr>:32002
+        MR_URL: https://<HOST_IP>:30443/registry/models # Model reigstry URL
         SAMPLE_APP: pallet-defect-detection # application directory
     webrtcturnserver:
         username: <username>  # WebRTC credentials e.g. intel1234
@@ -81,7 +81,7 @@
     ```
 3.  Fetch the list of pipeline loaded available to launch
     ```sh
-    ./sample_list.sh
+    ./sample_list.sh helm
     ```
     This lists the pipeline loaded in DLStreamer Pipeline Server.
     
@@ -117,7 +117,7 @@
     ```
 4.  Start the sample application with a pipeline.
     ```sh
-    ./sample_start.sh -p pallet_defect_detection
+    ./sample_start.sh helm -p pallet_defect_detection
     ```
     This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available. 
     
@@ -142,7 +142,7 @@
 
 5.  Get status of pipeline instance(s) running.
     ```sh
-    ./sample_status.sh
+    ./sample_status.sh helm
     ```
     This command lists status of pipeline instances launched during the lifetime of sample application.
     
@@ -165,7 +165,7 @@
 
 6. Stop pipeline instance.
     ```sh
-    ./sample_stop.sh
+    ./sample_stop.sh helm
     ```
     This command will stop all instances that are currently in `RUNNING` state and respond with the last status.
     
@@ -190,7 +190,7 @@
     }
     ```
     If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.    
-    For example, `./sample_stop.sh --id 99ac50d852b511f09f7c2242868ff651`
+    For example, `./sample_stop.sh helm --id 99ac50d852b511f09f7c2242868ff651`
 
 7. Uninstall the helm chart.
      ```sh
@@ -270,7 +270,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
 
     ```sh
-    curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/pallet_defect_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
+    curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/pallet_defect_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
         "source": {
             "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
             "type": "uri"
@@ -290,7 +290,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     }'
     ```
 
-7. Go to MinIO console on `http://<HOST_IP>:30800/` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
+7. Go to MinIO console on `https://<HOST_IP>:30443/minio/` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
    ![S3 minio image storage](./images/s3-minio-storage.png)
 
@@ -348,7 +348,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 
 5. Start the pipeline with the above payload.
     ```
-    ./sample_start.sh -p pallet_defect_detection_mlops
+    ./sample_start.sh helm -p pallet_defect_detection_mlops
     ```
 
 6. Download and prepare the model.
@@ -359,8 +359,8 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     ```
 
 7. Run the following curl command to upload the local model. 
-    ```sh
-    curl -L -X POST "http://<HOST_IP>:32002/models" \
+    pa```sh
+    curl -k -L -X POST "https://<HOST_IP>:30443/registry/models" \
     -H 'Content-Type: multipart/form-data' \
     -F 'name="YOLO_Test_Model"' \
     -F 'precision="fp32"' \
@@ -376,18 +376,18 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 8. Check if the model is uploaded successfully.
 
     ```sh
-    curl 'http://<HOST_IP>:32002/models'
+    curl -k 'https://<HOST_IP>:30443/registry/models'
     ```
 
 9. Check the instance ID of the currently running pipeline to use it for the next step.
    ```sh
-   curl --location -X GET http://<HOST_IP>:30107/pipelines/status
+   curl -k --location -X GET https://<HOST_IP>:30443/api/pipelines/status
    ```
 
 10. Restart the model with a new model from Model Registry.
     The following curl command downloads the model from Model Registry using the specs provided in the payload. Upon download, the running pipeline is restarted with replacing the older model with this new model. Replace the `<instance_id_of_currently_running_pipeline>` in the URL below with the id of the pipeline instance currently running.
     ```sh
-    curl 'http://<HOST_IP>:30107/pipelines/user_defined_pipelines/pallet_defect_detection_mlops/{instance_id_of_currently_running_pipeline}/models' \
+    curl -k 'https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/pallet_defect_detection_mlops/{instance_id_of_currently_running_pipeline}/models' \
     --header 'Content-Type: application/json' \
     --data '{
     "project_name": "pallet-defect-detection",
@@ -404,7 +404,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 
     > NOTE- The data above assumes there is a model in the registry that contains these properties. Also, the pipeline name that follows `user_defined_pipelines/`, will affect the `deployment` folder name.
 
-11. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+11. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
     ![WebRTC streaming](./images/webrtc-streaming.png)
 

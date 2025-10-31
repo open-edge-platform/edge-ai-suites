@@ -56,9 +56,11 @@ pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download
 ```
 > 💡 *Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.*
 
-## Step 2: Configure Defaults
+## Step 2: Configuration
 
-The default setup uses Whisper for transcription and OpenVINO Qwen models for summarization. You can customize these in the configuration file.
+### a. Default Configuration  
+  
+By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
 
 ```bash
 asr:
@@ -74,16 +76,21 @@ summarizer:
   weight_format: int8         # Supported: fp16, fp32, int4, int8
   max_new_tokens: 1024        # Maximum tokens to generate in summaries
 ```
-### 💡 Tips:
-* For Chinese audio transcription, switch to funASR with Paraformer:
+### b. Chinese Audio Transcription  
 
+For Chinese audio transcription, switch to funASR with Paraformer in your config (`smart-classroom/config.yaml`):
 ```bash
 asr:
   provider: funasr
   name: paraformer-zh
 ```
 
-* (Optional) If you are using IPEX-based summarization, make sure IPEX-LLM is installed, env for ipex is activated and set following in `config`:
+### c. IPEX-based Summarization
+
+To use IPEX for summarization, ensure:
+- IPEX-LLM is installed.
+- The environment for IPEX is activated.
+- The configuration (`smart-classroom/config.yaml`) is updated as shown below:
 
 ```bash
 summarizer:
@@ -111,16 +118,59 @@ npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
-## Check Logs
+>  Open a second (new) Command Prompt / terminal window for the frontend. The backend terminal stays busy serving requests.
 
-Once the backend starts, you can see the following logs:
+💡 Tips: You should see backend logs similar to this:
 
-```bash
+```
 pipeline initialized
 [INFO] __main__: App started, Starting Server...
 INFO:     Started server process [21616]
-	@@ -92,5 +166,6 @@ INFO:     Application startup complete.
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
-This means your pipeline server is up and ready to accept requests.
+This means your pipeline server has started successfully and is ready to accept requests.
+
+## Step 4: Access the UI
+
+After starting the frontend you can open the Smart Classroom UI in a browser:
+
+Local machine:
+- http://localhost:5173
+- http://127.0.0.1:5173
+
+From another device on the same network (replace <HOST_IP> with your computer’s IP):
+- http://<HOST_IP>:5173
+
+Find your IP (Windows PowerShell):
+```
+ipconfig
+```
+Use the IPv4 Address from your active network adapter.
+
+If you changed the port, adjust the URL accordingly.
+
+## Troubleshooting
+
+- Frontend not opening: Ensure you ran npm run dev in a second terminal after starting python main.py.
+- Backend not ready: Wait until Uvicorn shows "Application startup complete" and listening on port 8000.
+- URL fails from another device: Confirm you used --host 0.0.0.0 and replace <HOST_IP> correctly.
+- Nothing at localhost:5173: Check that the frontend terminal shows Vite server running and no port conflict.
+- Firewall blocks access: Allow inbound on ports 5173 (frontend) and 8000 (backend) on Windows.
+- Auto reload not happening: Refresh manually if backend was restarted after initial UI load.
+- If you encounter the error “Port for tensor name cache_position was not found.” in the backend, it indicates the models were not configured as per the instructions in the README. To fix the issue, run:
+
+  ```bash
+  pip install --upgrade -r requirements.txt
+  ```
+
+  Then delete the models directory from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
+- If you face a tokenizer load issue like this:
+
+  ``` bash
+  Either openvino_tokenizer.xml was not provided or it was not loaded correctly. Tokenizer::encode is not available
+  ```
+  
+  Delete the models folder from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.

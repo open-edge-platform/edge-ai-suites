@@ -846,7 +846,7 @@ bash install_driver_related_libs.sh
 
 ### Build and run docker image through scripts
 
-> **Note that the default username is `openvino` and password is `intel` in docker image.**
+> **Note that the default username is `tfcc` and password is `intel` in docker image.**
 
 ##### Build and run docker image
 
@@ -894,7 +894,7 @@ docker cp /path/to/dataset <container id>:/path/to/dataset
 
 ### Build and run docker image through docker compose
 
-> **Note that the default username is `openvino` and password is `intel` in docker image.**
+> **Note that the default username is `tfcc` and password is `intel` in docker image.**
 
 Modify `proxy`, `VIDEO_GROUP_ID` and `RENDER_GROUP_ID` in `.env` file.
 

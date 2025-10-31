@@ -138,13 +138,21 @@ spec:
         - name: https_proxy
           value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx"
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx,otel-collector"
         - name: NO_PROXY
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx"
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx,otel-collector"
         - name: MQTT_HOST
           value: "broker"
         - name: MQTT_PORT
           value: "1883"
+        - name: ENABLE_OPEN_TELEMETRY
+          value: "{{ $.Values.env.ENABLE_OPEN_TELEMETRY }}"
+        - name: OTEL_COLLECTOR_HOST
+          value: otel-collector
+        - name: OTEL_COLLECTOR_PORT
+          value: "{{ $.Values.config.otel_collector.int.otlp_http_port }}"
+        - name: OTEL_EXPORT_INTERVAL_MILLIS
+          value: "{{ $.Values.env.OTEL_EXPORT_INTERVAL_MILLIS }}"
         - name: ZE_ENABLE_ALT_DRIVERS
           value: "libze_intel_npu.so"
       volumes:
