@@ -2,6 +2,8 @@
 
 This guide provides instructions for setting up custom UDF deployment package (UDFs, TICKscripts, models) and config.json in **Time Series Analytics Microservice**.
 
+## Configuration
+
 - **`config.json`**:
    - Understand the configuration documented at [link](get-started.md#configjson) and update 
      as per the need to configure the custom UDF deployment package
@@ -54,11 +56,9 @@ This guide provides instructions for setting up custom UDF deployment package (U
      - Contains model files (e.g., `.pkl`) used by UDF python scripts.
 
 
-## With Volume Mounts
+### Docker compose deployment
 
-> **Note**: Follow the [getting started](./get-started.md) to have the Wind Turbine Anomaly Detection sample app deployed
-
-### Docker compose deployment Only
+> **Note**: Follow the [getting started](./get-started.md) to have the `Wind Turbine Anomaly Detection` and `Weld Anomaly Detection` sample apps deployed
 
 The files at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config` for `Wind Turbine Anomaly Detection` sample app OR `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config` for `Weld Anomaly Detection` representing the UDF deployment package (UDFs, TICKscripts, models)
 and config.json has been volume mounted for the Time Series Analytics Microservice service in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and config.json, it has to be done at this location and the time series analytics microservice container needs to be restarted manually.
@@ -67,9 +67,9 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
 
 > **Note:** This method does not use a volume mount. Instead, the `kubectl cp` command is used to copy the UDF deployment package into the container, which serves the same purpose.
 
-1. Update the UDF deployment package by following the instructions in [Configure Time Series Analytics Microservice with Custom UDF Deployment Package](./how-to-configure-custom-udf.md#configure-time-series-analytics-microservice-with-custom-udf-deployment-package).
+1. Update the UDF deployment package by following the instructions in [Configure Time Series Analytics Microservice with Custom UDF Deployment Package](./how-to-configure-custom-udf.md#configuration).
 
-2. Copy the updated UDF deployment package using the [steps](./how-to-deploy-with-helm.md#copy-the-windturbine_anomaly_detection-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
+2. Copy the updated UDF deployment package using the [steps](./how-to-deploy-with-helm.md#step-4-copy-the-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
 
 3. Make the following REST API call to the Time Series Analytics microservice for the updated custom UDF:
     ```sh

@@ -65,6 +65,7 @@ docker run --rm --user=root \
 ```
 
 This command will:
+
 - Download the YOLOv10s object detection model
 - Convert it to OpenVINO IR format (FP16 precision)
 - Store the model files in the `public/yolov10s/FP16/` directory

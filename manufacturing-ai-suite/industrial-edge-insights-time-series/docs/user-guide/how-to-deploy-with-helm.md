@@ -17,7 +17,7 @@ This guide provides step-by-step instructions for deploying the Industrial Edge 
 
 You can either generate or download the Helm charts.
 
-- Wind Turbine Anomaly Detection Sample App
+### Wind Turbine Anomaly Detection Sample App
 
     - To download the Helm charts:
 
@@ -45,7 +45,7 @@ You can either generate or download the Helm charts.
         cd helm/
         ```
 
-- Weld Anomaly Detection Sample App
+### Weld Anomaly Detection Sample App
 
     - To download the Helm charts:
 
@@ -81,9 +81,6 @@ You can either generate or download the Helm charts.
     INFLUXDB_PASSWORD:
     VISUALIZER_GRAFANA_USER:
     VISUALIZER_GRAFANA_PASSWORD:
-    POSTGRES_PASSWORD:
-    MINIO_ACCESS_KEY:
-    MINIO_SECRET_KEY:
     HTTP_PROXY: # example: http_proxy: http://proxy.example.com:891
     HTTPS_PROXY: # example: http_proxy: http://proxy.example.com:891
     ```
@@ -95,7 +92,7 @@ You can either generate or download the Helm charts.
 > 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in `values.yaml` file.
 
-**Wind Turbine Anomaly Detection**
+### Install - Wind Turbine Anomaly Detection
 
 To install Helm charts, use one of the following options:
 
@@ -121,7 +118,7 @@ To install Helm charts, use one of the following options:
 > ```
 > The `privileged_access_required=true` setting enables Time Series Analytics Microservice access to GPU device through `/dev/dri`.
 
-**Weld Anomaly Detection**
+### Install - Weld Anomaly Detection
 
 ```bash
 helm install ts-weld-anomaly . -n ts-sample-app --create-namespace
@@ -136,7 +133,7 @@ Use the following command to verify if all the application resources got install
 
 ## Step 4: Copy the udf package for helm deployment to Time Series Analytics Microservice
 
-**Wind Turbine Anomaly Detection**
+### UDF - Wind Turbine Anomaly Detection Sample App
 
 To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
@@ -165,7 +162,7 @@ To copy your own or existing model into Time Series Analytics Microservice in or
     kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
     ```
 
-**Weld Anomaly Detection**
+### UDF - Weld Anomaly Detection Sample App
 
 To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
@@ -225,14 +222,16 @@ Follow the verification steps in the [Get Started guide](get-started.md):
 
 ## Uninstall Helm Charts
 
-To uninstall Helm charts:
+### Uninstall - Wind Turbine Anomaly Detection Sample App
 
 ```sh
-# Wind Turbine Anomaly Detection
 helm uninstall ts-wind-turbine-anomaly -n ts-sample-app
 kubectl get all -n ts-sample-app # It may take a few minutes for all application resources to be cleaned up.
+```
 
-# Weld Anomaly Detection
+### Uninstall - Weld Anomaly Detection Sample App
+
+```sh
 helm uninstall ts-weld-anomaly -n ts-sample-app
 kubectl get all -n ts-sample-app # It may take a few minutes for all application resources to be cleaned up.
 ```

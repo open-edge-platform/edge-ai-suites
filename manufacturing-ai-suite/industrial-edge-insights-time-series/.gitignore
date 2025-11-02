@@ -10,4 +10,4 @@ helm/*.conf
 helm/*.sh
 helm/*.csv
 
-.venv/
+venv/

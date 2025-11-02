@@ -1,6 +1,7 @@
 # Enable System Metrics Dashboard
 
 > **Note**: The system metrics dashboard is only supported with docker compose deployments and requires `Telegraf` to run as the `root` user.
+> Verified only for `Wind Turbine Anomaly Detection` sample app.
 
 Please follow [prerequisites](./get-started.md#configure-docker) and understand [data flow explanation](./get-started.md#data-flow-explanation) as
 a prerequisite.
