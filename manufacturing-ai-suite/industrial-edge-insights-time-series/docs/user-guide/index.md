@@ -24,12 +24,13 @@ in manufacturing, and preventing failures, hazards, and unplanned downtime.
 ::::{grid} 1 2 3 4
 :::{grid-item-card} Wind Turbine Anomaly Detection
 :class-card: homepage-card-container-big
-:link: ./wind-turbine-anomaly/index.html
+:link: ./wind-turbine-anomaly/get-started.html
 
 Monitoring power generation anomalies for preventive maintenance.
 :::
 :::{grid-item-card} Weld Anomaly Detection
 :class-card: homepage-card-container-big
+:link: ./wind-turbine-anomaly/index.html
 
 Monitoring weld anomalies for preventive maintenance.
 :::
@@ -52,5 +53,6 @@ wind-turbine-anomaly/how-to-update-config
 wind-turbine-anomaly/how-to-create-a-new-sample-app
 wind-turbine-anomaly/how-to-connect-to-secure-mqtt-broker
 wind-turbine-anomaly/release_notes
+weld-anomaly-detection/index
 :::
 hide_directive-->
