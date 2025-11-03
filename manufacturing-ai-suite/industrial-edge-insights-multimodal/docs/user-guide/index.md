@@ -36,6 +36,5 @@ weld-defect-detection/how-to-build-from-source.md
 weld-defect-detection/how-to-configure-alerts.md
 weld-defect-detection/how-to-update-config.md
 weld-defect-detection/release_notes/Overview.md
-weld-defect-detection/Overview.md
 :::
 hide_directive-->
