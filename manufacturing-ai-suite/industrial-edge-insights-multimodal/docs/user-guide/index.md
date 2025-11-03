@@ -1,4 +1,4 @@
-# MultiModal Weld Defect Detection
+# Industrial Edge Insights - Multimodal
 
 MultiModal sample apps demonstrate how to use AI at the edge to identify defects in manufacturing environments by analyzing both image and time series sensor data.
 
