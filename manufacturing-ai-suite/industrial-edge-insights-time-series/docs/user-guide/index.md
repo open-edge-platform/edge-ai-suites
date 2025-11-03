@@ -15,7 +15,7 @@ in wind turbines, relative to wind speed. By identifying deviations, it helps
 optimize maintenance schedules and prevent potential turbine failures, enhancing
 operational efficiency.
 
-[Weld Anomaly Detection](./weld-anomaly-detection/index.html) sample app demonstrates a use case of AI-driven time series
+[Weld Anomaly Detection](./weld-anomaly-detection/index.md) sample app demonstrates a use case of AI-driven time series
 analytics for maintaining weld quality. It enables detection of anomalous weld patterns
 and alerting operators for timely intervention critical for safety and reliability
 in manufacturing, and preventing failures, hazards, and unplanned downtime.
