@@ -21,7 +21,7 @@ and alerting operators for timely intervention critical for safety and reliabili
 in manufacturing, and preventing failures, hazards, and unplanned downtime.
 
 <!--hide_directive
-::::{grid} 1 1 1 1
+::::{grid} 1 2 3 4
 :::{grid-item-card} Wind Turbine Anomaly Detection
 :class-card: homepage-card-container-big
 :link: ./wind-turbine-anomaly/index.html
@@ -37,19 +37,20 @@ Monitoring weld anomalies for preventive maintenance.
 hide_directive-->
 
 <!--hide_directive
-.. toctree::
-   :hidden:
+:::{toctree}
+:hidden:
 
-   wind-turbine-anomaly/how-it-works.md
-   wind-turbine-anomaly/system-requirements
-   wind-turbine-anomaly/get-started
-   wind-turbine-anomaly/how-to-build-from-source
-   wind-turbine-anomaly/how-to-deploy-with-helm
-   wind-turbine-anomaly/how-to-configure-custom-udf
-   wind-turbine-anomaly/how-to-configure-alerts
-   wind-turbine-anomaly/how-to-enable-system-metrics
-   wind-turbine-anomaly/how-to-update-config
-   wind-turbine-anomaly/how-to-create-a-new-sample-app
-   wind-turbine-anomaly/how-to-connect-to-secure-mqtt-broker
-   wind-turbine-anomaly/release_notes
+wind-turbine-anomaly/how-it-works.md
+wind-turbine-anomaly/system-requirements
+wind-turbine-anomaly/get-started
+wind-turbine-anomaly/how-to-build-from-source
+wind-turbine-anomaly/how-to-deploy-with-helm
+wind-turbine-anomaly/how-to-configure-custom-udf
+wind-turbine-anomaly/how-to-configure-alerts
+wind-turbine-anomaly/how-to-enable-system-metrics
+wind-turbine-anomaly/how-to-update-config
+wind-turbine-anomaly/how-to-create-a-new-sample-app
+wind-turbine-anomaly/how-to-connect-to-secure-mqtt-broker
+wind-turbine-anomaly/release_notes
+:::
 hide_directive-->

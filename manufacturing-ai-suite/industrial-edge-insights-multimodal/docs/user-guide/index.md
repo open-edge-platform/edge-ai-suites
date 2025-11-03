@@ -26,14 +26,15 @@ Multimodal, real-time monitoring of weld defects.
 hide_directive-->
 
 <!--hide_directive
-.. toctree::
-   :hidden:
+:::{toctree}
+:hidden:
 
-   weld-defect-detection/how-it-works.md
-   weld-defect-detection/system-requirements.md
-   weld-defect-detection/get-started.md
-   weld-defect-detection/how-to-build-from-source.md
-   weld-defect-detection/how-to-configure-alerts.md
-   weld-defect-detection/how-to-update-config.md
-   weld-defect-detection/release_notes/Overview.md
+weld-defect-detection/how-it-works.md
+weld-defect-detection/system-requirements.md
+weld-defect-detection/get-started.md
+weld-defect-detection/how-to-build-from-source.md
+weld-defect-detection/how-to-configure-alerts.md
+weld-defect-detection/how-to-update-config.md
+weld-defect-detection/release_notes/Overview.md
+:::
 hide_directive-->
