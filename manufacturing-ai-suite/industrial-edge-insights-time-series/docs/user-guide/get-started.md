@@ -68,8 +68,10 @@ This data is being ingested into **Telegraf** using the **OPC-UA** protocol usin
 
 ### **Data Processing**
 
-**Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) which is already built-in to the container image. The UDF deployment package is available
-at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config`. Directory details is as below:
+**Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Wind Turbine Anomaly Detection` sample app is available
+at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config` and for `Weld Anomaly Detection` sample app is available at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config`. 
+
+Directory details is as below:
   
 #### **`config.json`**:
 
@@ -77,15 +79,7 @@ The `task` section defines the settings for the Kapacitor task and User-Defined 
 
 | Key                     | Description                                                                                     | Example Value                          |
 |-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
-| `model_registry` | Configuration for the Model Registry microservice.       | See below for details.                      |
 | `udfs`                  | Configuration for the User-Defined Functions (UDFs).                                           | See below for details.                 |
-
-**Model Registry Configuration**:
-
-| Key                     | Description                                                                                     | Example Value                          |
-|-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
-| `enable` | Boolean flag to enable fetching UDFs and models from the Model Registry microservice.       | `true` or `false`                      |
-| `version`               | Specifies the version of the task or model to use.                                             | `"1.0"`                                |
 
 **UDFs Configuration**:
 
@@ -116,10 +110,6 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 | `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
 | `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
 
-
-#### **`config/`**:
-   - `kapacitor.conf` would be updated as per the `config.json` at runtime for usage.
-
 #### **`udfs/`**:
    - Contains the python script to process the incoming data.
      Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with Intel® Extension for Scikit-learn*
@@ -141,9 +131,6 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
    - `INFLUXDB_PASSWORD`
    - `VISUALIZER_GRAFANA_USER`
    - `VISUALIZER_GRAFANA_PASSWORD`
-   - `MR_PSQL_PASSWORD`
-   - `MR_MINIO_ACCESS_KEY`
-   - `MR_MINIO_SECRET_KEY`
 
 2. Deploy the sample app, use only one of the following options:
 
@@ -158,9 +145,9 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 >    set this variable to `false`.
 >  - If `CONTINUOUS_SIMULATOR_INGESTION` is set to `false`, you may see the `[inputs.opcua] status not OK for node` message in the `telegraf` 
 >    logs for OPC-UA ingestion after a single data ingestion loop. This message can be ignored.
->  - `make up_opcua_ingestion` is supported only for `Wind Turbine Anomaly Detection`
+>  - `make up_opcua_ingestion` is supported only for `Wind Turbine Anomaly Detection` sample app
 
-### Deploying Wind Turbine Anomaly Detection
+### Deploying Wind Turbine Anomaly Detection sample app
 
   - **Using OPC-UA ingestion**:
     ```bash
@@ -171,28 +158,41 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
     make up_mqtt_ingestion app="wind-turbine-anomaly-detection"
     ```
 
-#### Multi-Stream Ingestion
-
-Multi-stream ingestion allows you to process multiple data streams in parallel. This feature is available only for the Wind Turbine Anomaly Detection sample app.
-
-To enable multi-stream ingestion, specify the desired number of parallel streams using the `num_of_streams` parameter:
-
-```bash
-# OPC-UA Multi-Stream Ingestion
-make up_opcua_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
-
-# MQTT Multi-Stream Ingestion
-make up_mqtt_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
-```
-
-- `<NUMBER_OF_STREAMS>`: Replace with the number of parallel streams you want to run (e.g., `3` for three streams).
-
-
-### Deploying Weld Anomaly Detection
+### Deploying Weld Anomaly Detection sample app
 
   ```bash
   make up_mqtt_ingestion app="weld-anomaly-detection"
   ```
+
+### Multi-Stream Ingestion support
+
+Multi-stream ingestion enables the simultaneous processing of multiple data streams, improving throughput and scalability.
+
+To activate multi-stream ingestion, set the `num_of_streams` parameter to the required number of parallel streams when deploying the application.
+`<NUMBER_OF_STREAMS>`: Specify the number of parallel streams to run (e.g., `3` for three concurrent streams).
+
+#### Wind Turbine Anomaly Detection
+
+```bash
+# Deploy with OPC-UA Multi-Stream Ingestion
+make up_opcua_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
+
+# Deploy with MQTT Multi-Stream Ingestion
+make up_mqtt_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
+```
+
+#### Weld Turbine Anomaly Detection
+
+```bash
+# Deploy with MQTT Multi-Stream Ingestion
+make up_mqtt_ingestion app="weld-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
+```
+
+#### Notes
+
+- Ensure system resources (CPU, memory) are sufficient to support the desired number of streams.
+- For troubleshooting or monitoring, use `make status` to verify container health and logs.
+
    
 Use the following command to verify that all containers are active and error-free.
 
@@ -205,7 +205,11 @@ Use the following command to verify that all containers are active and error-fre
 make status
 ```
 
-### Running UDF inference on GPU
+### Running User Defined Function(UDF) inference on GPU
+
+By default, UDF for both the sample apps is configured to run on `CPU`.
+The `Wind Turbine Anomaly Detection` sample app ML model can run on `iGPU` while
+the `Weld Anomaly Detection` sample app ML model can only run on `CPU`.
 
 To trigger the UDF inference on GPU in Time Series Analytics Microservice, run the following command:
 
@@ -218,9 +222,9 @@ To trigger the UDF inference on GPU in Time Series Analytics Microservice, run t
      value updated to gpu from cpu>'
 ```
 
-> **Note:** GPU Inferencing is supported only for `Wind Turbine Anomaly Detection` sample app
+## Verify the Output Results
 
-## Verify the Wind Turbine Anomaly Detection Results
+### Verify - Wind Turbine Anomaly Detection
 
 1. Get into the InfluxDB* container:
 
@@ -270,7 +274,7 @@ To trigger the UDF inference on GPU in Time Series Analytics Microservice, run t
   
       ![Anomaly prediction in grid active power](./_images/anomaly_power_prediction.png)
 
-## Verify the Weld Anomaly Detection Results
+### Verify - Weld Anomaly Detection
 
 1. Get into the InfluxDB* container:
 
@@ -319,6 +323,7 @@ To trigger the UDF inference on GPU in Time Series Analytics Microservice, run t
     - One will see the below output.
   
       ![Anomaly prediction in weld sensor data](./_images/anomaly_detection_weld.png)
+
 
 ## Bring down the sample app
 

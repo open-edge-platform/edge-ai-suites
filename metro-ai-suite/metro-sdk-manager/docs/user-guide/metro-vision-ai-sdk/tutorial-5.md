@@ -70,7 +70,7 @@ docker run --rm --user=root \
   -v "${PWD}:/home/dlstreamer/" \
   intel/dlstreamer:2025.1.2-ubuntu24 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
-  
+
 # Create a continuous DLStreamer pipeline script
 cat > metro_vision_pipeline.sh << 'EOF'
 #!/bin/bash
@@ -100,7 +100,7 @@ fi
 # Continuous loop to keep pipeline running
 while true; do
     echo "$(date): Starting pipeline iteration..."
-    
+
     # Run DLStreamer pipeline in Docker container with object detection
     docker run --rm \
         --device /dev/dri:/dev/dri \
@@ -115,7 +115,7 @@ while true; do
             gvafpscounter ! \
             fakesink sync=false \
             2>/dev/null
-    
+
     echo "$(date): Pipeline ended, restarting in 2 seconds..."
     sleep 2
 done
@@ -143,12 +143,14 @@ htop
 ```
 
 **What to observe:**
+
 - CPU usage per core (bars at the top)
 - Memory usage and available memory
 - Running processes sorted by CPU usage
 - Look for your Metro Vision AI processes
 
 **Key shortcuts in htop:**
+
 - `F6` - Sort by different columns (CPU%, MEM%)
 - `F4` - Filter processes by name
 - `q` - Quit htop
@@ -163,6 +165,7 @@ intel_gpu_top
 ```
 
 **What to observe:**
+
 - Render/3D engine usage (shows AI inference workload)
 - Video engine usage (shows video decode/encode)
 - GPU frequency and power consumption
@@ -189,6 +192,7 @@ sudo perf report
 ```
 
 **What to observe:**
+
 - Function call hotspots and CPU cycles
 - Call stack and execution paths
 - Cache misses and memory access patterns
@@ -207,7 +211,7 @@ free -h -s 1 | head -20 > memory_usage.log &
 # Let them run while your AI application is processing
 ```
 
-## Step 8: Monitor Process-Specific Performance  
+## Step 8: Monitor Process-Specific Performance
 
 Monitor the specific performance of your AI processes:
 
@@ -231,7 +235,7 @@ Monitor system thermal status during AI workload:
 # Check CPU temperature
 sensors | grep Core
 
-# Monitor power consumption (if available)  
+# Monitor power consumption (if available)
 sudo powertop --time=10
 
 # Check CPU frequency scaling
@@ -265,7 +269,7 @@ Current Memory Usage: $(free -h | awk 'NR==2{printf "Used: %s/%s (%.1f%%)", $3, 
 
 === Recommendations ===
 - Review htop output for CPU usage patterns
-- Check intel_gpu_top for GPU utilization efficiency  
+- Check intel_gpu_top for GPU utilization efficiency
 - Analyze perf report for CPU bottlenecks
 - Monitor thermal status for throttling
 
@@ -285,14 +289,16 @@ echo "kill \$(pgrep -f metro_vision_pipeline)"
 This tutorial provides a practical approach to profiling Metro Vision AI workloads using command-line tools:
 
 ### **What You've Learned:**
+
 1. **Installing Tools**: Set up `htop`, `intel_gpu_top`, and `perf` for system monitoring
-2. **System Monitoring**: Use `htop` for real-time CPU and memory monitoring  
+2. **System Monitoring**: Use `htop` for real-time CPU and memory monitoring
 3. **GPU Profiling**: Monitor Intel GPU performance with `intel_gpu_top`
 4. **CPU Profiling**: Use `perf` to identify performance bottlenecks and hotspots
 5. **System Analysis**: Collect comprehensive performance data
 6. **Performance Reporting**: Generate actionable performance summaries
 
 ### **Key Monitoring Points:**
+
 - **CPU Usage**: Monitor core utilization and identify bottlenecks
 - **Memory Usage**: Track memory consumption and avoid swapping
 - **GPU Utilization**: Monitor Intel GPU render engine usage

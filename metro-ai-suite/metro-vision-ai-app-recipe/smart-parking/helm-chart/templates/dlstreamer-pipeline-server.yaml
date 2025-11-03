@@ -189,7 +189,7 @@ spec:
           sizeLimit: 100Mi
       - name: models-volume
         emptyDir:
-          sizeLimit: 100Mi
+          sizeLimit: 150Mi
 ---
 apiVersion: v1
 kind: ConfigMap

@@ -215,7 +215,7 @@
           "measurement": "weld-sensor-anomaly-data",
           "orderByTime": "ASC",
           "policy": "autogen",
-          "query": "SELECT \"Primary Weld Current\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 1) AND $timeFilter",
+          "query": "SELECT \"Primary Weld Current\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 1)  AND $timeFilter",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -323,7 +323,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "wind_turbine_anomaly_data",
+          "measurement": "weld-sensor-anomaly-data",
           "orderByTime": "ASC",
           "policy": "default",
           "query": "SELECT count(\"Pressure\") FROM \"weld-sensor-anomaly-data\" where anomaly_status>0",
