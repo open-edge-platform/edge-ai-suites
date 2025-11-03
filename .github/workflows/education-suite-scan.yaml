@@ -42,7 +42,7 @@ jobs:
 
       - name: Run trivy Scan - education-suite (SPDX SBOM)
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: videosummary-frontend-spdx
+        id: education-suite-frontend-spdx
         with:
           scan_type: "fs"  
           scan-scope: "all"
@@ -56,5 +56,5 @@ jobs:
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
-          name: trivy-report-video-summary
+          name: trivy-report-education-ai-suite
           path: security-results/trivy*
