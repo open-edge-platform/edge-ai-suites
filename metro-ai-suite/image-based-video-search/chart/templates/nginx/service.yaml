@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: '{{ include "image_based_video_search.fullname" . }}-nginx-reverse-proxy'
+  labels:
+    {{- include "image_based_video_search.labels" . | nindent 4 }}
+    katenary.v3/component: nginx-reverse-proxy
+spec:
+  type: NodePort 
+  ports:
+  - name: nginx-reverse-proxy-80
+    port: 80
+    protocol: TCP
+    targetPort: 80
+    nodePort: 30080 
+  - name: nginx-reverse-proxy-443
+    port: 443
+    protocol: TCP
+    targetPort: 443
+    nodePort: 30443
+  - name: nginx-reverse-proxy-8554
+    port: 8554
+    targetPort: 8554
+    nodePort: 30554  # external port for 8554
+  selector:
+    {{- include "image_based_video_search.selectorLabels" . | nindent 4 }}
+    katenary.v3/component: nginx-reverse-proxy

@@ -3,7 +3,7 @@
 # Download artifacts for a specific sample application
 #   by calling respective app's setup.sh script
 SCRIPT_DIR=$(dirname $(readlink -f "$0"))
-MODEL_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/c13b8dbf23d514c2667d39b66615bd1400cb889d/models/weld_porosity_classification.zip"
+MODEL_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/FP16/weld_porosity_classification.zip"
 VIDEO_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/c13b8dbf23d514c2667d39b66615bd1400cb889d/videos/welding.avi"
 
 err() {

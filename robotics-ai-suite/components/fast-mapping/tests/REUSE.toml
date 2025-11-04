@@ -1,0 +1,10 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+version = 1
+
+[[annotations]]
+path = ["ros2/**", "assets/**"]
+SPDX-FileCopyrightText = "2025 Intel Corporation"
+SPDX-License-Identifier = "Apache-2.0"

@@ -19,5 +19,26 @@
                 }
             }
         }
+    },
+    {
+        "pipeline": "pallet_defect_detection_gpu",
+        "payload":{
+            "source": {
+                "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
+                "type": "uri"
+            },
+            "destination": {
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "pdd"
+                }
+            },
+            "parameters": {
+                "detection-properties": {
+                    "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
+                    "device": "GPU"
+                }
+            }
+        }
     }
 ]

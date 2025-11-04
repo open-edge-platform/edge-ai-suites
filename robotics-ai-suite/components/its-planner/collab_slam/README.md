@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Enable Collaborative Visual SLAM Framework on ROS2 Navigation
 
 The Collaborative Visual SLAM Framework can be obtained from [CSLAM link](https://github.com/open-edge-platform/edge-ai-suites)

@@ -186,4 +186,4 @@
 
 
 ## Troubleshooting
-- [Troubleshooting Guide](../../../docs/pcb-anomaly-detection/troubleshooting-guide.md)
+- [Troubleshooting Guide](../../../docs/user-guide/pcb-anomaly-detection/troubleshooting-guide.md)

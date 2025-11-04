@@ -74,6 +74,7 @@ wget -O models/intel/human-pose-estimation-0001/human-pose-estimation-0001.json 
 ### Step 2: Understand Human Pose Estimation Model
 
 **Model Architecture:**
+
 - **Model Name**: human-pose-estimation-0001
 - **Framework**: OpenVINO optimized model from Intel Model Zoo
 - **Input**: 256x456 RGB image
@@ -114,6 +115,7 @@ docker run -it --rm --net=host \
 ```
 
 **Pipeline Execution Features:**
+
 - Real-time human pose detection and visualization
 - Skeletal overlay on detected persons
 - Keypoint confidence scoring

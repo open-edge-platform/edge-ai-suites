@@ -5,18 +5,16 @@ metadata:
   name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
   namespace: {{ $.Values.namespace }}
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: dlstreamer-pipeline-server
   ports:
   - name: "rest-api"
     port: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
     targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
-    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rest_api_port }}
   - name: "rtsp-output-streaming"
     port: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
     targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
-    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rtsp_output_port }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -129,9 +127,9 @@ spec:
         - name: ENABLE_OPEN_TELEMETRY
           value: "{{ $.Values.env.ENABLE_OPEN_TELEMETRY }}"
         - name: OTEL_COLLECTOR_HOST
-          value: {{ $.Values.env.HOST_IP }}
+          value: otel-collector
         - name: OTEL_COLLECTOR_PORT
-          value: "{{ $.Values.env.OTEL_COLLECTOR_PORT }}"
+          value: "{{ $.Values.config.otel_collector.int.otlp_http_port }}"
         - name: OTEL_EXPORT_INTERVAL_MILLIS
           value: "{{ $.Values.env.OTEL_EXPORT_INTERVAL_MILLIS }}"
         - name: OPCUA_SERVER_IP
@@ -152,6 +150,12 @@ spec:
           value: "{{ $.Values.env.MR_REQUEST_TIMEOUT }}"
         - name: MR_VERIFY_CERT
           value: "{{ $.Values.env.MR_VERIFY_CERT }}"
+        - name: ZE_ENABLE_ALT_DRIVERS
+          value: "libze_intel_npu.so"
+        - name: MQTT_HOST
+          value: mqtt-broker
+        - name: MQTT_PORT
+          value: "1883"
       initContainers:
       - name: wait-for-model-registry
         image: busybox
