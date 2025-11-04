@@ -1,4 +1,4 @@
-# Getting Started Guide
+# Getting Started Guide - Metro Vision AI SDK
 
 ## Overview
 
@@ -65,20 +65,33 @@ wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-v
 
 ### Step 3: Pipeline Execution
 
-Execute the object detection pipeline using the configured assets:
+Execute the object detection pipeline using the configured assets.
 
 ```bash
+# Allow X11 connections from local clients
 xhost +
-docker run --rm -it \
+
+# Start the container
+docker run --rm -it --name dlstreamer \
   -v $PWD:/data \
   -e DISPLAY=$DISPLAY \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
-  intel/dlstreamer:latest \
-  gst-launch-1.0 filesrc location=/data/sample.mp4 ! \
+  intel/dlstreamer
+```
+
+```bash
+# Run the GStreamer pipeline inside the running container
+gst-launch-1.0 filesrc location=/data/sample.mp4 ! \
   decodebin ! videoconvert ! \
-  gvadetect model=/data/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.xml model-proc=/data/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=CPU ! \
-  gvawatermark ! videoconvert ! \
-  autovideosink
+  gvadetect model=/data/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.xml \
+    model-proc=/data/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json \
+    device=CPU ! \
+  gvawatermark ! videoconvert ! autovideosink
+```
+
+```bash
+# To exit the container
+exit
 ```
 
 ![Object Detection](images/object-detection.png)
@@ -134,6 +147,10 @@ Develop a complete object detection application with interactive controls, perfo
 ### [Tutorial 4: Advanced Video Analytics Pipelines](./tutorial-4.md)
 
 Create sophisticated video analytics using Intel® DL Streamer framework, including human pose estimation and multi-model integration.
+
+### [Tutorial 5: Profiling](./tutorial-5.md)
+
+Profiling and monitoring performance of Metro Vision AI workloads using command-line tools. 
 
 ## Additional Resources
 

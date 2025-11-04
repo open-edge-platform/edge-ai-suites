@@ -1,4 +1,4 @@
-# Getting Started Guide
+# Getting Started Guide - Visual AI Demo Kits
 
 ## Overview
 
