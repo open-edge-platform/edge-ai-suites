@@ -138,12 +138,11 @@ start_piplines() {
     # load the payload
     load_payload
 
-    # If no arguments are provided, start all pipelines
+    # If no arguments are provided, start only the first pipeline
     if [[ -z "$1" ]]; then
-        echo "Starting all pipelines"
-        for pipeline in $(echo "$ALL_PIPELINES_IN_PAYLOAD" | jq -r '.[].pipeline'); do
-            launch_pipeline "$pipeline"
-        done
+        first_pipeline=$(echo "$ALL_PIPELINES_IN_PAYLOAD" | jq -r '.[0].pipeline')
+        echo "Starting first pipeline: $first_pipeline"
+        launch_pipeline "$first_pipeline"
         return
     fi
     # Expect other arguments to be pipeline names

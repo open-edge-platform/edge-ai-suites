@@ -367,7 +367,11 @@ jobs:
             sed -i "s/VISUALIZER_GRAFANA_USER:.*/VISUALIZER_GRAFANA_USER: ${VISUALIZER_GRAFANA_USER}/g" values.yaml
             sed -i "s/VISUALIZER_GRAFANA_PASSWORD:.*/VISUALIZER_GRAFANA_PASSWORD: ${VISUALIZER_GRAFANA_PASSWORD}/g" values.yaml
 
-            trivy config . >> trivy-timeseries-helm.txt
+            trivy config . >> trivy-timeseries-mqtt-helm.txt
+
+            sed -i "s/TELEGRAF_INPUT_PLUGIN:.*/TELEGRAF_INPUT_PLUGIN: opcua/g" values.yaml
+            trivy config . >> trivy-timeseries-opcua-helm.txt
+
           fi
           
       - name: Upload Scan artifact to Github
@@ -375,7 +379,7 @@ jobs:
         with:
           name: Trivy Report - Config scan for Helm
           path: |
-            manufacturing-ai-suite/industrial-edge-insights-time-series/helm/trivy-timeseries-helm.txt
+            manufacturing-ai-suite/industrial-edge-insights-time-series/helm/trivy-timeseries-*.txt
       
   trivy-config-time-series-dockerfile-scan:
     if: ${{ ((inputs.target == 'trivy-config-scan') || (inputs.target == 'trivy-dockerfile-scan') || (inputs.target == 'all-scans')) && ((inputs.application == 'time-series') || (inputs.application == 'both')) }}
