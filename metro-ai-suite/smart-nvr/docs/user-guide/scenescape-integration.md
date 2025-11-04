@@ -197,6 +197,13 @@ docker logs nvr-event-router-ui -f
 docker logs nvr-event-router | grep "Scenescape MQTT client"
 ```
 
+## Monitoring Commands
+
+```bash
+# Check system CPU usage and load
+cat /proc/loadavg && docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+```
+
 ## Support
 
 For Scenescape integration issues:
@@ -204,7 +211,9 @@ For Scenescape integration issues:
 2. **Environment Variables**: Verify `NVR_SCENESCAPE=true` and MQTT credentials are set  
 3. **MQTT Connection**: Check logs for "Scenescape MQTT client started" message
 4. **Smart Intersection**: Confirm Smart Intersection application is accessible at expected path
-5. Review logs using debug commands above and contact support with relevant excerpts
+5. **Performance Issues**: Run `cat /proc/loadavg && docker stats --no-stream` to check CPU usage and system load
+6. **High Resource Usage**: If load average >10 or containers show >500% CPU, restart high-usage containers
+7. Review logs using debug commands above and contact support with relevant excerpts
 
 For general Smart NVR issues, see the [main documentation](get-started.md).
 

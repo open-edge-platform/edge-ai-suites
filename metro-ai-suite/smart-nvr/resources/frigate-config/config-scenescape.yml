@@ -31,12 +31,18 @@ cameras:
     ffmpeg:
       inputs:
         - path: rtsp://{RTSP_STREAM_IP}:8554/camera1
+          input_args: -avoid_negative_ts make_zero -fflags +genpts+discardcorrupt -rtsp_transport tcp -r 20
           roles:
             - detect
             - record
+      output_args:
+        record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 30 -pix_fmt yuv420p -movflags +faststart
     detect:
-      enabled: true
+      enabled: false
       max_disappeared: 30
+      width: 1280
+      height: 720
+      fps: 10
     objects:
       track: [vehicle,pedestrian]
       filters:
@@ -52,29 +58,34 @@ cameras:
       retain:
         default: 1
     genai:
-      enabled: true
+      enabled: false
       use_snapshot: true
       objects:
         - vehicle
         - pedestrian
         - car
-
   camera2:
     ffmpeg:
       inputs:
         - path: rtsp://{RTSP_STREAM_IP}:8554/camera2
+          input_args: -avoid_negative_ts make_zero -fflags +genpts+discardcorrupt -rtsp_transport tcp -r 20
           roles:
             - detect
             - record
+      output_args:
+        record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 30 -pix_fmt yuv420p -movflags +faststart
     detect:
-      enabled: true
+      enabled: false
       max_disappeared: 30
+      width: 1280
+      height: 720
+      fps: 10
     objects:
       track: [vehicle,pedestrian]
       filters:
         car:
           min_score: 0.6
-          threshold: 0.80
+          threshold: 0.70
     record:
       enabled: true
       retain:
@@ -84,7 +95,7 @@ cameras:
       retain:
         default: 1
     genai:
-      enabled: true
+      enabled: false
       use_snapshot: true
       objects:
         - vehicle
@@ -94,12 +105,18 @@ cameras:
     ffmpeg:
       inputs:
         - path: rtsp://{RTSP_STREAM_IP}:8554/camera3
+          input_args: -avoid_negative_ts make_zero -fflags +genpts+discardcorrupt -rtsp_transport tcp -r 20
           roles:
             - detect
             - record
+      output_args:
+        record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 30 -pix_fmt yuv420p -movflags +faststart
     detect:
-      enabled: true
+      enabled: false
       max_disappeared: 30
+      width: 1280
+      height: 720
+      fps: 10
     objects:
       track: [vehicle,pedestrian]
       filters:
@@ -115,29 +132,34 @@ cameras:
       retain:
         default: 1
     genai:
-      enabled: true
+      enabled: false
       use_snapshot: true
       objects:
         - vehicle
         - pedestrian
         - car
-
   camera4:
     ffmpeg:
       inputs:
         - path: rtsp://{RTSP_STREAM_IP}:8554/camera4
+          input_args: -avoid_negative_ts make_zero -fflags +genpts+discardcorrupt -rtsp_transport tcp -r 20
           roles:
             - detect
             - record
+      output_args:
+        record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 30 -pix_fmt yuv420p -movflags +faststart
     detect:
-      enabled: true
+      enabled: false
       max_disappeared: 30
+      width: 1280
+      height: 720
+      fps: 10
     objects:
       track: [vehicle,pedestrian]
       filters:
         car:
           min_score: 0.6
-          threshold: 0.80
+          threshold: 0.70
     record:
       enabled: true
       retain:
@@ -147,10 +169,10 @@ cameras:
       retain:
         default: 1
     genai:
-      enabled: true
+      enabled: false
       use_snapshot: true
       objects:
         - vehicle
         - pedestrian
-        - car  
+        - car                
 version: 0.15-1
