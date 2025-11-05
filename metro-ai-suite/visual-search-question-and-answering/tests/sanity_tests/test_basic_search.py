@@ -20,6 +20,7 @@ def test_basic_search():
     for k, v in Query_list.items():
         at.text_input(key="ktext").input(k)
         at.button(key="kSearch").click().run()
+        ret = False
         for i in range(len(at.session_state.latest_log)):
             if v in at.session_state.latest_log[i]:
                 ret = True

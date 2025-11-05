@@ -1,4 +1,4 @@
-CONTAINER_IDS=$(docker ps -a --filter "ancestor=visual-search-qa-app" -q)
+CONTAINER_IDS=$(docker ps -a --filter "status=running" -q | xargs -r docker inspect --format '{{.Config.Image}} {{.Id}}' | grep "visual-search-qa-app" | awk '{print $2}')
 
 # Check if any containers were found
 if [ -z "$CONTAINER_IDS" ]; then
