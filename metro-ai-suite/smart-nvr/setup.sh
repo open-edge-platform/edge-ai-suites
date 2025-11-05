@@ -93,6 +93,7 @@ configure_scenescape_setup() {
         SMART_INTERSECTION_CERTS="edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs"
         if [ -f "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" ]; then
             mkdir -p ./resources/mqtt-certs
+            chmod u+w ./resources/mqtt-certs
             cp "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" "./resources/mqtt-certs/root-cert"
             cp "${SMART_INTERSECTION_CERTS}/scenescape-broker.crt" "./resources/mqtt-certs/broker-cert"
             cp "${SMART_INTERSECTION_CERTS}/scenescape-broker.key" "./resources/mqtt-certs/broker-key"
