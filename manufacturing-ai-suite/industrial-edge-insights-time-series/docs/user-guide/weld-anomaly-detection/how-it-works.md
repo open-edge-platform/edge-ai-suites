@@ -5,13 +5,14 @@ As seen in the following architecture diagram, the sample app at a high-level co
 
 ![Time Series AI Stack Architecture Diagram](../_images/time-series-ai-stack-architecture.png)
 
+
 ## Data flow explanation
 
-Let's discuss how this architecture translates to data flow in the wind turbine anomaly detection use case, by ingesting the data using the OPC-UA simulator and publishing the anomaly alerts to MQTT broker.
+Let's discuss how this architecture translates to data flow in the weld anomaly detection use case, by ingesting the data using the OPC-UA simulator and publishing the anomaly alerts to MQTT broker.
 
 ### **Data Sources**
 
-Using the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/ingestor-data/wind-turbine-anomaly-detection.csv` which is a normalized version of open source data wind turbine dataset (`edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/T1.csv`) from <https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset>.
+Simulation data in CSV format from `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/simulation-data`.
 This data is being ingested into **Telegraf** using the **OPC-UA** protocol using the **OPC-UA** data simulator.
 
 ### **Data Ingestion**
@@ -24,8 +25,7 @@ This data is being ingested into **Telegraf** using the **OPC-UA** protocol usin
 
 ### **Data Processing**
 
-**Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Wind Turbine Anomaly Detection` sample app is available
-at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config`.
+**Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Weld Anomaly Detection` sample app is available at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config`.
 
 Directory details is as below:
 
@@ -43,8 +43,8 @@ The `udfs` section specifies the details of the UDFs used in the task.
 
 | Key     | Description                                                                                 | Example Value                          |
 |---------|---------------------------------------------------------------------------------------------|----------------------------------------|
-| `name`  | The name of the UDF script.                                                                 | `"windturbine_anomaly_detector"`       |
-| `models`| The name of the model file used by the UDF.                                                 | `"windturbine_anomaly_detector.pkl"`   |
+| `name`  | The name of the UDF script.                                                                 | `"weld_anomaly_detector.py"`       |
+| `models`| The name of the model file used by the UDF.                                                 | `"weld_anomaly_detector.cb"`   |
 | `device`| Specifies the hardware `CPU` or `GPU` for executing the UDF model inference.Default is `cpu`| `cpu`                                  |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
@@ -72,10 +72,9 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
      to run on CPU to detect the anomalous power generation data points relative to wind speed.
 
 #### **`tick_scripts/`**:
-   - The TICKScript `windturbine_anomaly_detector.tick` determines processing of the input data coming in.
+   - The TICKScript `weld_anomaly_detector.tick` determines processing of the input data coming in.
      Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts.
      By default, it is configured to publish the alerts to **MQTT**.
 
 #### **`models/`**:
-   - The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo.
-     More details on how it is built is accessible at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/windturbine/README.md`
+   - The `weld_anomaly_detector.cb` is a model built using the RandomForestRegressor Algo.
