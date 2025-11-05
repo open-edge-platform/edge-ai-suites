@@ -1,4 +1,4 @@
-# Getting Started Guide
+# Getting Started Guide - Metro Gen AI SDK
 
 ## Overview
 

@@ -17,7 +17,7 @@ By following this guide, you will learn how to:
 
 - Verify that your metro vision AI application is running: [Setup Guide](./tutorial-1.md)
 - Verify that your Node Red flow setup is completed: [Node Red Flow](./tutorial-2.md)
-- Access to Grafana dashboard (typically at `http://localhost:3000`)
+- Access to Grafana dashboard (typically at `https://<HOST_IP>/grafana`)
 - WebRTC streaming service configured and operational
 - MQTT broker running with object detection data feed
 
@@ -26,7 +26,7 @@ By following this guide, you will learn how to:
 ### 1. **Create a New Dashboard**
 
 1. **Access Grafana Interface**:
-   - Open your web browser and navigate to `http://localhost:3000`
+   - Open your web browser and navigate to `https://<HOST_IP>/grafana`
    - Log in with your Grafana credentials
       - Username: admin
       - Password: admin
@@ -47,7 +47,7 @@ By following this guide, you will learn how to:
 
    ```html
    <iframe 
-     src="http://<HOST_IP>:8889/object_detection_1" 
+     src="https://<HOST_IP>/mediamtx/object_detection_1/" 
      style="width:100%;height:500px;" 
      allow="autoplay; encrypted-media"
      frameborder="0">

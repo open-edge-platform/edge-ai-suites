@@ -1,4 +1,4 @@
-# Tutorial 5: Profiling
+# Metro Vision AI SDK - Tutorial 5
 
 This tutorial will guide you through profiling and monitoring performance of Metro Vision AI workloads using command-line tools. You'll learn to use `perf`, `htop`, and `intel_gpu_top` to analyze system performance while running DLStreamer Pipeline Server or OpenVINO applications.
 
@@ -19,7 +19,7 @@ Install the required command-line performance monitoring tools and Docker:
 sudo apt update
 
 # Install performance monitoring tools
-sudo apt install -y htop intel-gpu-tools linux-tools-generic
+sudo apt install -y htop intel-gpu-tools
 
 # Install Docker (if not already installed)
 sudo apt install -y docker.io
@@ -34,7 +34,6 @@ sudo systemctl enable docker
 # Verify installations
 htop --version
 intel_gpu_top --help
-perf --version
 docker --version
 ```
 
@@ -121,6 +120,7 @@ while true; do
 done
 EOF
 
+export DEVICE=GPU
 chmod +x metro_vision_pipeline.sh
 
 # Start the pipeline in background
@@ -161,7 +161,7 @@ Use intel_gpu_top to monitor GPU usage during AI inference:
 
 ```bash
 # Start Intel GPU monitoring
-intel_gpu_top
+sudo intel_gpu_top
 ```
 
 **What to observe:**
@@ -171,118 +171,53 @@ intel_gpu_top
 - GPU frequency and power consumption
 - Memory usage and bandwidth
 
-## Step 6: Profile CPU Performance with perf
+## Step 6: Stop the Running Pipeline
 
-Use perf to profile CPU performance and identify hotspots:
-
-```bash
-# Find the process ID of the Docker DLStreamer pipeline
-DOCKER_PID=$(pgrep -f "docker.*dlstreamer")
-echo "Found Docker DLStreamer container PID: $DOCKER_PID"
-
-# Also find the gst-launch process inside container
-GST_PID=$(pgrep -f "gst-launch")
-echo "Found gst-launch process PID: $GST_PID"
-
-# Record performance data for 30 seconds (monitor Docker process)
-sudo perf record -g -p $DOCKER_PID sleep 30
-
-# Generate performance report
-sudo perf report
-```
-
-**What to observe:**
-
-- Function call hotspots and CPU cycles
-- Call stack and execution paths
-- Cache misses and memory access patterns
-
-## Step 7: Collect System Statistics
-
-Capture detailed system performance statistics:
+When you're done profiling, stop the background pipeline:
 
 ```bash
-# Monitor system statistics for 60 seconds
-vmstat 1 60 > system_stats.log &
-
-# Monitor memory usage
-free -h -s 1 | head -20 > memory_usage.log &
-
-# Let them run while your AI application is processing
+# Stop the background DLStreamer pipeline
+pkill -9 -f metro_vision_pipeline.sh
 ```
 
-## Step 8: Monitor Process-Specific Performance
+## Next Steps: Visual Pipeline and Platform Evaluation Tool (Vippet)
 
-Monitor the specific performance of your AI processes:
+Now that you've learned to monitor AI workloads with command-line tools, take your performance analysis to the next level with **Vippet** - a visual tool for evaluating and optimizing AI pipelines.
 
-```bash
-# Find and monitor Docker DLStreamer pipeline processes
-ps aux | grep -E "docker.*dlstreamer\|metro_vision_pipeline" | grep -v grep
+### What is Vippet?
 
-# Monitor Docker container process with top
-top -p $(pgrep -f "docker.*dlstreamer")
+Vippet (Visual Pipeline and Platform Evaluation Tool) is an interactive web-based application that helps you:
 
-# Check Docker container processes and threads
-docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Status}}"
-ps -T -p $(pgrep -f "docker.*dlstreamer")
-```
+- **Visualize Pipeline Performance**: See real-time metrics and graphs of your AI pipeline performance
+- **Compare Configurations**: Test different hardware devices (CPU, GPU, NPU) and model configurations
+- **Benchmark Workloads**: Measure throughput, latency, and resource utilization
+- **Optimize Pipelines**: Identify bottlenecks and tune parameters for better performance
+- **Generate Reports**: Create detailed performance reports for analysis and documentation
 
-## Step 9: Check Thermal and Power Status
+### Getting Started with Vippet
 
-Monitor system thermal status during AI workload:
+To learn more and get started with Vippet, visit the official documentation:
 
-```bash
-# Check CPU temperature
-sensors | grep Core
+**📚 [Vippet Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)**
 
-# Monitor power consumption (if available)
-sudo powertop --time=10
+The documentation includes:
+- Installation instructions
+- Quick start guides
+- Tutorial videos
+- Pipeline configuration examples
+- Performance tuning best practices
 
-# Check CPU frequency scaling
-cat /proc/cpuinfo | grep MHz | head -4
-```
+### Why Use Vippet After This Tutorial?
 
-## Step 10: Generate Performance Summary Report
+After using `htop` and `intel_gpu_top` for basic monitoring, Vippet provides:
 
-Create a simple performance summary from your monitoring:
+1. **Visual Analysis**: Interactive charts instead of terminal output
+2. **Automated Testing**: Run multiple benchmark scenarios automatically
+3. **Comparative Analysis**: Side-by-side comparison of different configurations
+4. **Historical Data**: Track performance trends over time
+5. **Export Capabilities**: Generate professional reports for stakeholders
 
-```bash
-# Create a performance summary report
-cat > performance_summary.txt << EOF
-Metro Vision AI Workload Performance Summary
-Generated: $(date)
-
-=== System Configuration ===
-CPU: $(lscpu | grep "Model name" | cut -d: -f2 | xargs)
-Memory: $(free -h | awk 'NR==2{print $2}')
-GPU: $(lspci | grep -i vga | head -1)
-
-=== AI Process Performance ===
-Docker DLStreamer Pipeline Processes:
-$(ps aux | grep -E "docker.*dlstreamer\|metro_vision_pipeline" | grep -v grep | awk '{printf "PID: %s, CPU: %s%%, MEM: %s%%, CMD: %s\n", $2, $3, $4, $11}')
-
-Docker Containers:
-$(docker ps --format "{{.ID}}: {{.Image}} ({{.Status}})" | grep dlstreamer)
-
-Current System Load: $(cat /proc/loadavg)
-Current Memory Usage: $(free -h | awk 'NR==2{printf "Used: %s/%s (%.1f%%)", $3, $2, $3/$2*100}')
-
-=== Recommendations ===
-- Review htop output for CPU usage patterns
-- Check intel_gpu_top for GPU utilization efficiency
-- Analyze perf report for CPU bottlenecks
-- Monitor thermal status for throttling
-
-EOF
-
-echo "Performance summary saved to: performance_summary.txt"
-cat performance_summary.txt
-
-# Stop the background pipeline when profiling is complete
-echo ""
-echo "To stop the background DLStreamer pipeline:"
-echo "kill \$(pgrep -f metro_vision_pipeline)"
-```
+Vippet complements the command-line monitoring skills you've learned in this tutorial by providing a comprehensive visual interface for deeper performance analysis and optimization.
 
 ## Summary
 
@@ -290,17 +225,14 @@ This tutorial provides a practical approach to profiling Metro Vision AI workloa
 
 ### **What You've Learned:**
 
-1. **Installing Tools**: Set up `htop`, `intel_gpu_top`, and `perf` for system monitoring
+1. **Installing Tools**: Set up `htop` and `intel_gpu_top` for system monitoring
 2. **System Monitoring**: Use `htop` for real-time CPU and memory monitoring
 3. **GPU Profiling**: Monitor Intel GPU performance with `intel_gpu_top`
-4. **CPU Profiling**: Use `perf` to identify performance bottlenecks and hotspots
-5. **System Analysis**: Collect comprehensive performance data
-6. **Performance Reporting**: Generate actionable performance summaries
+4. **Performance Analysis**: Understand resource utilization patterns
 
 ### **Key Monitoring Points:**
 
 - **CPU Usage**: Monitor core utilization and identify bottlenecks
 - **Memory Usage**: Track memory consumption and avoid swapping
 - **GPU Utilization**: Monitor Intel GPU render engine usage
-- **Thermal Status**: Ensure no thermal throttling occurs
 - **Process Performance**: Track specific AI application performance

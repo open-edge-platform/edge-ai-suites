@@ -26,6 +26,7 @@ The basic architecture follows a modular pipeline designed for efficient audio s
 
 [![High-Level System Diagram](./docs/user-guide/_images/architecture.svg)]
 
+
 ## Learn More
 
 •	[Release Notes](./docs/user-guide/release-notes.md)
