@@ -28,6 +28,7 @@ services:
          condition: service_healthy
     environment:
       no_proxy: ${no_proxy}, frigate, ${VSS_SUMMARY_IP}, ${VLM_SERVING_IP}
+      NO_PROXY: ${no_proxy}, frigate, ${VSS_SUMMARY_IP}, ${VLM_SERVING_IP}
       FRIGATE_MQTT_PASSWORD: ${MQTT_PASSWORD} 
       FRIGATE_MQTT_USER: ${MQTT_USER}
       OPENAI_BASE_URL: "http://${VLM_SERVING_IP}:${VLM_SERVING_PORT}/v1"
