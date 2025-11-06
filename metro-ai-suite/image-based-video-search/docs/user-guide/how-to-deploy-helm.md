@@ -60,21 +60,9 @@ helm install ibvs . --create-namespace -n ibvs \
     --set noProxy="localhost\,127.0.0.1"
 ```
 
-To get the port where the application is serving, run the following command:
 
-```bash
-kubectl -n ibvs get svc/ibvs-app
-```
-
-This is an example output of the previous command:
-
-```text
-NAME       TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-ibvs-app   NodePort   10.109.118.49   <none>        3000:31998/TCP   14m
-```
-
-Now frontend should be accessible at http://localhost:31998/.
-> Note: To access the above url remotely, replace the `localhost` with your system IP address. 
+Now frontend should be accessible at https://<ip-addr>:30443/.
+> Note: To access the above url remotely, replace the `<ip-addr>` with your system IP address. 
 
 Finally, the app can be uninstalled using the following command:
 

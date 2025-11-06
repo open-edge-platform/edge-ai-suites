@@ -17,3 +17,5 @@ fsspec>=2023.1.0,<=2025.3.0
 openai-whisper
 numpy
 optimum[openvino]
+nncf==2.18.0
+ultralytics==8.3.201

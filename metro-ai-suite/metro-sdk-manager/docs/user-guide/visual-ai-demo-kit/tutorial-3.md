@@ -1,4 +1,4 @@
-# Tutorial 3 - Grafana
+# Visual AI Demo Kit - Tutorial 3
 
 <!--
 **Sample Description**: Learn how to create custom Grafana dashboards that integrate real-time video streams and MQTT data visualization for metro vision AI applications.
@@ -9,6 +9,7 @@ This tutorial guides you through creating a custom Grafana dashboard that displa
 **What You Can Do**: Highlight the developer workflows supported by the guide.
 -->
 By following this guide, you will learn how to:
+
 - **Create Custom Dashboards**: Build new Grafana dashboards tailored for metro vision applications
 - **Integrate Video Streams**: Embed real-time WebRTC video feeds using HTML panels
 - **Visualize MQTT Data**: Create dynamic tables that display live object detection data from MQTT streams
@@ -46,9 +47,9 @@ By following this guide, you will learn how to:
    - In the below code update <HOST_IP> to your host IP address. If you are testing on localhost, update it to localhost.
 
    ```html
-   <iframe 
-     src="http://<HOST_IP>:8889/object_detection_1" 
-     style="width:100%;height:500px;" 
+   <iframe
+     src="http://<HOST_IP>:8889/object_detection_1"
+     style="width:100%;height:500px;"
      allow="autoplay; encrypted-media"
      frameborder="0">
    </iframe>
@@ -58,7 +59,6 @@ By following this guide, you will learn how to:
    - Set panel title to "Live Object Detection Feed"
    - Click "Save Dashboard" to save the panel
    - Adjust panel size as needed.
-
 
 ### 3. **Create MQTT Data Table**
 
@@ -73,8 +73,7 @@ By following this guide, you will learn how to:
    - Update Topic to "inference/enhanced"
 
 3. **Add Transformations** (Optional):
-   - You can add different types of transformations to this dashboard panel. 
-
+   - You can add different types of transformations to this dashboard panel.
 
 ### 4. **Configure Dashboard Layout**
 

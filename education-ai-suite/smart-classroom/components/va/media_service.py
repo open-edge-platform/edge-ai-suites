@@ -1,0 +1,197 @@
+import subprocess
+import sys
+import time
+import logging
+from pathlib import Path
+from typing import Optional
+import signal
+import requests
+import zipfile
+import atexit
+from utils.config_loader import config
+
+
+class MediaService:
+    """Service to manage MediaMTX RTSP server"""
+
+    # MediaMTX download URL
+    MEDIAMTX_VERSION = "v1.15.3"
+    MEDIAMTX_DOWNLOAD_URL = f"https://github.com/bluenviron/mediamtx/releases/download/{MEDIAMTX_VERSION}/mediamtx_{MEDIAMTX_VERSION}_windows_amd64.zip"
+
+    def __init__(self):
+        """
+        Initialize MediaService
+        """
+        self.logger = logging.getLogger(self.__class__.__name__)
+
+        self.mediamtx_dir = Path(config.va_pipeline.mediamtx_path).resolve()
+        self.mediamtx_exe = self.mediamtx_dir / "mediamtx.exe"
+        self.process: Optional[subprocess.Popen] = None
+
+        # Download MediaMTX if not found
+        if not self.mediamtx_exe.exists():
+            self._download_mediamtx()
+
+        # Register cleanup handler
+        atexit.register(self._cleanup)
+
+    def _download_mediamtx(self):
+        """Download and extract MediaMTX"""
+        try:
+            self.logger.info(f"Downloading MediaMTX {self.MEDIAMTX_VERSION}...")
+
+            response = requests.get(self.MEDIAMTX_DOWNLOAD_URL, stream=True)
+            response.raise_for_status()
+
+            zip_path = Path("mediamtx.zip")
+            with open(zip_path, "wb") as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+
+            self.mediamtx_dir.mkdir(exist_ok=True)
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                zip_ref.extractall(self.mediamtx_dir)
+            zip_path.unlink()
+
+            self.logger.info(f"MediaMTX installed to {self.mediamtx_dir}")
+
+        except Exception as e:
+            self.logger.error(f"Failed to download MediaMTX: {e}")
+            raise
+
+    def is_running(self) -> bool:
+        """Check if MediaMTX server is running"""
+        if self.process is None:
+            return False
+
+        # Check if process is still alive
+        if self.process.poll() is None:
+            return True
+
+        return False
+
+    def get_status(self) -> dict:
+        """Get server status information"""
+        status = {
+            "running": self.is_running(),
+            "pid": self.process.pid if self.process else None,
+            "executable": str(self.mediamtx_exe),
+        }
+
+        return status
+
+    def launch_server(self, timeout: float = 10.0) -> bool:
+        """
+        Launch MediaMTX server
+
+        Args:
+            timeout: Maximum time to wait for server to be ready (seconds)
+
+        Returns:
+            True if server started successfully, False otherwise
+        """
+        if self.is_running():
+            self.logger.warning("MediaMTX server is already running")
+            return True
+
+        try:
+            self.logger.info(f"Starting MediaMTX server")
+
+            # Build command
+            command = [str(self.mediamtx_exe)]
+
+            # Start the process
+            self.process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                bufsize=1,
+                cwd=str(self.mediamtx_dir),
+                creationflags=(
+                    subprocess.CREATE_NEW_PROCESS_GROUP
+                    if sys.platform == "win32"
+                    else 0
+                ),
+            )
+
+            # Wait for server to be ready
+            start_time = time.time()
+            ready = False
+
+            while time.time() - start_time < timeout:
+                if not self.is_running():
+                    self.logger.error("MediaMTX server process terminated unexpectedly")
+                    return False
+
+                try:
+                    line = self.process.stdout.readline()
+                    if line:
+                        # Look for indicators that server is ready
+                        if "[RTSP] listener opened" in line:
+                            ready = True
+                            break
+                except:
+                    pass
+
+                time.sleep(1)
+
+            if ready:
+                self.logger.info("MediaMTX server is ready")
+                return True
+
+            else:
+                self.logger.warning(
+                    f"Server started but ready check timed out after {timeout}s"
+                )
+                return False
+
+        except Exception as e:
+            self.logger.error(f"Failed to start MediaMTX server: {e}")
+            return False
+
+    def stop_server(self) -> bool:
+        """
+        Stop MediaMTX server
+
+        Returns:
+            True if server stopped successfully, False otherwise
+        """
+        if not self.is_running():
+            self.logger.warning("MediaMTX server is not running")
+            return True
+
+        try:
+            self.logger.info(f"Stopping MediaMTX server (PID: {self.process.pid})")
+
+            # Try graceful shutdown first
+            if sys.platform == "win32":
+                # On Windows, send CTRL_BREAK_EVENT
+                self.process.send_signal(signal.CTRL_BREAK_EVENT)
+            else:
+                # On Unix-like systems, send SIGTERM
+                self.process.terminate()
+
+            # Wait for process to terminate
+            try:
+                self.process.wait(timeout=10.0)
+                self.logger.info("MediaMTX server stopped gracefully")
+                return True
+            except subprocess.TimeoutExpired:
+                self.logger.warning(f"Server did not stop within 10s, forcing kill...")
+                self.process.kill()
+                self.process.wait(timeout=5)
+                self.logger.info("MediaMTX server killed")
+                return True
+
+        except Exception as e:
+            self.logger.error(f"Error stopping MediaMTX server: {e}")
+            return False
+        finally:
+            self.process = None
+
+    def _cleanup(self):
+        """Cleanup handler called on process exit"""
+        if self.is_running():
+            self.logger.info("Cleaning up MediaMTX server on exit...")
+            self.stop_server()

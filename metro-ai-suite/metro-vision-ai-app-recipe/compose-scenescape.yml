@@ -16,8 +16,6 @@ services:
 
   broker:
     image: docker.io/library/eclipse-mosquitto:2.0.21
-    ports:
-      - "1883:1883"
     environment:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
@@ -56,8 +54,6 @@ services:
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
       NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
-    ports:
-      - "1880:1880"
     networks:
       - scenescape
     volumes:
@@ -136,8 +132,10 @@ services:
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
       NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
-    ports:
-      - "3000:3000"
+      GF_SERVER_ROOT_URL: http://localhost/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: true
+      GF_PANELS_DISABLE_SANITIZE_HTML: true
+      GF_SECURITY_ALLOW_EMBEDDING: true
     restart: on-failure:5
     networks:
       - scenescape
@@ -166,9 +164,6 @@ services:
       - scenescape
     privileged: true
     entrypoint: ["./run.sh"]
-    ports:
-      - "8080:8080"
-      - "8555:8555"
     devices:
       - "/dev/dri:/dev/dri"
     depends_on:
@@ -176,8 +171,6 @@ services:
       - ntpserver
     environment:
       - ENABLE_RTSP=true
-      - ENABLE_WEBRTC=true
-      - WEBRTC_SIGNALING_SERVER=ws://localhost:8443
       - RUN_MODE=EVA
       - GENICAM=Balluff
       - DETECTION_DEVICE=CPU
@@ -256,8 +249,6 @@ services:
           - web.scenescape.intel.com
     depends_on:
       - pgserver
-    ports:
-      - "443:443"
     environment:
       - "DBROOT=/workspace"
       - http_proxy=${http_proxy}
@@ -326,6 +317,30 @@ services:
         target: certs/scenescape-ca.pem
       - django
       - controller.auth
+    restart: on-failure:5
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nginx-reverse-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./${SAMPLE_APP}/src/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./${SAMPLE_APP}/src/nginx/ssl:/etc/nginx/ssl:ro"
+    networks:
+      - scenescape
+    depends_on:
+      - dlstreamer-pipeline-server
+      - grafana
+      - node-red
+      - influxdb2
+      - web
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},${HOST_IP}
+      - NO_PROXY=${no_proxy},${HOST_IP}
     restart: on-failure:5
 
 networks:

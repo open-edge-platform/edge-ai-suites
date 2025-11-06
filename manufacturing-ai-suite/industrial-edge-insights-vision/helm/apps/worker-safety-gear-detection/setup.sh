@@ -3,7 +3,7 @@
 # Download artifacts for a specific sample application
 #   by calling respective app's setup.sh script
 SCRIPT_DIR=$(dirname $(readlink -f "$0"))
-MODEL_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/edd25f37c324a9ef73df1642354b2ba5fa7b7df5/models/worker-safety-gear-detection.zip"
+MODEL_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/INT8/worker-safety-gear-detection.zip"
 VIDEO_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/edd25f37c324a9ef73df1642354b2ba5fa7b7df5/videos/Safety_Full_Hat_and_Vest.avi"
 
 err() {
@@ -92,3 +92,11 @@ download_artifacts() {
 }
 
 download_artifacts "worker-safety-gear-detection"
+
+mkdir -p $SCRIPT_DIR/configs/nginx/ssl
+cd $SCRIPT_DIR/configs/nginx/ssl
+if [ ! -f server.key ] || [ ! -f server.crt ]; then
+    echo "Generate self-signed certificate..."
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout server.key -out server.crt -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"
+    chown -R "$(id -u):$(id -g)" server.key server.crt 2>/dev/null || true
+fi
