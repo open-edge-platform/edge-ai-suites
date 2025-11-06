@@ -1,5 +1,5 @@
 ARG BASE=ubuntu
-ARG BASE_VERSION=22.04
+ARG BASE_VERSION=24.04
 
 # ==============================================================================
 # base builder stage
@@ -29,21 +29,21 @@ RUN apt update && \
 # Intel GPU client drivers and prerequisites installation
 RUN curl -fsSL https://repositories.intel.com/gpu/intel-graphics.key | \
     gpg --dearmor -o /usr/share/keyrings/intel-graphics.gpg && \
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy unified" | \
-    tee /etc/apt/sources.list.d/intel-gpu-jammy.list
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble unified" |\
+    tee /etc/apt/sources.list.d/intel-gpu-noble.list
 
 RUN apt update && \
     apt install --allow-downgrades -y -q --no-install-recommends libze-intel-gpu1 libze1 \
-    intel-media-va-driver-non-free intel-opencl-icd && \
+    intel-media-va-driver-non-free intel-gsc intel-opencl-icd && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Intel NPU drivers and prerequisites installation
 WORKDIR /tmp/npu_deps
-RUN curl -LO https://github.com/oneapi-src/level-zero/releases/download/v1.22.4/level-zero_1.22.4+u22.04_amd64.deb && \
-    dpkg -i level-zero_1.22.4+u22.04_amd64.deb && \
-    curl -LO https://github.com/intel/linux-npu-driver/releases/download/v1.23.0/linux-npu-driver-v1.23.0.20250827-17270089246-ubuntu2204.tar.gz && \
-    tar -xf linux-npu-driver-v1.23.0.20250827-17270089246-ubuntu2204.tar.gz && \
+RUN curl -LO https://github.com/oneapi-src/level-zero/releases/download/v1.24.2/level-zero_1.24.2+u24.04_amd64.deb && \
+    dpkg -i level-zero_1.24.2+u24.04_amd64.deb && \
+    curl -LO https://github.com/intel/linux-npu-driver/releases/download/v1.24.0/linux-npu-driver-v1.24.0.20251003-18218973328-ubuntu2404.tar.gz && \
+    tar -xf linux-npu-driver-v1.24.0.20251003-18218973328-ubuntu2404.tar.gz && \
     dpkg -i ./*.deb && \
     rm -rf /var/lib/apt/lists/* /tmp/npu_deps
 
@@ -120,12 +120,12 @@ RUN ./bootstrap.sh && ./configure --with-qt4=no --with-qt5=no --with-python=no &
     make -j8 && make install && \
     rm -rf /home/tfcc/3rd_build
 
-# mkl
+# oneapi
 RUN curl -k -o GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB -L && \
 	apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && \
 	echo "deb https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list && \
 	apt update -y && \
-	apt install -y intel-oneapi-mkl-devel lsb-release
+	apt install -y intel-oneapi-base-toolkit lsb-release
 
 # Install oneVPL dependencies
 WORKDIR /home/tfcc/3rd_build/
@@ -136,10 +136,10 @@ RUN bash install_media.sh
 
 # openvino
 WORKDIR /home/tfcc/3rd_build
-RUN curl -k -o openvino_toolkit_ubuntu22_2025.2.0.19140.c01cd93e24d_x86_64.tgz https://storage.openvinotoolkit.org/repositories/openvino/packages/2025.2/linux/openvino_toolkit_ubuntu22_2025.2.0.19140.c01cd93e24d_x86_64.tgz -L && \
-	tar -xvf openvino_toolkit_ubuntu22_2025.2.0.19140.c01cd93e24d_x86_64.tgz && \
+RUN curl -k -o openvino_toolkit_ubuntu24_2025.3.0.19807.44526285f24_x86_64.tgz https://storage.openvinotoolkit.org/repositories/openvino/packages/2025.3/linux/openvino_toolkit_ubuntu24_2025.3.0.19807.44526285f24_x86_64.tgz -L && \
+	tar -xvf openvino_toolkit_ubuntu24_2025.3.0.19807.44526285f24_x86_64.tgz && \
 	mkdir -p /opt/intel/openvino_2025 && \
-	mv openvino_toolkit_ubuntu22_2025.2.0.19140.c01cd93e24d_x86_64/* /opt/intel/openvino_2025
+	mv openvino_toolkit_ubuntu24_2025.3.0.19807.44526285f24_x86_64/* /opt/intel/openvino_2025
 
 # grpc 1.58.1
 WORKDIR /home/tfcc/3rd_build
@@ -155,11 +155,11 @@ RUN cmake -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/opt/g
     make -j8 && \
     make install
 
-# level-zero 1.22.4
+# level-zero 1.24.2
 WORKDIR /home/tfcc/3rd_build
 RUN git clone https://github.com/oneapi-src/level-zero.git
 WORKDIR /home/tfcc/3rd_build/level-zero
-RUN git checkout v1.22.4 && \
+RUN git checkout v1.24.2 && \
     mkdir build
 WORKDIR /home/tfcc/3rd_build/level-zero/build
 RUN cmake .. -DCMAKE_INSTALL_PREFIX=/opt/intel/level-zero && \
@@ -184,13 +184,6 @@ RUN apt update && \
 WORKDIR /home/tfcc/3rd_build/OpenCL-SDK/build
 RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr && \
 	cmake --build . --target install --config Release
-
-# # xpu_smi
-# WORKDIR /home/tfcc/3rd_build
-# RUN apt update && \
-# 	apt install -y -q --no-install-recommends intel-gsc && \
-# 	curl -k -o xpu-smi_1.3.3_20250926.101214.8a6b6526.u22.04_amd64.deb https://github.com/intel/xpumanager/releases/download/v1.3.3/xpu-smi_1.3.3_20250926.101214.8a6b6526.u22.04_amd64.deb -L && \
-# 	dpkg -i xpu-smi_*.deb
 
 # clean build files
 RUN rm -rf /home/tfcc/3rd_build /tmp/*
@@ -232,7 +225,7 @@ RUN \
     -Dtests=disabled \
     -Dbenchmarks=disabled \
     -Dpackage-origin="${PACKAGE_ORIGIN}" \
-    --buildtype="${BUILD_ARG}"  \
+    --buildtype="${BUILD_ARG}" \
     --prefix=/ \
     --libdir=lib/ \
     --libexecdir=bin/ \
@@ -299,10 +292,14 @@ RUN apt update && \
     rm -rf /var/lib/apt/lists/*
 
 # Build Project
-COPY . /home/tfcc/metro-2.0
-WORKDIR /home/tfcc/metro-2.0
-RUN rm -rf build
+COPY . /home/tfcc/metro
+WORKDIR /home/tfcc/metro
+RUN rm -rf build liblidar.so
+WORKDIR /home/tfcc/metro/ai_inference/liblidar
 RUN /bin/bash -c "bash build.sh"
+WORKDIR /home/tfcc/metro
+RUN /bin/bash -c "bash build.sh"
+RUN rm -rf /home/tfcc/metro/ai_inference/liblidar/build
 
 # ---------- Runtime Stage ----------
 FROM $BASE:${BASE_VERSION} AS runtime
@@ -318,21 +315,21 @@ RUN apt update && \
 # Intel GPU client drivers and prerequisites installation
 RUN curl -fsSL https://repositories.intel.com/gpu/intel-graphics.key | \
     gpg --dearmor -o /usr/share/keyrings/intel-graphics.gpg && \
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy unified" | \
-    tee /etc/apt/sources.list.d/intel-gpu-jammy.list
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble unified" |\
+    tee /etc/apt/sources.list.d/intel-gpu-noble.list
 
 RUN apt update && \
     apt install --allow-downgrades -y -q --no-install-recommends libze-intel-gpu1 libze1 \
-    intel-media-va-driver-non-free intel-opencl-icd && \
+    intel-media-va-driver-non-free intel-gsc intel-opencl-icd && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Intel NPU drivers and prerequisites installation
 WORKDIR /tmp/npu_deps
-RUN curl -LO https://github.com/oneapi-src/level-zero/releases/download/v1.22.4/level-zero_1.22.4+u22.04_amd64.deb && \
-    dpkg -i level-zero_1.22.4+u22.04_amd64.deb && \
-    curl -LO https://github.com/intel/linux-npu-driver/releases/download/v1.23.0/linux-npu-driver-v1.23.0.20250827-17270089246-ubuntu2204.tar.gz && \
-    tar -xf linux-npu-driver-v1.23.0.20250827-17270089246-ubuntu2204.tar.gz && \
+RUN curl -LO https://github.com/oneapi-src/level-zero/releases/download/v1.24.2/level-zero_1.24.2+u24.04_amd64.deb && \
+    dpkg -i level-zero_1.24.2+u24.04_amd64.deb && \
+    curl -LO https://github.com/intel/linux-npu-driver/releases/download/v1.24.0/linux-npu-driver-v1.24.0.20251003-18218973328-ubuntu2404.tar.gz && \
+    tar -xf linux-npu-driver-v1.24.0.20251003-18218973328-ubuntu2404.tar.gz && \
     dpkg -i ./*.deb && \
     rm -rf /var/lib/apt/lists/* /tmp/npu_deps
 
@@ -344,8 +341,8 @@ RUN useradd -ms /bin/bash -G video,users,sudo tfcc && \
 RUN apt update && \
 	apt install -y -q --no-install-recommends autoconf automake libtool build-essential g++ \
 	bison pkg-config flex curl git git-lfs vim dkms cmake make wget \
-	debhelper devscripts mawk openssh-server libssl-dev libopencv-dev opencv-data \
-	opencl-headers opencl-dev intel-gpu-tools va-driver-all python3-dev libmfxgen1 libvpl2 \
+	debhelper devscripts mawk openssh-server libssl-dev libeigen3-dev libopencv-dev opencv-data \
+	opencl-headers opencl-dev intel-gpu-tools va-driver-all libmfxgen1 libvpl2 \
 	libx11-dev libx11-xcb-dev libxcb-dri3-dev libxext-dev libxfixes-dev libwayland-dev \
 	libgtk2.0-0 libgl1 libsm6 libxext6 x11-apps && \
     apt clean && \
@@ -355,9 +352,18 @@ RUN curl -k -o GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB https://apt.repos.intel.com/int
 	apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && \
 	echo "deb https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list && \
 	apt update -y && \
-	apt install -y intel-oneapi-runtime-mkl lsb-release && \
+	apt install -y intel-oneapi-runtime-mkl intel-oneapi-compiler-dpcpp-cpp-runtime lsb-release && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
+
+# xpu_smi
+WORKDIR /tmp/
+RUN apt update && \
+	apt install -y -q --no-install-recommends intel-gsc && \
+	curl -k -o xpu-smi_1.3.3_20250926.101214.8a6b6526.u24.04_amd64.deb https://github.com/intel/xpumanager/releases/download/v1.3.3/xpu-smi_1.3.3_20250926.101214.8a6b6526.u24.04_amd64.deb -L && \
+	dpkg -i xpu-smi_*.deb && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/*
 
 RUN apt autoremove -y
 
@@ -372,13 +378,13 @@ COPY --from=project-builder /usr/include /usr/include
 COPY --from=project-builder /usr/lib /usr/lib
 COPY --from=project-builder /lib/x86_64-linux-gnu /lib/x86_64-linux-gnu
 
-COPY --from=project-builder /home/tfcc/metro-2.0 /home/tfcc/metro-2.0
+COPY --from=project-builder /home/tfcc/metro /home/tfcc/metro
 
 # environment variables and bashrc configuration
 RUN echo "source /opt/intel/openvino_2025/setupvars.sh" >> /home/tfcc/.bashrc && \
 	echo "source /opt/intel/media/etc/vpl/vars.sh" >> /home/tfcc/.bashrc && \
 	echo "source /opt/intel/oneapi/setvars.sh" >> /home/tfcc/.bashrc
-ENV PROJ_DIR=/home/tfcc/metro-2.0
+ENV PROJ_DIR=/home/tfcc/metro
 RUN ln -s $PROJ_DIR/ai_inference/deployment/datasets /opt/datasets && \
 	ln -s $PROJ_DIR/ai_inference/deployment/models /opt/models && \
 	cp $PROJ_DIR/ai_inference/deployment/datasets/radarResults.csv /opt
@@ -387,10 +393,10 @@ RUN chown tfcc -R /home/tfcc
 USER tfcc
 WORKDIR /home/tfcc
 
-ENV GST_PLUGIN_PATH=/opt/gstreamer/lib/gstreamer-1.0:/opt/gstreamer/lib/:
+ENV GST_PLUGIN_PATH=/opt/gstreamer/lib/gstreamer-1.0:/opt/gstreamer/lib/
 ENV LD_LIBRARY_PATH=/opt/gstreamer/lib:/usr/lib:/usr/local/lib/gstreamer-1.0:/usr/local/lib
 
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
-  CMD (test -d /home/tfcc/metro-2.0) || exit 1
+  CMD (test -d /home/tfcc/metro) || exit 1
 
 ENTRYPOINT ["/bin/bash", "-c", "source /home/tfcc/.bashrc && bash"]

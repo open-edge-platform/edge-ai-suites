@@ -37,7 +37,7 @@ _install_base_libs()
 {  
   sudo -E apt-get update -y
   sudo -E apt install -y --only-upgrade systemd
-  sudo -E apt install -y libssl-dev libuv1-dev libeigen3-dev git-lfs libfmt-dev zlib1g-dev libicu-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev intel-gpu-tools libopencv-dev
+  sudo -E apt install -y libssl-dev libuv1-dev libeigen3-dev git-lfs libfmt-dev zlib1g-dev libicu-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev intel-gpu-tools libopencv-dev libeigen3-dev
   sudo -E apt install -y intel-media-va-driver-non-free va-driver-all libmfx1 libvpl2
 }
 
@@ -56,10 +56,6 @@ _install_boost()
 _install_spdlog()
 {
   pushd ${THIRD_PARTY_BUILD_DIR}
-  # curl -k -o v1.8.2.tar.gz https://github.com/gabime/spdlog/archive/refs/tags/v1.8.2.tar.gz -L
-  # tar -zxf v1.8.2.tar.gz && cd spdlog-1.8.2
-  # sudo rm -rf /usr/local/include/spdlog && sudo mv include/spdlog /usr/local/include
-
   curl -k -o v1.11.0.tar.gz https://github.com/gabime/spdlog/archive/refs/tags/v1.11.0.tar.gz -L
   tar -zxf v1.11.0.tar.gz && cd spdlog-1.11.0
   sudo rm -rf /usr/local/include/spdlog && sudo mv include/spdlog /usr/local/include
@@ -70,11 +66,6 @@ _install_spdlog()
 _install_thrift()
 {
   pushd ${THIRD_PARTY_BUILD_DIR}
-  # curl -k -o thrift_v0.18.1.tar.gz https://github.com/apache/thrift/archive/refs/tags/v0.18.1.tar.gz -L
-  # tar -zxf thrift_v0.18.1.tar.gz && cd thrift-0.18.1
-  # ./bootstrap.sh && ./configure --with-qt4=no --with-qt5=no --with-python=no
-  # make -j8 && sudo make install
-
   curl -k -o thrift_v0.21.0.tar.gz https://github.com/apache/thrift/archive/refs/tags/v0.21.0.tar.gz -L
   tar -zxf thrift_v0.21.0.tar.gz && cd thrift-0.21.0
   ./bootstrap.sh && ./configure --with-qt4=no --with-qt5=no --with-python=no --disable-dependency-tracking
@@ -82,8 +73,8 @@ _install_thrift()
   popd
 }
 
-#[5] oneapi-mkl
-_install_mkl()
+#[5] oneapi
+_install_oneapi()
 {
   pushd ${THIRD_PARTY_BUILD_DIR}
   curl -k -o GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB -L
@@ -92,7 +83,7 @@ _install_mkl()
   echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
 
   sudo -E apt-get update -y
-  sudo -E apt-get install -y intel-oneapi-mkl-devel lsb-release
+  sudo -E apt-get install -y intel-oneapi-base-toolkit lsb-release
   popd
 }
 
@@ -158,7 +149,7 @@ _install_level_zero()
 
   git clone https://github.com/oneapi-src/level-zero.git
   cd level-zero
-  git checkout v1.20.2
+  git checkout v1.22.4
   mkdir build && cd build
   cmake .. -DCMAKE_INSTALL_PREFIX=/opt/intel/level-zero
   sudo cmake --build . --config Release --target install
@@ -170,80 +161,38 @@ _install_onevpl()
 {
   pushd ${THIRD_PARTY_BUILD_DIR}
 
-  mkdir -p onevpl_dependencies
-  MFX_HOME="/opt/intel/media"
-  LIBVA_INSTALL_PATH="/opt/intel/media/lib64"
-  LIBVA_DRIVERS_PATH="/opt/intel/media/lib64"
-  LIBVA_DRIVER_NAME="iHD"
-  LIBVA_INSTALL_PREFIX="/opt/intel/media"
-  export LIBRARY_PATH=${LIBVA_INSTALL_PATH}:${LIBRARY_PATH}
-  export C_INCLUDE_PATH=${LIBVA_INSTALL_PREFIX}/include:${C_INCLUDE_PATH}
-  export CPLUS_INCLUDE_PATH=${LIBVA_INSTALL_PREFIX}/include:${CPLUS_INCLUDE_PATH}
-  export PKG_CONFIG_PATH=${LIBVA_INSTALL_PATH}/pkgconfig:${PKG_CONFIG_PATH}
+  curl -k -o MediaStack.tar.gz https://github.com/intel/vpl-gpu-rt/releases/download/intel-onevpl-25.2.6/MediaStack.tar.gz -L
 
-  sudo mkdir -p $MFX_HOME
-  sudo mkdir -p $LIBVA_INSTALL_PATH
-  sudo mkdir -p $LIBVA_DRIVERS_PATH
+  tar -xvf MediaStack.tar.gz
 
-  sudo -E apt install -y libdrm-dev libegl1-mesa-dev libgl1-mesa-dev libx11-dev libx11-xcb-dev libxcb-dri3-dev libxext-dev libxfixes-dev libwayland-dev
+  cd MediaStack
 
-  mkdir -p onevpl_dependencies
-  pushd onevpl_dependencies
+  sudo bash install_media.sh
 
-  curl -k -o libva-2.22.0.tar.gz https://github.com/intel/libva/archive/refs/tags/2.22.0.tar.gz -L
-  tar -xvf libva-2.22.0.tar.gz
-  pushd libva-2.22.0
-  ./autogen.sh --prefix=${LIBVA_INSTALL_PREFIX} --libdir=${LIBVA_INSTALL_PATH} --enable-x11
-  make -j8 && sudo make install
-  popd
- 
-  curl -k -o libva-utils-2.22.0.tar.gz https://github.com/intel/libva-utils/archive/refs/tags/2.22.0.tar.gz -L
-  tar -xvf libva-utils-2.22.0.tar.gz
-  pushd libva-utils-2.22.0
-  ./autogen.sh --prefix=${LIBVA_INSTALL_PREFIX} --libdir=${LIBVA_INSTALL_PATH}
-  make -j8 && sudo make install
-  popd
+  # sudo usermod -aG $(stat --format %G /dev/dri/renderD128) $(whoami)
+  # sudo usermod -aG $(stat --format %G /dev/dri/card0) $(whoami)
 
-  curl -k -o gmmlib-22.7.1.tar.gz https://github.com/intel/gmmlib/archive/refs/tags/intel-gmmlib-22.7.1.tar.gz -L
-  tar -xvf gmmlib-22.7.1.tar.gz
-  pushd  gmmlib-intel-gmmlib-22.7.1
-  mkdir -p build && pushd build
-  cmake .. -DCMAKE_INSTALL_PREFIX=${LIBVA_INSTALL_PREFIX} -DCMAKE_INSTALL_LIBDIR=${LIBVA_INSTALL_PATH} -DCMAKE_BUILD_TYPE=Release
-  make -j8 && sudo make install && popd
-  popd
-
-  curl -k -o intel-media-25.1.4.tar.gz https://github.com/intel/media-driver/archive/refs/tags/intel-media-25.1.4.tar.gz -L
-  tar -xvf intel-media-25.1.4.tar.gz
-  mkdir -p build_media && pushd build_media
-  cmake ../media-driver-intel-media-25.1.4 -DCMAKE_INSTALL_PREFIX=${LIBVA_INSTALL_PREFIX} -DLIBVA_INSTALL_PATH=${LIBVA_INSTALL_PATH} -DCMAKE_INSTALL_LIBDIR=${LIBVA_INSTALL_PATH} -DCMAKE_BUILD_TYPE=Release -DENABLE_PRODUCTION_KMD=ON
-  make -j8 && sudo make install
-  env LD_LIBRARY_PATH=${LIBVA_INSTALL_PATH}:${LD_LIBRARY_PATH} LIBRARY_PATH=${LIBVA_INSTALL_PATH}:${LIBRARY_PATH}  && sudo make install
-  sudo mv /opt/intel/media/lib64/dri/* /opt/intel/media/lib64/
-  sudo rm -rf /opt/intel/media/lib64/dri
-  popd
-
-  curl -k -o intel-onevpl-25.1.4.tar.gz https://github.com/intel/vpl-gpu-rt/archive/refs/tags/intel-onevpl-25.1.4.tar.gz -L
-  tar -xvf intel-onevpl-25.1.4.tar.gz
-  pushd vpl-gpu-rt-intel-onevpl-25.1.4
-  mkdir -p build && pushd build
-  cmake .. -DCMAKE_INSTALL_PREFIX=${LIBVA_INSTALL_PREFIX} -DCMAKE_INSTALL_LIBDIR=${LIBVA_INSTALL_PATH} -DCMAKE_BUILD_TYPE=Release
-  make -j8 && sudo make install && popd
-  popd
-
-  curl -k -o oneVPL_v2.13.0.tar.gz https://github.com/intel/libvpl/archive/refs/tags/v2.13.0.tar.gz -L
-  tar -xvf oneVPL_v2.13.0.tar.gz
-  pushd libvpl-2.13.0
-  mkdir -p build && pushd build
-  cmake .. -DCMAKE_INSTALL_PREFIX=${LIBVA_INSTALL_PREFIX} -DCMAKE_INSTALL_LIBDIR=${LIBVA_INSTALL_PATH} -DCMAKE_BUILD_TYPE=Release -DENABLE_X11=ON
-  cmake --build . --config Release
-  sudo cmake --build . --config Release --target install
-  popd && popd
-
-  popd
   popd
 }
 
-#[9] libradar
+#[10] opencl-sdk
+_install_opencl_sdk()
+{
+  pushd ${THIRD_PARTY_BUILD_DIR}
+
+  sudo -E apt install -y vulkan-tools libvulkan-dev vulkan-utility-libraries-dev
+
+  git clone --recursive -b v2025.07.23 https://github.com/KhronosGroup/OpenCL-SDK.git
+  cd OpenCL-SDK
+  mkdir build
+  cd build
+  cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+  sudo cmake --build . --target install --config Release
+
+  popd
+}
+
+#[11] libradar
 _install_libradar()
 {
   pushd ${THIRD_PARTY_BUILD_DIR}
@@ -259,8 +208,8 @@ _install_libradar()
   sudo bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
 
   # Update package list and install libradar
-  sudo apt update
-  sudo apt-get install libradar
+  sudo -E apt update
+  sudo -E apt-get install libradar
 
   popd
 }
@@ -272,11 +221,12 @@ install_3rd_libs(){
   _install_boost
   _install_spdlog
   _install_thrift
-  _install_mkl
+  _install_oneapi
   _install_openvino
   _install_grpc
   _install_level_zero
   _install_onevpl
+  _install_opencl_sdk
   _install_libradar
 }
 

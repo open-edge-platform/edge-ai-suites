@@ -20,91 +20,85 @@ Besides, you can test each component (without display) following the guides at [
 - Local File Pipeline for Media pipeline
   - Json File: localMediaPipeline.json 
     
-    > File location: `$PROJ_DIR/ai_inference/test/configs/raddet/1C1R/localMediaPipeline.json`
+    > File location: `$PROJ_DIR/ai_inference/test/configs/kitti/1C1L/localMediaPipeline.json`
   - Pipeline Description: 
     ```
     input -> decode -> detection -> tracking -> output
     ```
   
-  
-- Local File Pipeline for mmWave Radar pipeline
-  - Json File: localRadarPipeline.json
+- Local File Pipeline for Lidar pipeline
+  - Json File: localLidarPipeline.json
     
-    > File location: `$PROJ_DIR/ai_inference/test/configs/raddet/1C1R/localRadarPipeline.json`
+    > File location: `$PROJ_DIR/ai_inference/test/configs/kitti/1C1L/localLidarPipeline.json`
 - Pipeline Description: 
   
     ```
-    input -> preprocess -> radar_detection -> clustering -> tracking -> output
+    input -> lidar signal processing -> output
   ```
   
-- Local File Pipeline for `Camera + Radar(1C+1R)` Sensor fusion pipeline
+- Local File Pipeline for `Camera + Lidar(2C+1L)` Sensor fusion pipeline
 
   - Json File: localFusionPipeline.json
     
-    > File location: `$PROJ_DIR/ai_inference/test/configs/raddet/1C1R/localFusionPipeline.json`
+    > File location: `$PROJ_DIR/ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json`
   - Pipeline Description: 
     ```
-    input  | -> decode     -> detector         -> tracker                  -> |
-           | -> preprocess -> radar_detection  -> clustering   -> tracking -> | -> coordinate_transform->fusion -> output
+           | -> decode     -> detector         -> tracker                  -> |                                    |
+    input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> | -> output
+           | ->                lidar signal processing                     -> |                                    |
     ```
-- Local File Pipeline for `Camera + Radar(4C+4R)` Sensor fusion pipeline
+- Local File Pipeline for `Camera + Lidar(4C+2L)` Sensor fusion pipeline
 
   - Json File: localFusionPipeline.json
     
-    > File location: `$PROJ_DIR/ai_inference/test/configs/raddet/4C4R/localFusionPipeline.json`
+    > File location: `$PROJ_DIR/ai_inference/test/configs/raddet/2C1L/localFusionPipeline.json`
   - Pipeline Description: 
     ```
-    input  | -> decode     -> detector         -> tracker                  -> |
-           |              -> radarOfflineResults ->                           | -> coordinate_transform->fusion -> |
-    input  | -> decode     -> detector         -> tracker                  -> |                                    |
-           |              -> radarOfflineResults ->                           | -> coordinate_transform->fusion -> | -> output
-    input  | -> decode     -> detector         -> tracker                  -> |                                    |
-           |              -> radarOfflineResults ->                           | -> coordinate_transform->fusion -> |
-    input  | -> decode     -> detector         -> tracker                  -> |                                    |
-           |              -> radarOfflineResults ->                           | -> coordinate_transform->fusion -> |
+           | -> decode     -> detector         -> tracker                  -> |                                    |
+    input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> |
+           | ->                lidar signal processing                     -> |                                    |
+           | -> decode     -> detector         -> tracker                  -> |                                    | -> output
+    input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> | 
+           | ->                lidar signal processing                     -> |                                    |
     ```
-
-- Local File Pipeline for `Camera + Radar(2C+1R)` Sensor fusion pipeline
-
-    - Json File: localFusionPipeline.json
-      `File location: ai_inference/test/configs/raddet/2C1R/localFusionPipeline.json`
-
-    - Pipeline Description: 
-
-        ```
-               | -> decode     -> detector         -> tracker                  -> |                                    |
-        input  | -> decode     -> detector         -> tracker                  -> | ->  Camera2CFusion ->  fusion   -> | -> output
-               | -> preprocess -> radar_detection  -> clustering   -> tracking -> |                                    |
-        ```
-
-- Local File Pipeline for `Camera + Radar(16C+4R)` Sensor fusion pipeline
+  
+- Local File Pipeline for `Camera + Lidar(12C+2L)` Sensor fusion pipeline
 
     - Json File: localFusionPipeline.json
-      `File location: ai_inference/test/configs/raddet/16C4R/localFusionPipeline.json`
+      `File location: ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json`
 
     - Pipeline Description: 
 
         ```
                | -> decode     -> detector         -> tracker                  -> |                                    |
                | -> decode     -> detector         -> tracker                  -> |                                    |
-        input  | -> decode     -> detector         -> tracker                  -> |->  Camera4CFusion ->  fusion   ->  |
                | -> decode     -> detector         -> tracker                  -> |                                    |
-               |              -> radarOfflineResults ->                           |                                    |
-               | -> decode     -> detector         -> tracker                  -> |                                    |
-               | -> decode     -> detector         -> tracker                  -> |                                    |
-        input  | -> decode     -> detector         -> tracker                  -> |->  Camera4CFusion ->  fusion   ->  |
-               | -> decode     -> detector         -> tracker                  -> |                                    |
-               |              -> radarOfflineResults ->                           |                                    | -> output
+        input  | -> decode     -> detector         -> tracker                  -> | ->  LidarCam6CFusion -> fusion  -> | -> output
                | -> decode     -> detector         -> tracker                  -> |                                    |
                | -> decode     -> detector         -> tracker                  -> |                                    |
-        input  | -> decode     -> detector         -> tracker                  -> |->  Camera4CFusion ->  fusion   ->  |
+               | ->                lidar signal processing                     -> |                                    |
+        ```
+
+- Local File Pipeline for `Camera + Lidar(8C+4L)` Sensor fusion pipeline
+
+    - Json File: localFusionPipeline.json
+      `File location: ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json`
+
+    - Pipeline Description: 
+
+        ```
                | -> decode     -> detector         -> tracker                  -> |                                    |
-               |              -> radarOfflineResults ->                           |                                    |
+        input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> |
+               | ->                lidar signal processing                     -> |                                    |
                | -> decode     -> detector         -> tracker                  -> |                                    |
+        input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> | 
+               | ->                lidar signal processing                     -> |                                    | -> output
                | -> decode     -> detector         -> tracker                  -> |                                    |
-        input  | -> decode     -> detector         -> tracker                  -> |->  Camera4CFusion ->  fusion   ->  |
+        input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> | 
+               | ->                lidar signal processing                     -> |                                    |
                | -> decode     -> detector         -> tracker                  -> |                                    |
-               |              -> radarOfflineResults ->                           |                                    |
+        input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> | 
+               | ->                lidar signal processing                     -> |                                    |
         ```
 
 ### Start Service
@@ -128,11 +122,11 @@ sudo bash -x run_service_bare.sh
     [2023-06-26 14:34:42.972] [DualSinks] [trace] Add connection with uid 0 into the conn pool
 
 ```
-> NOTE-1 : workload (default as 1) can be configured in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
+> NOTE-1 : workload (default as 4) can be configured in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
 ```
 ...
 [Pipeline]
-maxConcurrentWorkload=1
+maxConcurrentWorkload=4
 ```
 
 > NOTE-2 : to stop service, run the following commands:
@@ -140,17 +134,16 @@ maxConcurrentWorkload=1
 sudo pkill Hce
 ```
 
-
 ### Run Entry Program
-#### 1C+1R
 
-**The target platform is Intel® Celeron® Processor 7305E.**
+#### Usage
 
 All executable files are located at: $PROJ_DIR/build/bin
 
-Usage:
+##### entry program with display
+
 ```
-Usage: CRSensorFusionDisplay <host> <port> <json_file> <total_stream_num> <repeats> <data_path> <display_type> [<save_flag: 0 | 1>] [<pipeline_repeats>] [<fps_window: unsigned>] [<cross_stream_num>] [<warmup_flag: 0 | 1>]  [<logo_flag: 0 | 1>]
+Usage: CLSensorFusionDisplay <host> <port> <json_file> <total_stream_num> <repeats> <data_path> <display_type> <visualization_type>    [<save_flag: 0 | 1>] [<pipeline_repeats>] [<cross_stream_num>] [<warmup_flag: 0 | 1>] [<logo_flag: 0 | 1>]
 --------------------------------------------------------------------------------
 Environment requirement:
    unset http_proxy;unset https_proxy;unset HTTP_PROXY;unset HTTPS_PROXY
@@ -161,168 +154,224 @@ Environment requirement:
 * **total_stream_num**: to control the input streams.
 * **repeats**: to run tests multiple times, so that we can get more accurate performance.
 * **data_path**: multi-sensor binary files folder for input.
-* **display_type**: support for `media`, `radar`, `media_radar`, `media_fusion` currently.
-  * `media`: only show image results in frontview. Example:
-  [![Display type: media](_images/1C1R-Display-type-media.png)](_images/1C1R-Display-type-media.png)
-  * `radar`: only show radar results in birdview. Example:
-  [![Display type: radar](_images/1C1R-Display-type-radar.png)](_images/1C1R-Display-type-radar.png)
-  * `media_radar`: show image results in frontview and radar results in birdview separately. Example:
-  [![Display type: media_radar](_images/1C1R-Display-type-media-radar.png)](_images/1C1R-Display-type-media-radar.png)
-  * `media_fusion`: show both for image results in frontview and fusion results in birdview. Example:
-  [![Display type: media_fusion](_images/1C1R-Display-type-media-fusion.png)](_images/1C1R-Display-type-media-fusion.png)
-* **save_flag**: whether to save display results into video.
-* **pipeline_repeats**: pipeline repeats number.
-* **fps_window**: The number of frames processed in the past is used to calculate the fps. 0 means all frames processed are used to calculate the fps.
-* **cross_stream_num**: the stream number that run in a single pipeline.
-* **warmup_flag**: warm up flag before pipeline start.
-* **logo_flag**: whether to add intel logo in display.
-
-More specifically, open another terminal, run the following commands:
-
-```bash
-# multi-sensor inputs test-case
-sudo -E ./build/bin/CRSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/raddet/1C1R/libradar/localFusionPipeline_libradar.json 1 1 /path-to-dataset media_fusion
-```
-> Note: Run with `root` if users want to get the GPU utilization profiling.
-> change /path-to-dataset to your data path if you generate demo data independently, or simply change it to $PROJ_DIR/ai_inference/test/demo/raddet_bin_files to use the demo data.
-
-#### 4C+4R
-
-**The target platform is Intel® Core™ Ultra 7 Processor 165H.**
-
-All executable files are located at: $PROJ_DIR/build/bin
-
-Usage:
-```
-Usage: CRSensorFusion4C4RDisplay <host> <port> <json_file> <additional_json_file> <total_stream_num> <repeats> <data_path> <display_type> [<save_flag: 0 | 1>] [<pipeline_repeats>] [<cross_stream_num>] [<warmup_flag: 0 | 1>] [<logo_flag: 0 | 1>]
---------------------------------------------------------------------------------
-Environment requirement:
-   unset http_proxy;unset https_proxy;unset HTTP_PROXY;unset HTTPS_PROXY
-```
-* **host**: use `127.0.0.1` to call from localhost.
-* **port**: configured as `50052`, can be changed by modifying file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config` before starting the service.
-* **json_file**: AI pipeline topology file.
-* **additional_json_file**: AI pipeline additional topology file.
-* **total_stream_num**: to control the input streams.
-* **repeats**: to run tests multiple times, so that we can get more accurate performance.
-* **data_path**: multi-sensor binary files folder for input.
-* **display_type**: support for `media`, `radar`, `media_radar`, `media_fusion` currently.
-  * `media`: only show image results in frontview. Example:
-  [![Display type: media](_images/4C4R-Display-type-media.png)](_images/4C4R-Display-type-media.png)
-  * `radar`: only show radar results in birdview. Example:
-  [![Display type: radar](_images/4C4R-Display-type-radar.png)](_images/4C4R-Display-type-radar.png)
-  * `media_radar`: show image results in frontview and radar results in birdview separately. Example:
-  [![Display type: media_radar](_images/4C4R-Display-type-media-radar.png)](_images/4C4R-Display-type-media-radar.png)
-  * `media_fusion`: show both for image results in frontview and fusion results in birdview. Example:
-  [![Display type: media_fusion](_images/4C4R-Display-type-media-fusion.png)](_images/4C4R-Display-type-media-fusion.png)
+* **display_type**: support for `media`, `lidar`, `media_lidar`, `media_fusion` currently.
+  * `media`: only show image results in frontview.
+  * `lidar`: only show lidar results in birdview.
+  * `media_lidar`: show image results in frontview and lidar results in birdview separately.
+  * `media_fusion`: show both for image results in frontview and fusion results in birdview.
+* **visualization_type**: visualization type of different pipelines, currently support `2C1L`, `4C2L`, `8C4L`, `12C2L`.
 * **save_flag**: whether to save display results into video.
 * **pipeline_repeats**: pipeline repeats number.
 * **cross_stream_num**: the stream number that run in a single pipeline.
 * **warmup_flag**: warm up flag before pipeline start.
 * **logo_flag**: whether to add intel logo in display.
 
-More specifically, open another terminal, run the following commands:
 
-```bash
-# multi-sensor inputs test-case
-sudo -E ./build/bin/CRSensorFusion4C4RDisplay 127.0.0.1 50052 ai_inference/test/configs/raddet/4C4R/localFusionPipeline.json ai_inference/test/configs/raddet/4C4R/localFusionPipeline_npu.json 4 1 /path-to-dataset media_fusion
-```
-> Note: Run with `root` if users want to get the GPU utilization profiling.
+#### 2C+1L
 
-#### 2C+1R
-
-**The target platform is Intel® Celeron® Processor 7305E.**
-
-All executable files are located at: $PROJ_DIR/build/bin
-
-Usage:
-
-```bash
-Usage: CRSensorFusion2C1RDisplay <host> <port> <json_file> <total_stream_num> <repeats> <data_path> <display_type> [<save_flag: 0 | 1>] [<pipeline_repeats>] [<fps_window: unsigned>] [<cross_stream_num>] [<warmup_flag: 0 | 1>]  [<logo_flag: 0 | 1>]
---------------------------------------------------------------------------------
-Environment requirement:
-   unset http_proxy;unset https_proxy;unset HTTP_PROXY;unset HTTPS_PROXY
-```
-
-* **host**: use `127.0.0.1` to call from localhost.
-* **port**: configured as `50052`, can be changed by modifying file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config` before starting the service.
-* **json_file**: AI pipeline topology file.
-* **total_stream_num**: to control the input streams.
-* **repeats**: to run tests multiple times, so that we can get more accurate performance.
-* **data_path**: multi-sensor binary files folder for input.
-* **display_type**: support for `media`, `radar`, `media_radar`, `media_fusion` currently.
-    * `media`: only show image results in frontview. Example:
-        [![Display type: media](_images/2C1R-Display-type-media.png)](_images/2C1R-Display-type-media.png)
-    * `radar`: only show radar results in birdview. Example:
-        [![Display type: radar](_images/2C1R-Display-type-radar.png)](_images/2C1R-Display-type-radar.png)
-    * `media_radar`: show image results in frontview and radar results in birdview separately. Example:
-        [![Display type: media_radar](_images/2C1R-Display-type-media-radar.png)](_images/2C1R-Display-type-media-radar.png)
-    * `media_fusion`: show both for image results in frontview and fusion results in birdview. Example:
-        [![Display type: media_fusion](_images/2C1R-Display-type-media-fusion.png)](_images/2C1R-Display-type-media-fusion.png)
-* **save_flag**: whether to save display results into video.
-* **pipeline_repeats**: pipeline repeats number.
-* **fps_window**: The number of frames processed in the past is used to calculate the fps. 0 means all frames processed are used to calculate the fps.
-* **cross_stream_num**: the stream number that run in a single pipeline.
-* **warmup_flag**: warm up flag before pipeline start.
-* **logo_flag**: whether to add intel logo in display.
-
-More specifically, open another terminal, run the following commands:
-
-```bash
-# multi-sensor inputs test-case
-sudo -E ./build/bin/CRSensorFusion2C1RDisplay 127.0.0.1 50052 ai_inference/test/configs/raddet/2C1R/localFusionPipeline_libradar.json 1 1 /path-to-dataset media_fusion
-```
+**The target platform is Intel® Core™ Ultra 7 265H.**
 
 > Note: Run with `root` if users want to get the GPU utilization profiling.
+> change /path-to-dataset to your data path.
 
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
 
+- `media_fusion` display type
 
-#### 16C+4R
+    open another terminal, run the following commands:
 
-**The target platform is Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics.**
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_fusion 2C1L
+    ```
 
-All executable files are located at: $PROJ_DIR/build/bin
+    [![Display type: media_fusion](_images/2C1L-Display-type-media-fusion.png)
 
-Usage:
+- `media_lidar` display type
 
-```
-Usage: CRSensorFusion16C4RDisplay <host> <port> <json_file> <total_stream_num> <repeats> <data_path> <display_type> [<save_flag: 0 | 1>] [<pipeline_repeats>] [<cross_stream_num>] [<warmup_flag: 0 | 1>] [<logo_flag: 0 | 1>]
---------------------------------------------------------------------------------
-Environment requirement:
-   unset http_proxy;unset https_proxy;unset HTTP_PROXY;unset HTTPS_PROXY
-```
+    open another terminal, run the following commands:
 
-* **host**: use `127.0.0.1` to call from localhost.
-* **port**: configured as `50052`, can be changed by modifying file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config` before starting the service.
-* **json_file**: AI pipeline topology file.
-* **total_stream_num**: to control the input streams.
-* **repeats**: to run tests multiple times, so that we can get more accurate performance.
-* **data_path**: multi-sensor binary files folder for input.
-* **display_type**: support for `media`, `radar`, `media_radar`, `media_fusion` currently.
-    * `media`: only show image results in frontview. Example:
-        [![Display type: media](_images/16C4R-Display-type-media.png)](_images/16C4R-Display-type-media.png)
-    * `radar`: only show radar results in birdview. Example:
-        [![Display type: radar](_images/16C4R-Display-type-radar.png)](_images/16C4R-Display-type-radar.png)
-    * `media_radar`: show image results in frontview and radar results in birdview separately. Example:
-        [![Display type: media_radar](_images/16C4R-Display-type-media-radar.png)](_images/16C4R-Display-type-media-radar.png)
-    * `media_fusion`: show both for image results in frontview and fusion results in birdview. Example:
-        [![Display type: media_fusion](_images/16C4R-Display-type-media-fusion.png)](_images/16C4R-Display-type-media-fusion.png)
-* **save_flag**: whether to save display results into video.
-* **pipeline_repeats**: pipeline repeats number.
-* **cross_stream_num**: the stream number that run in a single pipeline.
-* **warmup_flag**: warm up flag before pipeline start.
-* **logo_flag**: whether to add intel logo in display.
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_lidar 2C1L
+    ```
 
-More specifically, open another terminal, run the following commands:
+    ![Display type: media_lidar](_images/2C1L-Display-type-media-lidar.png)
 
-```bash
-# multi-sensor inputs test-case
-sudo -E ./build/bin/CRSensorFusion16C4RDisplay 127.0.0.1 50052 ai_inference/test/configs/raddet/16C4R/localFusionPipeline.json 4 1 /path-to-dataset media_fusion
-```
+- `media` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 1 1 /path-to-dataset media 2C1L
+    ```
+
+    ![Display type: media](_images/2C1L-Display-type-media.png)
+
+- `lidar` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 1 1 /path-to-dataset lidar 2C1L
+    ```
+
+    ![Display type: lidar](_images/2C1L-Display-type-lidar.png)
+
+#### 4C+2L
+
+**The target platform is Intel® Core™ Ultra 7 265H.**
 
 > Note: Run with `root` if users want to get the GPU utilization profiling.
+> change /path-to-dataset to your data path.
 
+- `media_fusion` display type
 
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 2 1 /path-to-dataset media_fusion 4C2L
+    ```
+
+    ![Display type: media_fusion](_images/4C2L-Display-type-media-fusion.png)
+
+- `media_lidar` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 2 1 /path-to-dataset media_lidar 4C2L
+    ```
+
+    ![Display type: media_lidar](_images/4C2L-Display-type-media-lidar.png)
+
+- `media` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 2 1 /path-to-dataset media 4C2L
+    ```
+
+    ![Display type: media](_images/4C2L-Display-type-media.png)
+
+- `lidar` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 2 1 /path-to-dataset lidar 4C2L
+    ```
+
+    ![Display type: lidar](_images/4C2L-Display-type-lidar.png)
+
+#### 12C+2L
+
+**Intel® Core™ i7-13700 and Intel® B580 Graphics.**
+
+> Note: Run with `root` if users want to get the GPU utilization profiling.
+> change /path-to-dataset to your data path.
+
+- `media_fusion` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json 2 1 /path-to-dataset media_fusion 12C2L
+    ```
+
+    ![Display type: media_fusion](_images/12C2L-Display-type-media-fusion.png)
+
+- `media_lidar` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json 2 1 /path-to-dataset media_lidar 12C2L
+    ```
+
+    ![Display type: media_lidar](_images/12C2L-Display-type-media-lidar.png)
+
+- `media` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localMediaPipeline.json 2 1 /path-to-dataset media 12C2L
+    ```
+
+    ![Display type: media](_images/12C2L-Display-type-media.png)
+
+- `lidar` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localLidarPipeline.json 2 1 /path-to-dataset lidar 12C2L
+    ```
+
+    ![Display type: lidar](_images/12C2L-Display-type-lidar.png)
+
+#### 8C+4L
+
+**Intel® Core™ i7-13700 and Intel® B580 Graphics.**
+
+> Note: Run with `root` if users want to get the GPU utilization profiling.
+> change /path-to-dataset to your data path.
+
+- `media_fusion` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 8C4L
+    ```
+
+    ![Display type: media_fusion](_images/8C4L-Display-type-media-fusion.png)
+
+- `media_lidar` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 8C4L
+    ```
+
+    ![Display type: media_lidar](_images/8C4L-Display-type-media-lidar.png)
+
+- `media` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 4 1 /path-to-dataset media 8C4L
+    ```
+
+    ![Display type: media](_images/8C4L-Display-type-media.png)
+
+- `lidar` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 8C4L
+    ```
+
+    ![Display type: lidar](_images/8C4L-Display-type-lidar.png)
 
 
 ## Code Reference
@@ -381,25 +430,33 @@ Some of the code is referenced from the following projects:
     sudo apt-get install -y intel-oneapi-mkl-devel
     ```
 
-4. If you encounter the following errors during running 16C+4R pipeline:
+4. If you encounter the following errors during running on B580 platform:
     ![device_index_error](./_images/device_index_error.png)
 
     <center>Figure 4: Device Index Error</center>
 
-    It may be because the iGPU is not enabled, only the A770 is enabled.
+    It may be because the iGPU is not enabled, only the B580 is enabled.
 
     You can use `lspci | grep VGA` to view the number of GPU devices on the machine.
     
-    The solution is either enable iGPU in BIOS, or change config `Device=(STRING)GPU.1` to `Device=(STRING)GPU` in pipeline config file `ai_inference/test/configs/raddet/16C4R/localFusionPipeline.json`.
+    The solution is either enable iGPU in BIOS, or change the config of `Device=(STRING)GPU.1` to `Device=(STRING)GPU` in `VPLDecoderNode` and `VPLDecoderNode` in pipeline config file, for example: `ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json`.
+
+5. If you encounter the following backends mismatch errors during running pipeline:
+    ![backends_mismatch_error](./_images/backends_mismatch_error.png)
+    
+    <center>Figure 5: Backends Mismatch Error</center>
+    
+    This is because the wrong or non-existent device is selected. We need to select the `dGPU+opencl` Backend. As shown in the figure, it should be the second device (numbered starting from 0), that is, `GPU.2`.
+    
+    The solution is change config `Device=(STRING)GPU.4` to `Device=(STRING)GPU.2` in `LidarSignalProcessingNode` in pipeline config file, for example:  `ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json`.
 
 
 
 
-
-Current Version: 2.0
-- Support 2C+1R pipeline
-- Support 16C+4R pipeline
-- Support YOLOv6 model
+Current Version: 3.0
+- Support 2C+1L/4C+2L pipeline
+- Support 8C+4L/12C+2L pipeline
+- Support Pointpillar model
 - Updated OpenVINO to 2025.2
-- Updated oneMKL to 2025.1.0
+- Updated oneAPI to 2025.2.0
 
