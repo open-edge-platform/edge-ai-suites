@@ -1,8 +1,13 @@
 namespace:
 replicaCount: 1
-http_proxy:
-https_proxy:
-no_proxy:
+http_proxy: 
+https_proxy: 
+no_proxy: 
+
+# Global configuration
+global:
+  # External IP address for certificate generation
+  externalIP: 
 
 # Global image pull policy for all containers
 imagePullPolicy: IfNotPresent
@@ -60,8 +65,9 @@ influxdb:
   retention: 1w
 
   service:
-    type: ClusterIP
+    type: NodePort
     port: 8086
+    nodePort: 30086
 
   # Optional: storage class (used if you add PVCs later)
   storageClassName: "standard"

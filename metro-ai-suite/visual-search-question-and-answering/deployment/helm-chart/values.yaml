@@ -2,30 +2,35 @@
 global:
   proxy:
     no_proxy: "localhost,127.0.0.1,192.168.0.0/16,172.16.0.0/12,127.0.0.0/8,10.0.0.0/8,.svc.cluster.local"
-    http_proxy: 
-    https_proxy: 
+    http_proxy: http://child-prc.intel.com:913
+    https_proxy: http://child-prc.intel.com:913
 
-  LOCAL_EMBED_MODEL_ID:    # Ensure this is configured
-  VLM_MODEL_NAME:          # Ensure this is configured
+  EMBEDDING_MODEL_NAME: CLIP/clip-vit-h-14    # Ensure this is configured
+  VLM_MODEL_NAME: Qwen/Qwen2.5-VL-7B-Instruct          # Ensure this is configured
+
+  sharedPvcName: "vsqa-shared-pvc"
+  sharedClaimSize : "20Gi"
+
+  registry: ""
 
   env:
-    keeppvc: true # Set to true to keep PVCs after uninstalling the chart
+    keeppvc: false # Set to true to keep PVCs after uninstalling the chart
 
 # Shared volumes
 volumes:
-  huggingfaceCache:
-    hostPath: "/home/user/.cache/huggingface"  # Ensure this path exists on the host
-  modelDir:
-    hostPath: "/home/user/models"  # Ensure this path exists on the host
   hostDataPath:
     hostPath: "/home/user/data"  # Ensure this path exists on the host
 
 # Service ports
 servicePorts:
   vlm: 8000
+  mme: 9777
   dataprep: 9990
   retriever: 7770
   visualSearch: 17580
+
+MILVUS_HOST: "my-milvus.milvus.svc.cluster.local"
+MILVUS_PORT: 19530
 
 vlmOpenvinoServing:
   name: vlm-openvino-serving
@@ -57,11 +62,37 @@ vlmOpenvinoServing:
   userGroupId: 1000
   videoGroupId: 44
   renderGroupId: 110
-  volumeMounts:
-    pvcName: vlm-pvc
-    egai_vlm_pvc:
-      size: 40Gi
-      accessMode: ReadWriteMany
+
+multimodalembeddingServing:
+  replicaCount: 1
+  name: multimodal-embedding-serving
+  image:
+    repository: "multimodal-embedding-serving"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+  service:
+    type: ClusterIP
+    port: 9777
+    targetPort: 9777
+  env:
+    HF_ENDPOINT: "https://hf-mirror.com"
+    EMBEDDING_BASE_URL: "http://multimodal-embedding-serving.vsqa.svc.cluster.local:9777"
+    EMBEDDING_DEVICE: "GPU"
+    EMBEDDING_USE_OV: true
+    EMBEDDING_OV_MODELS_DIR: "/app/ov_models"
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 30
+    failureThreshold: 120
+    httpGet:
+      path: /health
+      port: 9777
+  readinessProbe:
+    sameAsLiveness: true
+  userGroupId: 1000
+  videoGroupId: 44
+  renderGroupId: 110
 
 dataprepVisualdataMilvus:
   replicaCount: 1
@@ -76,9 +107,9 @@ dataprepVisualdataMilvus:
     targetPort: 9990
   env:
     DEVICE: "CPU"
-    MILVUS_HOST: my-milvus.milvus.svc.cluster.local
     MILVUS_PORT: 19530
     HF_ENDPOINT: "https://hf-mirror.com"
+    HOST_DATA_PATH: "/home/user/data"
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 30
@@ -102,8 +133,6 @@ retrieverMilvus:
     port: 7770
     targetPort: 7770
   env:
-    DEVICE: "CPU"
-    MILVUS_HOST: my-milvus.milvus.svc.cluster.local
     MILVUS_PORT: 19530
     HF_ENDPOINT: "https://hf-mirror.com"
   livenessProbe:
@@ -137,3 +166,24 @@ visualSearchQaApp:
     MAX_MAX_NUM_SEARCH_RESULTS: 200
     DEFAULT_NUM_SEARCH_RESULTS: 10
     SHOW_RESULT_PER_ROW: 5
+    HOST_DATA_PATH: "/home/user/data"
+
+# milvus:
+#   enabled: true
+#   # Milvus config for standalone mode with no PVC which has minimum requirements for the K8s cluster.
+#   # Check https://github.com/zilliztech/milvus-helm/tree/milvus-4.2.12/charts/milvus for more production level configuration.
+#   cluster:
+#     enabled: false
+#   etcd:
+#     replicaCount: 1
+#     persistence:
+#       enabled: false
+#   pulsar:
+#     enabled: false
+#   minio:
+#     mode: standalone
+#     persistence:
+#       enabled: false
+#   standalone:
+#     persistence:
+#       enabled: false
