@@ -2,11 +2,11 @@
 global:
   proxy:
     no_proxy: "localhost,127.0.0.1,192.168.0.0/16,172.16.0.0/12,127.0.0.0/8,10.0.0.0/8,.svc.cluster.local"
-    http_proxy: http://child-prc.intel.com:913
-    https_proxy: http://child-prc.intel.com:913
+    http_proxy: 
+    https_proxy:
 
-  EMBEDDING_MODEL_NAME: CLIP/clip-vit-h-14    # Ensure this is configured
-  VLM_MODEL_NAME: Qwen/Qwen2.5-VL-7B-Instruct          # Ensure this is configured
+  EMBEDDING_MODEL_NAME:   # Ensure this is configured
+  VLM_MODEL_NAME:         # Ensure this is configured
 
   sharedPvcName: "vsqa-shared-pvc"
   sharedClaimSize : "20Gi"
@@ -19,7 +19,7 @@ global:
 # Shared volumes
 volumes:
   hostDataPath:
-    hostPath: "/home/user/data"  # Ensure this path exists on the host
+    hostPath: "/home/user/data"  # Ensure this path exists on the host node
 
 # Service ports
 servicePorts:
@@ -45,7 +45,7 @@ vlmOpenvinoServing:
     targetPort: 8000
   env:
     VLM_COMPRESSION_WEIGHT_FORMAT: "int8"
-    VLM_DEVICE: "GPU"
+    VLM_DEVICE: "CPU"
     VLM_SEED: "42"
     WORKERS: "1"
     HF_ENDPOINT: "https://hf-mirror.com"
@@ -77,7 +77,7 @@ multimodalembeddingServing:
   env:
     HF_ENDPOINT: "https://hf-mirror.com"
     EMBEDDING_BASE_URL: "http://multimodal-embedding-serving.vsqa.svc.cluster.local:9777"
-    EMBEDDING_DEVICE: "GPU"
+    EMBEDDING_DEVICE: "CPU"
     EMBEDDING_USE_OV: true
     EMBEDDING_OV_MODELS_DIR: "/app/ov_models"
   livenessProbe:
@@ -167,23 +167,3 @@ visualSearchQaApp:
     DEFAULT_NUM_SEARCH_RESULTS: 10
     SHOW_RESULT_PER_ROW: 5
     HOST_DATA_PATH: "/home/user/data"
-
-# milvus:
-#   enabled: true
-#   # Milvus config for standalone mode with no PVC which has minimum requirements for the K8s cluster.
-#   # Check https://github.com/zilliztech/milvus-helm/tree/milvus-4.2.12/charts/milvus for more production level configuration.
-#   cluster:
-#     enabled: false
-#   etcd:
-#     replicaCount: 1
-#     persistence:
-#       enabled: false
-#   pulsar:
-#     enabled: false
-#   minio:
-#     mode: standalone
-#     persistence:
-#       enabled: false
-#   standalone:
-#     persistence:
-#       enabled: false

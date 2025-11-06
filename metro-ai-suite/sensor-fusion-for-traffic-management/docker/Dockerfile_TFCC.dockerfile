@@ -294,8 +294,9 @@ RUN apt update && \
 # Build Project
 COPY . /home/tfcc/metro
 WORKDIR /home/tfcc/metro
-RUN rm -rf build liblidar.so
+RUN rm -rf build
 WORKDIR /home/tfcc/metro/ai_inference/liblidar
+RUN rm -rf build liblidar.so
 RUN /bin/bash -c "bash build.sh"
 WORKDIR /home/tfcc/metro
 RUN /bin/bash -c "bash build.sh"
