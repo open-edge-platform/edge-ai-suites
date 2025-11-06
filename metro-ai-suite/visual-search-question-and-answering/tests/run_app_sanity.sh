@@ -9,7 +9,11 @@ fi
 CONTAINER_IDS=($CONTAINER_IDS)
 NUM_CONTAINERS=${#CONTAINER_IDS[@]}
 
-for file in unit_tests/*.py; do
+# download test image inside the container
+docker exec -it ${CONTAINER_IDS[0]} bash -c "mkdir -p /home/user/data/sanity_tests"
+docker exec -it ${CONTAINER_IDS[0]} bash -c "curl -L "http://farm6.staticflickr.com/5268/5602445367_3504763978_z.jpg" -o /home/user/data/sanity_tests/girl.jpg"
+
+for file in sanity_tests/*.py; do
   docker cp "$file" ${CONTAINER_IDS[0]}:/home/user/visual-search-qa/src/
 done
 
@@ -17,8 +21,8 @@ declare -a TEST_RESULTS
 pass_count=0
 total_count=0
 
-for test_file in unit_tests/test_*.py; do
-  test_file_name=$(basename "$test_file")  # Remove the unit_tests/ prefix
+for test_file in sanity_tests/test_*.py; do
+  test_file_name=$(basename "$test_file")  # Remove the sanity_tests/ prefix
   echo "Running tests in $test_file_name"
   # Capture the output of the pytest command
   output=$(docker exec -it ${CONTAINER_IDS[0]} bash -c "cd /home/user/visual-search-qa/src && python -m pytest $test_file_name --tb=short")
