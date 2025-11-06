@@ -72,30 +72,17 @@ helm install my-milvus milvus/milvus -n milvus --set image.all.tag=v2.6.0   --se
 
 Check the pods status with `kubectl get po -n milvus`. `RESTARTS` are possible, as long as the 3 pods are stablized after a while, the deployment is successful.
 
-
-### Step 6: Deploy [intel-device-plugins-for-kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes)
-
-Follw these steps to install with NFD
-
-```bash
-kubectl apply -k 'https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd?ref=v0.32.0'
-
-kubectl apply -k 'https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd/overlays/node-feature-rules?ref=v0.32.0'
-
-kubectl apply -k 'https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin/overlays/nfd_labeled_nodes?ref=v0.32.0'
-```
-
-### Step 7: Prepare host directories for models and data
+### Step 6: Prepare host directories for models and data
 
 ```
 mkdir -p $HOME/data
 ```
 
-Make sure the host directories are available to the cluster, and the host-paths under the `volumes.hostDataPath` section in `values.yaml` file match the correct directories. Particularly, the default path in `values.yaml` is `/home/user/data`, which corresponds to a host username `user`.
+Make sure the host directories are available to the cluster nodes, and the host-paths under the `volumes.hostDataPath` section in `values.yaml` file match the correct directories. Particularly, the default path in `values.yaml` is `/home/user/data`, which corresponds to a host username `user`.
 
 Note: supported media types: jpg, png, mp4
 
-### Step 8: Deploy the Application
+### Step 7: Deploy the Application
 
 Create a namespace for VSQA app
 
@@ -110,7 +97,7 @@ helm install vsqa . --values values.yaml -n vsqa
 ``` 
 
 
-### Step 9: Verify the Deployment
+### Step 8: Verify the Deployment
 
 Check the status of the deployed resources to ensure everything is running correctly:
 
@@ -121,34 +108,18 @@ kubectl get services -n vsqa
 
 Ensure all pods are in the "Running" state before proceeding.
 
-### Step 10: (Optional) Run sanity test inside the pod
+### Step 9: Access the application
 
-Find the dataprep pod which is under namespace `vsqa` and starts with `vsqa-dataprep-visualdata-milvus-`. Enter the pod
-
-```bash
-kubectl exec -ti -n vsqa <dataprep-pod-name> -- bash
-```
-
-Inside the pod container, run
+For a simpler access, we can do a port forward
 
 ```bash
-python example/example_utils.py -d DAVIS
+kubectl port-forward -n vsqa svc/visual-search-qa-app 17580:17580
 ```
 
-This script is for demo dataset preparation. After execution, some images and videos for demo are stored on host in `$HOME/data/DAVIS/subset` (may vary according to your host data directories setting in step 7 and `values.yaml`), use this path to do the next step.
-
-Exit the pod. Go to `http://{host_ip}:17580` with a browser. Put the exact path to the subset of demo dataset (usually`/home/user/data/DAVIS/subset`, may vary according to your local username) into `file directory on host`. Click `UpdataDB`. Wait for a while and click `showInfo`. 
-
-Try searching with prompt `tractor`, see if the results are correct.
-
-Expected valid inputs are "car-race", "deer", "guitar-violin", "gym", "helicopter", "carousel", "monkeys-trees", "golf", "rollercoaster", "horsejump-stick", "planes-crossing", "tractor"
-
-Try ticking a search result, and ask a question in the leftside chatbox about the selected media.
-
-Note: for each chat request, you may select either a single image, or multiple images, or a single video. Multiple videos or a collection of images+videos are not supported yet.
+Leave the session alive, then access `http://localhost:17580` to view the application.
 
 
-### Step 11: Uninstall the Application
+### Step 10: Uninstall the Application
 
 To uninstall, use the following command:
 
