@@ -33,7 +33,6 @@ cameras:
         - path: rtsp://{RTSP_STREAM_IP}:8554/camera1
           input_args: -avoid_negative_ts make_zero -fflags +genpts+discardcorrupt -rtsp_transport tcp -r 5
           roles:
-            - detect
             - record
       output_args:
         record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 50 -pix_fmt yuv420p -movflags +faststart
@@ -70,7 +69,6 @@ cameras:
         - path: rtsp://{RTSP_STREAM_IP}:8554/camera2
           input_args: -avoid_negative_ts make_zero -fflags +genpts+discardcorrupt -rtsp_transport tcp -r 5
           roles:
-            - detect
             - record
       output_args:
         record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 50 -pix_fmt yuv420p -movflags +faststart
@@ -107,7 +105,6 @@ cameras:
         - path: rtsp://{RTSP_STREAM_IP}:8554/camera3
           input_args: -avoid_negative_ts make_zero -fflags +genpts+discardcorrupt -rtsp_transport tcp -r 5
           roles:
-            - detect
             - record
       output_args:
         record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 50 -pix_fmt yuv420p -movflags +faststart
@@ -144,7 +141,6 @@ cameras:
         - path: rtsp://{RTSP_STREAM_IP}:8554/camera4
           input_args: -avoid_negative_ts make_zero -fflags +genpts+discardcorrupt -rtsp_transport tcp -r 5
           roles:
-            - detect
             - record
       output_args:
         record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 50 -pix_fmt yuv420p -movflags +faststart
