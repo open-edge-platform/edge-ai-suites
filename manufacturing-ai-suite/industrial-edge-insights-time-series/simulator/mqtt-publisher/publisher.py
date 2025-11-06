@@ -72,7 +72,7 @@ def parse_args():
 
 def stream_csv(mqttc, topic, subsample, sampling_rate, folder_name="/simulation-data"):
     """
-    Stream the csv file
+    Stream CSV files from a folder
     """
     continous_simulator_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true").lower()
 
