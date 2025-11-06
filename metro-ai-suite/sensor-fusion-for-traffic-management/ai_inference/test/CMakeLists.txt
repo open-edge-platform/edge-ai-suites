@@ -83,7 +83,7 @@ if (USE_GRPC_API)
     message("PROTO_SRCS: ${PROTO_SRCS}")
     message("GRPC_SRCS: ${GRPC_SRCS}")
 
-#-------Generate a testGRPCLocalPipeline executable file---------------
+    #-------Generate a testGRPCLocalPipeline executable file---------------
 
     add_executable(testGRPCLocalPipeline testGRPCLocalPipeline.cpp
                                 # ${CMAKE_CURRENT_SOURCE_DIR}/../source/common/base64.cpp
@@ -732,3 +732,61 @@ target_link_libraries(CRSensorFusion16C4RDisplay PUBLIC "${OpenCV_LIBRARIES}")
 
 target_include_directories(CRSensorFusion16C4RDisplay PUBLIC "${LevelZero_INCLUDE_DIRS}")
 target_link_libraries(CRSensorFusion16C4RDisplay PUBLIC "${LevelZero_LIBRARIES}")
+
+
+#-------Generate a testGRPCCPlusLPipeline executable file---------------
+add_executable(testGRPCCPlusLPipeline testGRPCCPlusLPipeline.cpp
+                            ${CMAKE_CURRENT_SOURCE_DIR}/../source/common/base64.cpp
+                            ${CMAKE_CURRENT_SOURCE_DIR}/../source/common/common.cpp
+                            ${CMAKE_CURRENT_SOURCE_DIR}/utils/sys_metrics/cpu-top.c
+                            ${CMAKE_CURRENT_SOURCE_DIR}/utils/sys_metrics/gmg_common_util.c
+                            ${CMAKE_CURRENT_SOURCE_DIR}/utils/sys_metrics/gpu_monitor.cpp
+                            ${PROTO_SRCS} ${GRPC_SRCS})
+
+target_include_directories(testGRPCCPlusLPipeline PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+target_include_directories(testGRPCCPlusLPipeline PUBLIC "$<BUILD_INTERFACE:${HVA_INC_DIR}>")
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(testGRPCCPlusLPipeline PUBLIC Threads::Threads dl)
+
+target_include_directories(testGRPCCPlusLPipeline PUBLIC ${Boost_INCLUDE_DIR})
+target_link_libraries(testGRPCCPlusLPipeline PUBLIC ${Boost_LIBRARIES})
+
+target_link_libraries(testGRPCCPlusLPipeline PUBLIC hva)
+
+target_link_libraries(testGRPCCPlusLPipeline PUBLIC
+    gRPC::grpc++_reflection
+    protobuf::libprotobuf
+)
+
+#-------Generate a CLSensorFusionDisplay executable file---------------
+add_executable(CLSensorFusionDisplay CLSensorFusionDisplay.cpp
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/../source/common/base64.cpp
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/../source/common/common.cpp
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/utils/sys_metrics/cpu-top.c
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/utils/sys_metrics/gmg_common_util.c
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/utils/sys_metrics/gpu_monitor.cpp
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/../source/modules/visualization/FusionDisplay.cpp
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/../source/modules/visualization/Plot.cpp
+                                    ${PROTO_SRCS} ${GRPC_SRCS})
+
+target_include_directories(CLSensorFusionDisplay PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+target_include_directories(CLSensorFusionDisplay PUBLIC "$<BUILD_INTERFACE:${HVA_INC_DIR}>")
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(CLSensorFusionDisplay PUBLIC Threads::Threads dl)
+
+target_include_directories(CLSensorFusionDisplay PUBLIC ${Boost_INCLUDE_DIR})
+target_link_libraries(CLSensorFusionDisplay PUBLIC ${Boost_LIBRARIES})
+
+target_link_libraries(CLSensorFusionDisplay PUBLIC hva)
+
+target_link_libraries(CLSensorFusionDisplay PUBLIC
+                        gRPC::grpc++_reflection
+                        protobuf::libprotobuf
+                        )
+target_include_directories(CLSensorFusionDisplay PUBLIC "${OpenCV_INCLUDE_DIRS}")
+target_link_libraries(CLSensorFusionDisplay PUBLIC "${OpenCV_LIBRARIES}")

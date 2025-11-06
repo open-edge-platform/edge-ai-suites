@@ -1,8 +1,8 @@
 # Release Notes
 
-Current Version: 2.0
-- Support 2C+1R pipeline
-- Support 16C+4R pipeline
-- Support YOLOv6 model
-- Updated OpenVINO to 2024.6
-- Updated oneMKL to 2025.1.0
+Current Version: 3.0
+- Support 2C+1L/4C+2L pipeline
+- Support 8C+4L/12C+2L pipeline
+- Support Pointpillar model
+- Updated OpenVINO to 2025.2
+- Updated oneAPI to 2025.2.0

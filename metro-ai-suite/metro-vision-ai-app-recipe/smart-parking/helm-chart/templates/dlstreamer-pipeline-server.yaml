@@ -70,7 +70,7 @@ spec:
         - |
           mkdir -p /tmp/models
           cd /tmp/
-          curl -L -o /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/v1.0.0.tar.gz && \          
+          curl -L -o /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/v1.0.0.tar.gz && \
           tar -xzf /tmp/main.tar.gz -C /tmp && \
           cp -r /tmp/edge-ai-suites-1.0.0/metro-ai-suite/smart-parking/dlsps/models/* /tmp/models/ && \
           rm -rf /tmp/main.tar.gz /tmp/edge-ai-suites-1.0.0
@@ -96,8 +96,8 @@ spec:
         securityContext:
           privileged: true  # Required for direct access to /dev
         {{- end }}
-      {{- if $.Values.gpu.enabled }}
-          resources:
+        {{- if $.Values.gpu.enabled }}
+        resources:
           limits:
             {{ $.Values.gpu.type }}: {{ $.Values.gpu.count }}
         {{- end }}
