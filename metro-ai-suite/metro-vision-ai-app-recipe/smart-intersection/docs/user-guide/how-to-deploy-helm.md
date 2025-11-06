@@ -21,7 +21,7 @@ configured Kubernetes cluster.
 - **Tools Installed**: Install the required tools:
   - Kubernetes CLI (kubectl)
   - Helm 3 or later
-- **cert-manager**: Will be installed as part of the deployment process (instructions provided below)
+- **Storage Provisioner**: A default storage class is required for persistent volumes
 
 ## Steps to Deploy
 
@@ -40,16 +40,31 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ```
 
-### Step 2: Configure Proxy Settings (If behind a proxy)
+### Step 2: Configure External IP and Proxy Settings
 
-If you are deploying in a proxy environment, update the values.yaml file with your proxy settings before installation:
+#### Configure External IP (Required)
+
+The Smart Intersection application needs to know your cluster's external IP address for proper certificate generation and CSRF security configuration. Update the external IP in the values.yaml file:
 
 ```bash
-# Edit the values.yml file to add proxy configuration
+# Edit the values.yaml file to set your external IP
 nano ./smart-intersection/chart/values.yaml
 ```
 
-Update the existing proxy configuration in your values.yaml with following values:
+Find the `global.externalIP` section and update it with your actual external IP address:
+
+```yaml
+# Global configuration
+global:
+  # External IP address for certificate generation and CSRF configuration
+  externalIP: "YOUR_EXTERNAL_IP_HERE"
+```
+
+Replace `YOUR_EXTERNAL_IP_HERE` with your actual external IP address where the application will be accessible.
+
+#### Configure Proxy Settings (If behind a proxy)
+
+If you are deploying in a proxy environment, also update the proxy settings in the same values.yaml file:
 
 ```yaml
 http_proxy: "http://your-proxy-server:port"
@@ -59,115 +74,82 @@ no_proxy: "localhost,127.0.0.1,.local,.cluster.local"
 
 Replace `your-proxy-server:port` with your actual proxy server details.
 
-### Install cert-manager
 
-The Smart Intersection application requires cert-manager for TLS certificate management. Install cert-manager before deploying the application:
+
+### Step 3: Setup Storage Provisioner (For Single-Node Clusters)
+
+Check if your cluster has a default storage class with dynamic provisioning. If not, install a storage provisioner:
 
 ```bash
-# Install cert-manager
-helm install \
-  cert-manager oci://quay.io/jetstack/charts/cert-manager \
-  --version v1.18.2 \
-  --namespace cert-manager \
-  --create-namespace \
-  --set crds.enabled=true
+# Check for existing storage classes
+kubectl get storageclass
+
+# If no storage classes exist or none are marked as default, install local-path-provisioner
+# This step is typically needed for single-node bare Kubernetes installations
+# (Managed clusters like EKS/GKE/AKS already have storage classes configured)
+
+# Install local-path-provisioner for automatic storage provisioning
+kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+
+# Set it as default storage class
+kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+
+# Verify storage class is ready
+kubectl get storageclass
 ```
 
-### Step 3: Deploy the application
+### Step 4: Deploy the application
 
-Now you're ready to deploy the Smart Intersection application:
+Now you're ready to deploy the Smart Intersection application with nginx reverse proxy and self-signed certificates:
 
 ```bash
-# Install the chart
+# Install the chart (works on both single-node and multi-node clusters)
 helm upgrade --install smart-intersection ./smart-intersection/chart \
   --create-namespace \
-  --set grafana.service.type=NodePort \
+  --set global.storageClassName="" \
   -n smart-intersection
+
+# Wait for all pods to be ready
+kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300s
 ```
 
-## Access Application Services using Node Port
+> **Note**: Using `global.storageClassName=""` makes the deployment use whatever default storage class exists on your cluster.
 
-### Access the Application UI using Node Port
+## Access Application Services
 
-- Get the Node Port Number using following command and use it to access the Application UI
+### Smart Intersection Application UI
+- **URL**: `https://<HOST_IP>:30443/`
+- **Username**: `admin`
+- **Password**: Get from secrets:
+  ```bash
+  kubectl get secret smart-intersection-supass-secret -n smart-intersection -o jsonpath='{.data.supass}' | base64 -d && echo
+  ```
 
-```bash
-kubectl get service smart-intersection-web -n smart-intersection -o jsonpath='{.spec.ports[0].nodePort}'
-```
+### Grafana Dashboard  
+- **URL**: `https://<HOST_IP>:30443/grafana/`
+- **Username**: `admin`
+- **Password**: `admin`
 
-- Go to https://<HOST_IP>:<Node_PORT>
-- **Log in with credentials**:
-  - **Username**: `admin`
-  - **Password**: Stored in `supass` secret. To retrieve run the following command:
+### InfluxDB
+- **URL**: `http://<HOST_IP>:30086/`
+- **Username**: `admin`
+- **Password**: Get from secrets:
+  ```bash
+  kubectl get secret smart-intersection-influxdb-secrets -n smart-intersection -o jsonpath='{.data.influxdb2-admin-password}' | base64 -d && echo
+  ```
 
-    ```bash
-    kubectl get secret smart-intersection-supass-secret -n smart-intersection -o jsonpath='{.data.supass}' | base64 -d && echo
-    ```
+### NodeRED Editor
+- **URL**: `https://<HOST_IP>:30443/nodered/`
+- **No login required** - Visual programming interface
 
-### Access the Grafana UI using Node Port
+### DL Streamer Pipeline Server
+- **URL**: `https://<HOST_IP>:30443/api/pipelines/status`
+- **API Access**: No authentication required for status endpoints
 
-- Get the Node Port Number using following command and use it to access the Grafana UI
+> **Note**: For InfluxDB, use the direct access on port 30086 (`http://<HOST_IP>:30086/`) for login and full functionality. The proxy access through nginx (`https://<HOST_IP>:30443/influxdb/`) provides basic functionality and API access but is not recommended for the web UI login.
 
-```bash
-kubectl get service smart-intersection-grafana -n smart-intersection -o jsonpath='{.spec.ports[0].nodePort}'
-```
+> **Security Note**: The application uses self-signed certificates for HTTPS. Your browser will show a security warning when first accessing the site. Click "Advanced" and "Proceed to site" (or equivalent) to continue. This is safe for local deployments.
 
-- Go to http://<HOST_IP>:<Node_PORT>
-- **Log in with credentials**:
-  - **Username**: `admin`
-  - **Password**: `admin`
-
-## Access Application Services using Port Forwarding (Optional)
-
-### Access the Application UI
-
-```bash
-WEB_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-web -o jsonpath="{.items[0].metadata.name}")
-sudo -E kubectl -n smart-intersection port-forward $WEB_POD 443:443 --address <HOST_IP>
-```
-
-- Go to https://<HOST_IP>
-- **Log in with credentials**:
-  - **Username**: `admin`
-  - **Password**: Stored in `supass` secret. To retrieve run the following command:
-
-    ```bash
-    kubectl get secret smart-intersection-supass-secret -n smart-intersection -o jsonpath='{.data.supass}' | base64 -d && echo
-    ```
-
-### Access the Grafana UI
-
-```bash
-GRAFANA_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-grafana -o jsonpath="{.items[0].metadata.name}")
-kubectl -n smart-intersection port-forward $GRAFANA_POD 3000:3000
-```
-
-- Go to http://<HOST_IP>:<Node_PORT>
-- **Log in with credentials**:
-  - **Username**: `admin`
-  - **Password**: `admin`
-
-### Access the InfluxDB UI
-
-```bash
-INFLUX_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-influxdb -o jsonpath="{.items[0].metadata.name}")
-kubectl -n smart-intersection port-forward $INFLUX_POD 8086:8086
-```
-
-### Access the NodeRED UI
-
-```bash
-NODE_RED_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-nodered -o jsonpath="{.items[0].metadata.name}")
-kubectl -n smart-intersection port-forward $NODE_RED_POD 1880:1880
-```
-
-### Access the DL Streamer Pipeline Server
-
-```bash
-DLS_PS_POD=$(kubectl get pods -n smart-intersection -l app=smart-intersection-dlstreamer-pipeline-server -o jsonpath="{.items[0].metadata.name}")
-kubectl -n smart-intersection port-forward $DLS_PS_POD 8080:8080
-kubectl -n smart-intersection port-forward $DLS_PS_POD 8555:8555
-```
 
 ## Uninstall the Application
 
@@ -184,6 +166,29 @@ To delete the namespace and all resources within it, run the following command:
 ```bash
 kubectl delete namespace smart-intersection
 ```
+
+## Complete Cleanup
+
+If you want to completely remove all infrastructure components installed during the setup process:
+
+```bash
+# Remove local-path-provisioner (if installed)
+kubectl delete -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+
+# Delete all PVCs in the smart-intersection namespace
+kubectl delete pvc --all -n smart-intersection
+
+# Delete any remaining PVs (persistent volumes)
+kubectl delete pv --all
+
+# Force cleanup of stuck PVCs if needed (patch each PVC individually)
+kubectl get pvc -n smart-intersection --no-headers | awk '{print $1}' | xargs -I {} kubectl patch pvc {} -n smart-intersection --type merge -p '{"metadata":{"finalizers":null}}'
+
+# Remove additional storage classes (if created)
+kubectl delete storageclass hostpath local-storage standard
+```
+
+> **Note**: This complete cleanup will remove storage provisioning from your cluster. You'll need to reinstall the storage provisioner for future deployments that require persistent volumes.
 
 ## What to Do Next
 

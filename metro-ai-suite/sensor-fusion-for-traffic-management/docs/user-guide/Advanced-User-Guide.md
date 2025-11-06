@@ -779,7 +779,7 @@ bash install_driver_related_libs.sh
 
 > **Note that the default username is `tfcc` and password is `intel` in docker image.**
 
-##### Build and run docker image
+#### Build and run docker image
 
 Usage:
 
@@ -801,7 +801,7 @@ bash run_docker.sh tfcc:latest false
 # After the run is complete, the container ID will be output, or you can view it through docker ps 
 ```
 
-##### Enter docker
+#### Enter docker
 
 Get the container id by command bellow:
 
@@ -815,7 +815,7 @@ And then enter docker by command bellow:
 docker exec -it <container id> /bin/bash
 ```
 
-##### Copy dataset
+#### Copy dataset
 
 If you want to copy dataset or other files to docker, you can refer the command bellow:
 
@@ -852,7 +852,7 @@ echo $(getent group video | awk -F: '{printf "%s\n", $3}')
 echo $(getent group render | awk -F: '{printf "%s\n", $3}')
 ```
 
-##### Build and run docker image
+#### Build and run docker image
 Uasge:
 ```bash
 cd $PROJ_DIR/docker
@@ -873,7 +873,7 @@ cd $PROJ_DIR/docker
 docker compose up tfcc-npu -d
 ```
 
-##### Enter docker
+#### Enter docker
 Usage:
 ```bash
 docker compose exec <services-name> /bin/bash
@@ -883,7 +883,7 @@ Example:
 docker compose exec tfcc /bin/bash
 ```
 
-##### Copy dataset
+#### Copy dataset
 
 Find the container name or ID:
 
