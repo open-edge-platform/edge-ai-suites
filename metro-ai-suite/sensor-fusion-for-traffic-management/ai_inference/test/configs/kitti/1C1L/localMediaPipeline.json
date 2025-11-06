@@ -1,0 +1,65 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "LidarCamFusionInputNode",
+            "Node Name": "Input",
+            "Thread Number": "1",
+            "Is Source Node": "true",
+            "Configure String": "MediaIndex=(INT)0;SensorType=(STRING)Media;InputCapacity=(INT)1"
+        },
+        {
+            "Node Class Name": "VPLDecoderNode",
+            "Node Name": "Decoder",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "Device=(STRING)GPU.0;CodecType=(STRING)JPEG;BufferType=(STRING)mfxFrame"
+        },
+        {
+            "Node Class Name": "DetectionNode",
+            "Node Name": "Detection",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "InferReqNumber=(INT)6;PreProcessType=(STRING)vaapi-surface-sharing;reshapeWidth=(INT)640;reshapeHeight=(INT)640;Device=(STRING)GPU.0;InferConfig=(STRING_ARRAY)[PERFORMANCE_HINT=LATENCY];PreProcessConfig=(STRING_ARRAY)[VAAPI_THREAD_POOL_SIZE=6,VAAPI_FAST_SCALE_LOAD_FACTOR=0];ModelPath=(STRING)vehicle-bike-detection-yoloxs-001/FP16-INT8/yolox_s.xml;ModelProcConfPath=(STRING)vehicle-bike-detection-yoloxs-001/yolox_s.model_proc.json;Threshold=(FLOAT)0.3;MaxROI=(INT)0;FilterLabels=(STRING_ARRAY)[car,bus,truck]"
+        },
+        {
+            "Node Class Name": "TrackerNode_CPU",
+            "Node Name": "Tracker",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "TrackerType=(STRING)zero_term_imageless"
+        },
+        {
+            "Node Class Name": "MediaOutputNode",
+            "Node Name": "Output",
+            "Thread Number": "1",
+            "Is Source Node": "false"
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "Decoder",
+            "Next Node Port": "0",
+            "Queue Size": "1"
+        },
+        {
+            "Previous Node": "Decoder",
+            "Previous Node Port": "0",
+            "Next Node": "Detection",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Detection",
+            "Previous Node Port": "0",
+            "Next Node": "Tracker",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Tracker",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0"
+        }
+    ]
+}

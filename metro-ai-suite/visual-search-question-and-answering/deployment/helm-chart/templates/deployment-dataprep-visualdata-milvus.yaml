@@ -21,17 +21,19 @@ spec:
         fsGroup: 1000
       containers:
       - name: {{ .Values.dataprepVisualdataMilvus.name }}
-        image: "{{ .Values.dataprepVisualdataMilvus.image.repository }}:{{ .Values.dataprepVisualdataMilvus.image.tag }}"
+        image: "{{ if .Values.global.registry }}{{ .Values.global.registry }}{{ end }}{{ .Values.dataprepVisualdataMilvus.image.repository }}:{{ .Values.dataprepVisualdataMilvus.image.tag }}"
         imagePullPolicy: {{ .Values.dataprepVisualdataMilvus.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.servicePorts.dataprep }}
         env:
         - name: MILVUS_HOST
-          value: {{ .Values.dataprepVisualdataMilvus.env.MILVUS_HOST | quote }}
+          value: {{ .Values.MILVUS_HOST | quote }}
         - name: MILVUS_PORT
-          value: {{ .Values.dataprepVisualdataMilvus.env.MILVUS_PORT | quote  }}
-        - name: LOCAL_EMBED_MODEL_ID
-          value: {{ required "Value for `global.LOCAL_EMBED_MODEL_ID` is required!" .Values.global.LOCAL_EMBED_MODEL_ID | quote }}
+          value: {{ .Values.MILVUS_PORT | quote  }}
+        - name: EMBEDDING_MODEL_NAME
+          value: {{ required "Value for `global.EMBEDDING_MODEL_NAME` is required!" .Values.global.EMBEDDING_MODEL_NAME | quote }}
+        - name: EMBEDDING_BASE_URL
+          value: {{ .Values.multimodalembeddingServing.env.EMBEDDING_BASE_URL | quote }}
         - name: DEVICE
           value: {{ .Values.dataprepVisualdataMilvus.env.DEVICE | quote }}
         - name: HF_ENDPOINT
@@ -44,15 +46,11 @@ spec:
           value: {{ .Values.global.proxy.https_proxy | quote }}
         - name: HOST_DATA_PATH
           value: {{ .Values.volumes.hostDataPath.hostPath | quote }}
-        - name: MODEL_DIR
-          value: {{ .Values.volumes.modelDir.hostPath | quote}}
         volumeMounts:
-        - name: models
-          mountPath: /home/user/models
         - name: data
           mountPath: /home/user/data
-        - name: huggingface-cache
-          mountPath: /home/user/.cache/huggingface
+        - name: workspace
+          mountPath: /home/user/models
         livenessProbe:
           httpGet:
             path: /v1/dataprep/health
@@ -74,15 +72,12 @@ spec:
           failureThreshold: {{ .Values.dataprepVisualdataMilvus.livenessProbe.failureThreshold }}
           {{- end }}
       volumes:
-      - name: models
-        hostPath:
-          path: {{ .Values.volumes.modelDir.hostPath }}
-          type: Directory
       - name: data
         hostPath:
           path: {{ .Values.volumes.hostDataPath.hostPath }}
-      - name: huggingface-cache
-        hostPath:
-          path: {{ .Values.volumes.huggingfaceCache.hostPath }}
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: {{ .Values.global.sharedPvcName }}
+
 
 

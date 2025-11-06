@@ -36,6 +36,7 @@ Following directory structure consisting of generic deployment code as well as p
                 pipeline-server-config.json
             setup.sh
             payload.json
+
     helm/
         apps/
             application_name/
@@ -58,6 +59,7 @@ Following directory structure consisting of generic deployment code as well as p
     sample_start.sh
     sample_status.sh
     sample_stop.sh
+    benchmark_start.sh
 
  - **apps**: containing application specific pre-requisite installers, configurations and runtime data. Users can follow the same structure to create their own application. The data from here is used for docker based deployments.
 

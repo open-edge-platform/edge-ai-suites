@@ -1,0 +1,26 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: ITS Planner
+
+on:
+  workflow_call:
+    inputs:
+      # workaround until unified workflow is implemented
+      component-name:
+        default: its-planner
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  dummy:
+    name: '[${{ inputs.component-name }}] Dummy job'
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash
+        run: |
+          echo "This is a placeholder"

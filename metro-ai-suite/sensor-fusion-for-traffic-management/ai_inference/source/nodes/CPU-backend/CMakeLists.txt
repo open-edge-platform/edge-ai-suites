@@ -378,6 +378,16 @@ target_link_libraries(Media2COutputNode hva)
 target_include_directories(Media2COutputNode PUBLIC ${HVA_INC_DIR})
 target_include_directories(Media2COutputNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
 
+#----------------Generate Media3COutputNode .so file---------------------#
+add_library(Media3COutputNode SHARED ${CMAKE_CURRENT_SOURCE_DIR}/Media3COutputNode.cpp
+${BASE_NODE_DIR}/baseResponseNode.cpp
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp)
+
+target_compile_definitions(Media3COutputNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
+target_link_libraries(Media3COutputNode hva)
+target_include_directories(Media3COutputNode PUBLIC ${HVA_INC_DIR})
+target_include_directories(Media3COutputNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
+
 #----------------Generate Media4COutputNode .so file---------------------#
 add_library(Media4COutputNode SHARED ${CMAKE_CURRENT_SOURCE_DIR}/Media4COutputNode.cpp
 ${BASE_NODE_DIR}/baseResponseNode.cpp
@@ -387,6 +397,16 @@ target_compile_definitions(Media4COutputNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC
 target_link_libraries(Media4COutputNode hva)
 target_include_directories(Media4COutputNode PUBLIC ${HVA_INC_DIR})
 target_include_directories(Media4COutputNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
+
+#----------------Generate Media6COutputNode .so file---------------------#
+add_library(Media6COutputNode SHARED ${CMAKE_CURRENT_SOURCE_DIR}/Media6COutputNode.cpp
+${BASE_NODE_DIR}/baseResponseNode.cpp
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp)
+
+target_compile_definitions(Media6COutputNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
+target_link_libraries(Media6COutputNode hva)
+target_include_directories(Media6COutputNode PUBLIC ${HVA_INC_DIR})
+target_include_directories(Media6COutputNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
 
 #----------------Generate CoordinateTransformationNode .so file---------------------#
 find_package(OpenCV REQUIRED)
@@ -406,6 +426,28 @@ target_link_libraries(CoordinateTransformationNode "${OpenCV_LIBRARIES}")
 
 target_link_libraries(CoordinateTransformationNode Threads::Threads dl)
 
+
+#----------------Generate LidarCamCoordinateTransformationNode .so file---------------------#
+find_package(OpenCV REQUIRED)
+message(DEBUG "OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
+message(DEBUG "OpenCV_LIBRARIES: ${OpenCV_LIBRARIES}")
+
+add_library(LidarCamCoordinateTransformationNode SHARED LidarCamCoordinateTransformationNode.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src/liblidar.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/include/nodes/lidarDatabaseMeta.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/modules/inference_util/fusion/data_fusion_helper_lidar.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/base64.cpp ${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp)
+target_compile_definitions(LidarCamCoordinateTransformationNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
+target_link_libraries(LidarCamCoordinateTransformationNode hva)
+target_include_directories(LidarCamCoordinateTransformationNode PUBLIC "${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src")
+target_include_directories(LidarCamCoordinateTransformationNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
+target_include_directories(LidarCamCoordinateTransformationNode PUBLIC "$<BUILD_INTERFACE:${HVA_INC_DIR}>")
+
+include_directories("${OpenCV_INCLUDE_DIRS}")
+target_link_libraries(LidarCamCoordinateTransformationNode "${OpenCV_LIBRARIES}")
+
+target_link_libraries(LidarCamCoordinateTransformationNode Threads::Threads dl)
+
 #----------------Generate Camera2CFusionNode .so file---------------------#
 find_package(OpenCV REQUIRED)
 message(DEBUG "OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
@@ -423,6 +465,94 @@ include_directories("${OpenCV_INCLUDE_DIRS}")
 target_link_libraries(Camera2CFusionNode "${OpenCV_LIBRARIES}")
 
 target_link_libraries(Camera2CFusionNode Threads::Threads dl)
+
+
+#----------------Generate LidarCam2CFusionNode .so file---------------------#
+find_package(OpenCV REQUIRED)
+message(DEBUG "OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
+message(DEBUG "OpenCV_LIBRARIES: ${OpenCV_LIBRARIES}")
+
+add_library(LidarCam2CFusionNode SHARED LidarCam2CFusionNode.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src/liblidar.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/include/nodes/lidarDatabaseMeta.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/modules/inference_util/fusion/data_fusion_helper_lidar.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/base64.cpp ${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp)
+target_compile_definitions(LidarCam2CFusionNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
+target_link_libraries(LidarCam2CFusionNode hva)
+target_include_directories(LidarCam2CFusionNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
+target_include_directories(LidarCam2CFusionNode PUBLIC "${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src")
+target_include_directories(LidarCam2CFusionNode PUBLIC "$<BUILD_INTERFACE:${HVA_INC_DIR}>")
+
+include_directories("${OpenCV_INCLUDE_DIRS}")
+target_link_libraries(LidarCam2CFusionNode "${OpenCV_LIBRARIES}")
+
+target_link_libraries(LidarCam2CFusionNode Threads::Threads dl)
+
+
+#----------------Generate LidarCam3CFusionNode .so file---------------------#
+find_package(OpenCV REQUIRED)
+message(DEBUG "OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
+message(DEBUG "OpenCV_LIBRARIES: ${OpenCV_LIBRARIES}")
+
+add_library(LidarCam3CFusionNode SHARED LidarCam3CFusionNode.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src/liblidar.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/include/nodes/lidarDatabaseMeta.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/modules/inference_util/fusion/data_fusion_helper_lidar.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/base64.cpp ${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp)
+target_compile_definitions(LidarCam3CFusionNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
+target_link_libraries(LidarCam3CFusionNode hva)
+target_include_directories(LidarCam3CFusionNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
+target_include_directories(LidarCam3CFusionNode PUBLIC "${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src")
+target_include_directories(LidarCam3CFusionNode PUBLIC "$<BUILD_INTERFACE:${HVA_INC_DIR}>")
+
+include_directories("${OpenCV_INCLUDE_DIRS}")
+target_link_libraries(LidarCam3CFusionNode "${OpenCV_LIBRARIES}")
+
+target_link_libraries(LidarCam3CFusionNode Threads::Threads dl)
+
+
+#----------------Generate LidarCam4CFusionNode .so file---------------------#
+find_package(OpenCV REQUIRED)
+message(DEBUG "OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
+message(DEBUG "OpenCV_LIBRARIES: ${OpenCV_LIBRARIES}")
+
+add_library(LidarCam4CFusionNode SHARED LidarCam4CFusionNode.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src/liblidar.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/include/nodes/lidarDatabaseMeta.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/modules/inference_util/fusion/data_fusion_helper_lidar.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/base64.cpp ${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp)
+target_compile_definitions(LidarCam4CFusionNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
+target_link_libraries(LidarCam4CFusionNode hva)
+target_include_directories(LidarCam4CFusionNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
+target_include_directories(LidarCam4CFusionNode PUBLIC "${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src")
+target_include_directories(LidarCam4CFusionNode PUBLIC "$<BUILD_INTERFACE:${HVA_INC_DIR}>")
+
+include_directories("${OpenCV_INCLUDE_DIRS}")
+target_link_libraries(LidarCam4CFusionNode "${OpenCV_LIBRARIES}")
+
+target_link_libraries(LidarCam4CFusionNode Threads::Threads dl)
+
+#----------------Generate LidarCam6CFusionNode .so file---------------------#
+find_package(OpenCV REQUIRED)
+message(DEBUG "OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
+message(DEBUG "OpenCV_LIBRARIES: ${OpenCV_LIBRARIES}")
+
+add_library(LidarCam6CFusionNode SHARED LidarCam6CFusionNode.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src/liblidar.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/include/nodes/lidarDatabaseMeta.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/modules/inference_util/fusion/data_fusion_helper_lidar.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/base64.cpp ${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp)
+target_compile_definitions(LidarCam6CFusionNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
+target_link_libraries(LidarCam6CFusionNode hva)
+target_include_directories(LidarCam6CFusionNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
+target_include_directories(LidarCam6CFusionNode PUBLIC "${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src")
+target_include_directories(LidarCam6CFusionNode PUBLIC "$<BUILD_INTERFACE:${HVA_INC_DIR}>")
+
+include_directories("${OpenCV_INCLUDE_DIRS}")
+target_link_libraries(LidarCam6CFusionNode "${OpenCV_LIBRARIES}")
+
+target_link_libraries(LidarCam6CFusionNode Threads::Threads dl)
+
 
 #----------------Generate Camera4CFusionNode .so file---------------------#
 find_package(OpenCV REQUIRED)
@@ -460,6 +590,29 @@ target_link_libraries(Track2TrackAssociationNode "${OpenCV_LIBRARIES}")
 
 target_link_libraries(Track2TrackAssociationNode Threads::Threads dl)
 
+
+#----------------Generate LidarCamTrack2TrackAssociationNode .so file---------------------#
+find_package(OpenCV REQUIRED)
+message(DEBUG "OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
+message(DEBUG "OpenCV_LIBRARIES: ${OpenCV_LIBRARIES}")
+
+add_library(LidarCamTrack2TrackAssociationNode SHARED LidarCamTrack2TrackAssociationNode.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src/liblidar.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/include/nodes/lidarDatabaseMeta.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/modules/inference_util/fusion/data_fusion_helper_lidar.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/base64.cpp ${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp
+${PROJECT_SOURCE_DIR}/ai_inference/source/modules/vas/components/ot/mtt/hungarian_wrap.cpp)
+target_compile_definitions(LidarCamTrack2TrackAssociationNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
+target_link_libraries(LidarCamTrack2TrackAssociationNode hva)
+target_include_directories(LidarCamTrack2TrackAssociationNode PUBLIC "${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src")
+target_include_directories(LidarCamTrack2TrackAssociationNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
+target_include_directories(LidarCamTrack2TrackAssociationNode PUBLIC "$<BUILD_INTERFACE:${HVA_INC_DIR}>")
+
+include_directories("${OpenCV_INCLUDE_DIRS}")
+target_link_libraries(LidarCamTrack2TrackAssociationNode "${OpenCV_LIBRARIES}")
+
+target_link_libraries(LidarCamTrack2TrackAssociationNode Threads::Threads dl)
+
 #----------------Generate PostFusionOutputNode .so file---------------------#
 add_library(PostFusionOutputNode SHARED PostFusionOutputNode.cpp 
 ${BASE_NODE_DIR}/baseResponseNode.cpp
@@ -471,6 +624,26 @@ target_include_directories(PostFusionOutputNode PUBLIC "$<BUILD_INTERFACE:${HVA_
 
 target_link_libraries(PostFusionOutputNode ${Boost_LIBRARIES})
 target_include_directories(PostFusionOutputNode PUBLIC ${Boost_INCLUDE_DIRS})
+
+#----------------Generate LidarCamFusionOutputNode .so file---------------------#
+find_package(OpenCV REQUIRED)
+message(DEBUG "OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
+message(DEBUG "OpenCV_LIBRARIES: ${OpenCV_LIBRARIES}")
+add_library(LidarCamFusionOutputNode SHARED LidarCamFusionOutputNode.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src/liblidar.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/include/nodes/lidarDatabaseMeta.hpp 
+${BASE_NODE_DIR}/baseResponseNode.cpp
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp)
+target_compile_definitions(LidarCamFusionOutputNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
+target_link_libraries(LidarCamFusionOutputNode hva)
+target_include_directories(LidarCamFusionOutputNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
+target_include_directories(LidarCamFusionOutputNode PUBLIC "${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src")
+target_include_directories(LidarCamFusionOutputNode PUBLIC "$<BUILD_INTERFACE:${HVA_INC_DIR}>")
+include_directories("${OpenCV_INCLUDE_DIRS}")
+target_link_libraries(LidarCamFusionOutputNode "${OpenCV_LIBRARIES}")
+
+target_link_libraries(LidarCamFusionOutputNode ${Boost_LIBRARIES})
+target_include_directories(LidarCamFusionOutputNode PUBLIC ${Boost_INCLUDE_DIRS})
 
 #----------------Generate RadarPreProcessingNode.so file---------------------#
 find_package(MKL CONFIG REQUIRED)
@@ -619,6 +792,21 @@ target_include_directories(LocalMultiSensorInputNode PUBLIC "$<BUILD_INTERFACE:$
 
 target_link_libraries(LocalMultiSensorInputNode Threads::Threads dl)
 
+#----------------Generate LidarCamFusionInputNode.so file---------------------#
+
+add_library(LidarCamFusionInputNode SHARED LidarCamFusionInputNode.cpp
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp
+${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src/liblidar.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/include/nodes/lidarDatabaseMeta.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/modules/inference_util/lidar/kitti_loader.cpp)
+
+target_compile_definitions(LidarCamFusionInputNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
+target_link_libraries(LidarCamFusionInputNode hva)
+target_include_directories(LidarCamFusionInputNode PUBLIC "${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src")
+target_include_directories(LidarCamFusionInputNode PUBLIC ${HVA_INC_DIR})
+target_include_directories(LidarCamFusionInputNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
+
+target_link_libraries(LidarCamFusionInputNode Threads::Threads dl)
 
 #----------------Generate LocalMediaSensorInputNode.so file---------------------#
 
@@ -694,3 +882,15 @@ target_compile_options(RadarSignalProcessingNode PUBLIC $<TARGET_PROPERTY:MKL::M
 # target_link_libraries(RadarPreProcessingNode media_storage utility)
 target_link_libraries(RadarSignalProcessingNode $<LINK_ONLY:MKL::MKL>)
 target_link_libraries(RadarSignalProcessingNode Threads::Threads dl radar)
+
+#----------------Generate LidarOutputNode .so file---------------------#
+add_library(LidarOutputNode SHARED LidarOutputNode.cpp
+${BASE_NODE_DIR}/baseResponseNode.cpp
+${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src/liblidar.hpp
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp)
+
+target_compile_definitions(LidarOutputNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
+target_link_libraries(LidarOutputNode hva)
+target_include_directories(LidarOutputNode PUBLIC ${HVA_INC_DIR})
+target_include_directories(LidarOutputNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>")
+target_include_directories(LidarOutputNode PUBLIC "${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src")

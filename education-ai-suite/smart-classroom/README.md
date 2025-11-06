@@ -22,7 +22,7 @@ To see the system requirements and other installations, see the following guides
 
 The basic architecture follows a modular pipeline designed for efficient audio summarisation. It begins with **audio preprocessing**, where FFMPEG chunks input audio into smaller segments for optimal handling. These segments are processed by an **ASR transcriber** (e.g., Whisper or Paraformer) to convert speech into text. Finally, an **LLM summariser** (such as Qwen or Llama), optimised through frameworks like OpenVINO IR, Llama.cpp, or IPEX, generates concise summaries, which are delivered via the **output handler** for downstream use.
 
-![High-Level System Diagram](./docs/user-guide/_images/architecture.svg)
+![High-Level System Diagram](./docs/user-guide/images/architecture.svg)
 
 ## Learn More
 
