@@ -92,7 +92,7 @@ Note: supported media types: jpg, png, mp4
     **Important**: You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See [multimodal-embedding-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/supported_models.md) for available embedding models, and [vlm-openvino-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for available vlm models.
 
 
-   You might want to pay some attention to `DEVICE` and `VLM_DEVICE` in `env.sh`. By default, they are both `GPU.1`, which applies to a standard hardware platform with an integrated GPU as `GPU.0` and the discrete GPU would be `GPU.1`. You can refer to [OpenVINO's query device sample](https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html) to learn more about how to identify which GPU index should be set.
+   You might want to pay some attention to `DEVICE`, `VLM_DEVICE` and `EMBEDDING_DEVICE` in `env.sh`. By default, they are `GPU.1`, which applies to a standard hardware platform with an integrated GPU as `GPU.0` and a discrete GPU as `GPU.1`. You can refer to [OpenVINO's query device sample](https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html) to learn more about how to identify which GPU index should be set.
 
 3.  Deploy with docker compose
 
@@ -117,7 +117,7 @@ visual-search-qa-app         "streamlit run app.p…"   visual-search-qa-app    
 vlm-openvino-serving         "/bin/bash -c '/app/…"   vlm-openvino-serving         running (healthy)   0.0.0.0:9764->8000/tcp, :::9764->8000/tcp
 ```
 
-#### Option2: Deploy the application in Kubernetes
+#### Option2: Deploy in Kubernetes
 
 Please refer to [Deploy with helm](./deploy-with-helm.md) for details.
 
