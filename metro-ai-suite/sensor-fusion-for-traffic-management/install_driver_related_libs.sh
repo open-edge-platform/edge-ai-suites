@@ -41,17 +41,19 @@ _install_base_libs()
 
 _upgrade_kernel()
 {
-  mkdir -p ${THIRD_PARTY_BUILD_DIR}/6.8.0-51_kernel
-  pushd ${THIRD_PARTY_BUILD_DIR}/6.8.0-51_kernel
+  mkdir -p ${THIRD_PARTY_BUILD_DIR}/6.16.0_kernel
+  pushd ${THIRD_PARTY_BUILD_DIR}/6.16.0_kernel
   cur_kernel=$(uname -r)
-  if [[ "$cur_kernel" != *"6.8.0-51-generic"* ]]; then
+  if [[ "$cur_kernel" != *"6.16.0-061600-generic"* ]]; then
     sudo -E apt update
-    sudo -E apt install -y linux-image-6.8.0-51-generic
-    sudo -E apt install -y linux-headers-6.8.0-51-generic
-    sudo -E apt install -y linux-modules-6.8.0-51-generic
-    sudo -E apt install -y linux-modules-extra-6.8.0-51-generic
+    wget https://kernel.ubuntu.com/mainline/v6.16/amd64/linux-headers-6.16.0-061600_6.16.0-061600.202507272138_all.deb
+    wget https://kernel.ubuntu.com/mainline/v6.16/amd64/linux-headers-6.16.0-061600-generic_6.16.0-061600.202507272138_amd64.deb
+    wget https://kernel.ubuntu.com/mainline/v6.16/amd64/linux-image-unsigned-6.16.0-061600-generic_6.16.0-061600.202507272138_amd64.deb
+    wget https://kernel.ubuntu.com/mainline/v6.16/amd64/linux-modules-6.16.0-061600-generic_6.16.0-061600.202507272138_amd64.deb
 
-    sudo sed -i 's#^GRUB_DEFAULT=0$#GRUB_DEFAULT="Advanced options for Ubuntu>Ubuntu, with Linux 6.8.0-51-generic"#' /etc/default/grub
+    sudo dpkg -i *.deb
+
+    sudo sed -i 's#^GRUB_DEFAULT=0$#GRUB_DEFAULT="Advanced options for Ubuntu>Ubuntu, with Linux 6.16.0-061600-generic"#' /etc/default/grub
 
     sudo update-grub
 
@@ -63,113 +65,48 @@ _upgrade_kernel()
   popd
 }
 
-_install_arc770_gpu_driver()
-{
-  # Install the Intel graphics GPG public key
-  wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
-    sudo gpg --yes --dearmor --output /usr/share/keyrings/intel-graphics.gpg
-
-  # Configure the repositories.intel.com package repository
-  echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy unified" | \
-    sudo tee /etc/apt/sources.list.d/intel-gpu-jammy.list
-
-  # Update the package repository metadata
-  sudo -E apt update
-
-
-  # Install the compute-related packages
-  sudo -E apt install -y intel-opencl-icd=23.22.26516.25-682~22.04 \
-    debhelper devscripts mawk openssh-server opencl-headers opencl-dev intel-gpu-tools clinfo \
-    intel-fw-gpu libtbb12 intel-level-zero-gpu libigc1 libigdfcl1 libigfxcmrt7 libmfx1
-  
-  sudo apt-mark hold intel-opencl-icd
-}
-
-_upgrade_i915_driver()
-{
-  pushd ${THIRD_PARTY_BUILD_DIR}
-
-  git clone https://github.com/intel-gpu/intel-gpu-i915-backports.git
-  cd intel-gpu-i915-backports/
-  git checkout backport/RELEASE_2405_23.10
-  make i915dkmsdeb-pkg
-  sudo dpkg -i ../intel-i915-dkms_*_all.deb
-
-  popd
-}
-
-_install_mtl_gpu_driver()
+_install_gpu_driver()
 {
   set +e
-  pushd ${THIRD_PARTY_BUILD_DIR}
+  sudo -E apt-get update
 
-  # Install the Intel graphics GPG public key
-  wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
-    sudo gpg --yes --dearmor --output /usr/share/keyrings/intel-graphics.gpg
-
-  # Configure the repositories.intel.com package repository
-  echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy unified" | \
-    sudo tee /etc/apt/sources.list.d/intel-gpu-jammy.list
-
-  # Update the package repository metadata
-  sudo -E apt update
-
-
+  sudo -E apt install -y software-properties-common
+  # Add the intel-graphics PPA
+  sudo -E add-apt-repository -y ppa:kobuk-team/intel-graphics
   # Install the compute-related packages
-  sudo -E apt install -y debhelper devscripts mawk openssh-server opencl-headers opencl-dev intel-gpu-tools clinfo \
-    intel-fw-gpu libtbb12 intel-level-zero-gpu libigc1 libigdfcl1 libigfxcmrt7 libmfx1
-  
-  # Install header files to allow compilation of new code
-  sudo -E apt install -y ocl-icd-libopencl1
+  sudo -E apt install -y libze-intel-gpu1 libze1 intel-ocloc intel-opencl-icd clinfo intel-gsc hwinfo
+  # Install the media-related packages
+  sudo -E apt install -y intel-media-va-driver-non-free libmfx1 libmfx-gen1 libvpl2 libvpl-tools libva-glx2 va-driver-all vainfo
 
+  sudo gpasswd -a ${USER} render
+
+  sudo -E apt install -y ocl-icd-libopencl1 libigdgmm12
+  pushd ${THIRD_PARTY_BUILD_DIR}
   neo_download_url=https://github.com
-  # if $PRC_NETWORK; then
-  #   neo_download_url=https://hub.mirror.com/github.com
-  # fi
   mkdir -p neo && cd neo
-  # 25.13.33276.16 version cause some unexpected iGPU issues, so we use 24.39.31294.12 version
-  # rm -f ww13.sum && wget ${neo_download_url}/intel/compute-runtime/releases/download/25.13.33276.16/ww13.sum
-  # sha256sum -c ww13.sum
-  # if [ $? -ne 0 ] ; then
-  #     rm -rf *.deb *.ddeb
-  #     wget ${neo_download_url}/intel/intel-graphics-compiler/releases/download/v2.10.8/intel-igc-core-2_2.10.8+18926_amd64.deb
-  #     wget ${neo_download_url}/intel/intel-graphics-compiler/releases/download/v2.10.8/intel-igc-opencl-2_2.10.8+18926_amd64.deb
-  #     wget ${neo_download_url}/intel/compute-runtime/releases/download/25.13.33276.16/intel-level-zero-gpu-dbgsym_1.6.33276.16_amd64.ddeb
-  #     wget ${neo_download_url}/intel/compute-runtime/releases/download/25.13.33276.16/intel-level-zero-gpu_1.6.33276.16_amd64.deb
-  #     wget ${neo_download_url}/intel/compute-runtime/releases/download/25.13.33276.16/intel-opencl-icd-dbgsym_25.13.33276.16_amd64.ddeb
-  #     wget ${neo_download_url}/intel/compute-runtime/releases/download/25.13.33276.16/intel-opencl-icd_25.13.33276.16_amd64.deb
-  #     wget ${neo_download_url}/intel/compute-runtime/releases/download/25.13.33276.16/libigdgmm12_22.7.0_amd64.deb
-
-  #     set -e
-  #     sha256sum -c ww13.sum
-  # fi
-
-  # # Install all packages as root
-  # sudo dpkg -i *deb
-
-  sudo -E apt install libigdgmm12
-
-  rm -f ww39.sum && wget ${neo_download_url}/intel/compute-runtime/releases/download/24.39.31294.12/ww39.sum
-  sha256sum -c ww39.sum
+  rm -f ww35.sum && wget ${neo_download_url}/intel/compute-runtime/releases/download/25.35.35096.9/ww35.sum
+  sha256sum -c ww35.sum
   if [ $? -ne 0 ] ; then
       rm -rf *.deb *.ddeb
-      wget ${neo_download_url}/intel/intel-graphics-compiler/releases/download/igc-1.0.17791.9/intel-igc-core_1.0.17791.9_amd64.deb
-      wget ${neo_download_url}/intel/intel-graphics-compiler/releases/download/igc-1.0.17791.9/intel-igc-opencl_1.0.17791.9_amd64.deb
-      wget ${neo_download_url}/intel/compute-runtime/releases/download/24.39.31294.12/intel-level-zero-gpu-dbgsym_1.6.31294.12_amd64.ddeb
-      wget ${neo_download_url}/intel/compute-runtime/releases/download/24.39.31294.12/intel-level-zero-gpu_1.6.31294.12_amd64.deb
-      wget ${neo_download_url}/intel/compute-runtime/releases/download/24.39.31294.12/intel-opencl-icd-dbgsym_24.39.31294.12_amd64.ddeb
-      wget ${neo_download_url}/intel/compute-runtime/releases/download/24.39.31294.12/intel-opencl-icd_24.39.31294.12_amd64.deb
+      wget ${neo_download_url}/intel/intel-graphics-compiler/releases/download/v2.18.5/intel-igc-core-2_2.18.5+19820_amd64.deb
+      wget ${neo_download_url}/intel/intel-graphics-compiler/releases/download/v2.18.5/intel-igc-opencl-2_2.18.5+19820_amd64.deb
+      wget ${neo_download_url}/intel/compute-runtime/releases/download/25.35.35096.9/intel-ocloc-dbgsym_25.35.35096.9-0_amd64.ddeb
+      wget ${neo_download_url}/intel/compute-runtime/releases/download/25.35.35096.9/intel-ocloc_25.35.35096.9-0_amd64.deb
+      wget ${neo_download_url}/intel/compute-runtime/releases/download/25.35.35096.9/intel-opencl-icd-dbgsym_25.35.35096.9-0_amd64.ddeb
+      wget ${neo_download_url}/intel/compute-runtime/releases/download/25.35.35096.9/intel-opencl-icd_25.35.35096.9-0_amd64.deb
+      wget ${neo_download_url}/intel/compute-runtime/releases/download/25.35.35096.9/libigdgmm12_22.8.1_amd64.deb
+      wget ${neo_download_url}/intel/compute-runtime/releases/download/25.35.35096.9/libze-intel-gpu1-dbgsym_25.35.35096.9-0_amd64.ddeb
+      wget ${neo_download_url}/intel/compute-runtime/releases/download/25.35.35096.9/libze-intel-gpu1_25.35.35096.9-0_amd64.deb
 
-      set -e
-      sha256sum -c ww39.sum
+      sha256sum -c ww35.sum
   fi
-
+  set -e
   # Install all packages as root
+  rm -rf libigdgmm12_22.8.1_amd64.deb
   sudo dpkg -i *deb
 
   popd
 }
-
 
 _install_npu_driver()
 {
@@ -182,40 +119,29 @@ _install_npu_driver()
       dpkg -l | grep -q "^ii  intel-level-zero-npu "; then
       echo "NPU driver already installed."
   else
-      wget https://github.com/intel/linux-npu-driver/releases/download/v1.16.0/intel-driver-compiler-npu_1.16.0.20250328-14132024782_ubuntu22.04_amd64.deb
-      wget https://github.com/intel/linux-npu-driver/releases/download/v1.16.0/intel-fw-npu_1.16.0.20250328-14132024782_ubuntu22.04_amd64.deb
-      wget https://github.com/intel/linux-npu-driver/releases/download/v1.16.0/intel-level-zero-npu_1.16.0.20250328-14132024782_ubuntu22.04_amd64.deb
+      wget https://github.com/intel/linux-npu-driver/releases/download/v1.22.0/linux-npu-driver-v1.22.0.20250813-16938856004-ubuntu2404.tar.gz
+      tar -xf linux-npu-driver-v1.22.0.20250813-16938856004-ubuntu2404.tar.gz
 
       sudo -E apt install -y libtbb12 && sudo dpkg -i *.deb
 
-      wget https://github.com/oneapi-src/level-zero/releases/download/v1.20.2/level-zero_1.20.2+u22.04_amd64.deb
+      wget https://github.com/oneapi-src/level-zero/releases/download/v1.22.4/level-zero_1.22.4+u24.04_amd64.deb
       sudo dpkg -i level-zero*.deb
 
-      read -n 1 -s -r -p "Press any key to reboot, after reboot please set the udev rules for permissions access of NPU ..."
+      read -n 1 -s -r -p "Press any key to reboot..."
       sudo reboot
   fi
   popd
 }
 
-_set_rule_after_npu()
+_install_xpu_smi()
 {
-  if [ -e "/dev/accel/accel0" ]; then
-    ls -lah /dev/accel/accel0
-  else
-    sudo chown root:render /dev/accel/accel0
-    sudo chmod g+rw /dev/accel/accel0
-    sudo usermod -a -G render $USER
+  pushd ${THIRD_PARTY_BUILD_DIR}
+  wget https://github.com/intel/xpumanager/releases/download/v1.3.3/xpu-smi_1.3.3_20250926.101214.8a6b6526.u24.04_amd64.deb
 
-    sudo bash -c "echo 'SUBSYSTEM==\"accel\", KERNEL==\"accel*\", GROUP=\"render\", MODE=\"0660\"' > /etc/udev/rules.d/10-intel-vpu.rules"
-    sudo udevadm control --reload-rules
-    sudo udevadm trigger --subsystem-match=accel
+  # Install all packages as root
+  sudo dpkg -i xpu-smi_*.deb
 
-    ls -lah /dev/accel/accel0
-
-    echo "The system will reboot shortly..."
-    sleep 1
-    sudo reboot
-  fi
+  popd
 }
 
 install_3rd_libs(){
@@ -223,21 +149,13 @@ install_3rd_libs(){
   _install_base_libs
   check_network #in case that some components download may failed in PRC network, we provide a proxy to help, comment this line if no needed.
   _upgrade_kernel
-  
-  if lscpu | grep "Model name" | grep -q i7-13700; then
-    echo "Install i7-13700 driver"
-    _install_arc770_gpu_driver
-    _upgrade_i915_driver
-  fi
-  if lscpu | grep "Model name" | grep -q Ultra; then
-    echo "Install Ultra driver"
-    _install_mtl_gpu_driver
+  _install_gpu_driver
+  _install_xpu_smi
+  if lspci | grep -iq "npu\|neural\|ai"; then
+    echo "NPU detected, installing NPU driver..."
     _install_npu_driver
-    _set_rule_after_npu
-  fi
-  if lscpu | grep "Model name" | grep -q 7305E; then
-    echo "Install 7305E driver"
-    _install_mtl_gpu_driver
+  else
+    echo "No NPU detected, skipping NPU driver installation."
   fi
   sudo rm -rf ${THIRD_PARTY_BUILD_DIR}
 

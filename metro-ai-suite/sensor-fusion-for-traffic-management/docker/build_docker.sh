@@ -3,7 +3,7 @@ set -e
 IMAGE_TAG=${1-tfcc:latest}
 DOCKERFILE=${2-Dockerfile_TFCC.dockerfile}
 BASE=${3-ubuntu}
-BASE_VERSION=${4-22.04}
+BASE_VERSION=${4-24.04}
 
 docker build \
     --network=host \
