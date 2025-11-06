@@ -1,16 +1,16 @@
 from os import PathLike
 from pathlib import Path
-from ultralytics import YOLO
-import openvino as ov
 from zipfile import ZipFile
+import shutil
 
+import openvino as ov
+from ultralytics import YOLO
 from ultralytics.data.utils import DATASETS_DIR
 from ultralytics.utils import DEFAULT_CFG
 from ultralytics.cfg import get_cfg
 from ultralytics.data.utils import check_det_dataset
 from ultralytics.models.yolo.pose import PoseValidator
 from ultralytics.utils.metrics import OKS_SIGMA
-
 import nncf
 
 DATA_URL = "https://ultralytics.com/assets/coco8-pose.zip"
@@ -79,12 +79,30 @@ if not (OUT_DIR / "coco8-pose/labels").exists():
 
 
 def convert_yolo_to_openvino(model_name: str, output_dir: str):
+    output_path = Path(output_dir)
+    output_path.mkdir(exist_ok=True, parents=True)
+
+    # Check if quantized model already exists
+    int8_model_pose_path = output_path / f"{model_name}.xml"
+    if int8_model_pose_path.exists() and (output_path / f"{model_name}.bin").exists():
+        return
+
+    pt_file = Path(f"{model_name}.pt")
     pose_model = YOLO(f"{model_name}.pt")
     label_map = pose_model.model.names
 
-    pose_model_path = Path(f"{output_dir}/{model_name}_openvino_model/{model_name}.xml")
+    pose_model_dir = output_path / f"{model_name}_openvino_model"
+    pose_model_path = pose_model_dir / f"{model_name}.xml"
     if not pose_model_path.exists():
+        # Export to a temporary location then move to output_dir
+        temp_export_dir = Path(f"{model_name}_openvino_model")
         pose_model.export(format="openvino", dynamic=True, half=True)
+        # Move the exported model to output_dir
+        if temp_export_dir.exists():
+            shutil.move(str(temp_export_dir), str(pose_model_dir))
+
+    if pt_file.exists():
+        pt_file.unlink()
 
     core = ov.Core()
     pose_ov_model = core.read_model(pose_model_path)
@@ -133,7 +151,6 @@ def convert_yolo_to_openvino(model_name: str, output_dir: str):
     quantized_pose_model.set_rt_info("yolo_v8_pose" if 'v8' in model_name else "yolo_v11_pose", ['model_info', 'model_type'])
     quantized_pose_model.set_rt_info("sit stand sit_raise_up stand_raise_up", ['model_info', 'labels'])
 
-    int8_model_pose_path = Path(f"{output_dir}/{model_name}.xml")
     print(f"Quantized model will be saved to {int8_model_pose_path}")
     ov.save_model(quantized_pose_model, str(int8_model_pose_path))
 

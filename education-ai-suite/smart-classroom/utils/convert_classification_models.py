@@ -107,11 +107,26 @@ def convert_to_openvino(model, model_name, output_dir, input_shape=(1, 3, 224, 2
     print(f"Saved quantized OpenVINO model to {output_path}")
 
 def convert_classification_models(output_dir: str = "models/va"):
-    print("Starting model conversion process...\n")
-    
     output_path = Path(output_dir)
     output_path.mkdir(exist_ok=True, parents=True)
-    
+
+    # Check if all required models are present
+    required_models = [
+        "resnet18.xml",
+        "resnet18.bin",
+        "resnet50.xml",
+        "resnet50.bin",
+        "mobilenetv2.xml",
+        "mobilenetv2.bin",
+        "person-reidentification-retail-0288.xml",
+        "person-reidentification-retail-0288.bin"
+    ]
+
+    all_models_present = all((output_path / model).exists() for model in required_models)
+
+    if all_models_present:
+        return
+
     print("Processing ResNet-18")
     weights_path = download(RESNET18, "resnet18-f37072fd.pth", output_path)
     model = models.resnet18()
@@ -131,10 +146,10 @@ def convert_classification_models(output_dir: str = "models/va"):
     convert_to_openvino(model, "mobilenetv2", output_path, input_shape=(1, 3, 224, 224))
 
     print("\nProcessing person-reidentification-retail-0288")
-    download(REID_XML, "person-reidentification-retail-0288.xml", output_path)
-    download(REID_BIN, "person-reidentification-retail-0288.bin", output_path)
+    download(REID_XML, "person-reidentification-retail-0288-original.xml", output_path)
+    download(REID_BIN, "person-reidentification-retail-0288-original.bin", output_path)
     core = ov.Core()
-    reid_model = core.read_model(str(output_path / "person-reidentification-retail-0288.xml"))
+    reid_model = core.read_model(str(output_path / "person-reidentification-retail-0288-original.xml"))
     reid_model.set_rt_info("raw_data_copy", ['model_info', 'model_type'])
     reid_model.set_rt_info("123.675,116.28,103.53", ['model_info', 'mean_values'])
     reid_model.set_rt_info("58.395,57.12,57.375", ['model_info', 'scale_values'])

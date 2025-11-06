@@ -45,8 +45,8 @@ if __name__ == "__main__":
     preload_models()
 
     media_service = MediaService()
-    MediaService.launch_server()
-    
+    media_service.launch_server()
+
     import uvicorn
     logger.info("App started, Starting Server...")
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
