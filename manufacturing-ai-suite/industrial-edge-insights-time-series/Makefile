@@ -41,18 +41,13 @@ export SAMPLE_APP
 # Example: Run a shell if-else block before starting containers
 define multi_stream_check
 	@if [ "$(num_of_streams)" -gt 1 ]; then \
-		if [ "$(SAMPLE_APP)" = "$(DEFAULT_SAMPLE_APP)" ]; then \
-			TELEGRAF_METRIC_BATCH_SIZE=$$(grep -m1 TELEGRAF_METRIC_BATCH_SIZE $(DOCKER_COMPOSE_FILE) | awk -F ': ' '{print $$2}' | xargs); \
-			LOG_LEVEL=$$(grep -E "^LOG_LEVEL=" $(ENV_FILE) | cut -d'=' -f2); \
-			python3 -m venv ./venv; \
-			. ./venv/bin/activate; \
-			python3 -m pip install -r requirements.txt; \
-			python generate-telegraf-config.py $(num_of_streams) $$LOG_LEVEL $$TELEGRAF_METRIC_BATCH_SIZE $(ingestion_interval) $(1); \
-			deactivate; \
-		else \
-			echo "Multi-stream ingestion is only supported for the 'Wind Turbine Anomaly Detection' sample app."; \
-			exit 1; \
-		fi; \
+		TELEGRAF_METRIC_BATCH_SIZE=$$(grep -m1 TELEGRAF_METRIC_BATCH_SIZE $(DOCKER_COMPOSE_FILE) | awk -F ': ' '{print $$2}' | xargs); \
+		LOG_LEVEL=$$(grep -E "^LOG_LEVEL=" $(ENV_FILE) | cut -d'=' -f2); \
+		python3 -m venv ./venv; \
+		. ./venv/bin/activate; \
+		python3 -m pip install -r requirements.txt; \
+		python generate-telegraf-config.py --no_of_streams $(num_of_streams) --log_level $$LOG_LEVEL --telegraf_metric_batch_size $$TELEGRAF_METRIC_BATCH_SIZE --ingestion_interval $(ingestion_interval) --ingestion_type $(1) --app_name $(SAMPLE_APP); \
+		deactivate; \
 	fi
 endef
 
@@ -118,24 +113,6 @@ check_env_variables:
 			VISUALIZER_GRAFANA_PASSWORD) \
 				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
 					echo "VISUALIZER_GRAFANA_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit"; \
-					exit 1; \
-				fi \
-				;; \
-			MR_PSQL_PASSWORD) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
-					echo "MR_PSQL_PASSWORD length must be a minimum of 10 alphanumeric characters with atleast one digit"; \
-					exit 1; \
-				fi \
-				;; \
-			MR_MINIO_ACCESS_KEY) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
-					echo "MR_MINIO_ACCESS_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit"; \
-					exit 1; \
-				fi \
-				;; \
-			MR_MINIO_SECRET_KEY) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
-					echo "MR_MINIO_SECRET_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit"; \
 					exit 1; \
 				fi \
 				;; \

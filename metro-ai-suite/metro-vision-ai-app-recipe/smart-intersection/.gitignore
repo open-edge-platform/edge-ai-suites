@@ -6,6 +6,7 @@ src/secrets/*.auth
 src/secrets/*.token
 src/secrets/supass
 src/dlstreamer-pipeline-server/videos/*.ts
+src/nginx/ssl/
 chart/charts/
 chart/Chart.lock
 __pycache__/

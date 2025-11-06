@@ -19,9 +19,6 @@ services:
       - milvus-data:/var/lib/milvus
       - ./src/milvus-db/embedEtcd.yaml:/milvus/configs/embedEtcd.yaml
       - ./src/milvus-db/user.yaml:/milvus/configs/user.yaml
-    ports:
-      - "19530:19530"
-      - "9091:9091"
       # This port conflicts with etcd when exposed, so it is commented out:
       # - "2379:2379"
     healthcheck:
@@ -43,8 +40,6 @@ services:
       - http_proxy=
       - https_proxy=
       - no_proxy=
-    ports:
-      - "8000:3000"
     restart: on-failure:5
     depends_on:
       milvus-db:
@@ -52,12 +47,13 @@ services:
 
   feature-matching:
     image: ${DOCKER_REGISTRY}intel/feature-matching:v1.0.2-pre-RC1
-    ports:
-      - "9000:8000"
     container_name: ibvs-featurematching
     build:
       context: src/feature-matching
       dockerfile: Dockerfile
+    read_only: true
+    tmpfs:
+    - /usr/src/app/static
     environment:
       MILVUS_ENDPOINT: http://milvus-db:19530
       COLLECTION_NAME: my_image_collection
@@ -123,21 +119,12 @@ services:
       - http_proxy=
       - https_proxy=
       - no_proxy=
-    ports:
-      - "8554:8554"
-      - "1935:1935"
-      - "8888:8888"
-      - "8889:8889"
-      - "8890:8890/udp"
-      - "8189:8189/udp"
     restart: on-failure:5
   broker:
     image: docker.io/library/eclipse-mosquitto:2.0.20
     container_name: ibvs-broker
     volumes:
       - ./src/broker:/mosquitto/config
-    ports:
-      - "1883:1883"
     restart: unless-stopped
     healthcheck:
       test:  ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
@@ -154,8 +141,6 @@ services:
     privileged: false
     tty: true
     entrypoint: ["./run.sh"]
-    ports:
-      - '8080:8080'
       # - '8554:8554'
     environment:
       - ENABLE_RTSP=true
@@ -219,11 +204,10 @@ services:
   app:
     image: ${DOCKER_REGISTRY}intel/image-based-video-search:v1.0.2-pre-RC1
     container_name: ibvs-app
-    ports:
-      - "3000:3000"
     build:
       context: src/app
       dockerfile: Dockerfile
+    read_only: true
     depends_on:
       streaming-pipeline:
         condition: service_healthy
@@ -238,6 +222,31 @@ services:
       retries: 3
       start_period: 20s
     restart: on-failure:5
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ibvs-reverse-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8554:8554"
+    volumes:
+      - ./src/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./src/nginx/generate_certs.sh:/usr/local/bin/generate_certs.sh:ro
+    entrypoint: ["/usr/local/bin/generate_certs.sh"]
+    depends_on:
+      - app
+    environment:
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
+      - NO_PROXY=
+    restart: on-failure:5
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/nginx_healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   milvus-data:

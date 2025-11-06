@@ -2,8 +2,8 @@
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-name: "[Industrial Edge Insights Time Series] SDLe Scans"
-run-name: "[Industrial Edge Insights Time Series] SDLe Scans workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+name: "[Industrial Edge Insights Multimodal and Time Series] SDLe Scans"
+run-name: "[Industrial Edge Insights Multimodal and Time Series] SDLe Scans workflow (by @${{ github.actor }} via ${{ github.event_name }})"
 
 
 # Only run at most 1 workflow concurrently per PR, unlimited for branches
@@ -28,6 +28,15 @@ on:
         - virus-scan
         - dbs-scan
         - codeql-scan
+      
+      application:
+        description: 'Which application to scan (time-series, multimodal or both)'
+        type: choice
+        options:
+        - both
+        - time-series
+        - multimodal
+        default: both
 
   workflow_call: 
     inputs:
@@ -35,6 +44,11 @@ on:
         description: 'Which Scans to run'
         required: false
         type: string
+      application:
+        description: 'Which application to scan (time-series, multimodal, or both)'
+        required: false
+        type: string
+        default: both
 
 jobs:   
   trivy-fs-scan:
@@ -62,7 +76,7 @@ jobs:
         shell: bash
         run: |
           pwd
-          cd manufacturing-ai-suite/industrial-edge-insights-time-series/
+          CWD=$(pwd)
           trivy --version
           which trivy
           trivy image --download-db-only
@@ -100,9 +114,19 @@ jobs:
           EOF
 
           # Use the downloaded template
-          trivy fs . --format template --template "@trivy-html.tpl" -o "trivy_fs_full_report_code_scan.html" 
-          trivy fs --list-all-pkgs --format template --template "@csv.tpl" --output trivy-fs-full-report.csv .
-          trivy fs --ignore-unfixed . | tee trivy-fs-full-report-ignore-unfixed.txt  
+          if [[ "${{ inputs.application }}" == "time-series" || "${{ inputs.application }}" == "both" ]]; then
+            cd $CWD/manufacturing-ai-suite/industrial-edge-insights-time-series/
+            trivy fs . --format template --template "@$CWD/trivy-html.tpl" -o "trivy_timeseries_fs_full_report_code_scan.html" 
+            trivy fs --list-all-pkgs --format template --template "@$CWD/csv.tpl" --output trivy-timeseries-fs-full-report.csv .
+            trivy fs --ignore-unfixed . | tee trivy-timeseries-fs-full-report-ignore-unfixed.txt
+          fi
+
+          if [[ "${{ inputs.application }}" == "multimodal" || "${{ inputs.application }}" == "both" ]]; then
+            cd $CWD/manufacturing-ai-suite/industrial-edge-insights-multimodal/
+            trivy fs . --format template --template "@$CWD/trivy-html.tpl" -o "trivy_multimodal_fs_full_report_code_scan.html" 
+            trivy fs --list-all-pkgs --format template --template "@$CWD/csv.tpl" --output trivy-multimodal-fs-full-report.csv .
+            trivy fs --ignore-unfixed . | tee trivy-multimodal-fs-full-report-ignore-unfixed.txt
+          fi
 
       - name: Upload Trivy FS Scan Report
         continue-on-error: true
@@ -112,6 +136,7 @@ jobs:
           name: Trivy Report - Filesystem Scan
           path: |
                 manufacturing-ai-suite/industrial-edge-insights-time-series/trivy*
+                manufacturing-ai-suite/industrial-edge-insights-multimodal/trivy*
     
   trivy-image-scan:
     if: ${{ (inputs.target == 'trivy-image-scan') || (inputs.target == 'all-scans') }}
@@ -138,7 +163,7 @@ jobs:
         shell: bash
         run: |
           pwd
-          cd manufacturing-ai-suite/industrial-edge-insights-time-series/
+          CWD=$(pwd)
           trivy --version
           which trivy
           trivy image --download-db-only
@@ -180,29 +205,80 @@ jobs:
         shell: bash
         run: |
               pwd
-              echo "Building Wind Turbine Sample App and scanning Image"
-              cd manufacturing-ai-suite/industrial-edge-insights-time-series/
-              make down
-              sed -i -e "s|OPC_UA_SERVER_IMAGE=.*|OPC_UA_SERVER_IMAGE=ia-opcua-server:latest|g" .env
-              sed -i -e "s|MQTT_PUBLISHER_IMAGE=.*|MQTT_PUBLISHER_IMAGE=ia-mqtt-publisher:latest|g" .env
-              make build
+              CWD=$(pwd)
+              if [[ "${{ inputs.application }}" == "time-series" || "${{ inputs.application }}" == "both" ]]; then
+                echo "Building Time Series Sample app and scanning docker images"
+                cd $CWD/manufacturing-ai-suite/industrial-edge-insights-time-series/
+                make down
 
-              trivy image ia-opcua-server:latest --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy-image-scan-opcua-server-ignore-unfixed.html
-              trivy image ia-opcua-server:latest --ignore-unfixed --format template --template "@csv.tpl" -o trivy-image-scan-opcua-server-ignore-unfixed.csv
-              trivy image --quiet --format spdx-json --output trivy-image-scan-opcua-server.spdx.json ia-opcua-server:latest
+                OPC_UA_SERVER_IMAGE=$(grep '^OPC_UA_SERVER_IMAGE=' .env | cut -d'=' -f2)
+                MQTT_PUBLISHER_IMAGE=$(grep '^MQTT_PUBLISHER_IMAGE=' .env | cut -d'=' -f2)
+                IMAGE_SUFFIX=$(grep '^IMAGE_SUFFIX=' .env | cut -d'=' -f2 | tr -d '"')
+                if [ -n "$IMAGE_SUFFIX" ]; then
+                  OPC_UA_SERVER_IMAGE="${OPC_UA_SERVER_IMAGE}-${IMAGE_SUFFIX}"
+                  MQTT_PUBLISHER_IMAGE="${MQTT_PUBLISHER_IMAGE}-${IMAGE_SUFFIX}"
+                fi
+                make build
 
-              trivy image --list-all-pkgs --format template --template "@csv.tpl" --output trivy-image-scan_opcua-server-list-all-pkgs.csv ia-opcua-server:latest
-              trivy image --ignore-unfixed ia-opcua-server:latest | tee trivy-image-scan-opcua-server-ignore-unfixed.txt
+                declare -A IMAGE_MAP
+                IMAGE_MAP[$OPC_UA_SERVER_IMAGE]="opcua-server"
+                IMAGE_MAP[$MQTT_PUBLISHER_IMAGE]="mqtt-publisher"
 
+                # Loop through images and perform Trivy scans
+                for IMAGE in "${!IMAGE_MAP[@]}"; do
+                    PREFIX="${IMAGE_MAP[$IMAGE]}"
+                    
+                    echo "Scanning image: $IMAGE"
+                    
+                    # All scan types
+                    trivy image "$IMAGE" --ignore-unfixed --format template --template "@$CWD/trivy-html.tpl" -o "trivy-image-scan-${PREFIX}-ignore-unfixed.html"
+                    trivy image "$IMAGE" --ignore-unfixed --format template --template "@$CWD/csv.tpl" -o "trivy-image-scan-${PREFIX}-ignore-unfixed.csv"
+                    trivy image --quiet --format spdx-json --output "trivy-image-scan-${PREFIX}.spdx.json" "$IMAGE"
+                    trivy image --list-all-pkgs --format template --template "@$CWD/csv.tpl" --output "trivy-image-scan-${PREFIX}-list-all-pkgs.csv" "$IMAGE"
+                    trivy image --ignore-unfixed "$IMAGE" | tee "trivy-image-scan-${PREFIX}-ignore-unfixed.txt"
+                    
+                    echo "Completed scanning $IMAGE"
+                done
 
-              trivy image ia-mqtt-publisher:latest --ignore-unfixed --format template --template "@trivy-html.tpl" -o trivy-image-scan-mqtt-publisher-ignore-unfixed.html
-              trivy image ia-mqtt-publisher:latest --ignore-unfixed --format template --template "@csv.tpl" -o trivy-image-scan-mqtt-publisher-ignore-unfixed.csv
-              trivy image --quiet --format spdx-json --output trivy-image-scan-mqtt-publisher.spdx.json ia-mqtt-publisher:latest
+                echo "completed Time Series Sample App Image scanning"
+              fi
 
-              trivy image --list-all-pkgs --format template --template "@csv.tpl" --output trivy-image-scan-mqtt-publisher-list-all-pkgs.csv ia-mqtt-publisher:latest
-              trivy image --ignore-unfixed ia-mqtt-publisher:latest | tee trivy-image-scan-mqtt-publisher-ignore-unfixed.txt
+              if [[ "${{ inputs.application }}" == "multimodal" || "${{ inputs.application }}" == "both" ]]; then
+                echo "Building Multimodal Weld Defect Detection Sample app and scanning docker images"
+                cd $CWD/manufacturing-ai-suite/industrial-edge-insights-multimodal/
+                make down
 
-              echo "completed Wind Turbine Sample App Image scanning"
+                WELD_SIMULATOR_IMAGE=$(grep '^WELD_SIMULATOR_IMAGE=' .env | cut -d'=' -f2)
+                FUSION_MODULE_IMAGE=$(grep '^FUSION_MODULE_IMAGE=' .env | cut -d'=' -f2)
+                IMAGE_SUFFIX=$(grep '^IMAGE_SUFFIX=' .env | cut -d'=' -f2 | tr -d '"')
+                if [ -n "$IMAGE_SUFFIX" ]; then
+                  WELD_SIMULATOR_IMAGE="${WELD_SIMULATOR_IMAGE}-${IMAGE_SUFFIX}"
+                  FUSION_MODULE_IMAGE="${FUSION_MODULE_IMAGE}-${IMAGE_SUFFIX}"
+                fi
+                make build
+
+                declare -A IMAGE_MAP
+                IMAGE_MAP[$WELD_SIMULATOR_IMAGE]="weld-simulator"
+                IMAGE_MAP[$FUSION_MODULE_IMAGE]="fusion-analytics"
+
+                # Loop through images and perform Trivy scans
+                for IMAGE in "${!IMAGE_MAP[@]}"; do
+                    PREFIX="${IMAGE_MAP[$IMAGE]}"
+                    
+                    echo "Scanning image: $IMAGE"
+                    
+                    # All scan types
+                    trivy image "$IMAGE" --ignore-unfixed --format template --template "@$CWD/trivy-html.tpl" -o "trivy-image-scan-${PREFIX}-ignore-unfixed.html"
+                    trivy image "$IMAGE" --ignore-unfixed --format template --template "@$CWD/csv.tpl" -o "trivy-image-scan-${PREFIX}-ignore-unfixed.csv"
+                    trivy image --quiet --format spdx-json --output "trivy-image-scan-${PREFIX}.spdx.json" "$IMAGE"
+                    trivy image --list-all-pkgs --format template --template "@$CWD/csv.tpl" --output "trivy-image-scan-${PREFIX}-list-all-pkgs.csv" "$IMAGE"
+                    trivy image --ignore-unfixed "$IMAGE" | tee "trivy-image-scan-${PREFIX}-ignore-unfixed.txt"
+                    
+                    echo "Completed scanning $IMAGE"
+                done
+
+                echo "completed Multimodal Weld Defect Detection Sample App Image scanning"
+              fi
             
       - name: Upload Trivy Image Scan Report
         continue-on-error: true
@@ -211,7 +287,8 @@ jobs:
         with:
           name: Trivy Report - Image Scan
           path: |
-                manufacturing-ai-suite/industrial-edge-insights-time-series/trivy-image-scan*
+            manufacturing-ai-suite/industrial-edge-insights-time-series/trivy-image-scan*
+            manufacturing-ai-suite/industrial-edge-insights-multimodal/trivy-image-scan*
 
   trivy-config-helm-scan:
     if: ${{ (inputs.target == 'trivy-config-scan') || (inputs.target == 'trivy-helm-scan') || (inputs.target == 'all-scans') }}
@@ -238,7 +315,6 @@ jobs:
         shell: bash
         run: |
           pwd
-          cd manufacturing-ai-suite/industrial-edge-insights-time-series/
           trivy --version
           which trivy
           trivy image --download-db-only
@@ -277,19 +353,36 @@ jobs:
 
       - name: Trivy config scan for helm charts 
         run: |
-          cd manufacturing-ai-suite/industrial-edge-insights-time-series/
-          make gen_helm_charts
-          cd helm
-          trivy config . >> trivy-wind-turbine-helm.txt
+          if [[ "${{ inputs.application }}" == "time-series" || "${{ inputs.application }}" == "both" ]]; then
+            cd manufacturing-ai-suite/industrial-edge-insights-time-series/
+            make gen_helm_charts
+            cd helm
+            INFLUXDB_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+            INFLUXDB_PASSWORD=$(openssl rand -hex 10)
+            VISUALIZER_GRAFANA_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+            VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 10)
+
+            sed -i "s/INFLUXDB_USERNAME:.*/INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}/g" values.yaml
+            sed -i "s/INFLUXDB_PASSWORD:.*/INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}/g" values.yaml
+            sed -i "s/VISUALIZER_GRAFANA_USER:.*/VISUALIZER_GRAFANA_USER: ${VISUALIZER_GRAFANA_USER}/g" values.yaml
+            sed -i "s/VISUALIZER_GRAFANA_PASSWORD:.*/VISUALIZER_GRAFANA_PASSWORD: ${VISUALIZER_GRAFANA_PASSWORD}/g" values.yaml
+
+            trivy config . >> trivy-timeseries-mqtt-helm.txt
+
+            sed -i "s/TELEGRAF_INPUT_PLUGIN:.*/TELEGRAF_INPUT_PLUGIN: opcua/g" values.yaml
+            trivy config . >> trivy-timeseries-opcua-helm.txt
+
+          fi
           
       - name: Upload Scan artifact to Github
         uses: actions/upload-artifact@v4
         with:
           name: Trivy Report - Config scan for Helm
-          path: manufacturing-ai-suite/industrial-edge-insights-time-series/helm/trivy-wind-turbine-helm.txt
+          path: |
+            manufacturing-ai-suite/industrial-edge-insights-time-series/helm/trivy-timeseries-*.txt
       
-  trivy-config-dockerfile-scan:
-    if: ${{ (inputs.target == 'trivy-config-scan') || (inputs.target == 'trivy-dockerfile-scan') || (inputs.target == 'all-scans') }}
+  trivy-config-time-series-dockerfile-scan:
+    if: ${{ ((inputs.target == 'trivy-config-scan') || (inputs.target == 'trivy-dockerfile-scan') || (inputs.target == 'all-scans')) && ((inputs.application == 'time-series') || (inputs.application == 'both')) }}
     permissions:
       contents: read
       packages: read          # needed for actions/checkout
@@ -304,6 +397,30 @@ jobs:
           - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-time-series/simulator/mqtt-publisher/Dockerfile
             output-report-path: trivy-mqttpublisher-dockerfile.json
             scan-name: Time Series mqttpublisher Dockerfile
+    uses: open-edge-platform/edge-ai-libraries/.github/workflows/trivy-config-mode.yaml@e6e04af3dbca805db9118b85a22ad2998f7eec39
+    with:
+      dockerfile-path: ${{ matrix.dockerfile-path }}
+      trivy-report-format: 'json'
+      severity-levels: 'HIGH,CRITICAL'
+      output-report-path: ${{ matrix.output-report-path }}
+      name: ${{ matrix.scan-name }}
+    
+  trivy-config-multimodal-dockerfile-scan:
+    if: ${{ ((inputs.target == 'trivy-config-scan') || (inputs.target == 'trivy-dockerfile-scan') || (inputs.target == 'all-scans')) && ((inputs.application == 'multimodal') || (inputs.application == 'both')) }}
+    permissions:
+      contents: read
+      packages: read          # needed for actions/checkout
+    name: Scan Dockerfiles (weld data simulator  & fusion module)
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator/Dockerfile
+            output-report-path: trivy-weld-simulator-dockerfile.json
+            scan-name: Multimodal Weld Data Simulator Dockerfile
+          - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-multimodal/fusion-analytics/Dockerfile
+            output-report-path: trivy-fusion-analytics-dockerfile.json
+            scan-name: Multimodal Fusion Analytics Dockerfile
     uses: open-edge-platform/edge-ai-libraries/.github/workflows/trivy-config-mode.yaml@e6e04af3dbca805db9118b85a22ad2998f7eec39
     with:
       dockerfile-path: ${{ matrix.dockerfile-path }}
@@ -335,40 +452,55 @@ jobs:
         mkdir -p reports
         docker pull ghcr.io/pycqa/bandit/bandit
         echo "### Bandit Scan Results" >> $GITHUB_STEP_SUMMARY
-        docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/manufacturing-ai-suite/industrial-edge-insights-time-series/ -f json -o /src/reports/bandit-report.json || true >> $GITHUB_STEP_SUMMARY
-        echo "Please find full report in bandit-report.txt" >> $GITHUB_STEP_SUMMARY
+        if [[ "${{ inputs.application }}" == "time-series" || "${{ inputs.application }}" == "both" ]]; then
+          docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/manufacturing-ai-suite/industrial-edge-insights-time-series/ -f json -o /src/reports/bandit-timeseries-report.json || true >> $GITHUB_STEP_SUMMARY
+          echo "Please find full report in bandit-timeseries-report.txt" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [[ "${{ inputs.application }}" == "multimodal" || "${{ inputs.application }}" == "both" ]]; then
+          docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/manufacturing-ai-suite/industrial-edge-insights-multimodal/ -f json -o /src/reports/bandit-multimodal-report.json || true >> $GITHUB_STEP_SUMMARY
+          echo "Please find full report in bandit-multimodal-report.txt" >> $GITHUB_STEP_SUMMARY
+        fi
         ls -al 
         pwd
     - name: Convert JSON to CSV
       run: |
-        python3 <<EOF
+        cat > convert_json_to_csv.py << 'EOF'
         import json
         import csv
+        import glob
 
-        with open("reports/bandit-report.json") as f:
-            data = json.load(f)
+        # Find all bandit report JSON files
+        json_files = glob.glob("reports/bandit-*-report.json")
+        
+        for json_file in json_files:
+            print(f"Processing {json_file}")
+            
+            with open(json_file) as f:
+                data = json.load(f)
 
-        with open("reports/bandit-report.csv", "w", newline="") as csvfile:
-            fieldnames = ["filename", "line_number", "issue_text", "severity", "confidence", "test_name"]
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for issue in data.get("results", []):
-                writer.writerow({
-                    "filename": issue["filename"],
-                    "line_number": issue["line_number"],
-                    "issue_text": issue["issue_text"],
-                    "severity": issue["issue_severity"],
-                    "confidence": issue["issue_confidence"],
-                    "test_name": issue["test_name"]
-                })
+            csv_file = json_file.replace(".json", ".csv")
+            with open(csv_file, "w", newline="") as csvfile:
+                fieldnames = ["filename", "line_number", "issue_text", "severity", "confidence", "test_name"]
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                for issue in data.get("results", []):
+                    writer.writerow({
+                        "filename": issue["filename"],
+                        "line_number": issue["line_number"],
+                        "issue_text": issue["issue_text"],
+                        "severity": issue["issue_severity"],
+                        "confidence": issue["issue_confidence"],
+                        "test_name": issue["test_name"]
+                    })
         EOF
+        python3 convert_json_to_csv.py
     - name: Upload Scan Reports
       uses: actions/upload-artifact@v4
       with:
         name: bandit-report
         path: |
-          reports/bandit-report.json
-          reports/bandit-report.csv
+          reports/bandit*.json
+          reports/bandit-*.csv
 
   virus-scans:
     if: ${{ (inputs.target == 'virus-scan') || (inputs.target == 'all-scans') }}
@@ -392,14 +524,23 @@ jobs:
         mkdir -p reports
         docker pull clamav/clamav
         echo "### Virus Scan Results" >> $GITHUB_STEP_SUMMARY
-        docker run --rm -v "${{ github.workspace }}:/src" clamav/clamav clamscan -r  /src/manufacturing-ai-suite/industrial-edge-insights-time-series/ > ./reports/clamav-report.txt || true
-        echo "Please find full report in clamav-report.txt" >> $GITHUB_STEP_SUMMARY
+        if [[ "${{ inputs.application }}" == "time-series" || "${{ inputs.application }}" == "both" ]]; then
+          docker run --rm -v "${{ github.workspace }}:/src" clamav/clamav clamscan -r  /src/manufacturing-ai-suite/industrial-edge-insights-time-series/ > ./reports/clamav-timeseries-report.txt || true
+          echo "Please find full report in clamav-timeseries-report.txt" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        if [[ "${{ inputs.application }}" == "multimodal" || "${{ inputs.application }}" == "both" ]]; then
+          docker run --rm -v "${{ github.workspace }}:/src" clamav/clamav clamscan -r  /src/manufacturing-ai-suite/industrial-edge-insights-multimodal/ > ./reports/clamav-multimodal-report.txt || true
+          echo "Please find full report in clamav-multimodal-report.txt" >> $GITHUB_STEP_SUMMARY
+        fi
     - name: Upload Scan Reports
       uses: actions/upload-artifact@v4
       with:
         name: virus-reports
-        path: reports/clamav-report.txt
-  
+        path: |
+          reports/clamav-timeseries-report.txt
+          reports/clamav-multimodal-report.txt
+
   DBS_job:
     if: ${{ (inputs.target == 'dbs-scan') || (inputs.target == 'all-scans') }}
     runs-on: ubuntu-24.04
@@ -445,7 +586,8 @@ jobs:
           docker compose down -v 
           docker compose build
 
-      - name: Deploy Wind Turbine Sample App 
+      - name: Deploy Time Series Wind Turbine Sample App 
+        if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}
         run: |
           cd manufacturing-ai-suite/industrial-edge-insights-time-series/
           make down 
@@ -454,22 +596,18 @@ jobs:
           INFLUXDB_PASSWORD=$(openssl rand -hex 10)
           VISUALIZER_GRAFANA_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
           VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 10)
-          MR_PSQL_PASSWORD=$(openssl rand -hex 10)
-          MR_MINIO_ACCESS_KEY=$(openssl rand -hex 10)
-          MR_MINIO_SECRET_KEY=$(openssl rand -hex 10)
 
           sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
           sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
           sed -i "s/VISUALIZER_GRAFANA_USER=.*/VISUALIZER_GRAFANA_USER=${VISUALIZER_GRAFANA_USER}/g" .env
           sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
-          sed -i "s/MR_PSQL_PASSWORD=.*/MR_PSQL_PASSWORD=${MR_PSQL_PASSWORD}/g" .env
-          sed -i "s/MR_MINIO_ACCESS_KEY=.*/MR_MINIO_ACCESS_KEY=${MR_MINIO_ACCESS_KEY}/g" .env
-          sed -i "s/MR_MINIO_SECRET_KEY=.*/MR_MINIO_SECRET_KEY=${MR_MINIO_SECRET_KEY}/g" .env 
+
           make build
           echo "Deploying using opcua ingestion"
           make up_opcua_ingestion app=wind-turbine-anomaly-detection
 
-      - name: DBS download and scan for Wind Turbine Sample App
+      - name: DBS download and scan for Time Series Wind Turbine Sample App
+        if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}
         run: |
           cd manufacturing-ai-suite/industrial-edge-insights-time-series/
           docker run --rm --net host --pid host --userns host --cap-add audit_control \
@@ -484,20 +622,115 @@ jobs:
           docker-bench-security > dbs_scan_windturbine_sample_app.txt
 
       - name: Undeploy Time Series Analytics microservice
+        if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}
+        run: |
+          cd manufacturing-ai-suite/industrial-edge-insights-time-series/
+          make down
+        
+      - name: Deploy Time Series Weld Anomaly Detection Sample App 
+        if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}
+        run: |
+          cd manufacturing-ai-suite/industrial-edge-insights-time-series/
+          make down 
+          # Generate random values for sensitive environment variables
+          INFLUXDB_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+          INFLUXDB_PASSWORD=$(openssl rand -hex 10)
+          VISUALIZER_GRAFANA_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+          VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 10)
+
+          sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
+          sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
+          sed -i "s/VISUALIZER_GRAFANA_USER=.*/VISUALIZER_GRAFANA_USER=${VISUALIZER_GRAFANA_USER}/g" .env
+          sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
+          make build
+          echo "Deploying using mqtt ingestion"
+          make up_mqtt_ingestion app=weld-anomaly-detection
+
+      - name: DBS download and scan for Time Series Weld Anomaly Detection Sample App
+        if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}
+        run: |
+          cd manufacturing-ai-suite/industrial-edge-insights-time-series/
+          docker run --rm --net host --pid host --userns host --cap-add audit_control \
+          -e DOCKER_CONTENT_TRUST=$DOCKER_CONTENT_TRUST \
+          -v /etc:/etc:ro \
+          -v /usr/bin/containerd:/usr/bin/containerd:ro \
+          -v /usr/bin/runc:/usr/bin/runc:ro \
+          -v /usr/lib/systemd:/usr/lib/systemd:ro \
+          -v /var/lib:/var/lib:ro \
+          -v /var/run/docker.sock:/var/run/docker.sock:ro \
+          --label docker_bench_security \
+          docker-bench-security > dbs_scan_weld_anomaly_detection_sample_app.txt
+
+      - name: Undeploy Time Series Analytics microservice
+        if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}
         run: |
           cd manufacturing-ai-suite/industrial-edge-insights-time-series/
           make down
           
       - name: Upload Scan artifact to Github
+        if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}
         uses: actions/upload-artifact@v4
         with:
           name: DBS_time-series-analytics
           path:  manufacturing-ai-suite/industrial-edge-insights-time-series/dbs_scan_*
-  
-  codeql-job:
-    name: CodeQL Scan - Python
-    if: ${{ (inputs.target == 'codeql-scan') || (inputs.target == 'all-scans') }}
-    # Consider using larger runners or machines with greater resources for possible analysis time improvements.
+
+      - name: Deploy Multimodal Weld Defect Detection Sample App
+        if: ${{ (inputs.application == 'multimodal') || (inputs.application == 'both') }}
+        run: |
+          cd manufacturing-ai-suite/industrial-edge-insights-multimodal/
+          make down 
+          # Generate random values for sensitive environment variables
+          INFLUXDB_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+          INFLUXDB_PASSWORD=$(openssl rand -hex 10)
+          VISUALIZER_GRAFANA_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+          VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 10)
+          MTX_WEBRTCICESERVERS2_0_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+          MTX_WEBRTCICESERVERS2_0_PASSWORD=$(openssl rand -hex 10)
+          HOST_IP=$(hostname -I | awk '{print $1}')
+
+          sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
+          sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
+          sed -i "s/VISUALIZER_GRAFANA_USER=.*/VISUALIZER_GRAFANA_USER=${VISUALIZER_GRAFANA_USER}/g" .env
+          sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
+          sed -i "s/MTX_WEBRTCICESERVERS2_0_USERNAME=.*/MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME}/g" .env
+          sed -i "s/MTX_WEBRTCICESERVERS2_0_PASSWORD=.*/MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}/g" .env
+          sed -i "s/HOST_IP=.*/HOST_IP=${HOST_IP}/g" .env
+
+          make build
+          echo "Deploying using mqtt ingestion"
+          make up
+
+      - name: DBS download and scan for Multimodal Weld Defect Detection Sample App
+        if: ${{ (inputs.application == 'multimodal') || (inputs.application == 'both') }}
+        run: |
+          cd manufacturing-ai-suite/industrial-edge-insights-multimodal/
+          docker run --rm --net host --pid host --userns host --cap-add audit_control \
+          -e DOCKER_CONTENT_TRUST=$DOCKER_CONTENT_TRUST \
+          -v /etc:/etc:ro \
+          -v /usr/bin/containerd:/usr/bin/containerd:ro \
+          -v /usr/bin/runc:/usr/bin/runc:ro \
+          -v /usr/lib/systemd:/usr/lib/systemd:ro \
+          -v /var/lib:/var/lib:ro \
+          -v /var/run/docker.sock:/var/run/docker.sock:ro \
+          --label docker_bench_security \
+          docker-bench-security > dbs_scan_multimodal_weld_defect_detection_sample_app.txt
+
+      - name: Undeploy Multimodal Weld Defect Detection Sample App
+        if: ${{ (inputs.application == 'multimodal') || (inputs.application == 'both') }}
+        run: |
+          cd manufacturing-ai-suite/industrial-edge-insights-multimodal/
+          make down
+
+      - name: Upload Scan artifact to Github
+        if: ${{ (inputs.application == 'multimodal') || (inputs.application == 'both') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: DBS_multimodal_weld_defect_detection
+          path:  manufacturing-ai-suite/industrial-edge-insights-multimodal/dbs_scan_*
+
+  codeql-timeseries-job:
+    name: CodeQL Scan - Time Series Python
+    if: ${{ ((inputs.target == 'codeql-scan') || (inputs.target == 'all-scans')) && ((inputs.application == 'time-series') || (inputs.application == 'both')) }}
     runs-on: ubuntu-24.04
     permissions:
       security-events: write
@@ -522,7 +755,7 @@ jobs:
         with:
           category: "/language:python"
           upload: "never"
-          output: results
+          output: results-timeseries
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -532,6 +765,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install reportlab
+          
       - name: Convert SARIF to PDF
         run: |
           python - <<EOF
@@ -545,7 +779,7 @@ jobs:
           def generate_pdf(data, output_file):
               c = canvas.Canvas(output_file, pagesize=letter)
               width, height = letter
-              c.drawString(100, height - 100, "SARIF Report")
+              c.drawString(100, height - 100, "SARIF Report - Time Series")
               y_position = height - 150
               for run in data.get('runs', []):
                   for result in run.get('results', []):
@@ -560,14 +794,96 @@ jobs:
                           c.showPage()
                           y_position = height - 100
               c.save()
-          sarif_data = parse_sarif('results/python.sarif')
-          generate_pdf(sarif_data, 'sarif_report.pdf')
+          sarif_data = parse_sarif('results-timeseries/python.sarif')
+          generate_pdf(sarif_data, 'sarif_timeseries_report.pdf')
           EOF
+          
       - name: Create ZIP File
         run: |
-          zip codeql_reports.zip results/python.sarif sarif_report.pdf
+          zip codeql_timeseries_reports.zip results-timeseries/python.sarif sarif_timeseries_report.pdf
+          
       - name: Upload ZIP Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Wind Turbine CodeQL Reports
-          path: codeql_reports.zip
+          name: Time Series Sample app CodeQL Reports
+          path: codeql_timeseries_reports.zip
+
+  codeql-multimodal-job:
+    name: CodeQL Scan - Multimodal Python
+    if: ${{ ((inputs.target == 'codeql-scan') || (inputs.target == 'all-scans')) && ((inputs.application == 'multimodal') || (inputs.application == 'both')) }}
+    runs-on: ubuntu-24.04
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false 
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@ff0a06e83cb2de871e5a09832bc6a81e7276941f # v3.28.18
+        with:
+          languages: 'python'
+          source-root: manufacturing-ai-suite/industrial-edge-insights-multimodal/
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@ff0a06e83cb2de871e5a09832bc6a81e7276941f # v3.28.18
+        with:
+          category: "/language:python"
+          upload: "never"
+          output: results-multimodal
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install reportlab
+          
+      - name: Convert SARIF to PDF
+        run: |
+          python - <<EOF
+          import json
+          from reportlab.lib.pagesizes import letter
+          from reportlab.pdfgen import canvas
+          def parse_sarif(sarif_file):
+              with open(sarif_file, 'r') as file:
+                  data = json.load(file)
+              return data
+          def generate_pdf(data, output_file):
+              c = canvas.Canvas(output_file, pagesize=letter)
+              width, height = letter
+              c.drawString(100, height - 100, "SARIF Report - Multimodal")
+              y_position = height - 150
+              for run in data.get('runs', []):
+                  for result in run.get('results', []):
+                      message = result.get('message', {}).get('text', 'No message')
+                      severity = result.get('level', 'Unknown')
+                      location = result.get('locations', [{}])[0].get('physicalLocation', {}).get('artifactLocation', {}).get('uri', 'Unknown location')
+                      c.drawString(100, y_position, f"Message: {message}")
+                      c.drawString(100, y_position - 20, f"Severity: {severity}")
+                      c.drawString(100, y_position - 40, f"Location: {location}")
+                      y_position -= 80
+                      if y_position < 100:
+                          c.showPage()
+                          y_position = height - 100
+              c.save()
+          sarif_data = parse_sarif('results-multimodal/python.sarif')
+          generate_pdf(sarif_data, 'sarif_multimodal_report.pdf')
+          EOF
+          
+      - name: Create ZIP File
+        run: |
+          zip codeql_multimodal_reports.zip results-multimodal/python.sarif sarif_multimodal_report.pdf
+          
+      - name: Upload ZIP Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Multimodal Weld Defect Detection Sample app CodeQL Reports
+          path: codeql_multimodal_reports.zip

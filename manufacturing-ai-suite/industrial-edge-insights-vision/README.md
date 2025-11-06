@@ -36,6 +36,7 @@ Following directory structure consisting of generic deployment code as well as p
                 pipeline-server-config.json
             setup.sh
             payload.json
+
     helm/
         apps/
             application_name/
@@ -58,6 +59,7 @@ Following directory structure consisting of generic deployment code as well as p
     sample_start.sh
     sample_status.sh
     sample_stop.sh
+    benchmark_start.sh
 
  - **apps**: containing application specific pre-requisite installers, configurations and runtime data. Users can follow the same structure to create their own application. The data from here is used for docker based deployments.
 
@@ -111,6 +113,6 @@ Using the template above, several industrial recipies have been provided for use
 Click on the applications below to get started.
 
 * [Pallet Defect Detection](./docs/pallet-defect-detection/get-started.md)
-* [PCB Anomaly Detection](./docs/pcb-anomaly-detection/get-started.md)
-* [Weld Porosity Classfication](./docs/weld-porosity/get-started.md)
-* [Worker Safety Gear Detection](./docs/worker-safety-gear-detection/get-started.md)
+* [PCB Anomaly Detection](./docs/user-guide/pcb-anomaly-detection/get-started.md)
+* [Weld Porosity Classfication](./docs/user-guide/weld-porosity/get-started.md)
+* [Worker Safety Gear Detection](./docs/user-guide/worker-safety-gear-detection/get-started.md)

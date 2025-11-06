@@ -30,6 +30,9 @@
     nodered/node-red:3.1
   )
 
+  NAME="Visual AI Demo Kit"
+
+
 set -euo pipefail
 
 readonly SCRIPT_NAME="$(basename "${0}")"
@@ -638,18 +641,16 @@ main() {
   fi
   
   echo -e "${BOLD}${BLUE}==================================================${NC}"
-  success "Metro Gen AI SDK installation completed successfully!"
+  success "${NAME} installation completed successfully!"
   echo -e "${BOLD}${BLUE}==================================================${NC}"
   
   echo ""
   info "Next steps:"
   info "1. Navigate to ${HOME}/metro/ to explore the cloned repositories"
   info "2. Check repository documentation for usage instructions"
-  info "3. Start developing with Metro Gen AI SDK!"
+  info "3. Start developing with ${NAME}!"
 
 }
 
 # Execute main function if script is run directly
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  main "${@}"
-fi
+main "$@"

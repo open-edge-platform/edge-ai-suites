@@ -1,0 +1,41 @@
+Source: ros-jazzy-its-send-localization
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    libboost-dev,
+    libboost-serialization-dev,
+    python3-ament-package,
+    ros-jazzy-ament-cmake-gtest,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-auto,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-builtin-interfaces,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-its-planner,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-nav2-core,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp-action,
+    ros-jazzy-rclcpp-lifecycle,
+    ros-jazzy-rclcpp,
+    ros-jazzy-std-msgs,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-visualization-msgs,
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-its-send-localization
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-its-planner,
+    ros-jazzy-nav2-amcl,
+    ros-jazzy-nav2-core,
+    ros-jazzy-nav2-msgs,
+    ros-jazzy-rcl,
+    ros-jazzy-rclcpp-lifecycle,
+    ros-jazzy-rclcpp,
+    ros-jazzy-std-srvs,
+Description: Send localization if package needed for Relocalization module for ROS2 Navigation

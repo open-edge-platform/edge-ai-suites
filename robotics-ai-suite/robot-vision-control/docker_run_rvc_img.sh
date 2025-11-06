@@ -25,6 +25,7 @@ docker run -it \
 	--volume=/dev:/dev \
 	--volume=/tmp/.X11-unix:/tmp/.X11-unix \
 	--ipc=host \
+    --network=host \
     --privileged \
     --env="DISPLAY" \
     --env="WAYLAND_DISPLAY" \

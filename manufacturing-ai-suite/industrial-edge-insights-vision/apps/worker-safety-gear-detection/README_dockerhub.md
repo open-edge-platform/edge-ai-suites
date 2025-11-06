@@ -4,12 +4,12 @@ This application enables real-time safety gear monitoring of workers by running 
 
 ## Deploy using Docker Compose
 ---
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/worker-safety-gear-detection/main/user-guide/get-started.html).
- 
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/worker-safety-gear-detection/get-started.html).
+
 ## Deploy using Kubernetes Charts
 
 ---
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/worker-safety-gear-detection/main/user-guide/how-to-deploy-using-helm-charts.html).
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/worker-safety-gear-detection/how-to-deploy-using-helm-charts.html).
 
 ## Supported versions
 
