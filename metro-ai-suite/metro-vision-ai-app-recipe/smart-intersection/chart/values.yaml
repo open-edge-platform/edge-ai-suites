@@ -131,7 +131,7 @@ dlstreamerPipelineServer:
   tag: 3.1.0-ubuntu24
   # Overrides the storage class name
   storageClassName: "standard"
-
+  gpuWorkload: false
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 
