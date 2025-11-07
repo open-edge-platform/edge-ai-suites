@@ -1,0 +1,72 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+## [2025.2] - December 2025
+
+### Added
+- Introduced a new sample application for Multimodal (Vision + Timeseries) Weld Defect Detection, combining camera-based visual inspection and sensor data analysis for industrial edge insights. ([#669])
+- Added fusion analytics module to combine vision and time-series anomaly detection results.
+- Implemented weld data simulator for generating video streams (RTSP) and time-series data (MQTT).
+- Added logger for fusion analytics and weld simulator for improved traceability. ([#777])
+- Added step to enable copyleft source in build process. ([#776])
+- Added architecture diagram for multimodal weld defect detection. ([#802])
+- Enabled publishing of source timestamp from simulator for time-series data. ([#801])
+- Added comprehensive Helm chart structure and deployment documentation for multimodal app. ([#813])
+- Added "How to Deploy with Helm" section to documentation. ([#837])
+
+### Changed
+- Updated fusion logic default mode from "AND" to "OR" for anomaly detection, improving detection flexibility. ([#794])
+- Enhanced fusion analytics with additional metadata tracking, including vision classification labels.
+- Redesigned Grafana dashboard layout with new fusion analytics results table and reorganized panels.
+- Renamed resource folder from "weld-porosity" to "models" and updated model path to "weld-defect-classification-f16-DeiT". ([#840])
+- Updated DLStreamer pipeline server image from Ubuntu 22 to Ubuntu 24.
+- Modular refactoring of time series documentation for improved maintainability. ([#899])
+- Multimodal apps documentation updated to use tile layout for better navigation. ([#908])
+- Fixed references and broken links in documentation and toctree. ([#934], [#820])
+- Fixed and enhanced documentation for Docker and Helm deployment workflows. ([#889])
+- Corrected fusion analytics MQTT topic name from "fusion/anomaly" to "fusion/anomaly_detection_results".
+- Updated arch diagram to remove influxdb out line from DLS PS.
+- Removed references to non-existing articles in documentation. ([#924])
+- Fixed dashboard name references in documentation. ([#881])
+- Updated documentation for multimodal weld defect detection, transitioning from wind turbine anomaly detection theme. ([#838])
+- Improved documentation clarity and consistency across files.
+
+### Removed
+- Removed Helm chart deployment support for the industrial-edge-insights-multimodal sample application due to Kubernetes networking issues. Docker Compose deployment remains supported. ([#896])
+
+### Security
+- Addressed Trivy image scan vulnerabilities by updating Python base image version and upgrading pip in all affected Dockerfiles. ([#928])
+- Added SSL configuration to nginx for secure communications. ([#851])
+
+### Fixed
+- Fixed DBS GitHub workflow by adding HOST_IP environment variable and correcting scan names. ([#916])
+- Reordered CWD variable assignment in workflow scripts.
+- Fixed minor documentation issues. ([#841])
+- Fixed table of contents in MultiModal Weld Defect Detection documentation. ([#842])
+
+---
+
+[#669]: https://github.com/open-edge-platform/edge-ai-suites/commit/9a6b8011db1bdb7d91c4ce3094adde1a29767571
+[#777]: https://github.com/open-edge-platform/edge-ai-suites/commit/5c156ad4581b528df01ed6fcd13f5895f15d4127
+[#776]: https://github.com/open-edge-platform/edge-ai-suites/commit/0a9e14ab265d088e64e2e328ee04250bc62f36e8
+[#802]: https://github.com/open-edge-platform/edge-ai-suites/commit/b08f34de976c4806bd63390cd07bde724dec592b
+[#801]: https://github.com/open-edge-platform/edge-ai-suites/commit/7cc112d7f73bc40fc15e6545150dcd6154f5e7c8
+[#813]: https://github.com/open-edge-platform/edge-ai-suites/commit/f4c61f3ddfb755e2704bdaae4d9ce6702c62d2e1
+[#837]: https://github.com/open-edge-platform/edge-ai-suites/commit/64aa5d1e21f3c5b18cd5e059b3ea63e68492de7a
+[#794]: https://github.com/open-edge-platform/edge-ai-suites/commit/16f1bd30b4100b917b07714ec1c4e4c36843865e
+[#840]: https://github.com/open-edge-platform/edge-ai-suites/commit/caa379d0228e7596365a9217d922a6b75bcca43e
+[#899]: https://github.com/open-edge-platform/edge-ai-suites/commit/d90aaebc5a511a2fb7455d37970d414d45c284d6
+[#908]: https://github.com/open-edge-platform/edge-ai-suites/commit/f6a03a3afa2c180a268578bc0fe28575d27efafb
+[#934]: https://github.com/open-edge-platform/edge-ai-suites/commit/5790e87b430e2e9b6c06bfceccefb10351b25261
+[#820]: https://github.com/open-edge-platform/edge-ai-suites/commit/3350d11c555fa99ab10b1c18a090c1fa954ab9e4
+[#889]: https://github.com/open-edge-platform/edge-ai-suites/commit/b28eaadffb8ef95f53d770878ff2415765b25752
+[#924]: https://github.com/open-edge-platform/edge-ai-suites/commit/14e11c99007b92e54f4484a2cf2a5be675d02b24
+[#881]: https://github.com/open-edge-platform/edge-ai-suites/commit/9ed010d862fdfb173ef6db7f8096fa1419cd26bf
+[#838]: https://github.com/open-edge-platform/edge-ai-suites/commit/3dfefad329fa0d839b6fdd9637f3ddfc8b0fa909
+[#896]: https://github.com/open-edge-platform/edge-ai-suites/commit/314492c7ca2929f826ea8f2f2376660f06986e8b
+[#928]: https://github.com/open-edge-platform/edge-ai-suites/commit/307b4925f70268f97081e05c5726943775e873dc
+[#851]: https://github.com/open-edge-platform/edge-ai-suites/commit/b9ab22fde4668f7ff412eff741ca1d1c880b2c85
+[#916]: https://github.com/open-edge-platform/edge-ai-suites/commit/9480ed085f9807fc081a63d3239ded4066ac8423
+[#841]: https://github.com/open-edge-platform/edge-ai-suites/commit/9c21e8fbdc32ebf46f8bb8e6314cfa4bee6bb31e
+[#842]: https://github.com/open-edge-platform/edge-ai-suites/commit/fb37dc26b86020ce0ea256a568a2a16a8781c185

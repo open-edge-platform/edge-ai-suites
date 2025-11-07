@@ -32,8 +32,11 @@
 Details about the changes, improvements, and known issues in this release of the
 application.
 
-## Version 1.0.2-pre-RC1 ( Upcoming release )
+## Version 1.1.0 ( Upcoming release )
 
+- Added Nginx reverse proxy server
+- Fix high coverity issues
+- Npm packages and python packages update
 - Added healthchecks for compose and helm deployment
 
 ## Version 1.0.1

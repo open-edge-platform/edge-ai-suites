@@ -1,0 +1,241 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-reverse-proxy-config
+  namespace: {{ .Release.Namespace }}
+data:
+  nginx.conf: |
+    events {
+        worker_connections 1024;
+    }
+    
+    http {
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        
+        upstream smart_intersection_web {
+            server smart-intersection-web:443;
+        }
+        
+        upstream grafana {
+            server smart-intersection-grafana:3000;
+        }
+        
+        upstream influxdb {
+            server influxdb2:8086;
+        }
+        
+        upstream nodered {
+            server smart-intersection-nodered:1880;
+        }
+        
+        upstream dlstreamer {
+            server smart-intersection-dlstreamer-pipeline-server:8080;
+        }
+        
+        # HTTP server - redirect to HTTPS
+        server {
+            listen 80;
+            return 301 https://$host$request_uri;
+        }
+        
+        # HTTPS server
+        server {
+            listen 443 ssl;
+            server_name _;
+            
+            # SSL configuration using self-signed certificates
+            ssl_certificate /etc/nginx/ssl/tls.crt;
+            ssl_certificate_key /etc/nginx/ssl/tls.key;
+            
+            # SSL security settings
+            ssl_protocols TLSv1.2 TLSv1.3;
+            ssl_ciphers HIGH:!aNULL:!MD5;
+            ssl_prefer_server_ciphers on;
+            
+            # Security headers
+            add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+            add_header X-Content-Type-Options nosniff;
+            add_header X-Frame-Options SAMEORIGIN;
+            add_header X-XSS-Protection "1; mode=block";
+            
+            # Smart Intersection API endpoints (more specific than /api/)
+            location /api/v1/ {
+                proxy_pass https://smart_intersection_web/api/v1/;
+                proxy_ssl_verify off;
+                proxy_ssl_session_reuse on;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_redirect off;
+            }
+            
+            # DL Streamer Pipeline Server (for /api/pipelines/* etc.)
+            location /api/ {
+                proxy_pass http://dlstreamer/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_redirect off;
+            }
+            
+            # Grafana dashboard
+            location /grafana/ {
+                proxy_pass http://grafana;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                
+                # WebSocket support for Grafana
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                
+                # Allow iframe embedding for Grafana
+                add_header X-Frame-Options ALLOWALL always;
+                add_header Content-Security-Policy "frame-ancestors *" always;
+            }
+            
+            # Node-RED dashboard
+            location /nodered/ {
+                proxy_pass http://nodered/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                
+                # WebSocket support for Node-RED
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                proxy_redirect off;
+            }
+            
+            # InfluxDB Web UI - Both proxy and direct access available
+            # Direct access: http://<HOST_IP>:30086 - Fully functional
+            # Proxy access: https://<HOST_IP>:30443/influxdb/ - Basic functionality + API access
+            location /influxdb {
+                return 301 https://$host/influxdb/;
+            }
+            
+            location /influxdb/ {
+                # Remove the /influxdb prefix when proxying to backend
+                rewrite ^/influxdb/(.*) /$1 break;
+                proxy_pass http://influxdb;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                
+                # Handle redirects properly
+                proxy_redirect http://influxdb/ /influxdb/;
+                proxy_redirect https://influxdb/ /influxdb/;
+            }
+            
+            # InfluxDB API access through proxy
+            location /api/influxdb/ {
+                proxy_pass http://influxdb/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_redirect off;
+            }
+            
+            # Smart Intersection Web Interface - Main UI
+            location / {
+                proxy_pass https://smart_intersection_web/;
+                proxy_ssl_verify off;
+                proxy_ssl_session_reuse on;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                
+                # WebSocket support for real-time updates
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                
+                # Handle SceneScape authentication (matching Docker Compose)
+                proxy_set_header X-Forwarded-Host $host;
+                proxy_set_header X-Forwarded-Server $host;
+            }
+            
+            # Health check endpoint
+            location /health {
+                access_log off;
+                return 200 "healthy\n";
+                add_header Content-Type text/plain;
+            }
+        }
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-reverse-proxy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: nginx-reverse-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-reverse-proxy
+  template:
+    metadata:
+      labels:
+        app: nginx-reverse-proxy
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        env:
+        - name: http_proxy
+          value: {{ .Values.http_proxy }}
+        - name: https_proxy
+          value: {{ .Values.https_proxy }}
+        - name: no_proxy
+          value: {{ .Values.no_proxy }}
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - name: nginx-tls
+          mountPath: /etc/nginx/ssl
+          readOnly: true
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-reverse-proxy-config
+      - name: nginx-tls
+        secret:
+          secretName: nginx-reverse-proxy-tls
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-reverse-proxy
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: NodePort
+  selector:
+    app: nginx-reverse-proxy
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    nodePort: 30080
+  - name: https
+    port: 443
+    targetPort: 443
+    nodePort: 30443

@@ -1,7 +1,7 @@
 /*
  * INTEL CONFIDENTIAL
  * 
- * Copyright (C) 2024 Intel Corporation.
+ * Copyright (C) 2024-2025 Intel Corporation.
  * 
  * This software and the related documents are Intel copyrighted materials, and your use of
  * them is governed by the express license under which they were provided to you (License).
@@ -198,6 +198,7 @@ private:
     hva::hvaConfigStringParser_t m_configParser;
     
     float m_waitTime;
+    unsigned int m_decodeInterval;
 
     VPLInitParameters m_vplParam;
 };
@@ -205,7 +206,7 @@ private:
 class VPLDecoderNodeWorker : public hva::hvaNodeWorker_t{
 public:
 
-    VPLDecoderNodeWorker(hva::hvaNode_t* parentNode, VPLInitParameters vplParam, float waitTime);
+    VPLDecoderNodeWorker(hva::hvaNode_t* parentNode, VPLInitParameters vplParam, float waitTime, unsigned int decodeInterval);
     ~VPLDecoderNodeWorker();
 
     /**
@@ -236,6 +237,7 @@ private:
     bool m_useGPU;
     hce::ai::inference::ColorFormat m_colorFmt;     // BGR; I420; NV12
     float m_waitTime;
+    unsigned int m_decodeInterval;
     int m_workStreamId;
 
     VADisplay m_vaDisplay = nullptr;
@@ -244,7 +246,7 @@ private:
     // mfxSession CreateVPLSession(mfxLoader *loader);
     VPLDecoderManager m_vplDecoderManager;
 
-    void sendEmptyBlob(unsigned tag, unsigned frameId, unsigned streamId);
+    void sendEmptyBlob(const hva::hvaBlob_t::Ptr &blob, unsigned tag, unsigned frameId, unsigned streamId);
 
 };
 

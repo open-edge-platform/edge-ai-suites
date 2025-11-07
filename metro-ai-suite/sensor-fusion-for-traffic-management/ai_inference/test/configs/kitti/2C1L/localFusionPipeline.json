@@ -1,0 +1,156 @@
+{
+    "Nodes": [
+        {
+            "Node Class Name": "LidarCamFusionInputNode",
+            "Node Name": "Input",
+            "Thread Number": "1",
+            "Is Source Node": "true",
+            "Configure String": "MediaIndex=(INT)0;LidarIndex=(INT)1;CalibIndex=(INT)2;SensorType=(STRING)All;InputCapacity=(INT)1;Stride=(INT)3;ControlType=(STRING)All"
+        },
+        {
+            "Node Class Name": "VPLDecoderNode",
+            "Node Name": "Decoder1",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "Device=(STRING)GPU.0;CodecType=(STRING)JPEG;BufferType=(STRING)mfxFrame"
+        },
+        {
+            "Node Class Name": "VPLDecoderNode",
+            "Node Name": "Decoder2",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "Device=(STRING)GPU.0;CodecType=(STRING)JPEG;BufferType=(STRING)mfxFrame"
+        },
+        {
+            "Node Class Name": "DetectionNode",
+            "Node Name": "Detection1",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "InferReqNumber=(INT)6;PreProcessType=(STRING)vaapi-surface-sharing;reshapeWidth=(INT)640;reshapeHeight=(INT)640;Device=(STRING)GPU.0;InferConfig=(STRING_ARRAY)[PERFORMANCE_HINT=LATENCY];PreProcessConfig=(STRING_ARRAY)[VAAPI_THREAD_POOL_SIZE=6,VAAPI_FAST_SCALE_LOAD_FACTOR=0];ModelPath=(STRING)vehicle-bike-detection-yoloxs-001/FP16-INT8/yolox_s.xml;ModelProcConfPath=(STRING)vehicle-bike-detection-yoloxs-001/yolox_s.model_proc.json;Threshold=(FLOAT)0.3;MaxROI=(INT)0;FilterLabels=(STRING_ARRAY)[car,bus,truck]"
+        },
+        {
+            "Node Class Name": "DetectionNode",
+            "Node Name": "Detection2",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "InferReqNumber=(INT)6;PreProcessType=(STRING)vaapi-surface-sharing;reshapeWidth=(INT)640;reshapeHeight=(INT)640;Device=(STRING)GPU.0;InferConfig=(STRING_ARRAY)[PERFORMANCE_HINT=LATENCY];PreProcessConfig=(STRING_ARRAY)[VAAPI_THREAD_POOL_SIZE=6,VAAPI_FAST_SCALE_LOAD_FACTOR=0];ModelPath=(STRING)vehicle-bike-detection-yoloxs-001/FP16-INT8/yolox_s.xml;ModelProcConfPath=(STRING)vehicle-bike-detection-yoloxs-001/yolox_s.model_proc.json;Threshold=(FLOAT)0.3;MaxROI=(INT)0;FilterLabels=(STRING_ARRAY)[car,bus,truck]"
+        },
+        {
+            "Node Class Name": "TrackerNode_CPU",
+            "Node Name": "Tracker1",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "TrackerType=(STRING)zero_term_imageless"
+        },
+        {
+            "Node Class Name": "TrackerNode_CPU",
+            "Node Name": "Tracker2",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "TrackerType=(STRING)zero_term_imageless"
+        },
+        {
+            "Node Class Name": "LidarSignalProcessingNode",
+            "Node Name": "LidarProcessing",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "LidarConfigPath=(STRING)/opt/datasets/LidarConfig.json;Device=(STRING)GPU.2;PfeModelFile=(STRING)/opt/models/pointpillar-kitti/pfe.onnx;RpnModelFile=(STRING)/opt/models/pointpillar-kitti/rpn.onnx;ScoreThreshold=(FLOAT)0.5;NmsThreshold=(FLOAT)0.5"
+        },
+        {
+            "Node Class Name": "LidarCam2CFusionNode",
+            "Node Name": "Camera2CFusion",
+            "Thread Number": "1",
+            "Is Source Node": "false",
+            "Configure String": "InMediaNum=(INT)2"
+        },
+        {
+            "Node Class Name": "LidarCamTrack2TrackAssociationNode",
+            "Node Name": "Association",
+            "Thread Number": "1",
+            "Is Source Node": "false"
+        },
+        {
+            "Node Class Name": "LidarCamFusionOutputNode",
+            "Node Name": "Output",
+            "Thread Number": "1",
+            "Is Source Node": "false"
+        }
+    ],
+    "Links": [
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "Decoder1",
+            "Next Node Port": "0",
+            "Queue Size": "1"
+        },
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "Decoder2",
+            "Next Node Port": "0",
+            "Queue Size": "1"
+        },
+        {
+            "Previous Node": "Decoder1",
+            "Previous Node Port": "0",
+            "Next Node": "Detection1",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Decoder2",
+            "Previous Node Port": "0",
+            "Next Node": "Detection2",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Detection1",
+            "Previous Node Port": "0",
+            "Next Node": "Tracker1",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Detection2",
+            "Previous Node Port": "0",
+            "Next Node": "Tracker2",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Tracker1",
+            "Previous Node Port": "0",
+            "Next Node": "Camera2CFusion",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Tracker2",
+            "Previous Node Port": "0",
+            "Next Node": "Camera2CFusion",
+            "Next Node Port": "1"
+        },
+        {
+            "Previous Node": "Input",
+            "Previous Node Port": "0",
+            "Next Node": "LidarProcessing",
+            "Next Node Port": "0",
+            "Queue Size": "1"
+        },
+        {
+            "Previous Node": "LidarProcessing",
+            "Previous Node Port": "0",
+            "Next Node": "Camera2CFusion",
+            "Next Node Port": "2"
+        },
+        {
+            "Previous Node": "Camera2CFusion",
+            "Previous Node Port": "0",
+            "Next Node": "Association",
+            "Next Node Port": "0"
+        },
+        {
+            "Previous Node": "Association",
+            "Previous Node Port": "0",
+            "Next Node": "Output",
+            "Next Node Port": "0"
+        }
+    ]
+}

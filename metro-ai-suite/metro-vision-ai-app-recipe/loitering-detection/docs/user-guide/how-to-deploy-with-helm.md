@@ -36,6 +36,25 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
 ```
 
+Optional: Pull the helm chart and replace the existing helm-chart folder with it
+    - Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/helm-chart`
+
+```bash
+#Navigate to Loitering Detection directory
+cd loitering-detection
+
+#Download helm chart with the following command
+helm pull oci://registry-1.docker.io/intel/loitering-detection --version 1.3.0-rc1
+
+#unzip the package using the following command
+tar -xvf loitering-detection-1.3.0-rc1.tgz
+
+#Replace the helm directory
+rm -rf helm-chart && mv loitering-detection helm-chart
+
+cd ..
+```
+
 ## Step 2: Configure and update the environment variables
 
 1. Update the following fields in `values.yaml` file in the Helm chart:
@@ -64,11 +83,10 @@ Follow this procedure to run the sample application. In a typical deployment, mu
     helm install loitering-detection ./loitering-detection/helm-chart -n ld  --create-namespace
     ```
 
-2. Verify all the pods and services are running:
+2. Wait for all pods to be ready:
 
     ```sh
-    kubectl get pods -n ld
-    kubectl get svc -n ld
+    kubectl wait --for=condition=ready pod --all -n ld --timeout=300s
     ```
 
 3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)

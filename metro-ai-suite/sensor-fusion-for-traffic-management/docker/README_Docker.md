@@ -78,7 +78,7 @@ newgrp docker
 6. Then pull base image
 
 ```bash
-docker pull ubuntu:22.04
+docker pull ubuntu:24.04
 ```
 
 
@@ -86,7 +86,7 @@ docker pull ubuntu:22.04
 ### Install the corresponding driver on the host
 
 ```bash
-bash install_driver_related_libs.sh
+bash install_driver_related_libs_radar.sh
 ```
 
 **If driver are already installed on the machine, you don't need to do this step.**
@@ -102,7 +102,7 @@ bash install_driver_related_libs.sh
 Usage:
 
 ```bash
-bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 22.04> 
+bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04> 
 ```
 
 ```
@@ -156,7 +156,7 @@ https_proxy=
 http_proxy=
 # base image settings
 BASE=ubuntu
-BASE_VERSION=22.04
+BASE_VERSION=24.04
 # group IDs for various services
 VIDEO_GROUP_ID=44
 RENDER_GROUP_ID=110
@@ -226,7 +226,3 @@ copy dataset
 ```bash
 docker cp /path/to/dataset docker-tfcc-1:/path/to/dataset
 ```
-
-### Running inside docker
-
-Enter the project directory `/home/tfcc/metro-2.0` then following the guides [How it works](../docs/user-guide/Advanced-User-Guide.md#how-it-works) to run sensor fusion application.

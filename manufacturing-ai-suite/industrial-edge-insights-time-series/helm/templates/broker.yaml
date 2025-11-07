@@ -37,6 +37,13 @@ spec:
       labels:
         app: ia-mqtt-broker
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+        runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        fsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: ia-mqtt-broker
         image: eclipse-mosquitto:2.0.21
@@ -44,6 +51,7 @@ spec:
         securityContext:
           runAsUser: {{ $.Values.env.TIMESERIES_UID }}
           runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+          runAsNonRoot: true
           readOnlyRootFilesystem: true 
           allowPrivilegeEscalation: false
           capabilities:

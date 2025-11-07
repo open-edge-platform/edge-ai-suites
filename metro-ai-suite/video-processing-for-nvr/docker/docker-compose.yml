@@ -16,6 +16,7 @@ services:
       https_proxy: ${https_proxy}
       LD_LIBRARY_PATH: /usr/local/lib
       # DISPLAY: ${DISPLAY}
+      # DISPLAY_NEW_PLATFORM: "1"
     # volumes:
       # - /tmp/.X11-unix:/tmp/.X11-unix
       # - ${HOME}/.Xauthority:/root/.Xauthority:rw

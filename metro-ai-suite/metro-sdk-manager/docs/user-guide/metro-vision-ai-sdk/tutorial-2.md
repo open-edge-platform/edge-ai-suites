@@ -1,4 +1,4 @@
-# Tutorial 2: Video Decode and Tiled Display
+# Metro Vision AI SDK - Tutorial 2
 
 This tutorial demonstrates advanced video processing capabilities using Intel's hardware-accelerated video decoding and composition. You'll learn to decode multiple video streams simultaneously and display them in a tiled layout on a 4K monitor using VAAPI (Video Acceleration API) and GStreamer.
 
@@ -6,7 +6,7 @@ This tutorial demonstrates advanced video processing capabilities using Intel's 
 
 Multi-stream video processing is essential for applications like video surveillance, broadcasting, and media production. This tutorial showcases how Intel's hardware acceleration can efficiently decode and composite 16 simultaneous video streams into a single 4K display output, demonstrating the power of Intel® Quick Sync Video technology.
 
-> ** Platform Compatibility**  
+> **Platform Compatibility**
 > This tutorial requires Intel® Core™ or Intel® Core™ Ultra processors with integrated graphics. Intel® Xeon® processors without integrated graphics are not supported for this specific use case.
 
 ## Time to Complete
@@ -56,13 +56,6 @@ mkdir -p ~/metro/metro-vision-tutorial-2/videos/
 cd ~/metro/metro-vision-tutorial-2
 
 # Download Big Buck Bunny sample video (Creative Commons licensed)
-wget -O videos/Big_Buck_Bunny.mp4 "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_30MB.mp4s"
-```
-
-**Alternative Download Method:**
-If the above link doesn't work, you can download from the official source:
-```bash
-# Alternative: Download from Internet Archive
 wget -O videos/Big_Buck_Bunny.mp4 "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4"
 ```
 
@@ -138,6 +131,7 @@ EOF
 The script creates a complex pipeline with these key components:
 
 **Pipeline Architecture:**
+
 - **Input Sources**: 16 identical video file streams
 - **Decoder**: `vah264dec` - Hardware-accelerated H.264 decoding using VAAPI
 - **Scaling**: `vapostproc` - Hardware-accelerated video post-processing and scaling
@@ -145,7 +139,8 @@ The script creates a complex pipeline with these key components:
 - **Output**: `xvimagesink` - X11-based video display
 
 **Tiled Layout Configuration:**
-```
+
+```text
 ┌─────────┬─────────┬─────────┬─────────┐
 │ Stream1 │ Stream2 │ Stream3 │ Stream4 │  ← Row 1 (y=0)
 │  0,0    │ 960,0   │1920,0   │2880,0   │
@@ -162,6 +157,7 @@ The script creates a complex pipeline with these key components:
 ```
 
 **Performance Optimizations:**
+
 - **VAAPI Acceleration**: Hardware-accelerated decoding, scaling, and composition
 - **Fast Scaling**: `scale-method=fast` for optimal performance
 - **Async Display**: `sync=false` to prevent frame dropping
@@ -221,14 +217,11 @@ Monitor system resources during playback:
 ```bash
 # In a separate terminal, monitor GPU utilization
 sudo intel_gpu_top
-
+```
+```bash
 # Monitor CPU and memory usage
 htop
-
-# Check video decoder utilization
-cat /sys/class/drm/card0/gt/gt0/rc6_residency_ms
 ```
-
 
 ### Step 6: Stop the Application
 
@@ -251,7 +244,6 @@ xhost -local:docker
 docker system prune -f
 ```
 
-
 ## Understanding the Technology
 
 ### Intel® Quick Sync Video Technology
@@ -259,14 +251,16 @@ docker system prune -f
 This tutorial leverages Intel's hardware-accelerated video processing capabilities:
 
 **Hardware Acceleration Benefits:**
+
 - **Dedicated Video Engines**: Separate silicon for video decode/encode operations
-- **CPU Offloading**: Frees CPU resources for other computational tasks  
+- **CPU Offloading**: Frees CPU resources for other computational tasks
 - **Power Efficiency**: Lower power consumption compared to software decoding
 - **Parallel Processing**: Multiple decode engines can process streams simultaneously
 
 ### VAAPI Integration
 
 **Video Acceleration API (VAAPI)** provides:
+
 - **Hardware Abstraction**: Unified interface across Intel graphics generations
 - **Pipeline Optimization**: Direct GPU memory access without CPU copies
 - **Format Support**: Hardware acceleration for H.264, H.265, VP9, and AV1 codecs
@@ -277,14 +271,16 @@ This tutorial leverages Intel's hardware-accelerated video processing capabiliti
 The tutorial demonstrates advanced GStreamer concepts:
 
 **Element Types:**
+
 - **Source Elements**: `filesrc` - File input
-- **Demuxer Elements**: `qtdemux` - Container format parsing  
+- **Demuxer Elements**: `qtdemux` - Container format parsing
 - **Decoder Elements**: `vah264dec` - Hardware-accelerated decoding
 - **Transform Elements**: `vapostproc` - Hardware scaling and format conversion
 - **Compositor Elements**: `vacompositor` - Multi-stream composition
 - **Sink Elements**: `xvimagesink` - Display output
 
 **Pipeline Benefits:**
+
 - **Zero-Copy Operations**: Direct GPU memory transfers
 - **Parallel Processing**: Concurrent decode of multiple streams
 - **Dynamic Reconfiguration**: Runtime pipeline modifications
