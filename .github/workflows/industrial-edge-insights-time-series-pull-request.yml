@@ -59,20 +59,17 @@ jobs:
         make down 
         # Generate random values for sensitive environment variables
         INFLUXDB_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
-        INFLUXDB_PASSWORD=$(openssl rand -hex 6)
+        base=$(tr -dc 'a-zA-Z' </dev/urandom | head -c9)
+        digit=$(tr -dc '0-9' </dev/urandom | head -c1)
+        pos=$((RANDOM % 10))
+        INFLUXDB_PASSWORD=${base:0:$pos}${digit}${base:$pos}
         VISUALIZER_GRAFANA_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
-        VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 6)
-        MR_PSQL_PASSWORD=$(openssl rand -hex 10)
-        MR_MINIO_ACCESS_KEY=$(openssl rand -hex 10)
-        MR_MINIO_SECRET_KEY=$(openssl rand -hex 10)
+        VISUALIZER_GRAFANA_PASSWORD=${base:0:$pos}${digit}${base:$pos}
 
         sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
         sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
         sed -i "s/VISUALIZER_GRAFANA_USER=.*/VISUALIZER_GRAFANA_USER=${VISUALIZER_GRAFANA_USER}/g" .env
         sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
-        sed -i "s/MR_PSQL_PASSWORD=.*/MR_PSQL_PASSWORD=${MR_PSQL_PASSWORD}/g" .env
-        sed -i "s/MR_MINIO_ACCESS_KEY=.*/MR_MINIO_ACCESS_KEY=${MR_MINIO_ACCESS_KEY}/g" .env
-        sed -i "s/MR_MINIO_SECRET_KEY=.*/MR_MINIO_SECRET_KEY=${MR_MINIO_SECRET_KEY}/g" .env 
         make build
     - name: Deploying Wind Turbine Anomaly Detection Sample App
       run: |
@@ -106,9 +103,12 @@ jobs:
         make down 
         # Generate random values for sensitive environment variables
         INFLUXDB_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
-        INFLUXDB_PASSWORD=$(openssl rand -hex 6)
+        base=$(tr -dc 'a-zA-Z' </dev/urandom | head -c9)
+        digit=$(tr -dc '0-9' </dev/urandom | head -c1)
+        pos=$((RANDOM % 10))
+        INFLUXDB_PASSWORD=${base:0:$pos}${digit}${base:$pos}
         VISUALIZER_GRAFANA_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
-        VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 6)
+        VISUALIZER_GRAFANA_PASSWORD=${base:0:$pos}${digit}${base:$pos}
         MTX_WEBRTCICESERVERS2_0_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
         MTX_WEBRTCICESERVERS2_0_PASSWORD=$(openssl rand -hex 10)
         HOST_IP=$(hostname -I | awk '{print $1}')

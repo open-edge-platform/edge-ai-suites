@@ -1,0 +1,13 @@
+image:
+  repository: eclipse-mosquitto
+  tag: 2.0
+env:
+  MQTT_USER: ""
+  MQTT_PASSWORD: ""
+
+# Service configuration
+service:
+  # Name of the Service
+  name: mqtt-broker
+  # Kubernetes Service type (ClusterIP, NodePort, LoadBalancer)
+  type: ClusterIP

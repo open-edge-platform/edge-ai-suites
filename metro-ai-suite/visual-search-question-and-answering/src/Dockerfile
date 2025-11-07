@@ -19,8 +19,6 @@ RUN chown -R user /home/user/visual-search-qa
 RUN pip install --no-cache-dir --upgrade pip setuptools && \
     pip install --no-cache-dir -r /home/user/visual-search-qa/src/requirements.txt
 
-ENV PYTHONPATH=$PYTHONPATH:/home/user
-
 RUN mkdir -p /home/user/data && chown -R user /home/user/data
 
 USER user

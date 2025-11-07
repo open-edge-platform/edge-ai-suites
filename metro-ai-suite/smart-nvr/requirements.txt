@@ -1,3 +1,5 @@
+# For directory watcher support
+watchdog==4.0.0
 fastapi==0.115.2  # Note: Latest is 0.111.0 (your version seems higher than current)
 uvicorn[standard]==0.29.0  # Upgraded from 0.24.0
 requests==2.32.4  # Upgraded from 2.31.0 (fixes CVE-2024-35195 and CVE-2024-47081)
@@ -8,4 +10,10 @@ gradio==5.34.2  # Latest is 4.28.3 (your version seems higher than current)
 paho-mqtt==1.6.1  # Latest is 2.0.0 (consider upgrading)
 redis>=6.2.0  # Latest is 5.0.1 (keep as >=6.2.0)
 aiohttp==3.10.11   # Upgraded from 3.9.4 (fixes CVE-2024-52304)
+pytz==2023.3
 #setuptools>=70.0.0  # Added to address setuptools CVEs (CVE-2024-6345, etc.)
+pydantic-settings>=2.0.0
+pytest==8.2.2  # Added for test suite
+pytest-asyncio==0.23.7  # Async endpoint tests
+pytest-cov==5.0.0
+httpx==0.27.0

@@ -211,6 +211,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 - [Publish frames to S3 storage pipelines](how-to-run-store-frames-in-s3.md)
 - [View telemetry data in Open Telemetry](how-to-view-telemetry-data.md)
 - [Publish metadata to OPCUA](how-to-use-opcua-publisher.md)
+- [Integrate Balluff SDK with supported cameras](how-to-integrate-balluff-sdk.md)
+- [Integrate Pylon SDK for Basler camera support](how-to-integrate-pylon-sdk.md)
 
 ## Troubleshooting
 

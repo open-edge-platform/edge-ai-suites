@@ -59,7 +59,7 @@ Set up the required environment variables:
 ```bash
 # Docker Registry Details
 export REGISTRY_URL="intel"
-export TAG="1.2.0"
+export TAG="1.2.1"
 
 # VSS Service Endpoints
 export VSS_SUMMARY_IP=<vss-summary-device-ip>
@@ -71,7 +71,9 @@ export VSS_SEARCH_PORT=<vss-search-port>          # Default: 12345
 export MQTT_USER=<mqtt-username>
 export MQTT_PASSWORD=<mqtt-password>
 
-export NVR_GENAI=false                  
+# Feature Toggles
+export NVR_GENAI=false                  # Set to 'true' to enable AI-powered event descriptions  
+export NVR_SCENESCAPE=false             # Set to 'true' to enable Scenescape integration                  
 ```
 
 ### Step 3: Launch Application
@@ -131,6 +133,53 @@ Re-run the application after [configuring](./get-started.md#step-2-configure-env
 > - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation
 > - Requires VLM microservice to be running
 > - Disabled by default for system stability
+
+## Running Tests and Generating Coverage Report
+
+To ensure the functionality of the microservice and measure test coverage, follow these steps:
+
+1. **Install Dependencies**  
+   Install the required dependencies, including development dependencies, using:
+
+   ```bash
+   poetry install --with test
+   ```
+
+2. **Run Tests with Poetry**  
+   Use the following command to run all tests:
+
+   ```bash
+   poetry run pytest
+   ```
+
+3. **Run Tests with Coverage**  
+   To collect coverage data while running tests, use:
+
+   ```bash
+   poetry run pytest --cov=src --cov=ui --cov-report=term-missing:skip-covered
+   ```
+
+4. **Generate Coverage Report**  
+   After running the tests, generate a coverage report:
+
+   ```bash
+   poetry run coverage report -m
+   ```
+
+5. **Generate HTML Coverage Report (Optional)**  
+   For a detailed view, generate an HTML report:
+
+   ```bash
+   poetry run coverage html
+   ```
+
+   Open the `htmlcov/index.html` file in your browser to view the report.
+
+These steps will help you verify the functionality of the microservice and ensure adequate test coverage.
+
+### Scenescape Integration
+
+For traffic analytics capabilities with Intel Scenescape (vehicle counting, traffic flow analysis), see the **[Scenescape Integration Guide](./scenescape-integration.md)**.
 
 ### Custom Build Configuration
 

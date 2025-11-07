@@ -4,52 +4,43 @@
 This reference implementation enables the development of a high-performance, Intel-based® Intelligent Traffic Solution. The end-to-end pipeline of this software reference implementation includes the following major workloads, as shown in the following figure: 
 
 - Dataset loading and data format conversion
-- Radar signal processing
+- Lidar signal processing
 - Video analytics
 - Data fusion
 - Visualization
   
 
-Each pipeline is deployed on a single Intel® SoC processor, providing the necessary heterogeneous compute capabilities from Intel Core™ processors and integrated GPU. The implementation includes video analytics optimized by the Intel® Distribution of OpenVINO™ Toolkit, radar signal processing accelerated by Intel® oneMKL, data fusion, and visualization. Key performance indicators, such as throughput and processing latency, significantly surpass current market standards. To maximize performance on Intel® processors, we optimized this SW RI using Intel software toolkits and open-source libraries.
+Each pipeline is deployed on a single Intel® SoC processor, providing the necessary heterogeneous compute capabilities from Intel Core™ processors and integrated GPU. The implementation includes video analytics optimized by the Intel® Distribution of OpenVINO™ Toolkit, radar/lidar signal processing accelerated by Intel® oneAPI, data fusion, and visualization. Key performance indicators, such as throughput and processing latency, significantly surpass current market standards. To maximize performance on Intel® processors, we optimized this SW RI using Intel software toolkits and open-source libraries.
 
-![Case1-1C1R](./_images/Case1-1C1R.png)
-<center>Use case #1: 1C+1R Pipeline</center>
-
-![Case2-4C4R](./_images/Case2-4C4R.png)
-<center>Use case #2: 4C+4R Pipeline</center>
-
-![Case3-2C1R](./_images/Case3-2C1R.png)
-<center>Use case#3: 2C+1R </center>
-
-![Case4-16C4R](./_images/Case4-16C4R.png)
-<center>Use case#4: 16C+4R </center>
+![Case-C+L](./_images/Case-C+L.png)
+<center>Use case: C+L Pipeline</center>
 
 Following are the four demo configurations. Please refer to the [Get Started Guide](./Get-Started-Guide.md) for more instructions on deploying services on bare metal.  
 
-## Demo for 1C+1R
+## Demo for 2C+1L
 
-![Demo-1C1R](./_images/Demo-1C1R.png)
-<center>Use case #1: 1C+1R running on Intel® Celeron® Processor 7305E </center>
+![Demo-2C1L](./_images/Demo-2C1L.png)
+<center>Use case #1: 2C+1L running on Intel® Core™ Ultra 7 265H </center>
 
-## Demo for 4C+4R
+## Demo for 4C+2L
 
-![Demo-4C4R](./_images/Demo-4C4R.png)
-<center>Use case #2: 4C+4R running on Intel® Core™ Ultra 7 Processor 165H </center>
+![Demo-4C2L](./_images/Demo-4C2L.png)
+<center>Use case #2: 4C+2L running on Intel® Core™ Ultra 7 265H </center>
 
-## Demo for 2C+1R
+## Demo for 12C+2L
 
-![Demo-2C1R](./_images/Demo-2C1R.png)
-<center>Use case #3: 2C+1R running on Intel® Celeron® Processor 7305E </center>
+![Demo-12C2L](./_images/Demo-12C2L.png)
+<center>Use case #3: 12C+2L running on Intel® Core™ i7-13700 and Intel® B580 Graphics </center>
 
-## Demo for 16C+4R
+## Demo for 8C+4L
 
-![Demo-16C4R](./_images/Demo-16C4R.png)
+![Demo-8C4L](./_images/Demo-8C4L.png)
 
-<center>Use case #4: 16C+4R running on Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics </center>
+<center>Use case #4: 8C+4L running on Intel® Core™ i7-13700 and Intel® B580 Graphics </center>
 
 ## Key Features
 
-* Powerful and scalable CPU, built-in GPU (iGPU) configurations that deliver heterogeneous computing capabilities for sensor fusion-based AI inferencing. 
+* Powerful and scalable CPU, built-in GPU (iGPU), dGPU configurations that deliver heterogeneous computing capabilities for sensor fusion-based AI inferencing. 
 
 * Low power consumption package with a wide temperature range, compact fanless design, and enhanced vibration resistance. 
 
@@ -75,37 +66,15 @@ Following are the four demo configurations. Please refer to the [Get Started Gui
 
     - Platform
 
-        - Intel® Celeron® Processor 7305E (1C+1R/2C+1R usecase)
-        - Intel® Core™ Ultra 7 Processor 165H (4C+4R usecase)
-
-        - Intel® Core™ i7-13700 and Intel® Arc™ A770 Graphics (16C+4R usecase)
-
-    - BIOS setting
-
-        - MTL
-
-            | Setting                                          | Step                                                         |
-            | ------------------------------------------------ | ------------------------------------------------------------ |
-            | Enable the Hidden BIOS Setting in Seavo Platform | "Right Shift+F7" Then Change Enabled Debug Setup Menu from [Enabled] to [Disable] |
-            | Disable VT-d in BIOS                             | Intel Advanced Menu → System Agent (SA) Configuration → VT-d setup menu → VT-d<Disabled>    <br>Note: If VT-d can’t be disabled, please disable Intel Advanced Menu → CPU Configuration → X2APIC |
-            | Disable SAGV in BIOS                             | Intel Advanced Menu → [System Agent (SA) Configuration]  →  Memory configuration →  SAGV <Disabled> |
-            | Enable NPU Device                                | Intel Advanced Menu → CPU Configuration → Active SOC-North Efficient-cores <ALL>   <br>Intel Advanced Menu → System Agent (SA) Configuration → NPU Device <Enabled> |
-            | TDP Configuration                                | SOC TDP configuration is very important for performance. Suggestion: TDP = 45W. For extreme heavy workload, TDP = 64W <br>---TDP = 45W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations → Power Limit 1 <45000> <br>---TDP = 64W settings: Intel Advanced → Power & Performance → CPU - Power Management Control → Config TDP Configurations →  Configurable TDP Boot Mode [Level2] |
-
-        - RPL-S+A770
-
-            | Setting                  | Step                                                         |
-            | ------------------------ | ------------------------------------------------------------ |
-            | Enable ResizeBar in BIOS | Intel Advanced Menu -> System Agent (SA) Configuration -> PCI Express Configuration -> PCIE Resizable BAR Support <Enabled> |
-
-    
+        - Intel® Core™ Ultra 7 265H + Ubuntu24.04 (2C+1L/4C+2L usecase)
+        - Intel® Core™ i7-13700 and Intel® B580 Graphics + Ubuntu24.10 (8C+4L/12C+2L usecase)
 
 - Software requirements
 
     | Software           | Version                |
     | ------------------ | ---------------------- |
     | Intel  OpenVINO    | 2025.2.0               |
-    | Intel  oneMKL      | 2025.1.0               |
+    | Intel  oneAPI      | 2025.1.0               |
     | NEO OpenCL         | Release/23.22.26516.25 |
     | cmake              | 3.22.1                 |
     | boost              | 1.83.0                 |
@@ -113,7 +82,7 @@ Following are the four demo configurations. Please refer to the [Get Started Gui
     | thrift             | 0.18.1                 |
     | gRPC               | 1.58.1                 |
     | zlib               | 1.2.11                 |
-    | oneAPI Level  Zero | 1.17.19                |
+    | oneAPI Level  Zero | 1.22.4                 |
 
 ## Get Started
 
