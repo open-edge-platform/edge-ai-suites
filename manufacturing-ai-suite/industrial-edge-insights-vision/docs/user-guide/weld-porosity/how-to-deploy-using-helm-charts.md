@@ -138,7 +138,7 @@
     Posting payload to REST server at http://10.223.22.63:30107/pipelines/user_defined_pipelines/weld_porosity_classification
     Payload for pipeline 'weld_porosity_classification' posted successfully. Response: "895130405c8e11f08b78029627ef9c6b"
     ```
-    >NOTE- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:31111/weld/
+    >NOTE- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/weld/
 
 5.  Get status of pipeline instance(s) running.
     ```sh
