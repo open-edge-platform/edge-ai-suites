@@ -1,24 +1,37 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
     accel_fps: 0
-    align_depth.enable: true
-    allow_no_texture_points: false
+    align_depth:
+      enable: true
+
     calib_odom_file: ''
     clip_distance: -0.8
-    colorizer.enable: false
+    color_qos: "SENSOR_DATA"
+    colorizer:
+      enable: false
     config_file: ''
-    decimation_filter.enable: false
-    depth_module.emitter_enabled: 1
-    depth_module.laser_power: 360.0
-    depth_module.enable_auto_exposure: true
-    depth_module.enable_auto_white_balance: true
-    depth_module.exposure: 6000
-    depth_module.exposure.1: 6000
-    depth_module.exposure.2: 6000
-    depth_module.gain.1: 16
-    depth_module.gain.2: 16
-    depth_module.profile: 640x480x30
+    decimation_filter:
+      enable: false
+    depth_module:
+      emitter_enabled: 1
+      enable_auto_exposure: true
+      auto_exposure_limit: 200000
+      auto_exposure_limit_toggle: false
+      auto_exposure_mode: false
+      auto_exposure_roi:
+        bottom: 479
+        left: 0
+        right: 639
+        top: 0
+      auto_gain_limit: 248
+      auto_gain_limit_toggle: false
+      depth_format: Z16
+      depth_profile: 640x480x30
+      emitter_always_on: false
+      depth_profile: 640x480x30
     device_type: ''
+    depth_qos: "SENSOR_DATA"
+    depth_info_qos: "SENSOR_DATA"
     diagnostics_period: 0.0
     enable_accel: false
     enable_color: true
@@ -27,8 +40,10 @@
     enable_fisheye1: false
     enable_fisheye2: false
     enable_gyro: false
+    enable_infra: false
     enable_infra1: false
     enable_infra2: false
+    enable_rgbd: false
     enable_pose: false
     enable_sync: true
     gyro_fps: 0
@@ -39,28 +54,32 @@
     log_level: info
     output: screen
     color_info_qos: "SENSOR_DATA"
-    color_qos: "SENSOR_DATA"
-    depth_info_qos: "SENSOR_DATA"
-    depth_qos: "SENSOR_DATA"
+
+
     infra1_info_qos: "SENSOR_DATA"
     infra1_qos: "SENSOR_DATA"
     infra2_info_qos: "SENSOR_DATA"
     infra2_qos: "SENSOR_DATA"
     infra_info_qos: "SENSOR_DATA"
     infra_qos: "SENSOR_DATA"
-    pointcloud.enable: true
-    pointcloud.ordered_pc: true
-    pointcloud.pointcloud_qos: "SENSOR_DATA"
-    pointcloud.frames_queue_size: 1
+    pointcloud:
+      allow_no_texture_points: false
+      enable: true
+      filter_magnitude: 0
+      ordered_pc: true
+      pointcloud_qos: "SENSOR_DATA"
+      frames_queue_size: 1
     # 0: disable texture, 1: depth texture 2: RGB, see: https://intelrealsense.github.io/librealsense/doxygen/rs__sensor_8h.html#a01b4027af33139de861408872dd11b93a58a1d3d8a392aafe15b30b6d4575c153
-    pointcloud.stream_filter: 2
-    pointcloud.stream_index_filter: 0
-    pose_fps: 200
+      stream_filter: 2
+      stream_index_filter: 0
     reconnect_timeout: 6.0
-    rgb_camera.enable_auto_exposure: false
-    rgb_camera.enable_auto_white_balance: true
-    rgb_camera.exposure: 100
-    rgb_camera.profile: 640x480x30
+    rgb_camera:
+      backlight_compensation: false
+      brightness: 0
+      color_profile: 640x480x30
+      enable_auto_exposure: true
+      enable_auto_white_balance: true
+      exposure: 166
     rosbag_filename: ''
     #serial_no: _002422060415
     tf_publish_rate: 0.0
