@@ -2,53 +2,60 @@
 
 This section shows how to deploy the Video Search and Summary Sample Application using Helm chart.
 
-# Prerequisites
+## Prerequisites
+
 Before you begin, ensure that you have the following:
+
 - Kubernetes\* cluster set up and running.
 - The cluster must support **dynamic provisioning of Persistent Volumes (PV)**. Refer to the [Kubernetes Dynamic Provisioning Guide](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) for more details.
-- Install `kubectl` on your system. See the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster. 
+- Install `kubectl` on your system. See the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster.
 - Helm chart installed on your system. See the [Installation Guide](https://helm.sh/docs/intro/install/).
 - **Storage Requirement :** Application requests for **50GiB** of storage in its default configuration. (This should change with choice of models and needs to be properly configured). Please make sure that required storage is available in you cluster.
 
 Before setting up Smart NVR, ensure these services are running on their respective devices:
 
-#### 1. VSS (Video Search and Summarization) Services
+### 1. VSS (Video Search and Summarization) Services
+
 Deploy these on separate devices:
+
 - **VSS Search**: Handles video search functionality
 - **VSS Summary**: Provides video summarization capabilities
 
 📖 [VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
 
-#### 2. VLM Microservice (Optional)
+### 2. VLM Microservice (Optional)
+
 Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
+
 - Runs the VLM model defined in the frigate [config file](../../resources/frigate-config/config.yml)
 - Use `VLM_MAX_COMPLETION_TOKENS` to limit response length during deployment
 
 📖 [VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
 
-
-# Helm Chart Installation
+## Helm Chart Installation
 
 In order to setup the end-to-end application, we need to acquire the charts and install it with optimal values and configurations. Subsequent sections will provide step by step details for the same.
 
-## 1. Acquire the helm chart
+### 1. Acquire the helm chart
 
 There are 2 options to get the charts in your workspace:
 
-### Option 1: Get the charts from Docker Hub
+#### Option 1: Get the charts from Docker Hub
 
-#### Step 1: Pull the Specific Chart
+##### Step 1: Pull the Specific Chart
 
 Use the following command to pull the Helm chart from Docker Hub:
+
 ```bash
 helm pull oci://registry-1.docker.io/intel/smart-nvr --version 1.2.1
 ```
 
 Refer to the release notes for details on the latest version number to use for the sample application.
 
-#### Step 2: Extract the `.tgz` File
+##### Step 2: Extract the `.tgz` File
 
 After pulling the chart, extract the `.tgz` file:
+
 ```bash
 tar -xvf smart-nvr-1.2.1.tgz
 ```
@@ -59,16 +66,17 @@ This will create a directory named `smart-nvr` containing the chart files. Navig
 cd smart-nvr
 ```
 
-### Option 2: Install from Source
+#### Option 2: Install from Source
 
-#### Step 1: Clone the Repository
+##### Step 1: Clone the Repository
 
 Clone the repository containing the Helm chart:
+
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
 ```
 
-#### Step 2: Change to the Chart Directory
+##### Step 2: Change to the Chart Directory
 
 Navigate to the chart directory:
 
@@ -76,8 +84,7 @@ Navigate to the chart directory:
 cd edge-ai-suites/metro-ai-suite/smart-nvr
 ```
 
-
-## 2. Configure Required Values
+### 2. Configure Required Values
 
 The application requires several values to be set by user in order to work. To make it easier, we have included a `user_values_override.yaml` file, which contains only the values that user needs to tweak. Open the file in your favorite editor or use nano:
 
@@ -103,7 +110,7 @@ Update or edit the values in YAML file as follows:
 | `nvr-event-router.env.VSS_SUMMARY_PORT` | VSS summary port | `<your-vss-summary-port>` |
 | `nvr-event-router-ui.NVR_GENAI` | Flag to enable GENAI on Frigate NVR  | `true/false` |
 
-## 3. Build Helm Dependencies
+### 3. Build Helm Dependencies
 
 Navigate to the chart directory and build the Helm dependencies using the following command:
 
@@ -111,7 +118,7 @@ Navigate to the chart directory and build the Helm dependencies using the follow
 helm dependency build
 ```
 
-## 4. Set and Create a Namespace
+### 4. Set and Create a Namespace
 
 We will install the helm chart in a new namespace. Create a shell variable to refer a new namespace and create it.
 
@@ -129,9 +136,7 @@ We will install the helm chart in a new namespace. Create a shell variable to re
 
 > **_NOTE :_** All subsequent steps assume that you have `my_namespace` variable set and accessible on your shell with the desired namespace as its value.
 
-
-## 5. Deploy the Helm Chart
-
+### 5. Deploy the Helm Chart
 
 Deploy the Smart NVR Application:
 
@@ -139,7 +144,7 @@ Deploy the Smart NVR Application:
 helm install smart-nvr . -f user_value_override.yaml -n $my_namespace
 ```
 
-### Step 6: Verify the Deployment
+### 6: Verify the Deployment
 
 Check the status of the deployed resources to ensure everything is running correctly:
 
@@ -159,7 +164,7 @@ kubectl get pods -n $my_namespace
 
 ### Step 7: Accessing the application
 
-Nginx service running as a reverse proxy in one of the pods, helps us to access the application. We need to get Host IP and Port on the node where the nginx service is running. 
+Nginx service running as a reverse proxy in one of the pods, helps us to access the application. We need to get Host IP and Port on the node where the nginx service is running.
 
 Run the following command to get the host IP of the node and port exposed by Nginx service:
 
@@ -222,5 +227,7 @@ helm uninstall smart-nvr -n $my_namespace
     ```bash
     kubectl delete pvc <pvc-name> -n $my_namespace
     ```
+
 ## Related links
+
 - [How to Build from Source](./how-to-build-from-source.md)

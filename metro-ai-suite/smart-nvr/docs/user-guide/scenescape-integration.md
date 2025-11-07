@@ -13,7 +13,7 @@ Smart NVR system integrates with Intel Scenescape to enable:
 ## Prerequisites
 
 - **Smart Intersection Reference Implementation**: We will use the Smart Intersection application to showcase the SceneScape integration.
-  
+
 > **Please follow the below steps to run Smart Intersection Application.**
 
 ```bash
@@ -42,6 +42,7 @@ cd ../../../../smart-nvr
 ```
 
 These files provide:
+
 - RTSP streaming support in the DLStreamer pipeline
 - SceneScape-specific Docker Compose settings
 
@@ -70,7 +71,7 @@ export SCENESCAPE_THROTTLE_INTERVAL=2.0  # Optional: throttle interval in second
 ### Step 3: Start Smart NVR
 
 ```bash
-# Start the application 
+# Start the application
 ./setup.sh start
 
 # Or restart with new configuration
@@ -95,6 +96,7 @@ docker logs nvr-event-router -f
 ![Scenescape Enabled Interface](_images/Scenescape_enabled.png)
 
 When Scenescape is enabled (`NVR_SCENESCAPE=true`) and scenescape source is selected:
+
 - Source dropdown shows both **"frigate"** and **"scenescape"** options
 - **Count** field becomes visible and editable
 - Users can set minimum count threshold for rule triggering (e.g., 5, 10, 15)
@@ -106,7 +108,8 @@ When Scenescape is enabled (`NVR_SCENESCAPE=true`) and scenescape source is sele
 ![Frigate Selected Interface](_images/Scenescape_enabled_frigate.png)
 
 When Scenescape is enabled but frigate source is selected:
-- Source dropdown still shows both **"frigate"** and **"scenescape"** options  
+
+- Source dropdown still shows both **"frigate"** and **"scenescape"** options
 - **Count** field is automatically hidden (not applicable for frigate)
 - Standard frigate rule configuration with detection labels
 - Rules table shows "Count" column but displays "-" for frigate rules
@@ -117,9 +120,10 @@ When Scenescape is enabled but frigate source is selected:
 ![Scenescape Disabled Interface](_images/Scenescape_disabled.png)
 
 When Scenescape is disabled in environment variables:
+
 - Source dropdown shows **only** "frigate" option
 - Count field is never visible
-- Rules table **excludes** the "Count" column entirely  
+- Rules table **excludes** the "Count" column entirely
 - Pure frigate-only functionality and interface
 - Scenescape MQTT client will not start
 
@@ -128,21 +132,24 @@ When Scenescape is disabled in environment variables:
 ### Creating Rules
 
 **Steps (both sources):**
+
 1. Navigate to **Auto-Route Events** tab
 2. **Select Source:** "scenescape" or "frigate"
 3. **Set Count:** (Scenescape only) Define minimum threshold (e.g., 5)
-4. **Select Camera:** Choose target camera 
+4. **Select Camera:** Choose target camera
 5. **Choose Detection Label:** Select object type
 6. **Select Action:** "Summarize" or "Add to Search"
 7. **Click Add Rule**
 
 **Key Differences:**
+
 - **Scenescape:** Count field visible when selected
 - **Frigate:** Count field hidden
 
 ### Rule Behavior Examples
 
 **Scenescape Rule Example:**
+
 ```
 Source: scenescape
 Camera: camera1
@@ -150,15 +157,18 @@ Count: 5
 Label: vehicle
 Action: Summarize
 ```
+
 *Triggers video summarization when 5+ vehicles detected in camera1*
 
 **Frigate Rule Example:**
+
 ```
 Source: frigate
 Camera: livingroom
 Label: person
-Action: Add to Search  
+Action: Add to Search
 ```
+
 *Adds person detection events to search index for livingroom camera*
 
 ## Troubleshooting
@@ -175,6 +185,7 @@ export NVR_SCENESCAPE=true
 ```
 
 **No scenescape events received:**
+
 ```bash
 # Check MQTT connection
 docker logs nvr-event-router | grep -i scenescape
@@ -207,8 +218,9 @@ cat /proc/loadavg && docker stats --no-stream --format "table {{.Name}}\t{{.CPUP
 ## Support
 
 For Scenescape integration issues:
+
 1. **Certificate Error**: Ensure Smart Intersection application is running and has generated certificates
-2. **Environment Variables**: Verify `NVR_SCENESCAPE=true` and MQTT credentials are set  
+2. **Environment Variables**: Verify `NVR_SCENESCAPE=true` and MQTT credentials are set
 3. **MQTT Connection**: Check logs for "Scenescape MQTT client started" message
 4. **Smart Intersection**: Confirm Smart Intersection application is accessible at expected path
 5. **Performance Issues**: Run `cat /proc/loadavg && docker stats --no-stream` to check CPU usage and system load
