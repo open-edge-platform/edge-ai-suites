@@ -190,6 +190,9 @@ kubectl delete storageclass hostpath local-storage standard
 
 > **Note**: This complete cleanup will remove storage provisioning from your cluster. You'll need to reinstall the storage provisioner for future deployments that require persistent volumes.
 
+> **Run workload on GPU**: Set `gpuWorkload: true` in values.yaml file before deploying the helm chart.
+
+
 ## What to Do Next
 
 - **[Troubleshooting Helm Deployments](./support.md#troubleshooting-helm-deployments)**: Consolidated troubleshooting steps for resolving issues during Helm deployments.

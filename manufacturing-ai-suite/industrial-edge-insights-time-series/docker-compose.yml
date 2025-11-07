@@ -256,7 +256,7 @@ services:
     networks:
     - timeseries_network
     volumes:
-    - ./apps/${SAMPLE_APP}/${SAMPLE_APP}.csv:/${SAMPLE_APP}.csv
+    - ./apps/${SAMPLE_APP}/simulation-data:/simulation-data
 
   nginx:
     image: nginx:1.29.1-bookworm-perl

@@ -1,4 +1,4 @@
-FROM docker.io/intel/dlstreamer:2025.1.2-ubuntu22
+FROM docker.io/intel/dlstreamer:2025.2-ubuntu22-rc1
 
 USER root
 

@@ -215,7 +215,7 @@ gen_helm_charts:
 	@cp -f configs/influxdb/config/*.conf helm/
 	@cp -f configs/influxdb/init-influxdb.sh helm/
 	@cp -f configs/mqtt-broker/*.conf helm/
-	@cp -f apps/${SAMPLE_APP}/${SAMPLE_APP}.csv helm/
+	@cp -rf apps/${SAMPLE_APP}/simulation-data helm/
 	@cp -f apps/${SAMPLE_APP}/telegraf-config/*.conf helm
 	@cp -f apps/${SAMPLE_APP}/time-series-analytics-config/config.json helm/
 	@cp -f configs/telegraf/entrypoint.sh helm/telegraf_entrypoint.sh
