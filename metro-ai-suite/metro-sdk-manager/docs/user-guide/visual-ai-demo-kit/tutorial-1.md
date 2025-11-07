@@ -1,4 +1,4 @@
-# Tutorial 1 - DLStreamer Pipeline Server
+# Visual AI Demo Kit - Tutorial 1
 
 <!--
 **Sample Description**: This tutorial demonstrates how to build an intelligent tolling system using edge AI technologies for real-time vehicle detection, license plate recognition, and vehicle attribute analysis.

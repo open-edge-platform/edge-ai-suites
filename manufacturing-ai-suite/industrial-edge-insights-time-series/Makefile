@@ -116,24 +116,6 @@ check_env_variables:
 					exit 1; \
 				fi \
 				;; \
-			MR_PSQL_PASSWORD) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
-					echo "MR_PSQL_PASSWORD length must be a minimum of 10 alphanumeric characters with atleast one digit"; \
-					exit 1; \
-				fi \
-				;; \
-			MR_MINIO_ACCESS_KEY) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
-					echo "MR_MINIO_ACCESS_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit"; \
-					exit 1; \
-				fi \
-				;; \
-			MR_MINIO_SECRET_KEY) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
-					echo "MR_MINIO_SECRET_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit"; \
-					exit 1; \
-				fi \
-				;; \
 		esac; \
 	done
 
@@ -233,7 +215,7 @@ gen_helm_charts:
 	@cp -f configs/influxdb/config/*.conf helm/
 	@cp -f configs/influxdb/init-influxdb.sh helm/
 	@cp -f configs/mqtt-broker/*.conf helm/
-	@cp -f apps/${SAMPLE_APP}/${SAMPLE_APP}.csv helm/
+	@cp -rf apps/${SAMPLE_APP}/simulation-data helm/
 	@cp -f apps/${SAMPLE_APP}/telegraf-config/*.conf helm
 	@cp -f apps/${SAMPLE_APP}/time-series-analytics-config/config.json helm/
 	@cp -f configs/telegraf/entrypoint.sh helm/telegraf_entrypoint.sh

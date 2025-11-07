@@ -1,4 +1,4 @@
-# Tutorial 4: Video Analytics Pipelines
+# Metro Vision AI SDK - Tutorial 4
 
 This tutorial demonstrates how to build sophisticated video analytics pipelines using Intel® DL Streamer framework. You'll learn to create real-time human pose estimation applications, understand GStreamer pipeline architecture, and develop custom video analytics solutions for computer vision applications.
 

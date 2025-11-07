@@ -40,6 +40,12 @@ spec:
       labels:
         app: nginx
     spec:
+      securityContext:
+        runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+        runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: nginx-proxy
         image: nginx:1.29.1-bookworm-perl
@@ -47,6 +53,7 @@ spec:
         securityContext:
           runAsUser: {{ $.Values.env.TIMESERIES_UID }}
           runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+          runAsNonRoot: true
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
           capabilities:

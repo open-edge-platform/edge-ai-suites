@@ -640,7 +640,7 @@ main() {
   fi
   
   echo -e "${BOLD}${BLUE}==================================================${NC}"
-  success "Metro Gen AI SDK installation completed successfully!"
+  success "${NAME} installation completed successfully!"
   echo -e "${BOLD}${BLUE}==================================================${NC}"
   
   echo ""

@@ -3,29 +3,34 @@ global:
   proxy:
     no_proxy: "localhost,127.0.0.1,192.168.0.0/16,172.16.0.0/12,127.0.0.0/8,10.0.0.0/8,.svc.cluster.local"
     http_proxy: 
-    https_proxy: 
+    https_proxy:
 
-  LOCAL_EMBED_MODEL_ID:    # Ensure this is configured
-  VLM_MODEL_NAME:          # Ensure this is configured
+  EMBEDDING_MODEL_NAME:   # Ensure this is configured
+  VLM_MODEL_NAME:         # Ensure this is configured
+
+  sharedPvcName: "vsqa-shared-pvc"
+  sharedClaimSize : "20Gi"
+
+  registry: ""
 
   env:
-    keeppvc: true # Set to true to keep PVCs after uninstalling the chart
+    keeppvc: false # Set to true to keep PVCs after uninstalling the chart
 
 # Shared volumes
 volumes:
-  huggingfaceCache:
-    hostPath: "/home/user/.cache/huggingface"  # Ensure this path exists on the host
-  modelDir:
-    hostPath: "/home/user/models"  # Ensure this path exists on the host
   hostDataPath:
-    hostPath: "/home/user/data"  # Ensure this path exists on the host
+    hostPath: "/home/user/data"  # Ensure this path exists on the host node
 
 # Service ports
 servicePorts:
   vlm: 8000
+  mme: 8000
   dataprep: 9990
   retriever: 7770
   visualSearch: 17580
+
+MILVUS_HOST: "my-milvus.milvus.svc.cluster.local"
+MILVUS_PORT: 19530
 
 vlmOpenvinoServing:
   name: vlm-openvino-serving
@@ -40,7 +45,7 @@ vlmOpenvinoServing:
     targetPort: 8000
   env:
     VLM_COMPRESSION_WEIGHT_FORMAT: "int8"
-    VLM_DEVICE: "GPU"
+    VLM_DEVICE: "CPU"
     VLM_SEED: "42"
     WORKERS: "1"
     HF_ENDPOINT: "https://hf-mirror.com"
@@ -57,11 +62,37 @@ vlmOpenvinoServing:
   userGroupId: 1000
   videoGroupId: 44
   renderGroupId: 110
-  volumeMounts:
-    pvcName: vlm-pvc
-    egai_vlm_pvc:
-      size: 40Gi
-      accessMode: ReadWriteMany
+
+multimodalembeddingServing:
+  replicaCount: 1
+  name: multimodal-embedding-serving
+  image:
+    repository: "multimodal-embedding-serving"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+  env:
+    HF_ENDPOINT: "https://hf-mirror.com"
+    EMBEDDING_BASE_URL: "http://multimodal-embedding-serving.vsqa.svc.cluster.local:8000"
+    EMBEDDING_DEVICE: "CPU"
+    EMBEDDING_USE_OV: false
+    EMBEDDING_OV_MODELS_DIR: "/app/ov_models"
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 30
+    failureThreshold: 120
+    httpGet:
+      path: /health
+      port: 8000
+  readinessProbe:
+    sameAsLiveness: true
+  userGroupId: 1000
+  videoGroupId: 44
+  renderGroupId: 110
 
 dataprepVisualdataMilvus:
   replicaCount: 1
@@ -76,7 +107,6 @@ dataprepVisualdataMilvus:
     targetPort: 9990
   env:
     DEVICE: "CPU"
-    MILVUS_HOST: my-milvus.milvus.svc.cluster.local
     MILVUS_PORT: 19530
     HF_ENDPOINT: "https://hf-mirror.com"
   livenessProbe:
@@ -102,8 +132,6 @@ retrieverMilvus:
     port: 7770
     targetPort: 7770
   env:
-    DEVICE: "CPU"
-    MILVUS_HOST: my-milvus.milvus.svc.cluster.local
     MILVUS_PORT: 19530
     HF_ENDPOINT: "https://hf-mirror.com"
   livenessProbe:
@@ -132,7 +160,7 @@ visualSearchQaApp:
     BACKEND_VQA_BASE_URL: "http://vlm-openvino-serving.vsqa.svc.cluster.local:8000"
     BACKEND_SEARCH_BASE_URL: "http://retriever-milvus.vsqa.svc.cluster.local:7770"
     BACKEND_DATAPREP_BASE_URL: "http://dataprep-visualdata-milvus.vsqa.svc.cluster.local:9990"
-    DATA_INGEST_WITH_DETECT: true
+    DATA_INGEST_WITH_DETECT: false
     VISUAL_SEARCH_QA_UI_PORT: 17580
     MAX_MAX_NUM_SEARCH_RESULTS: 200
     DEFAULT_NUM_SEARCH_RESULTS: 10
