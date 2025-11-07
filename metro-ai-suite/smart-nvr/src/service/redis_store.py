@@ -1,9 +1,15 @@
+
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import json
 from fastapi import Request
 from config import REDIS_HOST, REDIS_PORT
+import logging
 import redis.asyncio as redis
+import logging
+
+# Module logger (was missing causing NameError in tests when error branch executed)
+logger = logging.getLogger(__name__)
 
 # --- RULE MANAGEMENT ---
 # Fallback client for non-FastAPI contexts (like MQTT)
@@ -11,7 +17,7 @@ fallback_redis_client = redis.from_url(
     f"redis://{REDIS_HOST}:{REDIS_PORT}", decode_responses=True
 )
 
-
+logger = logging.getLogger("redis-store")
 async def add_rule(request: Request, rule_id: str, rule_data: dict) -> bool:
     """Adds a new rule if it doesn't already exist. Returns True if added, False if exists."""
     redis_client = request.app.state.redis_client
@@ -195,3 +201,27 @@ async def get_summary_result(request: Request, summary_id: str):
     """Retrieve stored summary response."""
     redis_client = request.app.state.redis_client
     return await redis_client.get(f"summary_result:{summary_id}")
+
+
+CAMERA_WATCHER_KEY = "camera_watcher_mapping"
+
+async def save_camera_watcher_mapping(mapping: dict, request=None):
+    """Save camera watcher enable/disable mapping to Redis."""
+    redis_client = (
+        getattr(request.app.state, "redis_client", None)
+        if request
+        else fallback_redis_client
+    )
+    await redis_client.set(CAMERA_WATCHER_KEY, json.dumps(mapping))
+
+async def load_camera_watcher_mapping(request=None) -> dict:
+    """Load camera watcher enable/disable mapping from Redis."""
+    redis_client = (
+        getattr(request.app.state, "redis_client", None)
+        if request
+        else fallback_redis_client
+    )
+    data = await redis_client.get(CAMERA_WATCHER_KEY)
+    if data:
+        return json.loads(data)
+    return {}
