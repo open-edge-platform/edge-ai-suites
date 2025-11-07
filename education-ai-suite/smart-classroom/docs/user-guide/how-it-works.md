@@ -41,7 +41,7 @@ The uploaded audio is passed to the Backend API, which acts as the gateway to th
 
 ## Outputs
 
-- Transcriptions and summaries can be accessed from the Web-based UI and file system. The path for file system is <project-location>/<project-name>/<session_id>.
+- Transcriptions and summaries can be accessed from the Web-based UI and file system. The path for file system is **/<project-location>/<your-project-name>/**. For example, /storage/chapter-10/
 - Performance metrics (e.g., utilisation, model efficiency) are displayed for monitoring.
 - Localisation ensures outputs are available in multiple languages (English/Chinese).
 
