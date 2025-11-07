@@ -38,12 +38,14 @@ spec:
               value: {{ .Values.multimodalembeddingServing.env.EMBEDDING_OV_MODELS_DIR | quote }}
             - name: no_proxy
               value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
+            - name: NO_PROXY
+              value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
+            - name: no_proxy_env
+              value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
             - name: http_proxy
               value: {{ .Values.global.proxy.http_proxy | quote }}
             - name: https_proxy
               value: {{ .Values.global.proxy.https_proxy | quote }}
-            - name: no_proxy_env
-              value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
           volumeMounts:
             - name: workspace
               mountPath: /app/ov_models
@@ -51,22 +53,8 @@ spec:
               mountPath: /home/appuser/.cache/huggingface
             - name: gpu-devices
               mountPath: /dev/dri
-          livenessProbe:
-            httpGet:
-              path: {{ .Values.multimodalembeddingServing.livenessProbe.httpGet.path }}
-              port: {{ .Values.multimodalembeddingServing.livenessProbe.httpGet.port }}
-            initialDelaySeconds: {{ .Values.multimodalembeddingServing.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.multimodalembeddingServing.livenessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.multimodalembeddingServing.livenessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.multimodalembeddingServing.livenessProbe.failureThreshold }}
-          readinessProbe:
-            httpGet:
-              path: {{ .Values.multimodalembeddingServing.livenessProbe.httpGet.path }}
-              port: {{ .Values.multimodalembeddingServing.livenessProbe.httpGet.port }}
-            initialDelaySeconds: {{ .Values.multimodalembeddingServing.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.multimodalembeddingServing.livenessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.multimodalembeddingServing.livenessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.multimodalembeddingServing.livenessProbe.failureThreshold }}
+          securityContext:
+            readOnlyRootFilesystem: false
       volumes:
         - name: workspace
           persistentVolumeClaim:

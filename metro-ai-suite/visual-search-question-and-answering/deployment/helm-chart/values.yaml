@@ -24,7 +24,7 @@ volumes:
 # Service ports
 servicePorts:
   vlm: 8000
-  mme: 9777
+  mme: 8000
   dataprep: 9990
   retriever: 7770
   visualSearch: 17580
@@ -72,13 +72,13 @@ multimodalembeddingServing:
     pullPolicy: "IfNotPresent"
   service:
     type: ClusterIP
-    port: 9777
-    targetPort: 9777
+    port: 8000
+    targetPort: 8000
   env:
     HF_ENDPOINT: "https://hf-mirror.com"
-    EMBEDDING_BASE_URL: "http://multimodal-embedding-serving.vsqa.svc.cluster.local:9777"
+    EMBEDDING_BASE_URL: "http://multimodal-embedding-serving.vsqa.svc.cluster.local:8000"
     EMBEDDING_DEVICE: "CPU"
-    EMBEDDING_USE_OV: true
+    EMBEDDING_USE_OV: false
     EMBEDDING_OV_MODELS_DIR: "/app/ov_models"
   livenessProbe:
     initialDelaySeconds: 60
@@ -87,7 +87,7 @@ multimodalembeddingServing:
     failureThreshold: 120
     httpGet:
       path: /health
-      port: 9777
+      port: 8000
   readinessProbe:
     sameAsLiveness: true
   userGroupId: 1000
@@ -109,7 +109,6 @@ dataprepVisualdataMilvus:
     DEVICE: "CPU"
     MILVUS_PORT: 19530
     HF_ENDPOINT: "https://hf-mirror.com"
-    HOST_DATA_PATH: "/home/user/data"
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 30
@@ -161,9 +160,8 @@ visualSearchQaApp:
     BACKEND_VQA_BASE_URL: "http://vlm-openvino-serving.vsqa.svc.cluster.local:8000"
     BACKEND_SEARCH_BASE_URL: "http://retriever-milvus.vsqa.svc.cluster.local:7770"
     BACKEND_DATAPREP_BASE_URL: "http://dataprep-visualdata-milvus.vsqa.svc.cluster.local:9990"
-    DATA_INGEST_WITH_DETECT: true
+    DATA_INGEST_WITH_DETECT: false
     VISUAL_SEARCH_QA_UI_PORT: 17580
     MAX_MAX_NUM_SEARCH_RESULTS: 200
     DEFAULT_NUM_SEARCH_RESULTS: 10
     SHOW_RESULT_PER_ROW: 5
-    HOST_DATA_PATH: "/home/user/data"
