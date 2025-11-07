@@ -26,10 +26,10 @@
 
     - Download helm chart with the following command
 
-        `helm pull oci://registry-1.docker.io/intel/worker-safety-gear-detection --version 1.0.0`
+        `helm pull oci://registry-1.docker.io/intel/worker-safety-gear-detection --version 1.1.0-rc1`
     - unzip the package using the following command
 
-        `tar -xvf worker-safety-gear-detection-1.0.0.tgz`
+        `tar -xvf worker-safety-gear-detection-1.1.0-rc1.tgz`
     - Replace the helm directory
 
         `rm -rf helm && mv worker-safety-gear-detection helm`
@@ -138,7 +138,7 @@
     Posting payload to REST server at http://<HOST_IP>:30107/pipelines/user_defined_pipelines/worker_safety_gear_detection
     Payload for pipeline 'worker_safety_gear_detection' posted successfully. Response: "74bebe7a5d1211f08ab0da88aa49c01e"
     ```
-    >NOTE- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:31111/worker_safety/.
+    >NOTE- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/worker_safety/.
 
 5.  Get status of pipeline instance(s) running.
     ```sh
