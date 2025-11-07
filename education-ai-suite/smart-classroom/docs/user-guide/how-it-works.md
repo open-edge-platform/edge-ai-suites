@@ -33,8 +33,6 @@ The uploaded audio is passed to the Backend API, which acts as the gateway to th
     - iPexLLM
     - OpenVINO
 
-
-
 - **Metrics Collector**
    Monitors and collects:
     - xPU utilisation for hardware performance
@@ -43,7 +41,7 @@ The uploaded audio is passed to the Backend API, which acts as the gateway to th
 
 ## Outputs
 
-- Transcriptions and summaries are accessible via the Web-based UI.
+- Transcriptions and summaries can be accessed from the Web-based UI and file system. The path for file system is <project-location>/<project-name>/<session_id>.
 - Performance metrics (e.g., utilisation, model efficiency) are displayed for monitoring.
 - Localisation ensures outputs are available in multiple languages (English/Chinese).
 
