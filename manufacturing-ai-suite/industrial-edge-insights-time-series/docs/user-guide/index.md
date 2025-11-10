@@ -52,6 +52,7 @@ wind-turbine-anomaly/how-to-enable-system-metrics
 wind-turbine-anomaly/how-to-update-config
 wind-turbine-anomaly/how-to-create-a-new-sample-app
 wind-turbine-anomaly/how-to-connect-to-secure-mqtt-broker
+wind-turbine-anomaly/how-to-connect-to-secure-opcua-server
 wind-turbine-anomaly/release_notes
 weld-anomaly-detection/index
 :::
