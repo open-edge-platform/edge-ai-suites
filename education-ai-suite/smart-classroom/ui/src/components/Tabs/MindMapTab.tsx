@@ -21,18 +21,20 @@ const activeMindmapSessions = new Set<string>();
 
 const cleanMindmapContent = (content: string): string => {
   if (!content) return "mindmap\n  root((Main Topic))";
-
-  content = content.replace(/```[\s\S]*?```/g, "").replace(/```/g, "").trim();
-
+  content = content.replace(/```[a-zA-Z]*\n?([\s\S]*?)```/g, "$1").trim();
   if (!/^mindmap/.test(content)) {
     content = "mindmap\n" + content;
   }
-  content = content.replace(
-    /root\(\((.*?)\)\)/g,
-    (match, label) => `root(("${label.trim()}"))`
-  );
+  content = content
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.replace(/\s+$/g, "")) 
+    .join("\n");
+  content = content.replace(/root\s*\(\(\s*(.*?)\s*\)\)/, (match, label) => {
+    return `root((${label.trim()}))`;
+  });
 
-  return content;
+  return content.trim();
 };
 
 const MindMapTab: React.FC = () => {

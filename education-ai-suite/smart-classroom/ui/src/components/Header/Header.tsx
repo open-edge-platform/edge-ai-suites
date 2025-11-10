@@ -33,6 +33,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const transcriptStatus = useAppSelector((s) => s.transcript.status);
   const sessionId = useAppSelector((state) => state.ui.sessionId);
   const projectLocation = useAppSelector((state) => state.ui.projectLocation);
+  const isMindmapStreaming = useAppSelector((s) => s.mindmap.isStreaming);
+  const isMindmapRendered = useAppSelector((s) => s.mindmap.isRendered);
+  const mindmapGenerationTime = useAppSelector((s) => s.mindmap.generationTime);
 
   const handleCopy = () => {
     const location = `${projectLocation}/${projectName}/${sessionId}`;
@@ -54,13 +57,41 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   }, [isRecording, timer]);
 
   useEffect(() => {
-    if (summaryEnabled && summaryLoading) setNotification(t('notifications.generatingSummary'));
-    else if (summaryEnabled && isBusy && !summaryLoading) setNotification(t('notifications.streamingSummary'));
-    else if (isBusy && transcriptStatus === 'streaming') setNotification(t('notifications.loadingTranscript'));
-    else if (isBusy && !summaryEnabled) setNotification(t('notifications.analyzingAudio'));
-    else if (!isBusy && summaryEnabled) setNotification(t('notifications.summaryReady'));
-    else setNotification(t('notifications.start'));
-  }, [isBusy, summaryEnabled, summaryLoading, transcriptStatus, t]);
+    if (isMindmapStreaming) {
+      setNotification(t('notifications.generatingMindMap')); // "Generating mindmap..."
+    } 
+    else if (isMindmapRendered) {
+      setNotification(t('notifications.mindmapReady') ); 
+    } 
+    else if (summaryEnabled && summaryLoading) {
+      setNotification(t('notifications.generatingSummary'));
+    } 
+    else if (summaryEnabled && isBusy && !summaryLoading) {
+      setNotification(t('notifications.streamingSummary'));
+    } 
+    else if (isBusy && transcriptStatus === 'streaming') {
+      setNotification(t('notifications.loadingTranscript'));
+    } 
+    else if (isBusy && !summaryEnabled) {
+      setNotification(t('notifications.analyzingAudio'));
+    } 
+    else if (!isBusy && summaryEnabled) {
+      setNotification(t('notifications.summaryReady'));
+    } 
+    else {
+      setNotification(t('notifications.start'));
+    }
+  }, [
+    isBusy,
+    summaryEnabled,
+    summaryLoading,
+    transcriptStatus,
+    isMindmapStreaming,
+    isMindmapRendered,
+    mindmapGenerationTime,
+    t
+  ]);
+
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<string>).detail;
@@ -69,7 +100,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     window.addEventListener('global-error', handler as EventListener);
     return () => window.removeEventListener('global-error', handler as EventListener);
   }, []);
+
   const clearForNewOp = () => setErrorMsg(null);
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -105,11 +138,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       const result = await uploadAudio(file);
       dispatch(setUploadedAudioPath(result.path));
       setNotification(t('notifications.uploadSuccess'));
-      setErrorMsg(null); // Clear any previous error
+      setErrorMsg(null);
     } catch (e: any) {
       const msg = e?.response?.data?.message || 'Upload failed';
-      setNotification(''); // Clear the notification
-      setErrorMsg(msg); // Set error message for NotificationsDisplay
+      setNotification('');
+      setErrorMsg(msg);
       dispatch(processingFailed());
     }
   };
@@ -129,7 +162,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
 
         <button
           className="text-button"
-          onClick={(e) => { e.preventDefault(); }} 
+          onClick={(e) => { e.preventDefault(); }}
           disabled={true}
           title="Recording disabled"
           style={{ cursor: 'not-allowed', opacity: 0.6 }}
@@ -137,24 +170,23 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           {isRecording ? t('header.stopRecording') : t('header.startRecording')}
         </button>
 
-    <label
-      className="upload-button"
-      style={{ opacity: isBusy || isRecording ? 0.6 : 1, cursor: isBusy || isRecording ? 'not-allowed' : 'pointer' }}
-    >
-      <input
-        type="file"
-        accept="audio/*"
-        style={{ display: 'none' }}
-        disabled={isBusy || isRecording}
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) handleFileUpload(f);
-          e.currentTarget.value = '';
-        }}
-      />
-      {t('header.uploadFile')}
-    </label>
-
+        <label
+          className="upload-button"
+          style={{ opacity: isBusy || isRecording ? 0.6 : 1, cursor: isBusy || isRecording ? 'not-allowed' : 'pointer' }}
+        >
+          <input
+            type="file"
+            accept="audio/*"
+            style={{ display: 'none' }}
+            disabled={isBusy || isRecording}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFileUpload(f);
+              e.currentTarget.value = '';
+            }}
+          />
+          {t('header.uploadFile')}
+        </label>
       </div>
 
       <div className="navbar-center">
