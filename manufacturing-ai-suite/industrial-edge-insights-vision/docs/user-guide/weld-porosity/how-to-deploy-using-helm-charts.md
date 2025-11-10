@@ -26,10 +26,10 @@
 
     - Download helm chart with the following command
 
-        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.2.0`
+        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.3.0-rc1`
     - unzip the package using the following command
 
-        `tar -xvf weld-porosity-sample-application-1.2.0.tgz`
+        `tar -xvf weld-porosity-sample-application-1.3.0-rc1.tgz`
     - Replace the helm directory
 
         `rm -rf helm && mv weld-porosity-sample-application helm`
@@ -138,7 +138,7 @@
     Posting payload to REST server at http://10.223.22.63:30107/pipelines/user_defined_pipelines/weld_porosity_classification
     Payload for pipeline 'weld_porosity_classification' posted successfully. Response: "895130405c8e11f08b78029627ef9c6b"
     ```
-    >NOTE- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:31111/weld/
+    >NOTE- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/weld/
 
 5.  Get status of pipeline instance(s) running.
     ```sh

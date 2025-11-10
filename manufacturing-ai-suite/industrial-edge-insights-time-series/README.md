@@ -11,18 +11,7 @@ To see the system requirements and other installation, see the following guides:
 
 ## Architecture and Functionality Overview
 
-The Industrial Edge Insights - Time Series sample application comprises of data simulators, the generic Time Series AI stack based on **TICK Stack**, and Grafana. The Model Registry microservice helps to achieve the MLOps flow by uploading the **UDF deployment package**.
-
-![Time Series AI Stack Architecture Diagram](./docs/user-guide/wind-turbine-anomaly/_images/time-series-ai-stack-architecture.png)
-
-  - **Data Simulators/Destinations**: OPC-UA server and MQTT Publisher simulate data sources and destinations, reading from CSV files and interfacing with Telegraf plugins for data ingestion.
-  - **Generic Time Series AI Stack**: A customizable pipeline for data ingestion, storage, processing, and visualization, supporting integration with various databases, and enabling deep learning model execution.
-  - **Data Ingestion**: Telegraf collects and reports metrics using input plugins, sending ingested data to InfluxDB for storage.
-  - **Data Storage**: InfluxDB is a high-performance database optimized for time series data, supporting high write throughput and efficient querying.
-  - **Data Processing**: Kapacitor processes time series data in real-time, allowing custom logic using User-Defined Functions (UDFs) for anomaly detection and advanced analytics.
-  - **Data Visualization**: Grafana offers an intuitive interface for real-time visualization of time series data stored in InfluxDB, enabling custom dashboards and monitoring.
-
-For more details on Architecture, see [How it works](docs/user-guide/wind-turbine-anomaly/how-it-works.md).
+Refer [How it works](docs/user-guide/wind-turbine-anomaly/how-it-works.md).
 
 ## Learn More
 
@@ -31,5 +20,6 @@ For more details on Architecture, see [How it works](docs/user-guide/wind-turbin
   - [How to configure OPC-UA/MQTT alerts](docs/user-guide/wind-turbine-anomaly/how-to-configure-alerts.md): Guide for configuring the OPC-UA/MQTT alerts in the Time Series Analytics microservice
   - [How to configure custom UDF deployment package](docs/user-guide/wind-turbine-anomaly/how-to-configure-custom-udf.md): Guide for deploying a customized UDF deployment package (udfs/models/tick scripts)
   - [How to create a new sample app](docs/user-guide/wind-turbine-anomaly/how-to-create-a-new-sample-app.md): Guide for creating a new sample app by referencing Wind Turbine Anomaly Detection sample app
+  - [How to connect to secure MQTT broker](docs/user-guide/how-to-connect-to-secure-mqtt-broker.md): Guide for connecting to secure MQTT broker.
 - **Release Notes**
   - [Release Notes](docs/user-guide/wind-turbine-anomaly/release_notes.md): Information on the latest updates, improvements, and bug fixes.

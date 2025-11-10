@@ -203,7 +203,8 @@ hva::hvaStatus_t Camera4CFusionNode::Impl::reset()
 
 Camera4CFusionNode::Camera4CFusionNode(std::size_t totalThreadNum)
     : hva::hvaNode_t(CAMERA_4CFUSION_MODULE_INPORT_NUM, 1, totalThreadNum), m_impl(new Impl(*this))
-{}
+{
+}
 
 Camera4CFusionNode::~Camera4CFusionNode() {}
 
@@ -452,32 +453,36 @@ void Camera4CFusionNodeWorker::Impl::process(std::size_t batchIdx)
         TimeStampAll_t timeMetaAll;
         TimeStamp_t timeMeta;
         if (ptrFrameBuf1->getMeta(timeMeta) == hva::hvaSuccess) {
-            timeMetaAll.timeStamp1 = timeMeta.timeStamp;
+            timeMetaAll.timeStamp[0] = timeMeta.timeStamp;
         }
         if (ptrFrameBuf2->getMeta(timeMeta) == hva::hvaSuccess) {
-            timeMetaAll.timeStamp2 = timeMeta.timeStamp;
+            timeMetaAll.timeStamp[1] = timeMeta.timeStamp;
         }
         if (ptrFrameBuf3->getMeta(timeMeta) == hva::hvaSuccess) {
-            timeMetaAll.timeStamp3 = timeMeta.timeStamp;
+            timeMetaAll.timeStamp[2] = timeMeta.timeStamp;
         }
         if (ptrFrameBuf4->getMeta(timeMeta) == hva::hvaSuccess) {
-            timeMetaAll.timeStamp4 = timeMeta.timeStamp;
+            timeMetaAll.timeStamp[3] = timeMeta.timeStamp;
         }
         ptrFrameBuf1->setMeta<TimeStampAll_t>(timeMetaAll);
 
         InferenceTimeStamp_t inferenceTimeMeta;
         InferenceTimeAll_t inferenceTimeMetaAll;
         if (ptrFrameBuf1->getMeta(inferenceTimeMeta) == hva::hvaSuccess) {
-            inferenceTimeMetaAll.inferenceLatencies[0] = std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
+            inferenceTimeMetaAll.inferenceLatencies[0] =
+                std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
         }
         if (ptrFrameBuf2->getMeta(inferenceTimeMeta) == hva::hvaSuccess) {
-            inferenceTimeMetaAll.inferenceLatencies[1] = std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
+            inferenceTimeMetaAll.inferenceLatencies[1] =
+                std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
         }
         if (ptrFrameBuf3->getMeta(inferenceTimeMeta) == hva::hvaSuccess) {
-            inferenceTimeMetaAll.inferenceLatencies[2] = std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
+            inferenceTimeMetaAll.inferenceLatencies[2] =
+                std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
         }
         if (ptrFrameBuf4->getMeta(inferenceTimeMeta) == hva::hvaSuccess) {
-            inferenceTimeMetaAll.inferenceLatencies[3] = std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
+            inferenceTimeMetaAll.inferenceLatencies[3] =
+                std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
         }
         ptrFrameBuf1->setMeta<InferenceTimeAll_t>(inferenceTimeMetaAll);
 
@@ -527,7 +532,8 @@ Camera4CFusionNodeWorker::Camera4CFusionNodeWorker(hva::hvaNode_t *parentNode,
                                                    const camera4CFusionInPortsInfo_t &camera2CFusionInPortsInfo)
     : hva::hvaNodeWorker_t(parentNode),
       m_impl(new Impl(*this, registrationMatrixFilePath, qMatrixFilePath, homographyMatrixFilePath, pclConstraints, inMediaNum, camera2CFusionInPortsInfo))
-{}
+{
+}
 
 Camera4CFusionNodeWorker::~Camera4CFusionNodeWorker() {}
 

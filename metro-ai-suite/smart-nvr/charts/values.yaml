@@ -1,0 +1,92 @@
+global:
+  # pvcName is the name of common PVC used by multiple microservices for persisting models, cache and other files.
+  pvcName: "smart-nvr-pvc"
+  # claimSize is the size of the PVC to be created.
+  claimSize: "50Gi"  
+  # keepPvc should be set to true to retain the PVC after uninstalling the chart.
+  keepPvc: false
+  storageClassName: 
+
+  proxy:
+    no_proxy: "localhost,127.0.0.1,192.168.0.0/16,172.16.0.0/12,127.0.0.0/8,10.0.0.0/8,.svc.cluster.local"
+    http_proxy: ""
+    https_proxy: ""
+  env:
+    FRIGATE_MQTT_USER: ""
+    FRIGATE_MQTT_PASSWORD: ""
+
+frigate:
+  image:
+    repository: ghcr.io/blakeblackshear/frigate
+    tag: 0.15.1
+    pullPolicy: IfNotPresent
+
+  env:
+    OPENAI_BASE_URL: ""
+    OPENAI_API_KEY: ""
+  persistence:
+    enabled: true
+    videos:
+      enabled: true
+      mountPath: /videos
+
+
+nvr-event-router:
+  image:
+    repository: intel/nvr-event-router
+    tag: 1.2.1
+
+  replicaCount: 1
+
+  service:
+    type: ClusterIP
+    port: 8000
+
+  env:
+    MODE: "backend"
+    FRIGATE_BASE_URL: "http://frigate:5000"
+    VSS_SEARCH_IP: ""
+    VSS_SEARCH_PORT: 12345
+    VSS_SUMMARY_IP: ""
+    VSS_SUMMARY_PORT: 
+    REDIS_PORT: 6379
+    REDIS_HOST: "redis"
+    MQTT_BROKER: "mqtt-broker"
+    MQTT_PORT: "1883"
+
+
+  volumes:
+    localtime:
+      name: localtime
+      hostPath: /etc/localtime
+      mountPath: /etc/localtime
+      readOnly: true
+
+
+nvr-event-router-ui:
+  image:
+    repository: intel/nvr-event-router
+    tag: 1.2.1
+  env:
+    MODE: "ui"
+    API_BASE_URL: "http://nvr-event-router:8000"
+    EVENT_POLL_INTERVAL: "3000"
+    NVR_GENAI: "false"
+
+mqtt-broker:
+  image:
+    repository: eclipse-mosquitto
+    tag: 2.0
+
+redis:
+  image:
+    repository: redis
+    tag: 7.0
+
+ingress:
+  enabled: true
+  host: nvr-ui.local
+  annotations: {}
+  tls: false
+  tlsSecret: ""
+

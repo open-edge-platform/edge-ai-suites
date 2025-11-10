@@ -31,23 +31,33 @@ def parse_input_to_timestamp(input_val, label):
 
 
 def process_video(camera_name, start_dt, duration_seconds, action, label=None):
+    """Process a video summarization or search request.
+
+    start_dt may be:
+      - datetime (naive or tz-aware)
+      - int/float epoch seconds
+    """
     try:
-        logger.info(f"Start time (local): {start_dt}")
-        logger.info(f"Start time tzinfo: {getattr(start_dt, 'tzinfo', 'None')}")
+        # Normalize start_dt
+        if isinstance(start_dt, (int, float)):
+            start_dt = datetime.fromtimestamp(start_dt, tz=pytz.utc).astimezone(IST)
+        elif isinstance(start_dt, datetime):
+            if start_dt.tzinfo is None:
+                logger.warning("start_dt has no timezone info; assuming IST.")
+                start_dt = IST.localize(start_dt)
+            else:
+                start_dt = start_dt.astimezone(IST)
+        else:
+            return {"status": "error", "message": "Invalid start time type"}
 
-        # Optional: warn if datetime is naive
-        if start_dt.tzinfo is None:
-            logger.warning("start_dt has no timezone info; assuming server's local time.")
+        logger.info(f"Normalized start_dt: {start_dt} tz={start_dt.tzinfo}")
 
-        # Compute end time by adding duration
+        if duration_seconds <= 0:
+            return {"status": "error", "message": "End time must be after start time"}
+
         end_dt = start_dt + timedelta(seconds=duration_seconds)
-
-        # Convert to timestamps (based on whatever timezone start_dt uses — could be naive/local or aware)
         start_time = int(start_dt.timestamp())
         end_time = int(end_dt.timestamp())
-
-        logger.info(f"Start timestamp: {start_time} ({start_dt})")
-        logger.info(f"End timestamp: {end_time} ({end_dt})")
 
         if start_time >= end_time:
             return {"status": "error", "message": "End time must be after start time"}
@@ -61,10 +71,8 @@ def process_video(camera_name, start_dt, duration_seconds, action, label=None):
             response.raise_for_status()
             result = response.json()
             if result.get("status") != 200:
-                logger.info(result)
                 return {"status": "Failed", "message": result.get("message")}
             return {"status": "success", "summary_id": result.get("message")}
-
         elif action == "Add to Search":
             response = requests.get(
                 f"{API_BASE_URL}/search-embeddings/{camera_name}",
@@ -74,13 +82,10 @@ def process_video(camera_name, start_dt, duration_seconds, action, label=None):
             response.raise_for_status()
             result = response.json()
             if result.get("status") != 200:
-                logger.info(result)
                 return {"status": "Failed", "message": result.get("message")}
             return {"status": "success", "response": result.get("message")}
-
         else:
             return {"status": "error", "message": "Unknown action"}
-
     except Exception as e:
         logger.error(f"Video processing failed: {e}", exc_info=True)
         return {"status": "error", "message": str(e)}

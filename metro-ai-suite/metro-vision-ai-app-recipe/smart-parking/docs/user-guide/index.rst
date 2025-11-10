@@ -22,7 +22,6 @@ Using advanced technologies and pre-trained deep learning models, the applicatio
    how-to-deploy-with-helm
    how-to-use-cpu-for-inference
    how-to-use-gpu-for-inference
-   how-to-use-npu-for-inference
    how-to-deploy-with-edge-orchestrator
    how-to-view-telemetry-data
    how-to-generate-offline-package

@@ -1,4 +1,4 @@
-# Tutorial 1: OpenVINO Model Benchmark
+# Metro Vision AI SDK - Tutorial 1
 
 This tutorial demonstrates how to download AI models, set up the OpenVINO environment, and run performance benchmarks using Intel's optimized containers. You'll learn to evaluate AI model performance across different hardware configurations including CPU, GPU, and Intel® Core™ Ultra processors.
 
@@ -75,16 +75,26 @@ This command will:
 Execute the OpenVINO benchmark application to measure inference performance on CPU:
 
 ```bash
+# Start the container
 docker run -it --rm \
   --volume ${PWD}:/home/openvino \
   --env http_proxy=$http_proxy \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
-  openvino/ubuntu24_dev:2025.3.0 \
-  /opt/intel/openvino_2025.3.0.0/samples/cpp/samples_bin/benchmark_app \
-  -m /home/openvino/public/yolov10s/FP16/yolov10s.xml \
-  -i /home/openvino/bottle-detection.mp4 \
-  -d CPU
+  openvino/ubuntu24_dev:2025.3.0
+```
+
+```bash
+# Run the sample application
+/opt/intel/openvino_2025.3.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
+-m /home/openvino/public/yolov10s/FP16/yolov10s.xml \
+-i /home/openvino/bottle-detection.mp4 \
+-d CPU
+```
+
+```bash
+# To exit the container
+exit
 ```
 
 ![Benchamark Result](images/intel-edge-ai-box-sample-benchmark-output.png)
@@ -102,7 +112,7 @@ docker run -it --rm \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
   openvino/ubuntu24_dev:2025.3.0 \
-  /opt/intel/openvino_2025.3.0.0/samples/cpp/samples_bin/benchmark_app \
+  /opt/intel/openvino_2025.3.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
   -m /home/openvino/public/yolov10s/FP16/yolov10s.xml \
   -i /home/openvino/bottle-detection.mp4 \
   -d GPU
@@ -120,7 +130,7 @@ docker run -it --rm \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
   openvino/ubuntu24_dev:2025.3.0 \
-  /opt/intel/openvino_2025.3.0.0/samples/cpp/samples_bin/benchmark_app \
+  /opt/intel/openvino_2025.3.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
   -m /home/openvino/public/yolov10s/FP16/yolov10s.xml \
   -i /home/openvino/bottle-detection.mp4 \
   -d NPU

@@ -11,4 +11,11 @@ To see the system requirements and other installation, see the following guides:
 
 ## Architecture and Functionality Overview
 
-TBD
+Refer [How it works](docs/user-guide/weld-defect-detection/how-it-works.md).
+
+## Learn More
+
+  - [How to build from source and deploy](docs/user-guide/weld-defect-detection/how-to-build-from-source.md): Guide to build from source and docker compose deployment
+  - [How to configure MQTT alerts](docs/user-guide/weld-defect-detection/how-to-configure-alerts.md): Guide for configuring the MQTT alerts for the sample app
+- **Release Notes**
+  - [Release Notes](docs/user-guide/weld-defect-detection/release_notes.md): Information on the latest updates, improvements, and bug fixes.

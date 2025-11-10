@@ -41,6 +41,12 @@ spec:
       - name: registryauth
       {{- end }}
       securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+        runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        fsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        seccompProfile:
+          type: RuntimeDefault
         supplementalGroups: [109,110,992]  # render group IDs for ubuntu 20.04, 22.04 and 24.04 host OS
       containers:
       - name: ia-time-series-analytics-microservice
@@ -54,6 +60,7 @@ spec:
           privileged: false
           allowPrivilegeEscalation: false
           {{- end }}
+          runAsNonRoot: true
           readOnlyRootFilesystem: true
           capabilities:
             drop:
