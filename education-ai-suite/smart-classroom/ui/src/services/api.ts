@@ -181,7 +181,65 @@ export async function* streamSummary(sessionId: string, opts: StreamOptions = {}
   yield { type: 'done' };
 }
 
+export async function* streamMindmap(sessionId: string, opts: StreamOptions = {}): AsyncGenerator<StreamEvent> {
+  const res = await fetch(`${BASE_URL}/mindmap`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json",},
+    body: JSON.stringify({ session_id: sessionId }),
+    signal: opts.signal,
+    cache: "no-store", 
+  });
 
+  if (!res.ok || !res.body) {
+    throw new Error(`Failed to start mindmap generation: ${res.status} ${res.statusText}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        let chunk: any;
+        try {
+          chunk = JSON.parse(trimmed);
+        } catch {
+          continue;
+        }
+
+        if (chunk.error) {
+          yield { type: "error", message: chunk.error };
+          return;
+        }
+
+        if (chunk.token) {
+          yield { type: "mindmap_token", token: chunk.token };
+        }
+
+        if (chunk.done) {
+          yield { type: "done" };
+          return;
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Stream read error:", err);
+    yield { type: "error", message: "Stream connection lost" };
+  }
+
+  yield { type: "done" };
+}
 
 export async function getResourceMetrics(sessionId: string): Promise<any> {
   return safeApiCall(async () => {

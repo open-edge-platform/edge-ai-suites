@@ -51,7 +51,17 @@ class SummarizerComponent(PipelineComponent):
                 {"role": "system", "content": f"{lang_prompt.get(config.models.summarizer.language)}"},
                 {"role": "user", "content": f"{input}"}
             ]
+    
+    def _get_mindmap_message(self, input):
+    
+        lang_prompt = vars(config.models.summarizer.mindmap_prompt)
+        logger.debug(f"System Prompt: {lang_prompt.get(config.models.summarizer.language)}")
 
+        return [
+                {"role": "system", "content": f"{lang_prompt.get(config.models.summarizer.language)}"},
+                {"role": "user", "content": f"{input}"}
+            ]
+    
     def process(self, input):
         project_config = RuntimeConfig.get_section("Project")
         project_path = os.path.join(project_config.get("location"), project_config.get("name"), self.session_id)
@@ -100,6 +110,41 @@ class SummarizerComponent(PipelineComponent):
                     "performance.end_to_end_time": f"{round(end_to_end_time, 4)}s",
                 }
             )
-        
+    
+    def mind_map(self, summary_text):
+        """
+        Generate a Mermaid mindmap (.mmd) file from the given summary text.
+        """
+        project_config = RuntimeConfig.get_section("Project")
+        project_path = os.path.join(
+            project_config.get("location"),
+            project_config.get("name"),
+            self.session_id
+        )
+
+        try:
+            logger.info("Generating mindmap from summary...")
+            mindmap_prompt = self.summarizer.tokenizer.apply_chat_template(
+                self._get_mindmap_message(summary_text),
+                tokenize=False,
+                add_generation_prompt=True
+            )
+
+            mindmap_streamer = self.summarizer.generate(mindmap_prompt)
+            mindmap_path = os.path.join(project_path, "mindmap.mmd")
+
+            # Overwrite any previous file
+            StorageManager.save(mindmap_path, "", append=False)
+
+            # Stream output to file and yield for live updates (if used in API)
+            for token in mindmap_streamer:
+                StorageManager.save_async(mindmap_path, token, append=True)
+                yield token
+
+            logger.info("Mindmap generation completed successfully.")
+        except Exception as e:
+            logger.error(f"Mindmap generation failed: {e}")
+            yield f"[ERROR]: {e}"
+
 
 

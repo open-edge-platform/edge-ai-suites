@@ -68,4 +68,55 @@ class Pipeline:
                 yield token
         finally:
             monitor.stop_monitoring()            
-            
+            time.sleep(3)     
+
+    def run_mindmap(self):
+        """
+        Generate a mindmap separately from an existing summary.txt file.
+        """
+        project_config = RuntimeConfig.get_section("Project")
+        summary_path = os.path.join(
+            project_config.get("location"),
+            project_config.get("name"),
+            self.session_id,
+            "summary.md"  # Changed from summary.txt to summary.md
+        )
+        monitor.start_monitoring(os.path.join(
+            project_config.get("location"),
+            project_config.get("name"),
+            self.session_id,
+            "utilization_logs"
+        ))
+
+        try:
+            summary_text = StorageManager.read_text_file(summary_path)
+            if not summary_text:
+                logger.error("Summary is empty. Cannot generate mindmap.")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Summary is empty. Cannot generate mindmap."
+                )
+        except FileNotFoundError:
+            logger.error(f"Invalid Session ID: {self.session_id}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid session id: {self.session_id}, summary not found."
+            )
+        except Exception as e:
+            logger.error(f"An unexpected error occurred while accessing the summary: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred while accessing the summary."
+            )
+
+        # Call the mindmap generation from summarizer component
+        try:
+            for component in self.summarizer_pipeline:
+                mindmap_stream = component.mind_map(summary_text)
+                for token in mindmap_stream:
+                    yield token
+        except Exception as e:
+            logger.error(f"Error during mindmap generation: {e}")
+            yield f"[ERROR]: {e}"
+        finally:
+            monitor.stop_monitoring()            

@@ -39,7 +39,8 @@
     },
     "tabs": {
       "transcripts": "Transcripts",
-      "summary": "AI Summary"
+      "summary": "AI Summary",
+      "mindmap":"Mind Map"
     },
   
   "accordion": {

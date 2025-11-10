@@ -96,6 +96,31 @@ async def summarize_audio(request: SummaryRequest):
 
     return StreamingResponse(event_stream(), media_type="application/json")
 
+@router.post("/mindmap")
+async def generate_mindmap(request: SummaryRequest):
+    if audio_pipeline_lock.locked():
+        raise HTTPException(status_code=429, detail="Session Active, Try Later")
+
+    pipeline = Pipeline(request.session_id)
+
+    async def event_stream():
+        try:
+            for token in pipeline.run_mindmap():
+                if token.startswith("[ERROR]:"):
+                    logger.error(f"Error while generating mindmap: {token}")
+                    yield json.dumps({"token": "", "error": token}) + "\n"
+                    break
+                else:
+                    yield json.dumps({"token": token, "error": ""}) + "\n"
+                await asyncio.sleep(0)
+        except Exception as e:
+            logger.exception(f"Mindmap stream crashed: {e}")
+            yield json.dumps({"token": "", "error": str(e)}) + "\n"
+        finally:
+            yield json.dumps({"done": True}) + "\n"
+
+    return StreamingResponse(event_stream(), media_type="text/plain")
+
 @router.get("/performance-metrics")
 def get_summary_metrics(session_id: Optional[str] = Header(None, alias="session_id")):
     project_config = RuntimeConfig.get_section("Project")

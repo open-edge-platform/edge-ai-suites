@@ -39,7 +39,8 @@
   },
   "tabs": {
     "transcripts": "转录",
-    "summary": "人工智能摘要"
+    "summary": "人工智能摘要",
+    "mindmap":"思维导图"
   },
   "accordion": {
     "noData": "暂无数据",

@@ -2,17 +2,21 @@ import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
 
-export type Tab = 'transcripts' | 'summary';
+export type Tab = 'transcripts' | 'summary' | 'mindmap';
 
 export interface UIState {
   aiProcessing: boolean;
   summaryEnabled: boolean;
   summaryLoading: boolean;
+  mindmapEnabled: boolean;
+  mindmapLoading: boolean;
   activeTab: Tab;
   autoSwitched: boolean;
+  autoSwitchedToMindmap: boolean;
   sessionId: string | null;
   uploadedAudioPath: string | null;
   shouldStartSummary: boolean;
+  shouldStartMindmap: boolean;
   projectLocation: string;
 }
 
@@ -20,11 +24,15 @@ const initialState: UIState = {
   aiProcessing: false,
   summaryEnabled: false,
   summaryLoading: false,
+  mindmapEnabled: false,
+  mindmapLoading: false,
   activeTab: 'transcripts',
   autoSwitched: false,
+  autoSwitchedToMindmap: false,
   sessionId: null,
   uploadedAudioPath: null,
   shouldStartSummary: false,
+  shouldStartMindmap: false,
   projectLocation: 'storage/',
 };
 
@@ -36,15 +44,20 @@ const uiSlice = createSlice({
       state.aiProcessing = true;
       state.summaryEnabled = false;
       state.summaryLoading = false;
+      state.mindmapEnabled = false;
+      state.mindmapLoading = false;
       state.activeTab = 'transcripts';
       state.autoSwitched = false;
+      state.autoSwitchedToMindmap = false;
       state.sessionId = null;
       state.uploadedAudioPath = null;
       state.shouldStartSummary = false;
+      state.shouldStartMindmap = false;
     },
     processingFailed(state) {
       state.aiProcessing = false;
       state.summaryLoading = false;
+      state.mindmapLoading = false;
     },
     transcriptionComplete(state) {
       console.log('transcriptionComplete reducer called');
@@ -73,7 +86,29 @@ const uiSlice = createSlice({
       state.summaryLoading = false; // hide spinner on first token
     },
     summaryDone(state) {
-      state.aiProcessing = false; // all done, re-enable controls
+      state.aiProcessing = false;
+      state.mindmapEnabled = true;
+      state.mindmapLoading = true; // Start loading immediately
+      state.shouldStartMindmap = true; // Auto-start mindmap
+      // Auto-switch to mindmap tab
+      if (!state.autoSwitchedToMindmap) {
+        state.activeTab = 'mindmap';
+        state.autoSwitchedToMindmap = true;
+      }
+    },
+    firstMindmapToken(state) {
+      state.mindmapLoading = false;
+    },
+    mindmapDone(state) {
+      state.mindmapLoading = false;
+      state.shouldStartMindmap = false;
+    },
+    requestMindmapStart(state) {
+      state.shouldStartMindmap = true;
+      state.mindmapLoading = true;
+    },
+    clearMindmapStartRequest(state) {
+      state.shouldStartMindmap = false;
     },
     setActiveTab(state, action: PayloadAction<Tab>) {
       state.activeTab = action.payload;
@@ -95,6 +130,10 @@ export const {
   setSessionId,
   firstSummaryToken,
   summaryDone,
+  firstMindmapToken,
+  mindmapDone,
+  requestMindmapStart,
+  clearMindmapStartRequest,
   setActiveTab,
   setProjectLocation,
   resetFlow,
