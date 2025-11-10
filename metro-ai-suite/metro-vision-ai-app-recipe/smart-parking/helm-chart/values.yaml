@@ -11,7 +11,7 @@ gitSource:
   # Use 'tag' for releases or 'branch' for branches
   type: branch  # Options: 'tag' or 'branch'
   # Name of the tag or branch
-  ref: main  # e.g., 'v1.0.0' for tag or 'main' for branch
+  ref: release-2025.2.0  # e.g., 'v1.0.0' for tag or 'main' for branch
   
 mqtt_broker:
   image: eclipse-mosquitto
