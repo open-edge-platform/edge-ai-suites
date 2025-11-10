@@ -76,6 +76,21 @@ RUN bash -c 'wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INT
   libnlopt-cxx-dev \
   && rm -rf /var/lib/apt/lists/*
 
+# Install Intel GPU/Level Zero packages
+RUN wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.1.12/intel-igc-core-2_2.1.12+18087_amd64.deb \
+  && wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.1.12/intel-igc-opencl-2_2.1.12+18087_amd64.deb \
+  && wget https://github.com/intel/compute-runtime/releases/download/24.45.31740.9/intel-level-zero-gpu_1.6.31740.9_amd64.deb \
+  && wget https://github.com/intel/compute-runtime/releases/download/24.45.31740.9/intel-opencl-icd_24.45.31740.9_amd64.deb \
+  && wget https://github.com/intel/compute-runtime/releases/download/24.45.31740.9/libigdgmm12_22.5.2_amd64.deb \
+  && dpkg -i intel-igc-core-2_2.1.12+18087_amd64.deb \
+            intel-igc-opencl-2_2.1.12+18087_amd64.deb \
+            intel-level-zero-gpu_1.6.31740.9_amd64.deb \
+            intel-opencl-icd_24.45.31740.9_amd64.deb \
+            libigdgmm12_22.5.2_amd64.deb \
+  && rm -f *.deb \
+  && apt-get update \ 
+  && apt-get install clinfo
+
 
 ENV ROS_DISTRO=humble
 ENV AMENT_PREFIX_PATH=/opt/ros/humble
