@@ -18,25 +18,15 @@ on:
     - cron: "0 2 * * 0"  # 2 a.m. on Sunday
 
 jobs:   
-
   trivy-scan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
-          path: edge-ai-suites-repo
           persist-credentials: false
-      - name: Run Trivy Filesystem Scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: trivy-fs
-        with:
-          scan_type: "fs"  
-          scan-scope: "all"  
-          severity: "HIGH,CRITICAL" 
-          format: "json"  
-      
+
       - name: Build Docker images
         run: |
           git clone https://github.com/open-edge-platform/edge-ai-libraries.git
@@ -51,50 +41,62 @@ jobs:
           ls -R
           docker build -t visual-search-qa-app:latest -f visual-search-question-and-answering/src/Dockerfile .
           
-      - name: Run trivy Scan - dataprep-visualdata-milvus
+      - name: Verify Docker image
+        run: |
+          echo "=== Built Docker Image ==="
+          docker images
+          echo "=== Image Build Verification Complete ==="
+      - name: Run Trivy Filesystem Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: dataprep-visualdata-milvus
+        id: trivy-fs
         with:
-          scan_type: "image"  
-          scan-scope: all
-          scan_target: "dataprep-visualdata-milvus:latest"  
-          severity: "HIGH,CRITICAL"  
-          format: "json"  
+          scan_type: "fs"  
+          scan-scope: "all"  
+          severity: "HIGH,CRITICAL" 
+          format: "json"
+          scan_target: "edge-ai-suites-repo/metro-ai-suite/visual-search-question-and-answering/"
+          report_suffix: "-fs-vqa-CT7"
 
-      - name: Run trivy Scan - retriever-milvus
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: retriever-milvus
-        with:
-          scan_type: "image"  
-          scan-scope: all
-          scan_target: "retriever-milvus:latest"  
-          severity: "HIGH,CRITICAL"  
-          format: "json"  
 
-      - name: Run trivy Scan - vlm-openvino-serving
+      - name: Run trivy Scan -vqa (HTML Report)
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id:  vlm-openvino-serving
+        id: vqa-html
         with:
           scan_type: "image"  
-          scan-scope: all
-          scan_target: "vlm-openvino-serving:latest"  
+          scan-scope: "all"
+          scan_target: "dataprep-visualdata-milvus:latest retriever-milvus:latest vlm-openvino-serving:latest visual-search-qa-app:latest"  
           severity: "HIGH,CRITICAL"  
-          format: "json"  
+          format: "table"
+          report_suffix: "-image-vqa-html-CT248"
+          generate_sbom: "false"
 
-      - name: Run trivy Scan - visual-search-qa-app
+      - name: Run trivy Scan - vqa (SPDX SBOM)
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id:  visual-search-qa-app
+        id: multilevel-video-understandingr-spdx
         with:
           scan_type: "image"  
-          scan-scope: all
-          scan_target: "visual-search-qa-app:latest" 
+          scan-scope: "all"
+          scan_target: "dataprep-visualdata-milvus:latest retriever-milvus:latest vlm-openvino-serving:latest visual-search-qa-app:latest"  
           severity: "HIGH,CRITICAL"  
-          format: "json"  
-          
+          format: "spdx-json"
+          scanners: "vuln"
+          report_suffix: "-image-vqa-spdx-CT248"
+          generate_sbom: "false"
+
+      - name: Scan Dockerfile with Trivy
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        with:
+          scan_type: "config"
+          scan_target: "edge-ai-suites-repo/metro-ai-suite/visual-search-question-and-answering/docker/"
+          severity: "HIGH,CRITICAL"
+          format: "json"
+          misconfig_scanners: "dockerfile"
+          report_suffix: "-config-vqa-CT222"
+
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
-          name: trivy-report
+          name: trivy-report-vqa
           path: security-results/trivy*
 
   bandit-scan:
