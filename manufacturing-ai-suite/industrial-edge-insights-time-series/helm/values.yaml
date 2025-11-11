@@ -47,6 +47,8 @@ env:
   INFLUXDB_RETENTION_DURATION: 1h0m0s
   # The Telegraf metric_batch_size specifies the number of metrics or data points that are grouped together and sent in a single batch to the InfluxDB.
   TELEGRAF_METRIC_BATCH_SIZE: 100
+  # The VISUALIZER_GRAFANA_INACTIVE_TIMEOUT sets the duration after which Grafana logs out an inactive user
+  VISUALIZER_GRAFANA_INACTIVE_TIMEOUT: 1h
   LOG_LEVEL: INFO
 
 images:

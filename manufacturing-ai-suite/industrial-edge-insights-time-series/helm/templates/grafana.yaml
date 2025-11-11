@@ -98,6 +98,12 @@ spec:
           value: "/etc/grafana/provisioning/dashboards"
         - name: GF_LOG_LEVEL
           value: '{{ $.Values.env.LOG_LEVEL }}'
+        - name: GF_AUTH_LOGIN_MAXIMUM_INACTIVE_LIFETIME_DURATION
+          value: '{{ $.Values.env.VISUALIZER_GRAFANA_INACTIVE_TIMEOUT }}'
+        - name: GF_AUTH_LOGIN_MAXIMUM_LIFETIME_DURATION
+          value: '{{ $.Values.env.VISUALIZER_GRAFANA_INACTIVE_TIMEOUT }}'
+        - name: GF_SECURITY_LOGIN_REMEMBER_DAYS
+          value: "1"
       volumes:
       - name: vol-temp-grafana
         emptyDir: {}
