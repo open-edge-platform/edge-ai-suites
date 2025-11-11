@@ -37,7 +37,7 @@ jobs:
           sudo apt install intel-vppsdk
           sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
           source /opt/intel/vppsdk/env.sh
-          cd edge-ai-suites-repo/metro-ai-suite
+          cd metro-ai-suite
           cd video-processing-for-nvr/docker
           bash build_sample.sh
           
