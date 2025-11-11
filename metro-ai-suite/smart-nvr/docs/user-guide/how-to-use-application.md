@@ -83,8 +83,26 @@ This powerful automation feature enables intelligent event management and workfl
 
 ![Event-router](./_images/summary_event_response.png)
 
+---
+
+#### 4. **Configure Camera Streaming (Continuous Ingestion)**
+
+Enable or disable continuous background processing ("watchers") per camera to automatically stream new video segments into the Video Search pipeline.
+
+This feature allows selected cameras to be continuously monitored so their footage is proactively uploaded for Video Search indexing and managed centrally without restarting services or editing configuration files
+
+- **Continuous Ingestion Watcher**: Monitors the NVR folder for each enabled camera and automatically sends new videos to the Video Search pipeline.
+- **Real-Time Configuration**: Enable or disable cameras instantly via the UI without restarting any service.
+- **Centralized Control**: Manage camera ingestion settings for all cameras in one place through the backend APIs (/watchers/mapping and /watchers/enable).
+- **Persistent State Management**: Retains watcher settings across restarts when Redis persistence is active.
+
+**Example Use Case**: Enable continuous ingestion for frequently used cameras to keep their footage always indexed for fast video search, while disabling low-priority ones to conserve resources.
+![Continous-Streaming](./_images/configure_camera_streaming.png)
+
+---
+
 ## Additional Resources
 
-- **[Troubleshooting Guide](./Troubleshooting.md)** - Resolve common deployment and runtime issues
+- **[Troubleshooting Guide](./troubleshooting.md)** - Resolve common deployment and runtime issues
 - **[Getting Started](./get-started.md)** - Complete initial setup requirements
 - **[Build from Source](./how-to-build-from-source.md)** - Build and deploy the application manually

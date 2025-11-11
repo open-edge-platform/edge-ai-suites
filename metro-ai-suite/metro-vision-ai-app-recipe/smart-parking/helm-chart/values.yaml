@@ -5,6 +5,14 @@ DOCKER_USERNAME: ''
 DOCKER_PASSWORD: ''
 imagePullPolicy: Always
 storageClassName: manual
+
+# Git source configuration for downloading models
+gitSource:
+  # Use 'tag' for releases or 'branch' for branches
+  type: branch  # Options: 'tag' or 'branch'
+  # Name of the tag or branch
+  ref: main  # e.g., 'v1.0.0' for tag or 'main' for branch
+  
 mqtt_broker:
   image: eclipse-mosquitto
   imageTag: 2.0.21
@@ -16,7 +24,7 @@ mediamtx:
   imageTag: 1.11.3
 dlstreamer_pipeline_server:
   image: intel/dlstreamer-pipeline-server
-  imageTag: 3.1.0-ubuntu24
+  imageTag: 2025.2-ubuntu24-rc1
 grafana:
   image: grafana/grafana
   imageTag: 11.5.4

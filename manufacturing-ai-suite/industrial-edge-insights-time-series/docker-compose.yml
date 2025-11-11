@@ -223,7 +223,7 @@ services:
     ports:
     - ${OPCUA_SERVER_PORT}-30048:4840
     volumes:
-    - ./apps/${SAMPLE_APP}/${SAMPLE_APP}.csv:/app/${SAMPLE_APP}.csv
+    - ./apps/${SAMPLE_APP}/simulation-data:/app/simulation-data
 
   ia-mqtt-publisher:
     build:

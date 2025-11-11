@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mqtt-config
+data:
+  mosquitto.conf: |
+    allow_anonymous false
+    listener 1883
+    listener 9001
+    protocol websockets
+    persistence true
+    password_file /mosquitto/config/pwfile
+    persistence_file mosquitto.db
+    persistence_location /mosquitto/data/
