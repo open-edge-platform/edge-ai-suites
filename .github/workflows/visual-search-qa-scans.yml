@@ -106,18 +106,53 @@ jobs:
 
       - name: Run trivy Scan - vqa (SPDX SBOM)
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: multilevel-video-understandingr-spdx
+        id: vqa-dataprep-spdx
         with:
           scan_type: "image"  
           scan-scope: "all"
-          scan_target: "dataprep-visualdata-milvus:latest retriever-milvus:latest vlm-openvino-serving:latest visual-search-qa-app:latest"  
+          scan_target: "dataprep-visualdata-milvus:latest"  
           severity: "HIGH,CRITICAL"  
           format: "spdx-json"
-          exit_code: "0"
-          scanners: "vuln,sbom"
-          report_suffix: "-image-vqa-spdx-CT248"
+          scanners: "vuln"
+          report_suffix: "-image-vqa-dataprep-spdx-CT248"
           generate_sbom: "true"
-        continue-on-error: true
+      - name: Run trivy Scan - vqa (SPDX SBOM)
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: vqa-retriever-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: "all"
+          scan_target: "retriever-milvus:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          scanners: "vuln"
+          report_suffix: "-image-vqa-retriever-spdx-CT248"
+          generate_sbom: "true"
+      - name: Run trivy Scan - vqa (SPDX SBOM)
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: vqa-vlm-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: "all"
+          scan_target: "vlm-openvino-serving:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          scanners: "vuln"
+          report_suffix: "-image-vqa-vlm-spdx-CT248"
+          generate_sbom: "true"
+      - name: Run trivy Scan - vqa (SPDX SBOM)
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: vqa-visual-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: "all"
+          scan_target: "visual-search-qa-app:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          scanners: "vuln"
+          report_suffix: "-image-vqa-visual-spdx-CT248"
+          generate_sbom: "true"
+
       - name: Scan Dockerfile with Trivy
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         with:
