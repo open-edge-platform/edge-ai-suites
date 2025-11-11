@@ -39,7 +39,7 @@ jobs:
         with:
           name: bandit-report
           path: security-results/bandit*
-          
+
   trivy-scan:
     runs-on: ubuntu-22.04-64core-256GB
     permissions:
@@ -47,18 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
-          path: edge-ai-suites-repo
           persist-credentials: false
-          
-      - name: Run Trivy Filesystem Scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: trivy-fs
-        with:
-          scan_type: "fs"  
-          scan-scope: "all"  
-          scan-target: "edge-ai-suites-repo/metro-ai-suite/sensor-fusion-for-traffic-management"
-          severity: "HIGH,CRITICAL" 
-          format: "json"  
 
       - name: Build Docker images
         run: |
@@ -70,38 +59,65 @@ jobs:
             awk -v keep="$TFCC_IMAGE_ID" '$1 != keep {print $1}' | \
             xargs --no-run-if-empty docker rmi -f
           docker system prune -f
-          curl -fsSL https://raw.githubusercontent.com/kou/arrow/e49d8ae15583ceff03237571569099a6ad62be32/ci/scripts/util_free_space.sh | bash
-
-      - name: Free disk space
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
-        with:
-          tool-cache: true  
-          android: true      
-          dotnet: true  
-          haskell: true  
-          large-packages: true 
-          docker-images: false
-          swap-storage: true 
           
-      - name: Check resources
+      - name: Verify Docker image
         run: |
-          df -h
+          echo "=== Built Docker Image ==="
           docker images
-      - name: Run trivy Scan - tfcc
+          echo "=== Image Build Verification Complete ==="
+          
+      - name: Run Trivy Filesystem Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: tfccsample
+        id: trivy-fs
+        with:
+          scan_type: "fs"  
+          scan-scope: "all"  
+          severity: "HIGH,CRITICAL" 
+          format: "json"
+          scan_target: "edge-ai-suites-repo/metro-ai-suite/sensor-fusion-for-traffic-management/"
+          report_suffix: "-fs-tfcc-CT7"
+
+
+      - name: Run trivy Scan - tfcc (HTML Report)
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: tfcc-html
         with:
           scan_type: "image"  
-          scan-scope: all
+          scan-scope: "all"
           scan_target: "tfcc:latest"  
           severity: "HIGH,CRITICAL"  
-          format: "json"  
-          
+          format: "table"
+          report_suffix: "-image-tfcc-html-CT248"
+          generate_sbom: "false"
+
+      - name: Run trivy Scan - tfcc (SPDX SBOM)
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: tfcc-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: "all"
+          scan_target: "tfcc:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          scanners: "vuln"
+          report_suffix: "-image-tfcc-spdx-CT248"
+          generate_sbom: "false"
+
+      - name: Scan Dockerfile with Trivy
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        with:
+          scan_type: "config"
+          scan_target: "edge-ai-suites-repo/metro-ai-suite/sensor-fusion-for-traffic-management/docker/"
+          severity: "HIGH,CRITICAL"
+          format: "json"
+          misconfig_scanners: "dockerfile"
+          report_suffix: "-config-tfcc-CT222"
+
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
-          name: trivy-report
-          path: security-results/trivy
+          name: trivy-report-tfcc
+          path: security-results/trivy*
 
   coverity-scan:
     runs-on: ubuntu-22.04
