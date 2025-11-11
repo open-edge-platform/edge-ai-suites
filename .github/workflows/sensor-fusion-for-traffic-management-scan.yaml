@@ -52,7 +52,7 @@ jobs:
       - name: Build Docker images
         run: |
           ls
-          cd edge-ai-suites-repo/metro-ai-suite/sensor-fusion-for-traffic-management/docker
+          cd metro-ai-suite/sensor-fusion-for-traffic-management/docker
           bash build_docker.sh
           TFCC_IMAGE_ID=$(docker images -q tfcc)
           docker images --format '{{.ID}} {{.Repository}}' | \
