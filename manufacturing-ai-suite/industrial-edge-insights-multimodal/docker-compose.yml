@@ -225,8 +225,10 @@ services:
       CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
       SIMULATION_TARGET_FPS: ${SIMULATION_TARGET_FPS}
       LOG_LEVEL: ${LOG_LEVEL}
+    volumes:
+      - ./weld-data-simulator/simulation-data:/simulation-data
     networks:
-    - timeseries_network
+      - timeseries_network
 
   nginx:
     image: nginx:1.29.1-bookworm-perl
@@ -315,28 +317,28 @@ services:
       ENABLE_RTSP: true
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${MR_MINIO_HOSTNAME},ia-mqtt-broker
-      NO_PROXY: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${MR_MINIO_HOSTNAME},ia-mqtt-broker
+      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${MR_MINIO_HOSTNAME:-"minio-server"},ia-mqtt-broker
+      NO_PROXY: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${MR_MINIO_HOSTNAME:-"minio-server"},ia-mqtt-broker
       GST_DEBUG: "1"
       REST_SERVER_PORT: ${REST_SERVER_PORT}
-      S3_STORAGE_HOST: ${MR_MINIO_HOSTNAME}
-      S3_STORAGE_PORT: ${MR_MINIO_SERVER_PORT}
-      S3_STORAGE_USER: ${MR_MINIO_ACCESS_KEY}
-      S3_STORAGE_PASS: ${MR_MINIO_SECRET_KEY}
+      S3_STORAGE_HOST: ${MR_MINIO_HOSTNAME:-"minio-server"}
+      S3_STORAGE_PORT: ${MR_MINIO_SERVER_PORT:-9000}
+      S3_STORAGE_USER: ${MR_MINIO_ACCESS_KEY:-""}
+      S3_STORAGE_PASS: ${MR_MINIO_SECRET_KEY:-""}
       SERVICE_NAME: "dlstreamer-pipeline-server"
       ENABLE_OPEN_TELEMETRY: true
       OTEL_COLLECTOR_HOST: ${OTEL_COLLECTOR_HOST}
       OTEL_COLLECTOR_PORT: ${OTEL_COLLECTOR_PORT}
       OTEL_EXPORT_INTERVAL_MILLIS: ${OTEL_EXPORT_INTERVAL_MILLIS}
-      OPCUA_SERVER_IP: ${OPCUA_SERVER_IP}
-      OPCUA_SERVER_PORT: ${OPCUA_SERVER_PORT}
-      OPCUA_SERVER_USERNAME: ${OPCUA_SERVER_USERNAME}
-      OPCUA_SERVER_PASSWORD: ${OPCUA_SERVER_PASSWORD}
+      OPCUA_SERVER_IP: ${OPCUA_SERVER_IP:-"ia-opcua-server"}
+      OPCUA_SERVER_PORT: ${OPCUA_SERVER_PORT:-4840}
+      OPCUA_SERVER_USERNAME: ${OPCUA_SERVER_USERNAME:-""}
+      OPCUA_SERVER_PASSWORD: ${OPCUA_SERVER_PASSWORD:-""}
       # Model Registry Microservice
-      MR_URL: ${MR_URL}
-      MR_SAVED_MODELS_DIR: ${MR_SAVED_MODELS_DIR}
-      MR_REQUEST_TIMEOUT: ${MR_REQUEST_TIMEOUT}
-      MR_VERIFY_CERT: ${MR_VERIFY_CERT}
+      MR_URL: ${MR_URL:-""}
+      MR_SAVED_MODELS_DIR: ${MR_SAVED_MODELS_DIR:-""}
+      MR_REQUEST_TIMEOUT: ${MR_REQUEST_TIMEOUT:-""}
+      MR_VERIFY_CERT: ${MR_VERIFY_CERT:-""}
       MQTT_HOST: ia-mqtt-broker
       MQTT_PORT: 1883
     volumes:

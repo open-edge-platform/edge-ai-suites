@@ -59,7 +59,6 @@ COPY requirements.txt /
 RUN pip install --upgrade pip
 RUN pip3 install --no-cache-dir -r requirements.txt
 COPY publisher.py /
-COPY simulation-data /simulation-data
 
 USER ${TIMESERIES_USER_NAME}
 

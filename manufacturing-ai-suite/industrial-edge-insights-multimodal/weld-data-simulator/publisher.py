@@ -81,8 +81,10 @@ def get_available_simulation_files(simulation_data_dir: str = "/simulation-data"
     Returns:
         List of base filenames that have both video and CSV files
     """
+
     # Find all .avi files
     video_files = glob.glob(os.path.join(simulation_data_dir, "*.avi"))
+    print(f"Found {len(video_files)} video files in {simulation_data_dir}")
     available_pairs = []
     
     for video_file in video_files:
