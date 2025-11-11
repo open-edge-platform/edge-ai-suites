@@ -64,7 +64,7 @@ Vision data is being ingested into **dlstreamer-pipeline-server** using the **RT
   
 ### **Data Ingestion**
 
-Vision Data: **dlstreamer-pipeline-server** gathers the data through RTSP Stream using **mediamxt** as the **RTSP Server**.
+Vision Data: **dlstreamer-pipeline-server** gathers the data through RTSP Stream using **mediamtx** as the **RTSP Server**.
 
 Time-series Data: **Telegraf** through its input plugins (**MQTT**) gathers the data and sends this input data to both **InfluxDB** and **Time Series Analytics Microservice**.
 
