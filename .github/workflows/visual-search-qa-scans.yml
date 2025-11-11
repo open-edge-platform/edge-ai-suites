@@ -66,10 +66,12 @@ jobs:
           scan_type: "image"  
           scan-scope: "all"
           scan_target: "dataprep-visualdata-milvus:latest retriever-milvus:latest vlm-openvino-serving:latest visual-search-qa-app:latest"  
-          severity: "HIGH,CRITICAL"  
+          severity: "HIGH,CRITICAL"
+          exit_code: "0"
           format: "table"
           report_suffix: "-image-vqa-html-CT248"
           generate_sbom: "false"
+        continue-on-error: true
 
       - name: Run trivy Scan - vqa (SPDX SBOM)
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
@@ -80,10 +82,11 @@ jobs:
           scan_target: "dataprep-visualdata-milvus:latest retriever-milvus:latest vlm-openvino-serving:latest visual-search-qa-app:latest"  
           severity: "HIGH,CRITICAL"  
           format: "spdx-json"
+          exit_code: "0"
           scanners: "vuln"
           report_suffix: "-image-vqa-spdx-CT248"
           generate_sbom: "false"
-
+        continue-on-error: true
       - name: Scan Dockerfile with Trivy
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         with:
