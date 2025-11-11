@@ -64,6 +64,7 @@ jobs:
         run: |
           echo "=== Built Docker Image ==="
           docker images
+          ls
           echo "=== Image Build Verification Complete ==="
           
       - name: Run Trivy Filesystem Scan
@@ -74,7 +75,7 @@ jobs:
           scan-scope: "all"  
           severity: "HIGH,CRITICAL" 
           format: "json"
-          scan_target: "edge-ai-suites-repo/metro-ai-suite/sensor-fusion-for-traffic-management/"
+          scan_target: "metro-ai-suite/sensor-fusion-for-traffic-management/"
           report_suffix: "-fs-tfcc-CT7"
 
 
@@ -107,7 +108,7 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         with:
           scan_type: "config"
-          scan_target: "edge-ai-suites-repo/metro-ai-suite/sensor-fusion-for-traffic-management/docker/"
+          scan_target: "metro-ai-suite/sensor-fusion-for-traffic-management/docker/"
           severity: "HIGH,CRITICAL"
           format: "json"
           misconfig_scanners: "dockerfile"
