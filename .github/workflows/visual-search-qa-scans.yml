@@ -29,16 +29,15 @@ jobs:
 
       - name: Build Docker images
         run: |
-          git clone https://github.com/open-edge-platform/edge-ai-libraries.git
-          cd edge-ai-libraries/microservices
-          docker build -t dataprep-visualdata-milvus:latest -f visual-data-preparation-for-retrieval/milvus/src/Dockerfile .
-          docker build -t retriever-milvus:latest -f vector-retriever/milvus/src/Dockerfile .
-          cd vlm-openvino-serving
-          docker build -t vlm-openvino-serving:latest -f docker/Dockerfile .
-          cd ../../..
+          # git clone https://github.com/open-edge-platform/edge-ai-libraries.git
+          # cd edge-ai-libraries/microservices
+          # docker build -t dataprep-visualdata-milvus:latest -f visual-data-preparation-for-retrieval/milvus/src/Dockerfile .
+          # docker build -t retriever-milvus:latest -f vector-retriever/milvus/src/Dockerfile .
+          # cd vlm-openvino-serving
+          # docker build -t vlm-openvino-serving:latest -f docker/Dockerfile .
+          # cd ../../..
           ls
           cd metro-ai-suite
-          ls -R
           docker build -t visual-search-qa-app:latest -f visual-search-question-and-answering/src/Dockerfile .
           
       - name: Verify Docker image
@@ -58,40 +57,6 @@ jobs:
           scan_target: "metro-ai-suite/visual-search-question-and-answering/"
           report_suffix: "-fs-vqa-CT7"
 
-
-      - name: Run trivy Scan -vqa (HTML Report)
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: vqa-dataprep-html
-        with:
-          scan_type: "image"  
-          scan-scope: "all"
-          scan_target: "dataprep-visualdata-milvus:latest"  
-          severity: "HIGH,CRITICAL"
-          format: "table"
-          report_suffix: "-image-vqa-dataprep-html-CT248"
-          generate_sbom: "false"
-      - name: Run trivy Scan -vqa (HTML Report)
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: vqa-retriever-html
-        with:
-          scan_type: "image"  
-          scan-scope: "all"
-          scan_target: "retriever-milvus:latest"  
-          severity: "HIGH,CRITICAL"
-          format: "table"
-          report_suffix: "-image-vqa-retriever-html-CT248"
-          generate_sbom: "false"
-      - name: Run trivy Scan -vqa (HTML Report)
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: vqa-vlm-html
-        with:
-          scan_type: "image"  
-          scan-scope: "all"
-          scan_target: "vlm-openvino-serving:latest"  
-          severity: "HIGH,CRITICAL"
-          format: "table"
-          report_suffix: "-image-vqa-vlm-html-CT248"
-          generate_sbom: "false"
       - name: Run trivy Scan -vqa (HTML Report)
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: vqa-visual-html
@@ -103,43 +68,7 @@ jobs:
           format: "table"
           report_suffix: "-image-vqa-visual-html-CT248"
           generate_sbom: "false"
-
-      - name: Run trivy Scan - vqa (SPDX SBOM)
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: vqa-dataprep-spdx
-        with:
-          scan_type: "image"  
-          scan-scope: "all"
-          scan_target: "dataprep-visualdata-milvus:latest"  
-          severity: "HIGH,CRITICAL"  
-          format: "spdx-json"
-          scanners: "vuln"
-          report_suffix: "-image-vqa-dataprep-spdx-CT248"
-          generate_sbom: "true"
-      - name: Run trivy Scan - vqa (SPDX SBOM)
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: vqa-retriever-spdx
-        with:
-          scan_type: "image"  
-          scan-scope: "all"
-          scan_target: "retriever-milvus:latest"  
-          severity: "HIGH,CRITICAL"  
-          format: "spdx-json"
-          scanners: "vuln"
-          report_suffix: "-image-vqa-retriever-spdx-CT248"
-          generate_sbom: "true"
-      - name: Run trivy Scan - vqa (SPDX SBOM)
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: vqa-vlm-spdx
-        with:
-          scan_type: "image"  
-          scan-scope: "all"
-          scan_target: "vlm-openvino-serving:latest"  
-          severity: "HIGH,CRITICAL"  
-          format: "spdx-json"
-          scanners: "vuln"
-          report_suffix: "-image-vqa-vlm-spdx-CT248"
-          generate_sbom: "true"
+          
       - name: Run trivy Scan - vqa (SPDX SBOM)
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: vqa-visual-spdx
@@ -207,5 +136,4 @@ jobs:
         with:
           name: clamav-report
           path: security-results/clamav*
-
 
