@@ -76,7 +76,7 @@ Time-series Data: **Telegraf** through its input plugins (**MQTT**) gathers the 
 
 **DL Streamer Pipeline Server** sends the images with overlaid bounding boxes through webrtc protocol to webrtc browser client. This is done via the MediaMTX server used for signaling. Coturn server is used to facilitate NAT traversal and ensure that the webrtc stream is accessible on a non-native browser client and helps in cases where firewall is enabled. 
 
-#### **`config.json`**
+#### **`DL Streamer Pipeline Server config.json`**
 
 **Pipeline Configuration**: 
 
