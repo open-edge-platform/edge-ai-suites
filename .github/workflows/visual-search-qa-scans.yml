@@ -36,7 +36,7 @@ jobs:
           cd vlm-openvino-serving
           docker build -t vlm-openvino-serving:latest -f docker/Dockerfile .
           cd ../../..
-          cd edge-ai-suites-repo
+          ls
           cd metro-ai-suite
           ls -R
           docker build -t visual-search-qa-app:latest -f visual-search-question-and-answering/src/Dockerfile .
