@@ -80,7 +80,7 @@ jobs:
           format: "spdx-json"
           scanners: "vuln"
           report_suffix: "-image-vqa-visual-spdx-CT248"
-          generate_sbom: "true"
+          generate_sbom: "false"
 
       - name: Scan Dockerfile with Trivy
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
