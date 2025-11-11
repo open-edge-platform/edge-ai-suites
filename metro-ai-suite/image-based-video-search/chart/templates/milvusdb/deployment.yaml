@@ -72,9 +72,9 @@ spec:
         {{- end }}
         {{- if .Values.milvusdb.healthcheck.enabled }}
         livenessProbe:
-          {{- toYaml .Values.milvusdb.healthcheck.livenessProbe | nindent 8 }}
+          {{- toYaml .Values.milvusdb.healthcheck.livenessProbe | nindent 10 }}
         readinessProbe:
-          {{- toYaml .Values.milvusdb.healthcheck.readinessProbe | nindent 8 }}
+          {{- toYaml .Values.milvusdb.healthcheck.readinessProbe | nindent 10 }}
         {{- end }}
       volumes:
       - name: '{{ include "image_based_video_search.fullname" . }}-milvusdb-config'

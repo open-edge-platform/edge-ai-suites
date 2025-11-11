@@ -57,3 +57,4 @@ pipeline:
 va_pipeline:
   mediamtx_path: components/va/bin/mediamtx
   plugin_path: components/va
+  rtsp_codec: h264 # h264 or h265

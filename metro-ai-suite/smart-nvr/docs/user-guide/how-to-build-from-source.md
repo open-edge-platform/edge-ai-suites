@@ -12,7 +12,6 @@ The Smart NVR application consists of multiple components that work together to 
 - **MQTT Broker**: Message broker for inter-service communication.
 - **Redis**: In-memory data store for caching and managing rules.
 
-
 ## Step 1: Clone the Repository
 
 First, clone the repository and navigate to the Smart NVR directory:
@@ -58,6 +57,7 @@ export TAG=<your-tag>                                # e.g. "rc4" or "latest"
 # Run the build script that takes the build values
 ./build.sh
 ```
+
 ### Building with Copyleft Sources
 
 If you need to include copyleft sources in your build, you can set the following environment variable:
@@ -73,6 +73,5 @@ When this environment variable is set to `true`, it allows the Dockerfiles to co
 - **[Get Started](./get-started.md)**: Complete the initial setup and configuration steps
 - **[How to Use the Application](./how-to-use-application.md)**: Learn about the application's features and functionality
 - **[API Reference](./api-reference.md)**: Explore the available REST API endpoints
-- **[Troubleshooting](./Troubleshooting.md#troubleshooting-docker-deployments)**: Find solutions to common deployment issues
+- **[Troubleshooting](./troubleshooting.md#troubleshooting-docker-deployments)**: Find solutions to common deployment issues
 - **[System Requirements](./system-requirements.md)**: Review hardware and software requirements
-

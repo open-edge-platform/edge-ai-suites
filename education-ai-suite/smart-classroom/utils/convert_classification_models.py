@@ -1,6 +1,7 @@
 from pathlib import Path
 import urllib.request
 import torch
+import torch.nn as nn
 import torchvision.models as models
 from torchvision import datasets
 from torchvision import transforms
@@ -57,14 +58,14 @@ def download_dataset(url, dataset_path):
 
 def convert_to_openvino(model, model_name, output_dir, input_shape=(1, 3, 224, 224)):
     """Convert PyTorch model to OpenVINO format."""
-    print(f"\nConverting {model_name} model...")
-    
+    print(f"Converting {model_name} model...")
+
     model.eval()
     dummy_input = torch.randn(input_shape)
-    
+
     ov_model = ov.convert_model(model, example_input=dummy_input)
     ov_model.reshape({ov_model.inputs[0].get_any_name(): input_shape})
-    
+
     print(f"Quantizing {model_name} model...")
     dataset_path = output_dir / "datasets"
     dataset_path.mkdir(exist_ok=True)
@@ -89,10 +90,10 @@ def convert_to_openvino(model, model_name, output_dir, input_shape=(1, 3, 224, 2
 
     calibration_dataset = nncf.Dataset(val_data_loader, transform_fn)
     ov_quantized_model = nncf.quantize(ov_model, calibration_dataset, preset=nncf.QuantizationPreset.PERFORMANCE, advanced_parameters=nncf.AdvancedQuantizationParameters())
-    
+
     ppp = ov.preprocess.PrePostProcessor(ov_quantized_model)
-    ppp.input("x").tensor().set_layout("NCHW")
-    ppp.input("x").preprocess().reverse_channels().scale([255.,255.,255.]).mean([0.485, 0.456, 0.406]).scale([0.229, 0.224, 0.225])
+    ppp.input().tensor().set_layout("NCHW")
+    ppp.input().preprocess().reverse_channels().scale([255.,255.,255.]).mean([0.485, 0.456, 0.406]).scale([0.229, 0.224, 0.225])
     ov_quantized_model = ppp.build()
 
     # Add model metadata using set_rt_info
@@ -100,11 +101,13 @@ def convert_to_openvino(model, model_name, output_dir, input_shape=(1, 3, 224, 2
     labels_str = " ".join(download_labels())
     ov_quantized_model.set_rt_info(labels_str, ['model_info', 'labels'])
 
-
     # Save the quantized model
     output_path = output_dir / f"{model_name}.xml"
     ov.save_model(ov_quantized_model, output_path)
     print(f"Saved quantized OpenVINO model to {output_path}")
+
+def add_softmax(model):
+    return nn.Sequential(model, nn.Softmax(dim=1))
 
 def convert_classification_models(output_dir: str = "models/va"):
     output_path = Path(output_dir)
@@ -131,18 +134,21 @@ def convert_classification_models(output_dir: str = "models/va"):
     weights_path = download(RESNET18, "resnet18-f37072fd.pth", output_path)
     model = models.resnet18()
     model.load_state_dict(torch.load(weights_path, map_location='cpu', weights_only=False))
+    model = add_softmax(model)
     convert_to_openvino(model, "resnet18", output_path, input_shape=(1, 3, 224, 224))
 
     print("\nProcessing ResNet-50")
     weights_path = download(RESNET50, "resnet50-19c8e357.pth", output_path)
     model = models.resnet50()
     model.load_state_dict(torch.load(weights_path, map_location='cpu', weights_only=False))
+    model = add_softmax(model)
     convert_to_openvino(model, "resnet50", output_path, input_shape=(1, 3, 224, 224))
     
     print("\nProcessing MobileNetV2")
     weights_path = download(MOBILENETV2, "mobilenet_v2-b0353104.pth", output_path)
     model = models.mobilenet_v2()
     model.load_state_dict(torch.load(weights_path, map_location='cpu', weights_only=False))
+    model = add_softmax(model)
     convert_to_openvino(model, "mobilenetv2", output_path, input_shape=(1, 3, 224, 224))
 
     print("\nProcessing person-reidentification-retail-0288")
@@ -151,9 +157,6 @@ def convert_classification_models(output_dir: str = "models/va"):
     core = ov.Core()
     reid_model = core.read_model(str(output_path / "person-reidentification-retail-0288-original.xml"))
     reid_model.set_rt_info("raw_data_copy", ['model_info', 'model_type'])
-    reid_model.set_rt_info("123.675,116.28,103.53", ['model_info', 'mean_values'])
-    reid_model.set_rt_info("58.395,57.12,57.375", ['model_info', 'scale_values'])
-    reid_model.set_rt_info("RGB", ['model_info', 'color_space'])
     ov.save_model(reid_model, str(output_path / "person-reidentification-retail-0288.xml"))
 
     print("Conversion completed!")
@@ -161,4 +164,3 @@ def convert_classification_models(output_dir: str = "models/va"):
 
 if __name__ == "__main__":
     convert_classification_models()
-

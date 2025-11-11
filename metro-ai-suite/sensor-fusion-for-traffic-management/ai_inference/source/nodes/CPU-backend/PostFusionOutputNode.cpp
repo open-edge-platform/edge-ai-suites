@@ -322,25 +322,12 @@ void PostFusionOutputNodeWorker::process(std::size_t batchIdx)
 
         hce::ai::inference::TimeStampAll_t timeMetaAll;
         if (inBlob->get(0)->getMeta(timeMetaAll) == hva::hvaSuccess) {
-            if (timeMetaAll.timeStamp1 != std::chrono::time_point<std::chrono::high_resolution_clock>()) {
-                latencyDuration = endTime - timeMetaAll.timeStamp1;
-                latency = latencyDuration.count();
-                jsonTree.put("latency1", latency);
-            }
-            if (timeMetaAll.timeStamp2 != std::chrono::time_point<std::chrono::high_resolution_clock>()) {
-                latencyDuration = endTime - timeMetaAll.timeStamp2;
-                latency = latencyDuration.count();
-                jsonTree.put("latency2", latency);
-            }
-            if (timeMetaAll.timeStamp3 != std::chrono::time_point<std::chrono::high_resolution_clock>()) {
-                latencyDuration = endTime - timeMetaAll.timeStamp3;
-                latency = latencyDuration.count();
-                jsonTree.put("latency3", latency);
-            }
-            if (timeMetaAll.timeStamp4 != std::chrono::time_point<std::chrono::high_resolution_clock>()) {
-                latencyDuration = endTime - timeMetaAll.timeStamp4;
-                latency = latencyDuration.count();
-                jsonTree.put("latency4", latency);
+            for (int i = 0; i < 4; i++) {
+                if (timeMetaAll.timeStamp[i] != std::chrono::time_point<std::chrono::high_resolution_clock>()) {
+                    latencyDuration = endTime - timeMetaAll.timeStamp[i];
+                    latency = latencyDuration.count();
+                    jsonTree.put("latency" + std::to_string(i + 1), latency);
+                }
             }
         }
 

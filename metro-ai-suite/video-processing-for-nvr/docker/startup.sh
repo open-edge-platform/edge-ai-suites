@@ -4,7 +4,7 @@
 NPU_ON=${1:-false}
 
 #build
-bash build_sample.sh
+#bash build_sample.sh
 
 # Get group IDs
 VIDEO_GROUP_ID=$(getent group video | awk -F: '{printf "%s\n", $3}')
@@ -31,5 +31,5 @@ if [[ "$NPU_ON" == "true" ]]; then
     --env ZE_ENABLE_ALT_DRIVERS=libze_intel_vpu.so \
     vppsample
 else
-  docker-compose up
+  docker compose up
 fi

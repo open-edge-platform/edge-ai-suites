@@ -9,6 +9,7 @@ import time
 import logging
 from services.api_client import (
     fetch_cameras,
+    fetch_cameras_with_labels,
     fetch_events,
     add_rule,
     fetch_rule_responses,
@@ -16,6 +17,8 @@ from services.api_client import (
     delete_rule_by_id,
     fetch_search_responses,
     fetch_summary_status,
+    fetch_camera_watcher_mapping,
+    submit_camera_watcher_mapping,
 )
 from services.video_processor import process_video
 from services.event_utils import display_events
@@ -46,61 +49,6 @@ def stop_event_updates():
         stop_event_thread.set()
         event_update_thread.join(timeout=2)
         logger.info("Event update thread stopped.")
-
-
-def cleanup_temp_files():
-    """Clean up temporary MP4 files older than 1 hour."""
-    logger.info("Cleaning up temp .mp4 files...")
-    try:
-        temp_dir = tempfile.gettempdir()
-        for file in os.listdir(temp_dir):
-            if file.endswith(".mp4"):
-                full_path = os.path.join(temp_dir, file)
-                age = time.time() - os.path.getmtime(full_path)
-                if age > 3600:
-                    os.remove(full_path)
-                    logger.info(f"Deleted: {full_path}")
-    except Exception as e:
-        logger.error(f"Failed to clean temp files: {e}")
-
-
-def render_rule_rows(rules, response_output):
-    """Render rows of rules with delete buttons."""
-    with gr.Column() as rule_column:
-        for rule in rules:
-            rule_id_state = gr.State(rule["id"])  # Hold rule ID as state
-
-            with gr.Row():
-                gr.Textbox(
-                    value=rule["id"], label="ID", interactive=False, show_label=False
-                )
-                gr.Textbox(
-                    value=rule.get("camera", ""),
-                    label="Camera",
-                    interactive=False,
-                    show_label=False,
-                )
-                gr.Textbox(
-                    value=rule.get("label", ""),
-                    label="Label",
-                    interactive=False,
-                    show_label=False,
-                )
-                gr.Textbox(
-                    value=rule.get("action", ""),
-                    label="Action",
-                    interactive=False,
-                    show_label=False,
-                )
-
-                delete_btn = gr.Button("❌ Delete")
-                delete_btn.click(
-                    fn=delete_rule_by_id,
-                    inputs=[rule_id_state],  # 👈 Pass the rule ID
-                    outputs=[response_output],
-                )
-    return rule_column
-
 
 polling_threads = {}
 
@@ -267,7 +215,8 @@ def wrapper_fn(
     if action == "Summarize":
         raw_summary = result_dict.get("summary_id")
         summary_id = extract_summary_id(raw_summary)
-        logger.info("Extracted Summary ID:", summary_id)
+        # Use proper logging formatting to avoid TypeError during tests
+        logger.info("Extracted Summary ID: %s", summary_id)
 
         return (
             result_dict,
@@ -329,9 +278,25 @@ def auto_refresh_summary_status(summary_id):
 
 def create_ui():
     show_genai_tab = os.getenv("NVR_GENAI", "false").lower() == "true"
+    show_scenescape_source = os.getenv("NVR_SCENESCAPE", "false").lower() == "true"
     time.sleep(5)  # Ensure the environment is fully initialized
-    camera_data = fetch_cameras()
-    camera_list = list(camera_data.keys())
+    # Prefer enriched labels-aware fetch; fall back to simple list on error
+    camera_list, camera_labels_map = fetch_cameras_with_labels()
+    if not camera_list:
+        # Fallback path (older behavior)
+        camera_data = fetch_cameras()
+        if isinstance(camera_data, list):
+            camera_list = camera_data
+            camera_labels_map = {c: [] for c in camera_list}
+        elif isinstance(camera_data, dict):
+            camera_list = list(camera_data.keys())
+            camera_labels_map = {k: (v if isinstance(v, list) else []) for k, v in camera_data.items()}
+        else:
+            logger.warning(
+                f"Unexpected camera_data type {type(camera_data)} from fetch_cameras(); defaulting to empty list"
+            )
+            camera_list = []
+            camera_labels_map = {}
     recent_events = []
     def get_labels_for_camera(camera_name):
         # Dummy example mapping camera to labels
@@ -339,9 +304,9 @@ def create_ui():
             "Front Gate": ["person", "car", "dog"],
             "Backyard": ["cat", "person"],
         }
-
-        labels = camera_data.get(camera_name, [])
-
+        labels = camera_labels_map.get(camera_name, []) if camera_labels_map else []
+        if not labels:  # fallback to example mapping
+            labels = camera_to_labels.get(camera_name, [])
         return gr.update(choices=labels, value=None)
 
     def format_summary_responses():
@@ -474,6 +439,105 @@ def create_ui():
                     outputs=[status_output, toast_output, close_toast_btn],
                 )
 
+            # Tab 2: Configure Camera Streaming (enable/disable watcher per camera)
+            with gr.TabItem("Configure Cameras"):
+                gr.Markdown("### Enable or disable cameras for sending NVR video feeds to VSS Search. ")
+                gr.Markdown("Select the cameras you want the backend watcher to process.")
+                # Fetch and normalize mapping (strip whitespace in keys for safety)
+                current_mapping = fetch_camera_watcher_mapping()
+                normalized_mapping = {str(k).strip(): v for k, v in (current_mapping or {}).items()}
+                # Pre-select cameras explicitly enabled (True)
+                preselected = [c for c in camera_list if normalized_mapping.get(str(c).strip()) is True]
+
+                with gr.Row():
+                    with gr.Column(scale=4):
+                        camera_selector = gr.CheckboxGroup(
+                            choices=camera_list,
+                            value=preselected,
+                            label="Enabled Cameras"
+                        )
+                    with gr.Column(scale=1, min_width=120):
+                        with gr.Row():
+                            submit_cameras_btn = gr.Button(
+                                "Submit",
+                                elem_id="submit-cameras-btn",
+                                variant="primary"
+                            )
+                        with gr.Row():
+                            refresh_cameras_btn = gr.Button(
+                                "Refresh",
+                                elem_id="refresh-cameras-btn",
+                                variant="secondary",
+                                size="sm"
+                            )
+
+                # Style the submit button to appear smaller
+                gr.HTML(
+                    """
+                    <style>
+                    #submit-cameras-btn button {
+                        padding: 4px 12px !important;
+                        font-size: 0.8rem !important;
+                        line-height: 1.1 !important;
+                        min-height: 30px !important;
+                    }
+                    </style>
+                    """
+                )
+
+                # Popup-style status (auto hide) using Markdown for simple formatting
+                camera_save_status = gr.Markdown(visible=False)
+
+                def submit_camera_config(selected):
+                    selected = selected or []
+                    resp = submit_camera_watcher_mapping(selected, camera_list)
+                    if "error" in resp:
+                        # Show then auto-hide
+                        yield gr.update(value=f"❌ {resp['error']}", visible=True)
+                        time.sleep(5)
+                        yield gr.update(visible=False)
+                        return
+                    enabled = resp.get("enabled", [])
+                    disabled = resp.get("disabled", [])
+                    msg = f"✅ Updated. Enabled: {enabled} | Disabled: {disabled}"
+                    yield gr.update(value=msg, visible=True)
+                    time.sleep(5)
+                    yield gr.update(visible=False)
+
+                # Submit selection; keep handle to chain a post-refresh
+                submit_event = submit_cameras_btn.click(
+                    fn=submit_camera_config,
+                    inputs=[camera_selector],
+                    outputs=[camera_save_status]
+                )
+
+                def refresh_camera_selector_only():
+                    """Fetch latest mapping and update only selector values.
+                    Avoids overwriting the status message (unlike full refresh)."""
+                    mapping = fetch_camera_watcher_mapping() or {}
+                    norm = {str(k).strip(): v for k, v in mapping.items()}
+                    new_selected = [c for c in camera_list if norm.get(str(c).strip()) is True]
+                    return gr.update(value=new_selected)
+
+                # After submit finishes (generator completes), refresh the selector so it never shows stale state
+                submit_event.then(
+                    fn=refresh_camera_selector_only,
+                    inputs=[],
+                    outputs=[camera_selector]
+                )
+
+                def refresh_camera_mapping():
+                    mapping = fetch_camera_watcher_mapping() or {}
+                    norm = {str(k).strip(): v for k, v in mapping.items()}
+                    new_selected = [c for c in camera_list if norm.get(str(c).strip()) is True]
+                    return gr.update(value=new_selected), gr.update(value=f"🔄 Refreshed mapping. Enabled: {new_selected}", visible=True)
+
+                refresh_cameras_btn.click(
+                    fn=refresh_camera_mapping,
+                    inputs=[],
+                    outputs=[camera_selector, camera_save_status]
+                )
+
             if show_genai_tab:
                 # Tab 2: AI-Powered Event Viewer
                 with gr.TabItem("AI-Powered Event Viewer") as event_viewer_tab:
@@ -545,17 +609,62 @@ def create_ui():
             # Tab 3: Auto-Route Rules
             with gr.TabItem("Auto-Route Events"):
                 with gr.Row():
+                    source_dropdown = gr.Dropdown(
+                        choices=["frigate"] + (["scenescape"] if show_scenescape_source else []),
+                        label="Select Source",
+                        value="frigate",
+                    )
+
                     camera_dropdown = gr.Dropdown(
                         choices=camera_list,
                         value=camera_list[0] if camera_list else None,
                         label="Select Camera"
                     )
 
-                    label_filter = gr.Dropdown(
-                        choices=[],
-                        value=None,
-                        label="Detection Labels"
+                    if show_scenescape_source:
+                        # scenescape on detection label before the count
+                        label_filter = gr.Dropdown(
+                            choices=[],
+                            value=None,
+                            label="Detection Labels"
+                        )
+
+                        count = gr.Number(
+                            label="Count",
+                            value=0,
+                            precision=0,
+                            interactive=True,
+                            visible=False,  
+                        )
+                    else:
+                        # Original layout for frigate-only
+                        count = gr.Number(
+                            label="Count",
+                            value=0,
+                            precision=0,
+                            interactive=True,
+                            visible=False,  
+                        )
+
+                    def toggle_count_visibility(source):
+                        if source == "scenescape":
+                            return gr.update(visible=True)
+                        else:
+                            return gr.update(visible=False, value=0)
+
+                    source_dropdown.change(
+                        fn=toggle_count_visibility,
+                        inputs=[source_dropdown],
+                        outputs=[count],
                     )
+
+                    if not show_scenescape_source:
+                        # Only create label_filter for frigate-only mode
+                        label_filter = gr.Dropdown(
+                            choices=[],
+                            value=None,
+                            label="Detection Labels"
+                        )
 
                     action_dropdown_auto = gr.Dropdown(
                         choices=["Summarize", "Add to Search"],
@@ -583,8 +692,14 @@ def create_ui():
                     add_rule_alert = gr.Textbox(label="Status", visible=False)
 
                 # 🔘 Callback to add rule and show alert
-                def add_rule_callback(camera, label, action):
-                    resp = add_rule(camera, label, action)
+                def add_rule_callback(camera, label, action, source, count_value):
+                    resp = add_rule(
+                        camera,
+                        label,
+                        action,
+                        source,
+                        count_value if source == "scenescape" else None,
+                    )
                     message = resp
                     return gr.update(value=message, visible=True)
 
@@ -595,8 +710,29 @@ def create_ui():
 
                 # 🚀 Show alert on rule add
                 # 🔘 Combined logic: show message, sleep, hide
-                def add_rule_with_auto_hide(camera, label, action):
-                    resp = add_rule(camera, label, action)
+                def add_rule_with_auto_hide(source, count_value, camera, label, action):
+                    threshold = None
+                    if source == "scenescape":
+                        try:
+                            threshold = int(count_value)
+                            if threshold < 0:
+                                raise ValueError
+                        except (TypeError, ValueError):
+                            yield gr.update(
+                                value="❌ Count must be a non-negative integer.",
+                                visible=True,
+                            )
+                            time.sleep(3)
+                            yield gr.update(visible=False)
+                            return
+
+                    resp = add_rule(
+                        camera,
+                        label,
+                        action,
+                        source,
+                        threshold,
+                    )
                     message = (
                         resp.get("message") if isinstance(resp, dict) else str(resp)
                     )
@@ -612,7 +748,7 @@ def create_ui():
 
                 add_rule_btn.click(
                     fn=add_rule_with_auto_hide,
-                    inputs=[camera_dropdown, label_filter, action_dropdown_auto],
+                    inputs=[source_dropdown, count, camera_dropdown, label_filter, action_dropdown_auto],
                     outputs=[add_rule_alert],
                 )
 
@@ -626,19 +762,31 @@ def create_ui():
                 # Rules Table Section
                 gr.Markdown("### Current Rules")
                 delete_status = gr.Textbox(label="Deletion Status", visible=False)
+                headers = ["ID", "Source"]
+                datatypes = ["str", "str"]
+                if show_scenescape_source:
+                    headers.append("Count")
+                    datatypes.append("str")
+                headers.extend(["Camera", "Label", "Action", "Delete"])
+                datatypes.extend(["str", "str", "str", "str"])
+
                 rules_table = gr.Dataframe(
-                    headers=["ID", "Camera", "Label", "Action", "Delete"],
-                    datatype=["str", "str", "str", "str", "str"],
+                    headers=headers,
+                    datatype=datatypes,
                     interactive=False,
                 )
                 refresh_rules_btn = gr.Button("🔄 Refresh Rules")
 
                 def load_rules():
                     rules = fetch_rules()
-                    return [
-                        [r["id"], r["camera"], r["label"], r["action"], "🗑️ Delete"]
-                        for r in rules
-                    ]
+                    rows = []
+                    for r in rules:
+                        row = [r["id"], r.get("source", "frigate")]
+                        if show_scenescape_source:
+                            row.append(str(r.get("count", "-")))
+                        row.extend([r.get("camera", "-"), r.get("label", "-"), r.get("action", "-"), "🗑️ Delete"])
+                        rows.append(row)
+                    return rows
 
                 def delete_selected_rule(evt: gr.SelectData):
 

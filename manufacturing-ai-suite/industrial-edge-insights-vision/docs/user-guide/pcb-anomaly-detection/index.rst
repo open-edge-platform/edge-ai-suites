@@ -93,6 +93,7 @@ This sample application offers the following features:
    how-to-use-cpu-for-inference
    how-to-use-npu-for-inference
    how-to-start-mqtt-publisher
+   how-to-benchmark
    api-reference
    environment-variables
    release_notes/Overview

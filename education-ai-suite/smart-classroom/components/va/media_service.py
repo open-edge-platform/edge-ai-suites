@@ -27,6 +27,7 @@ class MediaService:
         self.mediamtx_dir = Path(config.va_pipeline.mediamtx_path).resolve()
         self.mediamtx_exe = self.mediamtx_dir / "mediamtx.exe"
         self.process: Optional[subprocess.Popen] = None
+        self.log_file = None
 
         # Download MediaMTX if not found
         if not self.mediamtx_exe.exists():
@@ -100,10 +101,14 @@ class MediaService:
             # Build command
             command = [str(self.mediamtx_exe)]
 
+            # Open log file for writing
+            log_file_path = self.mediamtx_dir / "mediamtx.log"
+            self.log_file = open(log_file_path, "w", encoding="utf-8")
+
             # Start the process
             self.process = subprocess.Popen(
                 command,
-                stdout=subprocess.PIPE,
+                stdout=self.log_file,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 bufsize=1,
@@ -125,10 +130,11 @@ class MediaService:
                     return False
 
                 try:
-                    line = self.process.stdout.readline()
-                    if line:
-                        # Look for indicators that server is ready
-                        if "[RTSP] listener opened" in line:
+                    # Check log file for ready indicator
+                    self.log_file.flush()
+                    with open(self.log_file.name, "r", encoding="utf-8") as f:
+                        content = f.read()
+                        if "[RTSP] listener opened" in content:
                             ready = True
                             break
                 except:
@@ -189,9 +195,15 @@ class MediaService:
             return False
         finally:
             self.process = None
+            if self.log_file:
+                self.log_file.close()
+                self.log_file = None
 
     def _cleanup(self):
         """Cleanup handler called on process exit"""
         if self.is_running():
             self.logger.info("Cleaning up MediaMTX server on exit...")
             self.stop_server()
+        if self.log_file:
+            self.log_file.close()
+            self.log_file = None

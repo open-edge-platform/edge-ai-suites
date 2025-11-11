@@ -242,12 +242,13 @@ def start_video_analytics_pipeline(
                     detail=f"Failed to start pipeline '{request.pipeline_name}'",
                 )
 
-            hls_base_url = "http://localhost:8888"
+            hls_base_url = "http://127.0.0.1:8888"
             response_data = {
                 "status": "success",
                 "pipeline_name": request.pipeline_name,
                 "session_id": x_session_id,
                 "hls_stream": f"{hls_base_url}/{request.pipeline_name}_stream",
+                "overlays_embedded": True
             }
 
             return JSONResponse(content=response_data, status_code=200)
@@ -327,53 +328,22 @@ def stop_video_analytics_pipeline(
             raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/stream-content-classification")
-def stream_content_classification(x_session_id: Optional[str] = Header(None)):
-    """
-    Stream content classification results from content pipeline
-
-    Returns:
-        JSON stream with content classification data
-    """
-    if not x_session_id:
-        raise HTTPException(
-            status_code=400, detail="Missing required header: x_session_id"
-        )
-
-    if x_session_id not in va_services:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No video analytics service found for session {x_session_id}",
-        )
-
-    service = va_services[x_session_id]
-
-    if not service.is_pipeline_running("content"):
-        raise HTTPException(status_code=404, detail="Content pipeline is not running")
-
-    def event_stream():
-        try:
-            for json_data in service.monitor_pipeline("content", "content_results.txt"):
-                objects = json_data.get("objects", [])
-                if objects:
-                    # Get the first classification result
-                    yield json.dumps(
-                        objects[0]["classification_layer_name:output"]
-                    ) + "\n"
-        except Exception as e:
-            logger.error(f"Error streaming content classification: {e}")
-            yield json.dumps({"error": str(e)}) + "\n"
-
-    return StreamingResponse(event_stream(), media_type="application/json")
-
-
 @router.get("/class-statistics")
 def get_class_statistics(x_session_id: Optional[str] = Header(None)):
     """
     Get class statistics after class
 
     Returns:
-        JSON statistics data
+        JSON statistics data, example output:
+            {
+                "student_count": 99,
+                "stand_count": 99,
+                "raise_up_count": 99,
+                "stand_reid": [
+                    {"student_id": 1, "count": 15},
+                    {"student_id": 2, "count": 23}
+                ]
+            }
     """
     if not x_session_id:
         raise HTTPException(

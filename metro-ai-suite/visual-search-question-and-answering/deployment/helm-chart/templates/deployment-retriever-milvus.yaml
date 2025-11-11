@@ -21,19 +21,19 @@ spec:
         fsGroup: 1000
       containers:
       - name: {{ .Values.retrieverMilvus.name }}
-        image: "{{ .Values.retrieverMilvus.image.repository }}:{{ .Values.retrieverMilvus.image.tag }}"
+        image: "{{ if .Values.global.registry }}{{ .Values.global.registry }}{{ end }}{{ .Values.retrieverMilvus.image.repository }}:{{ .Values.retrieverMilvus.image.tag }}"
         imagePullPolicy: {{ .Values.retrieverMilvus.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.servicePorts.retriever }}
         env:
         - name: MILVUS_HOST
-          value: {{ .Values.retrieverMilvus.env.MILVUS_HOST | quote }}
+          value: {{ .Values.MILVUS_HOST | quote }}
         - name: MILVUS_PORT
-          value: {{ .Values.retrieverMilvus.env.MILVUS_PORT | quote  }}
-        - name: LOCAL_EMBED_MODEL_ID
-          value: {{ required "Value for `global.LOCAL_EMBED_MODEL_ID` is required!" .Values.global.LOCAL_EMBED_MODEL_ID | quote }}
-        - name: DEVICE
-          value: {{ .Values.retrieverMilvus.env.DEVICE | quote }}
+          value: {{ .Values.MILVUS_PORT | quote  }}
+        - name: EMBEDDING_MODEL_NAME
+          value: {{ required "Value for `global.EMBEDDING_MODEL_NAME` is required!" .Values.global.EMBEDDING_MODEL_NAME | quote }}
+        - name: EMBEDDING_BASE_URL
+          value: {{ .Values.multimodalembeddingServing.env.EMBEDDING_BASE_URL | quote }}
         - name: HF_ENDPOINT
           value: {{ .Values.retrieverMilvus.env.HF_ENDPOINT | quote }}
         - name: no_proxy
@@ -42,13 +42,6 @@ spec:
           value: {{ .Values.global.proxy.http_proxy | quote }}
         - name: https_proxy
           value: {{ .Values.global.proxy.https_proxy | quote }}
-        - name: MODEL_DIR
-          value: {{ .Values.volumes.modelDir.hostPath | quote}}
-        volumeMounts:
-        - name: models
-          mountPath: /home/user/models
-        - name: huggingface-cache
-          mountPath: /home/user/.cache/huggingface
         livenessProbe:
           httpGet:
             path: /v1/retrieval/health
@@ -69,11 +62,4 @@ spec:
           timeoutSeconds: {{ .Values.retrieverMilvus.livenessProbe.timeoutSeconds }}
           failureThreshold: {{ .Values.retrieverMilvus.livenessProbe.failureThreshold }}
           {{- end }}
-      volumes:
-        - name: models
-          hostPath:
-            path: {{ .Values.volumes.modelDir.hostPath }}
-        - name: huggingface-cache
-          hostPath:
-            path: {{ .Values.volumes.huggingfaceCache.hostPath }}
 

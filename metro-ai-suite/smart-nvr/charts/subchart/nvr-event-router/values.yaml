@@ -1,0 +1,61 @@
+image:
+  repository: intel/nvr-event-router
+  tag: 1.2.1
+
+replicaCount: 1
+
+service:
+  name: nvr-event-router
+  type: ClusterIP
+  port: 8000
+
+env:
+  MODE: "backend"
+  FRIGATE_BASE_URL: "http://frigate:5000"
+  VSS_SEARCH_IP: ""
+  VSS_SEARCH_PORT: 12345
+  VSS_SUMMARY_IP: ""
+  VSS_SUMMARY_PORT: 12345
+  no_proxy: ""
+  MQTT_USER: ""
+  MQTT_PASSWORD: ""
+  REDIS_PORT: 6379
+  REDIS_HOST: "redis"
+  MQTT_BROKER: "mqtt-broker"
+  MQTT_PORT: "1883"
+
+## Removed storage.hostPath/PVC mode toggle; using common PVC as before.
+
+volumes:
+  localtime:
+    name: localtime
+    hostPath: /etc/localtime
+    mountPath: /etc/localtime
+    readOnly: true
+
+probes:
+  readiness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 600
+    failureThreshold: 3
+    successThreshold: 1
+
+  liveness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 20
+    timeoutSeconds: 600
+    failureThreshold: 3
+
+  startup:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    timeoutSeconds: 600        # 10 minutes
+    failureThreshold: 6
+
