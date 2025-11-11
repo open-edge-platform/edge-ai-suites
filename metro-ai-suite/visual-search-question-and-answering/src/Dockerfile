@@ -1,11 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-FROM python:3.12.10-slim
+FROM python:3.12.12-slim
 
 ENV LANG=C.UTF-8
-
-ARG ARCH="gpu"
 
 RUN apt-get update -y && apt-get install -y --no-install-recommends --fix-missing curl
 
@@ -16,7 +14,7 @@ chown -R user /home/user/
 COPY visual-search-question-and-answering /home/user/visual-search-qa
 RUN chown -R user /home/user/visual-search-qa
 
-RUN pip install --no-cache-dir --upgrade pip setuptools && \
+RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r /home/user/visual-search-qa/src/requirements.txt
 
 RUN mkdir -p /home/user/data && chown -R user /home/user/data
