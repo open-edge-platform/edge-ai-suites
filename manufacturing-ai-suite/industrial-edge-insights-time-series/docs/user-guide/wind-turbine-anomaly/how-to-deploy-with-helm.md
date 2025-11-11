@@ -25,11 +25,11 @@ You can either generate or download the Helm charts.
 
         1. Download Helm chart with the following command:
 
-            `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-weekly`
+            `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-rc1`
 
         2. Unzip the package using the following command:
 
-            `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-weekly.tgz`
+            `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-rc1.tgz`
 
         - Get into the Helm directory:
 
