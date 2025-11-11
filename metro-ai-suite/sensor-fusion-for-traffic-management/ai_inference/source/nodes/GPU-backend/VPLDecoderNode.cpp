@@ -1,16 +1,16 @@
 /*
  * INTEL CONFIDENTIAL
- * 
+ *
  * Copyright (C) 2024 Intel Corporation.
- * 
+ *
  * This software and the related documents are Intel copyrighted materials, and your use of
  * them is governed by the express license under which they were provided to you (License).
  * Unless the License provides otherwise, you may not use, modify, copy, publish, distribute,
  * disclose or transmit this software or the related documents without Intel's prior written permission.
- * 
+ *
  * This software and the related documents are provided as is, with no express or implied warranties,
  * other than those that are expressly stated in the License.
-*/
+ */
 
 #include <boost/filesystem.hpp>
 
@@ -22,49 +22,58 @@ namespace ai {
 
 namespace inference {
 
-VPLDecoderManager::VPLDecoderManager() : m_frameOrder(0u) {
-}
+VPLDecoderManager::VPLDecoderManager() : m_frameOrder(0u) {}
 
-VPLDecoderManager::~VPLDecoderManager() {
+VPLDecoderManager::~VPLDecoderManager()
+{
     // deinitDecoder();
     deinit();
 }
 
-mfxLoader VPLDecoderManager::getLoader() {
+mfxLoader VPLDecoderManager::getLoader()
+{
     return m_loader;
 }
 
-mfxSession VPLDecoderManager::getSession() {
+mfxSession VPLDecoderManager::getSession()
+{
     return m_session;
 }
 
-decodeStatus_t VPLDecoderManager::getState() {
+decodeStatus_t VPLDecoderManager::getState()
+{
     return m_state;
 }
 
-decodeStatus_t VPLDecoderManager::setState(decodeStatus_t state) {
+decodeStatus_t VPLDecoderManager::setState(decodeStatus_t state)
+{
     HVA_DEBUG("VPL Decoder state transit to %s", decodeStatusToString(state).c_str());
     return m_state = state;
 }
 
-unsigned VPLDecoderManager::getFrameOrder() {
+unsigned VPLDecoderManager::getFrameOrder()
+{
     // starts from 0
     return m_frameOrder - 1;
 }
 
-mfxVideoParam VPLDecoderManager::getDecodeParams() {
+mfxVideoParam VPLDecoderManager::getDecodeParams()
+{
     return m_decodeParams;
 }
 
-mfxVideoParam VPLDecoderManager::getVPPParams() {
+mfxVideoParam VPLDecoderManager::getVPPParams()
+{
     return m_mfxVPPParams;
 }
 
-bool VPLDecoderManager::isVPPUsed() {
+bool VPLDecoderManager::isVPPUsed()
+{
     return m_vppUsed;
 }
 
-bool VPLDecoderManager::init(bool useGPU, mfxU32 inCodec, VADisplay vaDisplay) {
+bool VPLDecoderManager::init(bool useGPU, mfxU32 inCodec, VADisplay vaDisplay)
+{
     HVA_DEBUG("init VPL session.");
     m_useGPU = useGPU;
     m_inCodec = inCodec;
@@ -75,7 +84,8 @@ bool VPLDecoderManager::init(bool useGPU, mfxU32 inCodec, VADisplay vaDisplay) {
 /**
  * @brief deinit VPL decoder context
  */
-void VPLDecoderManager::deinit() {
+void VPLDecoderManager::deinit()
+{
     // HVA_DEBUG("deinit VPL session.");
     // TODO
 
@@ -103,13 +113,13 @@ void VPLDecoderManager::deinit() {
     m_mfxVPPParams = {};
 
     m_state = decodeStatus_t::DECODER_NONE;
-
 }
 
 /**
  * @brief init decoder
  */
-bool VPLDecoderManager::initDecoder(VPLInitParameters vplParam, std::string& buffer) {
+bool VPLDecoderManager::initDecoder(VPLInitParameters vplParam, std::string &buffer)
+{
     HVA_DEBUG("init VPL decoder.");
 
     mfxStatus sts = MFX_ERR_NONE;
@@ -131,7 +141,7 @@ bool VPLDecoderManager::initDecoder(VPLInitParameters vplParam, std::string& buf
         HVA_ERROR("Error reading bitstream");
         return false;
     }
-    
+
     // prepare decode runtime params
     // m_decodeParams and m_mfxVPPParams will be updated
     if (!prepareVideoParam(vplParam)) {
@@ -164,15 +174,15 @@ bool VPLDecoderManager::initDecoder(VPLInitParameters vplParam, std::string& buf
  * memset bitstream.Data
  * reset RT decoder parameters
  */
-bool VPLDecoderManager::resetDecoder(VPLInitParameters vplParam, std::string& buffer) {
+bool VPLDecoderManager::resetDecoder(VPLInitParameters vplParam, std::string &buffer)
+{
     HVA_DEBUG("reset VPL decoder.");
 
     if (!(m_state == decodeStatus_t::DECODER_VIDEO_EOS)) {
-        HVA_ERROR("ERR - decoder state: %s (DECODER_VIDEO_EOS is required), still reset decoder!",
-                    decodeStatusToString(m_state).c_str());
+        HVA_ERROR("ERR - decoder state: %s (DECODER_VIDEO_EOS is required), still reset decoder!", decodeStatusToString(m_state).c_str());
         HVA_ASSERT(false);
     }
-    
+
     mfxStatus sts = MFX_ERR_NONE;
     m_frameOrder = 0;
 
@@ -206,7 +216,8 @@ bool VPLDecoderManager::resetDecoder(VPLInitParameters vplParam, std::string& bu
 /**
  * @brief deinit decoder
  */
-void VPLDecoderManager::deinitDecoder() {
+void VPLDecoderManager::deinitDecoder()
+{
     // HVA_DEBUG("deinit VPL decoder.");
 
     // if (!(m_state == decodeStatus_t::DECODER_VIDEO_EOS ||
@@ -220,7 +231,7 @@ void VPLDecoderManager::deinitDecoder() {
     if (m_vppUsed) {
         MFXVideoVPP_Close(m_session);
     }
-    
+
     if (m_bitstream.Data) {
         free(m_bitstream.Data);
         m_bitstream = {};
@@ -237,10 +248,10 @@ void VPLDecoderManager::deinitDecoder() {
 /**
  * @brief create a VPL session
  */
-bool VPLDecoderManager::createVPLSession() {
-
+bool VPLDecoderManager::createVPLSession()
+{
     mfxStatus sts = MFX_ERR_NONE;
-    
+
     // Initialize VPL session
     m_loader = MFXLoad();
     if (m_loader == NULL) {
@@ -254,10 +265,9 @@ bool VPLDecoderManager::createVPLSession() {
             mfxConfig cfg;
             mfxVariant cfgVal;
             cfg = MFXCreateConfig(m_loader);
-            cfgVal.Type     = MFX_VARIANT_TYPE_U32;
+            cfgVal.Type = MFX_VARIANT_TYPE_U32;
             cfgVal.Data.U32 = MFX_IMPL_TYPE_HARDWARE;
-            sts =
-                MFXSetConfigFilterProperty(cfg, (mfxU8 *)"mfxImplDescription.Impl", cfgVal);
+            sts = MFXSetConfigFilterProperty(cfg, (mfxU8 *)"mfxImplDescription.Impl", cfgVal);
             if (sts != MFX_ERR_NONE) {
                 HVA_ERROR("MFXSetConfigFilterProperty failed for HW decoder");
                 return false;
@@ -285,10 +295,9 @@ bool VPLDecoderManager::createVPLSession() {
             mfxConfig cfg;
             mfxVariant cfgVal;
             cfg = MFXCreateConfig(m_loader);
-            cfgVal.Type     = MFX_VARIANT_TYPE_U32;
+            cfgVal.Type = MFX_VARIANT_TYPE_U32;
             cfgVal.Data.U32 = MFX_IMPL_TYPE_SOFTWARE;
-            sts =
-                MFXSetConfigFilterProperty(cfg, (mfxU8 *)"mfxImplDescription.Impl", cfgVal);
+            sts = MFXSetConfigFilterProperty(cfg, (mfxU8 *)"mfxImplDescription.Impl", cfgVal);
             if (sts != MFX_ERR_NONE) {
                 HVA_ERROR("MFXSetConfigFilterProperty failed for SW decoder");
                 return false;
@@ -301,12 +310,9 @@ bool VPLDecoderManager::createVPLSession() {
         mfxConfig cfg;
         mfxVariant cfgVal;
         cfg = MFXCreateConfig(m_loader);
-        cfgVal.Type     = MFX_VARIANT_TYPE_U32;
+        cfgVal.Type = MFX_VARIANT_TYPE_U32;
         cfgVal.Data.U32 = m_inCodec;
-        sts = MFXSetConfigFilterProperty(
-            cfg,
-            (mfxU8 *)"mfxImplDescription.mfxDecoderDescription.decoder.CodecID",
-            cfgVal);
+        sts = MFXSetConfigFilterProperty(cfg, (mfxU8 *)"mfxImplDescription.mfxDecoderDescription.decoder.CodecID", cfgVal);
         if (sts != MFX_ERR_NONE) {
             HVA_ERROR("MFXSetConfigFilterProperty failed for decoder CodecID");
             return false;
@@ -368,21 +374,15 @@ bool VPLDecoderManager::createVPLSession() {
 /**
  * decodeStatus_t str
  */
-std::string VPLDecoderManager::decodeStatusToString(decodeStatus_t sts) {
-    switch(sts)
-    {
-        case decodeStatus_t::DECODER_NONE:
-            return "DECODER_NONE";
-        case decodeStatus_t::DECODER_PREPARED:
-            return "DECODER_PREPARED";
-        case decodeStatus_t::DECODER_GOING:
-            return "DECODER_GOING";
-        case decodeStatus_t::DECODER_BUFFER_EOS:
-            return "DECODER_BUFFER_EOS";
-        case decodeStatus_t::DECODER_VIDEO_EOS:
-            return "DECODER_VIDEO_EOS";
-        default:
-            break;
+std::string VPLDecoderManager::decodeStatusToString(decodeStatus_t sts)
+{
+    switch (sts) {
+        case decodeStatus_t::DECODER_NONE: return "DECODER_NONE";
+        case decodeStatus_t::DECODER_PREPARED: return "DECODER_PREPARED";
+        case decodeStatus_t::DECODER_GOING: return "DECODER_GOING";
+        case decodeStatus_t::DECODER_BUFFER_EOS: return "DECODER_BUFFER_EOS";
+        case decodeStatus_t::DECODER_VIDEO_EOS: return "DECODER_VIDEO_EOS";
+        default: break;
     }
 
     std::string ret("<unknown ");
@@ -394,12 +394,13 @@ std::string VPLDecoderManager::decodeStatusToString(decodeStatus_t sts) {
  * @brief prepare decode runtime params
  * m_decodeParams and m_mfxVPPParams will be updated
  */
-bool VPLDecoderManager::prepareVideoParam(VPLInitParameters vplParam) {
+bool VPLDecoderManager::prepareVideoParam(VPLInitParameters vplParam)
+{
     HVA_DEBUG("prepare mfxVideoParam.");
 
     mfxStatus sts = MFX_ERR_NONE;
 
-    if(!m_bitstream.Data) {
+    if (!m_bitstream.Data) {
         HVA_ERROR("bitstream should be initialized before preparing MFXVideoParam");
         return false;
     }
@@ -419,17 +420,16 @@ bool VPLDecoderManager::prepareVideoParam(VPLInitParameters vplParam) {
         m_decodeParams.mfx.FrameInfo.Height = ALIGN16(m_decodeParams.mfx.FrameInfo.Height);
         m_decodeParams.mfx.FrameInfo.Width = ALIGN16(m_decodeParams.mfx.FrameInfo.Width);
     }
-    size_t oriImgWidth  = m_decodeParams.mfx.FrameInfo.Width;
+    size_t oriImgWidth = m_decodeParams.mfx.FrameInfo.Width;
     size_t oriImgHeight = m_decodeParams.mfx.FrameInfo.Height;
-    m_decodeParams.mfx.FrameInfo.FrameRateExtN  = 30;
-    m_decodeParams.mfx.FrameInfo.FrameRateExtD  = 1;
+    m_decodeParams.mfx.FrameInfo.FrameRateExtN = 30;
+    m_decodeParams.mfx.FrameInfo.FrameRateExtD = 1;
 
     // prepare vpp params (if need)
     bool do_vppResize = false, do_vppCSC = false;
     if (vplParam.vppOutWidth > 0 && vplParam.vppOutHeight > 0 && (oriImgWidth != vplParam.vppOutWidth || oriImgHeight != vplParam.vppOutHeight)) {
         do_vppResize = true;
-        HVA_DEBUG("VPP received resize parameters: [%d, %d] => [%d, %d]", 
-                    oriImgHeight, oriImgWidth, vplParam.vppOutHeight, vplParam.vppOutWidth);
+        HVA_DEBUG("VPP received resize parameters: [%d, %d] => [%d, %d]", oriImgHeight, oriImgWidth, vplParam.vppOutHeight, vplParam.vppOutWidth);
     }
     else {
         do_vppResize = false;
@@ -438,35 +438,34 @@ bool VPLDecoderManager::prepareVideoParam(VPLInitParameters vplParam) {
     }
     if (vplParam.vppOutFourCC != m_decodeParams.mfx.FrameInfo.FourCC) {
         do_vppCSC = true;
-        HVA_DEBUG("VPP received CSC parameters: %s => %s", 
-                    mfxColorFourCC_to_string(m_decodeParams.mfx.FrameInfo.FourCC).c_str(), 
-                    mfxColorFourCC_to_string(vplParam.vppOutFourCC).c_str());
+        HVA_DEBUG("VPP received CSC parameters: %s => %s", mfxColorFourCC_to_string(m_decodeParams.mfx.FrameInfo.FourCC).c_str(),
+                  mfxColorFourCC_to_string(vplParam.vppOutFourCC).c_str());
     }
     if (do_vppResize || do_vppCSC) {
-
         // Initialize VPP to do resize post-process
         m_vppUsed = true;
-         
+
         // m_mfxVPPParams.vpp.In = m_decodeParams.mfx.FrameInfo;
-        m_mfxVPPParams.vpp.In.FourCC         = m_decodeParams.mfx.FrameInfo.FourCC;
-        m_mfxVPPParams.vpp.In.ChromaFormat   = vplParam.vppOutChromaFormat;
-        m_mfxVPPParams.vpp.In.Width          = oriImgWidth;
-        m_mfxVPPParams.vpp.In.Height         = oriImgHeight;
-        m_mfxVPPParams.vpp.In.CropW          = oriImgWidth;
-        m_mfxVPPParams.vpp.In.CropH          = oriImgHeight;
-        m_mfxVPPParams.vpp.In.PicStruct      = MFX_PICSTRUCT_PROGRESSIVE;
-        m_mfxVPPParams.vpp.In.FrameRateExtN  = m_decodeParams.mfx.FrameInfo.FrameRateExtN;
-        m_mfxVPPParams.vpp.In.FrameRateExtD  = m_decodeParams.mfx.FrameInfo.FrameRateExtD;
-        m_mfxVPPParams.vpp.Out.FourCC        = vplParam.vppOutFourCC;
-        m_mfxVPPParams.vpp.Out.ChromaFormat  = vplParam.vppOutChromaFormat;
-        m_mfxVPPParams.vpp.Out.Width         = ALIGN16(vplParam.vppOutWidth);
-        m_mfxVPPParams.vpp.Out.Height        = ALIGN16(vplParam.vppOutHeight);
-        m_mfxVPPParams.vpp.Out.CropW         = vplParam.vppOutWidth;
-        m_mfxVPPParams.vpp.Out.CropH         = vplParam.vppOutHeight;
-        m_mfxVPPParams.vpp.Out.PicStruct     = MFX_PICSTRUCT_PROGRESSIVE;
+        m_mfxVPPParams.vpp.In.FourCC = m_decodeParams.mfx.FrameInfo.FourCC;
+        m_mfxVPPParams.vpp.In.ChromaFormat = vplParam.vppOutChromaFormat;
+        m_mfxVPPParams.vpp.In.Width = oriImgWidth;
+        m_mfxVPPParams.vpp.In.Height = oriImgHeight;
+        m_mfxVPPParams.vpp.In.CropW = oriImgWidth;
+        m_mfxVPPParams.vpp.In.CropH = oriImgHeight;
+        m_mfxVPPParams.vpp.In.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+        m_mfxVPPParams.vpp.In.FrameRateExtN = m_decodeParams.mfx.FrameInfo.FrameRateExtN;
+        m_mfxVPPParams.vpp.In.FrameRateExtD = m_decodeParams.mfx.FrameInfo.FrameRateExtD;
+        m_mfxVPPParams.vpp.Out.FourCC = vplParam.vppOutFourCC;
+        m_mfxVPPParams.vpp.Out.ChromaFormat = vplParam.vppOutChromaFormat;
+        m_mfxVPPParams.vpp.Out.Width = ALIGN16(vplParam.vppOutWidth);
+        m_mfxVPPParams.vpp.Out.Height = ALIGN16(vplParam.vppOutHeight);
+        m_mfxVPPParams.vpp.Out.CropW = vplParam.vppOutWidth;
+        m_mfxVPPParams.vpp.Out.CropH = vplParam.vppOutHeight;
+        m_mfxVPPParams.vpp.Out.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
         m_mfxVPPParams.vpp.Out.FrameRateExtN = m_decodeParams.mfx.FrameInfo.FrameRateExtN;
         m_mfxVPPParams.vpp.Out.FrameRateExtD = m_decodeParams.mfx.FrameInfo.FrameRateExtD;
-        m_mfxVPPParams.IOPattern = m_useGPU ? (MFX_IOPATTERN_IN_VIDEO_MEMORY | MFX_IOPATTERN_OUT_VIDEO_MEMORY) : (MFX_IOPATTERN_IN_SYSTEM_MEMORY | MFX_IOPATTERN_OUT_SYSTEM_MEMORY);
+        m_mfxVPPParams.IOPattern =
+            m_useGPU ? (MFX_IOPATTERN_IN_VIDEO_MEMORY | MFX_IOPATTERN_OUT_VIDEO_MEMORY) : (MFX_IOPATTERN_IN_SYSTEM_MEMORY | MFX_IOPATTERN_OUT_SYSTEM_MEMORY);
     }
     return true;
 }
@@ -474,7 +473,8 @@ bool VPLDecoderManager::prepareVideoParam(VPLInitParameters vplParam) {
 /**
  * @brief start a decoder, handle different decode status
  */
-bool VPLDecoderManager::startDecode(VPLInitParameters vplParam, std::string& buffer) {
+bool VPLDecoderManager::startDecode(VPLInitParameters vplParam, std::string &buffer)
+{
     switch (m_state) {
         case decodeStatus_t::DECODER_NONE:
             //
@@ -507,10 +507,7 @@ bool VPLDecoderManager::startDecode(VPLInitParameters vplParam, std::string& buf
         case decodeStatus_t::DECODER_GOING:
             // do nothing, can continue to decode
             break;
-        default:
-            HVA_ERROR("unknown decode status: %s",
-                      decodeStatusToString(m_state).c_str());
-            return false;
+        default: HVA_ERROR("unknown decode status: %s", decodeStatusToString(m_state).c_str()); return false;
     }
     return true;
 }
@@ -518,16 +515,15 @@ bool VPLDecoderManager::startDecode(VPLInitParameters vplParam, std::string& buf
 /**
  * @brief decode to get next frame data
  */
-bool VPLDecoderManager::decodeNext(std::string& buffer,
-                                   mfxFrameSurface1** pmfxDecOutSurface,
-                                   mfxFrameSurface1** pmfxVPPSurfacesOut) {
+bool VPLDecoderManager::decodeNext(std::string &buffer, mfxFrameSurface1 **pmfxDecOutSurface, mfxFrameSurface1 **pmfxVPPSurfacesOut)
+{
     mfxStatus sts;
     mfxSyncPoint syncp = {};
-    
+
     bool isDraining = false;
     *pmfxDecOutSurface = NULL;
     *pmfxVPPSurfacesOut = NULL;
-    
+
     // read next piece of buffer, each piece with max length of BITSTREAM_BUFFER_SIZE
     if (isDraining == false) {
         sts = ReadEncodedStreamFromBuffer(m_bitstream, buffer);
@@ -537,14 +533,12 @@ bool VPLDecoderManager::decodeNext(std::string& buffer,
     }
 
     // decode next frame
-    sts = MFXVideoDECODE_DecodeFrameAsync(m_session,
-                                          (isDraining) ? NULL : &m_bitstream,
-                                          NULL, pmfxDecOutSurface, &syncp);
+    sts = MFXVideoDECODE_DecodeFrameAsync(m_session, (isDraining) ? NULL : &m_bitstream, NULL, pmfxDecOutSurface, &syncp);
 
     if (sts == MFX_ERR_NONE) {
         // sucessfully decoded
-        m_frameOrder ++;
-    
+        m_frameOrder++;
+
         m_state = decodeStatus_t::DECODER_GOING;
 
         if (!*pmfxDecOutSurface) {
@@ -556,8 +550,7 @@ bool VPLDecoderManager::decodeNext(std::string& buffer,
             *pmfxVPPSurfacesOut = NULL;
             // resize here
             // The function processes a single input frame to a single output frame with internal allocation of output frame.
-            sts = MFXVideoVPP_ProcessFrameAsync(m_session, *pmfxDecOutSurface,
-                                                pmfxVPPSurfacesOut);
+            sts = MFXVideoVPP_ProcessFrameAsync(m_session, *pmfxDecOutSurface, pmfxVPPSurfacesOut);
             if (!*pmfxVPPSurfacesOut) {
                 HVA_ERROR("ERROR - empty array of vpp output at buffer frame: %d, status: %s", getFrameOrder(), mfxstatus_to_string(sts).c_str());
                 return false;
@@ -566,7 +559,7 @@ bool VPLDecoderManager::decodeNext(std::string& buffer,
         else {
             *pmfxVPPSurfacesOut = *pmfxDecOutSurface;
         }
-        
+
         return true;
     }
     else if (sts == MFX_WRN_VIDEO_PARAM_CHANGED) {
@@ -576,10 +569,10 @@ bool VPLDecoderManager::decodeNext(std::string& buffer,
         // can optionally retrieve new video parameters by calling MFXVideoDECODE_GetVideoParam.
         // mfxVideoParam decodeParamsNew = {};
         // MFXVideoDECODE_GetVideoParam(m_session, &decodeParamsNew);
-        HVA_WARNING(
-            "Video VPL decoder node detected a new sequence "
-            "header in the bitstream at buffer frame: %d, choose to ignore!", getFrameOrder());
-    
+        HVA_WARNING("Video VPL decoder node detected a new sequence "
+                    "header in the bitstream at buffer frame: %d, choose to ignore!",
+                    getFrameOrder());
+
         m_state = decodeStatus_t::DECODER_GOING;
         return false;
     }
@@ -604,24 +597,24 @@ bool VPLDecoderManager::decodeNext(std::string& buffer,
     }
 }
 
-VPLDecoderNode::VPLDecoderNode(std::size_t totalThreadNum)
-    : hva::hvaNode_t(1, 1, totalThreadNum) {
+VPLDecoderNode::VPLDecoderNode(std::size_t totalThreadNum) : hva::hvaNode_t(1, 1, totalThreadNum)
+{
     transitStateTo(hva::hvaState_t::configured);
 }
 
-std::shared_ptr<hva::hvaNodeWorker_t> VPLDecoderNode::createNodeWorker()
-    const {
-    return std::shared_ptr<hva::hvaNodeWorker_t>(new VPLDecoderNodeWorker(
-        (hva::hvaNode_t*)this, m_vplParam, m_waitTime));
+std::shared_ptr<hva::hvaNodeWorker_t> VPLDecoderNode::createNodeWorker() const
+{
+    return std::shared_ptr<hva::hvaNodeWorker_t>(new VPLDecoderNodeWorker((hva::hvaNode_t *)this, m_vplParam, m_waitTime, m_decodeInterval));
 }
 
 /**
-* @brief Parse params, called by hva framework right after node instantiate.
-* @param config Configure string required by this node.
-*/
-hva::hvaStatus_t VPLDecoderNode::configureByString(
-    const std::string& config) {
-    if (config.empty()) return hva::hvaFailure;
+ * @brief Parse params, called by hva framework right after node instantiate.
+ * @param config Configure string required by this node.
+ */
+hva::hvaStatus_t VPLDecoderNode::configureByString(const std::string &config)
+{
+    if (config.empty())
+        return hva::hvaFailure;
 
     if (!m_configParser.parse(config)) {
         HVA_ERROR("Illegal parse string!");
@@ -638,7 +631,7 @@ hva::hvaStatus_t VPLDecoderNode::configureByString(
         if (deviceName.rfind(".") == -1) {
             // "GPU", equals to "GPU.0"
             m_vplParam.deviceID = 0;
-        } 
+        }
         else {
             m_vplParam.deviceID = std::stoi(deviceName.substr(deviceName.rfind(".") + 1));
         }
@@ -677,7 +670,7 @@ hva::hvaStatus_t VPLDecoderNode::configureByString(
     m_configParser.getVal<int>("OutHeight", vppOutHeight);
     m_configParser.getVal<int>("OutWidth", vppOutWidth);
     m_vplParam.vppOutHeight = vppOutHeight;
-    m_vplParam.vppOutWidth = vppOutWidth;    
+    m_vplParam.vppOutWidth = vppOutWidth;
 
     // CSC parameters
     // TODO: enable CSC
@@ -691,92 +684,139 @@ hva::hvaStatus_t VPLDecoderNode::configureByString(
     m_configParser.getVal<float>("WaitTime", waitTime);
     m_waitTime = waitTime;
 
+    // decode interval
+    int decodeInterval = 1;
+    m_configParser.getVal<int>("DecodeInterval", decodeInterval);
+    m_decodeInterval = (unsigned int)decodeInterval;
+
     transitStateTo(hva::hvaState_t::configured);
     return hva::hvaSuccess;
 }
 
-VPLDecoderNodeWorker::VPLDecoderNodeWorker(hva::hvaNode_t* parentNode,
-                                                     VPLInitParameters vplParam,
-                                                     float waitTime)
-    : hva::hvaNodeWorker_t(parentNode),
-      m_ctr(0u),
-      m_vplParam(vplParam),
-      m_StartFlag(false),
-      m_waitTime(waitTime),
-      m_workStreamId(-1) {
-        m_useGPU = m_vplParam.deviceID >= 0;
-        if (m_useGPU) {
-            m_vaContext = std::make_shared<hce::ai::inference::VAAPIContext>(VADeviceManager::getInstance().getVADisplay(m_vplParam.deviceID));
-            m_vaDisplay = m_vaContext->va_display();
-            // m_vaDisplay = VADeviceManager::getInstance().getVADisplay(m_vplParam.deviceID);
-            // HVA_DEBUG("device id %d, VADisplay addr: %p", m_vplParam.deviceID, m_vaDisplay);
-        }
-        m_vplDecoderManager.init(m_useGPU, m_vplParam.inCodec, m_vaDisplay);
+VPLDecoderNodeWorker::VPLDecoderNodeWorker(hva::hvaNode_t *parentNode, VPLInitParameters vplParam, float waitTime, unsigned int decodeInterval)
+    : hva::hvaNodeWorker_t(parentNode), m_ctr(0u), m_vplParam(vplParam), m_StartFlag(false), m_waitTime(waitTime), m_decodeInterval(decodeInterval),
+      m_workStreamId(-1)
+{
+    m_useGPU = m_vplParam.deviceID >= 0;
+    if (m_useGPU) {
+        m_vaContext = std::make_shared<hce::ai::inference::VAAPIContext>(VADeviceManager::getInstance().getVADisplay(m_vplParam.deviceID));
+        m_vaDisplay = m_vaContext->va_display();
+        // m_vaDisplay = VADeviceManager::getInstance().getVADisplay(m_vplParam.deviceID);
+        // HVA_DEBUG("device id %d, VADisplay addr: %p", m_vplParam.deviceID, m_vaDisplay);
+    }
+    m_vplDecoderManager.init(m_useGPU, m_vplParam.inCodec, m_vaDisplay);
 }
 
 VPLDecoderNodeWorker::~VPLDecoderNodeWorker() {}
 
-hva::hvaStatus_t VPLDecoderNodeWorker::rearm() {
+hva::hvaStatus_t VPLDecoderNodeWorker::rearm()
+{
     HVA_DEBUG("Calling the rearm func.");
     return hva::hvaStatus_t::hvaSuccess;
 }
 
-hva::hvaStatus_t VPLDecoderNodeWorker::reset() {
+hva::hvaStatus_t VPLDecoderNodeWorker::reset()
+{
     HVA_DEBUG("Calling the reset func.");
     return hva::hvaStatus_t::hvaSuccess;
 }
 
-void VPLDecoderNodeWorker::init() { return;}
+void VPLDecoderNodeWorker::init()
+{
+    return;
+}
 
-void VPLDecoderNodeWorker::deinit() { return;}
+void VPLDecoderNodeWorker::deinit()
+{
+    return;
+}
 
 /**
  * @brief Frame index increased for every coming frame, will be called at the process()
  * @param void
  */
-unsigned VPLDecoderNodeWorker::fetch_increment() { return m_ctr++; }
+unsigned VPLDecoderNodeWorker::fetch_increment()
+{
+    return m_ctr++;
+}
 
-void VPLDecoderNodeWorker::sendEmptyBlob(unsigned tag, unsigned frameId, unsigned streamId) {
+void VPLDecoderNodeWorker::sendEmptyBlob(const hva::hvaBlob_t::Ptr &blob, unsigned tag, unsigned frameId, unsigned streamId)
+{
+    //
+    // for sanity check
+    //
+    hva::hvaVideoFrameWithROIBuf_t::Ptr videoBuf = std::dynamic_pointer_cast<hva::hvaVideoFrameWithROIBuf_t>(blob->get(0));
+    HVA_ASSERT(videoBuf);
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> currentTime;
+    currentTime = std::chrono::high_resolution_clock::now();
+    TimeStamp_t timeMeta;
+    timeMeta.timeStamp = currentTime;
+
     hva::hvaVideoFrameWithROIBuf_t::Ptr hvabuf;
-    hvabuf = hva::hvaVideoFrameWithROIBuf_t::make_buffer<mfxFrameSurface1*>(NULL, 0);
-    
+    hvabuf = hva::hvaVideoFrameWithROIBuf_t::make_buffer<mfxFrameSurface1 *>(NULL, 0);
+
     hvabuf->frameId = frameId;
     hvabuf->width = 0;
     hvabuf->height = 0;
     hvabuf->drop = true;
+    hvabuf->setMeta(timeMeta);
     hvabuf->setMeta<uint64_t>(0);
     hvabuf->tagAs(tag);
 
     auto jpegBlob = hva::hvaBlob_t::make_blob();
+    if (!jpegBlob) {
+        HVA_ERROR("Video VPL decoder make an empty blob!");
+        HVA_ASSERT(false);
+    }
     // frameIdx for blobs should always keep increasing
     jpegBlob->frameId = fetch_increment();
     jpegBlob->streamId = streamId;
     jpegBlob->push(hvabuf);
     HVA_DEBUG("Sending jpegBlob at blob frame id: %d with empty buffer!", frameId);
+    // Set the meta attribute
+    HceDatabaseMeta meta;
+    if (videoBuf->getMeta(meta) == hva::hvaSuccess) {
+        meta.bufType = HceDataMetaBufType::BUFTYPE_MFX_FRAME;
+        meta.colorFormat = m_colorFmt;
+        jpegBlob->get(0)->setMeta(meta);
+        HVA_DEBUG("Video VPL decoder copied meta to next buffer, mediauri: %s", meta.mediaUri.c_str());
+    }
+    SendController::Ptr controllerMeta;
+    if (videoBuf->getMeta(controllerMeta) == hva::hvaSuccess) {
+        jpegBlob->get(0)->setMeta(controllerMeta);
+        HVA_DEBUG("Video VPL decoder copied controller meta to next buffer");
+    }
+
+    InferenceTimeStamp_t inferenceTimeMeta;
+    currentTime = std::chrono::high_resolution_clock::now();
+    inferenceTimeMeta.startTime = currentTime;
+    hvabuf->setMeta(inferenceTimeMeta);
+
+    VideoTimeStamp_t videoTimeMeta;
+    videoTimeMeta.startTime = currentTime;
+    hvabuf->setMeta(videoTimeMeta);
 
     sendOutput(jpegBlob, 0, std::chrono::milliseconds(0));
     HVA_DEBUG("Sended jpegBlob success");
 }
 
-void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
+void VPLDecoderNodeWorker::process(std::size_t batchIdx)
+{
     HVA_DEBUG("Start to video VPL decoder node process");
-    std::vector<std::shared_ptr<hva::hvaBlob_t>> vecBlobInput =
-        hvaNodeWorker_t::getParentPtr()->getBatchedInput(batchIdx, std::vector<size_t>{0});
-    for (const auto& pBlob : vecBlobInput) {
+    std::vector<std::shared_ptr<hva::hvaBlob_t>> vecBlobInput = hvaNodeWorker_t::getParentPtr()->getBatchedInput(batchIdx, std::vector<size_t>{0});
+    for (const auto &pBlob : vecBlobInput) {
         std::chrono::time_point<std::chrono::high_resolution_clock> currentTime;
         currentTime = std::chrono::high_resolution_clock::now();
         TimeStamp_t timeMeta;
         timeMeta.timeStamp = currentTime;
 
-        getParentPtr()->emitEvent(hvaEvent_PipelineLatencyCapture,
-                                    &pBlob->frameId);
-        std::shared_ptr<hva::timeStampInfo> decodeIn =
-        std::make_shared<hva::timeStampInfo>(pBlob->frameId, "decodeIn");
+        getParentPtr()->emitEvent(hvaEvent_PipelineLatencyCapture, &pBlob->frameId);
+        std::shared_ptr<hva::timeStampInfo> decodeIn = std::make_shared<hva::timeStampInfo>(pBlob->frameId, "decodeIn");
 
         getParentPtr()->emitEvent(hvaEvent_PipelineTimeStampRecord, &decodeIn);
 
-        hva::hvaVideoFrameWithROIBuf_t::Ptr videoBuf =
-            std::dynamic_pointer_cast<hva::hvaVideoFrameWithROIBuf_t>(pBlob->get(0));
+        hva::hvaVideoFrameWithROIBuf_t::Ptr videoBuf = std::dynamic_pointer_cast<hva::hvaVideoFrameWithROIBuf_t>(pBlob->get(0));
 
         HVA_DEBUG("Video VPL decoder node %d on blob frameId %d", batchIdx, pBlob->frameId);
 
@@ -787,10 +827,9 @@ void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
         // for sanity: check the consistency of streamId, each worker should work on one streamId.
         int streamId = (int)pBlob->streamId;
         if (m_workStreamId >= 0 && streamId != m_workStreamId) {
-            HVA_ERROR(
-                "Video decoder worker should work on streamId: %d, but received "
-                "data from invalid streamId: %d!",
-                m_workStreamId, streamId);
+            HVA_ERROR("Video decoder worker should work on streamId: %d, but received "
+                      "data from invalid streamId: %d!",
+                      m_workStreamId, streamId);
             // send output
             videoBuf->drop = true;
             videoBuf->rois.clear();
@@ -798,7 +837,8 @@ void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
             sendOutput(pBlob, 0, std::chrono::milliseconds(0));
             HVA_DEBUG("Video decoder completed sent blob with frameid %u and streamid %u", pBlob->frameId, pBlob->streamId);
             continue;
-        } else {
+        }
+        else {
             // the first coming stream decides the workStreamId for this worker
             m_workStreamId = streamId;
         }
@@ -807,18 +847,27 @@ void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
         std::string tmpVideoStrData = videoBuf->get<std::string>();
         HVA_DEBUG("tmpVideoStrData size is %d", tmpVideoStrData.size());
 
-        if (!tmpVideoStrData.empty()) {
+        HVA_DEBUG("m_decodeInterval is %d", m_decodeInterval);
+
+        if (m_decodeInterval > 1 && pBlob->frameId % m_decodeInterval != 0) {
+            HVA_DEBUG("VPLDecoderNode skip processing at frameid %u and streamid %u", pBlob->frameId, pBlob->streamId);
+
+            // send empty blob as the last frame
+            unsigned frameId = m_vplDecoderManager.getFrameOrder();
+            sendEmptyBlob(pBlob, videoBuf->getTag(), frameId, streamId);
+            return;
+        }
+        else if (!tmpVideoStrData.empty()) {
             std::vector<hva::hvaROI_t> rois;
             // Use the origin rois
             if (!videoBuf->rois.empty()) {
                 rois = videoBuf->rois;
-                HVA_DEBUG("Video VPL decoder node receives a buffer with rois of size %d",
-                          videoBuf->rois.size());
+                HVA_DEBUG("Video VPL decoder node receives a buffer with rois of size %d", videoBuf->rois.size());
             }
 
-            // 
+            //
             // Use oneVPL to decode h264
-            // 
+            //
             bool isStillGoing = true;
             mfxStatus sts = MFX_ERR_NONE;
 
@@ -827,25 +876,25 @@ void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
             // mfxSession session = m_vplDecoderManager.getSession();
 
             // process start
-            getLatencyMonitor().startRecording(pBlob->frameId,"decoding");
+            getLatencyMonitor().startRecording(pBlob->frameId, "decoding");
             HVA_DEBUG("Video VPL decoder start decoding");
             if (!m_vplDecoderManager.startDecode(m_vplParam, tmpVideoStrData)) {
                 HVA_ASSERT(false);
             }
 
             // Original image size
-            size_t oriImgWidth  = m_vplDecoderManager.getDecodeParams().mfx.FrameInfo.Width;
+            size_t oriImgWidth = m_vplDecoderManager.getDecodeParams().mfx.FrameInfo.Width;
             size_t oriImgHeight = m_vplDecoderManager.getDecodeParams().mfx.FrameInfo.Height;
 
-            // buffer frameId will be operated in VPLDecoderManager 
+            // buffer frameId will be operated in VPLDecoderManager
             mfxU32 frameId;
             while (isStillGoing == true) {
                 mfxFrameSurface1 *pmfxDecOutSurface = NULL;
                 mfxFrameSurface1 *pmfxVPPSurfacesOut = NULL;
 
-                // 
+                //
                 // decode next frame and save to pmfxDecOutSurface, pmfxVPPSurfacesOut
-                // 
+                //
                 bool res = m_vplDecoderManager.decodeNext(tmpVideoStrData, &pmfxDecOutSurface, &pmfxVPPSurfacesOut);
                 frameId = (mfxU32)m_vplDecoderManager.getFrameOrder();
 
@@ -868,28 +917,17 @@ void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
                 unsigned inputWidth = (&pmfxVPPSurfacesOut->Info)->Width;
                 unsigned inputHeight = (&pmfxVPPSurfacesOut->Info)->Height;
                 mfxU32 inputCC = (&pmfxVPPSurfacesOut->Info)->FourCC;
-                HVA_DEBUG(
-                    "This frame: %d is decoded done, height: %d, width: "
-                    "%d, inputCC: %s",
-                    frameId, inputHeight, inputWidth,
-                    mfxColorFourCC_to_string(inputCC).c_str());
-                switch (inputCC)
-                {
-                    case MFX_FOURCC_I420:
-                        m_colorFmt = hce::ai::inference::ColorFormat::I420;
-                        break;
-                    case MFX_FOURCC_NV12:
-                        m_colorFmt = hce::ai::inference::ColorFormat::NV12;
-                        break;
-                    case MFX_FOURCC_RGB4:
-                        m_colorFmt = hce::ai::inference::ColorFormat::BGRX;
-                        break;
-                    default:
-                        HVA_DEBUG("unknown color format: %s", mfxColorFourCC_to_string(inputCC).c_str());
-                        HVA_ASSERT(false);
+                HVA_DEBUG("This frame: %d is decoded done, height: %d, width: "
+                          "%d, inputCC: %s",
+                          frameId, inputHeight, inputWidth, mfxColorFourCC_to_string(inputCC).c_str());
+                switch (inputCC) {
+                    case MFX_FOURCC_I420: m_colorFmt = hce::ai::inference::ColorFormat::I420; break;
+                    case MFX_FOURCC_NV12: m_colorFmt = hce::ai::inference::ColorFormat::NV12; break;
+                    case MFX_FOURCC_RGB4: m_colorFmt = hce::ai::inference::ColorFormat::BGRX; break;
+                    default: HVA_DEBUG("unknown color format: %s", mfxColorFourCC_to_string(inputCC).c_str()); HVA_ASSERT(false);
                 }
 
-                getLatencyMonitor().stopRecording(pBlob->frameId,"decoding");
+                getLatencyMonitor().stopRecording(pBlob->frameId, "decoding");
                 // Make hva blob data
                 hva::hvaVideoFrameWithROIBuf_t::Ptr hvabuf;
                 if (!m_useGPU) {
@@ -899,12 +937,12 @@ void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
 
                 // pmfxVPPSurfacesOut->FrameInterface->AddRef(pmfxVPPSurfacesOut);
 
-                hvabuf = hva::hvaVideoFrameWithROIBuf_t::make_buffer<mfxFrameSurface1*>(pmfxVPPSurfacesOut, sizeof(pmfxVPPSurfacesOut),
-                                                                                        [](mfxFrameSurface1* p) { p->FrameInterface->Release(p); });
+                hvabuf = hva::hvaVideoFrameWithROIBuf_t::make_buffer<mfxFrameSurface1 *>(pmfxVPPSurfacesOut, sizeof(pmfxVPPSurfacesOut),
+                                                                                         [](mfxFrameSurface1 *p) { p->FrameInterface->Release(p); });
 
                 //
                 // hvaframework requires frameId starts from 0
-                //  different with blob->frameId, frameId for hvabuf in video pipeline, 
+                //  different with blob->frameId, frameId for hvabuf in video pipeline,
                 //  it's the relative frame number in one video.
                 //
                 hvabuf->frameId = frameId;
@@ -936,11 +974,10 @@ void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
                     meta.scaleHeight = oriImgHeight * 1.0 / inputHeight;
                     meta.scaleWidth = oriImgWidth * 1.0 / inputWidth;
                     jpegBlob->get(0)->setMeta(meta);
-                    HVA_DEBUG("Video VPL decoder copied meta to next buffer, mediauri: %s",
-                                meta.mediaUri.c_str());
+                    HVA_DEBUG("Video VPL decoder copied meta to next buffer, mediauri: %s", meta.mediaUri.c_str());
                 }
                 SendController::Ptr controllerMeta;
-                if(videoBuf->getMeta(controllerMeta) == hva::hvaSuccess){
+                if (videoBuf->getMeta(controllerMeta) == hva::hvaSuccess) {
                     jpegBlob->get(0)->setMeta(controllerMeta);
                     HVA_DEBUG("Video VPL decoder copied controller meta to next buffer");
                 }
@@ -965,10 +1002,11 @@ void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
 
                 HVA_DEBUG("Sending jpegBlob at blob frame id: %d with buffer frame: %d", jpegBlob->frameId, hvabuf->frameId);
                 auto send = sendOutput(jpegBlob, 0, std::chrono::milliseconds(0));
-                if(send != hva::hvaSuccess) {
+                if (send != hva::hvaSuccess) {
                     HVA_ERROR("This frame is %d sended fail and the error is %d", jpegBlob->frameId, send);
                     HVA_ASSERT(false);
-                } else {
+                }
+                else {
                     HVA_DEBUG("The %d frame sended success", jpegBlob->frameId);
                 }
 
@@ -977,24 +1015,23 @@ void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
                 //     getParentPtr()->emitEvent(hvaEvent_PipelineTimeStampRecord, &decodeOut);
                 // }
 
-            } // while (isStillGoing == true)
+            }  // while (isStillGoing == true)
 
             if (m_vplDecoderManager.getState() != decodeStatus_t::DECODER_BUFFER_EOS) {
                 // abnormally quit
                 HVA_ERROR("Video VPL decoder node %d abnormally quit on frameId %d", batchIdx, frameId);
-                sendEmptyBlob(videoBuf->getTag(), frameId, streamId);
+                sendEmptyBlob(pBlob, videoBuf->getTag(), frameId, streamId);
                 return;
             }
-            // process done 
+            // process done
 
-            // 
+            //
             // If the very last frame of this video stream is received
             // then send empty blob as the last frame
-            // 
-            std::shared_ptr<hva::timeStampInfo> decodeOut =
-            std::make_shared<hva::timeStampInfo>(pBlob->frameId, "decodeOut");
+            //
+            std::shared_ptr<hva::timeStampInfo> decodeOut = std::make_shared<hva::timeStampInfo>(pBlob->frameId, "decodeOut");
             getParentPtr()->emitEvent(hvaEvent_PipelineTimeStampRecord, &decodeOut);
-            
+
             if (videoBuf->getTag() == hvaBlobBufferTag::END_OF_REQUEST) {
                 // transit DECODER_BUFFER_EOS -> DECODER_VIDEO_EOS
                 m_vplDecoderManager.setState(decodeStatus_t::DECODER_VIDEO_EOS);
@@ -1005,13 +1042,13 @@ void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
                 return;
             }
 
-        } // if (!tmpVideoStrData.empty())
-        else { 
+        }  // if (!tmpVideoStrData.empty())
+        else {
             HVA_DEBUG("Video VPL decoder receives an empty buf on frame %d", pBlob->frameId);
-            
+
             // send empty blob as the last frame
             unsigned frameId = m_vplDecoderManager.getFrameOrder();
-            sendEmptyBlob(videoBuf->getTag(), frameId, streamId);
+            sendEmptyBlob(pBlob, videoBuf->getTag(), frameId, streamId);
             return;
         }
     }
@@ -1020,7 +1057,7 @@ void VPLDecoderNodeWorker::process(std::size_t batchIdx) {
 
 #ifdef HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY
 HVA_ENABLE_DYNAMIC_LOADING(VPLDecoderNode, VPLDecoderNode(threadNum))
-#endif  //#ifdef HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY
+#endif  // #ifdef HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY
 
 }  // namespace inference
 }  // namespace ai

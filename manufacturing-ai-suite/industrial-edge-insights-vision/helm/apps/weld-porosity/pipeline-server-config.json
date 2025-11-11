@@ -79,10 +79,68 @@
                 "auto_start": false
             },
             {
+                "name": "weld_porosity_classification_opcua",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification model-instance-id=inst0  ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "opcua_publisher": {
+                    "publish_frame": true,
+                    "variable": "ns=3;s=Demo.Static.Scalar.String"
+                },
+                "auto_start": false
+            },
+            {
                 "name": "weld_porosity_classification_gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaclassify inference-region=full-frame device=GPU pre-process-backend=va-surface-sharing model-instance-id=inst0 name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! queue ! gvafpscounter ! appsink name=appsink",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "weld_porosity_classification_npu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaclassify inference-region=full-frame device=NPU pre-process-backend=va model-instance-id=inst0 name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! queue ! gvafpscounter ! appsink name=appsink",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "weld_porosity_classification_cpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin force-sw-decoders=true ! videoconvert ! video/x-raw ! gvaclassify inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! queue ! gvafpscounter ! appsink name=appsink",
                 "parameters": {
                     "type": "object",
                     "properties": {

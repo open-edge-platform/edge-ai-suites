@@ -156,24 +156,6 @@ push_images: build
 	@echo "Pushing the images to docker registry"
 	docker compose -f $(DOCKER_COMPOSE_FILE) push
 
-
-# Generate helm packages
-.PHONY: gen_helm_charts
-gen_helm_charts:
-	@echo "Generating Helm packages"
-	@cp -f configs/grafana/* helm/
-	@cp -f configs/influxdb/config/*.conf helm/
-	@cp -f configs/influxdb/init-influxdb.sh helm/
-	@cp -f configs/mqtt-broker/*.conf helm/
-	@cp -f configs/telegraf/config/*.conf helm/
-	@cp -f configs/telegraf/entrypoint.sh helm/telegraf_entrypoint.sh
-	@cp -f configs/time-series-analytics-microservice/config.json helm/
-	@cp -f configs/nginx/nginx-cert-gen.sh helm/nginx-cert-gen.sh
-	@cp -f configs/nginx/nginx.conf helm/nginx.conf
-	@cp -f configs/dlstreamer-pipeline-server/config.json helm/dlstreamer-pipeline-server.json
-	@sed -i 's/"auto_start": true,/"auto_start": false,/' helm/dlstreamer-pipeline-server.json
-	@echo "Helm packages generated"
-
 # Help
 .PHONY: help
 help:
@@ -185,8 +167,4 @@ help:
 	@echo "  make restart  - Restart Docker containers"
 	@echo "  make clean    - Remove all stopped containers and unused images"
 	@echo "  make push_images     - Push the images to docker registry"
-	@echo "  make gen_helm_charts              - Generate Helm packages for the selected sample app"
-	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Optional: version (default: 1.1.0-weekly)"
-	@echo "      Example: make gen_helm_charts app=weld-anomaly-detection version=1.2.0"
 	@echo "  make help     - Display this help message"

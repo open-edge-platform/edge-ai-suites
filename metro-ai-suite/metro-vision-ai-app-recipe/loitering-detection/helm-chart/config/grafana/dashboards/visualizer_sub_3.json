@@ -58,7 +58,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<iframe src=\"${WEBRTC_URL}/object_tracking_3\" style=\"width:100%;height:500px\";  allow=\"autoplay; encrypted-media\">\n</iframe> ",
+        "content": "<iframe src=\"${WEBRTC_URL}/object_tracking_3/\" style=\"width:100%;height:500px\";  allow=\"autoplay; encrypted-media\">\n</iframe> ",
         "mode": "html"
       },
       "pluginVersion": "11.5.4",
@@ -215,19 +215,19 @@
     "list": [
       {
         "current": {
-          "text": "http://0.0.0.0:8889",
-          "value": "http://0.0.0.0:8889"
+          "text": "https://0.0.0.0/mediamtx/",
+          "value": "https://0.0.0.0/mediamtx/"
         },
         "description": "",
         "name": "WEBRTC_URL",
         "options": [
           {
             "selected": true,
-            "text": "http://0.0.0.0:8889",
-            "value": "http://0.0.0.0:8889"
+            "text": "https://0.0.0.0/mediamtx/",
+            "value": "https://0.0.0.0/mediamtx/"
           }
         ],
-        "query": "http://0.0.0.0:8889",
+        "query": "https://0.0.0.0/mediamtx/",
         "type": "textbox"
       }
     ]

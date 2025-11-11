@@ -104,7 +104,43 @@
                 "name": "worker_safety_gear_detection_gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect device=GPU pre-process-backend=va-surface-sharing model-instance-id=inst0 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! queue ! gvafpscounter ! appsink name=appsink",
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect device=GPU pre-process-backend=va-surface-sharing model-instance-id=instgpu0 inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=\"NUM_STREAMS=2\" threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! queue ! gvafpscounter ! appsink name=appsink",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                            "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "worker_safety_gear_detection_npu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect device=NPU pre-process-backend=va model-instance-id=instnpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=4 ie-config=\"NUM_STREAMS=2\" threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! queue ! gvafpscounter ! appsink name=appsink",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                            "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "worker_safety_gear_detection_cpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! decodebin force-sw-decoders=true ! videoconvert ! video/x-raw ! gvadetect device=CPU pre-process-backend=opencv model-instance-id=inst0 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! queue ! gvafpscounter ! appsink name=appsink",
                 "parameters": {
                     "type": "object",
                     "properties": {

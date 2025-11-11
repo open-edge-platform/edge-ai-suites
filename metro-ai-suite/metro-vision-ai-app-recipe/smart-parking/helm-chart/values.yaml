@@ -5,6 +5,14 @@ DOCKER_USERNAME: ''
 DOCKER_PASSWORD: ''
 imagePullPolicy: Always
 storageClassName: manual
+
+# Git source configuration for downloading models
+gitSource:
+  # Use 'tag' for releases or 'branch' for branches
+  type: branch  # Options: 'tag' or 'branch'
+  # Name of the tag or branch
+  ref: main  # e.g., 'v1.0.0' for tag or 'main' for branch
+  
 mqtt_broker:
   image: eclipse-mosquitto
   imageTag: 2.0.21
@@ -16,13 +24,16 @@ mediamtx:
   imageTag: 1.11.3
 dlstreamer_pipeline_server:
   image: intel/dlstreamer-pipeline-server
-  imageTag: 3.1.0-ubuntu24
+  imageTag: 2025.2-ubuntu24-rc1
 grafana:
   image: grafana/grafana
   imageTag: 11.5.4
 node_red:
   image: nodered/node-red
   imageTag: 3.1
+nginx:
+  image: nginx
+  imageTag: 1.27-alpine
 env:
   ENABLE_WEBRTC: "true"
   ENABLE_RTSP: "true"
@@ -32,6 +43,8 @@ env:
   http_proxy:
   https_proxy:
   no_proxy:
+  ENABLE_OPEN_TELEMETRY: true
+  OTEL_EXPORT_INTERVAL_MILLIS: 5000
 privileged_access_required: false
 gpu:
   enabled: false
@@ -41,16 +54,22 @@ webrtcturnserver:
   username: <WEBRTC_TURN_SERVER_USERNAME>
   password: <WEBRTC_TURN_SERVER_PASSWORD>
 config:
+  prometheus:
+    name: prometheus
+    int:
+      prometheus_port: "9090"
+  otel_collector:
+    name: otel-collector
+    int:
+      otlp_grpc_port: "4317"
+      otlp_http_port: "4318"
+      otlp_prometheus_endpoint_port: "9464"
   mediamtx:
     name: mediamtx
     int:
       mediamtx_port: "8889"
       mediamtx_sdp_port: "8189"
       mediamtx_api_port: "9997"
-    ext:
-      mediamtx_port: "30489"
-      mediamtx_sdp_port: "30488"
-      mediamtx_api_port: "30487"
   coturn:
     name: coturn
     int:
@@ -64,27 +83,26 @@ config:
     int:
       rest_api_port: "8080"
       rtsp_output_port: "8554"
-    ext:
-      rest_api_port: "30485"
-      rtsp_output_port: "30484"
   mqtt_broker:
     name: mqtt-broker
     int:
       mqtt_port: "1883"
-    ext:
-      mqtt_port: "30483"
   grafana:
     name: grafana
     int:
       web_ui_port: "3000"
-    ext:
-      web_ui_port: "30480"
   node_red:
     name: node-red
     int:
       web_ui_port: "1880"
+  nginx:
+    name: nginx-reverse-proxy
+    int:
+      http_port: "80"
+      https_port: "443"
     ext:
-      web_ui_port: "30482"
+      http_port: "30080"
+      https_port: "30443"
 volumes:
   pipelines:
     name: vol-pipelines

@@ -1,4 +1,4 @@
-# Getting Started Guide
+# Getting Started Guide - Metro Gen AI SDK
 
 ## Overview
 
@@ -7,6 +7,7 @@ The Metro Gen AI SDK provides a comprehensive development environment for genera
 ## Learning Objectives
 
 Upon completion of this guide, you will be able to:
+
 - Install and configure the Metro Gen AI SDK
 - Deploy generative AI microservices for document processing and question-answering
 - Understand the architecture of RAG-based applications using Intel's AI frameworks
@@ -29,7 +30,6 @@ curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/he
 ```
 
 ![Metro Gen AI SDK Installation](images/metro-gen-ai-sdk-install.png)
-
 
 ## Question-Answering Application Implementation
 
@@ -69,6 +69,7 @@ Start the complete Gen AI application stack using Docker Compose:
 ```bash
 docker compose up
 ```
+
 ### Step 4: Verify Deployment Status
 
 Check that all application components are running correctly:
@@ -76,7 +77,6 @@ Check that all application components are running correctly:
 ```bash
 docker ps
 ```
-
 
 ### Step 5: Access the Application Interface
 
@@ -89,13 +89,23 @@ http://localhost:8101
 ## Additional Resources
 
 ### Technical Documentation
-- [Audio Analyzer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html) - Comprehensive documentation for multimodal audio processing capabilities
-- [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/get-started.md) - Vector database integration and document processing workflows
-- [Multimodal Embedding Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md) - Embedding generation service architecture and API documentation
-- [Visual Data Preparation For Retrieval](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md) - VDMS integration and visual data management workflows
-- [VLM OpenVINO Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md) - Vision-language model deployment and optimization guidelines
-- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/dev/ai-libraries.html) - Complete development toolkit documentation and microservice API references
-- [Edge AI Suites](https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html) - Comprehensive application suite documentation with Gen AI implementation examples
+
+- [Audio Analyzer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html)
+  \- Comprehensive documentation for multimodal audio processing capabilities
+- [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/get-started.md)
+  \- Vector database integration and document processing workflows
+- [Multimodal Embedding Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md)
+  \- Embedding generation service architecture and API documentation
+- [Visual Data Preparation For Retrieval](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md)
+  \- VDMS integration and visual data management workflows
+- [VLM OpenVINO Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md)
+  \- Vision-language model deployment and optimization guidelines
+- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/dev/ai-libraries.html)
+  \- Complete development toolkit documentation and microservice API references
+- [Edge AI Suites](https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html)
+  \- Comprehensive application suite documentation with Gen AI implementation examples
 
 ### Support Channels
-- [GitHub Issues](https://github.com/open-edge-platform/edge-ai-libraries/issues) - Technical issue tracking and community support for Gen AI applications
+
+- [GitHub Issues](https://github.com/open-edge-platform/edge-ai-libraries/issues)
+  \- Technical issue tracking and community support for Gen AI applications

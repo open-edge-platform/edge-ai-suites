@@ -186,4 +186,4 @@
 
 
 ## Troubleshooting
-- [Troubleshooting Guide](../../../docs/worker-safety-gear-detection/troubleshooting-guide.md)
+- [Troubleshooting Guide](../../../docs/user-guide/worker-safety-gear-detection/troubleshooting-guide.md)

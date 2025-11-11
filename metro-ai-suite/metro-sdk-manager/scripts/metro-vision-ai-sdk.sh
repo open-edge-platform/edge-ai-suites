@@ -640,7 +640,7 @@ main() {
   fi
   
   echo -e "${BOLD}${BLUE}==================================================${NC}"
-  success "Metro Gen AI SDK installation completed successfully!"
+  success "${NAME} installation completed successfully!"
   echo -e "${BOLD}${BLUE}==================================================${NC}"
   
   echo ""
@@ -652,6 +652,4 @@ main() {
 }
 
 # Execute main function if script is run directly
-if [[ "${BASH_SOURCE[0]:-}" == "${0}" ]]; then
-  main "${@}"
-fi
+main "$@"

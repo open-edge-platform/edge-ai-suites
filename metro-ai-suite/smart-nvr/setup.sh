@@ -74,6 +74,42 @@ get_host_ip() {
     echo "$HOST_IP"
 }
 
+# Function to configure Scenescape settings
+configure_scenescape_setup() {
+    print_info "Configuring Scenescape setup based on NVR_SCENESCAPE setting"
+    
+    if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
+        print_info "NVR_SCENESCAPE is enabled - configuring Scenescape mode"
+        
+        # Configure Frigate with Scenescape cameras
+        cp "./resources/frigate-config/config-scenescape.yml" "./resources/frigate-config/config.yml"
+        
+        # Substitute RTSP_STREAM_IP with host IP in the configuration
+        local host_ip=$(get_host_ip)
+        sed -i "s/{RTSP_STREAM_IP}/${host_ip}/g" "./resources/frigate-config/config.yml"
+        print_success "Scenescape Frigate configuration activated"
+        
+        # Copy Scenescape certificates
+        SMART_INTERSECTION_CERTS="edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs"
+        if [ -f "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" ]; then
+            mkdir -p ./resources/mqtt-certs
+            chmod u+w ./resources/mqtt-certs
+            cp "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" "./resources/mqtt-certs/root-cert"
+            cp "${SMART_INTERSECTION_CERTS}/scenescape-broker.crt" "./resources/mqtt-certs/broker-cert"
+            cp "${SMART_INTERSECTION_CERTS}/scenescape-broker.key" "./resources/mqtt-certs/broker-key"
+            print_success "Scenescape certificates copied successfully"
+        else
+            print_error "Scenescape is enabled but certificates not found at ${SMART_INTERSECTION_CERTS}"
+            print_info "Please ensure Smart Intersection application is running and certificates are generated"
+            return 1
+        fi
+    else
+        print_info "NVR_SCENESCAPE is disabled - using default configuration"
+        cp "./resources/frigate-config/config-default.yml" "./resources/frigate-config/config.yml"
+        print_success "Default Frigate configuration activated"
+    fi
+}
+
 # Function to validate required environment variables
 validate_environment() {    
     # Check for NVR_GENAI flag
@@ -82,7 +118,11 @@ validate_environment() {
         print_info "Please set it to 'true' or 'false' to enable/disable NVR GenAI features"
         return 1
     fi
-    
+    if [ -z "${NVR_SCENESCAPE}" ]; then
+        print_error "NVR_SCENESCAPE environment variable is required"
+        print_info "Please set it to 'true' or 'false' to enable/disable NVR SceneScape features"
+        return 1
+    fi    
     # Check for VSS IP and port
     if [ -z "${VSS_SUMMARY_IP}" ]; then
         print_error "VSS_SUMMARY_IP environment variable is required"
@@ -122,7 +162,20 @@ validate_environment() {
             return 1
         fi
     fi
-    
+    # Check for SceneScape MQTT settings if enabled
+    if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
+        if [ -z "${SCENESCAPE_MQTT_USER}" ]; then
+            print_error "SCENESCAPE_MQTT_USER environment variable is required when NVR_SCENESCAPE is enabled"
+            print_info "Please set it to the MQTT username for SceneScape"
+            return 1
+        fi
+
+        if [ -z "${SCENESCAPE_MQTT_PASSWORD}" ]; then
+            print_error "SCENESCAPE_MQTT_PASSWORD environment variable is required when NVR_SCENESCAPE is enabled"
+            print_info "Please set it to the MQTT password for SceneScape"
+            return 1
+        fi
+    fi    
     # Check for MQTT user and password
     if [ -z "${MQTT_USER}" ]; then
         print_error "MQTT_USER environment variable is required"
@@ -146,13 +199,18 @@ start_services() {
         return 1
     fi
     
+    # Configure Scenescape setup (config and certificates)
+    if ! configure_scenescape_setup; then
+        return 1
+    fi
+    
     print_info "Starting Docker Compose services..."
     # Run the Docker Compose stack with all services
-    docker compose -f docker/compose.yaml up -d
+    docker compose -f docker/compose.yaml up -d 
     if [ $? -eq 0 ]; then
-        sleep 5
-        print_success "Services are starting up..."
-        print_info "UI will be available at: ${CYAN}http://${HOST_IP}:7860${NC}"
+    sleep 5
+    print_success "Services are starting up..."
+    print_info "UI will be available at: ${CYAN}http://${HOST_IP}:7860${NC}"
     else
         print_error "Docker Compose failed to start services."
         exit 1

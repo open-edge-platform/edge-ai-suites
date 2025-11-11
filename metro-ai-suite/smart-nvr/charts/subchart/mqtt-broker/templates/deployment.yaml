@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-broker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-broker
+  template:
+    metadata:
+      labels:
+        app: mqtt-broker
+    spec:
+      containers:
+        - name: mqtt-broker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 1883
+            - containerPort: 9001
+          env:
+            - name: MQTT_USER
+              value: "{{ .Values.global.env.FRIGATE_MQTT_USER }}"
+            - name: MQTT_PASSWORD
+              value: "{{ .Values.global.env.FRIGATE_MQTT_PASSWORD }}"
+          volumeMounts:
+            - name: config
+              mountPath: /mosquitto/config/mosquitto.conf
+              subPath: mosquitto.conf
+            - name: data
+              mountPath: /mosquitto/data
+          command:
+            - sh
+            - -c
+            - |
+              touch /mosquitto/config/pwfile && \
+              mosquitto_passwd -c -b /mosquitto/config/pwfile $${MQTT_USER} $${MQTT_PASSWORD} && \
+              chmod 0700 /mosquitto/config/pwfile && \
+              chown mosquitto:mosquitto /mosquitto/config/pwfile && \
+              mosquitto -c /mosquitto/config/mosquitto.conf
+
+      volumes:
+        - name: config
+          configMap:
+            name: mqtt-config
+        - name: data
+          emptyDir: {}  # or use a PVC for persistence

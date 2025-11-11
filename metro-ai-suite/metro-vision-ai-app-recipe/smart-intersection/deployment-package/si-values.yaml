@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: LicenseRef-Intel
+---
+namespace: si
+http_proxy: # example: http_Proxy: http://proxy.example.com:891
+https_proxy: # example: https_Proxy: http://proxy.example.com:891
+no_proxy: # example: no_Proxy="localhost,127.0.0.1"
+# Grafana service configuration
+grafana:
+  service:
+    type: NodePort

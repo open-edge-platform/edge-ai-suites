@@ -89,7 +89,7 @@ dlstreamerpipelineserver:
     # key: dlstreamerpipelineserver.repository.image
     image: docker.io/intel/dlstreamer-pipeline-server
     # key: dlstreamerpipelineserver.repository.tag
-    tag: 3.1.0-ubuntu22
+    tag: 2025.2-ubuntu22-rc1
   # key: dlstreamerpipelineserver.replicas
   replicas: 1
   # key: dlstreamerpipelineserver.nodeSelector
@@ -254,7 +254,7 @@ streaming:
     # key: streaming.repository.image
     image: docker.io/intel/streaming-pipeline
     # key: streaming.repository.tag
-    tag: v1.0.2-pre-RC1
+    tag: v1.1.0-RC1
   # key: streaming.replicas
   replicas: 1
   # key: streaming.nodeSelector
@@ -297,7 +297,7 @@ app:
     # key: app.repository.image
     image: docker.io/intel/image-based-video-search
     # key: app.repository.tag
-    tag: v1.0.2-pre-RC1
+    tag: v1.1.0-RC1
   # key: app.replicas
   replicas: 1
   # key: app.nodeSelector
@@ -354,7 +354,7 @@ featurematching:
     # key: featurematching.repository.image
     image: docker.io/intel/feature-matching
     # key: featurematching.repository.tag
-    tag: v1.0.2-pre-RC1
+    tag: v1.1.0-RC1
   # key: featurematching.replicas
   replicas: 1
   # key: featurematching.nodeSelector
@@ -402,6 +402,36 @@ featurematching:
   # key: milvusui.serviceAccount
   serviceAccount: ""
 
+# nginx reverse proxy configuration
+nginx:
+  repository:
+    image: nginx
+    tag: 1.27-alpine
+  replicas: 1
+  nodeSelector: {}
+  resources: {}
+  imagePullPolicy: IfNotPresent
+  serviceAccount: ""
+  healthcheck:
+    enabled: true
+    livenessProbe:
+      httpGet:
+        path: /nginx_healthz
+        port: 80
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+      successThreshold: 1
+    readinessProbe:
+      httpGet:
+        path: /nginx_healthz
+        port: 80
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+      successThreshold: 1
 
 # imagePullSecrets allows you to specify a name of an image pull secret.
 # You must provide a list of object with the name field set to the name of the

@@ -1,4 +1,4 @@
-# Tutorial 1 - DLStreamer Pipeline Server
+# Visual AI Demo Kit - Tutorial 1
 
 <!--
 **Sample Description**: This tutorial demonstrates how to build an intelligent tolling system using edge AI technologies for real-time vehicle detection, license plate recognition, and vehicle attribute analysis.
@@ -11,6 +11,7 @@ This tutorial walks you through creating an AI-powered tolling system that autom
 -->
 
 By following this guide, you will learn how to:
+
 - **Set up the AI Tolling Application**: Create a new application based on the Smart Parking template and configure it for tolling use cases
 - **Download and Configure AI Models**: Install YOLO object detection models and Intel's specialized license plate recognition models
 - **Configure Video Processing Pipeline**: Set up the DLStreamer pipeline for real-time vehicle detection and license plate recognition
@@ -31,8 +32,8 @@ By following this guide, you will learn how to:
 -->
 ![AI Tolling Sytem Diagram](images/ai-tolling-system.svg)
 
-
 The AI Tolling system consists of several key components:
+
 - **Video Input**: Processes live camera feeds or video files from toll booth cameras
 - **Object Detection**: Uses YOLOv10s model to detect vehicles in the video stream
 - **License Plate Recognition**: Employs Intel's specialized model to extract license plate text
@@ -68,6 +69,7 @@ Video File Details
 </summary>
 
 The sample video contains:
+
 - Multiple vehicles passing through a toll booth scenario
 - Various vehicle types (cars, trucks)
 - Clear license plate visibility for testing recognition accuracy
@@ -126,6 +128,7 @@ Model Download Process Details
 </summary>
 
 The installation script performs the following operations:
+
 1. Creates the required directory structure under `src/dlstreamer-pipeline-server/models/`
 2. Runs a DLStreamer container to access model download tools
 3. Downloads public YOLO models using the built-in download scripts
@@ -248,6 +251,7 @@ docker compose up -d
 ```
 
 The deployment process will:
+
 - Pull required container images
 - Start the DLStreamer pipeline server
 - Initialize the Node-RED flow management
@@ -265,6 +269,7 @@ docker ps
 ```
 
 Expected output should show containers for:
+
 - `dlstreamer-pipeline-server`
 - `node-red`
 - `grafana`
@@ -273,9 +278,10 @@ Expected output should show containers for:
 ### 2. **Access the Application Interface**
 
 Open your web browser and navigate to:
+
 - **Main Dashboard**: `https://localhost/grafana` (Grafana)
-    - Username: admin
-    - Password: admin
+  - Username: admin
+  - Password: admin
 - **Node-RED Flow Editor**: `https://localhost/nodered/`
 
 ### 3. **Test Video Processing**
@@ -322,6 +328,7 @@ For local testing, you can use: `http://localhost/mediamtx/object_detection_1/`
 ![Vehicle Live Detection](images/car_live_detection.jpg)
 
 Expected results:
+
 - Vehicle detection accuracy > 90%
 - License plate recognition for clearly visible plates
 - Vehicle attribute classification (car, truck, color)
@@ -333,6 +340,7 @@ Expected results:
 ### 1. **Container Startup Issues**
 
 If containers fail to start:
+
 ```bash
 # Check container logs for specific errors
 docker logs <container_name>
@@ -346,6 +354,7 @@ docker logs <container_name>
 ### 2. **Model Download Failures**
 
 If model download fails during installation:
+
 ```bash
 # Retry the installation with verbose output
 ./install.sh 2>&1 | tee install.log
@@ -360,6 +369,7 @@ df -h
 ### 3. **Pipeline Processing Errors**
 
 If video processing fails or shows poor accuracy:
+
 ```bash
 # Check pipeline server logs
 docker logs dlstreamer-pipeline-server
@@ -374,6 +384,7 @@ ls -la ./ai-tolling/src/dlstreamer-pipeline-server/models/
 ### 4. **Performance Issues**
 
 For slow processing or high CPU usage:
+
 - **Reduce video resolution**: Use lower resolution input videos
 - **Adjust inference device**: Change from CPU to GPU if available
 - **Optimize pipeline**: Reduce queue sizes or disable unnecessary features

@@ -37,11 +37,14 @@ def launch_setup(context, *args, **kwargs):
     whoAmIConf = LaunchConfiguration("namespace",default="ipc")
     whoAmI= context.perform_substitution(whoAmIConf)
 
+    myRSModelTypeConf = LaunchConfiguration("rs_model")
+    myRSModelType= context.perform_substitution(myRSModelTypeConf)
     mySerialNumberConf = LaunchConfiguration("rs_serial")
     mySerialNumber= context.perform_substitution(mySerialNumberConf)
 
     camera_name = "camera" + whoAmI
     camera_namespace = whoAmI +"/camera"
+    full_camera_prefix = '/' + camera_namespace + "/" + camera_name + '/'
 
     rvc_pose_detector_path = get_package_share_directory("rvc_pose_detector")
     rvc_object_detection_path = get_package_share_directory("rvc_object_detection_engine")
@@ -56,11 +59,13 @@ def launch_setup(context, *args, **kwargs):
                     plugin='realsense2_camera::RealSenseNodeFactory',
                     name=camera_name,
                     namespace=camera_namespace,
-                    parameters=[ get_package_share_directory(packageName) + "/config/rs_parameters.yaml", 
+                    parameters=[ get_package_share_directory(packageName) + "/config/rs" + myRSModelType + "_parameters.yaml", 
                         { 
                             'camera_name': camera_name,
                             'serial_no': mySerialNumber,
                         }],
+                    #d405 default rgb topic is color/image_rect_raw instead of the usual color/image_raw, lets remap if exists;
+                    remappings=[(full_camera_prefix + 'color/image_rect_raw',full_camera_prefix+'color/image_raw')],
                     extra_arguments=[{'use_intra_process_comms': True}]
                     ),
                 ComposableNode(
@@ -104,6 +109,14 @@ def generate_launch_description():
             default_value="ipc"
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument( 
+            "rs_model", 
+            description="model type, can be d405, d415, d435, d455",
+            default_value="d415",
+            choices=['d405', 'd415', 'd435', 'd455']
+        )
+    )    
     declared_arguments.append(
         DeclareLaunchArgument( 
             "rs_serial", 

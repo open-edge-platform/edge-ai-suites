@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: '{{ include "image_based_video_search.fullname" . }}-nginx-reverse-proxy'
+  labels:
+    {{- include "image_based_video_search.labels" . | nindent 4 }}
+    katenary.v3/component: nginx-reverse-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "image_based_video_search.selectorLabels" . | nindent 6 }}
+      katenary.v3/component: nginx-reverse-proxy
+  template:
+    metadata:
+      labels:
+        {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
+        katenary.v3/component: nginx-reverse-proxy
+    spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+      - name: generate-certs
+        image: alpine/openssl:3.5.4
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsUser: 1000
+          runAsGroup: 1000
+        capabilities:
+          drop:
+            - ALL
+        command: 
+        - /bin/sh
+        - -c
+        - |
+          /scripts/generate_certs.sh 
+        volumeMounts:
+        - name: generate-certs-script
+          mountPath: /scripts
+        - name: nginx-ssl
+          mountPath: /etc/nginx/ssl
+      containers:
+      - name: nginx-reverse-proxy
+        image: nginx:1.27-alpine
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          capabilities:
+            drop:
+              - ALL
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        volumeMounts:
+        - name: nginx-conf
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - name: nginx-ssl
+          mountPath: /etc/nginx/ssl
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
+        - name: nginx-run
+          mountPath: /var/run
+      volumes:
+      - name: nginx-conf
+        configMap:
+          name: nginx-conf
+      - name: nginx-ssl
+        emptyDir: {}
+      - name: nginx-cache
+        emptyDir: {}
+      - name: nginx-run
+        emptyDir: {}
+      - name: generate-certs-script
+        configMap:
+          name: generate-certs-script
+          defaultMode: 0755

@@ -5,18 +5,16 @@ metadata:
   name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
   namespace: {{ $.Values.namespace }}
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: dlstreamer-pipeline-server
   ports:
   - name: "rest-api"
     port: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
     targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
-    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rest_api_port }}
   - name: "rtsp-output-streaming"
     port: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
     targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
-    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rtsp_output_port }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -71,9 +69,9 @@ spec:
         - -c
         - |
           export MODELS_PATH="/tmp/models/intel"
-          mkdir -p $MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/FP32/
-          curl -o "$MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.xml" -L "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.xml?raw=true"
-          curl -o "$MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.bin" -L "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.bin?raw=true"
+          mkdir -p $MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/FP16/
+          curl -o "$MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml" -L "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml?raw=true"
+          curl -o "$MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.bin" -L "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.bin?raw=true"
           curl -o "$MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json" -L "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/master/samples/gstreamer/model_proc/intel/pedestrian-and-vehicle-detector-adas-0001.json"
         env:
         - name: http_proxy
@@ -93,8 +91,8 @@ spec:
         securityContext:
           privileged: true  # Required for direct access to /dev
         {{- end }}
-      {{- if $.Values.gpu.enabled }}
-          resources:
+        {{- if $.Values.gpu.enabled }}
+        resources:
           limits:
             {{ $.Values.gpu.type }}: {{ $.Values.gpu.count }}
         {{- end }}
@@ -140,13 +138,23 @@ spec:
         - name: https_proxy
           value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx"
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx,otel-collector"
         - name: NO_PROXY
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx"
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx,otel-collector"
         - name: MQTT_HOST
           value: "broker"
         - name: MQTT_PORT
           value: "1883"
+        - name: ENABLE_OPEN_TELEMETRY
+          value: "{{ $.Values.env.ENABLE_OPEN_TELEMETRY }}"
+        - name: OTEL_COLLECTOR_HOST
+          value: otel-collector
+        - name: OTEL_COLLECTOR_PORT
+          value: "{{ $.Values.config.otel_collector.int.otlp_http_port }}"
+        - name: OTEL_EXPORT_INTERVAL_MILLIS
+          value: "{{ $.Values.env.OTEL_EXPORT_INTERVAL_MILLIS }}"
+        - name: ZE_ENABLE_ALT_DRIVERS
+          value: "libze_intel_npu.so"
       volumes:
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}

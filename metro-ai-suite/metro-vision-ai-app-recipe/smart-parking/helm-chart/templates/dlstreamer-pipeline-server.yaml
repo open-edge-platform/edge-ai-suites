@@ -5,18 +5,16 @@ metadata:
   name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
   namespace: {{ $.Values.namespace }}
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: dlstreamer-pipeline-server
   ports:
   - name: "rest-api"
     port: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
     targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rest_api_port }}
-    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rest_api_port }}
   - name: "rtsp-output-streaming"
     port: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
     targetPort: {{ $.Values.config.dlstreamer_pipeline_server.int.rtsp_output_port }}
-    nodePort: {{ $.Values.config.dlstreamer_pipeline_server.ext.rtsp_output_port }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -50,10 +48,10 @@ spec:
         - -c
         - |
           mkdir -p /tmp/videos
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_1.mp4 -o /tmp/videos/new_video_1.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_2.mp4 -o /tmp/videos/new_video_2.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_3.mp4 -o /tmp/videos/new_video_3.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/smart_parking_720p_4.mp4 -o /tmp/videos/new_video_4.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/videos/new_video_1.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/videos/new_video_2.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/videos/new_video_3.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4 -o /tmp/videos/new_video_4.mp4
         env:
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
@@ -72,14 +70,21 @@ spec:
         - |
           mkdir -p /tmp/models
           cd /tmp/
-          curl -L -o /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/v1.0.0.tar.gz && \          
+          {{- if eq $.Values.gitSource.type "tag" }}
+          curl -L -o /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/{{ $.Values.gitSource.ref }}.tar.gz && \
           tar -xzf /tmp/main.tar.gz -C /tmp && \
-          cp -r /tmp/edge-ai-suites-1.0.0/metro-ai-suite/smart-parking/dlsps/models/* /tmp/models/ && \
-          rm -rf /tmp/main.tar.gz /tmp/edge-ai-suites-1.0.0
+          EXTRACTED_DIR="edge-ai-suites-{{ $.Values.gitSource.ref | trimPrefix "v" }}" && \
+          {{- else }}
+          curl -L -o /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/heads/{{ $.Values.gitSource.ref }}.tar.gz && \
+          tar -xzf /tmp/main.tar.gz -C /tmp && \
+          EXTRACTED_DIR="edge-ai-suites-{{ $.Values.gitSource.ref | replace "/" "-" }}" && \
+          {{- end }}
+          cp -r /tmp/${EXTRACTED_DIR}/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src/dlstreamer-pipeline-server/models/* /tmp/models/ && \
+          rm -rf /tmp/main.tar.gz /tmp/${EXTRACTED_DIR}
           cd /home/dlstreamer/dlstreamer/samples
           chmod +x download_public_models.sh
           export MODELS_PATH=/tmp/models/
-          ./download_public_models.sh yolov10s
+          ./download_public_models.sh yolo11s coco128
         env:
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
@@ -98,8 +103,8 @@ spec:
         securityContext:
           privileged: true  # Required for direct access to /dev
         {{- end }}
-      {{- if $.Values.gpu.enabled }}
-          resources:
+        {{- if $.Values.gpu.enabled }}
+        resources:
           limits:
             {{ $.Values.gpu.type }}: {{ $.Values.gpu.count }}
         {{- end }}
@@ -145,13 +150,23 @@ spec:
         - name: https_proxy
           value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx"
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx,otel-collector"
         - name: NO_PROXY
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx"
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx,otel-collector"
         - name: MQTT_HOST
           value: "broker"
         - name: MQTT_PORT
           value: "1883"
+        - name: ENABLE_OPEN_TELEMETRY
+          value: "{{ $.Values.env.ENABLE_OPEN_TELEMETRY }}"
+        - name: OTEL_COLLECTOR_HOST
+          value: otel-collector
+        - name: OTEL_COLLECTOR_PORT
+          value: "{{ $.Values.config.otel_collector.int.otlp_http_port }}"
+        - name: OTEL_EXPORT_INTERVAL_MILLIS
+          value: "{{ $.Values.env.OTEL_EXPORT_INTERVAL_MILLIS }}"
+        - name: ZE_ENABLE_ALT_DRIVERS
+          value: "libze_intel_npu.so"
       volumes:
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}
@@ -181,7 +196,7 @@ spec:
           sizeLimit: 100Mi
       - name: models-volume
         emptyDir:
-          sizeLimit: 100Mi
+          sizeLimit: 150Mi
 ---
 apiVersion: v1
 kind: ConfigMap

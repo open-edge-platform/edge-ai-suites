@@ -27,10 +27,10 @@ Before You Begin, ensure the following:
 
 - Download helm chart with the following command
 
-    `helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.0.2-pre-RC1`
+    `helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.1.0-RC1`
 - unzip the package using the following command
 
-    `tar -xvf image-based-video-search-1.0.2-pre-RC1.tgz`
+    `tar -xvf image-based-video-search-1.1.0-RC1.tgz`
 - Get into the helm directory
 
     `cd image-based-video-search`
@@ -60,21 +60,9 @@ helm install ibvs . --create-namespace -n ibvs \
     --set noProxy="localhost\,127.0.0.1"
 ```
 
-To get the port where the application is serving, run the following command:
 
-```bash
-kubectl -n ibvs get svc/ibvs-app
-```
-
-This is an example output of the previous command:
-
-```text
-NAME       TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-ibvs-app   NodePort   10.109.118.49   <none>        3000:31998/TCP   14m
-```
-
-Now frontend should be accessible at http://localhost:31998/.
-> Note: To access the above url remotely, replace the `localhost` with your system IP address. 
+Now frontend should be accessible at https://<ip-addr>:30443/.
+> Note: To access the above url remotely, replace the `<ip-addr>` with your system IP address. 
 
 Finally, the app can be uninstalled using the following command:
 

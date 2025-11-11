@@ -31,14 +31,12 @@ env:
   POSTGRES_PASSWORD:
   S3_STORAGE_PORT: 30800
   ENABLE_OPEN_TELEMETRY: true
-  # OTEL_COLLECTOR_HOST: {{ $.Values.env.HOST_IP }}
-  OTEL_COLLECTOR_PORT: 30418
   OTEL_EXPORT_INTERVAL_MILLIS: 5000
   OPCUA_SERVER_IP:
   OPCUA_SERVER_PORT:
   OPCUA_SERVER_USERNAME:
   OPCUA_SERVER_PASSWORD:
-  MR_URL: <PROTOCOL>://<HOST_IP>:32002
+  MR_URL: https://<HOST_IP>:30443/registry/models
   MR_SAVED_MODELS_DIR: ./mr_models
   MR_REQUEST_TIMEOUT: 300
   MR_VERIFY_CERT:
@@ -54,34 +52,26 @@ webrtcturnserver:
 images:
   minio: minio/minio:RELEASE.2020-12-12T08-39-07Z
   model_registry: intel/model-registry:1.0.3
-  dlstreamer_pipeline_server: intel/dlstreamer-pipeline-server:3.1.0-ubuntu22
+  dlstreamer_pipeline_server: intel/dlstreamer-pipeline-server:2025.2-ubuntu22-rc1
+  nginx: nginx:1.27-alpine
+  mqtt_broker: eclipse-mosquitto:latest
 config:
   prometheus:
     name: prometheus
     int:
       prometheus_port: "9090"
-    ext:
-      prometheus_port: "32009"
   otel_collector:
     name: otel-collector
     int:
       otlp_grpc_port: "4317"
       otlp_http_port: "4318"
       otlp_prometheus_endpoint_port: "9464"
-    ext:
-      otlp_grpc_port: "30417"
-      otlp_http_port: "30418"
-      otlp_prometheus_endpoint_port: "30464"
   mediamtx:
     name: mediamtx
     int:
       mediamtx_port: "8889"
       mediamtx_sdp_port: "8189"
       mediamtx_api_port: "9997"
-    ext:
-      mediamtx_port: "31111"
-      mediamtx_sdp_port: "31112"
-      mediamtx_api_port: "31222"
   coturn:
     name: coturn
     int:
@@ -95,15 +85,22 @@ config:
     int:
       rest_api_port: "8080"
       rtsp_output_port: "8554"
-    ext:
-      rest_api_port: "30107"
-      rtsp_output_port: "30125"
   model_registry:
     name: model-registry
     int:
       port: "8111"
+  nginx:
+    name: nginx-reverse-proxy
+    int:
+      http_port: "80"
+      https_port: "443"
     ext:
-      port: "32002"
+      http_port: "30080"
+      https_port: "30443"
+  mqtt_broker:
+    name: mqtt-broker
+    int:
+      mqtt_port: "1883"
 volumes:
   pipelines:
     name: vol-pipelines

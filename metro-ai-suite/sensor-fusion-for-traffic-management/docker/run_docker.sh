@@ -33,8 +33,8 @@ if [[ "$NPU_ON" == "true" ]]; then
         -e DISPLAY=$DISPLAY \
         -e QT_X11_NO_MITSHM=1 \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v $HOME/.Xauthority:/home/openvino/.Xauthority:rw \
-        -w /home/openvino/metro-2.0 \
+        -v $HOME/.Xauthority:/home/tfcc/.Xauthority:rw \
+        -w /home/tfcc/metro \
         $DOCKER_IMAGE
 else
     echo "Running without NPU support"
@@ -49,7 +49,7 @@ else
         -e DISPLAY=$DISPLAY \
         -e QT_X11_NO_MITSHM=1 \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v $HOME/.Xauthority:/home/openvino/.Xauthority:rw \
-        -w /home/openvino/metro-2.0 \
+        -v $HOME/.Xauthority:/home/tfcc/.Xauthority:rw \
+        -w /home/tfcc/metro \
         $DOCKER_IMAGE
 fi

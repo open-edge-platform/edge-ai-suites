@@ -14,7 +14,18 @@ spec:
       labels:
         app: {{ .Release.Name }}-dlstreamer-pipeline-server
     spec:
+      securityContext:
+        supplementalGroups: [109,110,992]
       volumes:
+      - name: dev
+        hostPath:
+          path: /dev
+      - name: dev-shm
+        hostPath:
+          path: /dev/shm
+      - name: run-udev
+        hostPath:
+          path: /run/udev
       - name: dlstreamer-pipeline-server-videos-data
         persistentVolumeClaim:
           claimName: {{ .Release.Name }}-dlstreamer-pipeline-server-videos-pvc
@@ -94,14 +105,28 @@ spec:
         image: {{ .Values.dlstreamerPipelineServer.repository }}:{{ .Values.dlstreamerPipelineServer.tag }}
         name: {{ .Release.Name }}-dlstreamer-pipeline-server
         imagePullPolicy: {{ .Values.imagePullPolicy }}
+        {{- if .Values.dlstreamerPipelineServer.gpuWorkload }}
+        securityContext:
+          privileged: true
+          runAsUser: 0
+          runAsGroup: 0
+        {{- else }}
         securityContext:
           runAsUser: 0
           runAsGroup: 0
+        {{- end }}
+        terminationMessagePath: /tmp/termination-log
         command: ["/bin/bash", "-c"]
         args:
           - |
             {{- tpl (include "dlstreamer-pipeline-server.startup-script" .) . | nindent 12 }}
         volumeMounts:
+        - name: dev
+          mountPath: /dev
+        - name: dev-shm
+          mountPath: /dev/shm
+        - name: run-udev
+          mountPath: /run/udev
         - mountPath: /home/pipeline-server/videos
           name: dlstreamer-pipeline-server-videos-data
         - mountPath: /home/pipeline-server/models/object_detection

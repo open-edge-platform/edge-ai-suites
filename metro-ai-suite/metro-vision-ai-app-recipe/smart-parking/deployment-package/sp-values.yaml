@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: LicenseRef-Intel
+---
+namespace: sp
+env:
+  HOST_IP: # IP address of the target Edge Node, example: HOST_IP: 10.100.100.100
+  http_proxy: # example: http_proxy: http://proxy.example.com:891
+  https_proxy: # example: http_proxy: http://proxy.example.com:891
+  no_proxy: # example: noProxy="localhost,127.0.0.1"
+webrtcturnserver:
+  username: # example: username: myuser
+  password: # example: password: mypassword
