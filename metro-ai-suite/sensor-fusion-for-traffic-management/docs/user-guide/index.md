@@ -55,13 +55,14 @@ hardware platform's capabilities, this reference implementation serves as the pe
 :::{toctree}
 :hidden:
 
-   get-started-guide
-   prerequisites
-   How it Works <how-it-works.md>
-   system-req
-   Advanced user guide <advanced-user-guide.md>
-   APIs
-   FAQ
-   release-notes
+get-started-guide.md
+prerequisites.md
+How it Works <how-it-works.md>
+system-req.md
+Advanced user guide <advanced-user-guide.md>
+APIs.md
+FAQ.md
+release-notes.md
+
 :::
 hide_directive-->
