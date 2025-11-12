@@ -18,7 +18,7 @@ This section collects guides for Time Series Analytics microservice and associat
 Build from Source <how-to-build-from-source.md>
 Configure Alerts <how-to-configure-alerts.md>
 Configure Secure MQTT Broker Connection<how-to-connect-to-secure-mqtt-broker.md>
-Configre Secure OPC UA Server Connection<how-to-connect-to-secure-opcua-server.md>
+Configure Secure OPC UA Server Connection<how-to-connect-to-secure-opcua-server.md>
 Create New Sample App <how-to-create-a-new-sample-app.md>
 Deploy with Helm<how-to-deploy-with-helm.md>
 Deploy with Custom UDF <how-to-configure-custom-udf.md>

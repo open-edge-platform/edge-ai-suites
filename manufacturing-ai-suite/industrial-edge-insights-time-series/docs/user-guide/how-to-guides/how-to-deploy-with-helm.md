@@ -4,7 +4,7 @@ This guide provides step-by-step instructions for deploying the Industrial Edge 
 
 ## Prerequisites
 
-- [System Requirements](system-requirements.md)
+- [System Requirements](../system-requirements.md)
 -  K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to tutorials such as <https://adamtheautomator.com/installing-kubernetes-on-ubuntu> and many other
   online tutorials to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
@@ -234,9 +234,8 @@ curl -k -X 'GET' \
 
 ## Step 6: Verify the Results
 
-Follow the verification steps in the [Get Started guide](get-started.md):
-- [Wind Turbine Anomaly Detection Results](get-started.md#verify-the-wind-turbine-anomaly-detection-results)
-- [Weld Anomaly Detection Results](get-started.md#verify-the-weld-anomaly-detection-results)
+Follow the verification steps in the [Get Started guide](../get-started.md#verify-the-output-results).
+
 
 ## Uninstall Helm Charts
 

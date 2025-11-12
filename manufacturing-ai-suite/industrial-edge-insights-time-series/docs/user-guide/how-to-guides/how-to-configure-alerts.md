@@ -32,7 +32,7 @@ https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-
 :::{tab-item} **Weld Anomaly Detection**
 :sync: tab2
 
-[wind-turbine-anomaly-detection/time-series-analytics-config/config.json](
+[weld-anomaly-detection/time-series-analytics-config/config.json](
 https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/config.json)
 
 ```json
@@ -114,7 +114,7 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
   :sync: tab1
 
   [wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick](
-  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/  wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
+  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
 
   ```bash
   docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
@@ -125,7 +125,7 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
   :sync: tab2
 
   [weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick](
-  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/  weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
+  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
 
   ```bash
   docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/weld_defects -p 1883
@@ -143,7 +143,7 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
 #### Prerequisite
 
 Ensure that `make up_opcua_ingestion` has been executed by following the steps
-in the [getting started guide](./get-started.md#deploy-with-docker-compose) for the docker compose deployment
+in the [getting started guide](../get-started.md#deploy-with-docker-compose) for the docker compose deployment
 
 To enable OPC-UA alerts in `Time Series Analytics Microservice`, use the following steps.
 
@@ -338,7 +338,7 @@ To subscribe to MQTT topics in a Helm deployment, execute the following command:
 
 > **Note:**
 >
-> Ensure a sample app is deployed by following the [installation step](../how-to-guides/how-to-deploy-with-helm.md#install-helm-charts---use-only-one-of-the-options-below) for OPC-UA ingestion.
+> Ensure a sample app is deployed by following the [installation step](../how-to-guides/how-to-deploy-with-helm.md#step-3-install-helm-charts) for OPC-UA ingestion.
 
 To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow below steps.
 
