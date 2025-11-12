@@ -2,7 +2,7 @@
 
 This guide provides step-by-step instructions for building the `Time Series Analytics`
 microservice and `Wind Turbine Anomaly Detection` or `Weld Anomaly Detection` Sample Application from source.
-Please follow [prerequisites](./get-started.md#configure-docker) and understand [data flow explanation](./get-started.md#data-flow-explanation)
+Please follow [prerequisites](../get-started.md#configure-docker) and understand [data flow](../how-it-works.md)
 before proceeding with the below steps.
 
 ## Steps to Build from Source
@@ -18,7 +18,7 @@ before proceeding with the below steps.
     docker compose build
     ```
 
-    > **Note:**  
+    > **Note:**
     > To include copyleft licensed sources when building the Docker image, use the below command:
     >
     > ```bash
@@ -35,7 +35,7 @@ before proceeding with the below steps.
     make build # builds only data simulator (OPC-UA server and MQTT publisher) docker images
     ```
 
-    > **Note:**  
+    > **Note:**
     > To include copyleft licensed sources when building the Docker images, use the below command:
     >
     > ```bash
@@ -43,5 +43,5 @@ before proceeding with the below steps.
     > ```
 
 2. **Docker compose deployment and Verification**:
-    
-    Follow the remaining steps/sections starting from [docker compose deployment](./get-started.md#deploy-with-docker-compose)
+
+    Follow the remaining steps/sections starting from [docker compose deployment](../get-started.md#deploy-with-docker-compose)

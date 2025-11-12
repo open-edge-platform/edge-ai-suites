@@ -4,7 +4,7 @@ This guide provides step-by-step instructions for deploying the Industrial Edge 
 
 ## Prerequisites
 
-- [System Requirements](system-requirements.md)
+- [System Requirements](../system-requirements.md)
 -  K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to tutorials such as <https://adamtheautomator.com/installing-kubernetes-on-ubuntu> and many other
   online tutorials to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
@@ -17,60 +17,68 @@ This guide provides step-by-step instructions for deploying the Industrial Edge 
 
 You can either generate or download the Helm charts.
 
-### Wind Turbine Anomaly Detection Sample App
+::::{tab-set}
+:::{tab-item} **Wind Turbine Anomaly Detection**
+:sync: tab1
 
-    - To download the Helm charts:
+- To download the Helm charts:
 
-        Follow this procedure on the target system to install the package.
+  Follow this procedure on the target system to install the package.
 
-        1. Download Helm chart with the following command:
+  1. Download Helm chart with the following command:
 
-            `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-rc1`
+     `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-rc1`
 
-        2. Unzip the package using the following command:
+  2. Unzip the package using the following command:
 
-            `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-rc1.tgz`
+     `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-rc1.tgz`
 
-        - Get into the Helm directory:
+  3. Get into the Helm directory:
 
-            `cd wind-turbine-anomaly-detection-sample-app`
+     `cd wind-turbine-anomaly-detection-sample-app`
 
-    - To generate the Helm charts:
+- To generate the Helm charts:
 
-        ```bash
-        cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series # path relative to git clone folder
+```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series # path relative to git clone folder
 
-        make gen_helm_charts app=wind-turbine-anomaly-detection
+  make gen_helm_charts app=wind-turbine-anomaly-detection
 
-        cd helm/
-        ```
+  cd helm/
+```
 
-### Weld Anomaly Detection Sample App
+:::
+:::{tab-item} **Weld Anomaly Detection**
+:sync: tab2
 
-    - To download the Helm charts:
+- To download the Helm charts:
 
-        Follow this procedure on the target system to install the package.
+  Follow this procedure on the target system to install the package.
 
-        1. Download Helm chart with the following command:
+  1. Download Helm chart with the following command:
 
-            `helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 1.0.0-rc1`
+     `helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 1.0.0-rc1`
 
-        2. Unzip the package using the following command:
+  2. Unzip the package using the following command:
 
-            `tar -xvzf weld-anomaly-detection-sample-app-1.0.0-rc1.tgz`
+     `tar -xvzf weld-anomaly-detection-sample-app-1.0.0-rc1.tgz`
 
-        - Get into the Helm directory:
+  3. Get into the Helm directory:
 
-            `cd weld-anomaly-detection-sample-app`
+     `cd weld-anomaly-detection-sample-app`
 
-    - To generate the Helm charts:
-      ```bash
-        cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series # path relative to git clone folder
+- To generate the Helm charts:
 
-        make gen_helm_charts app=weld-anomaly-detection version=1.0.0-rc1
+```bash
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series # path relative to git clone folder
 
-        cd helm/
-      ```
+   make gen_helm_charts app=weld-anomaly-detection version=1.0.0-rc1
+
+   cd helm/
+```
+
+:::
+::::
 
 ## Step 2: Configure and update the environment variables
 
@@ -92,7 +100,9 @@ You can either generate or download the Helm charts.
 > 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in `values.yaml` file.
 
-### Install - Wind Turbine Anomaly Detection
+::::{tab-set}
+:::{tab-item} **Wind Turbine Anomaly Detection**
+:sync: tab1
 
 To install Helm charts, use one of the following options:
 
@@ -118,22 +128,24 @@ To install Helm charts, use one of the following options:
 > ```
 > The `privileged_access_required=true` setting enables Time Series Analytics Microservice access to GPU device through `/dev/dri`.
 
-### Install - Weld Anomaly Detection
+:::
+:::{tab-item} **Weld Anomaly Detection**
+:sync: tab2
+
+To install Helm charts, run the following command:
 
 ```bash
 helm install ts-weld-anomaly . -n ts-sample-app --create-namespace
 ```
 
-**Verify Installation:**
-Use the following command to verify if all the application resources got installed w/ their status:
-
-```bash
-   kubectl get all -n ts-sample-app
-```
+:::
+::::
 
 ## Step 4: Copy the udf package for helm deployment to Time Series Analytics Microservice
 
-### UDF - Wind Turbine Anomaly Detection Sample App
+::::{tab-set}
+:::{tab-item} **Wind Turbine Anomaly Detection**
+:sync: tab1
 
 To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
@@ -162,7 +174,9 @@ To copy your own or existing model into Time Series Analytics Microservice in or
     kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
     ```
 
-### UDF - Weld Anomaly Detection Sample App
+:::
+:::{tab-item} **Weld Anomaly Detection**
+:sync: tab2
 
 To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
@@ -180,6 +194,7 @@ To copy your own or existing model into Time Series Analytics Microservice in or
     ```
 
 2. Copy your new UDF package (using the windturbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
+
     ```sh
     export SAMPLE_APP="weld-anomaly-detection"
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config # path relative to git clone folder
@@ -190,6 +205,9 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 
     kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
     ```
+
+:::
+::::
 
 > **Note:**
 > Run the commands only after performing the Helm install.
@@ -216,33 +234,39 @@ curl -k -X 'GET' \
 
 ## Step 6: Verify the Results
 
-Follow the verification steps in the [Get Started guide](get-started.md):
-- [Wind Turbine Anomaly Detection Results](get-started.md#verify-the-wind-turbine-anomaly-detection-results)
-- [Weld Anomaly Detection Results](get-started.md#verify-the-weld-anomaly-detection-results)
+Follow the verification steps in the [Get Started guide](../get-started.md#verify-the-output-results).
+
 
 ## Uninstall Helm Charts
 
-### Uninstall - Wind Turbine Anomaly Detection Sample App
+::::{tab-set}
+:::{tab-item} **Wind Turbine Anomaly Detection**
+:sync: tab1
 
 ```sh
 helm uninstall ts-wind-turbine-anomaly -n ts-sample-app
 kubectl get all -n ts-sample-app # It may take a few minutes for all application resources to be cleaned up.
 ```
 
-### Uninstall - Weld Anomaly Detection Sample App
+:::
+:::{tab-item} **Weld Anomaly Detection**
+:sync: tab2
 
 ```sh
 helm uninstall ts-weld-anomaly -n ts-sample-app
 kubectl get all -n ts-sample-app # It may take a few minutes for all application resources to be cleaned up.
 ```
 
+:::
+::::
+
 ## Configure Alerts in Time Series Analytics Microservice
 
-To configure alerts in Time Series Analytics Microservice, follow the steps [here](./how-to-configure-alerts.md#helm-deployment).
+To configure alerts in Time Series Analytics Microservice, follow the steps in [Time Series Analytics Helm Deployment](./how-to-configure-alerts.md#helm-deployment).
 
 ## Deploy the Application with a Custom UDF
 
-To deploy the application with a custom UDF, follow the steps [here](./how-to-configure-custom-udf.md#helm-deployment).
+To deploy the application with a custom UDF, follow the steps in [Custom UDF Helm Deployment](./how-to-configure-custom-udf.md#helm-deployment).
 
 ## Troubleshooting
 
