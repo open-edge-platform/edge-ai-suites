@@ -1,3 +1,4 @@
+<<<<<<< HEAD:manufacturing-ai-suite/industrial-edge-insights-time-series/docs/user-guide/wind-turbine-anomaly-detection/how-to-enable-system-metrics.md
 # Enable System Metrics Dashboard
 
 > **Note**: The system metrics dashboard is only supported with docker compose deployments and requires `Telegraf` to run as the `root` user.
@@ -36,3 +37,43 @@ make up_mqtt_ingestion INCLUDE=validation
 - One will see the below output.
 
     ![System Metrics Dashboard](../_images/system_metrics_dashboard.png)
+=======
+# Enable System Metrics Dashboard
+
+> **Note**: The system metrics dashboard is only supported with docker compose deployments and requires `Telegraf` to run as the `root` user.
+> Verified only for `Wind Turbine Anomaly Detection` sample app.
+
+Please follow [prerequisites](../get-started.md#configure-docker) and understand [data flow explanation](./how-it-works.md#data-flow-explanation) as
+a prerequisite.
+
+To enable the system metrics dashboard showcasing the host and docker containers CPU, memory, network, disk IO usage, run the following command:
+
+```bash
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/ # path relative to git clone folder
+# Try one of the below options:
+make up_opcua_ingestion INCLUDE=validation
+# OR
+make up_mqtt_ingestion INCLUDE=validation
+```
+
+##  Viewing System Metrics Dashboard
+
+- Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably, chrome browser)
+
+- Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
+    in `.env` file and select **System Metrics Dashboard**.
+
+    ![Grafana login](../_images/login_wt.png)
+
+- After login, click on Dashboard
+
+    ![Menu view](../_images/dashboard.png)
+
+- Select the `System Metrics Dashboard`.
+
+    ![List all dashboard](../_images/list_all_dashboard.png)
+
+- One will see the below output.
+
+    ![System Metrics Dashboard](../_images/system_metrics_dashboard.png)
+>>>>>>> 3f9cbd6d ([DOCS] Time Series Docs Restructuring porting to release branch  (#1022)):manufacturing-ai-suite/industrial-edge-insights-time-series/docs/user-guide/wind-turbine-anomaly/how-to-enable-system-metrics.md
