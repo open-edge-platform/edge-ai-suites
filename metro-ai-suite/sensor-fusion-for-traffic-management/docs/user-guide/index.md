@@ -27,11 +27,6 @@ cameras with either radar or lidar:
 - Eight cameras paired with four lidars (8C+4L). 
 
 
-
-
-
-
-
 ## Key Features
 
 Discover the key features that set our implementation apart and see how it meets the sensor
@@ -56,7 +51,6 @@ hardware platform's capabilities, this reference implementation serves as the pe
 
 
 
-
 <!--hide_directive
 :::{toctree}
 :hidden:
@@ -71,5 +65,3 @@ hardware platform's capabilities, this reference implementation serves as the pe
    release-notes
 :::
 hide_directive-->
-
-Loitering Detection <edge-ai-suites/loitering-detection/index>
