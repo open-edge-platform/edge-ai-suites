@@ -41,7 +41,7 @@ jobs:
           path: security-results/bandit*
 
   trivy-scan:
-    runs-on: [ubuntu-22.04-64core-256GB, ubuntu-22.04]
+    runs-on: ubuntu-22.04-32core-128GB
     permissions:
       contents: read
     steps:
