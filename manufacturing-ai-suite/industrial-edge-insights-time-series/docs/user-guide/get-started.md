@@ -1,8 +1,7 @@
 # Get Started
 
--   **Time to Complete:** 30 minutes
--   **Programming Language:**  Python 3
-
+- **Time to Complete:** 30 minutes
+- **Programming Language:**  Python 3
 
 ## Configure Docker
 
@@ -12,6 +11,7 @@ To configure Docker:
 2. **Configure Proxy (if required)**:
    - Set up proxy settings for Docker client and containers as described in [Docker Proxy Configuration](https://docs.docker.com/network/proxy/).
    - Example `~/.docker/config.json`:
+
      ```json
      {
        "proxies": {
@@ -23,9 +23,11 @@ To configure Docker:
        }
      }
      ```
+
    - Configure the Docker daemon proxy as per [Systemd Unit File](https://docs.docker.com/engine/daemon/proxy/#systemd-unit-file).
 3. **Enable Log Rotation**:
    - Add the following configuration to `/etc/docker/daemon.json`:
+
      ```json
      {
        "log-driver": "json-file",
@@ -35,7 +37,9 @@ To configure Docker:
        }
      }
      ```
+
    - Reload and restart Docker:
+
      ```bash
      sudo systemctl daemon-reload
      sudo systemctl restart docker
@@ -43,12 +47,10 @@ To configure Docker:
 
 ## Clone source code
 
-
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
 ```
-
 
 ## Deploy with Docker Compose
 
@@ -61,17 +63,18 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
 2. Deploy the sample app, use only one of the following options:
 
 > **NOTE**:
->  - The below `make up_opcua_ingestion` or `make up_mqtt_ingestion` fails if the above required fields are not populated
->    as per the rules called out in `.env` file.
->  - The sample app is deployed by pulling the pre-built container images of the sample app
->    from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY`
->    env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series`)
->  - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) and in `helm/values.yaml` (for Helm deployments)
->    is set to `true` by default, enabling continuous looping of simulator data. To ingest the simulator data only once (without looping),
->    set this variable to `false`.
->  - If `CONTINUOUS_SIMULATOR_INGESTION` is set to `false`, you may see the `[inputs.opcua] status not OK for node` message in the `telegraf`
->    logs for OPC-UA ingestion after a single data ingestion loop. This message can be ignored.
->  - `make up_opcua_ingestion` is supported only for `Wind Turbine Anomaly Detection` sample app
+>
+> - The below `make up_opcua_ingestion` or `make up_mqtt_ingestion` fails if the above required fields are not populated
+>   as per the rules called out in `.env` file.
+> - The sample app is deployed by pulling the pre-built container images of the sample app
+>   from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY`
+>   env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series`)
+> - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) and in `helm/values.yaml` (for Helm deployments)
+>   is set to `true` by default, enabling continuous looping of simulator data. To ingest the simulator data only once (without looping),
+>   set this variable to `false`.
+> - If `CONTINUOUS_SIMULATOR_INGESTION` is set to `false`, you may see the `[inputs.opcua] status not OK for node` message in the `telegraf`
+>   logs for OPC-UA ingestion after a single data ingestion loop. This message can be ignored.
+> - `make up_opcua_ingestion` is supported only for `Wind Turbine Anomaly Detection` sample app
 
 ::::{tab-set}
 :::{tab-item} **Wind Turbine Anomaly Detection**
@@ -136,17 +139,13 @@ make up_mqtt_ingestion app="weld-anomaly-detection" num_of_streams=<NUMBER_OF_ST
 - Ensure system resources (CPU, memory) are sufficient to support the desired number of streams.
 - For troubleshooting or monitoring, use `make status` to verify container health and logs.
 
+  > **Note:** The command `make status` may show errors in containers like ia-grafana when user have not logged in
+  > for the first login OR due to session timeout. Just login again in Grafana and functionality wise if things are working, then
+  > ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
 
-Use the following command to verify that all containers are active and error-free.
-
-> **Note:** The command `make status` may show errors in containers like ia-grafana when user have not logged in
-> for the first login OR due to session timeout. Just login again in Grafana and functionality wise if things are working, then
-> ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
-
-
-```sh
-make status
-```
+  ```sh
+  make status
+  ```
 
 ### Running User Defined Function(UDF) inference on GPU
 
@@ -183,41 +182,41 @@ To trigger the UDF inference on GPU in Time Series Analytics Microservice, run t
 
 2. Run following commands to see the data in InfluxDB*:
 
-    > **NOTE**:
-    > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
-    > This does not affect any functionality while working with the InfluxDB commands
+   > **NOTE**:
+   > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
+   > This does not affect any functionality while working with the InfluxDB commands
 
-    ``` bash
-    # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
-    # for docker compose deployment and `values.yml` for helm deployment
-    influx -username <username> -password <passwd>
-    use datain # database access
-    show measurements
-    # Run below query to check and output measurement processed
-    # by Time Series Analytics microservice
-    select * from "wind-turbine-anomaly-data"
-    ```
+   ``` bash
+   # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
+   # for docker compose deployment and `values.yml` for helm deployment
+   influx -username <username> -password <passwd>
+   use datain # database access
+   show measurements
+   # Run below query to check and output measurement processed
+   # by Time Series Analytics microservice
+   select * from "wind-turbine-anomaly-data"
+   ```
 
 3. To check the output in Grafana:
 
-    - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably, chrome browser)
+   - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably, chrome browser)
 
-      > **Note**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
+     > **Note**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
 
-    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-      in `.env` file and select **Wind Turbine Dashboard**.
+   - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
+     in `.env` file and select **Wind Turbine Dashboard**.
 
-      ![Grafana login](./_images/login_wt.png)
+     ![Grafana login](./_images/login_wt.png)
 
-    - After login, click on Dashboard
-      ![Menu view](./_images/dashboard.png)
+   - After login, click on Dashboard
+     ![Menu view](./_images/dashboard.png)
 
-    - Select the `Wind Turbine Dashboard`.
-      ![Windturbine dashboard](./_images/wind_turbine_dashboard.png)
+   - Select the `Wind Turbine Dashboard`.
+     ![Windturbine dashboard](./_images/wind_turbine_dashboard.png)
 
-    - You will see the below output.
+   - You will see the below output.
 
-      ![Anomaly prediction in grid active power](./_images/anomaly_power_prediction.png)
+     ![Anomaly prediction in grid active power](./_images/anomaly_power_prediction.png)
 
 :::
 :::{tab-item} **Weld Anomaly Detection**
@@ -235,64 +234,65 @@ To trigger the UDF inference on GPU in Time Series Analytics Microservice, run t
 
 2. Run following commands to see the data in InfluxDB*:
 
-    > **NOTE**:
-    > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
-    > This does not affect any functionality while working with the InfluxDB commands
+   > **NOTE**:
+   > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
+   > This does not affect any functionality while working with the InfluxDB commands
 
-    ``` bash
-    # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
-    # for docker compose deployment and `values.yml` for helm deployment
-    influx -username <username> -password <passwd>
-    use datain # database access
-    show measurements
-    # Run below query to check and output measurement processed
-    # by Time Series Analytics microservice
-    select * from "weld-sensor-anomaly-data"
-    ```
+   ``` bash
+   # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
+   # for docker compose deployment and `values.yml` for helm deployment
+   influx -username <username> -password <passwd>
+   use datain # database access
+   show measurements
+   # Run below query to check and output measurement processed
+   # by Time Series Analytics microservice
+   select * from "weld-sensor-anomaly-data"
+   ```
 
 3. To check the output in Grafana:
 
-    - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably, chrome browser)
+   - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably, chrome browser)
 
-      > **Note**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
+     > **Note**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
 
-    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-      in `.env` file and select **Wind Turbine Dashboard**.
+   - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
+     in `.env` file and select **Wind Turbine Dashboard**.
 
-      ![Grafana login](./_images/login_wt.png)
+     ![Grafana login](./_images/login_wt.png)
 
-    - After login, click on Dashboard
-      ![Menu view](./_images/dashboard.png)
+   - After login, click on Dashboard
+     ![Menu view](./_images/dashboard.png)
 
-    - Select the `Weld Anomaly Detection Dashboard`.
-      ![Weld Anomaly Detection dashboard](./_images/weld_anomaly_detection.png)
+   - Select the `Weld Anomaly Detection Dashboard`.
+     ![Weld Anomaly Detection dashboard](./_images/weld_anomaly_detection.png)
 
-    - One will see the below output.
+   - One will see the below output.
 
-      ![Anomaly prediction in weld sensor data](./_images/anomaly_detection_weld.png)
+     ![Anomaly prediction in weld sensor data](./_images/anomaly_detection_weld.png)
 
 :::
 ::::
 
 ## Bring down the sample app
 
-  ```sh
-  make down
-  ```
+```sh
+make down
+```
 
 ## Check logs - troubleshooting
 
-- Check container logs to catch any failures:
+Check container logs to catch any failures:
 
-  ```bash
-  docker ps
-  docker logs -f <container_name>
-  docker logs -f <container_name> | grep -i error
-  ```
+```bash
+docker ps
+docker logs -f <container_name>
+docker logs -f <container_name> | grep -i error
+```
 
 ## Other Deployment options
 
-- [How to Deploy with Helm](./how-to-guides/how-to-deploy-with-helm.md): Guide for deploying the sample application on a k8s cluster using Helm.
+See [How to Deploy with Helm](./how-to-guides/how-to-deploy-with-helm.md)
+guide to learn how to deploy the sample application on a k8s cluster using Helm.
 
 ## Advanced setup
 

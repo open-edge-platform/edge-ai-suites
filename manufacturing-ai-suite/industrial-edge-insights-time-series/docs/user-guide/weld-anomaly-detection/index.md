@@ -11,7 +11,6 @@ As seen in the following architecture diagram, the sample app at a high-level co
 
 ![Time Series AI Stack Architecture Diagram](../_images/time-series-ai-stack-architecture.png)
 
-
 ### Data flow explanation
 
 Let's discuss how this architecture translates to data flow in the weld anomaly detection use case, by ingesting the data using the OPC-UA simulator and publishing the anomaly alerts to MQTT broker.
@@ -35,7 +34,7 @@ This data is being ingested into **Telegraf** using the **OPC-UA** protocol usin
 
 Directory details is as below:
 
-##### **`config.json`**:
+##### **`config.json`**
 
 The `task` section defines the settings for the Kapacitor task and User-Defined Functions (UDFs).
 
@@ -59,7 +58,7 @@ The `udfs` section specifies the details of the UDFs used in the task.
 **Alerts Configuration**:
 
 The `alerts` section defines the settings for alerting mechanisms, such as MQTT protocol.
-For OPC-UA configuration, please refer [Publishing OPC-UA alerts](../how-to-configure-alerts.md#helm---publish-opc-ua-alerts).
+For OPC-UA configuration, please refer [Publishing OPC-UA alerts](../how-to-guides/how-to-configure-alerts.md#helm---publish-opc-ua-alerts).
 Please note to enable only one of the MQTT or OPC-UA alerts.
 
 **MQTT Configuration**:
@@ -72,18 +71,21 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 | `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
 | `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
 
-##### **`udfs/`**:
-   - Contains the python script to process the incoming data.
-     Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with Intel® Extension for Scikit-learn*
-     to run on CPU to detect the anomalous power generation data points relative to wind speed.
+##### **`udfs/`**
 
-##### **`tick_scripts/`**:
-   - The TICKScript `weld_anomaly_detector.tick` determines processing of the input data coming in.
-     Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts.
-     By default, it is configured to publish the alerts to **MQTT**.
+Contains the python script to process the incoming data.
+Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with Intel® Extension for Scikit-learn*
+to run on CPU to detect the anomalous power generation data points relative to wind speed.
 
-##### **`models/`**:
-   - The `weld_anomaly_detector.cb` is a model built using the RandomForestRegressor Algo.
+##### **`tick_scripts/`**
+
+The TICKScript `weld_anomaly_detector.tick` determines processing of the input data coming in.
+Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts.
+By default, it is configured to publish the alerts to **MQTT**.
+
+##### **`models/`**
+
+The `weld_anomaly_detector.cb` is a model built using the RandomForestRegressor Algo.
 
 <!--hide_directive
 :::{toctree}

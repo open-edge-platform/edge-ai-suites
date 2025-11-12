@@ -5,11 +5,11 @@ As seen in the following architecture diagram, the sample app at a high-level co
 
 ![Time Series AI Stack Architecture Diagram](./_images/time-series-ai-stack-architecture.png)
 
+## 1. **Data Simulators/Destinations**
 
-## 1. **Data Simulators/Destinations**:
-  There are two data simulators - OPC-UA server and MQTT Publisher which read the data from
-  the CSV file and writes the data to the OPC-UA and MQTT input plugins in Telegraf.
-  The OPC-UA server and the MQTT broker can act as data destinations for receiving the alerts respectively
+There are two data simulators - OPC-UA server and MQTT Publisher which read the data from
+the CSV file and writes the data to the OPC-UA and MQTT input plugins in Telegraf.
+The OPC-UA server and the MQTT broker can act as data destinations for receiving the alerts respectively
 
 ---
 
