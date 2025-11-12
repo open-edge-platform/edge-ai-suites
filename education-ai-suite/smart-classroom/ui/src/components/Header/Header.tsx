@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { resetFlow, startProcessing, setUploadedAudioPath, processingFailed } from '../../redux/slices/uiSlice';
 import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
+import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { useTranslation } from 'react-i18next';
 import { uploadAudio } from '../../services/api';
 import Toast from '../common/Toast';
@@ -27,15 +28,16 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const [timer, setTimer] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const dispatch = useAppDispatch();
+
   const isBusy = useAppSelector((s) => s.ui.aiProcessing);
   const summaryEnabled = useAppSelector((s) => s.ui.summaryEnabled);
   const summaryLoading = useAppSelector((s) => s.ui.summaryLoading);
-  const transcriptStatus = useAppSelector((s) => s.transcript.status);
+  const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
+  const mindmapLoading = useAppSelector((s) => s.ui.mindmapLoading);
   const sessionId = useAppSelector((state) => state.ui.sessionId);
   const projectLocation = useAppSelector((state) => state.ui.projectLocation);
-  const isMindmapStreaming = useAppSelector((s) => s.mindmap.isStreaming);
-  const isMindmapRendered = useAppSelector((s) => s.mindmap.isRendered);
-  const mindmapGenerationTime = useAppSelector((s) => s.mindmap.generationTime);
+  const transcriptStatus = useAppSelector((s) => s.transcript.status);
+  const mindmapState = useAppSelector((s) => s.mindmap);
 
   const handleCopy = () => {
     const location = `${projectLocation}/${projectName}/${sessionId}`;
@@ -46,6 +48,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const handleClose = () => {
     setShowToast(false);
   };
+
   useEffect(() => {
     let interval: number | null = null;
     if (isRecording) {
@@ -57,26 +60,29 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   }, [isRecording, timer]);
 
   useEffect(() => {
-    if (isMindmapStreaming) {
-      setNotification(t('notifications.generatingMindMap')); // "Generating mindmap..."
-    } 
-    else if (isMindmapRendered) {
-      setNotification(t('notifications.mindmapReady') ); 
-    } 
+    if (mindmapState.error) {
+      setNotification(t('notifications.mindmapError'));
+    }
+    else if (mindmapLoading || mindmapState.isLoading) {
+      setNotification(t('notifications.generatingMindmap'));
+    }
+    else if (mindmapEnabled && !mindmapLoading && mindmapState.finalText) {
+      setNotification(t('notifications.mindmapReady'));
+    }
     else if (summaryEnabled && summaryLoading) {
       setNotification(t('notifications.generatingSummary'));
     } 
     else if (summaryEnabled && isBusy && !summaryLoading) {
       setNotification(t('notifications.streamingSummary'));
     } 
+    else if (!isBusy && summaryEnabled && !mindmapEnabled) {
+      setNotification(t('notifications.summaryReady'));
+    }
     else if (isBusy && transcriptStatus === 'streaming') {
       setNotification(t('notifications.loadingTranscript'));
     } 
     else if (isBusy && !summaryEnabled) {
       setNotification(t('notifications.analyzingAudio'));
-    } 
-    else if (!isBusy && summaryEnabled) {
-      setNotification(t('notifications.summaryReady'));
     } 
     else {
       setNotification(t('notifications.start'));
@@ -86,9 +92,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     summaryEnabled,
     summaryLoading,
     transcriptStatus,
-    isMindmapStreaming,
-    isMindmapRendered,
-    mindmapGenerationTime,
+    mindmapEnabled,
+    mindmapLoading,
+    mindmapState.isLoading,
+    mindmapState.finalText,
+    mindmapState.error,
     t
   ]);
 
@@ -120,6 +128,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       dispatch(resetFlow());
       dispatch(resetTranscript());
       dispatch(resetSummary());
+      dispatch(clearMindmap());
     } else {
       setNotification(t('notifications.uploading'));
       dispatch(startProcessing());
@@ -133,6 +142,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     dispatch(resetFlow());
     dispatch(resetTranscript());
     dispatch(resetSummary());
+    dispatch(clearMindmap());
     dispatch(startProcessing());
     try {
       const result = await uploadAudio(file);

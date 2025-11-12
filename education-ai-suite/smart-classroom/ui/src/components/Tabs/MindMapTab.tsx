@@ -1,20 +1,25 @@
 import React, { useEffect, useRef } from "react";
 import mermaid from "mermaid";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import "../../assets/css/MindMap.css";
 import {
-  firstMindmapToken,
-  mindmapDone,
   clearMindmapStartRequest,
+  mindmapStart as uiMindmapStart,
+  mindmapSuccess as uiMindmapSuccess,
+  mindmapFailed as uiMindmapFailed,
 } from "../../redux/slices/uiSlice";
+
 import {
-  appendMindmap,
-  finishMindmap,
-  startMindmap,
+  startMindmap as mmStart,
+  setMindmap,
   setRendered,
-  setSVG, 
+  setSVG,
   setGenerationTime,
+  setError,
+  clearMindmap,
 } from "../../redux/slices/mindmapSlice";
-import { streamMindmap } from "../../services/api";
+
+import { fetchMindmap } from "../../services/api";
 import "../../assets/css/MindMap.css";
 
 const activeMindmapSessions = new Set<string>();
@@ -25,13 +30,53 @@ const cleanMindmapContent = (content: string): string => {
   if (!/^mindmap/.test(content)) {
     content = "mindmap\n" + content;
   }
+
+  const wrapText = (text: string, maxLength: number = 25): string => {
+    if (text.length <= maxLength) return text;
+    
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+    
+    for (const word of words) {
+      if ((currentLine + ' ' + word).length <= maxLength) {
+        currentLine = currentLine ? currentLine + ' ' + word : word;
+      } else {
+        if (currentLine) lines.push(currentLine);
+        currentLine = word;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+    
+    return lines.join('<br/>');
+  };
+
   content = content
     .replace(/\r\n/g, "\n")
     .split("\n")
-    .map((line) => line.replace(/\s+$/g, "")) 
+    .map((line) => {
+      let cleaned = line.replace(/\s+$/g, "");
+      cleaned = cleaned.replace(/^(\s*)[-*•]\s+/, "$1");
+      cleaned = cleaned.replace(/\t/g, "  ");
+      
+      const match = cleaned.match(/^(\s*)(.*?)(\s*\([^)]*\)\s*)?$/);
+      if (match && match[2]) {
+        const indent = match[1] || '';
+        const text = match[2];
+        const suffix = match[3] || '';
+        
+        if (!text.includes('<br/>') && text.length > 25) {
+          const wrappedText = wrapText(text);
+          cleaned = indent + wrappedText + suffix;
+        }
+      }
+      
+      return cleaned;
+    })
     .join("\n");
   content = content.replace(/root\s*\(\(\s*(.*?)\s*\)\)/, (match, label) => {
-    return `root((${label.trim()}))`;
+    const wrappedLabel = wrapText(label, 30); 
+    return `root((${wrappedLabel}))`;
   });
 
   return content.trim();
@@ -43,7 +88,11 @@ const MindMapTab: React.FC = () => {
   const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
   const sessionId = useAppSelector((s) => s.ui.sessionId);
   const shouldStartMindmap = useAppSelector((s) => s.ui.shouldStartMindmap);
-  const { finalText, isRendered, svg } = useAppSelector((s) => s.mindmap);
+
+  const { finalText, isRendered, svg, isLoading } = useAppSelector(
+    (s) => s.mindmap
+  );
+
   const startedRef = useRef(false);
   const mermaidRef = useRef<HTMLDivElement>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -87,16 +136,14 @@ const MindMapTab: React.FC = () => {
         console.error("❌ Mermaid render error:", error);
         mermaidRef.current!.innerHTML = `
           <div class="mermaid-error">
-            ⚠️ Error rendering diagram. Please check your input format.
+            ⚠️ Error rendering diagram. Please check the input format.
           </div>`;
-        dispatch(setRendered(true)); 
+        dispatch(setRendered(true));
       }
     };
 
     renderMermaid();
   }, [finalText, dispatch, isRendered]);
-
-
   useEffect(() => {
     if (!mindmapEnabled || !sessionId || !shouldStartMindmap) return;
     if (activeMindmapSessions.has(sessionId) || startedRef.current) return;
@@ -104,53 +151,38 @@ const MindMapTab: React.FC = () => {
     startedRef.current = true;
     activeMindmapSessions.add(sessionId);
     startTimeRef.current = performance.now();
+    dispatch(clearMindmap());
     dispatch(clearMindmapStartRequest());
-    dispatch(startMindmap());
+    dispatch(uiMindmapStart()); 
+    dispatch(mmStart()); 
 
     (async () => {
       try {
-        let sentFirst = false;
-        let fullContent = "";
+        const fullMindmap = await fetchMindmap(sessionId);
 
-        for await (const ev of streamMindmap(sessionId)) {
-          if (ev.type === "mindmap_token") {
-            if (!sentFirst) {
-              dispatch(firstMindmapToken());
-              sentFirst = true;
-            }
-            fullContent += ev.token;
-          } else if (ev.type === "error") {
-            window.dispatchEvent(
-              new CustomEvent("global-error", {
-                detail: ev.message || "Mindmap generation error",
-              })
-            );
-            break;
-          } else if (ev.type === "done") {
-            dispatch(appendMindmap(fullContent));
-            break;
-          }
+        if (typeof fullMindmap === "string" && fullMindmap.length > 0) {
+          dispatch(setMindmap(fullMindmap)); 
+          dispatch(uiMindmapSuccess()); 
+        } else {
+          throw new Error("Empty mindmap returned from server.");
         }
-      } catch (e: any) {
-        if (e?.name !== "AbortError") console.error("Stream error", e);
+      } catch (err: any) {
+        console.error("❌ Mindmap fetch error:", err);
+        const message = err?.message || "Mindmap generation failed";
+        dispatch(setError(message)); 
+        dispatch(uiMindmapFailed()); 
+        mermaidRef.current!.innerHTML = `
+          <div class="mermaid-error">
+            ⚠️ Failed to generate mindmap: ${message}
+          </div>`;
       } finally {
-        dispatch(finishMindmap());
-        dispatch(mindmapDone());
+        dispatch(clearMindmapStartRequest());
       }
     })();
   }, [mindmapEnabled, shouldStartMindmap, sessionId, dispatch]);
 
-
   return (
     <div className="mindmap-tab">
-
-      {!isRendered && (
-        <div className="mindmap-loading">
-          <span className="tab-spinner" aria-label="loading" />
-          <p>Generating mindmap…</p>
-        </div>
-      )}
-
       <div
         className="mindmap-wrapper"
         style={{ display: isRendered ? "flex" : "none" }}

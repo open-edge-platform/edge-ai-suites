@@ -1,21 +1,21 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 interface MindmapState {
-  streamingText: string;
   finalText: string | null;
-  isStreaming: boolean;
+  isLoading: boolean;
   isRendered: boolean;
   svg: string | null;
-  generationTime: number | null; 
+  generationTime: number | null;
+  error: string | null;
 }
 
 const initialState: MindmapState = {
-  streamingText: "",
   finalText: null,
-  isStreaming: false,
+  isLoading: false,
   isRendered: false,
   svg: null,
   generationTime: null,
+  error: null,
 };
 
 const mindmapSlice = createSlice({
@@ -23,46 +23,50 @@ const mindmapSlice = createSlice({
   initialState,
   reducers: {
     startMindmap: (state) => {
-      state.streamingText = "";
-      state.finalText = null;
-      state.isStreaming = true;
+      state.isLoading = true;
       state.isRendered = false;
-      state.generationTime = null; 
+      state.finalText = null;
+      state.svg = null;
+      state.generationTime = null;
+      state.error = null;
     },
-    appendMindmap: (state, action: PayloadAction<string>) => {
-      state.streamingText = action.payload;
+    
+    setMindmap: (state, action: PayloadAction<string>) => {
+      state.finalText = action.payload;
+      state.isLoading = false;
+      state.error = null;
     },
-    finishMindmap: (state) => {
-      state.finalText = state.streamingText;
-      state.isStreaming = false;
-    },
+    
     setRendered: (state, action: PayloadAction<boolean>) => {
       state.isRendered = action.payload;
     },
+    
     setSVG: (state, action: PayloadAction<string>) => {
       state.svg = action.payload;
     },
+    
     setGenerationTime: (state, action: PayloadAction<number>) => {
-      state.generationTime = action.payload; 
+      state.generationTime = action.payload;
     },
-    clearMindmap: (state) => {
-      state.streamingText = "";
-      state.finalText = null;
-      state.isStreaming = false;
-      state.isRendered = false;
-      state.svg = null;
-      state.generationTime = null;
+    
+    setError: (state, action: PayloadAction<string>) => {
+      state.error = action.payload;
+      state.isLoading = false;
+    },
+    
+    clearMindmap: () => {
+      return initialState;
     },
   },
 });
 
 export const {
   startMindmap,
-  appendMindmap,
-  finishMindmap,
+  setMindmap,
   setRendered,
   setSVG,
-  setGenerationTime, 
+  setGenerationTime,
+  setError,
   clearMindmap,
 } = mindmapSlice.actions;
 

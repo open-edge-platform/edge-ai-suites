@@ -5,6 +5,7 @@ from utils.config_loader import config
 import logging, os
 from utils.session_manager import generate_session_id
 from components.summarizer_component import SummarizerComponent
+from components.mindmap_component import MindmapComponent
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from monitoring import monitor
@@ -23,6 +24,16 @@ class Pipeline:
 
         self.summarizer_pipeline = [
             SummarizerComponent(self.session_id, provider=config.models.summarizer.provider, model_name=config.models.summarizer.name, temperature=config.models.summarizer.temperature, device=config.models.summarizer.device)
+        ]
+
+        self.mindmap_pipeline = [
+            MindmapComponent(
+                self.session_id,
+                provider=config.models.summarizer.provider,
+                model_name=config.models.summarizer.name,
+                temperature=config.models.summarizer.temperature,
+                device=config.models.summarizer.device
+            )
         ]
 
     def run_transcription(self, audio_path: str):
@@ -72,21 +83,19 @@ class Pipeline:
 
     def run_mindmap(self):
         """
-        Generate a mindmap separately from an existing summary.txt file.
+        Generate a mindmap separately from an existing summary.md file.
         """
         project_config = RuntimeConfig.get_section("Project")
-        summary_path = os.path.join(
+        session_dir = os.path.join(
             project_config.get("location"),
             project_config.get("name"),
-            self.session_id,
-            "summary.md"  # Changed from summary.txt to summary.md
+            self.session_id
         )
-        monitor.start_monitoring(os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id,
-            "utilization_logs"
-        ))
+        summary_path = os.path.join(session_dir, "summary.md")
+        min_tokens = config.mindmap.min_token
+
+        # Start resource utilization monitoring
+        monitor.start_monitoring(os.path.join(session_dir, "utilization_logs"))
 
         try:
             summary_text = StorageManager.read_text_file(summary_path)
@@ -103,20 +112,41 @@ class Pipeline:
                 detail=f"Invalid session id: {self.session_id}, summary not found."
             )
         except Exception as e:
-            logger.error(f"An unexpected error occurred while accessing the summary: {e}")
+            logger.error(f"Unexpected error while accessing summary: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected error occurred while accessing the summary."
             )
 
-        # Call the mindmap generation from summarizer component
+        token_count = len(summary_text.split())
+        logger.info(f"Summary token count: {token_count}, Minimum required: {min_tokens}")
+        if token_count < min_tokens:
+            logger.warning("Insufficient tokens to generate mindmap.")
+            insufficient_mindmap = (
+                "mindmap\n"
+                "  root((Insufficient Input))\n"
+                "    The summary is too short to generate a meaningful mindmap."
+            )
+            mindmap_path = os.path.join(session_dir, "mindmap.mmd")
+            StorageManager.save(mindmap_path, insufficient_mindmap, append=False)
+            monitor.stop_monitoring()
+            return insufficient_mindmap
+        
         try:
-            for component in self.summarizer_pipeline:
-                mindmap_stream = component.mind_map(summary_text)
-                for token in mindmap_stream:
-                    yield token
+            full_mindmap = ""
+            for component in self.mindmap_pipeline:
+                mindmap_text = component.generate_mindmap(summary_text)
+                full_mindmap += mindmap_text
+
+            logger.info("Mindmap generation successful.")
+            return full_mindmap
+
         except Exception as e:
             logger.error(f"Error during mindmap generation: {e}")
-            yield f"[ERROR]: {e}"
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error during mindmap generation: {e}"
+            )
+
         finally:
-            monitor.stop_monitoring()            
+            monitor.stop_monitoring()
