@@ -1,17 +1,39 @@
+
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from fastapi import APIRouter, Depends, HTTPException, Request
+# --- Camera Watcher API (moved to end for formatting) ---
+
+from typing import List, Dict
+from service.directory_watcher import set_camera_watcher_mapping, get_enabled_cameras
+from service.directory_watcher import upload_videos_to_dataprep
+from fastapi import APIRouter, Depends, HTTPException, Request, Body
 from pydantic import BaseModel
 from api.endpoints.frigate_api import FrigateService
 from api.endpoints.summarization_api import SummarizationService
 from service.vms_service import VmsService
 from service import redis_store
+import requests
+
+class CameraWatcherRequest(BaseModel):
+    cameras: List[Dict[str, bool]]
 
 router = APIRouter()
 frigate_service = FrigateService()
 summarization_service = SummarizationService()
 vms_service = VmsService(frigate_service, summarization_service)
+try:  # Keep backward compatibility if VSS_SEARCH_URL still defined elsewhere
+    from config import VSS_SEARCH_URL  # type: ignore
+except Exception:
+    # Fallback: derive from VIDEO_UPLOAD_ENDPOINT if present
+    VSS_SEARCH_URL = settings.VIDEO_UPLOAD_ENDPOINT or ""
 
+@router.get("/health", summary="Health check for NVR Event Router service")
+async def health_check():
+    """
+    Basic health check endpoint for Docker Compose or monitoring.
+    Returns 200 OK if service is running.
+    """
+    return {"status": "healthy", "service": "nvr-event-router"}
 
 @router.get("/cameras", summary="Get list of camera names")
 async def get_cameras():
@@ -102,11 +124,17 @@ class Rule(BaseModel):
     label: str
     action: str
     camera: str | None = None
+    source: str | None = None
+    count: int | None = None
 
 
 @router.post("/rules/")
 async def add_rule(rule: Rule, request: Request):
-    success = await redis_store.add_rule(request, rule.id, rule.dict())
+    success = await redis_store.add_rule(
+        request,
+        rule.id,
+        rule.dict(exclude_none=True),
+    )
     if not success:
         raise HTTPException(status_code=400, detail="Rule ID already exists")
     return {"message": "Rule added", "rule": rule}
@@ -131,3 +159,67 @@ async def delete_rule(rule_id: str, request: Request):
     if not deleted:
         raise HTTPException(status_code=404, detail="Rule not found")
     return {"message": f"Rule {rule_id} deleted"}
+
+@router.post("/watchers/enable", summary="Enable/disable directory watcher for cameras")
+async def set_camera_watchers(
+    req: CameraWatcherRequest = Body(...),
+    request: Request = None
+):
+    # Step 1: Check if Video Search Service is reachable
+    try:
+        health_url = f"{VSS_SEARCH_URL}/manager/search/watched"
+        response = requests.get(health_url, timeout=5)
+        if response.status_code != 200:
+            raise Exception(f"Unexpected status: {response.status_code}")
+    except Exception as e:
+        # Log and return error
+        error_msg = f"Video search service is unreachable, please check and try again."
+        raise HTTPException(status_code=503, detail=error_msg)
+
+    # Step 2: Proceed with watcher setup if service reachable
+    mapping = {k: v for d in req.cameras for k, v in d.items()}
+    debounce_time = 5  # You can make this configurable if needed
+
+    updated = await set_camera_watcher_mapping(
+        mapping,
+        debounce_time,
+        upload_videos_to_dataprep,
+        request
+    )
+
+    return {
+        "mapping": updated,
+        "enabled": [k for k, v in updated.items() if v],
+        "disabled": [k for k, v in updated.items() if not v],
+    }
+
+@router.get("/watchers/mapping", summary="Get current camera watcher enable/disable mapping")
+async def get_camera_watcher_mapping(request: Request = None):
+    """Return merged camera watcher mapping.
+
+    Priority order:
+      1. In-memory runtime mapping (reflects changes since process start)
+      2. Persisted Redis mapping (authoritative across restarts)
+
+    If Redis is unavailable, fall back to in-memory only.
+    """
+    runtime_mapping = get_enabled_cameras() or {}
+    merged = runtime_mapping
+    try:
+        from service.redis_store import load_camera_watcher_mapping
+        persisted = await load_camera_watcher_mapping(request)
+        if persisted:
+            # Merge so that any runtime changes override persisted values
+            merged = {**persisted, **runtime_mapping}
+    except Exception as e:
+        # Include error info but still return something useful
+        return {"mapping": merged, "warning": f"Redis load failed: {e}"}
+    return {"mapping": merged}
+
+
+@router.get("/watchers/enable", summary="Alias to fetch current watcher mapping (GET)")
+async def get_camera_watcher_mapping_alias(request: Request = None):
+    """Provide a GET alias on /watchers/enable so users who query that endpoint directly
+    (expecting state) receive the same response as /watchers/mapping.
+    """
+    return await get_camera_watcher_mapping(request)

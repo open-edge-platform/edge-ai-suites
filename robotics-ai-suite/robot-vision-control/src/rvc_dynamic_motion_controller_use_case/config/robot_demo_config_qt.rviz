@@ -15,7 +15,6 @@ Panels:
         - /Pose1/Topic1
         - /PointCloud22/Topic1
         - /MarkerArray2/Topic1
-        - /PlanningScene1
         - /PlanningScene1/Scene Geometry1
         - /PlanningScene1/Scene Robot1
       Splitter Ratio: 0.5823529362678528
@@ -425,7 +424,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Best Effort
-        Value: camera/depth/color/points
+        Value: camera/cameraipc/depth/color/points
       Use Fixed Frame: true
       Use rainbow: true
       Value: false
@@ -729,21 +728,34 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: d405rs_description
-      Enabled: false
+        Value: rs_description
+      Enabled: true
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        cameraipc_bottom_screw_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        cameraipc_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
       Mass Properties:
         Inertia: false
         Mass: false
       Name: d405RS
       TF Prefix: ""
       Update Interval: 0
-      Value: false
+      Value: true
       Visual Enabled: true
   Enabled: true
   Global Options:

@@ -8,11 +8,11 @@ $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 name: "pcb"
 displayName: "pcb"
 description: "PCB Anomaly Detection Deployment Package"
-version: "1.0.0"
+version: "1.1.0"
 
 applications:
   - name: pcb-app
-    version: 1.0.0
+    version: 1.1.0
 
 defaultNamespaces:
   pcb-app: pcb

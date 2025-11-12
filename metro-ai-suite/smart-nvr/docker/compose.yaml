@@ -23,11 +23,13 @@ services:
         tmpfs:
           size: 1000000000 # 1GB cache
       - ../resources/videos:/videos # Add volume for video files
+      - ../frigate-clips:/media/frigate/recordings # Shared volume for Frigate output clips
     depends_on:
        mqtt-broker:
          condition: service_healthy
     environment:
       no_proxy: ${no_proxy}, frigate, ${VSS_SUMMARY_IP}, ${VLM_SERVING_IP}
+      NO_PROXY: ${no_proxy}, frigate, ${VSS_SUMMARY_IP}, ${VLM_SERVING_IP}
       FRIGATE_MQTT_PASSWORD: ${MQTT_PASSWORD} 
       FRIGATE_MQTT_USER: ${MQTT_USER}
       OPENAI_BASE_URL: "http://${VLM_SERVING_IP}:${VLM_SERVING_PORT}/v1"
@@ -46,10 +48,18 @@ services:
     restart: unless-stopped
     networks:
       - nvr-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     volumes:
       - ../src:/app
+      - ../frigate-clips:/media/frigate/recordings # Shared volume for watcher to access Frigate recordings
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
+      - ../resources/mqtt-certs:/mosquitto/secrets:ro
     depends_on:
       frigate:
         condition: service_healthy
@@ -68,6 +78,7 @@ services:
       MQTT_USER: ${MQTT_USER}
       MQTT_PASSWORD: ${MQTT_PASSWORD} 
       HOST_IP: ${HOST_IP}
+      NVR_SCENESCAPE: ${NVR_SCENESCAPE}
 
   nvr-event-router-ui:
     container_name: nvr-event-router-ui
@@ -87,6 +98,7 @@ services:
       API_BASE_URL: "http://${HOST_IP}:8000" 
       EVENT_POLL_INTERVAL: "10"
       NVR_GENAI: ${NVR_GENAI}
+      NVR_SCENESCAPE: ${NVR_SCENESCAPE}
       no_proxy: ${no_proxy}, frigate, nvr-event-router, ${VSS_SUMMARY_IP}, ${VLM_SERVING_IP}
       
   mqtt-broker:
@@ -102,6 +114,7 @@ services:
       - mosquitto_log:/mosquitto/log
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
+      - ../resources/mqtt-certs:/mosquitto/secrets:ro
     environment:
       MQTT_USER: ${MQTT_USER} 
       MQTT_PASSWORD: ${MQTT_PASSWORD} 

@@ -35,8 +35,15 @@
 #include <message_filters/sync_policies/exact_time.h>
 
 #include <pcl_conversions/pcl_conversions.h>
+#include <pcl/filters/extract_indices.h>
 
 #include <tf2_eigen/tf2_eigen.hpp>
+
+#include <sensor_msgs/msg/camera_info.hpp>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_sensor_msgs/tf2_sensor_msgs.h>  // for doTransform(sensor_msgs::PointCloud2)
+
 #include "matcher.hpp"
 
 namespace RVC
@@ -50,6 +57,13 @@ struct MatchOperation
 class PoseDetector : public rclcpp::Node
 {
 private:
+    std::unique_ptr<tf2_ros::Buffer> tfBuffer;
+    std::shared_ptr<tf2_ros::TransformListener> tfListener;
+	    // Camera intrinsics
+    double fx_, fy_, cx_, cy_;
+    bool intrinsicsReceived;
+    void cameraInfoCallback(sensor_msgs::msg::CameraInfo::ConstSharedPtr msg);
+    rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_sub_;
 
     message_filters::Subscriber<rvc_vision_messages::msg::RotatedBBList> m_rotated_bb_list_sub;
     message_filters::Subscriber<sensor_msgs::msg::PointCloud2> m_pcl_sub;

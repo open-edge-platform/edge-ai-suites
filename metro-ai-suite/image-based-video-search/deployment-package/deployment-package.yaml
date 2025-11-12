@@ -8,11 +8,11 @@ $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 name: "ibvs"
 displayName: "ibvs"
 description: "Image-Based Video Search Sample Application"
-version: "1.0.1"
+version: "1.1.0"
 
 applications:
   - name: ibvs-app
-    version: 1.0.1
+    version: 1.1.0
 
 defaultNamespaces:
   ibvs-app: ibvs

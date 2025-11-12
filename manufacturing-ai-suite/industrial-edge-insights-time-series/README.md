@@ -20,6 +20,7 @@ Refer [How it works](docs/user-guide/wind-turbine-anomaly/how-it-works.md).
   - [How to configure OPC-UA/MQTT alerts](docs/user-guide/wind-turbine-anomaly/how-to-configure-alerts.md): Guide for configuring the OPC-UA/MQTT alerts in the Time Series Analytics microservice
   - [How to configure custom UDF deployment package](docs/user-guide/wind-turbine-anomaly/how-to-configure-custom-udf.md): Guide for deploying a customized UDF deployment package (udfs/models/tick scripts)
   - [How to create a new sample app](docs/user-guide/wind-turbine-anomaly/how-to-create-a-new-sample-app.md): Guide for creating a new sample app by referencing Wind Turbine Anomaly Detection sample app
-  - [How to connect to secure MQTT broker](docs/user-guide/how-to-connect-to-secure-mqtt-broker.md): Guide for connecting to secure MQTT broker.
+  - [How to connect to secure MQTT broker](docs/user-guide/wind-turbine-anomaly/how-to-connect-to-secure-mqtt-broker.md): Guide for connecting to secure MQTT broker.
+  - [How to connect to secure OPC UA server](docs/user-guide/wind-turbine-anomaly/how-to-connect-to-secure-opcua-server.md): Guide for connecting to secure OPC UA server.
 - **Release Notes**
   - [Release Notes](docs/user-guide/wind-turbine-anomaly/release_notes.md): Information on the latest updates, improvements, and bug fixes.

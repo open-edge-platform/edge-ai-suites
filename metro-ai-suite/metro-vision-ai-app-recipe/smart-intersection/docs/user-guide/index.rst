@@ -29,4 +29,5 @@ This guide is designed to help developers understand the architecture, setup, an
    how-to-use-gpu-for-inference
    how-to-deploy-with-edge-orchestrator
    application-security-enablement
+   release-notes
    support
