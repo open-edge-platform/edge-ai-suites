@@ -32,9 +32,9 @@ hide_directive-->
 :::{toctree}
 :hidden:
 
-how-it-works.md
-system-requirements
 get-started
+system-requirements
+how-it-works.md
 how-to-guides/index
 weld-anomaly-detection/index
 wind-turbine-anomaly/index
