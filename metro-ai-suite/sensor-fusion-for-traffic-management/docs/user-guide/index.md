@@ -61,14 +61,15 @@ hardware platform's capabilities, this reference implementation serves as the pe
 :::{toctree}
 :hidden:
 
-.. toctree::
-   Get-Started-Guide
+   get-started-guide
    prerequisites
    How it Works <how-it-works.md>
    system-req
-   <Advanced user guide <advanced-user-guide.md>
+   Advanced user guide <advanced-user-guide.md>
    APIs
    FAQ
    release-notes
 :::
 hide_directive-->
+
+Loitering Detection <edge-ai-suites/loitering-detection/index>
