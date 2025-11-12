@@ -34,14 +34,11 @@ Choose **one** of the following approaches to get the Helm charts:
    cd wind-turbine-anomaly-detection-sample-app
    ```
 
-3. Proceed to Step 2 to configure your `values.yaml` file present in the current directory.
+            `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-rc1`
 
 **Option B: Generate Helm charts**
 
-1. Navigate to the source directory:
-   ```bash
-   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series  # path relative to git clone folder
-   ```
+            `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-rc1.tgz`
 
 2. Generate the charts:
    ```bash
