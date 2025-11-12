@@ -58,20 +58,55 @@ RTSP stream and csv data over mqtt using simulator and publishing the anomaly re
 
 Using the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator/simulation-data/` which is a normalized version of open source data welding dataset from <https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset>.
 
+The simulator reads `.avi` video files from the dataset and streams them as RTSP for vision data using the **mediamtx** server. This enables real-time video ingestion, simulating camera feeds for weld defect detection. The **dlstreamer-pipeline-server** connects to the RTSP stream and processes the video frames using a Geti model for automated defect analysis.
+
 Timeseries data is being ingested into **Telegraf** using the **MQTT** protocol using the **weld-data-simulator** data simulator
 Vision data is being ingested into **dlstreamer-pipeline-server** using the **RTSP** protocol using the **weld-data-simulator** data simulator
   
 ### **Data Ingestion**
 
-**Telegraf** through its input plugins (**MQTT**) gathers the data and sends this input data to both **InfluxDB** and **Time Series Analytics Microservice**.
-**dlstreamer-pipeline-server** gathers the data through RTSP Stream using **mediamxt** as the **RTSP Server**.
+Vision Data: **dlstreamer-pipeline-server** gathers the data through RTSP Stream using **mediamtx** as the **RTSP Server**.
 
+Time-series Data: **Telegraf** through its input plugins (**MQTT**) gathers the data and sends this input data to both **InfluxDB** and **Time Series Analytics Microservice**.
 
 ### **Data Storage**
 
 **InfluxDB** stores the incoming data coming from **Telegraf**, **Time Series Analytics Microservice** and **Fusion Analytics** .
 
 ### **Data Processing**
+
+**DL Streamer Pipeline Server** sends the images with overlaid bounding boxes through webrtc protocol to webrtc browser client. This is done via the MediaMTX server used for signaling. Coturn server is used to facilitate NAT traversal and ensure that the webrtc stream is accessible on a non-native browser client and helps in cases where firewall is enabled. 
+
+#### **`DL Streamer Pipeline Server config.json`**
+
+**Pipeline Configuration**: 
+
+| Key            | Description                                                                 | Example Value                          |
+|----------------|-----------------------------------------------------------------------------|----------------------------------------|
+| `name`         | The name of the pipeline configuration.                                     | `"weld_defect_classification"`        |
+| `source`       | The source type for video ingestion.                                        | `"gstreamer"`                         |
+| `queue_maxsize`| Maximum size of the queue for processing frames.                            | `50`                                  |
+| `pipeline`     | GStreamer pipeline string defining the video processing flow from RTSP source through classification to output. | `"rtspsrc location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination"` |
+| `parameters`   | Configuration parameters for pipeline elements, specifically for the classification element properties. | See below for nested structure |
+
+**Parameters Properties**:
+
+| Key                          | Description                                                                 | Value                          |
+|------------------------------|-----------------------------------------------------------------------------|--------------------------------|
+| `classification-properties`  | Properties for the classification element in the pipeline.                  | Object containing element configuration |
+| `element.name`               | Name of the GStreamer element to configure.                                 | `"classification"`            |
+| `element.format`             | Format type for element properties.                                         | `"element-properties"`        |
+
+**Destination Configuration**:
+
+| Key                | Description                                                                 | Example Value                          |
+|--------------------|-----------------------------------------------------------------------------|----------------------------------------|
+| `destination`      | Configuration for output destinations of the pipeline.                      | Object containing metadata and frame settings |
+| `metadata.type`    | The protocol type for sending metadata information.                         | `"mqtt"`                              |
+| `metadata.topic`   | The MQTT topic where vision classification results are published.           | `"vision_weld_defect_classification"` |
+| `frame.type`       | The protocol type for streaming video frames.                               | `"webrtc"`                            |
+| `frame.peer-id`    | Unique identifier for the WebRTC peer connection.                           | `"samplestream"`                      |
+---
 
 **Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) which is already built-in to the container image. The UDF deployment package is available
 at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/config/time-series-analytics-microservice`. Directory details is as below:
@@ -241,5 +276,5 @@ Use the following command to verify that all containers are active and error-fre
 ## Advanced setup
 
 - [How to build from source and deploy](./how-to-build-from-source.md): Guide to build from source and docker compose deployment
-- [How to configure OPC-UA/MQTT alerts](./how-to-configure-alerts.md): Guide for configuring the OPC-UA/MQTT alerts in the Time Series Analytics microservice
+- [How to configure MQTT alerts](./how-to-configure-alerts.md): Guide for configuring the MQTT alerts in the Time Series Analytics microservice
 - [How to configure custom UDF deployment package](./how-to-configure-custom-udf.md): Guide for deploying a customized UDF deployment package (udfs/models/tick scripts)

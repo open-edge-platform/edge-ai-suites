@@ -7,7 +7,17 @@ before proceeding with the below steps.
 
 ## Steps to Build from Source
 
-1. **Clone the source and build the `Time Series Analytics` microservice**:
+1. **Clone the source and build the `DLStreamer Pipeline Server` microservice**:
+
+    ```bash
+    git clone https://github.com/open-edge-platform/edge-ai-libraries.git
+    cd edge-ai-libraries/microservices/dlstreamer-pipeline-server/docker
+
+    # build
+    docker compose build
+    ```
+
+2. **Clone the source and build the `Time Series Analytics` microservice**:
 
     ```bash
     git clone https://github.com/open-edge-platform/edge-ai-libraries.git
@@ -25,7 +35,7 @@ before proceeding with the below steps.
     > docker compose build --build-arg COPYLEFT_SOURCES=true
     > ```
 
-2. **Clone the source and build the sample app**:
+3. **Clone the source and build the sample app**:
 
     ```bash
     git clone https://github.com/open-edge-platform/edge-ai-suites.git
@@ -42,6 +52,6 @@ before proceeding with the below steps.
     > make build_copyleft_sources
     > ```
 
-2. **Docker compose deployment and Verification**:
+4. **Docker compose deployment and Verification**:
     
     Follow the remaining steps/sections starting from [docker compose deployment](./get-started.md#deploy-with-docker-compose)
