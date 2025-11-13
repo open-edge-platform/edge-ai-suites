@@ -2,7 +2,7 @@
 # How It Works
 This section provides a high-level view of how the application processes audio input and integrates with a modular backend architecture.
 
-![High-Level System Diagram](./_images/education-ai-suite-smart-class-backend-service-layer.drawio.svg)
+![High-Level System Diagram](./images/education-ai-suite-smart-class-backend-service-layer.drawio.svg)
 
 ## Inputs
 
