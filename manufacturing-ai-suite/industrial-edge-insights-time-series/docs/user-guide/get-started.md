@@ -49,6 +49,7 @@ To configure Docker:
 
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git checkout release-2025.2.0
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
 ```
 
