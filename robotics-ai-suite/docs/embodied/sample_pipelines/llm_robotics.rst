@@ -333,7 +333,11 @@ The LLM Robotic demo includes the real-time component, non-real-time ROS2 compon
 
 #. Launch the JAKA robot arm ROS2 node:
 
-   .. important:: Execute the following commands as privileged user (``root``).
+   .. important:: Execute the following commands as privileged user (``root``). Open a root terminal using the following command:
+
+      .. code-block:: bash
+
+         $ sudo -i
 
    .. code-block:: bash
 
