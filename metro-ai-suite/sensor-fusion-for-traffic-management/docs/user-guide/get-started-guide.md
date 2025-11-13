@@ -100,6 +100,20 @@ Besides, you can test each component (without display) following the guides at [
         input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> | 
                | ->                lidar signal processing                     -> |                                    |
         ```
+  
+- Local File Pipeline for `Camera + Lidar(12C+4L)` Sensor fusion pipeline
+
+    - Json File: localFusionPipeline.json
+      `File location: ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json`
+
+    - Pipeline Description: 
+
+        ```
+               | -> decode     -> detector         -> tracker                  -> |                                    |
+               | -> decode     -> detector         -> tracker                  -> |                                    |
+        input  | -> decode     -> detector         -> tracker                  -> | ->  LidarCam3CFusion -> fusion  -> | -> output
+               | ->                lidar signal processing                     -> |                                    |
+        ```
 
 ### Start Service
 Open a terminal, run the following commands:
@@ -185,7 +199,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_fusion 2C1L
     ```
 
-    [![Display type: media_fusion](_images/2C1L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](_images/2C1L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -226,6 +240,8 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
 
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 > change /path-to-dataset to your data path.
+
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
 
 - `media_fusion` display type
 
@@ -278,6 +294,8 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 > change /path-to-dataset to your data path.
 
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+
 - `media_fusion` display type
 
     open another terminal, run the following commands:
@@ -329,6 +347,8 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 > change /path-to-dataset to your data path.
 
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+
 - `media_fusion` display type
 
     open another terminal, run the following commands:
@@ -373,6 +393,58 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
 
     ![Display type: lidar](_images/8C4L-Display-type-lidar.png)
 
+#### 12C+4L
+
+**Intel® Core™ i7-13700 and Intel® B580 Graphics.**
+
+> Note: Run with `root` if users want to get the GPU utilization profiling.
+> change /path-to-dataset to your data path.
+
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+
+- `media_fusion` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 12C4L
+    ```
+
+    ![Display type: media_fusion](_images/12C4L-Display-type-media-fusion.png)
+
+- `media_lidar` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 12C4L
+    ```
+
+    ![Display type: media_lidar](_images/12C4L-Display-type-media-lidar.png)
+
+- `media` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localMediaPipeline.json 4 1 /path-to-dataset media 12C4L
+    ```
+
+    ![Display type: media](_images/12C4L-Display-type-media.png)
+
+- `lidar` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 12C4L
+    ```
+
+    ![Display type: lidar](_images/12C4L-Display-type-lidar.png)
 
 ## Code Reference
 

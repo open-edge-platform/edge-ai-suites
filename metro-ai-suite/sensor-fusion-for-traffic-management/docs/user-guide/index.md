@@ -24,7 +24,8 @@ cameras with either radar or lidar:
 - Two cameras paired with one lidar (2C+1L),
 - Four cameras paired with two lidars (4C+2L),
 - Twelve cameras paired with two lidars (12C+2L),
-- Eight cameras paired with four lidars (8C+4L). 
+- Eight cameras paired with four lidars (8C+4L),
+- Twelve cameras paired with four lidars (12C+4L),
 
 
 ## Key Features

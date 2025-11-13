@@ -31,7 +31,7 @@ There are two steps required for running the sensor fusion application:
 - Start AI Inference service, more details can be found at [Service Start ](#service-start)
 - Run the application entry program, more details can be found at [Entry Program](#entry-program)
 
-Besides, you can test each component (without display) following the guides at [2C+1L Unit Tests](#2c+1l-unit-tests), [4C+2L Unit Tests](#4c+2l-unit-tests), [12C+2L Unit Tests](#12c+2l-unit-tests), [8C+4L Unit Tests](#8c+4l-unit-tests)
+Besides, you can test each component (without display) following the guides at [2C+1L Unit Tests](#2c+1l-unit-tests), [4C+2L Unit Tests](#4c+2l-unit-tests), [12C+2L Unit Tests](#12c+2l-unit-tests), [8C+4L Unit Tests](#8c+4l-unit-tests), [12C+4L Unit Tests](#12c+4l-unit-tests)
 
 
 ### Resources 
@@ -116,6 +116,20 @@ Besides, you can test each component (without display) following the guides at [
                | ->                lidar signal processing                     -> |                                    |
                | -> decode     -> detector         -> tracker                  -> |                                    |
         input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> | 
+               | ->                lidar signal processing                     -> |                                    |
+        ```
+
+- Local File Pipeline for `Camera + Lidar(12C+4L)` Sensor fusion pipeline
+
+    - Json File: localFusionPipeline.json
+      `File location: ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json`
+
+    - Pipeline Description: 
+
+        ```
+               | -> decode     -> detector         -> tracker                  -> |                                    |
+               | -> decode     -> detector         -> tracker                  -> |                                    |
+        input  | -> decode     -> detector         -> tracker                  -> | ->  LidarCam3CFusion -> fusion  -> | -> output
                | ->                lidar signal processing                     -> |                                    |
         ```
 
@@ -266,6 +280,8 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 > change /path-to-dataset to your data path.
 
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+
 In this section, the unit tests of three major components will be described: media processing, lidar processing, fusion pipeline without display.
 
 ##### Unit Test: Fusion pipeline without display
@@ -301,6 +317,8 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 > change /path-to-dataset to your data path.
+
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
 
 - `media_fusion` display type
 
@@ -353,6 +371,8 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 > change /path-to-dataset to your data path.
 
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+
 In this section, the unit tests of three major components will be described: media processing, lidar processing, fusion pipeline without display.
 
 ##### Unit Test: Fusion pipeline without display
@@ -386,10 +406,12 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 #### 12C+2L
 
-***The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
+**The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 > change /path-to-dataset to your data path.
+
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
 
 - `media_fusion` display type
 
@@ -437,10 +459,12 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 #### 12C+2L Unit Tests
 
-***The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
+**The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 > change /path-to-dataset to your data path.
+
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
 
 In this section, the unit tests of three major components will be described: media processing, lidar processing, fusion pipeline without display.
 
@@ -475,10 +499,12 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 #### 8C+4L
 
-***The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
+**The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 > change /path-to-dataset to your data path.
+
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
 
 - `media_fusion` display type
 
@@ -526,10 +552,12 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 #### 8C+4L Unit Tests
 
-***The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
+**The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
 > Note: Run with `root` if users want to get the GPU utilization profiling.
 > change /path-to-dataset to your data path.
+
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
 
 In this section, the unit tests of three major components will be described: media processing, lidar processing, fusion pipeline without display.
 
@@ -560,7 +588,96 @@ Open another terminal, run the following commands:
 sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 4 1 /path-to-dataset multisensor
 ```
 
+#### 12C+4L
 
+***The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
+
+> Note: Run with `root` if users want to get the GPU utilization profiling.
+> change /path-to-dataset to your data path.
+
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+
+- `media_fusion` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 12C4L
+    ```
+
+    ![Display type: media_fusion](_images/12C4L-Display-type-media-fusion.png)
+
+- `media_lidar` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 12C4L
+    ```
+
+    ![Display type: media_lidar](_images/12C4L-Display-type-media-lidar.png)
+
+- `media` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localMediaPipeline.json 4 1 /path-to-dataset media 12C4L
+    ```
+
+    ![Display type: media](_images/12C4L-Display-type-media.png)
+
+- `lidar` display type
+
+    open another terminal, run the following commands:
+
+    ```bash
+    # multi-sensor inputs test-case
+    sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 12C4L
+    ```
+
+    ![Display type: lidar](_images/12C4L-Display-type-lidar.png)
+
+#### 12C+4L Unit Tests
+
+**The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
+
+> Note: Run with `root` if users want to get the GPU utilization profiling.
+> change /path-to-dataset to your data path.
+
+Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+
+In this section, the unit tests of three major components will be described: media processing, lidar processing, fusion pipeline without display.
+
+##### Unit Test: Fusion pipeline without display
+
+Open another terminal, run the following commands:
+
+```bash
+# fusion test-case
+sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset multisensor
+```
+
+##### Unit Test: Media Processing
+
+Open another terminal, run the following commands:
+
+```bash
+# media test-case
+sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localMediaPipeline.json 4 1 /path-to-dataset media
+```
+
+##### Unit Test: Lidar Processing
+
+Open another terminal, run the following commands:
+
+```bash
+# lidar test-case
+sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localLidarPipeline.json 4 1 /path-to-dataset multisensor
+```
 
 ### KPI test
 
@@ -599,6 +716,17 @@ Fps and average latency will be calculated.
 sudo bash run_service_bare_log.sh
 # Open another terminal, run the command below:
 sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 10 /path-to-dataset multisensor
+```
+
+Fps and average latency will be calculated.
+
+#### 12C+4L
+
+```bash
+# Run service with the following command:
+sudo bash run_service_bare_log.sh
+# Open another terminal, run the command below:
+sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 10 /path-to-dataset multisensor
 ```
 
 Fps and average latency will be calculated.
@@ -674,6 +802,24 @@ Run the service first, and open another terminal, run the command below:
 sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 100 /path-to-dataset multisensor 100
 ```
 
+#### 12C+4L stability test
+
+
+> NOTE : change workload configuration to 4 in file: $PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config
+
+```vim
+...
+[Pipeline]
+numOfProcess=4
+maxConcurrentWorkload=4
+```
+
+Run the service first, and open another terminal, run the command below:
+
+```bash
+# 8C4L without display
+sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 100 /path-to-dataset multisensor 100
+```
 
 
 ## Build Docker image
