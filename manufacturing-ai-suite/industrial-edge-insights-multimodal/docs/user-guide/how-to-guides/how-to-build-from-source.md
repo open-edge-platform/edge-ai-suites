@@ -22,6 +22,7 @@ before proceeding with the below steps.
 
     ```bash
     git clone https://github.com/open-edge-platform/edge-ai-libraries.git
+    git checkout release-2025.2.0
     cd edge-ai-libraries/microservices/time-series-analytics/docker
 
     # build
