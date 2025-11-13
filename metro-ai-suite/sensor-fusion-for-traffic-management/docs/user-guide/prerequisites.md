@@ -10,7 +10,7 @@
 - Platform
 
     - Intel® Core™ Ultra 7 265H + Ubuntu24.04 (2C+1L/4C+2L usecase)
-    - Intel® Core™ i7-13700 and Intel® B580 Graphics + Ubuntu24.10 (8C+4L/12C+2L usecase)
+    - Intel® Core™ i7-13700 and Intel® B580 Graphics + Ubuntu24.10 (8C+4L/12C+2L/12C4L usecase)
     
 - Intel® OpenVINO™ Toolkit
 
