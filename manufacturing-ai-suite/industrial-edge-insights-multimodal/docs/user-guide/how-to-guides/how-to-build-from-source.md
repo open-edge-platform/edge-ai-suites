@@ -2,12 +2,13 @@
 
 This guide provides step-by-step instructions for building the `Time Series Analytics`
 microservice and `industrial-edge-insights-multimodal` Sample Application from source.
-Please follow [prerequisites](./get-started.md#configure-docker) and understand [data flow explanation](./get-started.md#data-flow-explanation)
+Please follow [prerequisites](../get-started.md#configure-docker) and understand
+[data flow explanation](../weld-defect-detection/index.md#data-flow-explanation)
 before proceeding with the below steps.
 
 ## Steps to Build from Source
 
-1. **Clone the source and build the `DLStreamer Pipeline Server` microservice**:
+1. **Clone the source and build the `DLStreamer Pipeline Server` microservice**.
 
     ```bash
     git clone https://github.com/open-edge-platform/edge-ai-libraries.git
@@ -17,7 +18,7 @@ before proceeding with the below steps.
     docker compose build
     ```
 
-2. **Clone the source and build the `Time Series Analytics` microservice**:
+2. **Clone the source and build the `Time Series Analytics` microservice**.
 
     ```bash
     git clone https://github.com/open-edge-platform/edge-ai-libraries.git
@@ -28,14 +29,14 @@ before proceeding with the below steps.
     docker compose build
     ```
 
-    > **Note:**  
+    > **Note:**
     > To include copyleft licensed sources when building the Docker image, use the below command:
     >
     > ```bash
     > docker compose build --build-arg COPYLEFT_SOURCES=true
     > ```
 
-3. **Clone the source and build the sample app**:
+3. **Clone the source and build the sample app**.
 
     ```bash
     git clone https://github.com/open-edge-platform/edge-ai-suites.git
@@ -45,13 +46,14 @@ before proceeding with the below steps.
     make build # builds only data simulator and fusion analytics docker images
     ```
 
-    > **Note:**  
+    > **Note:**
     > To include copyleft licensed sources when building the Docker images, use the below command:
     >
     > ```bash
     > make build_copyleft_sources
     > ```
 
-4. **Docker compose deployment and Verification**:
-    
-    Follow the remaining steps/sections starting from [docker compose deployment](./get-started.md#deploy-with-docker-compose)
+4. **Deploy with Docker compose and verify**.
+
+    Follow the remaining steps/sections starting from
+    [docker compose deployment](../get-started.md#deploy-with-docker-compose)

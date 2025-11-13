@@ -22,18 +22,18 @@ By default, the following MQTT alerts are configured in `edge-ai-suites/manufact
 
 #### Configure MQTT Alert in TICK Script
 
-The following snippet shows how to add the MQTT if not 
+The following snippet shows how to add the MQTT if not
 already added. By default, the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick` TICK Script has the following configuration done by default.
 
 ```bash
-@weld_anomaly_detector()
-|alert()
-    .crit(lambda: "anomaly_status" > 0)
-    .message('{"time": "{{ index .Time }}", "Pressure": {{ index .Fields "Pressure" }}, "CO2 Weld Flow": {{ index .Fields "CO2 Weld Flow" }}, "anomaly_status": {{ index .Fields "anomaly_status" }} } ')
-    .noRecoveries()
-    .mqtt('my_mqtt_broker')
-    .topic('alerts/weld_defect_detection')
-    .qos(1)
+data0
+        |alert()
+                .crit(lambda: "anomaly_status" > 0)
+                .message('{"time": "{{ index .Time }}", "Pressure": {{ index .Fields "Pressure" }}, "CO2 Weld Flow": {{ index .Fields "CO2 Weld Flow" }}, "anomaly_status": {{ index .Fields "anomaly_status" }} } ')
+                .noRecoveries()
+                .mqtt('my_mqtt_broker')
+                .topic('alerts/weld_defect_detection')
+                .qos(1)
 ```
 
 > **Note**: Setting **QoS** to `1` ensures messages are delivered at least once. Alerts are preserved and resent if the MQTT broker reconnects after downtime.
