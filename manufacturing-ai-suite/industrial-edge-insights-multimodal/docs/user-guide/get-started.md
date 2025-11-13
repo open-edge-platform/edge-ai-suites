@@ -69,20 +69,20 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
 2. Deploy the sample app, use only one of the following options.
 
-> **NOTE**:
->
-> - The below `make up` fails if the above required fields are not populated
->   as per the rules called out in `.env` file.
-> - The sample app is deployed by pulling the pre-built container images of the sample app
->   from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY`
->   env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal`)
-> - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) and in `helm/values.yaml` (for Helm deployments)
->   is set to `true` by default, enabling continuous looping of simulator data. To ingest the simulator data only once (without looping),
->   set this variable to `false`.
-> - The update rate of the graph and table may lag by a few seconds and might not perfectly align with the video stream, since
->   Grafana’s minimum refresh interval is 5 seconds.
-> - The graph and table may initially display "No Data" because the Time Series Analytics Microservice requires some time to
->   install its dependency packages before it can start running.
+   > **NOTE**:
+   >
+   > - The below `make up` fails if the above required fields are not populated
+   >   as per the rules called out in `.env` file.
+   > - The sample app is deployed by pulling the pre-built container images of the sample app
+   >   from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY`
+   >   env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal`)
+   > - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) and in `helm/values.yaml` (for Helm deployments)
+   >   is set to `true` by default, enabling continuous looping of simulator data. To ingest the simulator data only once (without looping),
+   >   set this variable to `false`.
+   > - The update rate of the graph and table may lag by a few seconds and might not perfectly align with the video stream, since
+   >   Grafana’s minimum refresh interval is 5 seconds.
+   > - The graph and table may initially display "No Data" because the Time Series Analytics Microservice requires some time to
+   >   install its dependency packages before it can start running.
 
    ```bash
    cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
@@ -91,14 +91,14 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
 3. Use the following command to verify that all containers are active and error-free.
 
-> **Note:** The command `make status` may show errors in containers like ia-grafana when user have not logged in
-> for the first login OR due to session timeout. Just login again in Grafana and functionality wise if things are working, then
-> ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
+   > **Note:** The command `make status` may show errors in containers like ia-grafana when user have not logged in
+   > for the first login OR due to session timeout. Just login again in Grafana and functionality wise if things are working, then
+   > ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
 
-```sh
-cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
-make status
-```
+   ```sh
+   cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+   make status
+   ```
 
 ## Verify the Weld Defect Detection Results
 

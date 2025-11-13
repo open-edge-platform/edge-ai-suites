@@ -10,15 +10,15 @@ This section provides instructions for setting up alerts in **Time Series Analyt
 
 By default, the following MQTT alerts are configured in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/config.json` file.
 
-  ```json
-    "alerts": {
-        "mqtt": {
-            "mqtt_broker_host": "ia-mqtt-broker",
-            "mqtt_broker_port": 1883,
-            "name": "my_mqtt_broker"
-        }
-     }
-   ```
+```json
+  "alerts": {
+      "mqtt": {
+          "mqtt_broker_host": "ia-mqtt-broker",
+          "mqtt_broker_port": 1883,
+          "name": "my_mqtt_broker"
+      }
+   }
+ ```
 
 #### Configure MQTT Alert in TICK Script
 
@@ -42,7 +42,7 @@ data0
 
 Follow the steps to subscribe to the published MQTT alerts.
 
-- To subscribe to all MQTT topics, execute the following command:
+To subscribe to all MQTT topics, execute the following command:
 
 ```sh
 docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
