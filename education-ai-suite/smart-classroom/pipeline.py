@@ -121,7 +121,7 @@ class Pipeline:
         token_count = len(summary_text.split())
         logger.info(f"Summary token count: {token_count}, Minimum required: {min_tokens}")
         if token_count < min_tokens:
-            logger.warning("Insufficient tokens to generate mindmap.")
+            logger.warning("Insufficient information to generate mindmap.")
             insufficient_mindmap = (
                 "mindmap\n"
                 "  root((Insufficient Input))\n"
