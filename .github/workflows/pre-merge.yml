@@ -185,7 +185,7 @@ jobs:
       contents: read          # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.robotics-ai-suite_changed == 'true' }}
-    uses: .github/workflows/build-documentation.yml
+    uses: ./.github/workflows/build-documentation.yml
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
