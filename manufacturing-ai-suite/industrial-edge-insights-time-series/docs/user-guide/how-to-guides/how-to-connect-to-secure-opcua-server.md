@@ -232,7 +232,7 @@ Edit your Telegraf configuration file:
 - `IDENTIFIER` with your OPC UA server node identifier
 - `USERNAME` and `PASSWORD` with your OPC UA server credentials
 
-> **Note:**  
+> **Note:**
 > Make sure your OPC UA server exposes nodes for both `wind_speed` and `grid_active_power`. These nodes must be available for data collection.
 
 ### 3.2 Update Wind Turbine Anomaly Detection Sample app configuration
@@ -262,7 +262,7 @@ Edit your sample app config file if you want to send alerts to OPC UA server:
 For OPC UA servers, ensure the following configuration:
 
 1. **Security Policy**: Set to `Basic256Sha256` or higher
-2. **Security Mode**: Set to `SignAndEncrypt`  
+2. **Security Mode**: Set to `SignAndEncrypt`
 3. **Authentication**: Configure username/password authentication
 4. **CA Certificate**: Install the generated CA certificate as trusted
 5. **Server Certificate**: Use the generated server certificate (`opcua_server_certificate.pem`)
@@ -271,4 +271,4 @@ For OPC UA servers, ensure the following configuration:
 
 ## Step 5: Deploy and Verify
 
-Deploy the sample application following the steps as mentioned [here](./get-started.md#deploy-with-docker-compose)
+Deploy the sample application following the steps as mentioned [here](../get-started.md#deploy-with-docker-compose)
