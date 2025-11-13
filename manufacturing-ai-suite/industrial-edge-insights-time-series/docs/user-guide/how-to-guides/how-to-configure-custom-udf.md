@@ -5,7 +5,7 @@ This guide provides instructions for setting up custom UDF deployment package (U
 ## Configuration
 
 - **`config.json`**:
-   - Understand the configuration documented at [link](get-started.md#configjson) and update 
+   - Understand the configuration documented at [link](../get-started.md#configjson) and update
      as per the need to configure the custom UDF deployment package
 
 - **`UDF Deployment package`**:
@@ -17,9 +17,9 @@ This guide provides instructions for setting up custom UDF deployment package (U
   2. **`tick_scripts/`**:
      - Contains TICKscripts for data processing, analytics, and alerts.
      - Mode detail on writing TICKscript is available at <https://docs.influxdata.com/kapacitor/v1/reference/tick/introduction/>
-   
+
      - Example TICKscript:
-         
+
       ```bash
       dbrp "datain"."autogen"
 
@@ -49,7 +49,7 @@ This guide provides instructions for setting up custom UDF deployment package (U
          - **Alerts**: Configuration for publishing alerts (e.g., MQTT). Refer [link](./how-to-configure-alerts.md#publish-mqtt-alerts)
          - **Logging**: Set log levels (`INFO`, `DEBUG`, `WARN`, `ERROR`).
          - **Output**: Publish processed data.
-      
+
           For more details, refer to the [Kapacitor TICK Script Documentation](https://docs.influxdata.com/kapacitor/v1/reference/tick/introduction/).
 
   3. **`models/`**:
@@ -98,5 +98,5 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
     POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
     kubectl logs -f -n ts-sample-app $POD_NAME
     ```
-    
+
 For more details, refer `Time Series Analytics` microservice API docs [here](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice).

@@ -2,7 +2,7 @@
 
 This guide provides step-by-step instructions on how one can create a new
 sample app by taking `Wind Turbine Anomaly Detection` OR `Weld Anomaly Detection` sample app as a reference
-by configuring the generic `Time Series AI Stack` as per the [how it works](./how-it-works.md).
+by configuring the generic `Time Series AI Stack` as outlined in [architecture guide](../how-it-works.md).
 Create a copy of the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection`
 folder and replace the folder name with the sample app name to be created.
 
@@ -11,7 +11,7 @@ folder and replace the folder name with the sample app name to be created.
 ### Configuration
 
 #### 1. **Data Simulators/Destinations**:
-   
+
    Options available:
    1. Update the OPC-UA/MQTT simulator containers (`edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/simulator`) as needed
       to ingest the needed dataset to analyze via a CSV file
@@ -28,7 +28,7 @@ folder and replace the folder name with the sample app name to be created.
     would be read and the topics in MQTT input plugin and name_override in OPC-UA
     input plugin is used for writing this as measurement in InfluxDB.
 
-    In the above same conf file, the two `[[outputs.influxdb]]` plugins publish the 
+    In the above same conf file, the two `[[outputs.influxdb]]` plugins publish the
     data to InfluxDB and Time Series Analytics microservice
 
 - **Data Processing - Time Series Analytics Microservice**
@@ -38,7 +38,7 @@ folder and replace the folder name with the sample app name to be created.
     More details at [how-to-configure-custom-udf](./how-to-configure-custom-udf.md)
 
 - **Data Visualization - Grafana**
-  
+
     Prepare the custom grafana dashboard (`edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/<new-app-name>/grafana-dashboard.yml`) which gets volume mounted in the grafana microservice at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/docker-compose.yml`.
 
 ### Deployment
@@ -46,5 +46,5 @@ folder and replace the folder name with the sample app name to be created.
 > **Note**: Adjust the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/Makefile` to add the support for the new sample
 > app name for both docker compose and helm deployments
 
-1. For docker compose deployment, follow the guide [Get Started](./get-started.md)
-2. For helm deployment, follow the guide [How to deploy with helm](./how-to-deploy-with-helm.md)
+1. For docker compose deployment, follow the [Get Started](../get-started.md) guide/
+2. For helm deployment, follow the [How to deploy with helm](./how-to-deploy-with-helm.md)
