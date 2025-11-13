@@ -261,7 +261,7 @@ Follow the below commands to download ``Phi-4-mini-instruct-int8-ov`` models:
 
    $ sudo apt install git-lfs
    $ mkdir ~/ov_models && cd ~/ov_models
-   $ GIT_LFS_SKIP_SMUDGE=1 git clone https://hf-mirror.com/OpenVINO/Phi-4-mini-instruct-int8-ov
+   $ GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/OpenVINO/Phi-4-mini-instruct-int8-ov
    $ git lfs pull
 
 Set the environment variable:
