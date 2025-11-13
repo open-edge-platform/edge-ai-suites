@@ -86,8 +86,10 @@ The `udfs` section specifies the details of the UDFs used in the task.
 **Alerts Configuration**:
 
 The `alerts` section defines the settings for alerting mechanisms, such as MQTT protocol.
-For OPC-UA configuration, please refer [Publishing OPC-UA alerts](./how-to-configure-alerts.md#publishing-opc-ua-alerts).
-Please note to enable only one of the MQTT or OPC-UA alerts.
+For OPC-UA configuration, please refer to
+[Publishing OPC-UA alerts](./how-to-configure-alerts.md#publishing-opc-ua-alerts).
+
+> **Note:** Make sure to enable only one of the MQTT or OPC-UA alerts.
 
 **MQTT Configuration**:
 
@@ -145,7 +147,6 @@ Also, publishes all the processed weld sensor data points over MQTT.
 
 **Fusion Analytics** subscribes to the MQTT topics coming out of `DL Streamer Pipeline Server` and `Time Series Analytics Microservice`, applies `AND`/`OR` logic to determine the anomalies during weld process, publishes the results over MQTT and writes the results as a measurement/table in **InfluxDB**
 
-
 #### 3. **Data Visualization**
 
 **Grafana** provides an intuitive user interface for visualizing time series data stored in **InfluxDB** and also rendering the output of `DL Streamer Pipeline Server` coming as webRTC stream. Additionally, it visualizes the fusion analytics results stored in **InfluxDB**.
@@ -154,7 +155,8 @@ Also, publishes all the processed weld sensor data points over MQTT.
 
 ### Summary
 
-This section provides an overview of the architecture for the Multimodal Weld Defect Detection sample app. For detailed instructions on getting started, refer to [Get Started](../get-started.md).
+This section provides an overview of the architecture for the Multimodal Weld Defect Detection sample app.
+Refer to the detailed instructions in [Get Started](../get-started.md).
 
 <!--hide_directive
 :::{toctree}

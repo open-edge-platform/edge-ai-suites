@@ -10,8 +10,8 @@ This section collects guides for Time Series Analytics microservice and associat
 :::{toctree}
 :hidden:
 
-how-to-build-from-source
-how-to-configure-alerts
-how-to-update-config
+Build from source <how-to-build-from-source>
+Configure Alerts <how-to-configure-alerts>
+Update Configuration <how-to-update-config>
 :::
 hide_directive-->
