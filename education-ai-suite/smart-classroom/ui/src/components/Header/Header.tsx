@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { resetFlow, startProcessing, setUploadedAudioPath, processingFailed } from '../../redux/slices/uiSlice';
 import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
+import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { useTranslation } from 'react-i18next';
 import { uploadAudio } from '../../services/api';
 import Toast from '../common/Toast';
@@ -27,12 +28,16 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const [timer, setTimer] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const dispatch = useAppDispatch();
+
   const isBusy = useAppSelector((s) => s.ui.aiProcessing);
   const summaryEnabled = useAppSelector((s) => s.ui.summaryEnabled);
   const summaryLoading = useAppSelector((s) => s.ui.summaryLoading);
-  const transcriptStatus = useAppSelector((s) => s.transcript.status);
+  const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
+  const mindmapLoading = useAppSelector((s) => s.ui.mindmapLoading);
   const sessionId = useAppSelector((state) => state.ui.sessionId);
   const projectLocation = useAppSelector((state) => state.ui.projectLocation);
+  const transcriptStatus = useAppSelector((s) => s.transcript.status);
+  const mindmapState = useAppSelector((s) => s.mindmap);
 
   const handleCopy = () => {
     const location = `${projectLocation}/${projectName}/${sessionId}`;
@@ -43,6 +48,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const handleClose = () => {
     setShowToast(false);
   };
+
   useEffect(() => {
     let interval: number | null = null;
     if (isRecording) {
@@ -54,13 +60,46 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   }, [isRecording, timer]);
 
   useEffect(() => {
-    if (summaryEnabled && summaryLoading) setNotification(t('notifications.generatingSummary'));
-    else if (summaryEnabled && isBusy && !summaryLoading) setNotification(t('notifications.streamingSummary'));
-    else if (isBusy && transcriptStatus === 'streaming') setNotification(t('notifications.loadingTranscript'));
-    else if (isBusy && !summaryEnabled) setNotification(t('notifications.analyzingAudio'));
-    else if (!isBusy && summaryEnabled) setNotification(t('notifications.summaryReady'));
-    else setNotification(t('notifications.start'));
-  }, [isBusy, summaryEnabled, summaryLoading, transcriptStatus, t]);
+    if (mindmapState.error) {
+      setNotification(t('notifications.mindmapError'));
+    }
+    else if (mindmapLoading || mindmapState.isLoading) {
+      setNotification(t('notifications.generatingMindmap'));
+    }
+    else if (mindmapEnabled && !mindmapLoading && mindmapState.finalText) {
+      setNotification(t('notifications.mindmapReady'));
+    }
+    else if (summaryEnabled && summaryLoading) {
+      setNotification(t('notifications.generatingSummary'));
+    } 
+    else if (summaryEnabled && isBusy && !summaryLoading) {
+      setNotification(t('notifications.streamingSummary'));
+    } 
+    else if (!isBusy && summaryEnabled && !mindmapEnabled) {
+      setNotification(t('notifications.summaryReady'));
+    }
+    else if (isBusy && transcriptStatus === 'streaming') {
+      setNotification(t('notifications.loadingTranscript'));
+    } 
+    else if (isBusy && !summaryEnabled) {
+      setNotification(t('notifications.analyzingAudio'));
+    } 
+    else {
+      setNotification(t('notifications.start'));
+    }
+  }, [
+    isBusy,
+    summaryEnabled,
+    summaryLoading,
+    transcriptStatus,
+    mindmapEnabled,
+    mindmapLoading,
+    mindmapState.isLoading,
+    mindmapState.finalText,
+    mindmapState.error,
+    t
+  ]);
+
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<string>).detail;
@@ -69,7 +108,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     window.addEventListener('global-error', handler as EventListener);
     return () => window.removeEventListener('global-error', handler as EventListener);
   }, []);
+
   const clearForNewOp = () => setErrorMsg(null);
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -87,6 +128,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       dispatch(resetFlow());
       dispatch(resetTranscript());
       dispatch(resetSummary());
+      dispatch(clearMindmap());
     } else {
       setNotification(t('notifications.uploading'));
       dispatch(startProcessing());
@@ -100,16 +142,17 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     dispatch(resetFlow());
     dispatch(resetTranscript());
     dispatch(resetSummary());
+    dispatch(clearMindmap());
     dispatch(startProcessing());
     try {
       const result = await uploadAudio(file);
       dispatch(setUploadedAudioPath(result.path));
       setNotification(t('notifications.uploadSuccess'));
-      setErrorMsg(null); // Clear any previous error
+      setErrorMsg(null);
     } catch (e: any) {
       const msg = e?.response?.data?.message || 'Upload failed';
-      setNotification(''); // Clear the notification
-      setErrorMsg(msg); // Set error message for NotificationsDisplay
+      setNotification('');
+      setErrorMsg(msg);
       dispatch(processingFailed());
     }
   };
@@ -129,7 +172,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
 
         <button
           className="text-button"
-          onClick={(e) => { e.preventDefault(); }} 
+          onClick={(e) => { e.preventDefault(); }}
           disabled={true}
           title="Recording disabled"
           style={{ cursor: 'not-allowed', opacity: 0.6 }}
@@ -137,24 +180,23 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           {isRecording ? t('header.stopRecording') : t('header.startRecording')}
         </button>
 
-    <label
-      className="upload-button"
-      style={{ opacity: isBusy || isRecording ? 0.6 : 1, cursor: isBusy || isRecording ? 'not-allowed' : 'pointer' }}
-    >
-      <input
-        type="file"
-        accept="audio/*"
-        style={{ display: 'none' }}
-        disabled={isBusy || isRecording}
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) handleFileUpload(f);
-          e.currentTarget.value = '';
-        }}
-      />
-      {t('header.uploadFile')}
-    </label>
-
+        <label
+          className="upload-button"
+          style={{ opacity: isBusy || isRecording ? 0.6 : 1, cursor: isBusy || isRecording ? 'not-allowed' : 'pointer' }}
+        >
+          <input
+            type="file"
+            accept="audio/*"
+            style={{ display: 'none' }}
+            disabled={isBusy || isRecording}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFileUpload(f);
+              e.currentTarget.value = '';
+            }}
+          />
+          {t('header.uploadFile')}
+        </label>
       </div>
 
       <div className="navbar-center">

@@ -20,14 +20,14 @@
             }
         }
     },
-        {
-            "pipeline": "pcb_anomaly_detection_gpu",
-            "payload":{
-                "source": {
-                    "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
-                    "type": "uri"
-                },
-                "destination": {
+    {
+        "pipeline": "pcb_anomaly_detection_gpu",
+        "payload":{
+            "source": {
+                "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
+                "type": "uri"
+            },
+            "destination": {
                 "frame": {
                     "type": "webrtc",
                     "peer-id": "anomaly"

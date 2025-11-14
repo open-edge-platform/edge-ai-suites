@@ -181,7 +181,30 @@ export async function* streamSummary(sessionId: string, opts: StreamOptions = {}
   yield { type: 'done' };
 }
 
+export async function fetchMindmap(sessionId: string): Promise<string> {
+  const response = await fetch(`${BASE_URL}/mindmap`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: sessionId }),
+  });
 
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(errText || `HTTP ${response.status}`);
+  }
+
+  const data: { mindmap?: string; error?: string } = await response.json();
+
+  if (data.error) {
+    throw new Error(data.error);
+  }
+
+  if (!data.mindmap) {
+    throw new Error("No mindmap field returned from server.");
+  }
+
+  return data.mindmap;
+}
 
 export async function getResourceMetrics(sessionId: string): Promise<any> {
   return safeApiCall(async () => {

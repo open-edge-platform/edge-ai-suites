@@ -53,8 +53,12 @@ README.md          @xwu2intel
 
 # documentation content - metro-ai
 /metro-ai-suite/README.md                                       @rrajore @vagheshp @ArokiEdgard @xwu2intel @ajagadi1            @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/metro-vision-ai-app-recipe/docs/                @rrajore @vagheshp @ArokiEdgard @xwu2intel @ajagadi1            @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/metro-vision-ai-app-recipe/README.md            @rrajore @vagheshp @ArokiEdgard @xwu2intel @ajagadi1            @open-edge-platform/open-edge-platform-docs-write
+
 /metro-ai-suite/image-based-video-search/docs/                  @rrajore @vagheshp @ArokiEdgard @rohitkatakol @xwu2intel @ajagadi1       @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/image-based-video-search/README.md              @rrajore @vagheshp @ArokiEdgard @rohitkatakol @xwu2intel @ajagadi1       @open-edge-platform/open-edge-platform-docs-write
+
 /metro-ai-suite/interactive-digital-avatar/docs/                @senhui2intel @Junyu-B @wzq112358 @myqi @xwu2intel              @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/interactive-digital-avatar/README.md            @senhui2intel @Junyu-B @wzq112358 @myqi @xwu2intel              @open-edge-platform/open-edge-platform-docs-write
 

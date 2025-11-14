@@ -83,7 +83,7 @@ Here is an example of a GPU pipeline configuration that includes both `detection
 
 ```json
 {
-    "pipeline": "yolov11s_1_gpu",
+    "pipeline": "yolov11s_gpu",
     "payload": {
         "source": {
             "uri": "file:///home/pipeline-server/videos/new_video_1_looped.mp4",
@@ -131,12 +131,12 @@ Here is an example of a GPU pipeline configuration that includes both `detection
 
 This example will find the maximum number of smart parking streams that can run on the CPU while maintaining at least 15 FPS.
 
-1.  Execute the `benchmark_start.sh` script, providing the desired pipeline name (`yolov11s_1_gpu` in this case). Here, we test a range of 1 to 16 streams.
+1.  Execute the `benchmark_start.sh` script, providing the desired pipeline name (`yolov11s_gpu` in this case). Here, we test a range of 1 to 16 streams.
 
     ```bash
     # Usage: ./benchmark_start.sh -p <pipeline_name> -l <lower_bound> -u <upper_bound> -t <target_fps>
     
-    ./benchmark_start.sh -p yolov11s_1_gpu -l 1 -u 16 -t 15
+    ./benchmark_start.sh -p yolov11s_gpu -l 1 -u 16 -t 15
     ```
 
 2.  The script will output its progress as it tests different stream counts. The final output will show the optimal stream density found.

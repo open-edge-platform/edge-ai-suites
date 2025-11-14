@@ -15,10 +15,12 @@
       "recording": "Recording…",
       "uploading": "Uploading transcript…",
       "generatingSummary": "Generating summary…",
+      "generatingMindmap": "Generating MindMap…",
       "streamingSummary": "Streaming summary…",
       "loadingTranscript": "Loading transcript…",
       "analyzingAudio": "Analyzing audio…",
       "summaryReady": "Summary ready",
+      "mindmapReady": "MindMap Ready",
       "uploadSuccess": "File uploaded successfully!",
       "uploadFailed": "Failed to upload file."
     },
@@ -39,7 +41,8 @@
     },
     "tabs": {
       "transcripts": "Transcripts",
-      "summary": "AI Summary"
+      "summary": "AI Summary",
+      "mindmap":"Mind Map"
     },
   
   "accordion": {

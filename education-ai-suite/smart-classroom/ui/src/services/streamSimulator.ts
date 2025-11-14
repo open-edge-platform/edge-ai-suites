@@ -1,6 +1,7 @@
 export type StreamEvent =
   | { type: 'transcript'; token: string }
   | { type: 'summary_token'; token: string }
+  | { type: 'mindmap_complete'; token: string }
   | { type: 'error'; message: string }
   | { type: 'done' };
 

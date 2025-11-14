@@ -51,7 +51,7 @@ class SummarizerComponent(PipelineComponent):
                 {"role": "system", "content": f"{lang_prompt.get(config.models.summarizer.language)}"},
                 {"role": "user", "content": f"{input}"}
             ]
-
+    
     def process(self, input):
         project_config = RuntimeConfig.get_section("Project")
         project_path = os.path.join(project_config.get("location"), project_config.get("name"), self.session_id)
@@ -100,6 +100,7 @@ class SummarizerComponent(PipelineComponent):
                     "performance.end_to_end_time": f"{round(end_to_end_time, 4)}s",
                 }
             )
-        
+            
+
 
 

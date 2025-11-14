@@ -48,7 +48,8 @@ from the WebRTC Server.
 - **WebRTC Server** serves video streams processed by the pipeline for
 end-user visualization. It is supplemented by the Coturn signaling server and passes the feed
 for display in Grafana.
-
+- **Inputs (Video Files and Cameras):** Provide raw video streams or files as input data for processing in the pipeline.
+- **Nginx:** is a high-performance web server and reverse proxy that provides TLS termination and unified HTTPS access.
 
 ## Learn More
 

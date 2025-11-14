@@ -96,6 +96,24 @@ async def summarize_audio(request: SummaryRequest):
 
     return StreamingResponse(event_stream(), media_type="application/json")
 
+@router.post("/mindmap")
+async def generate_mindmap(request: SummaryRequest):
+    if audio_pipeline_lock.locked():
+        raise HTTPException(status_code=429, detail="Session Active, Try Later")
+    pipeline = Pipeline(request.session_id)
+    try:
+        mindmap_text = pipeline.run_mindmap()
+        logger.info("Mindmap generated successfully.")
+        return {"mindmap": mindmap_text, "error": ""} 
+    except HTTPException as http_exc:
+        raise http_exc      
+    except Exception as e:
+        logger.exception(f"Error during mindmap generation: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Mindmap generation failed: {e}"
+        )
+
 @router.get("/performance-metrics")
 def get_summary_metrics(session_id: Optional[str] = Header(None, alias="session_id")):
     project_config = RuntimeConfig.get_section("Project")

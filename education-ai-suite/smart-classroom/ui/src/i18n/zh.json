@@ -15,10 +15,12 @@
     "recording": "正在录音…",
     "uploading": "正在上传转录…",
     "generatingSummary": "正在生成摘要…",
+    "generatingMindmap": "正在生成思维导图…",
     "streamingSummary": "正在流式摘要…",
     "loadingTranscript": "正在加载转录…",
     "analyzingAudio": "正在分析音频…",
     "summaryReady": "摘要已准备好",
+    "mindmapReady": "思维导图准备就绪",
     "uploadSuccess": "文件上传成功！",
     "uploadFailed": "文件上传失败。"
   },
@@ -39,7 +41,8 @@
   },
   "tabs": {
     "transcripts": "转录",
-    "summary": "人工智能摘要"
+    "summary": "人工智能摘要",
+    "mindmap":"思维导图"
   },
   "accordion": {
     "noData": "暂无数据",
