@@ -103,6 +103,6 @@ This feature allows selected cameras to be continuously monitored so their foota
 
 ## Additional Resources
 
-- **[Troubleshooting Guide](./Troubleshooting.md)** - Resolve common deployment and runtime issues
+- **[Troubleshooting Guide](./troubleshooting.md)** - Resolve common deployment and runtime issues
 - **[Getting Started](./get-started.md)** - Complete initial setup requirements
 - **[Build from Source](./how-to-build-from-source.md)** - Build and deploy the application manually
