@@ -190,7 +190,7 @@ The SLAM toolbox is a set of tools and capabilities for 2D SLAM that includes th
 
 ## ITS Global Path Planner
 
-[**Tutorial**]() :doc:`../../dev_guide/tutorials_amr/navigation/its-path-planner-plugin`
+[**Tutorial**](../../dev_guide/tutorials_amr/navigation/its-path-planner-plugin.rst)
 
 The Intelligent Sampling and Two-Way Search (ITS) Global Path Planner is a plugin for the |ros| Navigation package.
 It performs a path planning search on a roadmap from two directions
