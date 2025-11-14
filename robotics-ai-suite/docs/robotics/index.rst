@@ -23,7 +23,7 @@ Click each icon to learn more.
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :hidden:
 
    gsg_robot/index
