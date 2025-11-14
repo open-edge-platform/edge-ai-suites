@@ -8,11 +8,11 @@ $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 name: "si"
 displayName: "si"
 description: "Smart Intersection Deployment Package"
-version: "0.1.0"
+version: "0.2.0"
 
 applications:
   - name: si-app
-    version: 0.1.0
+    version: 0.2.0
 
 defaultNamespaces:
   si-app: si

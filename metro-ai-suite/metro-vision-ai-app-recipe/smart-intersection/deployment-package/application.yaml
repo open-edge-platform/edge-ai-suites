@@ -6,12 +6,12 @@ schemaVersion: "0.1"
 $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 
 name: si-app
-version: 0.1.0
+version: 0.2.0
 description: "Smart Intersection Application"
 
 helmRegistry: "docker-hub"
 chartName: "intel/smart-intersection"
-chartVersion: "0.1.0"
+chartVersion: "0.2.0"
 
 profiles:
   - name: "default"

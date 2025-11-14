@@ -25,17 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
-          path: edge-ai-suites-repo
           persist-credentials: false
-      - name: Run Trivy Filesystem Scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: trivy-fs
-        with:
-          scan_type: "fs"  
-          scan-scope: "all"
-          scan_target: "edge-ai-suites-repo/metro-ai-suite/video-processing-for-nvr"
-          severity: "HIGH,CRITICAL" 
-          format: "json"  
 
       - name: Build Docker images
         run: |
@@ -47,25 +37,70 @@ jobs:
           sudo apt install intel-vppsdk
           sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
           source /opt/intel/vppsdk/env.sh
-          cd edge-ai-suites-repo/metro-ai-suite
+          cd metro-ai-suite
           cd video-processing-for-nvr/docker
           bash build_sample.sh
           
-      - name: Run trivy Scan - vppsample
+      - name: Verify Docker image
+        run: |
+          echo "=== Built Docker Image ==="
+          docker images
+          ls
+          echo "=== Image Build Verification Complete ==="
+      - name: Run Trivy Filesystem Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: vppsample
+        id: trivy-fs
+        with:
+          scan_type: "fs"  
+          scan-scope: "all"  
+          severity: "HIGH,CRITICAL" 
+          format: "json"
+          scan_target: "metro-ai-suite/video-processing-for-nvr/"
+          report_suffix: "-fs-vpp-CT7"
+
+
+      - name: Run trivy Scan - vpp (HTML Report)
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: vpp-html
         with:
           scan_type: "image"  
-          scan-scope: all
+          scan-scope: "all"
           scan_target: "vppsample:latest"  
           severity: "HIGH,CRITICAL"  
-          format: "json"  
-          
+          format: "table"
+          report_suffix: "-image-vpp-html-CT248"
+          generate_sbom: "false"
+
+      - name: Run trivy Scan - vpp (SPDX SBOM)
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: vpp-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: "all"
+          scan_target: "vppsample:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          scanners: "vuln"
+          report_suffix: "-image-vpp-spdx-CT248"
+          generate_sbom: "false"
+
+      - name: Scan Dockerfile with Trivy
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        with:
+          scan_type: "config"
+          scan_target: "metro-ai-suite/video-processing-for-nvr/docker/"
+          severity: "HIGH,CRITICAL"
+          format: "json"
+          misconfig_scanners: "dockerfile"
+          report_suffix: "-config-vpp-CT222"
+
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
-          name: trivy-report
-          path: security-results/trivy
+          name: trivy-report-vpp
+          path: security-results/trivy*
+
+
 
   coverity-scan:
     runs-on: ubuntu-latest

@@ -7,7 +7,7 @@ This guide demonstrates how to benchmark the weld porosity classification pipeli
 > Ensure the application is set up and running. Refer to the [Setup Guide](../setup-guide.md) for complete installation and configuration steps.
 
 - DL Streamer Pipeline Server (DLSPS) running and accessible
-- `curl`, `jq`, and `bc` utilities installed
+- `curl`, `jq`, `gawk` and `bc` utilities installed
 
 ### Benchmark Script Usage
 
@@ -41,7 +41,7 @@ Available pipelines for weld porosity classification:
 These are the recommended parameters by Edge Benchmarking and Workloads team for workload with similar characteristics. These are configurable parameters that can be adjusted based on your specific requirements:
 
 ```
-inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config="NUM_STREAMS=2" threshold=0.7
+inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config="NUM_STREAMS=2"
 ```
 
 **Parameter Descriptions:**
@@ -50,7 +50,6 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 - `batch-size=8`: Process 8 frames in a single batch for better GPU utilization
 - `nireq=2`: Number of inference requests to run in parallel
 - `ie-config="NUM_STREAMS=2"`: Intel OpenVINO engine streams configuration
-- `threshold=0.7`: Detection confidence threshold (70%)
 
 ### Steps to run benchmarks
 

@@ -19,14 +19,14 @@ from marshmallow import ValidationError
 from PIL import Image
 from pymilvus import Collection, CollectionSchema, DataType, FieldSchema
 
-from encoder import Base64ImageProcessor
-from milvus_utils import (
+from .encoder import Base64ImageProcessor
+from .milvus_utils import (
     CollectionExists,
     create_collection,
     get_milvus_client,
     get_search_results,
 )
-from schemas import PayloadSchema, TensorSchema
+from .schemas import PayloadSchema, TensorSchema
 
 load_dotenv()
 
