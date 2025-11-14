@@ -60,4 +60,5 @@ specifically important for |p_amr| include:
 tools
 robot-apps
 robot-middleware
+robot-algorithms
 :::
