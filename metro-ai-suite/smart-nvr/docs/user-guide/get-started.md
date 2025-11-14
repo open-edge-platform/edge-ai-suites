@@ -59,7 +59,7 @@ Set up the required environment variables:
 ```bash
 # Docker Registry Details
 export REGISTRY_URL="intel"
-export TAG="1.2.1"
+export TAG="1.2.2"
 
 # VSS Service Endpoints
 export http_proxy=<http-proxy>
