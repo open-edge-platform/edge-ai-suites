@@ -83,7 +83,7 @@ Select a Collaborative Visual SLAM Tutorial to Run
 
    *  Collaborative visual SLAM has the FastMapping algorithm integrated.
 
-   *  For more information on FastMapping, see :ref:`how_it_works`.
+   *  For more information on FastMapping, see **how_it_works**.
 
    *  The |ros| tool rviz2 is used to visualize the robot exploring the area and
       how FastMapping creates the 2D and 3D maps.

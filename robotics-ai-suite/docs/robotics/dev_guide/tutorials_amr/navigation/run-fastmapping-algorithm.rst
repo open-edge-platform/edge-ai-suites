@@ -5,7 +5,7 @@ FastMapping Algorithm
 
 FastMapping application is the |intel| optimized version of octomap.
 
-For more information on FastMapping, see :ref:`how_it_works`.
+For more information on FastMapping, see **how_it_works**.
 
 
 Source Code
@@ -28,18 +28,18 @@ Run the FastMapping Standalone Application
 
    .. code-block::
 
-      sudo apt-get install ros-humble-fast-mapping    
+      sudo apt-get install ros-humble-fast-mapping
 
    .. note::
 
-      The ``ros-humble-fast-mapping`` package includes a |ros| bag, which will be used for this tutorial. 
+      The ``ros-humble-fast-mapping`` package includes a |ros| bag, which will be used for this tutorial.
       After the installation, the |ros| bag can be found at ``/opt/ros/humble/share/bagfiles/spinning/``
 
-#. Set up your |ros| environment 
+#. Set up your |ros| environment
 
    .. code-block::
 
-      source /opt/ros/humble/setup.bash 
+      source /opt/ros/humble/setup.bash
 
 #. Run the FastMapping sample application using a |ros| bag of a robot spinning:
 
