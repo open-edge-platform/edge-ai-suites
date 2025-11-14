@@ -1,14 +1,15 @@
 # 🎓 Smart Classroom
 
-The **Smart Classroom** project is a modular, extensible framework designed to process and summarize educational content using advanced AI models. It supports transcription, summarization, and future capabilities like video understanding and real-time analysis. 
+The **Smart Classroom** project is a modular, extensible framework designed to process and summarize educational content using advanced AI models. It supports transcription, summarization, mindmap generation and future capabilities like video understanding and real-time analysis. 
 
 The main features are as follows:
 
-- Audio transcription with ASR models (e.g., Whisper, Paraformer)
-- Summarization using powerful LLMs (e.g., Qwen, LLaMA)
-- Plug-and-play architecture for integrating new ASR and LLM models
-- API-first design ready for frontend integration
-- Extensible roadmap for real-time streaming, diarization, translation, and video analysis
+•	Audio transcription with ASR models (e.g., Whisper, Paraformer)\
+•	Summarization using powerful LLMs (e.g., Qwen, LLaMA)\
+•	MindMap Generation using Mermaid.js for visual diagram rendering of the summary\
+•	Plug-and-play architecture for integrating new ASR and LLM models\
+•	API-first design ready for frontend integration\
+•	Extensible roadmap for real-time streaming, diarization, translation, and video analysis
 
 ![Smart Classroom UI](./docs/user-guide/images/smart_classroom_ui.png)
 

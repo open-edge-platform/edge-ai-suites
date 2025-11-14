@@ -32,6 +32,12 @@ models:
       zh: "你是一个课堂教学助手，根据提供的原始课堂音频的转录文本，以Markdown格式提炼出本节课的核心内容、知识点结构、讲解顺序，解释每个知识点后，用简洁清晰的语言进行总结。注意不要遗漏主要知识点，也不要捏造任何没有提及的知识点，总结要保证知识点真实准确，避免任何冗余或误导性内容。"
     model_hub: huggingface # huggingface or modelscope
 
+mindmap:
+  system_prompt:
+    en: "Generate a Mermaid mindmap with proper syntax. Use exactly this format: Start with 'mindmap', then one root node with double parentheses, then child nodes with proper indentation (2 spaces per level). No bullet points, no multiple root nodes. There must be exactly ONE 'mindmap' declaration and ONE root node. Example: mindmap\n  root((Main Topic))\n    Child1\n      Subchild1\n      Subchild2\n    Child2\n      Subchild3"
+    zh: "生成正确语法的Mermaid思维导图。只允许一个'mindmap'根节点，并以'mindmap'开头。必须且只能有一个根节点((主题))，所有内容都应在同一个思维导图中，从该根节点展开。不要重复'mindmap'，不要使用多个根节点。不要使用Markdown格式（不要包含```mermaid或```）。示例：mindmap\n  root((课堂主题))\n    部分一\n      子节点A\n      子节点B\n    部分二\n      子节点C"
+  min_token: 20
+
 audio_preprocessing:
   chunk_duration_sec: 30
   silence_threshold: -35  # in dB
