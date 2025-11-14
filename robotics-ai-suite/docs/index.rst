@@ -3,7 +3,7 @@
 .. _introduction:
 
 |top_name_robotics|
-###################
+####################
 
 .. attention:: Robotics AI Suite is currently a preview release! A formal release will follow shortly.
 
