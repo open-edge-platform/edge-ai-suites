@@ -23,7 +23,7 @@ This page provides comprehensive support and troubleshooting information for the
 
 - **Issue**: Port conflicts with other running applications.
 - **Solution**: Update the ports section in the Docker Compose file.
-  
+
 ### 3. Description not coming in UI
 
 - Check logs for frigate container
@@ -73,7 +73,7 @@ This page provides comprehensive support and troubleshooting information for the
    ./setup.sh stop
    docker volume rm docker_mosquitto_data docker_mosquitto_log docker_redis_data
    ```
-   
+
 <!--
 ## Support
 - **Developer Forum**: Join the community forum

@@ -13,10 +13,11 @@
 
 - Scenescape Integration Limitation: Scenescape integration is currently not supported when deploying via Helm charts.
 - EMF and EMT are not supported yet.
+- SmartNVR will not work on EMT-S and EMT-D due to Frigate incompatibility with EMT.
 - The **AI-Powered Event Viewer** feature relies on Frigate GenAI features, which may exhibit instability or bugs, impacting event data processing reliability.
 
 
-## Current Release
+## Previous Release
 
 **Version**: 1.2.1 \
 **Release Date**: 30 October 2025
