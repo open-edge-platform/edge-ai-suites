@@ -362,7 +362,7 @@ def get_class_statistics(x_session_id: Optional[str] = Header(None)):
         # Get the front_posture.txt file path
         project_config = RuntimeConfig.get_section("Project")
         location = project_config.get("location", "outputs")
-        name = project_config.get("name", "default")
+        name = project_config.get("name", "default")                        
         output_dir = os.path.join(location, name, x_session_id, "va")
         front_posture_file = os.path.join(output_dir, "front_posture.txt")
 

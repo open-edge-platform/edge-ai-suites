@@ -14,6 +14,9 @@ export interface UIState {
   uploadedAudioPath: string | null;
   shouldStartSummary: boolean;
   projectLocation: string;
+  frontCamera: string;
+  backCamera: string;
+  boardCamera: string;
 }
 
 const initialState: UIState = {
@@ -26,6 +29,9 @@ const initialState: UIState = {
   uploadedAudioPath: null,
   shouldStartSummary: false,
   projectLocation: 'storage/',
+  frontCamera: 'Default Front Camera',
+  backCamera: 'Default Back Camera',
+  boardCamera: 'Default Board Camera'
 };
 
 const uiSlice = createSlice({
@@ -80,6 +86,15 @@ const uiSlice = createSlice({
     },
     setProjectLocation(state, action: PayloadAction<string>) { // Add reducer to update projectLocation
       state.projectLocation = action.payload;},
+    setFrontCamera(state, action: PayloadAction<string>) {
+      state.frontCamera = action.payload;
+    },
+    setBackCamera(state, action: PayloadAction<string>) {
+      state.backCamera = action.payload;
+    },
+    setBoardCamera(state, action: PayloadAction<string>) {
+      state.boardCamera = action.payload;
+    },
     resetFlow() {
       return initialState;
     },
@@ -98,6 +113,7 @@ export const {
   setActiveTab,
   setProjectLocation,
   resetFlow,
+  setFrontCamera, setBackCamera, setBoardCamera
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

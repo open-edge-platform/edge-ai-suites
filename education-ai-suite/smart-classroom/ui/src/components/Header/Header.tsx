@@ -13,6 +13,19 @@ import { resetSummary } from '../../redux/slices/summarySlice';
 import { useTranslation } from 'react-i18next';
 import { uploadAudio } from '../../services/api';
 import Toast from '../common/Toast';
+import { startVideoAnalyticsPipeline, stopVideoAnalyticsPipeline } from '../../services/api';
+import UploadFilesModal from '../Modals/UploadFilesModal';
+
+// Safe error extraction helper
+type ApiError = { response?: { data?: { message?: string } } };
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === 'object') {
+    const resp = (err as ApiError).response;
+    const msg = resp?.data?.message;
+    if (typeof msg === 'string' && msg.trim() !== '') return msg;
+  }
+  return fallback;
+};
 
 interface HeaderBarProps {
   projectName: string;
@@ -33,7 +46,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const transcriptStatus = useAppSelector((s) => s.transcript.status);
   const sessionId = useAppSelector((state) => state.ui.sessionId);
   const projectLocation = useAppSelector((state) => state.ui.projectLocation);
-
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); 
   const handleCopy = () => {
     const location = `${projectLocation}/${projectName}/${sessionId}`;
     navigator.clipboard.writeText(location);
@@ -92,7 +106,26 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       dispatch(startProcessing());
     }
   };
-
+  const handleStreamingToggle = async () => {
+    if (isBusy) return;
+    try {
+      if (isStreaming) {
+        await stopVideoAnalyticsPipeline('front', sessionId!);
+        await stopVideoAnalyticsPipeline('back', sessionId!);
+        await stopVideoAnalyticsPipeline('content', sessionId!);
+        setNotification(t('notifications.streamingStopped'));
+      } else {
+        await startVideoAnalyticsPipeline('front', 'source-path', sessionId!);
+        await startVideoAnalyticsPipeline('back', 'source-path', sessionId!);
+        await startVideoAnalyticsPipeline('content', 'source-path', sessionId!);
+        setNotification(t('notifications.streamingStarted'));
+      }
+      setIsStreaming(!isStreaming);
+    } catch (error) {
+      const msg = getErrorMessage(error, t('notifications.streamingError'));
+      setErrorMsg(msg);
+    }
+  };
   const handleFileUpload = async (file: File) => {
     if (isBusy || isRecording) return;
     clearForNewOp();
@@ -106,13 +139,26 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       dispatch(setUploadedAudioPath(result.path));
       setNotification(t('notifications.uploadSuccess'));
       setErrorMsg(null); // Clear any previous error
-    } catch (e: any) {
-      const msg = e?.response?.data?.message || 'Upload failed';
+    } catch (e) {
+      const msg = getErrorMessage(e, 'Upload failed');
       setNotification(''); // Clear the notification
       setErrorMsg(msg); // Set error message for NotificationsDisplay
       dispatch(processingFailed());
     }
   };
+  const handleApply = async (paths: { audioPath: string; frontCameraPath: string; rearCameraPath: string; boardCameraPath: string }) => {
+    try {
+      await startVideoAnalyticsPipeline('front', paths.frontCameraPath, sessionId!);
+      await startVideoAnalyticsPipeline('back', paths.rearCameraPath, sessionId!);
+      await startVideoAnalyticsPipeline('content', paths.boardCameraPath, sessionId!);
+      setNotification(t('notifications.streamingStarted'));
+    } catch (error) {
+      const msg = getErrorMessage(error, t('notifications.streamingError'));
+      setErrorMsg(msg);
+    }
+  };
+
+
 
   return (
     <div className="header-bar">
@@ -136,7 +182,15 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         >
           {isRecording ? t('header.stopRecording') : t('header.startRecording')}
         </button>
-
+        <button
+        className="streaming-button"
+        onClick={handleStreamingToggle}
+        style={{ opacity: isBusy ? 0.6 : 1, cursor: isBusy ? 'not-allowed' : 'pointer' }}
+        disabled={isBusy}
+      >
+        {isStreaming ? t('header.stopStreaming') : t('header.startStreaming')}
+      </button>
+{/* 
     <label
       className="upload-button"
       style={{ opacity: isBusy || isRecording ? 0.6 : 1, cursor: isBusy || isRecording ? 'not-allowed' : 'pointer' }}
@@ -153,9 +207,23 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         }}
       />
       {t('header.uploadFile')}
-    </label>
-
+    </label> */}
+        <button
+          className="upload-button"
+          onClick={() => setIsUploadModalOpen(true)}
+          style={{ opacity: isBusy || isRecording ? 0.6 : 1, cursor: isBusy || isRecording ? 'not-allowed' : 'pointer' }}
+          disabled={isBusy || isRecording}
+        >
+          {t('header.uploadFiles')}
+        </button>
       </div>
+      {isUploadModalOpen && (
+        <UploadFilesModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          onApply={handleApply}
+        />
+      )}
 
       <div className="navbar-center">
         <NotificationsDisplay notification={notification} error={errorMsg} />

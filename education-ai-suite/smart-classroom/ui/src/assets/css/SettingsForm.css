@@ -33,7 +33,30 @@ h2 {
   padding-bottom: 29px;
   padding-left: 40px;
 }
+.camera-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px; /* Add spacing between the inputs */
+  margin-top: 16px;
+}
 
+.camera-row > div {
+  flex: 1; /* Ensure equal width for all inputs */
+}
+
+.camera-row label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.camera-row select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f8f8f8;
+}
 label {
   color: #6A6D75;
   font-family: "IntelOne Text", system-ui, sans-serif;

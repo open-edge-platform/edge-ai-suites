@@ -1,0 +1,108 @@
+.video-stream {
+    display: flex;
+    flex-direction: column;
+    background: #f5f7fa;
+    border: 1px solid #e6e7e8;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .video-stream.room-view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    z-index: 1000;
+  }
+  
+  .video-stream-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: #0071c5;
+    color: #fff;
+  }
+  
+  .stream-controls button {
+    background: #0054ae;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    margin-left: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .video-stream-body {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+  }
+  
+  .stream-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .stream-container.split-screen {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Create 3 equal columns */
+    gap: 16px; /* Add spacing between streams */
+  }
+  
+  .stream {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #e6e7e8;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+  }
+  
+  .stream-label {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #6a6d75;
+  }
+  
+  .stream-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border: 1px dashed #ced4da;
+    border-radius: 10px;
+    margin: 20px;
+  }
+  
+  .streaming-icon-placeholder {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
+  }
+  
+  .upload-file-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .upload-file-button:hover {
+    background-color: #0056b3;
+  }

@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import uiReducer from './slices/uiSlice';
 import transcriptReducer from './slices/transcriptSlice';
 import summaryReducer from './slices/summarySlice';
-// import fileReducer from './slices/fileSlice';
+import classStatisticsReducer from './slices/fetchClassStatistics';
 import resourceReducer from './slices/resourceSlice';
 
 
@@ -11,7 +11,7 @@ export const store = configureStore({
     ui: uiReducer,
     transcript: transcriptReducer,
     summary: summaryReducer,
-    // file: fileReducer,
+    classStatistics: classStatisticsReducer,
     resource: resourceReducer,
   },
 });
