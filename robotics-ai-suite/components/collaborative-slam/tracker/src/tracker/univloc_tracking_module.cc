@@ -356,7 +356,7 @@ bool univloc_tracking_module::search_server_landmarks()
     spdlog::debug(" {} of {} server landmarks are observed when tracking server map", observed_server_landmarks_num,
                   server_landmarks.size());
 
-    spdlog::debug(" {} of {} server landmarks are succesfully matched ", matched_num, nearby_landmarks.size());
+    spdlog::debug(" {} of {} server landmarks are successfully matched ", matched_num, nearby_landmarks.size());
 
     return matched_num > min_matched_num_thr_;
 }
@@ -1284,7 +1284,7 @@ void univloc_tracking_module::track()
     // update last frame
     if (tracking_state_ == tracker_state_t::Tracking) {
         last_frm_ = curr_frm_;
-        // if a lidar frame is updated or recived, we will save the associated pose to this lidar frame
+        // if a lidar frame is updated or received, we will save the associated pose to this lidar frame
         // for now we are also saving the whole frame data structure
         if (curr_frm_->is_lidar_enable() && curr_frm_->lidar_landmarks_.updated){
             last_lidar_frm_ = curr_frm_;

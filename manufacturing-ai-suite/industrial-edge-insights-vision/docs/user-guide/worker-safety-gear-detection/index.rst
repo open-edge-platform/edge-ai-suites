@@ -100,6 +100,8 @@ This sample application offers the following features:
    how-to-integrate-balluff-sdk
    how-to-integrate-pylon-sdk
    how-to-benchmark
+   how-to-install-balluff-sdk-on-host
+   how-to-install-pylon-sdk-on-host
    api-reference
    environment-variables
    release_notes/Overview

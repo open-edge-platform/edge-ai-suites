@@ -21,10 +21,17 @@ async def test_get_camera_watcher_mapping_runtime_only():
 async def test_set_camera_watchers_persists_and_returns():
     fake_save = AsyncMock()
     fake_load = AsyncMock(return_value={})
+    # Patch health check HTTP call (requests.get) used inside router.set_camera_watchers
+    class FakeResp:
+        status_code = 200
+        def json(self):
+            return {}
+
     with patch("service.directory_watcher.save_camera_watcher_mapping", fake_save), \
          patch("service.directory_watcher._ensure_watcher_running"), \
          patch("service.directory_watcher._initial_scan_for_cameras"), \
-         patch("service.directory_watcher._enabled_cameras", {}):
+         patch("service.directory_watcher._enabled_cameras", {}), \
+         patch("api.router.requests.get", return_value=FakeResp()):
         req = CameraWatcherRequest(cameras=[{"garage": True}, {"livingroom": False}])
         # Directly call underlying function through router wrapper
         from api.router import set_camera_watchers as endpoint

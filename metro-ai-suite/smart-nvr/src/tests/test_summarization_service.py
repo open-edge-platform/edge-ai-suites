@@ -12,7 +12,7 @@ from model.model import Sampling, Evam, SummaryPayload
 def test_video_upload_file_missing(tmp_path):
     svc = SummarizationService()
     with pytest.raises(Exception):
-        svc.video_upload(tmp_path / 'nope.mp4', 'http://fake')
+        svc.video_upload(tmp_path / 'nope.mp4', 'http://fake', 'camX')
 
 
 def test_video_upload_request_exception(tmp_path):
@@ -24,7 +24,7 @@ def test_video_upload_request_exception(tmp_path):
     err = requests.exceptions.RequestException('fail')
     with patch('api.endpoints.summarization_api.requests.post', side_effect=err):
         with pytest.raises(Exception):
-            svc.video_upload(f, 'http://fake')
+            svc.video_upload(f, 'http://fake', 'camX')
 
 
 def test_video_upload_success(tmp_path):
@@ -33,7 +33,7 @@ def test_video_upload_success(tmp_path):
     f.write_bytes(b'0' * 2048)
     with patch('api.endpoints.summarization_api.requests.post') as mpost:
         mpost.return_value = MagicMock(status_code=200, json=lambda: {'videoId': 'vid1'}, raise_for_status=lambda: None)
-        resp = svc.video_upload(f, 'http://fake')
+        resp = svc.video_upload(f, 'http://fake', 'camY')
         assert resp['videoId'] == 'vid1'
 
 

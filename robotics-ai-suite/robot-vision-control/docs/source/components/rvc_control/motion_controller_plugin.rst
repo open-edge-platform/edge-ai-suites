@@ -57,14 +57,14 @@ Direct Universal Robot Pendant Controller
 The Universal Robot drivers are present in |ROS2| and fully supported, but in case another robot
 is employed, and the |ROS2| drivers are missing, we provided a strategy to implement a RVC Plugin
 able to interface with the specific robot using their custom interfaces. And as reference, we 
-chose Universal Robot pretending we didnt have a |ROS2| driver.
+chose Universal Robot pretending we didn't have a |ROS2| driver.
 
 The limitation of this plugin, is that the robot, once sent to a target, cant change destination,
 
 and before changing destination, the previous one has to be successfully reached.
 
 This limitation can of course be worked around, using fine tuned Universal specific interfaces (servoj as 
-opposed to movep), but we didnt want to particularize the solution too much towards a very specific model
+opposed to movep), but we didn't want to particularize the solution too much towards a very specific model
 
 Direct Universal Robot Pendant Controller configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -89,15 +89,12 @@ configure_scenescape_setup() {
         sed -i "s/{RTSP_STREAM_IP}/${host_ip}/g" "./resources/frigate-config/config.yml"
         print_success "Scenescape Frigate configuration activated"
         
-        # Copy Scenescape certificates
+        # Verify Scenescape certificates exist
         SMART_INTERSECTION_CERTS="edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs"
-        if [ -f "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" ]; then
-            mkdir -p ./resources/mqtt-certs
-            chmod u+w ./resources/mqtt-certs
-            cp "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" "./resources/mqtt-certs/root-cert"
-            cp "${SMART_INTERSECTION_CERTS}/scenescape-broker.crt" "./resources/mqtt-certs/broker-cert"
-            cp "${SMART_INTERSECTION_CERTS}/scenescape-broker.key" "./resources/mqtt-certs/broker-key"
-            print_success "Scenescape certificates copied successfully"
+        if [ -f "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" ] && \
+           [ -f "${SMART_INTERSECTION_CERTS}/scenescape-broker.crt" ] && \
+           [ -f "${SMART_INTERSECTION_CERTS}/scenescape-broker.key" ]; then
+            print_success "Scenescape certificates found at ${SMART_INTERSECTION_CERTS}"
         else
             print_error "Scenescape is enabled but certificates not found at ${SMART_INTERSECTION_CERTS}"
             print_info "Please ensure Smart Intersection application is running and certificates are generated"

@@ -84,11 +84,11 @@ class VmsService:
         try:
             if is_search:
                 upload_result = self.summarization_service.video_upload(
-                    tmp_path, self.vss_search_url
+                    tmp_path, self.vss_search_url, camera_name
                 )
             else:
                 upload_result = self.summarization_service.video_upload(
-                    tmp_path, self.vss_summary_url
+                    tmp_path, self.vss_summary_url, camera_name
                 )
 
             if not upload_result or "videoId" not in upload_result:

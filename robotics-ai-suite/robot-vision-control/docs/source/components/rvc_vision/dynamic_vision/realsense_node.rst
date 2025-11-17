@@ -21,7 +21,7 @@ The vision launcher automatically spawns all the component of the container, and
 
 In addition to command line parameters, an yaml file is provided with default values, in ``<rvc_vision_main_install_path>/config/rs_parameters>``
 
-The list is long and full of interesting parameters, useful to fine tune according to lightning, distance, camera perfomance enable_auto_white_balance
+The list is long and full of interesting parameters, useful to fine tune according to lightning, distance, camera performance enable_auto_white_balance
 but standing out are:
 
 - auto_exposure for both RGB and DEPTH streams:
