@@ -213,6 +213,7 @@ Setup a virtual environment for application
       $ cd /opt/llm-robotics/LLM/
       $ python3 -m venv venv-llm
       $ source venv-llm/bin/activate
+      $ python -m pip install --upgrade pip
       $ pip install -r requirement.txt
 
 #. Set the environment variable:
