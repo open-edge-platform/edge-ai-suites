@@ -185,7 +185,7 @@ def top_view(points_3D):
     return points_2D
 
 #Calculate the Euclidean distance between two 3D points   
-#the point is (x,y,z,reflex,obj_ID), obj_ID is refereded by pt[-1]
+#the point is (x,y,z,reflex,obj_ID), obj_ID is referenced by pt[-1]
 #only use the first 3 values in tuple for location
 def dist(pt1, pt2):
     return math.sqrt((pt1[0]-pt2[0])**2+(pt1[1]-pt2[1])**2 +(pt1[2]-pt2[2])**2 )

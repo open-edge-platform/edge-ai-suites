@@ -34,9 +34,9 @@ The DL Streamer Pipeline Server utilizes GStreamer pipelines to define the flow 
 
 ##### Object Detection Pipelines (YOLOv11s Series)
 
-Pipelines like `yolov11s_1_cpu`, `yolov11s_1_gpu`, `yolov11s_1_npu` etc., are used to identify objects in the video frames.
+Pipelines like `yolov11s`, `yolov11s_gpu`, `yolov11s_npu` etc., are used to identify objects in the video frames.
 
-*   **Pipelines:** `yolov11s_1_cpu`, `yolov11s_1_gpu`, `yolov11s_1_npu`
+*   **Pipelines:** `yolov11s`, `yolov11s_gpu`, `yolov11s_npu`
 *   **How They Work:**
     *   **Video Source:** Uses GStreamer to capture live video.
     *   **Decoding & Detection:** The pipeline decodes the video stream and uses the `gvadetect` element with a YOLO model (located at `/home/pipeline-server/models/public/yolo11s/INT8/yolo11s.xml`) to identify objects.

@@ -641,7 +641,7 @@ void plotMetrics(cv::Mat &windowImage, FusionVisualizer &visualizer, int frame_i
         //
         char cpuStr[1024];
         sprintf(cpuStr, "CPU: %d%%", cpuMetricsArr[frame_index] / cpuMetrics.cpuThreads());
-        std::vector<std::string> metrics = {"Intel Distribution of OpenVINO (2025.2.0)", "Intel oneMKL (2025.2.0)", "NN Model: YOLOX-S", cpuMetrics.modelName(),
+        std::vector<std::string> metrics = {"Intel Distribution of OpenVINO (2025.3.0)", "Intel oneMKL (2025.3.0)", "NN Model: YOLOX-S", cpuMetrics.modelName(),
                                             std::string(cpuStr)};
         char gpuStr[1024];
         float val = gpuMetricsArr[frame_index];

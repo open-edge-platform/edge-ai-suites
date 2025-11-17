@@ -402,7 +402,7 @@ private:
         components in the system, these collectors are
         saving pointers and removing them during the
         shutdown.
-        Not the optimal solution, but any other requires rewritting
+        Not the optimal solution, but any other requires rewriting
         entire code.
     */
     std::unordered_set<keyframe*> deleted_keyframes_;

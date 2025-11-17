@@ -64,7 +64,7 @@ def test_upload_videos_to_dataprep_skips_duplicates(tmp_path, monkeypatch):
     # Arrange: first upload success, second file duplicate path scenario
     posted = []
 
-    def post_side(url, files=None):
+    def post_side(url, files=None, data=None):  # include data param for compatibility
         posted.append(url)
         # Simulate sequential success for video and embedding endpoints
         if 'videos/search-embeddings' in url:

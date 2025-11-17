@@ -93,7 +93,7 @@ def generate_launch_description():
     ld.add_action(conveyorbelt_spawn_entity)
 
     # Initiate AMR spawning after spawn_entity service available.  
-    # This is same as launching imediately but since wait_on arguement is required therefore giving spawn_entity by default.
+    # This is same as launching immediately but since wait_on argument is required therefore giving spawn_entity by default.
     # AMR Nav2 stack launch will get triggered too
 
     amr_launch_cmd = IncludeLaunchDescription(

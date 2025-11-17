@@ -59,7 +59,7 @@ services:
       - ../frigate-clips:/media/frigate/recordings # Shared volume for watcher to access Frigate recordings
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-      - ../resources/mqtt-certs:/mosquitto/secrets:ro
+      - ../edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs:/mosquitto/secrets:ro
     depends_on:
       frigate:
         condition: service_healthy
@@ -114,7 +114,7 @@ services:
       - mosquitto_log:/mosquitto/log
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-      - ../resources/mqtt-certs:/mosquitto/secrets:ro
+      - ../edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs:/mosquitto/secrets:ro
     environment:
       MQTT_USER: ${MQTT_USER} 
       MQTT_PASSWORD: ${MQTT_PASSWORD} 

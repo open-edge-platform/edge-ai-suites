@@ -1,6 +1,6 @@
 [
     {
-        "pipeline": "yolov11s_1_cpu",
+        "pipeline": "yolov11s",
         "payload":{
             "source": {
                 "uri": "file:///home/pipeline-server/videos/new_video_1_looped.mp4",
@@ -30,7 +30,7 @@
         }
     },
         {
-        "pipeline": "yolov11s_1_gpu",
+        "pipeline": "yolov11s_gpu",
         "payload": {
             "source": {
                 "uri": "file:///home/pipeline-server/videos/new_video_1_looped.mp4",
@@ -60,7 +60,7 @@
         }
     },
         {
-        "pipeline": "yolov11s_1_npu",
+        "pipeline": "yolov11s_npu",
         "payload": {
             "source": {
                 "uri": "file:///home/pipeline-server/videos/new_video_1_looped.mp4",

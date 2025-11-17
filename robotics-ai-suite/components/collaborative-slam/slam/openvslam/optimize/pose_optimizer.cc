@@ -176,7 +176,7 @@ unsigned int pose_optimizer::optimize_tracker(data::frame& frm, bool compute_cov
     }
 
     // Phase 1
-    // In the feature_extraction_module: everytime a lidar frame is recived with an image frame, we set
+    // In the feature_extraction_module: everytime a lidar frame is received with an image frame, we set
     // the lidar_landmarks_.updated to true.  This way, we know that this image frame also has lidar data
     // so here, if the current image frame has lidar data, we want to do the bundle adjustment based on
     // both the lidar and image.

@@ -11,7 +11,7 @@ def test_upload_single_success(tmp_path, monkeypatch):
 
     post_calls = []
 
-    def fake_post(url, files=None):
+    def fake_post(url, files=None, data=None):  # include data param used by production code
         m = MagicMock()
         if "search-embeddings" in url:
             m.raise_for_status.return_value = None
@@ -33,7 +33,7 @@ def test_upload_single_failure(tmp_path, monkeypatch):
     fp = tmp_path / "file.mp4"
     fp.write_bytes(b"0" * 600_000)
 
-    def fake_post(url, files=None):
+    def fake_post(url, files=None, data=None):  # signature alignment
         raise Exception("boom")
 
     monkeypatch.setattr("utils.utils.requests.post", fake_post)
