@@ -12,9 +12,9 @@ Platform
 
 | Software           | Version                |
 | ------------------ | ---------------------- |
-| Intel  OpenVINO    | 2025.2.0               |
-| Intel  oneAPI      | 2025.2.0               |
-| NEO OpenCL         | 25.18.33578.13-1       |
+| Intel  OpenVINO    | 2025.3.0               |
+| Intel  oneAPI      | 2025.3.0               |
+| NEO OpenCL         | 25.35.35096.9-0        |
 | cmake              | 3.22.1                 |
 | boost              | 1.83.0                 |
 | spdlog             | 1.8.2                  |
