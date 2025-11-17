@@ -14,7 +14,7 @@ There are two steps required for running the sensor fusion application:
 - Start AI Inference service, more details can be found at [Start Service](#start-service)
 - Run the application entry program, more details can be found at [Run Entry Program](#run-entry-program)
 
-Besides, you can test each component (without display) following the guides at [Advanced-User-Guide.md](./Advanced-User-Guide.md#532-1c+1r-unit-tests)
+Besides, you can test each component (without display) following the guides at [Advanced-User-Guide.md](./advanced-user-guide.md#entry-program)
 
 ### Resources Summary
 - Local File Pipeline for Media pipeline
