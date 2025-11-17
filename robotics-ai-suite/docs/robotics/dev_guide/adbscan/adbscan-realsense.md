@@ -19,6 +19,10 @@ It outputs to the `obstacle_array` topic of type
 
 ## Install
 
+::::{tab-set}
+:::{tab-item} **Humble**
+:sync: tab1
+
 Install `ros-humble-adbscan-ros2` Deb package from Intel® Robotics AI
 Dev Kit APT repository
 
@@ -33,6 +37,28 @@ point cloud data from 2D LIDAR or Intel® RealSense™ camera
 > ```sh
 > sudo apt install ros-humble-bagfile-laser-pointcloud
 > ```
+
+:::
+:::{tab-item} **Jazzy**
+:sync: tab2
+
+Install `ros-jazzy-adbscan-ros2` Deb package from Intel® Robotics AI
+Dev Kit APT repository
+
+> ```sh
+> sudo apt update
+> sudo apt install ros-jazzy-adbscan-ros2
+> ```
+
+Install the following package with ROS 2 bag files in order to publish
+point cloud data from 2D LIDAR or Intel® RealSense™ camera
+
+> ```sh
+> sudo apt install ros-jazzy-bagfile-laser-pointcloud
+> ```
+
+:::
+::::
 
 ## Run the demo with Intel® RealSense™
 

@@ -35,4 +35,5 @@ various nodes on the factory floor.
    requirements
    tutorials_amr/index
    system_integrator/index
+   adbscan/adbscan-realsense
    terminology
