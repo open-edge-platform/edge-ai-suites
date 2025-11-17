@@ -39,7 +39,7 @@ point cloud data from 2D LIDAR or Intel® RealSense™ camera
 > ```
 
 :::
-:::{tab-item} **Jazzy PLACEHOLDER**
+:::{tab-item} **Jazzy**
 :sync: tab2
 
 Install `ros-jazzy-adbscan-ros2` Deb package from Intel® Robotics AI
