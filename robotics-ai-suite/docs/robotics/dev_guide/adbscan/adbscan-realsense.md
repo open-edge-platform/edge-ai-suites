@@ -1,8 +1,6 @@
 
 # ADBSCAN Algorithm with Intel® RealSense™ Camera Input Demo
 
----
-
 This tutorial describes how to run the ADBSCAN algorithm from Intel®
 RealSense™ camera input.
 
