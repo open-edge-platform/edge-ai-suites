@@ -1,5 +1,6 @@
 # Smart Parking
 
+<!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking">
      GitHub project
@@ -11,6 +12,7 @@
      Installation guide
   </a>
 </div>
+hide_directive-->
 
 The Smart Parking application optimizes parking management with AI-driven video analytics. It identifies and counts available parking spaces in real-time, accurately detecting empty slots. By monitoring parking areas, it tracks occupancy changes and provides current parking availability information.
 
