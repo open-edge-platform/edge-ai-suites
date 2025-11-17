@@ -1,5 +1,6 @@
 # Loitering Detection
 
+<!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection">
      GitHub project
@@ -11,6 +12,7 @@
      Installation guide
   </a>
 </div>
+hide_directive-->
 
 Loitering Detection leverages advanced AI algorithms to monitor and analyze real-time video feeds, identifying individuals lingering in designated areas. By proactively detecting suspicious behavior, this system helps to address potential security threats effectively.
 
