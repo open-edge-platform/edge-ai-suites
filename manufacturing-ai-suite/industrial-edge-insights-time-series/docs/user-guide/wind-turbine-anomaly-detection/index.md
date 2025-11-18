@@ -9,7 +9,7 @@ operational efficiency.
 
 As seen in the following architecture diagram, the sample app at a high-level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana.
 
-![Time Series AI Stack Architecture Diagram](../_images/time-series-ai-stack-architecture.png)
+![Wind Turbine Anomaly Detection - Time Series AI Stack Architecture Diagram](../_images/wind-turbine-anomaly-detection-timeseries-ai-stack-architecture.png)
 
 ### Data flow explanation
 
@@ -87,7 +87,7 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 ##### **`models/`**
 
-The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo.
+The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo from scikit-learn libary.
 More details on how it is built is accessible at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/windturbine/README.md`
 
 <!--hide_directive

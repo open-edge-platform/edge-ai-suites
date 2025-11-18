@@ -9,7 +9,7 @@ and unplanned downtime.
 
 As seen in the following architecture diagram, the sample app at a high-level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana.
 
-![Time Series AI Stack Architecture Diagram](../_images/time-series-ai-stack-architecture.png)
+![Weld Anomaly Detection - Time Series AI Stack Architecture Diagram](../_images/weld-anomaly-detection-timeseries-ai-stack-architecture.png)
 
 ### Data flow explanation
 
@@ -70,8 +70,11 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 ##### **`udfs/`**
 
 Contains the python script to process the incoming data.
-Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with Intel® Extension for Scikit-learn*
-to run on CPU to detect the anomalous power generation data points relative to wind speed.
+Uses CatBoostClassifier machine learning algo from CatBoost libary to run on CPU to 
+detect the anomalous power generation data points relative to wind speed.
+
+**Note**: Please note, CatBoost models doesn't run on Intel GPUs.
+
 
 ##### **`tick_scripts/`**
 
