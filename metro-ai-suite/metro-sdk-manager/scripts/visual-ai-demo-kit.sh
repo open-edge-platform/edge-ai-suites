@@ -9,8 +9,7 @@
 # Arguments:
 #   --skip-system-check: Skip system resource check
 #   --skip-docker: Skip Docker installation
-#   --skip-images: Skip Docker image download\
-"/;"
+#   --skip-images: Skip Docker image download
 #   --help: Show help message
 # Outputs:
 #   System resource information and installation status to stdout
