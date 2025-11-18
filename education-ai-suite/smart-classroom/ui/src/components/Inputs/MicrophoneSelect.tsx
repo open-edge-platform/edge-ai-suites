@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getAudioDevices } from '../../services/api';
 
 interface MicrophoneSelectProps {
   selectedMicrophone: string;
@@ -11,15 +12,70 @@ const MicrophoneSelect: React.FC<MicrophoneSelectProps> = ({
   onChange
 }) => {
   const { t } = useTranslation();
-  const defaultVal = selectedMicrophone || t('settings.ipMicrophone');
+  const [devices, setDevices] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDevices = async () => {
+      try {
+        const audioDevices = await getAudioDevices();
+        setDevices(audioDevices);
+        if (!selectedMicrophone && audioDevices.length > 0) {
+          const firstDevice = audioDevices[0].replace('audio=', '');
+          onChange(firstDevice);
+        }
+      } catch (error) {
+        console.error('❌ Failed to fetch audio devices:', error);
+        setDevices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDevices();
+  }, [t, onChange]);
+
+  if (loading) {
+    return (
+      <select disabled>
+        <option>{t('common.loading', 'Loading...')}</option>
+      </select>
+    );
+  }
+
+  if (devices.length === 0) {
+    return (
+      <select disabled>
+        <option>{t('settings.noMicrophonesFound', 'No microphones found')}</option>
+      </select>
+    );
+  }
+
+  const getDisplayName = (device: string) => device.replace('audio=', '');
+  const getStorageValue = (device: string) => device.replace('audio=', '');
+  const currentValue = selectedMicrophone || '';
+
   return (
     <select
-      value={defaultVal}
-      onChange={e => onChange(e.target.value)}
+      value={currentValue}
+      onChange={e => {
+        const selectedValue = e.target.value;
+        console.log('🎤 Microphone selected:', selectedValue);
+        onChange(selectedValue);
+      }}
       id="microphone"
-      disabled
     >
-      <option value={t('settings.ipMicrophone')!}>{t('settings.ipMicrophone')}</option>
+      <option value="">{t('settings.selectMicrophone', 'Select a microphone...')}</option>
+      {devices.map((device, index) => {
+        const storageValue = getStorageValue(device);
+        const displayName = getDisplayName(device);
+        
+        return (
+          <option key={index} value={storageValue}>
+            {displayName}
+          </option>
+        );
+      })}
     </select>
   );
 };

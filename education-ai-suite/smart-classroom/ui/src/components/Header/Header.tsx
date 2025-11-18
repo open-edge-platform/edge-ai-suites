@@ -10,9 +10,8 @@ import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { resetFlow, startProcessing, setUploadedAudioPath, processingFailed } from '../../redux/slices/uiSlice';
 import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
-import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { useTranslation } from 'react-i18next';
-import { uploadAudio } from '../../services/api';
+import { uploadAudio, stopMicrophone } from '../../services/api';
 import Toast from '../common/Toast';
 
 interface HeaderBarProps {
@@ -27,89 +26,55 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const { t } = useTranslation();
   const [timer, setTimer] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const dispatch = useAppDispatch();
 
+  const dispatch = useAppDispatch();
   const isBusy = useAppSelector((s) => s.ui.aiProcessing);
   const summaryEnabled = useAppSelector((s) => s.ui.summaryEnabled);
   const summaryLoading = useAppSelector((s) => s.ui.summaryLoading);
-  const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
-  const mindmapLoading = useAppSelector((s) => s.ui.mindmapLoading);
-  const sessionId = useAppSelector((state) => state.ui.sessionId);
-  const projectLocation = useAppSelector((state) => state.ui.projectLocation);
   const transcriptStatus = useAppSelector((s) => s.transcript.status);
-  const mindmapState = useAppSelector((s) => s.mindmap);
+  const sessionId = useAppSelector((s) => s.ui.sessionId);
+  const projectLocation = useAppSelector((s) => s.ui.projectLocation);
 
-  const handleCopy = () => {
-    const location = `${projectLocation}/${projectName}/${sessionId}`;
-    navigator.clipboard.writeText(location);
-    alert('Copied to clipboard!');
+  const clearForNewOp = () => setErrorMsg(null);
+  const handleCopy = async () => {
+    try {
+      const location = `${projectLocation}/${projectName}/${sessionId}`;
+      await navigator.clipboard.writeText(location);
+      setShowToast(true);
+    } catch {
+      setErrorMsg('Failed to copy path');
+    }
   };
 
-  const handleClose = () => {
-    setShowToast(false);
-  };
+  const handleClose = () => setShowToast(false);
 
   useEffect(() => {
-    let interval: number | null = null;
+    let interval: number | undefined;
     if (isRecording) {
       interval = window.setInterval(() => setTimer((t) => t + 1), 1000);
-    } else if (!isRecording && timer !== 0) {
-      if (interval !== null) clearInterval(interval);
+    } else {
+      if (interval) clearInterval(interval);
     }
-    return () => { if (interval !== null) clearInterval(interval); };
-  }, [isRecording, timer]);
+    return () => clearInterval(interval);
+  }, [isRecording]);
 
   useEffect(() => {
-    if (mindmapState.error) {
-      setNotification(t('notifications.mindmapError'));
-    }
-    else if (mindmapLoading || mindmapState.isLoading) {
-      setNotification(t('notifications.generatingMindmap'));
-    }
-    else if (mindmapEnabled && !mindmapLoading && mindmapState.finalText) {
-      setNotification(t('notifications.mindmapReady'));
-    }
-    else if (summaryEnabled && summaryLoading) {
-      setNotification(t('notifications.generatingSummary'));
-    } 
-    else if (summaryEnabled && isBusy && !summaryLoading) {
-      setNotification(t('notifications.streamingSummary'));
-    } 
-    else if (!isBusy && summaryEnabled && !mindmapEnabled) {
-      setNotification(t('notifications.summaryReady'));
-    }
-    else if (isBusy && transcriptStatus === 'streaming') {
-      setNotification(t('notifications.loadingTranscript'));
-    } 
-    else if (isBusy && !summaryEnabled) {
-      setNotification(t('notifications.analyzingAudio'));
-    } 
-    else {
-      setNotification(t('notifications.start'));
-    }
-  }, [
-    isBusy,
-    summaryEnabled,
-    summaryLoading,
-    transcriptStatus,
-    mindmapEnabled,
-    mindmapLoading,
-    mindmapState.isLoading,
-    mindmapState.finalText,
-    mindmapState.error,
-    t
-  ]);
+    if (summaryEnabled && summaryLoading) setNotification(t('notifications.generatingSummary'));
+    else if (summaryEnabled && isBusy && !summaryLoading) setNotification(t('notifications.streamingSummary'));
+    else if (isBusy && transcriptStatus === 'streaming') setNotification(t('notifications.loadingTranscript'));
+    else if (isBusy && !summaryEnabled) setNotification(t('notifications.analyzingAudio'));
+    else if (!isBusy && summaryEnabled) setNotification(t('notifications.summaryReady'));
+    else setNotification(t('notifications.start'));
+  }, [isBusy, summaryEnabled, summaryLoading, transcriptStatus, t]);
 
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<string>).detail;
-      setErrorMsg(detail || 'Error');
+      setErrorMsg(detail || 'An error occurred');
     };
     window.addEventListener('global-error', handler as EventListener);
     return () => window.removeEventListener('global-error', handler as EventListener);
   }, []);
-
-  const clearForNewOp = () => setErrorMsg(null);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -117,21 +82,47 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const handleRecordingToggle = () => {
+  const handleRecordingToggle = async () => {
     if (isBusy && !isRecording) return;
+
     const next = !isRecording;
-    setIsRecording(next);
+    clearForNewOp();
 
     if (next) {
+      // 🎙️ Start Recording
       setTimer(0);
       setNotification(t('notifications.recording'));
       dispatch(resetFlow());
       dispatch(resetTranscript());
       dispatch(resetSummary());
-      dispatch(clearMindmap());
-    } else {
-      setNotification(t('notifications.uploading'));
       dispatch(startProcessing());
+
+      try {
+        dispatch(setUploadedAudioPath('MICROPHONE'));
+        setIsRecording(true);
+        
+        console.log('🎙️ Microphone recording started - transcription will begin automatically');
+        
+      } catch (error) {
+        console.error('Failed to start microphone:', error);
+        setErrorMsg('Failed to start microphone recording');
+        dispatch(processingFailed());
+        setIsRecording(false);
+      }
+    } else {
+      setIsRecording(false);
+      
+      try {
+        if (sessionId) {
+          const result = await stopMicrophone(sessionId);
+          console.log('🛑 Microphone stopped:', result);
+        } else {
+          console.warn('No session ID available to stop microphone');
+        }
+      } catch (error) {
+        console.error('Failed to stop microphone:', error);
+        setErrorMsg('Failed to stop microphone recording');
+      }
     }
   };
 
@@ -142,16 +133,14 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     dispatch(resetFlow());
     dispatch(resetTranscript());
     dispatch(resetSummary());
-    dispatch(clearMindmap());
     dispatch(startProcessing());
+
     try {
       const result = await uploadAudio(file);
       dispatch(setUploadedAudioPath(result.path));
       setNotification(t('notifications.uploadSuccess'));
-      setErrorMsg(null);
     } catch (e: any) {
       const msg = e?.response?.data?.message || 'Upload failed';
-      setNotification('');
       setErrorMsg(msg);
       dispatch(processingFailed());
     }
@@ -165,24 +154,32 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           alt="Record"
           className="record-icon"
           onClick={handleRecordingToggle}
-          style={{ opacity: isBusy && !isRecording ? 0.5 : 1, cursor: isBusy && !isRecording ? 'not-allowed' : 'pointer' }}
+          style={{
+            opacity: (isBusy && !isRecording) ? 0.5 : 1,
+            cursor: (isBusy && !isRecording) ? 'not-allowed' : 'pointer'
+          }}
         />
         <img src={sideRecordIcon} alt="Side Record" className="side-record-icon" />
         <span className="timer">{formatTime(timer)}</span>
 
         <button
           className="text-button"
-          onClick={(e) => { e.preventDefault(); }}
-          disabled={true}
-          title="Recording disabled"
-          style={{ cursor: 'not-allowed', opacity: 0.6 }}
+          onClick={handleRecordingToggle}
+          disabled={isBusy && !isRecording}
+          style={{
+            cursor: (isBusy && !isRecording) ? 'not-allowed' : 'pointer',
+            opacity: (isBusy && !isRecording) ? 0.6 : 1
+          }}
         >
           {isRecording ? t('header.stopRecording') : t('header.startRecording')}
         </button>
 
         <label
           className="upload-button"
-          style={{ opacity: isBusy || isRecording ? 0.6 : 1, cursor: isBusy || isRecording ? 'not-allowed' : 'pointer' }}
+          style={{
+            opacity: (isBusy || isRecording) ? 0.6 : 1,
+            cursor: (isBusy || isRecording) ? 'not-allowed' : 'pointer'
+          }}
         >
           <input
             type="file"
@@ -206,9 +203,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       <div className="navbar-right">
         <ProjectNameDisplay projectName={projectName} />
       </div>
+
       {showToast && (
         <Toast
-          message={`Summary stored at: ${projectLocation}/${projectName}/${sessionId}`}
+          message={`Copied path: ${projectLocation}/${projectName}/${sessionId}`}
           onClose={handleClose}
           onCopy={handleCopy}
         />

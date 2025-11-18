@@ -1,13 +1,15 @@
 export async function* typewriterStream(
-    text: string,
-    delayMs: number = 30,
-    signal?: AbortSignal
-  ): AsyncGenerator<string> {
-    // Split into words, keeping trailing whitespace for natural effect
-    const tokens = Array.from(text.matchAll(/\S+\s*/g)).map(m => m[0]);
-    for (const token of tokens) {
-      if (signal?.aborted) return;
-      yield token;
-      await new Promise(res => setTimeout(res, delayMs));
+  text: string,
+  delayMs: number,
+  signal?: AbortSignal
+) {
+  const parts = text.split(/(\s+)/);
+ 
+  for (const part of parts) {
+    if (signal?.aborted) break;
+    yield part;
+    if (part.trim().length > 0 && delayMs > 0) {
+      await new Promise((res) => setTimeout(res, delayMs));
     }
   }
+}

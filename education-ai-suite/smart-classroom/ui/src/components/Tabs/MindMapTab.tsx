@@ -57,8 +57,8 @@ const cleanMindmapContent = (content: string): string => {
     .map((line) => {
       let cleaned = line.replace(/\s+$/g, "");
       cleaned = cleaned.replace(/^(\s*)[-*•]\s+/, "$1");
+      cleaned = cleaned.replace(/^(\s*)\|\s*/, "$1");
       cleaned = cleaned.replace(/\t/g, "  ");
-      
       const match = cleaned.match(/^(\s*)(.*?)(\s*\([^)]*\)\s*)?$/);
       if (match && match[2]) {
         const indent = match[1] || '';

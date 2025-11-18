@@ -3,7 +3,7 @@ import ProjectNameInput from '../Inputs/ProjectNameInput';
 import MicrophoneSelect from '../Inputs/MicrophoneSelect';
 import ProjectLocationInput from '../Inputs/ProjectLocationInput';
 import '../../assets/css/SettingsForm.css';
-import { saveSettings, getSettings } from '../../services/api';
+import { saveSettings, getSettings, getAudioDevices } from '../../services/api';
 import { useTranslation } from 'react-i18next';
 
 interface SettingsFormProps {
@@ -18,19 +18,50 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
   const [nameError, setNameError] = useState<string | null>(null);
   const { t } = useTranslation();
 
-  // Fetch settings on mount and set defaults
   useEffect(() => {
-    getSettings()
-      .then(s => {
-        if (!s) return;
-        setProjectLocation(s.projectLocation || 'storage/');
-        setSelectedMicrophone(s.microphone || '');
-        if (s.projectName) setProjectName(s.projectName); // default project name from API
-      })
-      .catch(() => {});
-  }, [setProjectName]);
+    const loadSettings = async () => {
+      try {
+        const [settings, devices] = await Promise.all([
+          getSettings(),
+          getAudioDevices()
+        ]);
+        
+        // Create full device list with IP microphone first
+        const ipMicrophone = t('settings.ipMicrophone');
+        const allDevices = [ipMicrophone, ...devices];
+        
+        console.log('Available devices:', allDevices); // Debug log
+        console.log('Saved microphone from settings:', settings?.microphone); // Debug log
+        
+        if (settings) {
+          setProjectLocation(settings.projectLocation || 'storage/');
+          if (settings.projectName) setProjectName(settings.projectName);
+          
+          // Set microphone: use saved value if it exists in available devices, otherwise use first device
+          if (settings.microphone && allDevices.includes(settings.microphone)) {
+            console.log('Using saved microphone:', settings.microphone);
+            setSelectedMicrophone(settings.microphone);
+          } else {
+            console.log('Using default microphone:', allDevices[0]);
+            setSelectedMicrophone(allDevices[0]);
+          }
+        } else {
+          // No saved settings, use first available device
+          console.log('No saved settings, using first device:', allDevices[0]);
+          setSelectedMicrophone(allDevices[0]);
+        }
+      } catch (error) {
+        console.error('Failed to load settings or devices:', error);
+        // Fallback to IP microphone
+        const fallback = t('settings.ipMicrophone');
+        console.log('Error fallback, using:', fallback);
+        setSelectedMicrophone(fallback);
+      }
+    };
 
-  // Validate project name
+    loadSettings();
+  }, [setProjectName, t]);
+
   const validateProjectName = () => {
     if (!projectName.trim()) {
       setNameError(t('errors.projectNameRequired'));
@@ -43,8 +74,15 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
     if (!validateProjectName()) {
       return;
     }
+    
+    console.log('Saving settings with microphone:', selectedMicrophone); // Debug log
+    
     try {
-      await saveSettings({ projectName, projectLocation, microphone: selectedMicrophone });
+      await saveSettings({ 
+        projectName, 
+        projectLocation, 
+        microphone: selectedMicrophone 
+      });
       onClose();
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -55,9 +93,16 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
     setProjectName(name);
     if (nameError) setNameError(null);
   };
+  
   const handleLocationChange = (location: string) => {
     setProjectLocation(location);
   };
+
+  const handleMicrophoneChange = (microphone: string) => {
+    console.log('Microphone changed to:', microphone); // Debug log
+    setSelectedMicrophone(microphone);
+  };
+
   return (
     <div className="settings-form">
       <h2>{t('settings.title')}</h2>
@@ -84,8 +129,12 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
           <label htmlFor="microphone">{t('settings.microphone')}</label>
           <MicrophoneSelect
             selectedMicrophone={selectedMicrophone}
-            onChange={setSelectedMicrophone}
+            onChange={handleMicrophoneChange}
           />
+          {/* Debug display */}
+          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+            Selected: {selectedMicrophone || 'None'}
+          </div>
         </div>
       </div>
       <div className="button-container">
