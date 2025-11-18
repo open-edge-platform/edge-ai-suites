@@ -58,16 +58,16 @@ def read_simulation_files(base_filename: str, simulation_data_dir: str = "/simul
     
     # Check if both files exist
     if os.path.exists(video_path) and os.path.exists(csv_path):
-        logger.info(f"Found paired files:")
-        logger.info(f"  Video: {video_path}")
-        logger.info(f"  CSV: {csv_path}")
+        logger.debug(f"Found paired files:")
+        logger.debug(f"  Video: {video_path}")
+        logger.debug(f"  CSV: {csv_path}")
         return video_path, csv_path
     else:
-        logger.info(f"Could not find both files for base name '{base_filename}'")
+        logger.warning(f"Could not find both files for base name '{base_filename}'")
         if not os.path.exists(video_path):
-            logger.info(f"  Missing video file: {video_path}")
+            logger.warning(f"  Missing video file: {video_path}")
         if not os.path.exists(csv_path):
-            logger.info(f"  Missing CSV file: {csv_path}")
+            logger.warning(f"  Missing CSV file: {csv_path}")
         return None, None
 
 
@@ -121,7 +121,7 @@ def load_simulation_data(base_filename: str, simulation_data_dir: str = "/simula
         # Load CSV
         df = pd.read_csv(csv_path)
         logger.debug(f"Successfully loaded:")
-        logger.info(f"  Video frames: {int(video_cap.get(cv2.CAP_PROP_FRAME_COUNT))} CSV rows: {len(df)}")        
+        logger.debug(f"  Video frames: {int(video_cap.get(cv2.CAP_PROP_FRAME_COUNT))} CSV rows: {len(df)}")        
         return video_cap, df
         
     except Exception as e:
@@ -181,10 +181,7 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration_sec = total_frames / fps if fps > 0 else 0
 
-    logger.info(f"Video duration: {duration_sec:.2f} seconds")
-    logger.info(f"Original FPS: {original_fps:.2f}")
-    logger.info(f"Effective FPS: {effective_fps:.2f}")
-    logger.info(f"Total frames: {total_frames}")
+    logger.info(f"Video duration: {duration_sec:.2f} seconds, Original FPS: {original_fps:.2f}, Effective FPS: {effective_fps:.2f}, Total frames: {total_frames}")
     if frame_skip_ratio > 1:
         logger.info(f"Frame skip ratio: {frame_skip_ratio} (showing every {frame_skip_ratio} frames)")
 
@@ -194,7 +191,7 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
     logger.info(f"Row time window: {row_time_window:.2f} seconds")
     # MQTT setup
     global client
-    client = mqtt.Client()
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.connect(MQTT_BROKER)
 
     start_ffmpeg = False
@@ -267,9 +264,7 @@ def check_and_load_simulation_files(target_fps):
     Display the available simulation file pairs and provide usage examples.
     """
     available_files = get_available_simulation_files()
-    if available_files:
-        logger.info("simulation file pairs found!")
-    else:
+    if not available_files:
         logger.info("No simulation file pairs found!")
         return
 
@@ -280,6 +275,7 @@ def check_and_load_simulation_files(target_fps):
             logger.info(f"  {i}. {filename}")
             stream_video_and_csv(filename, target_fps=target_fps)
         if not continuous_ingestion:
+            logger.info("Continuous ingestion disabled. Exiting...")
             break
     
     
@@ -295,7 +291,7 @@ if __name__ == "__main__":
     # stream_video_and_csv("crater_cracks_03-20-23-0122-11", target_fps=5)  # Downsample to 5 FPS
     
     # Default behavior - process all available files
-    client = mqtt.Client()
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.connect(MQTT_BROKER)
     target_fps = int(os.getenv("SIMULATION_TARGET_FPS", "10"))
     ffmpeg_cmd = [
