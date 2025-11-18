@@ -88,7 +88,7 @@ http://localhost:8101
 
 ### Technical Documentation
 
-- 
+- [Chat Q&A](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer/index.html)
 - [Audio Analyzer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html)
   \- Comprehensive documentation for multimodal audio processing capabilities
 - [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/get-started.md)
