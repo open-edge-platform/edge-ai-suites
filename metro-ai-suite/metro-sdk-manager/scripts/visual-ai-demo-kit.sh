@@ -9,7 +9,8 @@
 # Arguments:
 #   --skip-system-check: Skip system resource check
 #   --skip-docker: Skip Docker installation
-#   --skip-images: Skip Docker image download
+#   --skip-images: Skip Docker image download\
+"/;"
 #   --help: Show help message
 # Outputs:
 #   System resource information and installation status to stdout
@@ -18,7 +19,7 @@
 
 # Array of repositories to clone: "url|branch|directory"
 repositories=(
-  "https://github.com/open-edge-platform/edge-ai-suites|v1.2.0|edge-ai-suites"
+  "https://github.com/open-edge-platform/edge-ai-suites|release-2025.2.0|edge-ai-suites"
 )
 
 images=(
@@ -31,7 +32,6 @@ images=(
 )
 
 NAME="Visual AI Demo Kit"
-
 
 set -euo pipefail
 
@@ -689,11 +689,9 @@ main() {
   
   echo ""
   info "Next steps:"
-  info "1. Reboot your system to ensure GPU drivers are properly loaded"
-  info "2. Navigate to ${HOME}/metro/ to explore the cloned repositories"
-  info "3. Check repository documentation for usage instructions"
-  info "4. Verify GPU installation with: clinfo"
-  info "5. Start developing with ${NAME}!"
+  info "1. Navigate to ${HOME}/metro/ to explore the cloned repositories"
+  info "2. Check repository documentation for usage instructions"
+  info "3. Start developing with ${NAME}!"
 
 }
 
