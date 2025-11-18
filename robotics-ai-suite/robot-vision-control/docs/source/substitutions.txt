@@ -17,12 +17,15 @@
 
 .. |ros| replace:: ROS 2
 .. |ros_version| replace:: Humble
+.. |ROS2-jazzy| replace:: ROS 2 Jazzy Jalisco
+.. |ROS2-humble| replace:: ROS 2 Humble Hawksbill
 .. |ros_install_instructions| replace:: `ROS2 setup guide <https://docs.ros.org/en/humble/Installation.html>`__
 .. |ros_install_instructions_debian| replace:: `ROS2 setup with Ubuntu Deb Packages <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages>`__
 
 .. |Ubuntu_OS| replace:: Canonical Ubuntu OS
 .. |Ubuntu| replace:: Canonical Ubuntu
 .. |Ubuntu22| replace:: |Ubuntu| 22.04 LTS (Jammy Jellyfish)
+.. |Ubuntu24| replace:: Canonical® Ubuntu® 24.04 (Noble Numbat)
 .. |ubuntu_iso_download| replace:: `Ubuntu OS ISO Download <https://releases.ubuntu.com/22.04>`__
 .. |ubuntu_install_instructions| replace:: `Install Ubuntu OS <https://ubuntu.com/download/desktop>`__
 .. |ubuntu_version| replace:: |Ubuntu22|
@@ -30,6 +33,7 @@
 
 .. |asrockind_platform| replace:: ASRock Industrial intelligent edge platform
 .. |linux| replace:: Linux
+.. |Windows| replace:: Microsoft Windows
 .. |distro-ubuntu| replace:: Jammy
 .. |distro-format-ubuntu| replace:: ``jammy``
 .. |Docker_Engine| replace:: Docker Engine

@@ -1,4 +1,4 @@
-Camera Setup
+Camera USB Setup
 ====================
 
 RVC supports |Realsense| |D4xx| cameras, with many `Exemplary Use Cases <../use_cases.html>`_ utilizing  
