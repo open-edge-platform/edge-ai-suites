@@ -47,7 +47,7 @@ The AI Tolling system consists of several key components:
 Navigate to the metro vision AI recipe directory and create the AI tolling application by copying the Smart Parking template:
 
 ```bash
-cd ./edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe
+cd ~/metro/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe
 cp -r smart-parking/ ai-tolling/
 ```
 
@@ -231,6 +231,8 @@ if [ ! -f server.key ] || [ ! -f server.crt ]; then
 
 fi
 
+cd ~/metro/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe
+
 # Verify the configuration
 grep SAMPLE_APP= .env
 grep HOST_IP= .env
@@ -284,6 +286,8 @@ Open your web browser and navigate to:
   - Password: admin
 - **Node-RED Flow Editor**: `https://localhost/nodered/`
 
+Update localhost to IP Address if you are accessing it remotely.
+
 ### 3. **Test Video Processing**
 
 Start the AI pipeline and process the sample video:
@@ -318,12 +322,12 @@ curl -k -s https://localhost/api/pipelines/user_defined_pipelines/car_plate_reco
 Access the processed video stream with AI annotations through WebRTC:
 
 ```bash
-# Open in your web browser (replace <HOST_IP> with your actual IP address)
+# Open in your web browser (replace localhost with your actual IP address)
 # For local testing, typically use localhost or 127.0.0.1
-http://localhost/mediamtx/object_detection_1/
+https://localhost/mediamtx/object_detection_1/
 ```
 
-For local testing, you can use: `http://localhost/mediamtx/object_detection_1/`
+For local testing, you can use: `https://localhost/mediamtx/object_detection_1/`
 
 ![Vehicle Live Detection](images/car_live_detection.jpg)
 
