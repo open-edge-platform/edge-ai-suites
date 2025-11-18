@@ -15,6 +15,8 @@ ARG USER=intelmicroserviceuser
 ARG UID=1999
 RUN useradd -ms /bin/bash ${USER} -o -u $UID && \
     chown ${USER}:${USER} -R /usr/src/app /root
+RUN mkdir -p /usr/src/app/static && \
+    chown -R ${USER}:${USER} /usr/src/app/static
 RUN mkdir -p /home/${USER}/ && chown -R ${USER}:${USER} /home/${USER}
 USER ${USER}
 
