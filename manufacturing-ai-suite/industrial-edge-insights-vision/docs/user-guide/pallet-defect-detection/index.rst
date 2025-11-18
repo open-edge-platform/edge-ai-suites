@@ -95,7 +95,9 @@ This sample application offers the following features:
    how-to-use-gpu-for-inference
    how-to-start-mqtt-publisher
    how-to-integrate-balluff-sdk
+   how-to-install-balluff-sdk-on-host
    how-to-integrate-pylon-sdk
+   how-to-install-pylon-sdk-on-host.md
    how-to-benchmark
    api-reference
    environment-variables
