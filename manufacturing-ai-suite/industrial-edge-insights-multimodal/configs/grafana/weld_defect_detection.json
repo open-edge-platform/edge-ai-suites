@@ -45,7 +45,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<iframe id=\"myframe\" style=\"width:100%; height:500px;\" \n  allow=\"autoplay; encrypted-media\"\n  sandbox=\"allow-scripts allow-same-origin allow-forms allow-popups\">\n</iframe>\n\n<script>\n  const host = window.location.hostname;\n  document.getElementById(\"myframe\").src = `http://${host}:8889/samplestream/`;\n</script>",
+        "content": "<iframe id=\"myframe\" style=\"width:100%; height:500px;\" \n  allow=\"autoplay; encrypted-media\"\n  sandbox=\"allow-scripts allow-same-origin allow-forms allow-popups\">\n</iframe>\n\n<script>\n  const host = window.location.hostname;\n  const port = window.location.port || \"443\";   // default if none present\n\n  // Build iframe URL INCLUDING PORT\n  const iframeUrl = `https://${host}:${port}/samplestream/`;\n\n  document.getElementById(\"myframe\").src = iframeUrl;\n</script>",
         "mode": "html"
       },
       "pluginVersion": "12.0.0",
