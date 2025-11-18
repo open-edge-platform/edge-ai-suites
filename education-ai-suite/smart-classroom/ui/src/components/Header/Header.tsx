@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { resetFlow, startProcessing, setUploadedAudioPath, processingFailed } from '../../redux/slices/uiSlice';
 import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
+import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { useTranslation } from 'react-i18next';
 import { uploadAudio, stopMicrophone } from '../../services/api';
 import Toast from '../common/Toast';
@@ -32,8 +33,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const summaryEnabled = useAppSelector((s) => s.ui.summaryEnabled);
   const summaryLoading = useAppSelector((s) => s.ui.summaryLoading);
   const transcriptStatus = useAppSelector((s) => s.transcript.status);
+  const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
+  const mindmapLoading = useAppSelector((s) => s.ui.mindmapLoading);
   const sessionId = useAppSelector((s) => s.ui.sessionId);
   const projectLocation = useAppSelector((s) => s.ui.projectLocation);
+  const mindmapState = useAppSelector((s) => s.mindmap);
 
   const clearForNewOp = () => setErrorMsg(null);
   const handleCopy = async () => {
@@ -59,13 +63,45 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   }, [isRecording]);
 
   useEffect(() => {
-    if (summaryEnabled && summaryLoading) setNotification(t('notifications.generatingSummary'));
-    else if (summaryEnabled && isBusy && !summaryLoading) setNotification(t('notifications.streamingSummary'));
-    else if (isBusy && transcriptStatus === 'streaming') setNotification(t('notifications.loadingTranscript'));
-    else if (isBusy && !summaryEnabled) setNotification(t('notifications.analyzingAudio'));
-    else if (!isBusy && summaryEnabled) setNotification(t('notifications.summaryReady'));
-    else setNotification(t('notifications.start'));
-  }, [isBusy, summaryEnabled, summaryLoading, transcriptStatus, t]);
+    if (mindmapState.error) {
+          setNotification(t('notifications.mindmapError'));
+        }
+        else if (mindmapLoading || mindmapState.isLoading) {
+          setNotification(t('notifications.generatingMindmap'));
+        }
+        else if (mindmapEnabled && !mindmapLoading && mindmapState.finalText) {
+          setNotification(t('notifications.mindmapReady'));
+        }
+        else if (summaryEnabled && summaryLoading) {
+          setNotification(t('notifications.generatingSummary'));
+        } 
+        else if (summaryEnabled && isBusy && !summaryLoading) {
+          setNotification(t('notifications.streamingSummary'));
+        } 
+        else if (!isBusy && summaryEnabled && !mindmapEnabled) {
+          setNotification(t('notifications.summaryReady'));
+        }
+        else if (isBusy && transcriptStatus === 'streaming') {
+          setNotification(t('notifications.loadingTranscript'));
+        } 
+        else if (isBusy && !summaryEnabled) {
+          setNotification(t('notifications.analyzingAudio'));
+        } 
+        else {
+          setNotification(t('notifications.start'));
+        }
+      }, [
+        isBusy,
+        summaryEnabled,
+        summaryLoading,
+        transcriptStatus,
+        mindmapEnabled,
+        mindmapLoading,
+        mindmapState.isLoading,
+        mindmapState.finalText,
+        mindmapState.error,
+        t
+      ]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -96,6 +132,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       dispatch(resetTranscript());
       dispatch(resetSummary());
       dispatch(startProcessing());
+      dispatch(clearMindmap());
 
       try {
         dispatch(setUploadedAudioPath('MICROPHONE'));
@@ -133,14 +170,18 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     dispatch(resetFlow());
     dispatch(resetTranscript());
     dispatch(resetSummary());
+    dispatch(clearMindmap());
     dispatch(startProcessing());
 
     try {
       const result = await uploadAudio(file);
       dispatch(setUploadedAudioPath(result.path));
       setNotification(t('notifications.uploadSuccess'));
+      setErrorMsg(null);
     } catch (e: any) {
       const msg = e?.response?.data?.message || 'Upload failed';
+      setErrorMsg(msg);
+      setNotification('');
       setErrorMsg(msg);
       dispatch(processingFailed());
     }
