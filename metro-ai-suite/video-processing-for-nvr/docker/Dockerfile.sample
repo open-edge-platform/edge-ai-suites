@@ -1,12 +1,16 @@
 ARG BASE=ubuntu
 ARG BASE_VERSION=24.04
 FROM $BASE:${BASE_VERSION} AS base
+# FROM debian:latest
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 RUN echo "http_proxy=$http_proxy" >> /etc/environment && \
     echo "https_proxy=$https_proxy" >> /etc/environment && \
     echo "no_proxy=$no_proxy" >> /etc/environment
+
+RUN printf 'Acquire::http::Proxy "%s";\n'  "${http_proxy}"  > /etc/apt/apt.conf.d/99proxy && \
+    printf 'Acquire::https::Proxy "%s";\n' "${https_proxy}" >> /etc/apt/apt.conf.d/99proxy
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -15,7 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     sudo \
     lsb-release \
-    unzip
+    unzip \
+    curl
 
 RUN useradd -m -s /bin/bash vpp && \
 echo "vpp ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
@@ -28,7 +33,15 @@ WORKDIR /home/vpp/vppsample
 
 RUN bash ./live555_install.sh
 
-RUN dpkg -i ./intel-vppsdk_2025.0.0_amd64.deb
+RUN curl -s https://eci.intel.com/sed-repos/gpg-keys/GPG-PUB-KEY-INTEL-SED.gpg | tee /usr/share/keyrings/sed-archive-keyring.gpg > /dev/null
+RUN echo "deb [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | tee /etc/apt/sources.list.d/sed.list
+RUN echo "deb-src [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | tee -a /etc/apt/sources.list.d/sed.list
+RUN bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
+RUN apt update -y && \
+    apt install intel-vppsdk && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
 
 RUN bash ./build.sh
