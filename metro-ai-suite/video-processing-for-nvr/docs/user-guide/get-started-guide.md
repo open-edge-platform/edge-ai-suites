@@ -217,3 +217,15 @@ newdec --id=31 --input=1080p.h265 --codec=h265    --sink=disp15 -f NV12
 ctrl --cmd=run  --time=15000
 ctrl --cmd=stop  --time=0
 ```
+
+## Uninstall 
+
+### Uninstall SVET
+`sudo rm -rf build`
+
+### Uninstall live555
+`xargs sudo rm < live555-master/build/install_manifest.txt`
+
+### Uninstall VPP SDK
+`sudo rm -rf /opt/intel/vppsdk`  
+`sudo rm -rf /opt/intel/media`
