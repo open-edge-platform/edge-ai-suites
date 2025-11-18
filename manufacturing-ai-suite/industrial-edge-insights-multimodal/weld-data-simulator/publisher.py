@@ -181,7 +181,7 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration_sec = total_frames / fps if fps > 0 else 0
 
-    logger.info(f"Video duration: {duration_sec:.2f} seconds Original FPS: {original_fps:.2f} Effective FPS: {effective_fps:.2f} Total frames: {total_frames}")
+    logger.info(f"Video duration: {duration_sec:.2f} seconds, Original FPS: {original_fps:.2f}, Effective FPS: {effective_fps:.2f}, Total frames: {total_frames}")
     if frame_skip_ratio > 1:
         logger.info(f"Frame skip ratio: {frame_skip_ratio} (showing every {frame_skip_ratio} frames)")
 
