@@ -1,18 +1,7 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions
-# and limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import os, argparse
 import time
@@ -72,7 +61,7 @@ class InferenceManager(Thread):
 			self.proc.join()
 			Thread.join(self)
 			self.cv.acquire()
-			
+
 		self.cv.release()
 
 	def infer(self, image):
@@ -86,7 +75,7 @@ class InferenceManager(Thread):
 		if withPerf:
 			self.frames_number += 1
 
-			pv.draw_perf(image, self.adapter.name, self.adapter.device, 
+			pv.draw_perf(image, self.adapter.name, self.adapter.device,
 								self.fps(), self.adapter.fps(), self.cpu_load(), self.data_type, self.async_mode)
 			return image
 
@@ -117,26 +106,26 @@ class InferenceManager(Thread):
 			if image is None:
 				self.cv.acquire()
 				break
-			
+
 			self.adapter.infer(image)
-			
+
 			self.cv.acquire()
 
 			image = self.adapter.result()
 			if image is not None:
 				self.frames_number += 1
-				
-				pv.draw_perf(image, self.adapter.name, self.adapter.device, 
+
+				pv.draw_perf(image, self.adapter.name, self.adapter.device,
 							self.fps(), self.adapter.fps(), self.cpu_load(), self.data_type, self.async_mode)
 
 				self.image = image
 
 		self.cv.release()
-		
+
 	def cpu_load_handler(self):
 
 		self.cpu_loads.append(psutil.cpu_percent(0.1))
-		
+
 		while self.running:
 			self.cv.acquire()
 			self.cpu_loads.append(psutil.cpu_percent(0))

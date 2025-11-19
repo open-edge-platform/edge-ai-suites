@@ -1,18 +1,7 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions
-# and limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import os
 import sys
@@ -128,7 +117,7 @@ class VideoCapWrapper(ImagesCapture):
         status = self.cap.open(input)
         if not status:
            raise InvalidInput("Can't open the video from {}".format(input))
-            
+
     def read(self):
         status, image = self.cap.read()
         if not status:
@@ -148,7 +137,7 @@ class VideoCapWrapper(ImagesCapture):
 
 class RealSenseCapWrapper(ImagesCapture):
     def __init__(self, input, camera_resolution):
-        
+
         status = False
         if input.isnumeric():
             self.id = int(input)
@@ -165,7 +154,7 @@ class RealSenseCapWrapper(ImagesCapture):
                 self.pipeline.start(self.config)
                 self.depth_frame = None
                 status = True
-        
+
         if not status:
             raise InvalidInput("Can't find the RS camera {}".format(input))
 
@@ -174,9 +163,9 @@ class RealSenseCapWrapper(ImagesCapture):
         color_frame = frames.get_color_frame()
         self.depth_frame = frames.get_depth_frame()
 
-        if  color_frame:        
+        if  color_frame:
             color_frame = np.asanyarray(color_frame.get_data())
-       
+
         return color_frame
 
     def get_distance(self, x, y):
@@ -195,7 +184,7 @@ class RealSenseCapWrapper(ImagesCapture):
 class CameraCapWrapper(ImagesCapture):
 
     def __init__(self, input, camera_resolution):
-        
+
         self.cap = cv2.VideoCapture()
         try:
             status = self.cap.open(int(input))
@@ -224,12 +213,12 @@ class CameraCapWrapper(ImagesCapture):
 
 class VideoCapture():
     def __init__(self, input, loop=True, camera_resolution=(1280, 720)):
-       
+
         self.inputs = input.split(',')
         self.nb_inputs = len(self.inputs)
         self.input_index = -1
         self.loop = loop
-        self.camera_resolution = camera_resolution 
+        self.camera_resolution = camera_resolution
         self.next()
 
     def read(self):
@@ -246,7 +235,7 @@ class VideoCapture():
 
             self.input_index = (self.input_index+1) % self.nb_inputs
             input = self.inputs[self.input_index]
-        
+
             for reader in (ImreadWrapper, DirReader, RealSenseCapWrapper, VideoCapWrapper):
                 try:
                     self.reader = reader(input, self.loop)
@@ -265,7 +254,7 @@ class VideoCapture():
                 print(*errors[InvalidInput], file=sys.stderr, sep='\n')
             else:
                 print(*errors[OpenError], file=sys.stderr, sep='\n')
-    
+
     def get_distance(self, x, y):
         if self.reader is not None:
             return self.reader.get_distance(x,y)
