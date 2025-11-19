@@ -36,11 +36,11 @@ class Pipeline:
             )
         ]
 
-    def run_transcription(self, audio_path: str):
+    def run_transcription(self, input):
         project_config = RuntimeConfig.get_section("Project")
         monitor.start_monitoring(os.path.join(project_config.get("location"), project_config.get("name"), self.session_id, "utilization_logs"))
 
-        input_gen = ({"audio_path": audio_path} for _ in range(1))
+        input_gen = ({"input": input} for _ in range(1))
 
         for component in self.transcription_pipeline:
             input_gen = component.process(input_gen)
@@ -50,7 +50,6 @@ class Pipeline:
                 yield chunk_trancription
         finally:
             monitor.stop_monitoring()
-            time.sleep(3) #time for socwatch to get clean-start
             
     
     def run_summarizer(self):
