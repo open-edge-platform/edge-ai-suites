@@ -26,15 +26,15 @@ class Pipeline:
             SummarizerComponent(self.session_id, provider=config.models.summarizer.provider, model_name=config.models.summarizer.name, temperature=config.models.summarizer.temperature, device=config.models.summarizer.device)
         ]
 
-        self.mindmap_pipeline = [
-            MindmapComponent(
+        self.mindmap_component = MindmapComponent(
                 self.session_id,
                 provider=config.models.summarizer.provider,
-                model_name=config.models.summarizer.name,
+                model_name=config.models.summarizer.name, 
+                device=config.models.summarizer.device,
                 temperature=config.models.summarizer.temperature,
-                device=config.models.summarizer.device
             )
-        ]
+        
+        self.mindmap_component.model = self.summarizer_pipeline[0].summarizer
 
     def run_transcription(self, audio_path: str):
         project_config = RuntimeConfig.get_section("Project")
@@ -133,11 +133,7 @@ class Pipeline:
             return insufficient_mindmap
         
         try:
-            full_mindmap = ""
-            for component in self.mindmap_pipeline:
-                mindmap_text = component.generate_mindmap(summary_text)
-                full_mindmap += mindmap_text
-
+            full_mindmap = self.mindmap_component.generate_mindmap(summary_text)
             logger.info("Mindmap generation successful.")
             return full_mindmap
 
