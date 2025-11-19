@@ -74,7 +74,7 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, folder_name="/simulation-
     """
     Stream CSV files from a folder
     """
-    continous_simulator_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true").lower()
+    continuous_simulator_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true").lower()
 
     print(f"\nMQTT Topic - {topic}\nSubsample - {subsample}\nSampling Rate - \
           {sampling_rate}\nFolder Name - {folder_name}\n")
@@ -115,9 +115,9 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, folder_name="/simulation-
                     seconds')
         print(f"All files in folder {folder_name} have been processed.")
 
-        if continous_simulator_ingestion == "false":
+        if continuous_simulator_ingestion == "false":
             break
-    if continous_simulator_ingestion == "false":
+    if continuous_simulator_ingestion == "false":
         print("End of data reached.")
         while True:
             time.sleep(1)
