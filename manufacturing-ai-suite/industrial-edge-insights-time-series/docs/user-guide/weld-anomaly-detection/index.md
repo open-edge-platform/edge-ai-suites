@@ -70,7 +70,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 ##### **`udfs/`**
 
 Contains the python script to process the incoming data.
-Uses CatBoostClassifier machine learning algo from CatBoost libary to run on CPU to 
+Uses CatBoostClassifier machine learning algo from CatBoost library to run on CPU to 
 detect the anomalous power generation data points relative to wind speed.
 
 **Note**: Please note, CatBoost models doesn't run on Intel GPUs.
