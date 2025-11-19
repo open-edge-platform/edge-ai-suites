@@ -63,18 +63,16 @@ def transcribe_audio(
     request: TranscriptionRequest,
     x_session_id: Optional[str] = Header(None)
 ):
-    
     if audio_pipeline_lock.locked():
         raise HTTPException(status_code=429, detail="Session Active, Try Later")
-    
+   
     pipeline = Pipeline(x_session_id)
-    audio_path = request.audio_filename
-    
+   
     def stream_transcription():
-        for chunk_data in pipeline.run_transcription(audio_path):
+        for chunk_data in pipeline.run_transcription(request):
             yield json.dumps(chunk_data) + "\n"
-                
-
+               
+ 
     response = StreamingResponse(stream_transcription(), media_type="application/json")
     response.headers["X-Session-ID"] = pipeline.session_id
     return response
