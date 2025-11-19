@@ -1,7 +1,7 @@
 ADBSCAN Algorithm with 2D RPLIDAR Input Demo
 ==========================================================================
 
-This tutorial describes how to run the ADBSCAN algorithm from |p_amr|
+This tutorial describes how to run the ADBSCAN algorithm from Autonomous Mobile Robot
 using 2D RPLIDAR input.
 
 Prerequisites
@@ -12,14 +12,14 @@ Complete the :doc:`../../../../gsg_robot/index` before continuing.
 Install
 --------------------------------
 
-Install ``ros-humble-adbscan-ros2`` |deb_pack| from |intel| |p_amr| APT repository
+Install ``ros-humble-adbscan-ros2`` Deb package from Intel® Autonomous Mobile Robot APT repository
 
    .. code-block::
 
       sudo apt update
       sudo apt install ros-humble-adbscan-ros2
 
-Install the following package with |ros| bag files in order to publish point cloud data from 2D LIDAR or |realsense| camera
+Install the following package with ROS 2 bag files in order to publish point cloud data from 2D LIDAR or Intel® RealSense™ camera
 
    .. code-block::
 
@@ -32,11 +32,11 @@ Run the demo with 2D LIDAR input
 
       ros2 launch adbscan_ros2 play_demo_lidar_launch.py
 
-Expected output: ADBSCAN prints logs of its interpretation of the LIDAR data coming from the |ros| bag.
+Expected output: ADBSCAN prints logs of its interpretation of the LIDAR data coming from the ROS 2 bag.
 
    .. image:: ../../../../images/adbscan_demo_lidar.jpg
 
-One can view the list of running |ros| nodes by typing ``ros2 node list`` in a terminal.
+One can view the list of running ROS 2 nodes by typing ``ros2 node list`` in a terminal.
 
    .. image:: ../../../../images/adbscan_node_list.jpg
 

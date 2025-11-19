@@ -20,7 +20,7 @@ or the UR simulator can be reached.
 
     ros2 launch rvc_dynamic_motion_controller_use_case dynamic_demo_launch.py robot_ip:=<robot_ip>
 
-And then press play on the teaching pendant. 
+And then press play on the teaching pendant.
 
 
 .. _moveit2_servo_pose_tracking:
@@ -28,7 +28,7 @@ And then press play on the teaching pendant.
 Motion controller exemplary plugin
 ===================================
 
-A |moveit2| based motion controller has been implemented showing a dynamic
+A `MoveIt 2 <https://moveit.picknik.ai/main/index.html>`__ based motion controller has been implemented showing a dynamic
 real-time tracking of the goal set in sendGoal. At all time, sendGoal
 can be kept being called with different target, and the motion
 controller will do its best to track the goal.
@@ -41,7 +41,7 @@ Features
 - Avoid self collisions
 - Singularity Avoidance
 - Slows down to stop on singularities
-- Smoother movements: 
+- Smoother movements:
   - Butterworth filtering
   - custom plugin filtering
 - Supports Robots controllable in position and/or in velocity
@@ -145,7 +145,7 @@ The file waypoint.yaml exposes the waypoint the dynamic and static use cases use
 
 How to derive this numbers:
 
-|ROS2| is using a different coordinate system than the Univeral Robot teach pendant. To convert 
+ROS2 is using a different coordinate system than the Univeral Robot teach pendant. To convert
 the two, here is the conversion:
 
 

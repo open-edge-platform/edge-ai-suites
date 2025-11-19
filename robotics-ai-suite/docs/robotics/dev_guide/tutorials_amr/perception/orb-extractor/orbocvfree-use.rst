@@ -90,7 +90,7 @@ The above code illustrates how to store images in Mat2d class object.
     Based on BUILD_OPENCV_FREE=ON, only OpenCV-free dependency code will compile and link to the ``libgpu_orb_ocvfree.so`` library.
     Orb-extractor feature libraries have their own defined classes for *image input* and *keypoint output*.
     For more details, see the */usr/include/orb_type.h* file.
-    This file is installed by the |deb_pack| ``liborb-lze-dev``.
+    This file is installed by the Deb package ``liborb-lze-dev``.
 
 The vector of keypts can be used by application, or convert to different type. This example show how to convert ORB extractor ``KeyPoint`` to ``cv::KeyPoint``.
 

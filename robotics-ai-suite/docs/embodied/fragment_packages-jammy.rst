@@ -2,19 +2,19 @@
          :widths: 20 40 50
          :header-rows: 1
 
-         * - Component Group 
+         * - Component Group
            - Package
            - Description
          * - :ref:`LinuxBSP <linuxbsp>`
            - | linux-intel-rt-experimental
              | linux-intel-experimental
-           - Intel's |Linux| LTS real-time kernel (preempt-rt) and generic kernel, kernel version is 6.12.8
+           - Intel's Linux LTS real-time kernel (preempt-rt) and generic kernel, kernel version is 6.12.8
          * - `Linux Runtime Optimization <https://eci.intel.com/docs/3.3/appendix.html#eci-kernel-boot-optimizations>`__
            - customizations-grub
-           - |Linux| ECI and Intel's GRUB Customization
+           - Linux ECI and Intel's GRUB Customization
          * - `Linux firmware <https://eci.intel.com/docs/3.3/development/tutorials/enable-graphics.html>`__
            - linux-firmware
-           - |Linux| firmware with Ultra iGPU firmware
+           - Linux firmware with Ultra iGPU firmware
          * - `EtherCAT Master Stack <https://github.com/open-edge-platform/edge-ai-libraries/tree/main/libraries/edge-control-libraries/fieldbus/ethercat-masterstack>`__
            - | ighethercat
              | ighethercat-dpdk
@@ -23,7 +23,7 @@
              | ighethercat-dpdk-examples
              | ecat-enablekit
              | ecat-enablekit-dpdk
-           - Optimized open source IgH EtherCAT Master Stack, it supports on kernel space and user space  
+           - Optimized open source IgH EtherCAT Master Stack, it supports on kernel space and user space
          * - `Motion Control Gateway <https://eci.intel.com/docs/3.3/development/tutorials/enable-ros2-motion-ctrl-gw.html>`__
            - | rt-data-agent
              | ros-humble-agvm
@@ -90,4 +90,3 @@
 
    packages/linuxbsp
    packages/mc_gateway
-   

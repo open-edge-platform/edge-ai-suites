@@ -5,7 +5,7 @@ Diffusion Policy
 
 Diffusion Policy presents an innovative method for generating robot actions by conceptualizing visuomotor policy learning as a conditional denoising diffusion process. During inference, it utilizes the gradient of the score function for the action distribution and applies iterative stochastic Langevin dynamics, allowing for robust management of complex, multimodal, and high-dimensional action spaces while maintaining training stability. Key features, including receding horizon control, visual input conditioning, and a time-series diffusion transformer, further enhance the effectiveness of this approach for real-world visuomotor policy learning.
 
-A diffusion policy pipeline is provided for evaluating the diffusion policy model on the ``Push-T`` task in simulation. This pipeline includes source code optimized with |OpenVINO| for improved performance, and supports both Transformer-based and CNN-based diffusion policy for inference on the ``Push-T`` task.
+A diffusion policy pipeline is provided for evaluating the diffusion policy model on the ``Push-T`` task in simulation. This pipeline includes source code optimized with OpenVINO™ for improved performance, and supports both Transformer-based and CNN-based diffusion policy for inference on the ``Push-T`` task.
 
 In this tutorial, we will introduce how to setup Diffusion Policy simulation pipeline.
 
@@ -73,10 +73,10 @@ After installation, activate the ``robodiff`` Python environment in your current
 
     $ conda activate robodiff
 
-Install |OpenVINO|
+Install OpenVINO™
 ::::::::::::::::::::
 
-Install the |OpenVINO| with the following command:
+Install the OpenVINO™ with the following command:
 
 .. code-block:: bash
 

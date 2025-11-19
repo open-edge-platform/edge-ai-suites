@@ -5,7 +5,7 @@ Robotics Diffusion Transformer (RDT)
 
 Robotics Diffusion Transformer (RDT) is the largest bimanual manipulation foundation model with strong generalizability. RDT employs the diffusion transformer as its scalable backbone, with special designs for language-conditioned bimanual manipulation. RDT proposes the Physically Interpretable Unified Action Space, a unified action format for various robots with gripper arms, which enables the model to learn generalizable physical knowledge across diverse robotic datasets.
 
-A RDT pipeline is provided for evaluating the VLA model on the simulation task. This pipeline includes source code optimized with |OpenVINO| for improved performance, and supports running inference on Intel GPUs (discrete GPU and integrated GPU).
+A RDT pipeline is provided for evaluating the VLA model on the simulation task. This pipeline includes source code optimized with OpenVINO™ for improved performance, and supports running inference on Intel GPUs (discrete GPU and integrated GPU).
 
 In this tutorial, we will introduce how to setup RDT simulation pipeline.
 
@@ -131,7 +131,7 @@ Install the dependencies with the following command:
     $ pip install -r requirements.txt
     $ pip install huggingface_hub==0.23.4 opencv-python==4.10.0.84 numpy==1.26.4 mujoco==3.2.6 dm_control==1.0.26 einops ipython
 
-Install the |OpenVINO| with the following command:
+Install the OpenVINO™ with the following command:
 
 .. code-block:: bash
 
@@ -222,7 +222,7 @@ Inference
 
 After running the above command, you will get two files named ``text_embed_TransferCube-v1.pt`` and ``text_embed_PegInsertion-v1.pt`` in the ``<rdt_SOURCE_CODE_PATH>`` directory.
 
-3. You can download our fine-tuned weights from this link: `Download Link <https://eci.intel.com/embodied-sdk-docs/_downloads/RDT-sim-ft-weights.zip>`_, and then follow the instructions in ``<rdt_SOURCE_CODE_PATH>/scripts/convert/README.md`` to convert the model to the |OpenVINO| format.
+3. You can download our fine-tuned weights from this link: `Download Link <https://eci.intel.com/embodied-sdk-docs/_downloads/RDT-sim-ft-weights.zip>`_, and then follow the instructions in ``<rdt_SOURCE_CODE_PATH>/scripts/convert/README.md`` to convert the model to the OpenVINO™ format.
 
 .. note::
 
@@ -236,12 +236,12 @@ After running the above command, you will get two files named ``text_embed_Trans
 
 After running the above command, you will get a ``ov_ir`` directory in the ``<rdt_SOURCE_CODE_PATH>`` directory.
 
-4. You can now run the inference pipeline using the converted |OpenVINO| model.
+4. You can now run the inference pipeline using the converted OpenVINO™ model.
 
 .. note::
 
     Here is a brief explanation of the command options:
-    
+
     * ``MUJOCO_GL=egl`` environment variable can be set to enable EGL rendering, which provides better performance in simulation scenarios.
     * ``--env-id`` specifies the environment ID, which can be either ``TransferCube-v1`` or ``PegInsertion-v1``.
     * ``--device`` specifies the device to run the inference on, which can be either ``GPU`` or ``CPU``.

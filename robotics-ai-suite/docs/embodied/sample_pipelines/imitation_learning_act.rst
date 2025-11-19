@@ -3,11 +3,11 @@
 Imitation Learning - ACT
 #########################
 
-Imitation learning is a machine learning approach where a model is trained to mimic expert behavior by observing and replicating demonstrations, enabling it to perform tasks similarly to the expert. ACT is an action chunking policy with Transformers, an architecture designed for sequence modeling. It is trained as a 
-conditional VAE (CVAE) to capture the variability in human data. It significantly outperforms previous imitation 
+Imitation learning is a machine learning approach where a model is trained to mimic expert behavior by observing and replicating demonstrations, enabling it to perform tasks similarly to the expert. ACT is an action chunking policy with Transformers, an architecture designed for sequence modeling. It is trained as a
+conditional VAE (CVAE) to capture the variability in human data. It significantly outperforms previous imitation
 learning algorithms on a range of simulated and real-world fine manipulation tasks.
 
-| We have built an imitation learning pipeline for ACT, which can be used to train and evaluate the ACT model on different tasks both in simulation and real robot environment. In this sample pipeline, we provided source code optimized by |OpenVINO| to accelerate the process.
+| We have built an imitation learning pipeline for ACT, which can be used to train and evaluate the ACT model on different tasks both in simulation and real robot environment. In this sample pipeline, we provided source code optimized by OpenVINO™ to accelerate the process.
 
 In this tutorial, we will introduce how to setup ACT pipeline.
 
@@ -45,10 +45,10 @@ Virtual environment setup
 
       $ source act/bin/activate
 
-Install |OpenVINO|
+Install OpenVINO™
 ::::::::::::::::::::
 
-Install the |OpenVINO| with the following command:
+Install the OpenVINO™ with the following command:
 
    .. code-block:: bash
 
@@ -66,7 +66,7 @@ Install the dependencies with the following command:
 Install ACT package
 :::::::::::::::::::
 
-The Embodied Intelligence SDK provides optimized source code for |OpenVINO|. To get the source code from ``/opt/act-ov/`` with the following command:
+The Embodied Intelligence SDK provides optimized source code for OpenVINO™. To get the source code from ``/opt/act-ov/`` with the following command:
 
 .. _act-ov:
 
@@ -97,7 +97,7 @@ Inference
 
 2. Convert the model checkpoint to OpenVINO IR.
 
-| ``ov_convert.py`` is a script provided to convert the |pytorch| model to OpenVINO IR. You can find the script in the `act-ov` directory, and see the usage with the following command:
+| ``ov_convert.py`` is a script provided to convert the PyTorch model to OpenVINO IR. You can find the script in the `act-ov` directory, and see the usage with the following command:
 
    .. code-block:: bash
 

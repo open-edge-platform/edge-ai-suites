@@ -3,7 +3,7 @@
 Benchtool
 =====================================
 
-This tutorial will show you how to use Benchtool to measure the frequency of messages published in selected |ros| topics.
+This tutorial will show you how to use Benchtool to measure the frequency of messages published in selected ROS 2 topics.
 
 When to use it over ``ros2 topic hz``?
 --------------------------------------------
@@ -101,15 +101,15 @@ To start the Benchtool, run the following command:
 This will start the Benchtool with the configuration file `benchtool.toml` and save the results to `results.csv`.
 
 
-Advanced usage - |Prometheus_Server| + |Grafana_Dashboard|
+Advanced usage - Prometheus Server + Grafana Dashboard
 ----------------------------------------------------------
 
-This tool by default will also create a |Prometheus_Server|. 
-In this section you will learn how to use the Benchtool with |Prometheus_Server| and |Grafana_Dashboard| to visualize the data.
+This tool by default will also create a Prometheus Server.
+In this section you will learn how to use the Benchtool with Prometheus Server and Grafana Dashboard to visualize the data.
 
-First, you need to install |Docker_Engine| through https://docs.docker.com/engine/install/.
+First, you need to install Docker Engine through https://docs.docker.com/engine/install/.
 
-Then you need to prepare config file for |Prometheus_Server|. Save it in `/home/$USER/prometheus.yml`.
+Then you need to prepare config file for Prometheus Server. Save it in `/home/$USER/prometheus.yml`.
 
   .. code-block:: yaml
 
@@ -151,23 +151,23 @@ Then you need to prepare config file for |Prometheus_Server|. Save it in `/home/
         - localhost:8080 # This is the port where Benchtool will be running
 
 
-Now let's start the Benchtool with |Prometheus_Server| and |Grafana_Dashboard|.
+Now let's start the Benchtool with Prometheus Server and Grafana Dashboard.
 
    .. code-block:: bash
 
       docker run -d --name prometheus -p 9090:9090 --network=host -v /home/$USER/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
-      docker run -d -p 3000:3000 --network=host grafana/grafana-enterprise 
+      docker run -d -p 3000:3000 --network=host grafana/grafana-enterprise
       ros2 run benchtool benchtool --ros-args -p toml:=./benchtool.toml -p o_csv:=./results.csv
 
-Now you can access |Grafana_Dashboard| at http://localhost:3000 , |Prometheus_Server| at http://localhost:9090 and Benchtool at http://localhost:8080/metrics
+Now you can access Grafana Dashboard at http://localhost:3000 , Prometheus Server at http://localhost:9090 and Benchtool at http://localhost:8080/metrics
 
-After you open |Grafana_Dashboard| you need to login with default credentials (admin:admin) and add |Prometheus_Server| (localhost:9090) as a data source. 
+After you open Grafana Dashboard you need to login with default credentials (admin:admin) and add Prometheus Server (localhost:9090) as a data source.
 Then you can create a new dashboard and add a new graph. In the query editor you can select the data source and the metric you want to visualize. Right now Benchtool supports the following metrics:
 
   - `frequency` with labels `topic` and `type` (e.g. `frequency{topic="/camera/color/image_raw", type="sensor_msgs/msg/Image"}`)
-  - `total_messages` with labels `topic` and `type` (e.g. `total_messages{topic="/camera/color/image_raw", type="sensor_msgs/msg/Image"}`) 
+  - `total_messages` with labels `topic` and `type` (e.g. `total_messages{topic="/camera/color/image_raw", type="sensor_msgs/msg/Image"}`)
 
-Image of the |Grafana_Dashboard|:
+Image of the Grafana Dashboard:
 
    .. image:: ../../../images/grafana_example.png
       :width: 1200
