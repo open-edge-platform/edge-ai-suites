@@ -17,6 +17,7 @@ jobs:
     outputs:
       fast-mapping-changed: ${{ steps.filter.outputs.fast-mapping-location }}
       its-planner-changed: ${{ steps.filter.outputs.its-planner-location }}
+      multicam-demo-changed: ${{ steps.filter.outputs.multicam-demo-location }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
@@ -31,6 +32,8 @@ jobs:
               - 'robotics-ai-suite/components/fast-mapping/**'
             its-planner-location:
               - 'robotics-ai-suite/components/its-planner/**'
+            multicam-demo-location:
+              - 'robotics-ai-suite/components/multicam-demo/**'
 
   fast-mapping:
     name: "Fast Mapping"
@@ -43,3 +46,9 @@ jobs:
     needs: check-changes
     if: ${{ needs.check-changes.outputs.its-planner-changed == 'true' }}
     uses: "./.github/workflows/robotics-components-its-planner.yaml"
+
+  multicam-demo:
+    name: "Multi-Camera Demo"
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.multicam-demo-changed == 'true' }}
+    uses: "./.github/workflows/robotics-components-multicam-demo.yaml"

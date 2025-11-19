@@ -1,6 +1,12 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Multi-Camera Demo
 
-In this demo four instances of AI applications for object detection are run in parallel using four RealSense™ camera stream. In this demo, the Ultralytics YOLOv8 model and mobilenet-ssd model are downloaded and used for object detection and segmentation.
+In this demo four instances of AI applications for object detection are run in parallel using four RealSense™ camera streams. In this demo, the Ultralytics YOLOv8 model and mobilenet-ssd model are downloaded and used for object detection and segmentation.
 
 Here, the multicamera usecase is demonstrated using an Axiomtek Robox500 Industrial PC and 4x Intel® RealSense™ GMSL/FAKRA Stereo Camera D457. The Axiomtek Robox500 industrial PC consists of an 12th Gen Intel® Core™ i7-1270PE, 28W Alderlake P Processor and an Intel® Iris® Xe Graphics iGPU. However, this demo can be run on any Intel® platform which has a GPU and also with 4x USB Intel® RealSense™ cameras.
 
@@ -11,7 +17,7 @@ The setup looks like as described in the table below.
 |Camera-1|YOLOv8n-seg:FP16  |<ul><li>Object detection</li><li>Segmentation|GPU   |
 |Camera-2|YOLOv8n-seg:FP16  |<ul><li>Object detection</li><li>Segmentation|CPU   |
 |Camera-3|YOLOv8n:FP16      |Object detection                |GPU   |
-|Camera-4|moblienet-ssd:FP16|Object detection                |GPU   |
+|Camera-4|mobilenet-ssd:FP16|Object detection                |GPU   |
 
 ## Component Documentation
 

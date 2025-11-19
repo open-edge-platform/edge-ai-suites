@@ -1,3 +1,16 @@
+ros-humble-pyrealsense2-ai-demo (2.3-1) UNRELEASED; urgency=low
+
+  * Refactoring of the code and general optimizations
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 09 Oct 2025 00:00:00 +0000
+
+ros-humble-pyrealsense2-ai-demo (2.2.1-1) UNRELEASED; urgency=low
+
+  * Bump protobuf from 3.20.3 to 4.25.8
+  * General improvements to the workflow files
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 28 Sep 2023 00:00:42 +0000
+
 ros-humble-pyrealsense2-ai-demo (2.2-1) UNRELEASED; urgency=low
 
   * Fix dangling dependencies

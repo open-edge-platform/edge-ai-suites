@@ -9,6 +9,7 @@ case "$1" in
     configure)
 	[ -d /opt/ros/humble/share/pyrealsense2-ai-demo/models ] && rm -rf /opt/ros/humble/share/pyrealsense2-ai-demo/models
 	if [ -d /opt/ros/humble/share/pyrealsense2-ai-demo/venv ]  && [ -f /opt/ros/humble/share/pyrealsense2-ai-demo/scripts/generate_ai_models.sh ]; then
+		# shellcheck disable=SC1091
 	    . /opt/ros/humble/share/pyrealsense2-ai-demo/venv/bin/activate
             cd /opt/ros/humble/share/pyrealsense2-ai-demo && ./scripts/generate_ai_models.sh
 	    deactivate
