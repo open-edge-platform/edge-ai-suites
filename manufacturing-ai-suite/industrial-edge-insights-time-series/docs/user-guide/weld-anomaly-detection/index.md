@@ -93,9 +93,3 @@ By default, it is configured to publish the alerts to **MQTT**.
 The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier Algo of CatBoost ML
 library.
 
-<!--hide_directive
-:::{toctree}
-:hidden:
-
-:::
-hide_directive-->

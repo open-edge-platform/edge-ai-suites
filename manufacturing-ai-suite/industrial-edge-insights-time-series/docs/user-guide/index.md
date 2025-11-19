@@ -46,7 +46,7 @@ get-started
 system-requirements
 how-to-guides/index
 weld-anomaly-detection/index
-wind-turbine-anomaly/index
+wind-turbine-anomaly-detection/index
 Release Notes <release_notes>
 :::
 hide_directive-->
