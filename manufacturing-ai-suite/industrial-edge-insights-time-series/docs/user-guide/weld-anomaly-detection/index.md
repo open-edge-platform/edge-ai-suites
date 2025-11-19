@@ -5,6 +5,12 @@ It detects anomalous weld patterns and alerts operators for timely intervention,
 ensuring proactive maintenance, safety, and operational efficiency. No more failures
 and unplanned downtime.
 
+In this article, you can learn about the architecture of the sample and it's data flow.
+
+If you want to start working with it, instead, check out the
+(Get Started Guide)[../get-started.md] or (How-to Guides)[../how-to-guides/index.md]
+for Time-series applications.
+
 ## App Architecture
 
 As seen in the following architecture diagram, the sample app at a high-level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana.
@@ -70,7 +76,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 ##### **`udfs/`**
 
 Contains the python script to process the incoming data.
-Uses CatBoostClassifier machine learning algo from CatBoost library to run on CPU to 
+Uses CatBoostClassifier machine learning algo from CatBoost library to run on CPU to
 detect the anomalous power generation data points relative to wind speed.
 
 **Note**: Please note, CatBoost models doesn't run on Intel GPUs.
