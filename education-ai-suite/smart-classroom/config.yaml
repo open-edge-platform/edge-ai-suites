@@ -11,7 +11,7 @@ monitoring:
 models:
   asr:
     provider: openvino # openvino, funasr and openai supported
-    name: whisper-tiny  # can be (whisper-base, whisper-small etc) or paraformer-zh
+    name: whisper-base  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
     models_base_path: "models"
@@ -23,7 +23,7 @@ models:
     device: GPU # GPU or CPU
     weight_format: int8 # supports fp16, int4, int8 (Recommended)
     max_new_tokens: 1024
-    temperature: 0.5 # 0.5 default
+    temperature: 0.3 # 0.5 default
     use_cache: True
     models_base_path: "models"
     language: en # en or zh
@@ -39,10 +39,10 @@ mindmap:
   min_token: 20
 
 audio_preprocessing:
-  chunk_duration_sec: 30
+  chunk_duration_sec: 15
   silence_threshold: -35  # in dB
   silence_duration: 0.3   # minimum silence length in seconds
-  search_window_sec: 1.5    # how far to look for silence if no silence exactly at chunk boundary
+  search_window_sec: 1    # how far to look for silence if no silence exactly at chunk boundary
   chunk_output_path: chunks/
 
 audio_util:
