@@ -50,7 +50,6 @@ class Pipeline:
                 yield chunk_trancription
         finally:
             monitor.stop_monitoring()
-            time.sleep(3) #time for socwatch to get clean-start
             
     
     def run_summarizer(self):
