@@ -84,34 +84,39 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, folder_name="/simulation-
     if not csv_files:
         print(f"No CSV files found in folder: {folder_name}")
         return
-    for filename in csv_files:
-        print(f"Processing file: {filename}")
-        # The rest of the code will process each file in the loop
-        csv_data = pd.read_csv(filename, nrows=0)
-        columns = csv_data.columns.tolist()
-        chunk_size = 1000
-        start_time = time.time()
-        row_served = 0
+    while True:
+        for filename in csv_files:
+            print(f"Processing file: {filename}")
+            # The rest of the code will process each file in the loop
+            csv_data = pd.read_csv(filename, nrows=0)
+            columns = csv_data.columns.tolist()
+            chunk_size = 1000
+            start_time = time.time()
+            row_served = 0
 
-        tick = g_tick(float(subsample) / float(sampling_rate))
+            tick = g_tick(float(subsample) / float(sampling_rate))
 
-        for chunk in pd.read_csv(filename, chunksize=chunk_size):
-            for _, row in chunk.iterrows():
-                if subsample > 1 and (row_served % subsample) != 0:
+            for chunk in pd.read_csv(filename, chunksize=chunk_size):
+                for _, row in chunk.iterrows():
+                    if subsample > 1 and (row_served % subsample) != 0:
+                        row_served += 1
+                        continue
+                    try:
+                        msg = jencoder.encode({col: row[col] for col in columns})
+                        print("Publishing message %s", msg)
+                        mqttc.publish(topic, msg)
+                    except (ValueError, IndexError):
+                        print(f"Skipping row {row_served}- {row} due to ValueError: {ValueError} \
+                            or IndexError: {IndexError}")
+                        continue
                     row_served += 1
-                    continue
-                try:
-                    msg = jencoder.encode({col: row[col] for col in columns})
-                    print("Publishing message", msg)
-                    mqttc.publish(topic, msg)
-                except (ValueError, IndexError):
-                    print(f"Skipping row {row_served}- {row} due to ValueError: {ValueError} \
-                        or IndexError: {IndexError}")
-                    continue
-                row_served += 1
-                time.sleep(next(tick))
-        print(f'{filename} Done! {row_served} rows served in {time.time() - start_time:.2f} \
-                seconds')
+                    time.sleep(next(tick))
+            print(f'{filename} Done! {row_served} rows served in {time.time() - start_time:.2f} \
+                    seconds')
+        print(f"All files in folder {folder_name} have been processed.")
+
+        if continous_simulator_ingestion == "false":
+            break
     if continous_simulator_ingestion == "false":
         print("End of data reached.")
         while True:
