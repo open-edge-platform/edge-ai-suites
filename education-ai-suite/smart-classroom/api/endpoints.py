@@ -63,12 +63,10 @@ def transcribe_audio(
     request: TranscriptionRequest,
     x_session_id: Optional[str] = Header(None)
 ):
-    # request.source_type = AudioSource.MICROPHONE
     if audio_pipeline_lock.locked():
         raise HTTPException(status_code=429, detail="Session Active, Try Later")
    
     pipeline = Pipeline(x_session_id)
-    #audio_path = request.audio_filename
    
     def stream_transcription():
         for chunk_data in pipeline.run_transcription(request):
