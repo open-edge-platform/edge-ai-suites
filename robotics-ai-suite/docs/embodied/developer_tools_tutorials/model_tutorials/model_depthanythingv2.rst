@@ -5,7 +5,7 @@ Monocular Depth Estimation: Depth Anything V2
 
 Monocular depth estimation is the process of predicting depth information from a single image, which is a challenging
 task due to the inherent ambiguity and lack of explicit 3D cues in 2D images. Despite these challenges, advancements
-in computer vision and deep learning have made monocular depth estimation increasingly viable. 
+in computer vision and deep learning have made monocular depth estimation increasingly viable.
 Here's an overview of how it works, along with its significance in autonomous driving, mobile robots, and humanoid robots.
 
 Typically, monocular depth estimation brings such common features as below:
@@ -40,10 +40,10 @@ Here is a list of benefits monocular depth estimation can deliver to robotics sc
   - **Human-Robot Collaboration**: Depth information enhances the robot's ability to interpret human actions and gestures, facilitating more natural and effective collaboration.
 
 
-Depth Anything V2, is an active powerful foundation model for monocular depth estimation. It is capable of 
+Depth Anything V2, is an active powerful foundation model for monocular depth estimation. It is capable of
 
-- 1) providing robust and fine-grained depth prediction, 
-- 2) supporting extensive applications with varied model sizes (from 25M to 1.3B parameters), 
+- 1) providing robust and fine-grained depth prediction,
+- 2) supporting extensive applications with varied model sizes (from 25M to 1.3B parameters),
 - 3) being easily fine-tuned to downstream tasks as a promising model initialization.
 
 .. image:: assets/images/depthanythingv2.png
@@ -63,15 +63,15 @@ Depth Anything V2, is an active powerful foundation model for monocular depth es
 
 Model Conversion
 ================
-The Depth-Anything-V2 model is trained using |pytorch| but can achieve optimized inference performance on Intel devices using |OpenVINO|.  
-To enable this, the |pytorch| model must first be converted to the |OpenVINO| IR format.
+The Depth-Anything-V2 model is trained using PyTorch but can achieve optimized inference performance on Intel devices using OpenVINO™.
+To enable this, the PyTorch model must first be converted to the OpenVINO™ IR format.
 
 .. contents:: Table of Contents
    :local:
 
 Export Depth-Anything-V2 to ONNX
 --------------------------------
-Before converting the model to OpenVINO IR, it is best practice to first export the PyTorch model to ONNX format.  
+Before converting the model to OpenVINO IR, it is best practice to first export the PyTorch model to ONNX format.
 The repository `Depth-Anything-ONNX <https://github.com/fabio-sim/Depth-Anything-ONNX>`_ provides a simple command-line tool, ``dynamo.py``, based on `Typer <https://typer.tiangolo.com/>`_ to facilitate this conversion.
 
 Installation
@@ -95,7 +95,7 @@ Use the following command to export the Depth-Anything-V2 model to ONNX format:
 - ``--use-dynamo`` : Enables the use of ``torch.compile`` via Dynamo for optimized tracing.
 - ``-h 518 -w 518`` : Specifies the height and width of the input images.
 
-.. hint::  
+.. hint::
 
    If you encountered a downloading error, please refer to :ref:`Troubleshooting <depthanythingv2_troubleshooting>`
 
@@ -103,10 +103,10 @@ Convert ONNX to OpenVINO IR
 ---------------------------
 
 Ensure OpenVINO is Installed
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
-.. note::  
-   Make sure OpenVINO is installed by following the guide:  
-   :ref:`Install OpenVINO via pip <openvino_install>`  
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. note::
+   Make sure OpenVINO is installed by following the guide:
+   :ref:`Install OpenVINO via pip <openvino_install>`
 
 Once the model is in ONNX format, it can be converted to OpenVINO's Intermediate Representation (IR) format using OpenVINO's command-line model conversion tool, ``ovc``.
 

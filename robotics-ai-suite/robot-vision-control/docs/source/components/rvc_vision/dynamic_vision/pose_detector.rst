@@ -7,13 +7,13 @@ Pose Detector
 The last stage of the dynamic use cases Vision component of RVC is the Pose Detector.
 
 Its role is to acquire the :ref:`RVC Vision Messages<rvc_vision_messages>` RotateBBList message subscribing from the object detection component
-and the `PointCloud2 <https://docs.ros2.org/foxy/api/sensor_msgs/msg/PointCloud2.html>`_ message from |realsense| camera node
+and the `PointCloud2 <https://docs.ros2.org/foxy/api/sensor_msgs/msg/PointCloud2.html>`_ message from Intel® RealSense™ camera node
 
-With these information, using the pointcloud representation of the objects from storage, the Pose 
+With these information, using the pointcloud representation of the objects from storage, the Pose
 Detector will try to find instances of the idea object in the camera pointcloud scene.
 
 The corresponding mesh in pcd format is used according to the RotatedBB class id, so if the Object Detection
-found a cube, the pose detector will use the cube.pcd to try to find the cube in the |realsense| camera with the Point Cloud Library (PCL) scene.
+found a cube, the pose detector will use the cube.pcd to try to find the cube in the Intel® RealSense™ camera with the Point Cloud Library (PCL) scene.
 
 The package providing the object pcd files is specified in the yaml file as ``rvc_use_case_binaries`` as described below
 
@@ -25,7 +25,7 @@ This node accept following parameters:
 -  rvc_use_case_binaries: package name providing the needed binaries as per previous parameters
 
 The following parameters fine tune the internal pointcloud ransac algorithm aligning the mesh loaded
-from storage to the |realsense| camera's point cloud output. 
+from storage to the Intel® RealSense™ camera's point cloud output.
 For further information, refer to `SampleConsensusPrerejective <https://pointclouds.org/documentation/classpcl_1_1_sample_consensus_prerejective.html>`_.
 For a sample explanation, refers to `PCL Alignment Prerejective <https://pcl.readthedocs.io/projects/tutorials/en/latest/alignment_prerejective.html>`_
 

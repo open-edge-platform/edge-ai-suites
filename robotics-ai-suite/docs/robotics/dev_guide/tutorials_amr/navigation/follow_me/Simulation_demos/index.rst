@@ -1,7 +1,7 @@
-Simulation Demos 
+Simulation Demos
 =======================================
 
-We used `|Gazebo|` world simulation and digital twins of the `|tb3|` robot to demonstrate different versions of the Follow-me application.
+We used `Gazebo` world simulation and digital twins of the `TurtleBot3` robot to demonstrate different versions of the Follow-me application.
 
 .. toctree::
    :maxdepth: 1

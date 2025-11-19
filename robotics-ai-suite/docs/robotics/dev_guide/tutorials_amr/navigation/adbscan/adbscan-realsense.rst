@@ -1,7 +1,7 @@
-ADBSCAN Algorithm with |realsense| Camera Input Demo
+ADBSCAN Algorithm with Intel® RealSense™ Camera Input Demo
 ==========================================================================
 
-This tutorial describes how to run the ADBSCAN algorithm from |realsense| camera input.
+This tutorial describes how to run the ADBSCAN algorithm from Intel® RealSense™ camera input.
 
 Prerequisites
 -------------
@@ -12,29 +12,29 @@ Complete the :doc:`../../../../gsg_robot/index` before continuing.
 Install
 --------------------------------
 
-Install ``ros-humble-adbscan-ros2`` |deb_pack| from |intel| |p_amr| APT repository
+Install ``ros-humble-adbscan-ros2`` Deb package from Intel® Autonomous Mobile Robot APT repository
 
    .. code-block::
 
       sudo apt update
       sudo apt install ros-humble-adbscan-ros2
 
-Install the following package with |ros| bag files in order to publish point cloud data from 2D LIDAR or |realsense| camera
+Install the following package with ROS 2 bag files in order to publish point cloud data from 2D LIDAR or Intel® RealSense™ camera
 
    .. code-block::
 
       sudo apt install ros-humble-bagfile-laser-pointcloud
 
 
-Run the demo with |realsense| camera
--------------------------------------
+Run the demo with Intel® RealSense™ camera
+-------------------------------------------
 
    .. code-block::
 
       ros2 launch adbscan_ros2 play_demo_realsense_launch.py
 
-   Expected result: |ros| rviz2 starts, and you will see how ADBSCAN interprets
-   |realsense| camera data coming from the |ros| bag (click on the video to play):
+   Expected result: ROS 2 rviz2 starts, and you will see how ADBSCAN interprets
+   Intel® RealSense™ camera data coming from the ROS 2 bag (click on the video to play):
 
 
       .. video:: ../../../../videos/adbscan_demo_RS.mp4

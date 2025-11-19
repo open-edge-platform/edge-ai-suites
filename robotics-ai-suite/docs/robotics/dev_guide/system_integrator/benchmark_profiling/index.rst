@@ -1,7 +1,7 @@
 Benchmarking and Profiling
 ============================
 
-Use the |vtune| profiler and |openvino| toolkit benchmarking to measure the performance of your system.
+Use the VTune™ Profiler profiler and OpenVINO™ toolkit benchmarking to measure the performance of your system.
 
 .. toctree::
 

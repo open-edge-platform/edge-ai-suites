@@ -60,7 +60,7 @@ Install ROS2 Iron
 
       $ sudo apt update && sudo apt install -y locales curl gnupg2 lsb-release
 
-#. Setup the |Intel| oneAPI APT repository:
+#. Setup the Intel® oneAPI APT repository:
 
    .. code-block:: bash
 
@@ -115,7 +115,7 @@ Install JAKA robot arm application
 FunASR setup
 =============
 
-This section will provide a step-by-step guide to setup a FunASR (A Fundamental End-to-End Speech Recognition Toolkit) server. 
+This section will provide a step-by-step guide to setup a FunASR (A Fundamental End-to-End Speech Recognition Toolkit) server.
 
 Install dependency
 :::::::::::::::::::
@@ -201,7 +201,7 @@ Add OpenVINO speech model to FunASR
 LLM and vision models setup
 ============================
 
-This section will provide a step-by-step guide to setup a virtual Python environment to run LLM demo. 
+This section will provide a step-by-step guide to setup a virtual Python environment to run LLM demo.
 
 Setup a virtual environment for application
 :::::::::::::::::::::::::::::::::::::::::::
@@ -281,7 +281,7 @@ This section will provide a step-by-step guide to launch LLM robotics demo.
 Prepare System
 :::::::::::::::
 
-Please connect the following items to the |Core| Ultra IPC.
+Please connect the following items to the Intel® Core™ Ultra IPC.
 
 .. list-table::
    :widths: 100 500 500

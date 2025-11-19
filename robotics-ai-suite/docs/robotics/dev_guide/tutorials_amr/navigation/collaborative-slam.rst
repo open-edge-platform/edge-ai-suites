@@ -3,8 +3,8 @@
 Collaborative Visual SLAM
 =========================
 
-Collaborative Visual SLAM is compiled natively for both |core| and |atom| processor-based systems.
-In addition, GPU acceleration may be enabled on selected |core| processor-based system.
+Collaborative Visual SLAM is compiled natively for both Intel® Core™ and Intel Atom® processor-based systems.
+In addition, GPU acceleration may be enabled on selected Intel® Core™ processor-based system.
 The default installation of Collaborative Visual SLAM is designed to run on the widest range of processors.
 
 Source Code
@@ -66,46 +66,46 @@ Use the instructions above to switch between version to experiment with differen
 Select a Collaborative Visual SLAM Tutorial to Run
 --------------------------------------------------
 
--  :ref:`c-slam_two robots`: uses as input two |ros| bags that simulate two
+-  :ref:`c-slam_two robots`: uses as input two ROS 2 bags that simulate two
    robots exploring the same area
 
-   *  The |ros| tool rviz2 is used to visualize the two robots, the server, and
+   *  The ROS 2 tool rviz2 is used to visualize the two robots, the server, and
       how the server merges the two local maps of the robots into one common
       map.
 
    *  The output includes the estimated pose of the camera and visualization of
       the internal map.
 
-   *  All input and output are in standard |ros| formats.
+   *  All input and output are in standard ROS 2 formats.
 
--  :ref:`c-slam_FM`: uses as an input a |ros| bag that simulates a robot
+-  :ref:`c-slam_FM`: uses as an input a ROS 2 bag that simulates a robot
    exploring an area
 
    *  Collaborative visual SLAM has the FastMapping algorithm integrated.
 
    *  For more information on FastMapping, see :ref:`how_it_works`.
 
-   *  The |ros| tool rviz2 is used to visualize the robot exploring the area and
+   *  The ROS 2 tool rviz2 is used to visualize the robot exploring the area and
       how FastMapping creates the 2D and 3D maps.
 
--  :ref:`c-slam_multi-camera`: uses as an input a |ros| bag that simulates a robot with two
-   |realsense| cameras exploring an area.
+-  :ref:`c-slam_multi-camera`: uses as an input a ROS 2 bag that simulates a robot with two
+   Intel® RealSense™ cameras exploring an area.
 
    *  Collaborative visual SLAM enables tracker frame-level pose fusion using Kalman
       Filter (part of loosely coupled solution for multi-camera feature).
 
-   *  The |ros| tool rviz2 is used to visualize estimated pose of different cameras.
+   *  The ROS 2 tool rviz2 is used to visualize estimated pose of different cameras.
 
--  :ref:`c-slam_lidar`: uses as an input a |ros| bag that simulates a robot exploring an area
+-  :ref:`c-slam_lidar`: uses as an input a ROS 2 bag that simulates a robot exploring an area
 
    *  Collaborative visual SLAM enables 2D Lidar based frame-to-frame tracking for RGBD input.
 
-   *  The |ros| tool rviz2 is used to visualize the trajectory of robot when 2D Lidar is used.
+   *  The ROS 2 tool rviz2 is used to visualize the trajectory of robot when 2D Lidar is used.
 
--  :ref:`c-slam_remapping`: uses as an input a |ros| bag that simulates a robot to update pre-constructed
+-  :ref:`c-slam_remapping`: uses as an input a ROS 2 bag that simulates a robot to update pre-constructed
    keyframe/landmark map and 3D octree map with manual region input from user in remapping mode.
 
-   *  The |ros| tool rviz2 is used to visualize the process of region-wise remapping feature
+   *  The ROS 2 tool rviz2 is used to visualize the process of region-wise remapping feature
       including loading and updating the pre-constructed keyframe/landmark and 3D octree map.
 
 .. _c-slam_two robots:
@@ -119,7 +119,7 @@ Collaborative Visual SLAM with Two Robots
 
       sudo apt-get install ros-humble-cslam-tutorial-two-robot
 
-   Note: In this installation package, there are two substantial |ros| bag files, which are approximately 6.8 GB and 2.6 GB in size.
+   Note: In this installation package, there are two substantial ROS 2 bag files, which are approximately 6.8 GB and 2.6 GB in size.
 
 #. Run the Collaborative Visual SLAM algorithm using two bags simulating two robots going through the same area:
 
@@ -156,7 +156,7 @@ Collaborative Visual SLAM with FastMapping Enabled
 
       sudo apt-get install ros-humble-cslam-tutorial-fastmapping
 
-   Note: In this installation package, there is a substantial |ros| bag file, which is approximately 6.8 GB in size.
+   Note: In this installation package, there is a substantial ROS 2 bag file, which is approximately 6.8 GB in size.
 
 #. Run the collaborative visual SLAM algorithm with FastMapping enabled:
 
@@ -209,7 +209,7 @@ Collaborative Visual SLAM with Multi-Camera Feature
 
 Note: The following part illustrates part of the multi-camera feature in Collaborative SLAM that
 uses Kalman Filter to fuse SLAM poses from different trackers in a loosely-coupled manner,
-and we treat each individual camera as a separate tracker (|ros| node). For other parts of the multi-camera feature,
+and we treat each individual camera as a separate tracker (ROS 2 node). For other parts of the multi-camera feature,
 they are not yet ready and will be integrated later.
 
 #. To download and install the tutorial run the command below:
@@ -218,7 +218,7 @@ they are not yet ready and will be integrated later.
 
       sudo apt-get install ros-humble-cslam-tutorial-multi-camera
 
-   Note: In this installation package, there is a substantial |ros| bag file, which is approximately 206 MB in size.
+   Note: In this installation package, there is a substantial ROS 2 bag file, which is approximately 206 MB in size.
 
 #. Run the collaborative visual SLAM algorithm tracker frame-level pose fusion using Kalman Filter:
 
@@ -236,7 +236,7 @@ they are not yet ready and will be integrated later.
 
       [univloc_tracker_ros-1] [INFO] [1694539167.880197983] [univloc_tracker_0]: UnivLoc (unconnected) got 0 images in past 3.0s. Localized/processed 0/0 (0.00 Hz). Totally 2525/2525 (100.00%).
 
-#. Afterwards, run the Python script to visualize the three trajectories obtained from |ros| topics:
+#. Afterwards, run the Python script to visualize the three trajectories obtained from ROS 2 topics:
    ``univloc_tracker_0/kf_pose``, ``univloc_tracker_2/kf_pose``, ``/odometry/filtered``.
 
    .. code-block:: bash
@@ -269,7 +269,7 @@ Collaborative Visual SLAM with 2D Lidar Enabled
 
       sudo apt-get install ros-humble-cslam-tutorial-2d-lidar
 
-   Note: In this tutorial installation, there is a substantial |ros| bag file, which is approximately 3.7 GB in size.
+   Note: In this tutorial installation, there is a substantial ROS 2 bag file, which is approximately 3.7 GB in size.
 
 #. Run the collaborative visual SLAM algorithm with auxiliary Lidar data input:
 
@@ -277,7 +277,7 @@ Collaborative Visual SLAM with 2D Lidar Enabled
 
       /opt/ros/humble/share/collab-slam/tutorial-2d-lidar/cslam-2d-lidar.sh
 
-#. Use a separate terminal to debug and capture the output |ros| topic.
+#. Use a separate terminal to debug and capture the output ROS 2 topic.
    You can check if certain topic has been published and view its messages.
 
    .. code-block:: bash
@@ -321,7 +321,7 @@ Collaborative Visual SLAM with Region-wise Remapping Feature
 
       sudo apt-get install ros-humble-cslam-tutorial-region-remap
 
-   Note: In this tutorial installation, there is a substantial |ros| bag file, which is approximately 2.6 GB in size.
+   Note: In this tutorial installation, there is a substantial ROS 2 bag file, which is approximately 2.6 GB in size.
 
 #. Run the collaborative visual SLAM algorithm tracker frame-level pose fusion using Kalman Filter:
 
@@ -401,7 +401,7 @@ Troubleshooting
 
 *  The odometry feature ``use_odom:=true`` does not work with these bags.
 
-   The |ros| bags used in this example do not have the necessary topics recorded
+   The ROS 2 bags used in this example do not have the necessary topics recorded
    for the odometry feature of collaborative visual SLAM.
 
    If the ``use_odom:=true`` parameter is set, the ``collab-slam`` reports

@@ -7,10 +7,10 @@ Click each tab to learn about the new and updated features in each release of In
 
    .. group-tab:: Embodied Intelligence SDK v25.36
 
-      Embodied Intelligence SDK v25.36 enhances model optimization capabilities with |OpenVINO| and provides typical workflows and examples, including Diffusion Policy (DP), Robotic Diffusion Transformer (RDT), Improved 3D Diffusion Policy (IDP3), Visual Servoing (CNS) and LLM Robotic Demo. This release also updated Real-time optimized BKC to improve on AI/Control performance, and supporting on Intel Arc B-Series Graphic card (B570).
+      Embodied Intelligence SDK v25.36 enhances model optimization capabilities with OpenVINO™ and provides typical workflows and examples, including Diffusion Policy (DP), Robotic Diffusion Transformer (RDT), Improved 3D Diffusion Policy (IDP3), Visual Servoing (CNS) and LLM Robotic Demo. This release also updated Real-time optimized BKC to improve on AI/Control performance, and supporting on Intel Arc B-Series Graphic card (B570).
 
       **New Features:**
-      
+
       * Updated Real-time optimization BKC, including BIOS and runtime optimization, balancing performance with AI & Control consolidation.
       * Added support for Intel Arc B-Series (Battlemage) Graphics card (B570).
       * Fixed deadlock issue when reading i915 perf event in Preempt-RT kernel.
@@ -28,16 +28,16 @@ Click each tab to learn about the new and updated features in each release of In
       * ACRN feature and performance
 
         #. iGPU performance degradation observed when using passthrough iGPU to VM on ACRN.
-                   
+
         #. Display becomes unresponsive in VMs when running concurrent AI workloads with iGPU SR-IOV enabled on ACRN.
-      
+
       **The following model algorithms were added and optimized by Intel® OpenVINO™:**
 
       .. list-table::
          :widths: 20 80
          :header-rows: 1
 
-         * - Algorithm 
+         * - Algorithm
            - Description
          * - Qwen2.5VL
            - :ref:`Qwen2.5VL <model_tutorials>`
@@ -53,14 +53,14 @@ Click each tab to learn about the new and updated features in each release of In
            - A diffusion policy model enhancing capabilities for 3D robotic manipulation tasks
          * - :ref:`Robotic Diffusion Transformer (RDT-1B) <model_rdt>`
            - A diffusion-based foundation model for robotic manipulation
-     
+
       **The following pipelines were added:**
 
       .. list-table::
          :widths: 20 80
          :header-rows: 1
 
-         * - Pipeline Name 
+         * - Pipeline Name
            - Description
          * - :ref:`Diffusion Policy <diffusion_policy>`
            - An innovative method for generating robot actions by conceptualizing visuomotor policy learning as a conditional denoising diffusion process
@@ -71,16 +71,16 @@ Click each tab to learn about the new and updated features in each release of In
 
    .. group-tab:: Embodied Intelligence SDK v25.15
 
-      Embodied Intelligence SDK v25.15 provides necessary software framework, libraries, tools, BKC, tutorials and example codes to facilitate embodied intelligence solution development on |Intel| Core Ultra Series 2 processors (Arrow Lake-H), It provides Intel Linux LTS kernel v6.12.8 with Preempt-RT, and supports for |Ubuntu| 22.04, introduces initial support for ROS2 Humble. It supports many models optimization with |OpenVINO|, and provides typical workflows and examples including ACT manipulation, ORB-SLAM3, etc.
+      Embodied Intelligence SDK v25.15 provides necessary software framework, libraries, tools, BKC, tutorials and example codes to facilitate embodied intelligence solution development on Intel® Core Ultra Series 2 processors (Arrow Lake-H), It provides Intel Linux LTS kernel v6.12.8 with Preempt-RT, and supports for Canonical Ubuntu 22.04, introduces initial support for ROS2 Humble. It supports many models optimization with OpenVINO™, and provides typical workflows and examples including ACT manipulation, ORB-SLAM3, etc.
 
       **New Features:**
-      
-      * Provided |Linux| OS 6.12.8 BSP with Preempt-RT
+
+      * Provided Linux OS 6.12.8 BSP with Preempt-RT
       * Provided Real-time optimization BKC
-      * Optimized IgH EtherCAT master with |Linux| kernel v6.12
-      * Added ACT manipulation pipeline with |OpenVINO|/|IPEX| optimization
+      * Optimized IgH EtherCAT master with Linux kernel v6.12
+      * Added ACT manipulation pipeline with OpenVINO™/Intel® Extension for PyTorch optimization
       * Added ORB-SLAM3 pipeline focuses on real-time simultaneous localization and mapping
-      * Provided typical AI models optimization tutorials with |OpenVINO|
+      * Provided typical AI models optimization tutorials with OpenVINO™
 
       **Known Issues and Limitations**
 
@@ -92,7 +92,7 @@ Click each tab to learn about the new and updated features in each release of In
          :widths: 20 80
          :header-rows: 1
 
-         * - Algorithm 
+         * - Algorithm
            - Description
          * - :ref:`YOLOv8 <model_tutorials>`
            - CNN based object detection
@@ -133,11 +133,11 @@ Click each tab to learn about the new and updated features in each release of In
          :widths: 20 80
          :header-rows: 1
 
-         * - Pipeline Name 
+         * - Pipeline Name
            - Description
          * - :ref:`Imitation Learning - ACT <imitation_act>`
            - Imitation learning pipeline using Action Chunking with Transformers(ACT) algorithm to train and evaluate in simulator or real robot environment with Intel optimization
          * - :ref:`VSLAM: ORB-SLAM3 <orb_slam3>`
            - One of popular real-time feature-based SLAM libraries able to perform Visual, Visual-Inertial and Multi-Map SLAM with monocular, stereo and RGB-D cameras, using pin-hole and fisheye lens models
- 
+
 
