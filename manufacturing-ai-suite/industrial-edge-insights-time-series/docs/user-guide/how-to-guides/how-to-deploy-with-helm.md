@@ -15,67 +15,75 @@ This guide provides step-by-step instructions for deploying the Industrial Edge 
 
 ## Step 1: Generate or download the Helm charts
 
-You can either generate or download the Helm charts.
+Choose **one** of the following approaches to get the Helm charts:
 
 ::::{tab-set}
 :::{tab-item} **Wind Turbine Anomaly Detection**
 :sync: tab1
 
-- To download the Helm charts:
+**Option A: Download the Helm charts**
 
-  Follow this procedure on the target system to install the package.
+1. Download Helm chart:
+   ```bash
+   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-rc1
+   ```
 
-  1. Download Helm chart with the following command:
+2. Extract the Helm chart:
+   ```bash
+   tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-rc1.tgz
+   cd wind-turbine-anomaly-detection-sample-app
+   ```
 
-     `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-rc1`
+3. Proceed to Step 2 to configure your `values.yaml` file present in the current directory.
 
-  2. Unzip the package using the following command:
+**Option B: Generate Helm charts**
 
-     `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-rc1.tgz`
+1. Navigate to the source directory:
+   ```bash
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series  # path relative to git clone folder
+   ```
 
-  3. Get into the Helm directory:
+2. Generate the charts:
+   ```bash
+   make gen_helm_charts app=wind-turbine-anomaly-detection
+   cd helm/
+   ```
 
-     `cd wind-turbine-anomaly-detection-sample-app`
-
-- To generate the Helm charts:
-
-```bash
-  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series # path relative to git clone folder
-
-  make gen_helm_charts app=wind-turbine-anomaly-detection
-
-  cd helm/
-```
+3. Proceed to Step 2 to configure your `values.yaml` file present in the current directory.
 
 :::
 :::{tab-item} **Weld Anomaly Detection**
 :sync: tab2
 
-- To download the Helm charts:
+**Option A: Download the Helm charts**
 
-  Follow this procedure on the target system to install the package.
+1. Download Helm chart:
+   ```bash
+   helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 1.0.0-rc1
+   ```
 
-  1. Download Helm chart with the following command:
+2. Extract the Helm chart:
+   ```bash
+   tar -xvzf weld-anomaly-detection-sample-app-1.0.0-rc1.tgz
+   cd weld-anomaly-detection-sample-app
+   ```
 
-     `helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 1.0.0-rc1`
+3. Proceed to Step 2 to configure your `values.yaml` file present in the current directory.
 
-  2. Unzip the package using the following command:
+**Option B: Generate Helm charts**
 
-     `tar -xvzf weld-anomaly-detection-sample-app-1.0.0-rc1.tgz`
+1. Navigate to the source directory:
+    ```bash
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series  # path relative to git clone folder
+    ```
 
-  3. Get into the Helm directory:
+2. Generate the charts:
+    ```bash
+    make gen_helm_charts app=weld-anomaly-detection
+    cd helm/
+    ```
 
-     `cd weld-anomaly-detection-sample-app`
-
-- To generate the Helm charts:
-
-```bash
-   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series # path relative to git clone folder
-
-   make gen_helm_charts app=weld-anomaly-detection version=1.0.0-rc1
-
-   cd helm/
-```
+3. Proceed to Step 2 to configure your `values.yaml` file present in the current directory.
 
 :::
 ::::
