@@ -3,9 +3,9 @@
 
 The Time-series sample apps, at a high-level, are based on a generic Time Series AI stack.
 It comprises of typical **TICK Stack** components, such as Telegraf, InfluxDB, and Kapacitor
-(used by the Time Series Analytics microservice). It uses Grafana for visualization and data
-simulators (can act as data destinations if configured), as the source of data. In a
-real-world scenario, physical devices would replace data simulators.
+(used by the Time Series Analytics microservice) and Grafana for visualization. Data
+simulators (can act as data destinations if configured) would, of course, be replaced with
+physical devices, in a real deployment scenario.
 
 Here is an example of app architecture, based on Wind Turbine Anomaly Detection:
 
