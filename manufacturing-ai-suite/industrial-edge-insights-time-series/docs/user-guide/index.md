@@ -11,6 +11,16 @@ in wind turbines, relative to wind speed.
 
 They demonstrate how AI driven analytics can improve safety and preventive maintenance in industrial environments.
 
+
+## Architecture
+
+The Time-series sample apps, at a high-level, are based on a generic Time Series AI stack.
+It comprises of typical **TICK Stack** components, such as Telegraf, InfluxDB, and Kapacitor
+(used by the Time Series Analytics microservice) and Grafana for visualization. Data
+simulators (can act as data destinations if configured) would, of course, be replaced with
+physical devices, in a real deployment scenario. If you are interested, documents for each
+sample application provide detailed architectural descriptions.
+
 <!--hide_directive
 ::::{grid} 1 2 3 4
 :::{grid-item-card} Wind Turbine Anomaly Detection
@@ -34,7 +44,6 @@ hide_directive-->
 
 get-started
 system-requirements
-how-it-works.md
 how-to-guides/index
 weld-anomaly-detection/index
 wind-turbine-anomaly/index
