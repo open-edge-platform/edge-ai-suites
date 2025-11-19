@@ -5,10 +5,10 @@ It detects anomalous weld patterns and alerts operators for timely intervention,
 ensuring proactive maintenance, safety, and operational efficiency. No more failures
 and unplanned downtime.
 
-In this article, you can learn about the architecture of the sample and it's data flow.
+In this article, you can learn about the architecture of the sample and its data flow.
 
 If you want to start working with it, instead, check out the
-(Get Started Guide)[../get-started.md] or (How-to Guides)[../how-to-guides/index.md]
+[Get Started Guide](../get-started.md) or [How-to Guides](../how-to-guides/index.md)
 for Time-series applications.
 
 ## App Architecture

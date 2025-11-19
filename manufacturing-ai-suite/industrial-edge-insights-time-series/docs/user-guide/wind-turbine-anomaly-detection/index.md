@@ -5,10 +5,10 @@ patterns in wind turbines, relative to wind speed. By identifying deviations, it
 optimize maintenance schedules and prevent potential turbine failures, enhancing
 operational efficiency.
 
-In this article, you can learn about the architecture of the sample and it's data flow.
+In this article, you can learn about the architecture of the sample and its data flow.
 
 If you want to start working with it, instead, check out the
-(Get Started Guide)[../get-started.md] or (How-to Guides)[../how-to-guides/index.md]
+[Get Started Guide](../get-started.md) or [How-to Guides](../how-to-guides/index.md)
 for Time-series applications.
 
 
