@@ -86,10 +86,6 @@ The `udfs` section specifies the details of the UDFs used in the task.
 **Alerts Configuration**:
 
 The `alerts` section defines the settings for alerting mechanisms, such as MQTT protocol.
-For OPC-UA configuration, please refer to
-[Publishing OPC-UA alerts](./how-to-configure-alerts.md#publishing-opc-ua-alerts).
-
-> **Note:** Make sure to enable only one of the MQTT or OPC-UA alerts.
 
 **MQTT Configuration**:
 
