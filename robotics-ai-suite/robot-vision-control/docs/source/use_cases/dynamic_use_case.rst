@@ -1,6 +1,6 @@
 .. _dynamic_use_case:
 
-Exemplary Dynamic Use case
+Dynamic Vision Use Case
 ##############################
 
 .. toctree::
