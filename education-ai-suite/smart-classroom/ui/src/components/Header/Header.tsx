@@ -12,7 +12,7 @@ import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
 import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { useTranslation } from 'react-i18next';
-import { uploadAudio, stopMicrophone } from '../../services/api';
+import { uploadAudio, stopMicrophone, getAudioDevices } from '../../services/api';
 import Toast from '../common/Toast';
 
 interface HeaderBarProps {
@@ -24,6 +24,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const [showToast, setShowToast] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [notification, setNotification] = useState(constants.START_NOTIFICATION);
+  const [hasAudioDevices, setHasAudioDevices] = useState(true);
   const { t } = useTranslation();
   const [timer, setTimer] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -51,6 +52,21 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   };
 
   const handleClose = () => setShowToast(false);
+
+  useEffect(() => {
+    const checkAudioDevices = async () => {
+      try {
+        const devices = await getAudioDevices();
+        setHasAudioDevices(devices.length > 0);
+        console.log('Audio devices available:', devices.length > 0, devices);
+      } catch (error) {
+        console.error('Failed to check audio devices:', error);
+        setHasAudioDevices(false);
+      }
+    };
+
+    checkAudioDevices();
+  }, []);
 
   useEffect(() => {
     let interval: number | undefined;
@@ -118,8 +134,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
+  const isRecordingDisabled = (isBusy && !isRecording) || !hasAudioDevices;
+
   const handleRecordingToggle = async () => {
-    if (isBusy && !isRecording) return;
+    if (isRecordingDisabled) return;
 
     const next = !isRecording;
     clearForNewOp();
@@ -196,8 +214,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           className="record-icon"
           onClick={handleRecordingToggle}
           style={{
-            opacity: (isBusy && !isRecording) ? 0.5 : 1,
-            cursor: (isBusy && !isRecording) ? 'not-allowed' : 'pointer'
+            opacity: isRecordingDisabled ? 0.5 : 1,
+            cursor: isRecordingDisabled ? 'not-allowed' : 'pointer'
           }}
         />
         <img src={sideRecordIcon} alt="Side Record" className="side-record-icon" />
@@ -206,10 +224,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         <button
           className="text-button"
           onClick={handleRecordingToggle}
-          disabled={isBusy && !isRecording}
+          disabled={isRecordingDisabled}
           style={{
-            cursor: (isBusy && !isRecording) ? 'not-allowed' : 'pointer',
-            opacity: (isBusy && !isRecording) ? 0.6 : 1
+            cursor: isRecordingDisabled ? 'not-allowed' : 'pointer',
+            opacity: isRecordingDisabled ? 0.6 : 1
           }}
         >
           {isRecording ? t('header.stopRecording') : t('header.startRecording')}

@@ -16,6 +16,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
   const [selectedMicrophone, setSelectedMicrophone] = useState('');
   const [projectLocation, setProjectLocation] = useState('storage/');
   const [nameError, setNameError] = useState<string | null>(null);
+  const [availableDevices, setAvailableDevices] = useState<string[]>([]);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -25,37 +26,32 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
           getSettings(),
           getAudioDevices()
         ]);
-        
-        // Create full device list with IP microphone first
-        const ipMicrophone = t('settings.ipMicrophone');
-        const allDevices = [ipMicrophone, ...devices];
-        
-        console.log('Available devices:', allDevices); // Debug log
-        console.log('Saved microphone from settings:', settings?.microphone); // Debug log
+        setAvailableDevices(devices);
         
         if (settings) {
           setProjectLocation(settings.projectLocation || 'storage/');
           if (settings.projectName) setProjectName(settings.projectName);
-          
-          // Set microphone: use saved value if it exists in available devices, otherwise use first device
-          if (settings.microphone && allDevices.includes(settings.microphone)) {
-            console.log('Using saved microphone:', settings.microphone);
+        
+          if (settings.microphone && devices.includes(settings.microphone)) {
             setSelectedMicrophone(settings.microphone);
+          } else if (devices.length > 0) {
+            setSelectedMicrophone(devices[0]);
           } else {
-            console.log('Using default microphone:', allDevices[0]);
-            setSelectedMicrophone(allDevices[0]);
+            setSelectedMicrophone('');
           }
         } else {
-          // No saved settings, use first available device
-          console.log('No saved settings, using first device:', allDevices[0]);
-          setSelectedMicrophone(allDevices[0]);
+          if (devices.length > 0) {
+            console.log('No saved settings, using first device:', devices[0]);
+            setSelectedMicrophone(devices[0]);
+          } else {
+            console.log('No saved settings and no devices available');
+            setSelectedMicrophone('');
+          }
         }
       } catch (error) {
         console.error('Failed to load settings or devices:', error);
-        // Fallback to IP microphone
-        const fallback = t('settings.ipMicrophone');
-        console.log('Error fallback, using:', fallback);
-        setSelectedMicrophone(fallback);
+        setAvailableDevices([]);
+        setSelectedMicrophone('');
       }
     };
 
@@ -75,7 +71,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
       return;
     }
     
-    console.log('Saving settings with microphone:', selectedMicrophone); // Debug log
+    console.log('Saving settings with microphone:', selectedMicrophone); 
     
     try {
       await saveSettings({ 
@@ -99,7 +95,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
   };
 
   const handleMicrophoneChange = (microphone: string) => {
-    console.log('Microphone changed to:', microphone); // Debug log
+    console.log('Microphone changed to:', microphone); 
     setSelectedMicrophone(microphone);
   };
 
@@ -112,7 +108,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
           <label htmlFor="projectName">{t('settings.projectName')}</label>
           <ProjectNameInput projectName={projectName} onChange={handleNameChange} />
           {nameError && (
-            <div style={{ color: '#c00', fontSize: 12, marginTop: 4 }}>
+            <div className="error-message">
               {nameError}
             </div>
           )}
@@ -127,13 +123,18 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
         </div>
         <div>
           <label htmlFor="microphone">{t('settings.microphone')}</label>
-          <MicrophoneSelect
-            selectedMicrophone={selectedMicrophone}
-            onChange={handleMicrophoneChange}
-          />
-          {/* Debug display */}
-          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-            Selected: {selectedMicrophone || 'None'}
+          {availableDevices.length > 0 ? (
+            <MicrophoneSelect
+              selectedMicrophone={selectedMicrophone}
+              onChange={handleMicrophoneChange}
+            />
+          ) : (
+            <div className="no-devices-message">
+              No devices available
+            </div>
+          )}
+          <div className="debug-info">
+            Selected: {selectedMicrophone || 'None'} | Available: {availableDevices.length}
           </div>
         </div>
       </div>
