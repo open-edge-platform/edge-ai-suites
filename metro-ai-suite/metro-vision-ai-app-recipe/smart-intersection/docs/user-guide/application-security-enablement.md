@@ -20,7 +20,7 @@ These security features protect the Smart Intersection system from unauthorized 
  Download IFWI Firmware
 
 - Navigate
-  to: <https://www.intel.com/content/www/us/en/secure/content-details/858133/panther-lake-h-for-edge-platforms-uefi-reference-bios-ifwi-3214-54-alpha-and-3332-52-er-pre-beta.html?wapkw=ifwi&DocID=858133>
+  to: [IFWI Firmware Download Location](https://www.intel.com/content/www/us/en/secure/content-details/858133/panther-lake-h-for-edge-platforms-uefi-reference-bios-ifwi-3214-54-alpha-and-3332-52-er-pre-beta.html?wapkw=ifwi&DocID=858133)
 
     - Download the IFWI file
     - You need to sign in to intel.com to get the access.
@@ -28,7 +28,7 @@ These security features protect the Smart Intersection system from unauthorized 
     - Locate the binary file(*.bin) file according to your platform (e.g., `858133_ptl-h-refbios_releasepackage\858133_ptl-h-refbios3332_52releasepackage\IFWI\CRB\ECG_PTL_PR04_XXXX-XXXODCA_RPRF_SEP5_11E50692_2025WW34.4.02_BI333252_CRB.bin`)
 
 - Navigate
-  to: <https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=866974&wapkw=%20Consumer%20and%20Corporate%20Production>
+  to: [MFIT Download Location](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=866974&wapkw=%20Consumer%20and%20Corporate%20Production)
     - Download "Intel_CSME_SW_PTL_2540.8.40.0_Consumer_Corporate.zip" under "Intel_CSME_SW_PTL_2540.8.40.0_Consumer_Corporate"
     - Extract the downloaded zip file
     - "mfi.exe" will be located under "Intel_Silicon_FW_Kit_PTL-H12Xe_ES1_ES2_2025WW41.2.02\Tools\System_Tools\MFIT\Windows64"

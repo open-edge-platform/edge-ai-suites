@@ -86,7 +86,7 @@
                 "name": "worker_safety_gear_detection_gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect device=GPU pre-process-backend=va-surface-sharing model-instance-id=instgpu0 inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=\"NUM_STREAMS=2\" threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect device=GPU pre-process-backend=va-surface-sharing model-instance-id=instgpu0 inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=\"GPU_THROUGHPUT_STREAMS=2\" threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -104,7 +104,7 @@
                 "name": "worker_safety_gear_detection_npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect device=NPU pre-process-backend=va model-instance-id=instnpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=4 ie-config=\"NUM_STREAMS=2\" threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect device=NPU pre-process-backend=va model-instance-id=instnpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=4 threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {

@@ -48,7 +48,7 @@ hostname -I | awk '{print $1}'
 
 Open your web browser and navigate to the Node-RED interface:
 ```
-http://<HOST_IP>:1880
+https://<HOST_IP>/grafana
 ```
 
 Replace `<HOST_IP>` with your actual system IP address.
@@ -68,7 +68,7 @@ If you cannot access Node-RED:
 
 2. Check that port 1880 is exposed and accessible
 3. Ensure no firewall is blocking the connection
-4. Try accessing via localhost if running on the same machine: `http://localhost:1880`
+4. Try accessing via localhost if running on the same machine: `https://localhost/nodered`
 
 </details>
 
@@ -80,7 +80,7 @@ Remove any existing flows to start with a clean workspace:
 2. **Delete Selected Nodes**: Press the `Delete` key to remove all selected nodes
 3. **Deploy Changes**: Click the red **Deploy** button in the top-right corner to save the changes
 
-- Go to the URL http://<HOST_IP>:1880.
+- Go to the URL https://<HOST_IP>/nodered.
 - Select everything inside the flow and delete it.
 - This clears the your node red flow.
 
@@ -96,7 +96,7 @@ Set up an MQTT subscriber node to receive AI inference data:
    - **Server**: `broker:1883` (or your MQTT broker address)
    - **Topic**: `object_detection_1` (or your specific AI data topic)
    - **QoS**: `0`
-   - **Output**: `auto-detect (string or buffer)`
+   - **Output**: `auto-detect (parsed JSON object, string or buffer)`
 
 3. **Set Node Properties**:
    - **Name**: `AI Inference Input`
@@ -112,7 +112,7 @@ Create a debug node to monitor incoming data:
 
 2. **Configure Debug Node**:
    - **Output**: `msg.payload`
-   - **To**: `debug tab and console`
+   - **To**: `debug window`
    - **Name**: `Raw Data Monitor`
 
 3. **Deploy and Test**:
@@ -123,27 +123,26 @@ Create a debug node to monitor incoming data:
    If you don't see data in the debug panel, execute the AI pipeline using this curl command:
 
    ```bash
-   curl http://localhost:8080/pipelines/user_defined_pipelines/car_plate_recognition_1 -X POST -H 'Content-Type: application/json' -d '
+   curl -k -s https://localhost/api/pipelines/user_defined_pipelines/car_plate_recognition_1 -X POST -H 'Content-Type: application/json' -d '
    {
-         "source": {
-            "uri": "file:///home/pipeline-server/videos/cars_extended.mp4",
-            "type": "uri"
-         },
-         "destination": {
-            "metadata": {
+      "source": {
+         "uri": "file:///home/pipeline-server/videos/cars_extended.mp4",
+         "type": "uri"
+      },
+      "destination": {
+         "metadata": {
                "type": "mqtt",
-               "host": "broker:1883",
                "topic": "object_detection_1",
                "timeout": 1000
-            },
-            "frame": {
+         },
+         "frame": {
                "type": "webrtc",
                "peer-id": "object_detection_1"
-            }
-         },
-         "parameters": {
-            "detection-device": "CPU"
          }
+      },
+      "parameters": {
+         "detection-device": "CPU"
+      }
    }'
    ```
 
@@ -155,25 +154,26 @@ Add a function node to enhance the AI inference data with custom metadata:
 
 1. **Add Function Node**:
    - Drag a `function` node from the **function** section
-   - Position it between the MQTT input and a new MQTT output node
+   - Position it after the MQTT input
+   - Connect the mqtt in node output to this function node
 
 2. **Configure the Function Node**:
    - **Name**: `Add Custom Metadata`
-   - **Function Code**:
+   - **On Message**:
 
 ```javascript
 // Extract license, color, and type from msg.payload
 // Skip frames that don't have all required attributes
 
 // Check if payload exists and has objects array
-if (!msg.payload || !msg.payload.objects || !Array.isArray(msg.payload.objects)) {
+if (!msg.payload || !msg.payload.metadata.objects || !Array.isArray(msg.payload.metadata.objects)) {
     return null; // Ignore this data frame
 }
 
 let extractedData = [];
 
 // Process each object in the objects array
-for (let obj of msg.payload.objects) {
+for (let obj of msg.payload.metadata.objects) {
     // Check if object has all required attributes
     if (!obj.license_plate || !obj.color || !obj.type) {
         continue; // Skip this object if missing any attribute
@@ -212,13 +212,13 @@ Set up an MQTT publisher to send the enhanced data:
 
 2. **Configure MQTT Publisher**:
    - **Server**: Same as input (`broker:1883`)
-   - **Topic**: `inference/enhanced` (or use `msg.topic` for dynamic topics)
+   - **Topic**: `enhanced` (or use `msg.topic` for dynamic topics)
    - **QoS**: `0`
    - **Retain**: `false`
    - **Name**: `Enhanced Data Publisher`
 
 3. **Add Debug Output**:
-   - Add another debug node connected to the MQTT output
+   - Add another debug node connected to the Add Custom Metadata function Node
    - **Name**: `Enhanced Data Monitor`
 
 ### 7. **Deploy and Validate the Custom Flow**
@@ -236,6 +236,9 @@ Test your custom Node-RED flow:
 ## Expected Results
 
 ![Node Red Flow](images/node-red-flow.png)
+
+If you are unable to visualize any data, try restarting the inference pipeline.
+
 
 After completing this tutorial, you should have:
 

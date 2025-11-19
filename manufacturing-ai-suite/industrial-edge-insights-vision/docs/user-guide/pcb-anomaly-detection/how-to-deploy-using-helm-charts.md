@@ -42,7 +42,7 @@
         http_proxy: <http proxy> # proxy details if behind proxy
         https_proxy: <https proxy>
         POSTGRES_PASSWORD: <POSTGRES PASSWORD> #  example: intel1234
-        MR_URL: https://<HOST_IP>:30443/registry/models # Model reigstry URL
+        MR_URL: https://<HOST_IP>:30443/registry/ # Model reigstry URL
         SAMPLE_APP: pcb-anomaly-detection # application directory
     webrtcturnserver:
         username: <username>  # WebRTC credentials e.g. intel1234
@@ -403,7 +403,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 
     > NOTE- The data above assumes there is a model in the registry that contains these properties. Also, the pipeline name that follows `user_defined_pipelines/`, will affect the `deployment` folder name.
 
-11. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+11. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
     ![WebRTC streaming](./images/webrtc-streaming.png)
 
