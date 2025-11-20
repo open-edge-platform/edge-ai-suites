@@ -257,7 +257,7 @@ To trigger the UDF inference on GPU in Time Series Analytics Microservice, run t
      > **Note**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
 
    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-     in `.env` file and select **Wind Turbine Dashboard**.
+     in `.env` file
 
      ![Grafana login](./_images/login_wt.png)
 
