@@ -111,7 +111,7 @@ class AnomalyDetectorHandler(Handler):
         start_time = time.time_ns()
         if "source" in point.tags:
             stream_src = point.tags["source"]
-        if "source" in point.fieldsString:
+        elif "source" in point.fieldsString:
             stream_src = point.fieldsString["source"]
 
         global enable_benchmarking

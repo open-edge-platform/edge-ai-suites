@@ -123,7 +123,7 @@ class AnomalyDetectorHandler(Handler):
         stream_src = None
         if "source" in point.tags:
             stream_src = point.tags["source"]
-        if "source" in point.fieldsString:
+        elif "source" in point.fieldsString:
             stream_src = point.fieldsString["source"]
 
 
