@@ -10,38 +10,37 @@ import { getSettings, pingBackend } from './services/api';
 const App: React.FC = () => {
   const [projectName, setProjectName] = useState<string>('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  // COMMENTED OUT FOR UI TESTING - Backend health check disabled
-  // const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
-  const [backendStatus] = useState<'checking' | 'available' | 'unavailable'>('available'); // Force to 'available' for UI testing
+
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
   const wasInitiallyUnavailableRef = useRef(false);
   const reloadTriggeredRef = useRef(false);
 
-  // COMMENTED OUT FOR UI TESTING - Backend health check disabled
-  // const checkBackendHealth = async () => {
-  //   try {
-  //     const isHealthy = await pingBackend();
-  //     if (isHealthy) {
-  //       setBackendStatus('available');
-  //       // reload only if backend was initially unavailable
-  //       if (wasInitiallyUnavailableRef.current && !reloadTriggeredRef.current) {
-  //         reloadTriggeredRef.current = true;
-  //         window.location.reload();
-  //         return;
-  //       }
-  //       loadSettings();
-  //     } else {
-  //       setBackendStatus('unavailable');
-  //       if (!wasInitiallyUnavailableRef.current) {
-  //         wasInitiallyUnavailableRef.current = true;
-  //       }
-  //     }
-  //   } catch {
-  //     setBackendStatus('unavailable');
-  //     if (!wasInitiallyUnavailableRef.current) {
-  //       wasInitiallyUnavailableRef.current = true;
-  //     }
-  //   }
-  // };
+
+  const checkBackendHealth = async () => {
+    try {
+      const isHealthy = await pingBackend();
+      if (isHealthy) {
+        setBackendStatus('available');
+        // reload only if backend was initially unavailable
+        if (wasInitiallyUnavailableRef.current && !reloadTriggeredRef.current) {
+          reloadTriggeredRef.current = true;
+          window.location.reload();
+          return;
+        }
+        loadSettings();
+      } else {
+        setBackendStatus('unavailable');
+        if (!wasInitiallyUnavailableRef.current) {
+          wasInitiallyUnavailableRef.current = true;
+        }
+      }
+    } catch {
+      setBackendStatus('unavailable');
+      if (!wasInitiallyUnavailableRef.current) {
+        wasInitiallyUnavailableRef.current = true;
+      }
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -53,44 +52,44 @@ const App: React.FC = () => {
   };
 
   // COMMENTED OUT FOR UI TESTING - Backend health check disabled
-  // useEffect(() => {
-  //   checkBackendHealth(); // initial check
-  // }, []);
+  useEffect(() => {
+    checkBackendHealth(); // initial check
+  }, []);
+
+  //COMMENTED OUT FOR UI TESTING - Backend health check disabled
+  useEffect(() => {
+    if ((backendStatus === 'unavailable' || backendStatus === 'checking') && wasInitiallyUnavailableRef.current && !reloadTriggeredRef.current) {
+      const interval = setInterval(() => {
+        checkBackendHealth();
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [backendStatus]);
 
   // COMMENTED OUT FOR UI TESTING - Backend health check disabled
-  // useEffect(() => {
-  //   if ((backendStatus === 'unavailable' || backendStatus === 'checking') && wasInitiallyUnavailableRef.current && !reloadTriggeredRef.current) {
-  //     const interval = setInterval(() => {
-  //       checkBackendHealth();
-  //     }, 5000);
-  //     return () => clearInterval(interval);
-  //   }
-  // }, [backendStatus]);
+  if (backendStatus === 'checking') {
+    return (
+      <div className="app-loading">
+        <div className="loading-content">
+          <div className="spinner"></div>
+          <h2>Connecting to Backend...</h2>
+          <p>Checking backend server availability...</p>
+        </div>
+      </div>
+    );
+  }
 
   // COMMENTED OUT FOR UI TESTING - Backend health check disabled
-  // if (backendStatus === 'checking') {
-  //   return (
-  //     <div className="app-loading">
-  //       <div className="loading-content">
-  //         <div className="spinner"></div>
-  //         <h2>Connecting to Backend...</h2>
-  //         <p>Checking backend server availability...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
-  // COMMENTED OUT FOR UI TESTING - Backend health check disabled
-  // if (backendStatus === 'unavailable') {
-  //   return (
-  //     <div className="app-error">
-  //       <div className="error-content">
-  //         <h1>Backend Connection Lost</h1>
-  //         <p>Please check your server. Auto reload will occur once backend is up.</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (backendStatus === 'unavailable') {
+    return (
+      <div className="app-error">
+        <div className="error-content">
+          <h1>Backend Connection Lost</h1>
+          <p>Please check your server. Auto reload will occur once backend is up.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
