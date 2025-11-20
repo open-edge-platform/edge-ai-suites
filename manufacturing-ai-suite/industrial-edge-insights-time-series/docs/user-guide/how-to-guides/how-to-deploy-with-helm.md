@@ -198,7 +198,7 @@ To copy your own or existing model into Time Series Analytics Microservice in or
             - weld_anomaly_detector.py
     ```
 
-2. Copy your new UDF package (using the windturbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
+2. Copy your new UDF package (using the weld anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
 
     ```sh
     export SAMPLE_APP="weld-anomaly-detection"
