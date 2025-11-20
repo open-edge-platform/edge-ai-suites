@@ -234,12 +234,7 @@ Use the following command to verify that all containers are active and error-fre
   docker logs -f <container_name> | grep -i error
   ```
 
-## Other Deployment options
-
-- [How to Deploy with Helm](./how-to-deploy-with-helm.md): Guide for deploying the sample application on a k8s cluster using Helm.
-
 ## Advanced setup
 
-- [How to build from source and deploy](./how-to-build-from-source.md): Guide to build from source and docker compose deployment
-- [How to configure OPC-UA/MQTT alerts](./how-to-configure-alerts.md): Guide for configuring the OPC-UA/MQTT alerts in the Time Series Analytics microservice
-- [How to configure custom UDF deployment package](./how-to-configure-custom-udf.md): Guide for deploying a customized UDF deployment package (udfs/models/tick scripts)
+- [How to build from source and deploy](../how-to-guides/how-to-build-from-source.md): Guide to build from source and docker compose deployment
+- [How to configure MQTT alerts](../how-to-guides/how-to-configure-alerts.md): Guide for configuring the MQTT alerts in the Time Series Analytics microservice

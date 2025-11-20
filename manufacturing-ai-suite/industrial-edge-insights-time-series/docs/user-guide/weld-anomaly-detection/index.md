@@ -15,7 +15,7 @@ for Time-series applications.
 
 As seen in the following architecture diagram, the sample app at a high-level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana.
 
-![Time Series AI Stack Architecture Diagram](../_images/time-series-ai-stack-architecture.png)
+![Weld Anomaly Detection - Time Series AI Stack Architecture Diagram](../_images/weld-anomaly-detection-timeseries-ai-stack-architecture.png)
 
 ### Data flow explanation
 

@@ -34,11 +34,11 @@ Choose **one** of the following approaches to get the Helm charts:
    cd wind-turbine-anomaly-detection-sample-app
    ```
 
-            `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-weekly`
+    `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-weekly`
 
 **Option B: Generate Helm charts**
 
-            `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-weekly.tgz`
+    `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-weekly.tgz`
 
 2. Generate the charts:
    ```bash
