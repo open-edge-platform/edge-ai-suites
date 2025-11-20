@@ -3,9 +3,9 @@
 Follow-me with ADBSCAN and Gesture Control
 ====================================================
 
-This demo of the Follow-me algorithm shows a |p_amr| application for following a target person where the movement of the robot can be controlled by the person's location and hand gestures. The entire pipeline diagram can be found in :doc:`../index` page.
-This demo contains only the ADBSCAN and Gesture recognition modules in the input-processing application stack. No text-to-speech synthesis module is present in the output-processing application stack. This demo has been tested and validated on 12th Generation |core| processors with |xe| (known as Alder Lake-P).
-This tutorial describes how to launch the demo in `Gazebo` simulator. 
+This demo of the Follow-me algorithm shows a Autonomous Mobile Robot application for following a target person where the movement of the robot can be controlled by the person's location and hand gestures. The entire pipeline diagram can be found in :doc:`../index` page.
+This demo contains only the ADBSCAN and Gesture recognition modules in the input-processing application stack. No text-to-speech synthesis module is present in the output-processing application stack. This demo has been tested and validated on 12th Generation Intel® Core™ processors with Intel® Iris® Xe Integrated Graphics (known as Alder Lake-P).
+This tutorial describes how to launch the demo in `Gazebo` simulator.
 
 Getting Started
 ----------------
@@ -15,10 +15,10 @@ Prerequisites
 
 Complete the :doc:`../../../../../gsg_robot/index` before continuing.
 
-Install the |deb_pack|
+Install the Deb package
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Install ``ros-humble-followme-turtlebot3-gazebo`` |deb_pack| from |intel| |p_amr| APT repository. This is the wrapper package which will launch all of the dependencies in the backend.
+Install ``ros-humble-followme-turtlebot3-gazebo`` Deb package from Intel® Autonomous Mobile Robot APT repository. This is the wrapper package which will launch all of the dependencies in the backend.
 
    .. code-block::
 
@@ -30,7 +30,7 @@ Install Python Modules
 
 This application uses `Mediapipe Hands Framework <https://mediapipe.readthedocs.io/en/latest/solutions/hands.html>`__
 for hand gesture recognition. Install the following modules as a prerequisite for the framework:
-   
+
    .. code-block::
 
       pip3 install mediapipe
@@ -41,48 +41,48 @@ for hand gesture recognition. Install the following modules as a prerequisite fo
 Run Demo with 2D Lidar
 ----------------------------
 
-Run the following script to launch `Gazebo` simulator and |ros| rviz2.
+Run the following script to launch `Gazebo` simulator and ROS 2 rviz2.
 
    .. code-block::
 
       sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_lidar.sh
       /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_lidar.sh
 
-You will see two panels side-by-side: `Gazebo` GUI on the left and |ros| rviz display on the right.
-   
+You will see two panels side-by-side: `Gazebo` GUI on the left and ROS 2 rviz display on the right.
+
    .. image:: ../../../../../images/screenshot_followme_w_gesture_demo.jpg
 
 -  The green square robot is a guide robot (namely, the target), which will follow a pre-defined trajectory.
 
--  The gray circular robot is a `TurtleBot3 <https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation>`__ robot, which will follow the guide robot. |tb3| robot is equipped with a 2D Lidar and a |realsense| Depth Camera. In this demo, the 2D Lidar is used as the input topic.
+-  The gray circular robot is a `TurtleBot3 <https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation>`__ robot, which will follow the guide robot. TurtleBot3 robot is equipped with a 2D Lidar and a Intel® RealSense™ Depth Camera. In this demo, the 2D Lidar is used as the input topic.
 
-**Both** of the following conditions need to be fulfilled to start the |tb3| robot:
+**Both** of the following conditions need to be fulfilled to start the TurtleBot3 robot:
 
--  The target (guide robot) will be within the tracking radius (a reconfigurable parameter in `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) of the |tb3| robot.
+-  The target (guide robot) will be within the tracking radius (a reconfigurable parameter in `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) of the TurtleBot3 robot.
 
--  The gesture (visualized in the ``/image`` topic in |ros| rviz2) of the target is ``thumbs up``.
+-  The gesture (visualized in the ``/image`` topic in ROS 2 rviz2) of the target is ``thumbs up``.
 
-The stop condition for the |tb3| robot is fulfilled when **either one** of the following conditions are true:
+The stop condition for the TurtleBot3 robot is fulfilled when **either one** of the following conditions are true:
 
--  The target (guide robot) moves to a distance of more than the tracking radius (a reconfigurable parameter in `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) from the |tb3| robot.
+-  The target (guide robot) moves to a distance of more than the tracking radius (a reconfigurable parameter in `/opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`) from the TurtleBot3 robot.
 
--  The gesture (visualized in the ``/image`` topic in |ros| rviz2) of the target is ``thumbs down``.
+-  The gesture (visualized in the ``/image`` topic in ROS 2 rviz2) of the target is ``thumbs down``.
 
 .. _followme-gesture-realsense:
 
-Run Demo with |realsense| Camera
+Run Demo with Intel® RealSense™ Camera
 ---------------------------------------
 
 Execute the following commands one by one in three separate terminals.
 
-#. Terminal 1: This command will open `Gazebo` simulator and |ros| rviz2.
+#. Terminal 1: This command will open `Gazebo` simulator and ROS 2 rviz2.
 
    .. code-block::
 
       sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
       /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
 
-#. Terminal 2: This command will launch the ADBSCAN |deb_pack|. It runs the ADBScan node on the point cloud data to detect the location of the target.
+#. Terminal 2: This command will launch the ADBSCAN Deb package. It runs the ADBScan node on the point cloud data to detect the location of the target.
 
    .. code-block::
 
@@ -94,19 +94,19 @@ Execute the following commands one by one in three separate terminals.
 
       ros2 run gesture_recognition_pkg traj_and_img_publisher_node.py --ros-args --params-file /opt/ros/humble/share/gesture_recognition_pkg/config/gesture_recognition.yaml
 
-In this demo, |realsense| camera of the |tb3| robot is selected as the input point cloud sensor. After running all of the above commands,
-you will observe similar behavior of the |tb3| robot and guide robot in the `Gazebo` GUI as in :ref:`followme-gesture-lidar` 
+In this demo, Intel® RealSense™ camera of the TurtleBot3 robot is selected as the input point cloud sensor. After running all of the above commands,
+you will observe similar behavior of the TurtleBot3 robot and guide robot in the `Gazebo` GUI as in :ref:`followme-gesture-lidar`
 
 .. note::
 
-   There are reconfigurable parameters in `/opt/ros/humble/share/adbscan_ros2_follow_me/config/` directory for both LIDAR (`adbscan_sub_2D.yaml`) and |realsense| camera (`adbscan_sub_RS.yaml`). The user can modify parameters depending on the respective robot, sensor configuration and environments (if required) before running the tutorial.
+   There are reconfigurable parameters in `/opt/ros/humble/share/adbscan_ros2_follow_me/config/` directory for both LIDAR (`adbscan_sub_2D.yaml`) and Intel® RealSense™ camera (`adbscan_sub_RS.yaml`). The user can modify parameters depending on the respective robot, sensor configuration and environments (if required) before running the tutorial.
    Find a brief description of the parameters in the following table:
 
    .. list-table:: Configurable Parameters
       :widths: 20 80
 
       * - ``Lidar_type``
-        - Type of the point cloud sensor. For |realsense| camera and LIDAR inputs, the default value is set to ``RS`` and ``2D``, respectively.
+        - Type of the point cloud sensor. For Intel® RealSense™ camera and LIDAR inputs, the default value is set to ``RS`` and ``2D``, respectively.
       * - ``Lidar_topic``
         - Name of the topic publishing point cloud data.
       * - ``Verbose``
@@ -141,13 +141,10 @@ you will observe similar behavior of the |tb3| robot and guide robot in the `Gaz
 Troubleshooting
 ----------------------------
 
-- Failed to install |deb_pack|: Please make sure to run ``sudo apt update`` before installing the necessary |deb_packs|.
+- Failed to install Deb package: Please make sure to run ``sudo apt update`` before installing the necessary Deb packages.
 
 - You can stop the demo anytime by pressing ``ctrl-C``. If the `Gazebo` simulator freezes or does not stop, please use the following command in a terminal:
 
    .. code-block::
 
       sudo killall -9 gazebo gzserver gzclient
-
-
-

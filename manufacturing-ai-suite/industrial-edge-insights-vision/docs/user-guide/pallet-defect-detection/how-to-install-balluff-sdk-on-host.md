@@ -60,7 +60,7 @@ Comment out the following lines:
 ### Single Capture Storage
 ```bash
 cd /opt/ImpactAcquire/apps/SingleCapture/x86_64
-./SingleCaptureStorage
+./SingleCapture
 ```
 
 ### Common Settings Usage

@@ -1,7 +1,7 @@
 Simulation
 ==========
 
-The following tutorials guide you on how to use the |ros| simulations with |lp_amr|. Robot sensing and navigation can be tested in these simulated environments.
+The following tutorials guide you on how to use the ROS 2 simulations with Autonomous Mobile Robot. Robot sensing and navigation can be tested in these simulated environments.
 
 .. toctree::
    :maxdepth: 1

@@ -1,0 +1,56 @@
+# Smart Parking
+
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2025.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2025.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/README.md">
+     Readme
+  </a>
+  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2025.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/user-guide/get-started.md">
+     Installation guide
+  </a>
+</div>
+hide_directive-->
+
+The Smart Parking application optimizes parking management with AI-driven video analytics. It identifies and counts available parking spaces in real-time, accurately detecting empty slots. By monitoring parking areas, it tracks occupancy changes and provides current parking availability information.
+
+The solution records occupied parking spaces, enabling efficient use and reporting. It enhances parking efficiency and improves user experience by offering real-time insights into parking operations.
+
+Using advanced technologies and pre-trained deep learning models, the application processes and analyzes video streams in real-time. Its modular architecture and integration capabilities allow users to customize and extend functionalities to meet specific needs.
+
+<!--hide_directive
+:::{toctree}
+:caption: Get Started
+
+Overview
+system-requirements
+get-started
+release-notes
+:::
+
+:::{toctree}
+:caption: How to
+
+how-to-customize-application
+how-to-deploy-with-helm
+how-to-use-gpu-for-inference
+how-to-deploy-with-edge-orchestrator
+how-to-view-telemetry-data
+how-to-generate-offline-package
+how-to-benchmark
+:::
+
+:::{toctree}
+:caption: Source Code
+
+GitHub <https://github.com/intel/metro-ai-suite/tree/main/smart-parking>
+:::
+
+:::{toctree}
+:caption: Community and Support
+
+support
+:::
+hide_directive-->

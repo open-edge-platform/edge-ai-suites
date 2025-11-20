@@ -10,7 +10,7 @@ metadata:
   name: {{ $.Values.config.grafana.name }}
   namespace: {{ $.Values.namespace }}
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: ia-grafana
   ports:

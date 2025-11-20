@@ -1,13 +1,13 @@
 .. followme-with-gesture on jackal robot:
 
-Follow-me with ADBSCAN and Gesture-based Control on |clearpath_robotics| |jackal| Robot
+Follow-me with ADBSCAN and Gesture-based Control on Clearpath Robotics Jackal Robot
 =========================================================================================
 
-This tutorial demonstrates the Follow-me algorithm along with a gesture recognition network, where the robot follows a target person in real time and responds to state commands through hand gestures. 
-This tutorial uses |clearpath_robotics| |jackal| robot and one |realsense| camera D400 series.
-This camera provides the point cloud data as input for the |intel|-patented object detection algorithm Adaptive DBSCAN to detect the position of the target person. This camera also provides RGB images to the object detection network responsible for detecting hand gestures for controlling the robot's start and stop states.
-This RGB image is passed through a deep learning-based gesture recognition pipeline, called `Mediapipe Hands Framework <https://mediapipe.readthedocs.io/en/latest/solutions/hands.html>`__, to detect the gesture category. 
-The motion commands for the robot are published to ``twist`` topic based on these two outputs: person's position and gesture category. 
+This tutorial demonstrates the Follow-me algorithm along with a gesture recognition network, where the robot follows a target person in real time and responds to state commands through hand gestures.
+This tutorial uses Clearpath Robotics Jackal robot and one Intel® RealSense™ camera D400 series.
+This camera provides the point cloud data as input for the Intel®-patented object detection algorithm Adaptive DBSCAN to detect the position of the target person. This camera also provides RGB images to the object detection network responsible for detecting hand gestures for controlling the robot's start and stop states.
+This RGB image is passed through a deep learning-based gesture recognition pipeline, called `Mediapipe Hands Framework <https://mediapipe.readthedocs.io/en/latest/solutions/hands.html>`__, to detect the gesture category.
+The motion commands for the robot are published to ``twist`` topic based on these two outputs: person's position and gesture category.
 
 To start, the robot requires two conditions at the same time:
 
@@ -30,10 +30,10 @@ Prerequisites
 Complete the :doc:`../../../../../gsg_robot/index` before continuing.
 
 
-Install the |deb_pack|
+Install the Deb package
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Install ``ros-humble-follow-me-tutorial-w-gesture`` |deb_pack| from |lp_amr| APT repository.
+Install ``ros-humble-follow-me-tutorial-w-gesture`` Deb package from Autonomous Mobile Robot APT repository.
 
 .. code-block:: bash
 
@@ -45,7 +45,7 @@ Install Python Modules
 
 This application uses `Mediapipe Hands Framework <https://mediapipe.readthedocs.io/en/latest/solutions/hands.html>`__
 for hand gesture recognition. Install the following modules as a prerequisite for the framework:
-   
+
 .. code-block:: bash
 
    pip3 install mediapipe
@@ -56,8 +56,8 @@ for hand gesture recognition. Install the following modules as a prerequisite fo
 Identify serial number of Realsense Camera
 -------------------------------------------
 
-Install the |realsense| camera utilities package to easily read the correct serial number:
-    
+Install the Intel® RealSense™ camera utilities package to easily read the correct serial number:
+
 .. code-block:: bash
 
    sudo apt install librealsense2-utils
@@ -72,12 +72,12 @@ Check the Serial number:
 
 
 You will use this serial number (and not the ASIC Serial Number) when launching the demo below.
-         
 
-Run Demo with |realsense| Camera
----------------------------------
 
-Execute the following script to launch Follow-Me with Gesture on the |clearpath_robotics| |jackal| robot:
+Run Demo with Intel® RealSense™ Camera
+------------------------------------------
+
+Execute the following script to launch Follow-Me with Gesture on the Clearpath Robotics Jackal robot:
 
 .. code-block:: bash
 
@@ -86,19 +86,19 @@ Execute the following script to launch Follow-Me with Gesture on the |clearpath_
 
 
 <Camera Serial Number>: Use the serial number returned when using `rs-enumerate-devices`. Note that the output of other programs like `lsusb` might return an incorrect serial number.
- 
-After starting the script, the robot should begin searching for trackable objects in its initial detection radius (defaulting to around 0.5m), and then following acquired targets as soon as they provide a ``thumbs up`` to the |realsense| camera and move from the initial target location.
+
+After starting the script, the robot should begin searching for trackable objects in its initial detection radius (defaulting to around 0.5m), and then following acquired targets as soon as they provide a ``thumbs up`` to the Intel® RealSense™ camera and move from the initial target location.
 
 .. note::
 
-   There are reconfigurable parameters in ``/opt/ros/humble/share/tutorial_follow_me_w_gesture/params`` directory for the |realsense| camera (`followme_adbscan_RS_params.yaml`). You can modify parameters depending on the respective robot, sensor configuration and environments (if required) before running the tutorial.
+   There are reconfigurable parameters in ``/opt/ros/humble/share/tutorial_follow_me_w_gesture/params`` directory for the Intel® RealSense™ camera (`followme_adbscan_RS_params.yaml`). You can modify parameters depending on the respective robot, sensor configuration and environments (if required) before running the tutorial.
    Find a brief description of the parameters in the following table:
 
    .. list-table:: Configurable Parameters
       :widths: 20 80
 
       * - ``Lidar_type``
-        - Type of the point cloud sensor. For |realsense| camera and LIDAR inputs, the default value is set to ``RS`` and ``2D``, respectively.
+        - Type of the point cloud sensor. For Intel® RealSense™ camera and LIDAR inputs, the default value is set to ``RS`` and ``2D``, respectively.
       * - ``Lidar_topic``
         - Name of the topic publishing point cloud data.
       * - ``Verbose``
@@ -141,7 +141,7 @@ Troubleshooting
 
   **Note**: The machine may need to be restarted after adding the user to a new group.
 
-- Failed to install |deb_pack|: Please make sure to run ``sudo apt update`` before installing the necessary |deb_packs|.
+- Failed to install Deb package: Please make sure to run ``sudo apt update`` before installing the necessary Deb packages.
 
 - You may stop the demo anytime by pressing ``ctrl-C``.
 

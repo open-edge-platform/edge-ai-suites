@@ -3,9 +3,9 @@
 ADBSCAN Algorithm
 ==================
 
-ADBSCAN (Adaptive DBSCAN) is an |intel| patented algorithm. It is a highly adaptive and scalable object detection and localization (clustering) algorithm, tested successfully to detect objects at all ranges for 2D Lidar, 3D Lidar, and |realsense| Depth Camera.
+ADBSCAN (Adaptive DBSCAN) is an Intel® patented algorithm. It is a highly adaptive and scalable object detection and localization (clustering) algorithm, tested successfully to detect objects at all ranges for 2D Lidar, 3D Lidar, and Intel® RealSense™ Depth Camera.
 This method automatically computes clustering parameters (radius and minimum number of points that define a cluster) based on the distance from the sensor and the data density in its field of view, thus alleviating the guesswork from parameter selection and enabling efficient hierarchical clustering.
-ADBSCAN increases detection range by 30%-40% and detects 20%-30% more objects, compared to the state-of-the-art methods. It has been gainfully used in multiple applications such as 2D/3D Lidar or |realsense| camera based object tracking, multi-modal object classification (Camera + Lidar), surface segmentation, Lidar-based object classification, occupancy grid generation etc. 
+ADBSCAN increases detection range by 30%-40% and detects 20%-30% more objects, compared to the state-of-the-art methods. It has been gainfully used in multiple applications such as 2D/3D Lidar or Intel® RealSense™ camera based object tracking, multi-modal object classification (Camera + Lidar), surface segmentation, Lidar-based object classification, occupancy grid generation etc.
 
 
 Source Code
@@ -37,7 +37,7 @@ ADBSCAN Optimization
 Troubleshooting
 ----------------------------
 
-- Failed to install |deb_pack|: Please make sure to run ``sudo apt update`` before installing the necessary |deb_packs|.
+- Failed to install Deb package: Please make sure to run ``sudo apt update`` before installing the necessary Deb packages.
 
 - You can stop the demo anytime by pressing ``ctrl-C``.
 

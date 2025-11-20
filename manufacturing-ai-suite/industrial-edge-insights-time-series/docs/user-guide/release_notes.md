@@ -1,6 +1,6 @@
 # Industrial Edge Insights - Time Series Release Notes
 
-## [v2025.2](TBD) - December 2025
+## v2025.2 - December 2025
 
 This release introduces substantial enhancements to the Time Series AI stack, including a new sample application and several key features detailed below.
 
@@ -41,7 +41,7 @@ relative to wind speed.
 - Added sample OPC-UA server and MQTT publisher data simulators to ingest the wind turbine data
 - Generic Time Series AI stack supporting the data ingestion, data analytics,
   data storage and data visualization
-- Data Analytics is powered by [Time Series Analytics Microservice](https://docs.openedgeplatform.intel.com/edge-ai-libraries/time-series-analytics/main/user-guide/Overview.html)
+- Data Analytics is powered by [Time Series Analytics Microservice](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/time-series-analytics/index.html)
   which from the sample app context takes in the configuration related to wind turbine
   sample app and the User Defined Function(UDF) deployment package and provides
   below capabilities:

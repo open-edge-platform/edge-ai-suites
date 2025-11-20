@@ -8,7 +8,7 @@ Limitation
 
 This optimized PCL release does not support acceleration for CPU device for
 
-* 12th generation of |atom| processors, known as codename 'Alder Lake-N'.
+* 12th generation of Intel Atom® processors, known as codename 'Alder Lake-N'.
 
 
 Troubleshooting
@@ -28,7 +28,7 @@ if the GPU device is not listed in ``sycl-ls`` like below
    [level_zero:0] GPU : Intel(R) Level-Zero 1.3 [1.3.23034]
    [host:0] HOST: SYCL host platform 1.2 [1.2]
 
-There are two possibilities.  The |intel| processor does not have integrated GPU or the user does not have the correct group permissions to access to GPU device.  Add the user to the render group.
+There are two possibilities.  The Intel® processor does not have integrated GPU or the user does not have the correct group permissions to access to GPU device.  Add the user to the render group.
 
 .. code-block::
 

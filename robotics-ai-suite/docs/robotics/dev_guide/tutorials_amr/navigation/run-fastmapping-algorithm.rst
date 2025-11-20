@@ -3,7 +3,7 @@
 FastMapping Algorithm
 ======================
 
-FastMapping application is the |intel| optimized version of octomap.
+FastMapping application is the Intel® optimized version of octomap.
 
 For more information on FastMapping, see :ref:`how_it_works`.
 
@@ -28,20 +28,20 @@ Run the FastMapping Standalone Application
 
    .. code-block::
 
-      sudo apt-get install ros-humble-fast-mapping    
+      sudo apt-get install ros-humble-fast-mapping
 
    .. note::
 
-      The ``ros-humble-fast-mapping`` package includes a |ros| bag, which will be used for this tutorial. 
-      After the installation, the |ros| bag can be found at ``/opt/ros/humble/share/bagfiles/spinning/``
+      The ``ros-humble-fast-mapping`` package includes a ROS 2 bag, which will be used for this tutorial.
+      After the installation, the ROS 2 bag can be found at ``/opt/ros/humble/share/bagfiles/spinning/``
 
-#. Set up your |ros| environment 
+#. Set up your ROS 2 environment
 
    .. code-block::
 
-      source /opt/ros/humble/setup.bash 
+      source /opt/ros/humble/setup.bash
 
-#. Run the FastMapping sample application using a |ros| bag of a robot spinning:
+#. Run the FastMapping sample application using a ROS 2 bag of a robot spinning:
 
    .. code-block::
 
@@ -54,13 +54,13 @@ Run the FastMapping Standalone Application
       :preload: none
       :width: 900
 
-#. Run the FastMapping sample application using |realsense| camera input with RTAB-Map:
+#. Run the FastMapping sample application using Intel® RealSense™ camera input with RTAB-Map:
 
    .. code-block::
 
       ros2 launch fast_mapping fast_mapping_rtabmap.launch.py
 
-Once the tutorial is launched, the input from the |realsense| camera is used and a 3D voxel map of the environment can be viewed in rviz.
+Once the tutorial is launched, the input from the Intel® RealSense™ camera is used and a 3D voxel map of the environment can be viewed in rviz.
 
 To close this application, type ``Ctrl-c`` in the terminal where you ran the launch script.
 

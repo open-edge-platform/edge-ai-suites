@@ -72,8 +72,8 @@ export MQTT_USER=<mqtt-username>
 export MQTT_PASSWORD=<mqtt-password>
 
 # Feature Toggles
-export NVR_GENAI=false                  # Set to 'true' to enable AI-powered event descriptions  
-export NVR_SCENESCAPE=false             # Set to 'true' to enable Scenescape integration                  
+export NVR_GENAI=false                  # Set to 'true' to enable AI-powered event descriptions
+export NVR_SCENESCAPE=false             # Set to 'true' to enable Scenescape integration
 ```
 
 ### Step 3: Launch Application
@@ -122,7 +122,7 @@ Verify the VLM microservice is running and accessible at the configured endpoint
 ```bash
 export NVR_GENAI=true
 export VLM_SERVING_IP=<vlm-serving-device-ip>
-export VLM_SERVING_PORT=<vlm-serving-port>  
+export VLM_SERVING_PORT=<vlm-serving-port>
 ```
 
 #### 4. Run the application
@@ -138,35 +138,35 @@ Re-run the application after [configuring](./get-started.md#step-2-configure-env
 
 To ensure the functionality of the microservice and measure test coverage, follow these steps:
 
-1. **Install Dependencies**  
+1. **Install Dependencies**
    Install the required dependencies, including development dependencies, using:
 
    ```bash
    poetry install --with test
    ```
 
-2. **Run Tests with Poetry**  
+2. **Run Tests with Poetry**
    Use the following command to run all tests:
 
    ```bash
    poetry run pytest
    ```
 
-3. **Run Tests with Coverage**  
+3. **Run Tests with Coverage**
    To collect coverage data while running tests, use:
 
    ```bash
    poetry run pytest --cov=src --cov=ui --cov-report=term-missing:skip-covered
    ```
 
-4. **Generate Coverage Report**  
+4. **Generate Coverage Report**
    After running the tests, generate a coverage report:
 
    ```bash
    poetry run coverage report -m
    ```
 
-5. **Generate HTML Coverage Report (Optional)**  
+5. **Generate HTML Coverage Report (Optional)**
    For a detailed view, generate an HTML report:
 
    ```bash
@@ -189,4 +189,3 @@ If using custom [build flags](./how-to-build-from-source.md#customizing-the-buil
 
 1. **Explore Features**: Learn about application capabilities in the [How to Use Guide](./how-to-use-application.md)
 2. **Troubleshooting**: If you encounter issues, check the [Troubleshooting Guide](./Troubleshooting.md)
----

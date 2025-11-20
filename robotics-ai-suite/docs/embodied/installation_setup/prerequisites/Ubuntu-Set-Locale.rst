@@ -1,5 +1,5 @@
 Make sure you have a locale which supports ``UTF-8``.
-If you are in a minimal environment (such as a |Docker| container), the locale may be something minimal like ``POSIX``.
+If you are in a minimal environment (such as a Docker container), the locale may be something minimal like ``POSIX``.
 Intel has tested with the following settings. However, it should be fine if you're using a different UTF-8 supported locale.
 
 .. code-block:: bash

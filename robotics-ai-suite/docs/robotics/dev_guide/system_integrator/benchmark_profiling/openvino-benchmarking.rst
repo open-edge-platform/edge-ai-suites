@@ -1,9 +1,9 @@
-|openvino| Benchmarking Tool
+OpenVINO™ Benchmarking Tool
 ============================
 
-The benchmark application allows users to estimate deep learning inference performance on supported |intel| devices.
-It uses the asynchronous mode to estimate deep learning inference engine performance and latency. Refer to the tutorial 
-that illustrates how to run the benchmark application on an |core| processor with |xe| or |intel| UHD Graphics. 
+The benchmark application allows users to estimate deep learning inference performance on supported Intel® devices.
+It uses the asynchronous mode to estimate deep learning inference engine performance and latency. Refer to the tutorial
+that illustrates how to run the benchmark application on an Intel® Core™ processor with Intel® Iris® Xe Integrated Graphics or Intel® UHD Graphics.
 
 * `Benchmark C++ Tool <https://docs.openvino.ai/2023.2/openvino_inference_engine_samples_benchmark_app_README.html>`__
 * `Benchmark Python Tool <https://docs.openvino.ai/2023.2/openvino_inference_engine_tools_benchmark_tool_README.html>`__
@@ -17,6 +17,6 @@ that illustrates how to run the benchmark application on an |core| processor wit
 
 .. Note::
 
-   To use the benchmarking tools, you first have to install |openvino|, following
-   the instructions on the |openvino| `Get Started Sample
+   To use the benchmarking tools, you first have to install OpenVINO™, following
+   the instructions on the OpenVINO™ `Get Started Sample
    <https://docs.openvino.ai/2023.2/openvino_docs_get_started_get_started_demos.html>`__.

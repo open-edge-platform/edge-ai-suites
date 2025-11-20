@@ -1,9 +1,9 @@
 .. _oneapi_sample_mls:
 
-Surface Reconstruction with |oneapi| Moving Least Squares (MLS)
+Surface Reconstruction with oneAPI Moving Least Squares (MLS)
 =============================================================================
 
-MLS creates a 3D surface from a point cloud through either down-sampling or up-sampling techniques. |l_oneapi|\'s MLS is based on the original MLS API. Differences between the two:
+MLS creates a 3D surface from a point cloud through either down-sampling or up-sampling techniques. Intel® oneAPI Base Toolkit\'s MLS is based on the original MLS API. Differences between the two:
 
 -  oneapi MLS calculates with 32-bit float instead of 64-bit double.
 
@@ -23,8 +23,8 @@ for details.
 
 .. note::
 
-  This tutorial is applicable for execution both within inside and outside a |docker| image. It assumes that the
-  ``pcl-oneapi-tutorials`` |deb_pack| is installed, and the user has copied the *tutorial*
+  This tutorial is applicable for execution both within inside and outside a Docker image. It assumes that the
+  ``pcl-oneapi-tutorials`` Deb package is installed, and the user has copied the *tutorial*
   directory from */opt/intel/pcl/oneapi/tutorials/* to a user-writable directory.
 
 #. Prepare the environment:
@@ -41,7 +41,7 @@ for details.
       :linenos:
 
 
-#. Source the |l_oneapi| environment:
+#. Source the Intel® oneAPI Base Toolkit environment:
 
    .. code-block::
 
@@ -79,7 +79,7 @@ for details.
 Code Explanation
 --------------------
 
-|oneapi| MLS requires this header.
+oneAPI MLS requires this header.
 
 .. literalinclude:: ../../../../sources/mls/oneapi_mls.cpp
    :language: cpp
@@ -94,7 +94,7 @@ mandatory; other fields are allowed and preserved).
    :lines: 15-18
    :dedent:
 
-Compare to original version, append oneapi namespace to original MovingLeastSquares class. 
+Compare to original version, append oneapi namespace to original MovingLeastSquares class.
 The first template type is used for the input and output cloud. Only the XYZ
 dimensions of the input are smoothed in the output.
 
