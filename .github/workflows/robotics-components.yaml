@@ -4,6 +4,12 @@
 
 on:
   workflow_call:
+    inputs:
+      rebuild-all:
+        description: 'Whether to force rebuild all components'
+        type: boolean
+        default: false
+        required: false
 
 permissions:
   contents: read
@@ -15,9 +21,9 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     outputs:
-      fast-mapping-changed: ${{ steps.filter.outputs.fast-mapping-location }}
-      its-planner-changed: ${{ steps.filter.outputs.its-planner-location }}
-      multicam-demo-changed: ${{ steps.filter.outputs.multicam-demo-location }}
+      fast-mapping-changed: ${{ steps.filter.outputs.fast-mapping-location || inputs.rebuild-all }}
+      its-planner-changed: ${{ steps.filter.outputs.its-planner-location || inputs.rebuild-all }}
+      multicam-demo-changed: ${{ steps.filter.outputs.multicam-demo-location || inputs.rebuild-all }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
