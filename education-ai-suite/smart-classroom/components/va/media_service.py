@@ -54,6 +54,20 @@ class MediaService:
                 zip_ref.extractall(self.mediamtx_dir)
             zip_path.unlink()
 
+            # Update mediamtx.yml configuration
+            yml_path = self.mediamtx_dir / "mediamtx.yml"
+            if yml_path.exists():
+                with open(yml_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+
+                # Update RTP and RTCP addresses
+                import re
+                content = re.sub(r'^rtpAddress:.*$', 'rtpAddress: :8500', content, flags=re.MULTILINE)
+                content = re.sub(r'^rtcpAddress:.*$', 'rtcpAddress: :8501', content, flags=re.MULTILINE)
+
+                with open(yml_path, "w", encoding="utf-8") as f:
+                    f.write(content)
+
             self.logger.info(f"MediaMTX installed to {self.mediamtx_dir}")
 
         except Exception as e:

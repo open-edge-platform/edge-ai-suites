@@ -36,6 +36,7 @@ models:
     models_base_path: "models"
     device: NPU # NPU or GPU
     threshold: 0.5 # confidence threshold for YOLO detections
+
 mindmap:
   system_prompt:
     en: "Generate a Mermaid mindmap with proper syntax. Use exactly this format: Start with 'mindmap', then one root node with double parentheses, then child nodes with proper indentation (2 spaces per level). No bullet points, no multiple root nodes. There must be exactly ONE 'mindmap' declaration and ONE root node. Example: mindmap\n  root((Main Topic))\n    Child1\n      Subchild1\n      Subchild2\n    Child2\n      Subchild3"
@@ -63,3 +64,5 @@ va_pipeline:
   mediamtx_path: components/va/bin/mediamtx
   plugin_path: components/va
   rtsp_codec: h264 # h264 or h265
+  output_rtsp_url: rtsp://127.0.0.1:8554
+  hls_base_url: http://127.0.0.1:8888

@@ -214,40 +214,40 @@ va_services = {}  # {session_id: VideoAnalyticsPipelineService}
 
 @router.post("/start-video-analytics-pipeline")
 def start_video_analytics_pipeline(
-    request: VideoAnalyticsRequest, x_session_id: Optional[str] = Header(None)
+    requests: list[VideoAnalyticsRequest], x_session_id: Optional[str] = Header(None)
 ):
     """
-    Start video analytics pipeline
+    Start one or more video analytics pipelines
 
     Args:
-        request: VideoAnalyticsRequest with pipeline_name, source
+        requests: List of VideoAnalyticsRequest with pipeline_name, source
 
     Returns:
-        JSON with HLS stream address
+        JSON array with HLS stream addresses for each pipeline
     """
     if not x_session_id:
         raise HTTPException(
             status_code=400, detail="Missing required header: x-session-id"
         )
 
-    # Validate pipeline name
-    valid_pipelines = ["front", "back", "content"]
-    if request.pipeline_name not in valid_pipelines:
+    if not requests:
         raise HTTPException(
-            status_code=400,
-            detail=f"Invalid pipeline_name. Must be one of: {valid_pipelines}",
+            status_code=400, detail="Request array cannot be empty"
         )
+
+    # Validate all pipeline names
+    valid_pipelines = ["front", "back", "content"]
+    for request in requests:
+        if request.pipeline_name not in valid_pipelines:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid pipeline_name '{request.pipeline_name}'. Must be one of: {valid_pipelines}",
+            )
+
+    results = []
 
     # Check if a video analytics pipeline is already running for this session
     with video_analytics_lock:
-        if x_session_id in va_services:
-            existing_service = va_services[x_session_id]
-            if existing_service.is_pipeline_running(request.pipeline_name):
-                raise HTTPException(
-                    status_code=409,
-                    detail=f"Pipeline '{request.pipeline_name}' already running for session {x_session_id}",
-                )
-
         try:
             # Create or get service for this session
             if x_session_id not in va_services:
@@ -263,6 +263,7 @@ def start_video_analytics_pipeline(
             service = va_services[x_session_id]
 
             # Prepare pipeline options
+            from utils.config_loader import config
             project_config = RuntimeConfig.get_section("Project")
             location = project_config.get("location", "outputs")
             name = project_config.get("name", "default")
@@ -270,65 +271,91 @@ def start_video_analytics_pipeline(
 
             options = PipelineOptions(
                 output_dir=output_dir,
-                output_rtsp="rtsp://127.0.0.1:8554",
+                output_rtsp=config.va_pipeline.output_rtsp_url,
             )
 
-            # Launch pipeline
-            success = service.launch_pipeline(
-                pipeline_name=request.pipeline_name,
-                source=request.source,
-                options=options,
-            )
+            # Launch each pipeline
+            for request in requests:
+                try:
+                    # Check if pipeline is already running
+                    if service.is_pipeline_running(request.pipeline_name):
+                        results.append({
+                            "status": "error",
+                            "pipeline_name": request.pipeline_name,
+                            "session_id": x_session_id,
+                            "error": f"Pipeline '{request.pipeline_name}' already running"
+                        })
+                        continue
 
-            if not success:
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Failed to start pipeline '{request.pipeline_name}'",
-                )
+                    # Launch pipeline
+                    success = service.launch_pipeline(
+                        pipeline_name=request.pipeline_name,
+                        source=request.source,
+                        options=options,
+                    )
 
-            hls_base_url = "http://127.0.0.1:8888"
-            response_data = {
-                "status": "success",
-                "pipeline_name": request.pipeline_name,
-                "session_id": x_session_id,
-                "hls_stream": f"{hls_base_url}/{request.pipeline_name}_stream",
-                "overlays_embedded": True
-            }
+                    if not success:
+                        results.append({
+                            "status": "error",
+                            "pipeline_name": request.pipeline_name,
+                            "session_id": x_session_id,
+                            "error": f"Failed to start pipeline '{request.pipeline_name}'"
+                        })
+                    else:
+                        results.append({
+                            "status": "success",
+                            "pipeline_name": request.pipeline_name,
+                            "session_id": x_session_id,
+                            "hls_stream": f"{config.va_pipeline.hls_base_url}/{request.pipeline_name}_stream",
+                            "overlays_embedded": True
+                        })
+                except Exception as e:
+                    logger.error(f"Error starting pipeline '{request.pipeline_name}': {e}")
+                    results.append({
+                        "status": "error",
+                        "pipeline_name": request.pipeline_name,
+                        "session_id": x_session_id,
+                        "error": str(e)
+                    })
 
-            return JSONResponse(content=response_data, status_code=200)
+            return JSONResponse(content={"results": results}, status_code=200)
 
-        except HTTPException:
-            raise
         except Exception as e:
-            logger.error(f"Error starting video analytics pipeline: {e}")
+            logger.error(f"Error starting video analytics pipelines: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/stop-video-analytics-pipeline")
 def stop_video_analytics_pipeline(
-    request: VideoAnalyticsRequest, x_session_id: Optional[str] = Header(None)
+    requests: list[VideoAnalyticsRequest], x_session_id: Optional[str] = Header(None)
 ):
     """
-    Stop video analytics pipeline
+    Stop one or more video analytics pipelines
 
     Args:
-        request: VideoAnalyticsRequest with pipeline_name
+        requests: List of VideoAnalyticsRequest with pipeline_name
 
     Returns:
-        JSON with status message
+        JSON array with status messages for each pipeline
     """
     if not x_session_id:
         raise HTTPException(
             status_code=400, detail="Missing required header: x-session-id"
         )
 
-    # Validate pipeline name
-    valid_pipelines = ["front", "back", "content"]
-    if request.pipeline_name not in valid_pipelines:
+    if not requests:
         raise HTTPException(
-            status_code=400,
-            detail=f"Invalid pipeline_name. Must be one of: {valid_pipelines}",
+            status_code=400, detail="Request array cannot be empty"
         )
+
+    # Validate all pipeline names
+    valid_pipelines = ["front", "back", "content"]
+    for request in requests:
+        if request.pipeline_name not in valid_pipelines:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid pipeline_name '{request.pipeline_name}'. Must be one of: {valid_pipelines}",
+            )
 
     if x_session_id not in va_services:
         raise HTTPException(
@@ -336,39 +363,54 @@ def stop_video_analytics_pipeline(
             detail=f"No video analytics service found for session {x_session_id}",
         )
 
+    results = []
+
     with video_analytics_lock:
         try:
             service = va_services[x_session_id]
 
-            # Check if pipeline is running
-            if not service.is_pipeline_running(request.pipeline_name):
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Pipeline '{request.pipeline_name}' is not running for session {x_session_id}",
-                )
+            # Stop each pipeline
+            for request in requests:
+                try:
+                    # Check if pipeline is running
+                    if not service.is_pipeline_running(request.pipeline_name):
+                        results.append({
+                            "status": "error",
+                            "pipeline_name": request.pipeline_name,
+                            "session_id": x_session_id,
+                            "error": f"Pipeline '{request.pipeline_name}' is not running"
+                        })
+                        continue
 
-            # Stop the pipeline
-            success = service.stop_pipeline(request.pipeline_name)
+                    # Stop the pipeline
+                    success = service.stop_pipeline(request.pipeline_name)
 
-            if not success:
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Failed to stop pipeline '{request.pipeline_name}'",
-                )
+                    if not success:
+                        results.append({
+                            "status": "error",
+                            "pipeline_name": request.pipeline_name,
+                            "session_id": x_session_id,
+                            "error": f"Failed to stop pipeline '{request.pipeline_name}'"
+                        })
+                    else:
+                        results.append({
+                            "status": "success",
+                            "pipeline_name": request.pipeline_name,
+                            "session_id": x_session_id
+                        })
+                except Exception as e:
+                    logger.error(f"Error stopping pipeline '{request.pipeline_name}': {e}")
+                    results.append({
+                        "status": "error",
+                        "pipeline_name": request.pipeline_name,
+                        "session_id": x_session_id,
+                        "error": str(e)
+                    })
 
-            return JSONResponse(
-                content={
-                    "status": "success",
-                    "pipeline_name": request.pipeline_name,
-                    "session_id": x_session_id,
-                },
-                status_code=200,
-            )
+            return JSONResponse(content={"results": results}, status_code=200)
 
-        except HTTPException:
-            raise
         except Exception as e:
-            logger.error(f"Error stopping video analytics pipeline: {e}")
+            logger.error(f"Error stopping video analytics pipelines: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
 

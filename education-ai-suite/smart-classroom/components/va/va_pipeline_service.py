@@ -84,6 +84,7 @@ class VideoAnalyticsPipelineService:
         current_path = os.environ.get("GST_PLUGIN_PATH", "")
         os.environ["GST_PLUGIN_PATH"] = f"{self.plugin_path};{current_path}"
         os.environ["GST_DEBUG"] = "GVA_common:2,gvaposturedetect:4,gvareid:4,gvaroifilter:4"
+        os.environ["GST_PLUGIN_FEATURE_RANK"] = "d3d11h264dec:max,d3d11h265dec:max"
 
     def _get_model_path(self, model_key: str) -> str:
         """Get full path to model"""
@@ -122,7 +123,7 @@ class VideoAnalyticsPipelineService:
         elif input_type == "file":
             return [
                 "filesrc",
-                f"location={source}",
+                f"location={Path(source).as_posix()}",
                 "!",
                 "decodebin3",
                 "!",
@@ -145,7 +146,7 @@ class VideoAnalyticsPipelineService:
             "!",
             "rtspclientsink",
             f"location={rtsp_url}/{pipeline_name}",
-            "protocols=tcp"
+            "protocols=udp"
         ]
 
     def _check_redistribute_latency(self, log_file: Path) -> bool:
@@ -472,8 +473,6 @@ class VideoAnalyticsPipelineService:
             "gvametapublish",
             f"file-path={output_dir.as_posix()}/back_resnet18.txt",
             "file-format=json-lines",
-            "!",
-            "gvafpscounter",
             "!",
             *self._get_rtsp_sink_elements(
                 options.output_rtsp, "back_stream"
@@ -929,8 +928,8 @@ class VideoAnalyticsPipelineService:
         Returns:
             Dictionary with statistics:
             - student_count: Average person count
-            - stand_count: Count of stand transitions (sit->stand->sit counts as one)
-            - raise_up_count: Count of raise up transitions (not raising->raising->not raising counts as one)
+            - stand_count: Count of stand transitions
+            - raise_up_count: Count of raise up transitions
             - stand_reid: List of student IDs with their stand transition counts
         """
         posture_file = Path(front_posture_file)
@@ -1026,7 +1025,7 @@ class VideoAnalyticsPipelineService:
                 if target_idx < len(frames):
                     frame = frames[target_idx]
                     objects = frame.get("objects", [])
-                    # Count objects with non-zero bounding box (valid detections)
+                    # Count objects with non-zero bounding box
                     count = sum(1 for obj in objects 
                               if obj.get("detection", {}).get("bounding_box", {}).get("x_max", 0) > 0)
                     person_counts.append(count)
@@ -1040,7 +1039,9 @@ class VideoAnalyticsPipelineService:
             IOU_THRESHOLD = 0.3  # IoU threshold for matching objects without ID
 
             # State tracking for students with IDs
-            student_states = {}  # {student_id: {"is_standing": bool, "is_raising": bool, "stand_buffer": int, "raise_buffer": int}}
+            # Note: IDs are only assigned when students are in "stand" or "stand_raise_up" poses
+            # So we track when a student ID first appears (stand up event)
+            student_states = {}  # {student_id: {"last_seen_frame": int, "is_raising": bool, "raise_buffer": int}}
             student_stand_counts = {}
             student_raise_counts = {}
 
@@ -1050,6 +1051,9 @@ class VideoAnalyticsPipelineService:
 
             for frame_idx, frame in enumerate(frames):
                 objects = frame.get("objects", [])
+
+                # Track which student IDs were seen this frame
+                seen_student_ids = set()
 
                 # Track which unidentified objects were matched this frame
                 matched_unidentified = set()
@@ -1068,44 +1072,42 @@ class VideoAnalyticsPipelineService:
                     is_standing = label in ["stand", "stand_raise_up"]
                     is_raising = label in ["sit_raise_up", "stand_raise_up"]
 
-                    # Handle students with IDs
+                    # Handle students with IDs (they are standing)
                     if student_id > 0:
-                        # Initialize student state if not exists
+                        seen_student_ids.add(student_id)
+
+                        # First time seeing this student ID (or reappearing after absence) - just stood up
                         if student_id not in student_states:
                             student_states[student_id] = {
-                                "is_standing": False,
-                                "is_raising": False,
-                                "stand_buffer": 0,
+                                "last_seen_frame": frame_idx,
+                                "is_raising": is_raising,
                                 "raise_buffer": 0
                             }
-                            student_stand_counts[student_id] = 0
-                            student_raise_counts[student_id] = 0
+                            # Increment stand count or initialize to 1 if first time
+                            if student_id not in student_stand_counts:
+                                student_stand_counts[student_id] = 1
+                            else:
+                                student_stand_counts[student_id] += 1
 
-                        state = student_states[student_id]
-
-                        # Standing state transition with buffer
-                        if is_standing != state["is_standing"]:
-                            state["stand_buffer"] += 1
-                            if state["stand_buffer"] >= MIN_FRAMES_FOR_TRANSITION:
-                                # Confirmed transition
-                                if is_standing:  # Transition to standing
-                                    student_stand_counts[student_id] += 1
-                                state["is_standing"] = is_standing
-                                state["stand_buffer"] = 0
+                            # Initialize raise count if needed
+                            if student_id not in student_raise_counts:
+                                student_raise_counts[student_id] = 0
                         else:
-                            state["stand_buffer"] = 0
+                            # Update last seen frame
+                            state = student_states[student_id]
+                            state["last_seen_frame"] = frame_idx
 
-                        # Raising state transition with buffer
-                        if is_raising != state["is_raising"]:
-                            state["raise_buffer"] += 1
-                            if state["raise_buffer"] >= MIN_FRAMES_FOR_TRANSITION:
-                                # Confirmed transition
-                                if is_raising:  # Transition to raising
-                                    student_raise_counts[student_id] += 1
-                                state["is_raising"] = is_raising
+                            # Raising state transition with buffer
+                            if is_raising != state["is_raising"]:
+                                state["raise_buffer"] += 1
+                                if state["raise_buffer"] >= MIN_FRAMES_FOR_TRANSITION:
+                                    # Confirmed transition
+                                    if is_raising:  # Transition to raising
+                                        student_raise_counts[student_id] += 1
+                                    state["is_raising"] = is_raising
+                                    state["raise_buffer"] = 0
+                            else:
                                 state["raise_buffer"] = 0
-                        else:
-                            state["raise_buffer"] = 0
 
                     # Handle students without IDs (only track raising)
                     else:
@@ -1159,6 +1161,17 @@ class VideoAnalyticsPipelineService:
                     obj for obj in unidentified_objects
                     if frame_idx - obj["last_seen_frame"] < 30
                 ]
+
+                # Check for student IDs that disappeared (sat down)
+                # Mark them as absent so if they reappear later, we count it as a new stand event
+                ABSENCE_THRESHOLD = 15  # frames (1 second at 15 FPS)
+                for student_id in list(student_states.keys()):
+                    if student_id not in seen_student_ids:
+                        state = student_states[student_id]
+                        # If student hasn't been seen for a while, mark them as absent
+                        if frame_idx - state["last_seen_frame"] >= ABSENCE_THRESHOLD:
+                            # Remove from tracking - next appearance will be counted as new stand event
+                            del student_states[student_id]
 
             # 3. Calculate total counts
             stand_count = sum(student_stand_counts.values())
