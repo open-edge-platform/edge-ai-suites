@@ -32,7 +32,7 @@ Set date/time from the internet:
 $ sudo date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | sed -n 's/^ *Date: *//p')"
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 2. Influx -- Data Being Deleted Beyond Retention Policy (RP)
 
@@ -74,7 +74,7 @@ So the effective expiration time is **1 hour RP + 1 hour shard duration
 -   A 1-hour RP will **always** result in \~2 hours before deletion.
 -   No configuration can force deletion exactly at the RP limit.
 
-------------------------------------------------------------------------
+---
 
 ## 3. Time Series Analytics Microservice (Docker/Helm) -- Takes Time to Start or Shows Python Packages Installing
 
@@ -95,3 +95,5 @@ initializes and starts inferencing.
 No action required --- wait for the **time-series-analytics**
 microservice to complete downloading the dependent packages and
 initialize Kapacitor to start inference.
+
+---
