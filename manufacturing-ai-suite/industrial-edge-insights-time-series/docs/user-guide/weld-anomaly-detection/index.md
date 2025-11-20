@@ -94,5 +94,5 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 ##### **`models/`**
 
-The `weld_anomaly_detector.cb` is a model built using the RandomForestRegressor Algo.
+The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier algorithm from the CatBoost library.
 
