@@ -23,7 +23,7 @@ $ date
 Set the correct date/time manually:
 
 ``` sh
-$ sudo date -s '2014-12-25 12:34:56'
+$ sudo date -s 'YYYY-MM-DD HH:MM:SS'   # Replace with your actual date and time
 ```
 
 Set date/time from the internet:
