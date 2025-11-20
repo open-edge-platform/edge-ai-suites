@@ -1,0 +1,15 @@
+tar-ignore=.github
+tar-ignore=.git
+tar-ignore=.gitignore
+tar-ignore=.ci
+tar-ignore=ci
+tar-ignore=requirement.txt
+tar-ignore=Makefile
+tar-ignore=apt_packages.txt
+tar-ignore=Dockerfile
+tar-ignore=videos
+tar-ignore=debian/*.tmpl
+tar-ignore=.pc
+tar-ignore=*.deb
+tar-ignore=*.changes
+tar-ignore=*.buildinfo

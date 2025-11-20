@@ -1,9 +1,16 @@
 # Wind Turbine Anomaly Detection
 
-This sample app demonstrates a time series use case by detecting anomalous power generation patterns
-in wind turbines, relative to wind speed. By identifying deviations, it helps
+This sample app demonstrates a time series use case by detecting anomalous power generation
+patterns in wind turbines, relative to wind speed. By identifying deviations, it helps
 optimize maintenance schedules and prevent potential turbine failures, enhancing
 operational efficiency.
+
+In this article, you can learn about the architecture of the sample and its data flow.
+
+If you want to start working with it, instead, check out the
+[Get Started Guide](../get-started.md) or [How-to Guides](../how-to-guides/index.md)
+for Time-series applications.
+
 
 ## App Architecture
 

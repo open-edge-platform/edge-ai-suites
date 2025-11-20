@@ -1,5 +1,5 @@
 #!/bin/sh
-# preinst script 
+# preinst script
 #
 # see: dh_installdeb(1)
 
@@ -20,26 +20,27 @@ echo "Intel oneapi version $oneapi_ver"
 
 case "$1" in
     install|upgrade)
-	[ -d /opt/ros/humble/share/pyrealsense2-ai-demo/venv ] && rm -rf /opt/ros/humble/share/pyrealsense2-ai-demo/venv
+	[ -d /opt/ros/jazzy/share/pyrealsense2-ai-demo/venv ] && rm -rf /opt/ros/jazzy/share/pyrealsense2-ai-demo/venv
 	if command -v virtualenv > /dev/null; then
-	    virtualenv -p python3 /opt/ros/humble/share/pyrealsense2-ai-demo/venv
-	    . /opt/ros/humble/share/pyrealsense2-ai-demo/venv/bin/activate
+	    virtualenv -p python3 /opt/ros/jazzy/share/pyrealsense2-ai-demo/venv
+	    # shellcheck disable=SC1091
+	    . /opt/ros/jazzy/share/pyrealsense2-ai-demo/venv/bin/activate
 	    pip install imutils || :
 	    pip install onnx==1.13.0 || :
 	    pip install numpy==1.23.0 || :
 	    pip install protobuf==3.20.3 || :
 	    pip install ultralytics==8.0.43 || :
-	    pip install openvino-dev==$openvino_ver || :
-	    pip install mkl==$oneapi_ver \
-		onemkl-sycl-vm==$oneapi_ver \
-		onemkl-sycl-stats==$oneapi_ver \
-		onemkl-sycl-rng==$oneapi_ver \
-		onemkl-sycl-dft==$oneapi_ver \
-		onemkl-sycl-datafitting==$oneapi_ver \
-		onemkl-sycl-blas==$oneapi_ver \
-		onemkl-sycl-sparse==$oneapi_ver \
-		onemkl-sycl-lapack==$oneapi_ver \
-		mkl-dpcpp==$oneapi_ver \
+	    pip install openvino-dev=="$openvino_ver" || :
+	    pip install mkl=="$oneapi_ver" \
+		onemkl-sycl-vm=="$oneapi_ver" \
+		onemkl-sycl-stats=="$oneapi_ver" \
+		onemkl-sycl-rng=="$oneapi_ver" \
+		onemkl-sycl-dft=="$oneapi_ver" \
+		onemkl-sycl-datafitting=="$oneapi_ver" \
+		onemkl-sycl-blas=="$oneapi_ver" \
+		onemkl-sycl-sparse=="$oneapi_ver" \
+		onemkl-sycl-lapack=="$oneapi_ver" \
+		mkl-dpcpp=="$oneapi_ver" \
 		dpnp==0.13.0 \
 		dpctl==0.15.0 || :
 	    deactivate

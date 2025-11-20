@@ -11,6 +11,15 @@ on:
       - 'robotics-ai-suite/**'
       - '!robotics-ai-suite/**/docs/**'
 
+  push:
+    paths:
+      - '.github/workflows/robotics*'
+      - 'robotics-ai-suite/**'
+      - '!robotics-ai-suite/**/docs/**'
+    branches:
+      - main
+      - release-*
+
   workflow_dispatch:
 
 permissions:
