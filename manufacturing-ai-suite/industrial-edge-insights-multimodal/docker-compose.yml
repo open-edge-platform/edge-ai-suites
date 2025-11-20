@@ -3,7 +3,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-version: '3.6'
 services:
   ia-telegraf:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
