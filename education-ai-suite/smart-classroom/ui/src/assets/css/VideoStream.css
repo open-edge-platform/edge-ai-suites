@@ -1,108 +1,200 @@
 .video-stream {
-    display: flex;
-    flex-direction: column;
-    background: #f5f7fa;
-    border: 1px solid #e6e7e8;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  
-  .video-stream.room-view {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 50%;
-    z-index: 1000;
-  }
-  
-  .video-stream-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 16px;
-    background: #0071c5;
-    color: #fff;
-  }
-  
-  .stream-controls button {
-    background: #0054ae;
-    color: #fff;
-    border: none;
-    padding: 6px 12px;
-    margin-left: 8px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .video-stream-body {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 16px;
-  }
-  
-  .stream-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 16px;
-  }
-  
-  .stream-container.split-screen {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Create 3 equal columns */
-    gap: 16px; /* Add spacing between streams */
-  }
-  
-  .stream {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #e6e7e8;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 8px;
-  }
-  
-  .stream-label {
-    margin-top: 8px;
-    font-size: 14px;
-    color: #6a6d75;
-  }
-  
-  .stream-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 20px;
-    background-color: #f8f9fa;
-    border: 1px dashed #ced4da;
-    border-radius: 10px;
-    margin: 20px;
-  }
-  
-  .streaming-icon-placeholder {
-    width: 60px;
-    height: 60px;
-    margin-bottom: 10px;
-  }
-  
-  .upload-file-button {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    font-size: 14px;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-  
-  .upload-file-button:hover {
-    background-color: #0056b3;
-  }
+  display: flex;
+  flex-direction: column;
+  background: #ffffff; /* Match LeftPanel background */
+  border: 1px solid #e6e7e8;
+  border-radius: 8px;
+  overflow: hidden;
+  height: var(--video-height);
+  transition: height 0.3s ease, width 0.3s ease;
+  z-index: 1000;
+}
+
+.video-stream.room-view {
+  width: 100%;
+  height: 50vh; /* Take up half the viewport height */
+  z-index: 1000;
+  position: relative; /* Ensure it stays in the flow of the layout */
+  flex-shrink: 0; /* Prevent it from shrinking */
+}
+
+.video-stream.full-screen {
+  position: fixed;
+  top: calc(64px + 56px); /* Account for HeaderBar (64px) and TopPanel (56px) */
+  left: 0;
+  width: 100%;
+  height: calc(70vh - 64px - 56px); /* Adjust height to exclude HeaderBar and TopPanel */
+  z-index: 1000;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  transition: height 0.3s ease, width 0.3s ease;
+}
+
+.video-stream.full-screen .video-stream-header {
+  background: #f8f9fa; /* Retain original background color */
+  color: #333;
+}
+
+.video-stream.collapsed {
+  height: auto;
+  min-height: 48px;
+}
+
+.video-stream.collapsed .video-stream-body,
+.video-stream.collapsed .stream-controls {
+  display: none;
+}
+.container.fullscreen .left-panel,
+.container.fullscreen .right-panel {
+  margin-top: calc(70vh - 64px - 56px); /* Push panels down below the full-screen VideoStream */
+  transition: margin-top 0.3s ease;
+  /* z-index: 1000; */
+}
+
+.container.fullscreen .video-stream {
+  height: 50vh; /* Expand VideoStream to take up half the screen */
+  transition: height 0.3s ease; /* Smooth transition */
+}
+
+.video-stream-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #f8f9fa; /* Match LeftPanel header background */
+  color: #333; /* Match LeftPanel font color */
+  border-bottom: 1px solid #e6e7e8;
+  min-height: 48px;
+  position: relative; /* Fix hover alignment */
+  z-index: 10;
+}
+
+.room-view-toggle-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.room-view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.room-view-toggle input {
+  display: none;
+}
+
+.room-view-toggle .toggle-slider {
+  width: 40px;
+  height: 20px;
+  background: #ccc;
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.3s ease;
+  cursor: pointer;
+}
+
+.room-view-toggle .toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.room-view-toggle input:checked + .toggle-slider {
+  background: #0071c5;
+}
+
+.room-view-toggle input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.stream-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.stream-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.stream-label.active {
+  background: #0054ae;
+  color: #fff;
+}
+
+.full-screen-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.video-stream-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background: #f8f9fa;
+}
+.stream-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border: 1px dashed #ced4da;
+  border-radius: 10px;
+  margin: 20px;
+}
+
+.streaming-icon-placeholder {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 10px;
+}
+
+.streaming-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+
+.upload-file-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.upload-file-button:hover {
+  background-color: #0056b3;
+}
+
+.container:not(.fullscreen) .left-panel .video-stream {
+  height: var(--video-height);
+  margin-bottom: 8px;
+}

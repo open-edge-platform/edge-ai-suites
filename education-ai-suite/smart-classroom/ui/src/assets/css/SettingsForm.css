@@ -8,6 +8,7 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   color: #2B2C30;
   align-items: justify;
+  z-index: var(--z-index-modal); 
 }
 
 h2 {

@@ -1,10 +1,12 @@
 import React from 'react';
-import ProjectLocationInput from './ProjectLocationInput';
+import ProjectLocationInput from './PathInput';
 
 interface BoardCameraPathInputProps {
   boardCameraPath: string;
   onChange: (path: string) => void;
   onFolderClick: () => void;
+  isabled?: boolean; // Add the disabled property
+  placeholder?: string; 
 }
 
 const BoardCameraPathInput: React.FC<BoardCameraPathInputProps> = ({

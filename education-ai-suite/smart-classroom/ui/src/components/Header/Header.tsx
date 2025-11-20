@@ -57,6 +57,13 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const handleClose = () => {
     setShowToast(false);
   };
+  const handleOpenUploadModal = () => {
+    setIsUploadModalOpen(true); // Open the UploadFilesModal
+  };
+
+  const handleCloseUploadModal = () => {
+    setIsUploadModalOpen(false); // Close the UploadFilesModal
+  };
   useEffect(() => {
     let interval: number | null = null;
     if (isRecording) {
@@ -106,60 +113,28 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       dispatch(startProcessing());
     }
   };
-  const handleStreamingToggle = async () => {
-    if (isBusy) return;
-    try {
-      if (isStreaming) {
-        await stopVideoAnalyticsPipeline('front', sessionId!);
-        await stopVideoAnalyticsPipeline('back', sessionId!);
-        await stopVideoAnalyticsPipeline('content', sessionId!);
-        setNotification(t('notifications.streamingStopped'));
-      } else {
-        await startVideoAnalyticsPipeline('front', 'source-path', sessionId!);
-        await startVideoAnalyticsPipeline('back', 'source-path', sessionId!);
-        await startVideoAnalyticsPipeline('content', 'source-path', sessionId!);
-        setNotification(t('notifications.streamingStarted'));
-      }
-      setIsStreaming(!isStreaming);
-    } catch (error) {
-      const msg = getErrorMessage(error, t('notifications.streamingError'));
-      setErrorMsg(msg);
-    }
-  };
-  const handleFileUpload = async (file: File) => {
-    if (isBusy || isRecording) return;
-    clearForNewOp();
-    setNotification(t('notifications.uploading'));
-    dispatch(resetFlow());
-    dispatch(resetTranscript());
-    dispatch(resetSummary());
-    dispatch(startProcessing());
-    try {
-      const result = await uploadAudio(file);
-      dispatch(setUploadedAudioPath(result.path));
-      setNotification(t('notifications.uploadSuccess'));
-      setErrorMsg(null); // Clear any previous error
-    } catch (e) {
-      const msg = getErrorMessage(e, 'Upload failed');
-      setNotification(''); // Clear the notification
-      setErrorMsg(msg); // Set error message for NotificationsDisplay
-      dispatch(processingFailed());
-    }
-  };
-  const handleApply = async (paths: { audioPath: string; frontCameraPath: string; rearCameraPath: string; boardCameraPath: string }) => {
-    try {
-      await startVideoAnalyticsPipeline('front', paths.frontCameraPath, sessionId!);
-      await startVideoAnalyticsPipeline('back', paths.rearCameraPath, sessionId!);
-      await startVideoAnalyticsPipeline('content', paths.boardCameraPath, sessionId!);
-      setNotification(t('notifications.streamingStarted'));
-    } catch (error) {
-      const msg = getErrorMessage(error, t('notifications.streamingError'));
-      setErrorMsg(msg);
-    }
-  };
-
-
-
+  
+  // const handleFileUpload = async (file: File) => {
+  //   if (isBusy || isRecording) return;
+  //   clearForNewOp();
+  //   setNotification(t('notifications.uploading'));
+  //   dispatch(resetFlow());
+  //   dispatch(resetTranscript());
+  //   dispatch(resetSummary());
+  //   dispatch(startProcessing());
+  //   try {
+  //     const result = await uploadAudio(file);
+  //     dispatch(setUploadedAudioPath(result.path));
+  //     setNotification(t('notifications.uploadSuccess'));
+  //     setErrorMsg(null); // Clear any previous error
+  //   } catch (e) {
+  //     const msg = getErrorMessage(e, 'Upload failed');
+  //     setNotification(''); // Clear the notification
+  //     setErrorMsg(msg); // Set error message for NotificationsDisplay
+  //     dispatch(processingFailed());
+  //   }
+  // };
+ 
   return (
     <div className="header-bar">
       <div className="navbar-left">
@@ -182,48 +157,15 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         >
           {isRecording ? t('header.stopRecording') : t('header.startRecording')}
         </button>
-        <button
-        className="streaming-button"
-        onClick={handleStreamingToggle}
-        style={{ opacity: isBusy ? 0.6 : 1, cursor: isBusy ? 'not-allowed' : 'pointer' }}
-        disabled={isBusy}
-      >
-        {isStreaming ? t('header.stopStreaming') : t('header.startStreaming')}
-      </button>
-{/* 
-    <label
+
+    <button
       className="upload-button"
       style={{ opacity: isBusy || isRecording ? 0.6 : 1, cursor: isBusy || isRecording ? 'not-allowed' : 'pointer' }}
+      onClick={handleOpenUploadModal}    
     >
-      <input
-        type="file"
-        accept="audio/*"
-        style={{ display: 'none' }}
-        disabled={isBusy || isRecording}
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) handleFileUpload(f);
-          e.currentTarget.value = '';
-        }}
-      />
       {t('header.uploadFile')}
-    </label> */}
-        <button
-          className="upload-button"
-          onClick={() => setIsUploadModalOpen(true)}
-          style={{ opacity: isBusy || isRecording ? 0.6 : 1, cursor: isBusy || isRecording ? 'not-allowed' : 'pointer' }}
-          disabled={isBusy || isRecording}
-        >
-          {t('header.uploadFiles')}
-        </button>
+    </button>
       </div>
-      {isUploadModalOpen && (
-        <UploadFilesModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          onApply={handleApply}
-        />
-      )}
 
       <div className="navbar-center">
         <NotificationsDisplay notification={notification} error={errorMsg} />
@@ -238,6 +180,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           onClose={handleClose}
           onCopy={handleCopy}
         />
+      )}
+      {isUploadModalOpen && (
+        <UploadFilesModal isOpen={isUploadModalOpen} onClose={handleCloseUploadModal} />
       )}
     </div>
   );

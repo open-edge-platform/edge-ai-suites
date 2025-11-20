@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import ProjectNameInput from '../Inputs/ProjectNameInput';
 import MicrophoneSelect from '../Inputs/MicrophoneSelect';
 import ProjectLocationInput from '../Inputs/ProjectLocationInput';
-import FrontCameraSelect from '../Inputs/FrontCameraSelect';
-import BackCameraSelect from '../Inputs/BackCameraSelect';
-import BoardCameraSelect from '../Inputs/BoardCameraSelect';
 import '../../assets/css/SettingsForm.css';
 import { saveSettings, getSettings } from '../../services/api';
 import { useTranslation } from 'react-i18next';
@@ -18,9 +15,6 @@ interface SettingsFormProps {
 const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setProjectName}) => {
   const [selectedMicrophone, setSelectedMicrophone] = useState('');
   const [projectLocation, setProjectLocation] = useState('storage/');
-  const [selectedFrontCamera, setSelectedFrontCamera] = useState('Default Front Camera');
-  const [selectedBackCamera, setSelectedBackCamera] = useState('Default Back Camera');
-  const [selectedBoardCamera, setSelectedBoardCamera] = useState('Default Board Camera');
   const [nameError, setNameError] = useState<string | null>(null);
   const { t } = useTranslation();
 
@@ -31,10 +25,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
         if (!s) return;
         setProjectLocation(s.projectLocation || 'storage/');
         setSelectedMicrophone(s.microphone || '');
-        setSelectedFrontCamera(s.frontCamera || 'Default Front Camera');
-        setSelectedBackCamera(s.backCamera || 'Default Back Camera');
-        setSelectedBoardCamera(s.boardCamera || 'Default Board Camera');
-        if (s.projectName) setProjectName(s.projectName); 
+        if (s.projectName) setProjectName(s.projectName); // default project name from API
       })
       .catch(() => {});
   }, [setProjectName]);
@@ -53,9 +44,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
       return;
     }
     try {
-      await saveSettings({ projectName, projectLocation, microphone: selectedMicrophone, frontCamera: selectedFrontCamera,
-        backCamera: selectedBackCamera,
-        boardCamera: selectedBoardCamera });
+      await saveSettings({ projectName, projectLocation, microphone: selectedMicrophone });
       onClose();
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -86,7 +75,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
         <div>
           <label htmlFor="projectLocation">{t('settings.projectLocation')}</label>
           <ProjectLocationInput
-            value={projectLocation}
+            projectLocation={projectLocation}
             onChange={handleLocationChange}
             placeholder=""
           />
@@ -97,29 +86,6 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
             selectedMicrophone={selectedMicrophone}
             onChange={setSelectedMicrophone}
           />
-        </div>
-        <div className="camera-row">
-          <div>
-            <label htmlFor="frontCamera">{t('settings.frontCamera')}</label>
-            <FrontCameraSelect
-              selectedFrontCamera={selectedFrontCamera}
-              onChange={setSelectedFrontCamera}
-            />
-          </div>
-          <div>
-            <label htmlFor="backCamera">{t('settings.backCamera')}</label>
-            <BackCameraSelect
-              selectedBackCamera={selectedBackCamera}
-              onChange={setSelectedBackCamera}
-            />
-          </div>
-          <div>
-            <label htmlFor="boardCamera">{t('settings.boardCamera')}</label>
-            <BoardCameraSelect
-              selectedBoardCamera={selectedBoardCamera}
-              onChange={setSelectedBoardCamera}
-            />
-          </div>
         </div>
       </div>
       <div className="button-container">

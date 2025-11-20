@@ -243,32 +243,27 @@ export async function getConfigurationMetrics(sessionId: string): Promise<any> {
 }
 
 export const startVideoAnalyticsPipeline = async (
-  pipelineName: "front" | "back" | "content",
-  source: string,
+  pipelines: { pipeline_name: string; source: string }[],
   sessionId: string
-): Promise<{ hls_stream: string; overlays_embedded: boolean }> => {
+): Promise<{ results: any[] }> => {
   return safeApiCall(async () => {
     const response = await fetch(`${BASE_URL}/start-video-analytics-pipeline`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-session-id": sessionId,
+        "x-session-id": sessionId, // Include session ID in the headers
       },
-      body: JSON.stringify({
-        pipeline_name: pipelineName,
-        source: source,
-      }),
+      body: JSON.stringify(pipelines), // Send the array of pipelines
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail || `Failed to start pipeline: ${response.status}`);
+      throw new Error(error.detail || `Failed to start pipelines: ${response.status}`);
     }
 
     return response.json();
   });
 };
-
 export const stopVideoAnalyticsPipeline = async (
   pipelineName: "front" | "back" | "content",
   sessionId: string

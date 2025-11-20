@@ -1,5 +1,5 @@
 import React from 'react';
-import ProjectLocationInput from './ProjectLocationInput';
+import ProjectLocationInput from './PathInput';
 
 interface FrontCameraPathInputProps {
   frontCameraPath: string;

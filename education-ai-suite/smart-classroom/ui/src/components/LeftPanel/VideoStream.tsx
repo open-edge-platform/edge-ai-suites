@@ -1,91 +1,123 @@
-import React, { useState } from 'react';
-import streamingIcon from '../../assets/images/streaming-icon.png'; // Adjust the path as needed
-import '../../assets/css/VideoStream.css';
-import HLSPlayer from '../common/HLSPlayer';
-import UploadFilesModal from '../Modals/UploadFilesModal';
-import { startVideoAnalyticsPipeline, getClassStatistics  } from '../../services/api';
-import { useAppSelector, useAppDispatch } from '../../redux/hooks';
-import { setClassStatistics } from '../../redux/slices/fetchClassStatistics';
+import React, { useState } from "react";
+import "../../assets/css/VideoStream.css";
+import HLSPlayer from "../common/HLSPlayer";
+import UploadFilesModal from "../Modals/UploadFilesModal";
+import fullScreenIcon from "../../assets/images/fullScreenIcon.svg";
+import streamingIcon from "../../assets/images/streamingIcon.svg";
+interface VideoStreamProps {
+  isFullScreen: boolean;
+  onToggleFullScreen: () => void;
+}
 
-const VideoStream: React.FC = () => {
-  const [isRoomView, setIsRoomView] = useState(false);
+
+const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScreen }) => {
+  const [isRoomView, setIsRoomView] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [streams, setStreams] = useState<{ front?: string; back?: string; content?: string }>({});
-  const sessionId = useAppSelector((state) => state.ui.sessionId);
-  const dispatch = useAppDispatch();
+  const [activeStream, setActiveStream] = useState<'front' | 'back' | 'content' | 'all' | null>(null);
+  //const [isFullScreen, setIsFullScreen] = useState(false);
+
   const handleToggleRoomView = () => {
     setIsRoomView(!isRoomView);
   };
 
-  const handleStreamClick = async (pipelineName: 'front' | 'rear' | 'board' | 'all') => {
-    try {
-      if (pipelineName === 'all') {
-        // Start all pipelines and fetch their streams
-        const frontStream = await startVideoAnalyticsPipeline('front', 'source-path', sessionId!);
-        const backStream = await startVideoAnalyticsPipeline('back', 'source-path', sessionId!);
-        const contentStream = await startVideoAnalyticsPipeline('content', 'source-path', sessionId!);
-
-        // Update the streams state
-        setStreams({
-          front: frontStream.hls_stream,
-          back: backStream.hls_stream,
-          content: contentStream.hls_stream,
-        });
-
-        // Fetch class statistics after all streams are set
-        const classStats = await getClassStatistics(sessionId!);
-        dispatch(setClassStatistics(classStats));
-      } else {
-        // Start a specific pipeline and fetch its stream
-        const apiPipelineName: 'front' | 'back' | 'content' =
-          pipelineName === 'rear' ? 'back' : pipelineName === 'board' ? 'content' : pipelineName;
-
-        const stream = await startVideoAnalyticsPipeline(apiPipelineName, 'source-path', sessionId!);
-        setStreams({ [apiPipelineName]: stream.hls_stream });
-      }
-    } catch (error) {
-      console.error('Error starting video analytics pipeline or fetching class statistics:', error);
+  // const handleFullScreenToggle = () => {
+  //   setIsFullScreen(!isFullScreen);
+  //   document.querySelector(".container")?.classList.toggle("fullscreen", !isFullScreen);
+  // };
+  const handleFullScreenToggle = () => {
+    onToggleFullScreen();
+    const container = document.querySelector(".container");
+    if (container) {
+      container.classList.toggle("fullscreen", !isFullScreen);
     }
+  };
+  const handleApplyFiles = (paths: { frontCameraPath?: string; rearCameraPath?: string; boardCameraPath?: string }) => {
+    // Update streams only if paths are provided
+    setStreams((prevStreams) => ({
+      front: paths.frontCameraPath || prevStreams.front,
+      back: paths.rearCameraPath || prevStreams.back,
+      content: paths.boardCameraPath || prevStreams.content,
+    }));
+    setIsUploadModalOpen(false);
   };
 
   return (
-    <div className={`video-stream ${isRoomView ? 'room-view' : ''}`}>
+    <div className={`video-stream ${isRoomView ? "room-view" : "collapsed"} ${isFullScreen ? "full-screen" : ""}`}>
       <div className="video-stream-header">
-        <button className="toggle-room-view" onClick={handleToggleRoomView}>
-          {isRoomView ? 'Default View' : 'Room View'}
-        </button>
-        <div className="stream-controls">
-          <button onClick={() => handleStreamClick('front')}>Front</button>
-          <button onClick={() => handleStreamClick('rear')}>Rear</button>
-          <button onClick={() => handleStreamClick('board')}>Board</button>
-          <button onClick={() => handleStreamClick('all')}>All</button>
+        <div className="room-view-toggle-wrapper">
+          <label className="room-view-toggle">
+            <input
+              type="checkbox"
+              checked={isRoomView}
+              onChange={handleToggleRoomView}
+            />
+            <span className="toggle-slider"></span>
+            <span className="toggle-label">Room View</span>
+          </label>
         </div>
-      </div>
-      <div className="video-stream-body">
-        {Object.keys(streams).length > 0 ? (
-          <div className={`stream-container ${Object.keys(streams).length === 3 ? 'split-screen' : ''}`}>
-            {streams.front && <HLSPlayer streamUrl={streams.front} />}
-            {streams.back && <HLSPlayer streamUrl={streams.back} />}
-            {streams.content && <HLSPlayer streamUrl={streams.content} />}
-          </div>
-        ) : (
-          <div className="stream-placeholder">
-            <img src={streamingIcon} alt="Streaming Icon" className="streaming-icon-placeholder" />
-            <p>Go to settings to configure your recorders or upload audio/video files</p>
-            <button className="upload-file-button" onClick={() => setIsUploadModalOpen(true)}>
-              Upload File
-            </button>
+        {isRoomView && (
+          <div className="stream-controls">
+            {["front", "back", "content", "all"].map((pipeline) => (
+              <span
+                key={pipeline}
+                className={`stream-label ${activeStream === pipeline ? "active" : ""}`}
+                onClick={() => setActiveStream(pipeline as 'front' | 'back' | 'content' | 'all')}
+              >
+                {pipeline.charAt(0).toUpperCase() + pipeline.slice(1)}
+              </span>
+            ))}
+            <img
+              src={fullScreenIcon}
+              alt="Full Screen Disabled"
+              className="full-screen-icon"
+              style={{ cursor: 'not-allowed', opacity: 0.5 }} // Disable the icon
+            />
           </div>
         )}
       </div>
+
+      {isRoomView && (
+        <div className="video-stream-body">
+          {Object.keys(streams).length > 0 ? (
+            <div className={`stream-container ${Object.keys(streams).length === 3 ? "split-screen" : ""}`}>
+              {activeStream === null || activeStream === "all" ? (
+                <>
+                  {streams.front && <HLSPlayer streamUrl={streams.front} />}
+                  {streams.back && <HLSPlayer streamUrl={streams.back} />}
+                  {streams.content && <HLSPlayer streamUrl={streams.content} />}
+                </>
+              ) : (
+                <>
+                  {activeStream === "front" && streams.front && <HLSPlayer streamUrl={streams.front} />}
+                  {activeStream === "back" && streams.back && <HLSPlayer streamUrl={streams.back} />}
+                  {activeStream === "content" && streams.content && <HLSPlayer streamUrl={streams.content} />}
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="stream-placeholder">
+              <img
+              src={streamingIcon}
+              alt="Streaming Icon"
+              className="streaming-icon"
+            />
+              <p>Go to settings to configure your recorders or upload audio/video files</p>
+              <button
+                className="upload-file-button"
+                onClick={() => setIsUploadModalOpen(true)}
+              >
+                Upload File
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       {isUploadModalOpen && (
         <UploadFilesModal
           isOpen={isUploadModalOpen}
           onClose={() => setIsUploadModalOpen(false)}
-          onApply={(paths) => {
-            console.log('Uploaded file paths:', paths);
-            setIsUploadModalOpen(false);
-          }}
+         /// onApply={handleApplyFiles}
         />
       )}
     </div>
@@ -93,4 +125,3 @@ const VideoStream: React.FC = () => {
 };
 
 export default VideoStream;
-
