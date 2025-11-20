@@ -22,10 +22,10 @@ physical devices, in a real deployment scenario. If you are interested, document
 sample application provide detailed architectural descriptions.
 
 <!--hide_directive
-::::{grid} 1 2 3 4
+::::{grid} 1 2 2 2
 :::{grid-item-card} Wind Turbine Anomaly Detection
 :class-card: homepage-card-container-big
-:link: ./wind-turbine-anomaly/index.html
+:link: ./wind-turbine-anomaly-detection/index.html
 
 Monitoring power generation anomalies for preventive maintenance.
 :::
@@ -51,3 +51,4 @@ Release Notes <release_notes>
 troubleshoot-guide
 :::
 hide_directive-->
+
