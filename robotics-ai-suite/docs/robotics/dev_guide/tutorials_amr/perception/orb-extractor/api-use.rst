@@ -22,7 +22,7 @@ Tutorial
 
 .. note::
 
-   This tutorial can be run both inside and outside a Docker* image. We assume that the ``liborb-lze-dev`` |deb_pack| has been installed,
+   This tutorial can be run both inside and outside a Docker* image. We assume that the ``liborb-lze-dev`` Deb package has been installed,
    and the user has copied the tutorial directory from ``/opt/intel/orb_lze/samples/`` to a user-writable directory.
 
 #. Prepare the environment:
@@ -121,7 +121,7 @@ Create orb_extract object:
 .. note::
 
    The macro ORBLZE_KERNEL_PATH_STRING is defined as *"/usr/lib/x86_64-linux-gnu"* in the header file ``config.h``.
-   This header file is installed by the |deb_pack| ``liborb-lze-dev`` at */usr/include/config.h*.
+   This header file is installed by the Deb package ``liborb-lze-dev`` at */usr/include/config.h*.
 
 Call the extract function to output the keypoints and descriptors for all camera input images.
 Depending on the number of camera inputs, the orb-extractor feature library returns the number of the keypoints vector and the descriptors vector.

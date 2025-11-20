@@ -11,9 +11,9 @@ Do the following to prepare the target system:
 
    .. attention::
 
-      Please review `Canoncial Intellectual property rights policy <https://ubuntu.com/legal/intellectual-property-policy>`_ regarding |Ubuntu|. Note that any redistribution of modified versions of |Ubuntu| must be approved, certified or provided by Canonical if you are going to associate it with the Trademarks. Otherwise you must remove and replace the Trademarks and will need to recompile the source code to create your own binaries.
+      Please review `Canoncial Intellectual property rights policy <https://ubuntu.com/legal/intellectual-property-policy>`_ regarding Canonical Ubuntu. Note that any redistribution of modified versions of Canonical Ubuntu must be approved, certified or provided by Canonical if you are going to associate it with the Trademarks. Otherwise you must remove and replace the Trademarks and will need to recompile the source code to create your own binaries.
 
-#. To achieve real-time determinism and utilize the available |Intel| silicon features, you need to configure certain BIOS settings. Reboot the target system and access the BIOS(press the :kbd:`delete` or :kbd:`F2` keys while booting to open the BIOS menu).
+#. To achieve real-time determinism and utilize the available Intel® silicon features, you need to configure certain BIOS settings. Reboot the target system and access the BIOS(press the :kbd:`delete` or :kbd:`F2` keys while booting to open the BIOS menu).
 
 #. Select **Restore Defaults** or **Load Defaults**, and then select **Save Changes and Reset**. As the target system boots, access the BIOS again.
 
@@ -32,7 +32,7 @@ Set locale
 Set Date and Time
 ------------------
 
-Use the ``date`` command to display the current date and time. If the |Linux| OS time and date is incorrect, set it to current date and time:
+Use the ``date`` command to display the current date and time. If the Linux OS time and date is incorrect, set it to current date and time:
 
 .. code-block:: bash
 
@@ -43,4 +43,3 @@ Setup Sources
 --------------
 
 .. include:: Apt-Repositories.rst
-

@@ -3,16 +3,16 @@ Target System
 ------------------------------------------
 
 
--  |intel| processors:
+-  Intel® processors:
 
-   -  |atom| processor with |intel| SSE4.1 support
-   -  |intel| Pentium® processor N4200/5, N3350/5, N3450/5 with |intel| HD Graphics
-   -  |core| Ultra processors (Series 2) *(partial support - see note below)*
-   -  |core| Ultra processors (Series 1)
-   -  13th Generation |core| processors with |xe| or |intel| UHD Graphics
-   -  12th Generation |core| processors with |xe| or |intel| UHD Graphics
-   -  11th Generation |core| processors with |xe| or |intel| UHD Graphics
-   -  10th Generation |core| processors with an integrated GPU and |intel| UHD Graphics
+   -  Intel Atom® processor with Intel® SSE4.1 support
+   -  Intel® Pentium® processor N4200/5, N3350/5, N3450/5 with Intel® HD Graphics
+   -  Intel® Core™ Ultra processors (Series 2) *(partial support - see note below)*
+   -  Intel® Core™ Ultra processors (Series 1)
+   -  13th Generation Intel® Core™ processors with Intel® Iris® Xe Integrated Graphics or Intel® UHD Graphics
+   -  12th Generation Intel® Core™ processors with Intel® Iris® Xe Integrated Graphics or Intel® UHD Graphics
+   -  11th Generation Intel® Core™ processors with Intel® Iris® Xe Integrated Graphics or Intel® UHD Graphics
+   -  10th Generation Intel® Core™ processors with an integrated GPU and Intel® UHD Graphics
 
 -  8 GB or more RAM
 -  Free space on hard drive:
@@ -20,12 +20,12 @@ Target System
    -  10 GB for standard install
    -  30 GB for complete install
 
--  |ubuntu_version|
--  |realsense| camera D435i
+-  Canonical Ubuntu 22.04 LTS (Jammy Jellyfish)
+-  Intel® RealSense™ camera D435i
 -  Slamtec* RPLIDAR A3 2D LIDAR (optional)
 
 .. note::
-   | When deploying Robotics AI Suite with ROS2 Humble on Ubuntu 22.04 systems running kernel version 6.8 or lower, GPU/NPU offload functionality for |core| Ultra processors (Series 2) is not fully supported. In these environments, only CPU-based examples should be used.
+   | When deploying Robotics AI Suite with ROS2 Humble on Ubuntu 22.04 systems running kernel version 6.8 or lower, GPU/NPU offload functionality for Intel® Core™ Ultra processors (Series 2) is not fully supported. In these environments, only CPU-based examples should be used.
 
 .. note::
 

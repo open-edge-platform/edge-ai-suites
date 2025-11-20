@@ -164,6 +164,9 @@ services:
       GF_PROVISIONING_DASHBOARDS: /etc/grafana/provisioning/dashboards
       GF_SERVER_PROTOCOL: http
       GF_LOG_LEVEL: ${LOG_LEVEL}
+      GF_AUTH_LOGIN_MAXIMUM_INACTIVE_LIFETIME_DURATION: ${VISUALIZER_GRAFANA_INACTIVE_TIMEOUT}
+      GF_AUTH_LOGIN_MAXIMUM_LIFETIME_DURATION: ${VISUALIZER_GRAFANA_INACTIVE_TIMEOUT}
+      GF_SECURITY_LOGIN_REMEMBER_DAYS: "1"
     networks:
     - timeseries_network
     volumes:
@@ -223,7 +226,7 @@ services:
     ports:
     - ${OPCUA_SERVER_PORT}-30048:4840
     volumes:
-    - ./apps/${SAMPLE_APP}/${SAMPLE_APP}.csv:/app/${SAMPLE_APP}.csv
+    - ./apps/${SAMPLE_APP}/simulation-data:/app/simulation-data
 
   ia-mqtt-publisher:
     build:

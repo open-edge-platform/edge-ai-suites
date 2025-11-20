@@ -2,10 +2,10 @@ Create Your Own Robot Kit
 ==========================
 
 This tutorial guides guides you through creating an autonomous mobile robot capable of
-exploring and mapping an area. It involves adding an |intel| compute system, placing a
-|realsense| camera on top of any robot base, and using the |lp_amr| software.
+exploring and mapping an area. It involves adding an Intel® compute system, placing a
+Intel® RealSense™ camera on top of any robot base, and using the Autonomous Mobile Robot software.
 
-Use the :doc:`robot-keyboard-teleop` |ros| node to validate that the robot kit's hardware
+Use the :doc:`robot-keyboard-teleop` ROS 2 node to validate that the robot kit's hardware
 setup has been done correctly.
 
 
@@ -17,12 +17,12 @@ Hardware Requirements
 
 The robot base should contain:
 
-*  |intel| compute system with |lp_amr| installed
+*  Intel® compute system with Autonomous Mobile Robot installed
 
-*  |realsense| camera
+*  Intel® RealSense™ camera
 
-*  Robot base support (chassis) for the |intel| compute system and the
-   |realsense| camera
+*  Robot base support (chassis) for the Intel® compute system and the
+   Intel® RealSense™ camera
 
 *  Wheels
 
@@ -36,14 +36,14 @@ The robot base should contain:
 Software Requirements
 +++++++++++++++++++++
 
-The robot base should feature a |ros| node with the ability to:
+The robot base should feature a ROS 2 node with the ability to:
 
-*  Publish information from the motor controller firmware into |ros| topics
+*  Publish information from the motor controller firmware into ROS 2 topics
    like wheel odometry.
 
-*  Receive information from other |ros| nodes and transmit this data to the
+*  Receive information from other ROS 2 nodes and transmit this data to the
    motor controller firmware. For example, it should be capable of receiving movement commands from
-   |ros| Navigation 2 stack on the cmd_vel topic.
+   ROS 2 Navigation 2 stack on the cmd_vel topic.
 
 *  Provide robot specific information like the tf tree data with correct tf
    transformations. For example, ``odom`` and ``base_link`` and their
@@ -56,7 +56,7 @@ The robot base should feature a |ros| node with the ability to:
 
 .. note::
 
-   This |ros| node runs on the compute system and retrieving information from the
+   This ROS 2 node runs on the compute system and retrieving information from the
    motor robot's controller via a wired connection, usually a USB connection.
 
 Steps To Create Your Own Robot Kit
@@ -72,32 +72,31 @@ The standard assembly involves the following steps:
 
 #. Mount the motors onto the lower chassis board and then assemble the wheels.
 #. Fix the motor controller on the chassis board and establish connections with the motors.
-#. Attach the |realsense| camera and the SSD drive to the upper chassis board.
-#. Mount the |intel| compute system to the the upper chassis board.
+#. Attach the Intel® RealSense™ camera and the SSD drive to the upper chassis board.
+#. Mount the Intel® compute system to the the upper chassis board.
 #. Connect the two chassis boards.
-#. Establish a connection between the |intel| compute system and both |realsense| camera and motor controller via USB.
-#. Connect both the the |intel| compute system and the motor controller to a power source.
-#. Power the |intel| compute system using a power source.
-#. Turn on the power switch of motor controller.
+#. Establish a connection between the Intel® compute system and both Intel® RealSense™ camera and motor controller via USB.
+#. Connect both the the Intel® compute system and the motor controller to a power source.
+#. Power the Intel® compute system using a power source.
 
 
-Step 2: Integration into |lp_amr|
-+++++++++++++++++++++++++++++++++
+Step 2: Integration into Autonomous Mobile Robot
++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Start the robot base |ros| node on the native system OS or inside a |docker|
+Start the robot base ROS 2 node on the native system OS or inside a Docker
 container.
 To ensure proper functionality, ensure that both the robot base node and the rest of
-the |lp_amr| pipeline are configured with the same ROS_DOMAIN_ID.
+the Autonomous Mobile Robot pipeline are configured with the same ROS_DOMAIN_ID.
 
 .. _create_your_robot_kit_step3:
 
-Step 3: Robot Base Node |ros| Node
+Step 3: Robot Base Node ROS 2 Node
 ++++++++++++++++++++++++++++++++++++
 
 Introduction to Robotic Base Node
 -----------------------------------
 
-The |lp_amr| pipeline assumes that the robot base |ros| node:
+The Autonomous Mobile Robot pipeline assumes that the robot base ROS 2 node:
 
 *  Publishes ``odom`` and ``base_link``
 
@@ -114,7 +113,7 @@ The |lp_amr| pipeline assumes that the robot base |ros| node:
 *  Is subscribed to ``cmd_vel`` which is used by the Navigation 2 package to
    give instructions to the robot like spin in place or move forward
 
-The |lp_amr| provides the following examples with the ``ros-humble-aaeon-ros2-amr-interface`` |deb_pack|:
+The Autonomous Mobile Robot provides the following examples with the ``ros-humble-aaeon-ros2-amr-interface`` Deb package:
 
 * `/opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params_uncalibrated_imu.yaml`
 * `/opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml`
@@ -124,11 +123,11 @@ These samples are for the `AAEON UP Xtreme* i11 Robotic Development Kit <https:/
 Robotic Base Node Deep Dive
 --------------------------------
 
-This section details the commands required to startup the motor controller of an |up_xtreme|.
+This section details the commands required to startup the motor controller of an AAEON UP Xtreme i11 Robotic Development Kit.
 
-To start the node on the |up_xtreme|, you can reference and initiate it as follows:
+To start the node on the AAEON UP Xtreme i11 Robotic Development Kit, you can reference and initiate it as follows:
 
-* Ensure that the ``ros-humble-aaeon-ros2-amr-interface`` |deb_pack| is installed.
+* Ensure that the ``ros-humble-aaeon-ros2-amr-interface`` Deb package is installed.
 
   .. code-block:: bash
 
@@ -148,7 +147,7 @@ To start the node on the |up_xtreme|, you can reference and initiate it as follo
      [1452443.462213] usb 1-9: ch341-uart converter now attached to ttyUSB0
      [1452444.061111] ch341-uart ttyUSB0: ch341-uart converter now disconnected from ttyUSB0
 
-* Ensure the |up_xtreme| node configuration file has the proper USB device configured as value of  ``port_name``.
+* Ensure the AAEON UP Xtreme i11 Robotic Development Kit node configuration file has the proper USB device configured as value of  ``port_name``.
 
   .. code-block:: bash
 
@@ -168,7 +167,7 @@ To start the node on the |up_xtreme|, you can reference and initiate it as follo
 
 You can check the following:
 
--  |ros| topics
+-  ROS 2 topics
 
    .. code-block::
 
@@ -203,23 +202,23 @@ You can check the following:
 
 .. _create_your_robot_kit_step4:
 
-Step 4: Robot Base Node |ros| Navigation Parameter File
+Step 4: Robot Base Node ROS 2 Navigation Parameter File
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Introduction to the |ros| Navigation Parameter File
+Introduction to the ROS 2 Navigation Parameter File
 ----------------------------------------------------------
 
-The |lp_amr| pipeline for AMRs uses the `Navigation 2 package
-<https://navigation.ros.org/>`__ from |ros|. Setting parameters specific to the
+The Autonomous Mobile Robot pipeline for AMRs uses the `Navigation 2 package
+<https://navigation.ros.org/>`__ from ROS 2. Setting parameters specific to the
 robot and the mapping area is essential for the Navigation 2 packages to function properly.
 
 Robot Navigation Parameter File
 -------------------------------
 
-To help understand the options in this parameter file, see |ros| `Navigation 2
+To help understand the options in this parameter file, see ROS 2 `Navigation 2
 Packages Configuration Guide <https://navigation.ros.org/configuration/index.html>`__:
 
-With numerous parameters to configure, |intel| recommends referring to
+With numerous parameters to configure, Intel® recommends referring to
 Navigation 2 documentation for a comprehensive understanding of the setup.
 
 The most important parameters to set are:
@@ -269,9 +268,9 @@ Step 5: Navigation Full Stack
 Introduction to the Navigation Full Stack
 -------------------------------------------
 
-The |lp_amr| navigation full stack contains numerous components designed to assist the robot in navigation, obstacle avoidance, and mapping an area. For example:
+The Autonomous Mobile Robot navigation full stack contains numerous components designed to assist the robot in navigation, obstacle avoidance, and mapping an area. For example:
 
--  |realsense| Camera Node: receives input from the camera and publishes topics used by
+-  Intel® RealSense™ Camera Node: receives input from the camera and publishes topics used by
    the vSLAM algorithm.
 
 -  Robot Base Node: receives input from the motor controller (for example, from
@@ -294,19 +293,19 @@ The |lp_amr| navigation full stack contains numerous components designed to assi
    Robots paper <https://arxiv.org/abs/2102.03228>`__.
 
 -  FastMapping: It is an algorithm to create a 3D voxelmap of a robot's surroundings,
-   based on |realsense| camera's depth sensor data and provide the 2D map needed by the Navigation 2 stack.
+   based on Intel® RealSense™ camera's depth sensor data and provide the 2D map needed by the Navigation 2 stack.
 
 -  ``nav2``: the navigation package.
 
 -  Wandering Application: demonstrates the integration of middleware, algorithms, and the
-   |ros| navigation stack to navigate a robot within an unknown environment without hitting
+   ROS 2 navigation stack to navigate a robot within an unknown environment without hitting
    obstacles.
 
 
 Create a Parameter File for Your Robotic Kit
 ----------------------------------------------
 
-The :doc:`../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial` tutorial provides a parameter file for the |up_xtreme|, that file can be used as a template to create a parameter file for your robotic kit.
+The :doc:`../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial` tutorial provides a parameter file for the AAEON UP Xtreme i11 Robotic Development Kit, that file can be used as a template to create a parameter file for your robotic kit.
 
 * First install the tutorial.
 
@@ -315,7 +314,7 @@ The :doc:`../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aa
    sudo apt update
    sudo apt install ros-humble-wandering-aaeon-tutorial
 
-* Use the |up_xtreme| navigation parameter file as a template, make a copy of it, and adapt the content to match your robot.
+* Use the AAEON UP Xtreme i11 Robotic Development Kit navigation parameter file as a template, make a copy of it, and adapt the content to match your robot.
 
 .. code-block::
 
@@ -330,7 +329,7 @@ The :doc:`../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aa
 
 #. Replace the ``aaeon-amr-interface`` target with the generic robot node you created in ":ref:`create_your_robot_kit_step3`".
 
-#. In the |ros| command file, change the Navigation 2 target so that
+#. In the ROS 2 command file, change the Navigation 2 target so that
    ``params_file`` targets the parameter file you created in ":ref:`create_your_robot_kit_step4`".
 
    from: ``params_file:=/opt/ros/humble/share/ros2_amr_interface/params/<your_robot>_node_params.yaml``
@@ -339,14 +338,14 @@ The :doc:`../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aa
 
 #. In the ``ros-base-camera-tf`` target, change the transform values from
    ``static_transform_publisher``. The values for x, y, and z depend on where
-   your |realsense| camera is set.
+   your Intel® RealSense™ camera is set.
 
 Start Mapping an Area with Your Robot
 ----------------------------------------
 
 #. Place the robot in an area with multiple objects around it.
 
-#. Check that |p_amr| environment is set:
+#. Check that Autonomous Mobile Robot environment is set:
 
    Run the following script to create a map by using the :doc:`../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial`.
 

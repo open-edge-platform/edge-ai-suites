@@ -44,6 +44,11 @@ find_package(rvc_messages REQUIRED)
 find_package(rvc_vision_messages REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_eigen REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_sensor_msgs REQUIRED)
 
 # find non-ROS dependencies
 find_package(PCL REQUIRED)
@@ -66,6 +71,9 @@ ament_target_dependencies(${PROJECT_NAME_PLUGIN}
     pcl_conversions
     message_filters
     tf2_eigen
+    tf2_ros
+    tf2_geometry_msgs 
+    tf2_sensor_msgs 
 )
 target_include_directories(${PROJECT_NAME_PLUGIN} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

@@ -235,7 +235,7 @@ void PostProcess::DoPostProcess(const float *rpn_box_output,
     // Calculate number of boxes in the feature map
     const unsigned int length = num_anchor_x_inds_ * num_cls_ * num_anchor_r_inds_ * num_anchor_y_inds_;
     // Decode the output of the RegionProposalNetwork and store all the boxes with score above the threshold
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     queue.submit([&](auto &h) {
         auto float_min_ct18 = float_min_;
         auto float_max_ct19 = float_max_;

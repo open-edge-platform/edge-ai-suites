@@ -1,11 +1,11 @@
 .. object-detection-tutorial:
 
-|openvino| Object Detection Tutorial
+OpenVINO™ Object Detection Tutorial
 =======================================
 
-This tutorial is an example for understanding the utilization of the |ros| node with |openvino| toolkit.
+This tutorial is an example for understanding the utilization of the ROS 2 node with OpenVINO™ toolkit.
 It outlines the steps for installing the node and executing the object detection model.
-Object detection is performed using the |openvino| toolkit. The node is configured to accept dynamically
+Object detection is performed using the OpenVINO™ toolkit. The node is configured to accept dynamically
 device parameters (NPU, GPU, or CPU) to specify which inference engine should be used.
 
 
@@ -18,7 +18,7 @@ Prerequisites
 
 Complete the :doc:`../../../../gsg_robot/index` before continuing.
 
-Install |openvino| toolkit tutorial packages
+Install OpenVINO™ toolkit tutorial packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash

@@ -6,12 +6,12 @@ schemaVersion: "0.1"
 $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 
 name: sp-app
-version: 1.2.0
+version: 1.3.0
 description: "Smart Parking Sample Application"
 
 helmRegistry: "docker-hub"
 chartName: "intel/smart-parking"
-chartVersion: "1.2.0"
+chartVersion: "1.3.0-rc1"
 
 profiles:
   - name: "default"

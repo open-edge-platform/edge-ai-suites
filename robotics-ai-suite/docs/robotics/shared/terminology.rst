@@ -49,8 +49,8 @@
      -  Deterministic Road Map
    * -  DX
      -  Developer Experience
-   * -  |p_amr|
-     -  |lp_amr|
+   * -  Autonomous Mobile Robot
+     -  Autonomous Mobile Robot
    * -  EOF
      -  End-Of-File
    * -  FAST
