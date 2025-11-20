@@ -135,7 +135,7 @@ void NMS::ParallelNMS(const size_t host_filter_count, float *dev_sorted_box_for_
     sycl::range<3> blocks(DIVUP(host_filter_count, num_threads_), DIVUP(host_filter_count, num_threads_), 1);
     sycl::range<3> threads(num_threads_, 1, 1);
     unsigned long long *dev_mask;
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     dev_mask = sycl::malloc_device<unsigned long long>(host_filter_count * col_blocks, queue);
     queue.submit([&](auto &h) {
         sycl::accessor<float, 1, sycl::access::mode::read_write, sycl::access::target::local> block_boxes_acc_ct1(sycl::range<1>(256), h);
@@ -171,6 +171,6 @@ void NMS::ParallelNMS(const size_t host_filter_count, float *dev_sorted_box_for_
     }
 
     // release the dev_mask, as it was only of temporary use
-    sycl::free(dev_mask, dev_mgr_->getQue());
+    sycl::free(dev_mask, queue);
 }
 }  // namespace pointpillars
