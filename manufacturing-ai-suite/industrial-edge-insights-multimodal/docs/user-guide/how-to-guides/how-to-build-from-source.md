@@ -13,8 +13,7 @@ before proceeding with the below steps.
     ```bash
     git clone https://github.com/open-edge-platform/edge-ai-libraries.git
     cd edge-ai-libraries/microservices/dlstreamer-pipeline-server/docker
-    git checkout release-2025.2.0
-    
+
     # build
     docker compose build
     ```
@@ -24,7 +23,6 @@ before proceeding with the below steps.
     ```bash
     git clone https://github.com/open-edge-platform/edge-ai-libraries.git
     cd edge-ai-libraries/microservices/time-series-analytics/docker
-    git checkout release-2025.2.0
 
     # build
     docker compose build

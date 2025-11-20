@@ -25,20 +25,20 @@ Choose **one** of the following approaches to get the Helm charts:
 
 1. Download Helm chart:
    ```bash
-   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-rc1
+   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-weekly
    ```
 
 2. Extract the Helm chart:
    ```bash
-   tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-rc1.tgz
+   tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-weekly.tgz
    cd wind-turbine-anomaly-detection-sample-app
    ```
 
-            `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-rc1`
+            `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-weekly`
 
 **Option B: Generate Helm charts**
 
-            `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-rc1.tgz`
+            `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-weekly.tgz`
 
 2. Generate the charts:
    ```bash
@@ -56,12 +56,12 @@ Choose **one** of the following approaches to get the Helm charts:
 
 1. Download Helm chart:
    ```bash
-   helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 1.0.0-rc1
+   helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 1.0.0-weekly
    ```
 
 2. Extract the Helm chart:
    ```bash
-   tar -xvzf weld-anomaly-detection-sample-app-1.0.0-rc1.tgz
+   tar -xvzf weld-anomaly-detection-sample-app-1.0.0-weekly.tgz
    cd weld-anomaly-detection-sample-app
    ```
 
