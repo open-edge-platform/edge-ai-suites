@@ -26,6 +26,7 @@ const TranscriptsTab: React.FC = () => {
     const run = async () => {
       const stream = streamTranscript(audioPath, {
         signal: aborter.signal,
+        tokenDelayMs: 120,
         onSessionId: (id) => {
           console.log('Dispatching setSessionId:', id);
           dispatch(setSessionId(id));
