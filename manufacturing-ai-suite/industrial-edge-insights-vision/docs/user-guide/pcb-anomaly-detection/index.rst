@@ -90,7 +90,6 @@ This sample application offers the following features:
    how-to-run-store-frames-in-s3
    how-to-view-telemetry-data
    how-to-use-gpu-for-inference
-   how-to-use-cpu-for-inference
    how-to-start-mqtt-publisher
    how-to-benchmark
    api-reference

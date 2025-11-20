@@ -7,12 +7,15 @@ from dto.transcription_dto import TranscriptionRequest
 from dto.summarizer_dto import SummaryRequest
 from pipeline import Pipeline
 import json, os
+import subprocess, re
 from fastapi.responses import StreamingResponse
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.platform_info import get_platform_and_model_info
 from dto.project_settings import ProjectSettings
 from monitoring.monitor import start_monitoring, stop_monitoring, get_metrics
+from dto.audiosource import AudioSource
+from components.ffmpeg import audio_preprocessing
 from utils.audio_util import save_audio_file
 from utils.locks import audio_pipeline_lock
 import logging
@@ -60,18 +63,16 @@ def transcribe_audio(
     request: TranscriptionRequest,
     x_session_id: Optional[str] = Header(None)
 ):
-    
     if audio_pipeline_lock.locked():
         raise HTTPException(status_code=429, detail="Session Active, Try Later")
-    
+   
     pipeline = Pipeline(x_session_id)
-    audio_path = request.audio_filename
-    
+   
     def stream_transcription():
-        for chunk_data in pipeline.run_transcription(audio_path):
+        for chunk_data in pipeline.run_transcription(request):
             yield json.dumps(chunk_data) + "\n"
-                
-
+               
+ 
     response = StreamingResponse(stream_transcription(), media_type="application/json")
     response.headers["X-Session-ID"] = pipeline.session_id
     return response
@@ -95,6 +96,49 @@ async def summarize_audio(request: SummaryRequest):
             await asyncio.sleep(0)
 
     return StreamingResponse(event_stream(), media_type="application/json")
+
+@router.post("/mindmap")
+async def generate_mindmap(request: SummaryRequest):
+    if audio_pipeline_lock.locked():
+        raise HTTPException(status_code=429, detail="Session Active, Try Later")
+    pipeline = Pipeline(request.session_id)
+    try:
+        mindmap_text = pipeline.run_mindmap()
+        logger.info("Mindmap generated successfully.")
+        return {"mindmap": mindmap_text, "error": ""} 
+    except HTTPException as http_exc:
+        raise http_exc      
+    except Exception as e:
+        logger.exception(f"Error during mindmap generation: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Mindmap generation failed: {e}"
+        )
+
+@router.get("/devices")
+def list_audio_devices():
+    result = subprocess.run(
+        ["ffmpeg", "-list_devices", "true", "-f", "dshow", "-i", "dummy"],
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace"
+    )
+    audio_devices = re.findall(r'"(.*?)"\s*\(audio\)', result.stderr)
+    formatted_devices = [f"audio={d}" for d in audio_devices]
+    return {"devices": formatted_devices}
+ 
+ 
+@router.post("/stop-mic")
+def stop_microphone(session_id: str):
+    process = audio_preprocessing.FFMPEG_PROCESSES.pop(session_id, None)
+    if process:
+        logger.info(f"Stopping microphone recording for session {session_id}...")
+        process.terminate()
+        process.wait(timeout=5)
+        return {"status": "stopped", "message": f"Microphone for session {session_id} stopped successfully."}
+    else:
+        return {"status": "idle", "message": f"No active microphone session found for {session_id}."}
 
 @router.get("/performance-metrics")
 def get_summary_metrics(session_id: Optional[str] = Header(None, alias="session_id")):

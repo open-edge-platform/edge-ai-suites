@@ -2,13 +2,31 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tests for UI main entry point launching Gradio app."""
 import runpy
+import sys
+import types
 from unittest.mock import patch, MagicMock
 
+
+def _ensure_interface_top_level():
+    """Create a synthetic top-level 'interface' package pointing to ui.interface.
+
+    ui/main.py does: from interface.interface import create_ui
+    In repo test execution current sys.path may not include ui/ as a top-level, so
+    we alias it here purely for tests without changing source.
+    """
+    if 'interface' not in sys.modules:
+        pkg = types.ModuleType('interface')
+        sys.modules['interface'] = pkg
+        # import actual module and expose under interface.interface
+        import ui.interface.interface as real_iface
+        sys.modules['interface.interface'] = real_iface
+        setattr(pkg, 'interface', real_iface)
 
 def test_ui_main_import_only(monkeypatch):
     """Ensure importing ui.main does not execute launch (since __name__ != '__main__')."""
     # Patch heavy functions so even if imported side-effects minimize
     monkeypatch = monkeypatch  # explicit
+    _ensure_interface_top_level()
     monkeypatch.setattr("ui.main.initialize_app", lambda: None)
     monkeypatch.setattr("ui.main.create_ui", lambda: MagicMock())
     module = runpy.run_module("ui.main")
@@ -30,6 +48,7 @@ def test_ui_main_dunder_main(monkeypatch):
     # symbols point again at the original (unpatched) functions. Patching at the
     # source module (ui.interface.interface) ensures the imported symbols are the
     # patched versions during the re-execution.
+    _ensure_interface_top_level()
     monkeypatch.setattr("ui.interface.interface.initialize_app", lambda: calls.setdefault("initialized", True))
     monkeypatch.setattr("ui.interface.interface.create_ui", lambda: fake_ui)
     monkeypatch.setattr("ui.interface.interface.stop_event_updates", lambda: calls.setdefault("stopped", True))

@@ -93,7 +93,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 
 ``` sh
 #!/bin/bash
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_cpu -X POST -H 'Content-Type: application/json' -d '
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/new_video_1.mp4",
@@ -115,7 +115,7 @@ curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_
     }
 }'
 
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_cpu -X POST -H 'Content-Type: application/json' -d '
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/new_video_2.mp4",
@@ -137,7 +137,7 @@ curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_
     }
 }'
 
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_cpu -X POST -H 'Content-Type: application/json' -d '
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/new_video_3.mp4",
@@ -159,7 +159,7 @@ curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_
     }
 }'
 
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_cpu -X POST -H 'Content-Type: application/json' -d '
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/new_video_4.mp4",

@@ -37,7 +37,7 @@ Virtual environment setup
    .. code-block:: bash
 
       $ sudo apt install python3-venv
-      $ python3 -m venv venv-act
+      $ python3 -m venv act
 
 2. Activate the virtual environment with the following command:
 

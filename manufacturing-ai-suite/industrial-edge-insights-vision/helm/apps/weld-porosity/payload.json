@@ -19,5 +19,26 @@
                 }
             }
         }
+    },
+    {
+        "pipeline": "weld_porosity_classification_gpu",
+        "payload": {
+            "source": {
+                "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
+                "type": "uri"
+            },
+            "destination": {
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "weld"
+                }
+            },
+            "parameters": {
+                "classification-properties": {
+                    "model": "/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml",
+                    "device": "GPU"
+                }
+            }
+        }
     }
 ]

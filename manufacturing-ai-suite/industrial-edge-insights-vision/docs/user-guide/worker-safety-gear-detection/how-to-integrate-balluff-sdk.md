@@ -249,4 +249,5 @@ Replace `<HOST_IP>` with the IP address configured in your `.env` file.
 
 ## Troubleshooting
 
-- If you encounter issues with the camera, try installing the **Balluff SDK** on the host and follow the steps outlined in the [Balluff SDK Installation Guide](../how-to-install-balluff-sdk-on-host.md) to properly configure the camera.
+- For initial configuration and advanced configuration of the Balluff camera, please use the company-provided visualization tool **ImpactAcquire**, which is part of the **Balluff SDK**.
+- Instructions to install the **Balluff SDK** on the host can be found in the [Balluff SDK Installation Guide](./how-to-install-balluff-sdk-on-host.md).

@@ -261,7 +261,7 @@ Follow the below commands to download ``Phi-4-mini-instruct-int8-ov`` models:
 
    $ sudo apt install git-lfs
    $ mkdir ~/ov_models && cd ~/ov_models
-   $ GIT_LFS_SKIP_SMUDGE=1 git clone https://hf-mirror.com/OpenVINO/Phi-4-mini-instruct-int8-ov
+   $ GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/OpenVINO/Phi-4-mini-instruct-int8-ov
    $ git lfs pull
 
 Set the environment variable:
@@ -333,7 +333,11 @@ The LLM Robotic demo includes the real-time component, non-real-time ROS2 compon
 
 #. Launch the JAKA robot arm ROS2 node:
 
-   .. important:: Execute the following commands as privileged user (``root``).
+   .. important:: Execute the following commands as privileged user (``root``). Open a root terminal using the following command:
+
+      .. code-block:: bash
+
+         $ sudo -i
 
    .. code-block:: bash
 

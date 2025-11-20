@@ -14,6 +14,7 @@ The main features are as follows:
    :hidden:
 
    system-requirements
+   how-it-works
    get-started
    release-notes
 
