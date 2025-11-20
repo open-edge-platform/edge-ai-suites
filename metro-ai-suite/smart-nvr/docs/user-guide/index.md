@@ -1,6 +1,9 @@
 # Smart NVR Overview
 
-Provides GenAI-powered vision analytics to transform a traditional NVR into a Smart NVR, unlocking advanced insights and automation at the edge.
+The sample application showcases the use of GenAI-powered vision analytics to
+transform a traditional NVR into a Smart NVR, unlocking advanced insights and
+automation at the edge. It is designed to help developers understand the architecture, setup, and
+customization of the sample application.
 
 ## Overview
 
@@ -60,4 +63,19 @@ The diagram shows the key components of the Smart NVR application. The descripti
 - [Get Started](./get-started.md): Follow step-by-step instructions to set up the application.
 - [How to build from source](./how-to-build-from-source.md): How to build and deploy the application using Docker Compose.
 - [How to Use the Application](./how-to-use-application.md): Explore the application's features and verify its functionality.
-- [Support and Troubleshooting](./troubleshooting.md): Find solutions to common issues and troubleshooting steps.
+- [Support and Troubleshooting](./Troubleshooting.md): Find solutions to common issues and troubleshooting steps.
+
+
+:::{toctree}
+:hidden:
+
+system-requirements
+get-started
+how-to-build-from-source
+how-to-use-application
+deploy-with-helm
+scenescape-integration
+api-reference
+release-notes
+troubleshooting
+:::
