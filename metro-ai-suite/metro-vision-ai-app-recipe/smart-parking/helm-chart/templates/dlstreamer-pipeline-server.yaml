@@ -70,10 +70,17 @@ spec:
         - |
           mkdir -p /tmp/models
           cd /tmp/
-          curl -L -o /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/v1.0.0.tar.gz && \          
+          {{- if eq $.Values.gitSource.type "tag" }}
+          curl -L -o /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/{{ $.Values.gitSource.ref }}.tar.gz && \
           tar -xzf /tmp/main.tar.gz -C /tmp && \
-          cp -r /tmp/edge-ai-suites-1.0.0/metro-ai-suite/smart-parking/dlsps/models/* /tmp/models/ && \
-          rm -rf /tmp/main.tar.gz /tmp/edge-ai-suites-1.0.0
+          EXTRACTED_DIR="edge-ai-suites-{{ $.Values.gitSource.ref | trimPrefix "v" }}" && \
+          {{- else }}
+          curl -L -o /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/heads/{{ $.Values.gitSource.ref }}.tar.gz && \
+          tar -xzf /tmp/main.tar.gz -C /tmp && \
+          EXTRACTED_DIR="edge-ai-suites-{{ $.Values.gitSource.ref | replace "/" "-" }}" && \
+          {{- end }}
+          cp -r /tmp/${EXTRACTED_DIR}/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src/dlstreamer-pipeline-server/models/* /tmp/models/ && \
+          rm -rf /tmp/main.tar.gz /tmp/${EXTRACTED_DIR}
           cd /home/dlstreamer/dlstreamer/samples
           chmod +x download_public_models.sh
           export MODELS_PATH=/tmp/models/
@@ -96,8 +103,8 @@ spec:
         securityContext:
           privileged: true  # Required for direct access to /dev
         {{- end }}
-      {{- if $.Values.gpu.enabled }}
-          resources:
+        {{- if $.Values.gpu.enabled }}
+        resources:
           limits:
             {{ $.Values.gpu.type }}: {{ $.Values.gpu.count }}
         {{- end }}

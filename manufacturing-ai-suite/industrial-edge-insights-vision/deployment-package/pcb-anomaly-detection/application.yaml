@@ -6,12 +6,12 @@ schemaVersion: "0.1"
 $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 
 name: pcb-app
-version: 1.0.0
+version: 1.1.0
 description: "PCB Anomaly Detection Sample Application"
 
 helmRegistry: "docker-hub"
 chartName: "intel/pcb-anomaly-detection"
-chartVersion: "1.0.0"
+chartVersion: "1.1.0-rc1"
 
 profiles:
   - name: "default"

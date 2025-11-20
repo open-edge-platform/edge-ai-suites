@@ -1,0 +1,38 @@
+image:
+  repository: ghcr.io/blakeblackshear/frigate
+  tag: 0.15.1
+  pullPolicy: IfNotPresent
+
+env:
+  FRIGATE_MQTT_USER: ""
+  FRIGATE_MQTT_PASSWORD: ""
+  OPENAI_BASE_URL: ""
+  OPENAI_API_KEY: "your_openai_api_key"
+
+persistence:
+  enabled: true
+  videos:
+    enabled: true
+    mountPath: /videos
+
+# Service configuration
+service:
+  # Name of the Kubernetes Service resource
+  name: frigate
+  # Kubernetes Service type. Common values: ClusterIP, NodePort, LoadBalancer
+  type: ClusterIP
+
+# Security context (set runAsUser/group to non-root; enable privileged only if GPU/USB needs it)
+securityContext:
+  enabled: true
+  runAsUser: 0
+  runAsGroup: 0
+  fsGroup: 0
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+
+# Separate init container security override (may need root for ownership fixes). Set to 0/0 only if required.
+initSecurityContext:
+  runAsUser: 0
+  runAsGroup: 0
+  fsGroup: 0

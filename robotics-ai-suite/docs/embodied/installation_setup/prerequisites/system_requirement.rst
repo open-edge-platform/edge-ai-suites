@@ -44,7 +44,7 @@ This section outlines the system requirements for the Embodied Intelligence SDK,
 | **Component**                 | **Specifications**                                            |
 +===============================+===============================================================+
 | **Operating System**          | The Embodied Intelligence SDK runs on **Ubuntu distribution   |
-|                               | of the |Linux| OS  version 22.04 LTS**, a long-term support   |
+|                               | of the Linux OS  version 22.04 LTS**, a long-term support     |
 |                               | (LTS) version  optimized for stability, security, and         |
 |                               | performance in industrial and AI-driven applications.         |
 +-------------------------------+---------------------------------------------------------------+
@@ -52,4 +52,3 @@ This section outlines the system requirements for the Embodied Intelligence SDK,
 |                               | 6.12.8 with Real-Time Kernel (RT)** capability for optimized  |
 |                               | performance in time-sensitive applications.                   |
 +-------------------------------+---------------------------------------------------------------+
-

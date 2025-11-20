@@ -1,12 +1,10 @@
 # How to use GPU for inference
 
 ## Pre-requisites
-
 In order to benefit from hardware acceleration, pipelines can be constructed in a manner that different stages such as decoding, inference etc., can make use of these devices.
 For containerized applications built using the DL Streamer Pipeline Server, first we need to provide GPU device(s) access to the container user.
 
 ### Provide GPU access to the container
-
 This can be done by making the following changes to the docker compose file.
 
 ```yaml
@@ -39,27 +37,10 @@ DL Streamer inference elements also provides property such as `device=GPU` and `
 
 > Note - This sample application already provides a default `docker-compose.yml` file that includes the necessary GPU access to the containers.
 
-The pipeline `pcb_anomaly_detection_gpu` in [pipeline-server-config](../../configs/pipeline-server-config.json) contains GPU specific elements and uses GPU backend for inferencing. We will now start the pipeline with a curl request.
+The pipeline `pcb_anomaly_detection_gpu` contains GPU specific elements and uses GPU backend for inferencing. We can start the pipeline as follows:
 
 ```sh
-curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_gpu -X POST -H 'Content-Type: application/json' -d '{
-    "source": {
-        "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
-        "type": "uri"
-    },
-    "destination": {
-        "metadata": {
-            "type": "file",
-            "path": "/tmp/results.jsonl",
-            "format": "json-lines"
-        }
-    },
-    "parameters": {
-        "classification-properties": {
-            "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml"
-        }
-    }
-}'
+./sample_start.sh -p pcb_anomaly_detection_gpu
 ```
 
-We should see the metadata results in `/tmp/results.jsonl` file.
+Go to grafana as explained in [get-started](./get-started.md) to view the dashboard.

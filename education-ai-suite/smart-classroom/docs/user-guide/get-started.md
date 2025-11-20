@@ -27,26 +27,26 @@ To install dependencies, do the following:
 
 It’s recommended to create a **dedicated Python virtual environment** for the base dependencies.
 
+
 ```bash
 python -m venv smartclassroom
 smartclassroom\Scripts\activate
 
-# Make sure you are using Python 3.12.x before running pip.
-python.exe -m pip install --upgrade pip
-pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
+# Use Python 3.12.x before running pip.
 cd smart-classroom
+python.exe -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
-pip install py-cpuinfo
 ```
 
 
 **d. [Optional] Create Python Venv for Ipex Based Summarizer**  
 If you plan to use IPEX, create a separate virtual environment.
 
+
 ```bash
 python -m venv smartclassroom_ipex
 smartclassroom_ipex\Scripts\activate
-
+# Use Python 3.12.x before running pip.
 python.exe -m pip install --upgrade pip
 cd smart-classroom
 pip install --upgrade -r requirements.txt
@@ -161,6 +161,7 @@ If you changed the port, adjust the URL accordingly.
 - If you encounter the error “Port for tensor name cache_position was not found.” in the backend, it indicates the models were not configured as per the instructions in the README. To fix the issue, run:
 
   ```bash
+  # Use Python 3.12.x before running pip.
   pip install --upgrade -r requirements.txt
   ```
 
@@ -172,3 +173,13 @@ If you changed the port, adjust the URL accordingly.
   ```
   
   Delete the models folder from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
+
+## Uninstall the Application
+
+To uninstall the application, follow these steps:
+
+1. **Delete the Python virtual environment folder:**
+   Navigate to the directory and remove *education-ai-suite/smartclassroom*
+2. **Remove the models directory:**
+   Remove the models folder located under *education-ai-suite/smart-classroom*.
+

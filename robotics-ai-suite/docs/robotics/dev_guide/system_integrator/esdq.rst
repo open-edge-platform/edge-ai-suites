@@ -1,30 +1,30 @@
 .. esdq:
 
-|l_esdq| (|esdq|) for |p_amr|
-======================================================================================
+Intel® Edge Software Device Qualification (Intel® Edge Software Device Qualification (Intel® ESDQ)) for Autonomous Mobile Robot
+=================================================================================================================================
 
 
 Overview
 --------
 
 
-|l_esdq| (|esdq|) for |p_amr| provides customers with the capability to run an
-|Intel_Corporation|-provided test suite at the target system, with the goal of enabling
-partners to determine their platform's compatibility with the |p_amr|.
+Intel® Edge Software Device Qualification (Intel® Edge Software Device Qualification (Intel® ESDQ)) for Autonomous Mobile Robot provides customers with the capability to run an
+Intel-provided test suite at the target system, with the goal of enabling
+partners to determine their platform's compatibility with the Autonomous Mobile Robot.
 
-The target of this self certification suite is the |p_amr| compute systems.
+The target of this self certification suite is the Autonomous Mobile Robot compute systems.
 These platforms are the brain of the Robot Kit. They are responsible to get
 input from sensors, analyze them, and give instructions to the motors and wheels
-to move the |p_amr|.
+to move the Autonomous Mobile Robot.
 
 .. _esdq-how-it-works:
 
 How It Works
 ------------
 
-The |p_amr| Test Modules interact with the |esdq| Command Line Interface (CLI) through a common
-test module interface (TMI) layer which is part of the |esdq| binary.
-|esdq| generates a complete test report in HTML format, along with detailed
+The Autonomous Mobile Robot Test Modules interact with the Intel® Edge Software Device Qualification (Intel® ESDQ) Command Line Interface (CLI) through a common
+test module interface (TMI) layer which is part of the Intel® Edge Software Device Qualification (Intel® ESDQ) binary.
+Intel® Edge Software Device Qualification (Intel® ESDQ) generates a complete test report in HTML format, along with detailed
 logs packaged as one zip file, which you can manually choose to email to:
 edge.software.device.qualification@intel.com.
 More detailed information is available at `Intel® Edge Software Device Qualification (Intel® ESDQ) Overview
@@ -36,146 +36,146 @@ More detailed information is available at `Intel® Edge Software Device Qualific
    Each test and its pass/fail criteria is described below.
    To jump to the installation process, go to :ref:`esdq-install`.
 
-|esdq| for |p_amr| contains the following test modules.
+Intel® Edge Software Device Qualification (Intel® ESDQ) for Autonomous Mobile Robot contains the following test modules.
 
-+-------------------------------------------------------------------------------------------------+
-| |realsense| Camera                                                                              |
-|    This module verifies the capabilities of the |realsense| technology on the target platform.  |
-|    For more information, go to the `Intel® RealSense™ website                                   |
-|    <https://www.intelrealsense.com/>`__.                                                        |
-|                                                                                                 |
-|    The tests within this module verify that the following features are installed properly on    |
-|    the target platform and that |p_amr| and |realsense| camera are functioning properly.        |
-|                                                                                                 |
-|    The tests are considered PASS if:                                                            |
-|                                                                                                 |
-|      -  The |realsense| SDK 2.0 libraries are installed on the target system.                   |
-|                                                                                                 |
-|      -  A simple C++ file can be compiled using the g++ compiler and the ``-lrealsense2``       |
-|         compilation flag.                                                                       |
-|                                                                                                 |
-|      -  |realsense| camera topics are listed and published.                                     |
-|                                                                                                 |
-|      -  The number of FPS (Frames Per Second) are as expected.                                  |
-+-------------------------------------------------------------------------------------------------+
-| |intel| |vtune| Profiler                                                                        |
-|    This module runs the |intel| |vtune| Profiler on the target system. For more information,    |
-|    go to the `Intel® VTune™ Profiler website                                                    |
-|    <https://www.intel.com/content/www/us/en/developer/tools/oneapi/vtune-profiler.html>`__.     |
-|                                                                                                 |
-|    The test is considered PASS if:                                                              |
-|                                                                                                 |
-|      -  |vtune| Profiler runs without errors.                                                   |
-|                                                                                                 |
-|      -  |vtune| Profiler collects Platform information.                                         |
-+-------------------------------------------------------------------------------------------------+
-| rviz2 and FastMapping                                                                           |
-|   This module runs the FastMapping application (the version of octomap optimized for |intel|    |
-|   platforms) on the target system and uses rviz2 to verify that it works as expected.           |
-|   For more information, go to the `rviz wiki <http://wiki.ros.org/rviz>`__.                     |
-|                                                                                                 |
-|   The test is considered PASS if:                                                               |
-|                                                                                                 |
-|     -  FastMapping is able to create a map out of a pre-recorded |ros| bag.                     |
-+-------------------------------------------------------------------------------------------------+
-| |l_oneapi|                                                                                      |
-|    This module verifies some basic capabilities of |l_oneapi| on the target platform.           |
-|    For more information, go to the `Intel® oneAPI Base Toolkit website                          |
-|    <https://software.intel.com/content/www/us/en/develop/tools/oneapi.html#gs.cjvm2h>`__.       |
-|                                                                                                 |
-|    The tests within this module verify that the DPC++ compiler features are functioning         |
-|    properly on the target platform.                                                             |
-|                                                                                                 |
-|    This test is considered PASS if:                                                             |
-|                                                                                                 |
-|      -  A simple C++ file can be compiled using the DPC++ compiled and it runs as expected.     |
-+-------------------------------------------------------------------------------------------------+
-| |openvino| Toolkit                                                                              |
-|    This module verifies two core features of the |openvino| Toolkit:                            |
-|                                                                                                 |
-|      -  |openvino| model optimizer                                                              |
-|                                                                                                 |
-|      -  Object detection using TensorFlow model                                                 |
-|                                                                                                 |
-|    The test is considered PASS if:                                                              |
-|                                                                                                 |
-|      -  The |openvino| model optimizer is capable to transform a TensorFlow model to an         |
-|         Intermediate Representation (IR) of the network, which can be inferred with the         |
-|         Inference Engine.                                                                       |
-+-------------------------------------------------------------------------------------------------+
-| |openvino| Query for inferencing devices                                                        |
-|    This module executes the                                                                     |
-|    `Hello Query Device                                                                          |
-|    <https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html>`__   |
-|    C++ sample application of the |openvino| toolkit. This application identifies all            |
-|    available devices that can be used for inferencing.                                          |
-|                                                                                                 |
-|    The test is considered PASS if:                                                              |
-|                                                                                                 |
-|      -  The |openvino| Hello Query Device sample application can identify the inferencing       |
-|         devices ``CPU`` and ``GPU``.                                                            |
-|                                                                                                 |
-|      -  On |core| Ultra Processors, in addition the ``NPU`` must be be identified as an         |
-|         inferencing device.                                                                     |
-+-------------------------------------------------------------------------------------------------+
-| |gstreamer| Video                                                                               |
-|    This module verifies if a |gstreamer| Video Pipeline using |gstreamer| Plugins runs on the   |
-|    target system.                                                                               |
-|                                                                                                 |
-|    The test is considered PASS if:                                                              |
-|                                                                                                 |
-|      -  The Video Pipeline was opened on the host without errors.                               |
-+-------------------------------------------------------------------------------------------------+
-| |gstreamer| Audio                                                                               |
-|    This module verifies if a |gstreamer| Audio Pipeline using |gstreamer| Plugins runs on the   |
-|    target system.                                                                               |
-|                                                                                                 |
-|    The test is considered PASS if:                                                              |
-|                                                                                                 |
-|      -  The Audio Pipeline was opened on the host without errors.                               |
-+-------------------------------------------------------------------------------------------------+
-| |gstreamer| Autovideosink Plugin - Display                                                      |
-|    This module verifies if a stream from a camera compatible with libv4l2 can be opened and     |
-|    displayed using |gstreamer|.                                                                 |
-|                                                                                                 |
-|    The test is considered PASS if:                                                              |
-|                                                                                                 |
-|      -  No Error messages are displayed while running the gst-launch command.                   |
-|                                                                                                 |
-|    This test may Fail, or it may be skipped if the target system does not have a Web Camera     |
-|    connected.                                                                                   |
-+-------------------------------------------------------------------------------------------------+
-| ADBSCAN                                                                                         |
-|    This module verifies if the ADBSCAN algorithm works on the target system.                    |
-|                                                                                                 |
-|    The test is considered PASS if:                                                              |
-|                                                                                                 |
-|      -  The ADBSCAN algorithm works on the target system.                                       |
-+-------------------------------------------------------------------------------------------------+
-| Collaborative Visual SLAM                                                                       |
-|    This module verifies if the collaborative visual SLAM algorithm works on the target system.  |
-|                                                                                                 |
-|    The test is considered PASS if:                                                              |
-|                                                                                                 |
-|      -  The collaborative visual SLAM algorithm works on the target system.                     |
-+-------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------=======================--+
+| Intel® RealSense™ Camera                                                                                               |
+|    This module verifies the capabilities of the Intel® RealSense™ technology on the target platform.                   |
+|    For more information, go to the `Intel® RealSense™ website                                                          |
+|    <https://www.intelrealsense.com/>`__.                                                                               |
+|                                                                                                                        |
+|    The tests within this module verify that the following features are installed properly on                           |
+|    the target platform and that Autonomous Mobile Robot and Intel® RealSense™ camera are functioning properly.         |
+|                                                                                                                        |
+|    The tests are considered PASS if:                                                                                   |
+|                                                                                                                        |
+|      -  The Intel® RealSense™ SDK 2.0 libraries are installed on the target system.                                    |
+|                                                                                                                        |
+|      -  A simple C++ file can be compiled using the g++ compiler and the ``-lrealsense2``                              |
+|         compilation flag.                                                                                              |
+|                                                                                                                        |
+|      -  Intel® RealSense™ camera topics are listed and published.                                                      |
+|                                                                                                                        |
+|      -  The number of FPS (Frames Per Second) are as expected.                                                         |
++------------------------------------------------------------------------------------------------------------------------+
+| Intel® VTune™ Profiler                                                                                                 |
+|    This module runs the Intel® VTune™ Profiler on the target system. For more information,                             |
+|    go to the `Intel® VTune™ Profiler website                                                                           |
+|    <https://www.intel.com/content/www/us/en/developer/tools/oneapi/vtune-profiler.html>`__.                            |
+|                                                                                                                        |
+|    The test is considered PASS if:                                                                                     |
+|                                                                                                                        |
+|      -  VTune™ Profiler Profiler runs without errors.                                                                  |
+|                                                                                                                        |
+|      -  VTune™ Profiler Profiler collects Platform information.                                                        |
++------------------------------------------------------------------------------------------------------------------------+
+| rviz2 and FastMapping                                                                                                  |
+|   This module runs the FastMapping application (the version of octomap optimized for Intel®                            |
+|   platforms) on the target system and uses rviz2 to verify that it works as expected.                                  |
+|   For more information, go to the `rviz wiki <http://wiki.ros.org/rviz>`__.                                            |
+|                                                                                                                        |
+|   The test is considered PASS if:                                                                                      |
+|                                                                                                                        |
+|     -  FastMapping is able to create a map out of a pre-recorded ROS 2 bag.                                            |
++------------------------------------------------------------------------------------------------------------------------+
+| Intel® oneAPI Base Toolkit                                                                                             |
+|    This module verifies some basic capabilities of Intel® oneAPI Base Toolkit on the target platform.                  |
+|    For more information, go to the `Intel® oneAPI Base Toolkit website                                                 |
+|    <https://software.intel.com/content/www/us/en/develop/tools/oneapi.html#gs.cjvm2h>`__.                              |
+|                                                                                                                        |
+|    The tests within this module verify that the DPC++ compiler features are functioning                                |
+|    properly on the target platform.                                                                                    |
+|                                                                                                                        |
+|    This test is considered PASS if:                                                                                    |
+|                                                                                                                        |
+|      -  A simple C++ file can be compiled using the DPC++ compiled and it runs as expected.                            |
++------------------------------------------------------------------------------------------------------------------------+
+| OpenVINO™ Toolkit                                                                                                      |
+|    This module verifies two core features of the OpenVINO™ Toolkit:                                                    |
+|                                                                                                                        |
+|      -  OpenVINO™ model optimizer                                                                                      |
+|                                                                                                                        |
+|      -  Object detection using TensorFlow model                                                                        |
+|                                                                                                                        |
+|    The test is considered PASS if:                                                                                     |
+|                                                                                                                        |
+|      -  The OpenVINO™ model optimizer is capable to transform a TensorFlow model to an                                 |
+|         Intermediate Representation (IR) of the network, which can be inferred with the                                |
+|         Inference Engine.                                                                                              |
++------------------------------------------------------------------------------------------------------------------------+
+| OpenVINO™ Query for inferencing devices                                                                                |
+|    This module executes the                                                                                            |
+|    `Hello Query Device                                                                                                 |
+|    <https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html>`__                          |
+|    C++ sample application of the OpenVINO™ toolkit. This application identifies all                                    |
+|    available devices that can be used for inferencing.                                                                 |
+|                                                                                                                        |
+|    The test is considered PASS if:                                                                                     |
+|                                                                                                                        |
+|      -  The OpenVINO™ Hello Query Device sample application can identify the inferencing                               |
+|         devices ``CPU`` and ``GPU``.                                                                                   |
+|                                                                                                                        |
+|      -  On Intel® Core™ Ultra Processors, in addition the ``NPU`` must be be identified as an                          |
+|         inferencing device.                                                                                            |
++------------------------------------------------------------------------------------------------------------------------+
+| GStreamer Video                                                                                                        |
+|    This module verifies if a GStreamer Video Pipeline using GStreamer Plugins runs on the                              |
+|    target system.                                                                                                      |
+|                                                                                                                        |
+|    The test is considered PASS if:                                                                                     |
+|                                                                                                                        |
+|      -  The Video Pipeline was opened on the host without errors.                                                      |
++------------------------------------------------------------------------------------------------------------------------+
+| GStreamer Audio                                                                                                        |
+|    This module verifies if a GStreamer Audio Pipeline using GStreamer Plugins runs on the                              |
+|    target system.                                                                                                      |
+|                                                                                                                        |
+|    The test is considered PASS if:                                                                                     |
+|                                                                                                                        |
+|      -  The Audio Pipeline was opened on the host without errors.                                                      |
++------------------------------------------------------------------------------------------------------------------------+
+| GStreamer Autovideosink Plugin - Display                                                                               |
+|    This module verifies if a stream from a camera compatible with libv4l2 can be opened and                            |
+|    displayed using GStreamer.                                                                                          |
+|                                                                                                                        |
+|    The test is considered PASS if:                                                                                     |
+|                                                                                                                        |
+|      -  No Error messages are displayed while running the gst-launch command.                                          |
+|                                                                                                                        |
+|    This test may Fail, or it may be skipped if the target system does not have a Web Camera                            |
+|    connected.                                                                                                          |
++------------------------------------------------------------------------------------------------------------------------+
+| ADBSCAN                                                                                                                |
+|    This module verifies if the ADBSCAN algorithm works on the target system.                                           |
+|                                                                                                                        |
+|    The test is considered PASS if:                                                                                     |
+|                                                                                                                        |
+|      -  The ADBSCAN algorithm works on the target system.                                                              |
++------------------------------------------------------------------------------------------------------------------------+
+| Collaborative Visual SLAM                                                                                              |
+|    This module verifies if the collaborative visual SLAM algorithm works on the target system.                         |
+|                                                                                                                        |
+|    The test is considered PASS if:                                                                                     |
+|                                                                                                                        |
+|      -  The collaborative visual SLAM algorithm works on the target system.                                            |
++------------------------------------------------------------------------------------------------------------------------+
 
 Get Started
 -----------
 
-This tutorial takes you through the installation and execution of the |esdq| CLI tool.
+This tutorial takes you through the installation and execution of the Intel® Edge Software Device Qualification (Intel® ESDQ) CLI tool.
 Configure your target system to satisfy the necessary :ref:`esdq-prerequisites`
 before you proceed with the :ref:`esdq-install`.
 Execute your self-certification process by selecting from the three available
 certification types:
 
--  :ref:`esdq_compute` for certifying |intel|-based compute systems with
-   the |p_amr| software
+-  :ref:`esdq_compute` for certifying Intel®-based compute systems with
+   the Autonomous Mobile Robot software
 
--  :ref:`esdq_sensor_rgb` for certifying RGB cameras with the |p_amr|
+-  :ref:`esdq_sensor_rgb` for certifying RGB cameras with the Autonomous Mobile Robot
    software
 
--  :ref:`esdq_sensor_depth` for certifying depth cameras with the |p_amr|
+-  :ref:`esdq_sensor_depth` for certifying depth cameras with the Autonomous Mobile Robot
    software
 
 Refer to :ref:`esdq-how-it-works` for more detailed information about the test
@@ -186,9 +186,9 @@ modules.
 Prerequisites
 -------------
 
-Satisfy the |esdq| prerequisites by:
+Satisfy the Intel® Edge Software Device Qualification (Intel® ESDQ) prerequisites by:
 
-- Installing |openvino| Development Tools and specifying ``tensorflow`` as the extras parameter
+- Installing OpenVINO™ Development Tools and specifying ``tensorflow`` as the extras parameter
   of the described "Step 4. Install the Package" `instructions
   <https://docs.openvino.ai/2024/documentation/legacy-features/install-dev-tools.html#step-4-install-the-package>`__:
 
@@ -196,32 +196,32 @@ Satisfy the |esdq| prerequisites by:
 
      pip install openvino-dev[tensorflow]
 
-- Installing the ``intel-basekit`` |deb_pack| by following the |l_oneapi|
-  Installation Guide for |Linux| OS `instructions
+- Installing the ``intel-basekit`` Deb package by following the Intel® oneAPI Base Toolkit
+  Installation Guide for Linux OS `instructions
   <https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2023-2/apt.html>`__.
 
-- Installing |gstreamer| by following the "Install |GStreamer| on |Ubuntu_OS| or |Debian_OS|"
+- Installing GStreamer by following the "Install GStreamer on Canonical Ubuntu OS or Debian OS"
   `instructions
   <https://gstreamer.freedesktop.org/documentation/installing/on-linux.html?gi-language=c#install-gstreamer-on-ubuntu-or-debian>`__.
 
-- Installing the pre-built |realsense| SDK 2.0 packages ``librealsense2-utils``,
+- Installing the pre-built Intel® RealSense™ SDK 2.0 packages ``librealsense2-utils``,
   ``librealsense2-dev`` and ``librealsense2-dbg`` by following the "Installing
   the packages" `instructions
   <https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages>`__.
 
-- Configuring your |vtune| installation as described in the
+- Configuring your VTune™ Profiler installation as described in the
   "Additional System setup for CPU and GPU profiling" section of
   :doc:`benchmark_profiling/vtune-profiler`.
 
-- Installing the |openvino| Runtime by executing these steps:
+- Installing the OpenVINO™ Runtime by executing these steps:
 
-  #. Add the |openvino| APT package sources as described in section "|openvino| Installation Steps"
+  #. Add the OpenVINO™ APT package sources as described in section "OpenVINO™ Installation Steps"
      on page :doc:`../../gsg_robot/install-openvino`.
   #. Make sure that your file ``/etc/apt/preferences.d/intel-openvino``
-     pins the |openvino| version of all components to ``2024.2.0*`` or above.
-     Consider that earlier |openvino| versions do not support the NPU of
-     |core| Ultra Processors.
-  #. Install the |openvino| Runtime by using:
+     pins the OpenVINO™ version of all components to ``2024.2.0*`` or above.
+     Consider that earlier OpenVINO™ versions do not support the NPU of
+     Intel® Core™ Ultra Processors.
+  #. Install the OpenVINO™ Runtime by using:
 
      .. code-block:: bash
 
@@ -231,9 +231,9 @@ Satisfy the |esdq| prerequisites by:
   `OpenVINO™ documentation
   <https://docs.openvino.ai/2024/get-started/install-openvino/install-openvino-apt.html>`__.
 
-- Installing the |intel| NPU Driver as described on page
+- Installing the Intel® NPU Driver as described on page
   :doc:`../../gsg_robot/install-npu-driver`. Don't execute this step if
-  your system does not have an |core| Ultra Processor.
+  your system does not have an Intel® Core™ Ultra Processor.
 
 .. note::
 
@@ -241,8 +241,8 @@ Satisfy the |esdq| prerequisites by:
 
 .. _esdq-install:
 
-Download and Install |esdq| for |p_amr|
----------------------------------------------------------------
+Download and Install Intel® Edge Software Device Qualification (Intel® ESDQ) for Autonomous Mobile Robot
+---------------------------------------------------------------------------------------------------------
 
 Complete the following two installation steps in order to properly configure
 your test setup:
@@ -253,14 +253,14 @@ your test setup:
 
 .. _esdq-install-cli:
 
-Download and Install |esdq| CLI
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Download and Install Intel® Edge Software Device Qualification (Intel® ESDQ) CLI
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Download the |esdq| CLI to your device from here:
+Download the Intel® Edge Software Device Qualification (Intel® ESDQ) CLI to your device from here:
 :download:`edge-software-device-qualification-11.0.0.zip <https://amrdocs.intel.com/downloads/edge-software-device-qualification-11.0.0.zip>`
 
 Set the ``ESDQ_INSTALLATION`` variable to point to the desired installation
-location. For example, if you want to install the the |esdq| CLI under
+location. For example, if you want to install the the Intel® Edge Software Device Qualification (Intel® ESDQ) CLI under
 the ``~/esdq`` directory, just set the this variable as follows:
 
 .. code-block:: bash
@@ -282,7 +282,7 @@ in the next installation steps.
 
    export ROBOTICS_SDK=$ESDQ_INSTALLATION/edge-software-device-qualification-11.0.0/
 
-Install the |esdq| CLI executing the following commands:
+Install the Intel® Edge Software Device Qualification (Intel® ESDQ) CLI executing the following commands:
 
 .. code-block:: bash
 
@@ -290,7 +290,7 @@ Install the |esdq| CLI executing the following commands:
    ./setup.sh -i
    export PATH=$PATH:$HOME/.local/bin
 
-Check the successful installation of the |esdq| CLI verifying that the execution
+Check the successful installation of the Intel® Edge Software Device Qualification (Intel® ESDQ) CLI verifying that the execution
 of the following command prints ``Version: 11.0.0`` on the terminal:
 
 .. code-block:: bash
@@ -302,11 +302,11 @@ of the following command prints ``Version: 11.0.0`` on the terminal:
 Download and Install the Test Modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To download and install the |lp_amr| test modules on your target device follow the
+To download and install the Autonomous Mobile Robot test modules on your target device follow the
 steps below:
 
-#. Install the ``ros-humble-amr-esdq`` |deb_pack| from
-   |intel| |p_amr| APT repository.
+#. Install the ``ros-humble-amr-esdq`` Deb package from
+   Intel® Autonomous Mobile Robot APT repository.
 
    .. code-block:: bash
 
@@ -328,7 +328,7 @@ steps below:
       cd $ROBOTICS_SDK
       chmod -R +xw  modules/AMR_Test_Module
 
-#. Check that the |lp_amr| test module is correctly installed by verifying that
+#. Check that the Autonomous Mobile Robot test module is correctly installed by verifying that
    the output of the following command lists the ``Robotics_SDK`` module.
 
    .. code-block:: bash
@@ -356,7 +356,7 @@ Run the Self-Certification Application for Compute Systems
 
    Log out and log in again.
 
-#. If you have just installed the ``ros-humble-amr-esdq`` |deb_pack| as
+#. If you have just installed the ``ros-humble-amr-esdq`` Deb package as
    described in the :ref:`esdq-install` section, reboot your system.
 
    Otherwise, there is a possibility that the tests that depend on the
@@ -373,7 +373,7 @@ Run the Self-Certification Application for Compute Systems
       cd $ROBOTICS_SDK
 
 
-#. If your system uses a |Linux| Kernel 6.7.5 or later, read the section
+#. If your system uses a Linux Kernel 6.7.5 or later, read the section
    :ref:`troubleshooting-gpu-not-detected`.
    If your system is impacted by this issue, export the following debug
    variables as a workaround:
@@ -383,7 +383,7 @@ Run the Self-Certification Application for Compute Systems
       export NEOReadDebugKeys=1
       export OverrideGpuAddressSpace=48
 
-#. Run the |esdq| test, and generate the report:
+#. Run the Intel® Edge Software Device Qualification (Intel® ESDQ) test, and generate the report:
 
    .. code-block:: bash
 
@@ -404,9 +404,9 @@ Run the Self-Certification Application for Compute Systems
    .. note::
 
       All the tests are expected to pass.
-      The |vtune| test failure and the |realsense| camera test skip above
+      The VTune™ Profiler test failure and the Intel® RealSense™ camera test skip above
       are shown for demonstration purposes only. For example,
-      the |realsense| camera test is skipped if no |realsense| camera is connected to
+      the Intel® RealSense™ camera test is skipped if no Intel® RealSense™ camera is connected to
       the target system.
 
       If individual test cases do not pass, you can check the detailed
@@ -420,18 +420,18 @@ Run the Self-Certification Application for RGB Cameras
 
 This self-certification test expects the camera stream to be on the
 ``/camera/color/image_raw`` topic. This topic must be visible in rviz2 using
-the `camera_color_frame` fixed frame. If your camera |ros| node does not
-stream to that topic by default, use |ros| remapping to publish to that
+the `camera_color_frame` fixed frame. If your camera ROS 2 node does not
+stream to that topic by default, use ROS 2 remapping to publish to that
 topic.
 
 .. note::
 
-   The following steps use the |realsense| camera's |ros| node as an example. You must
-   change the node to your actual camera's |ros| node.
+   The following steps use the Intel® RealSense™ camera's ROS 2 node as an example. You must
+   change the node to your actual camera's ROS 2 node.
 
 You can check your current configuration by:
 
-#. Running the RGB camera node in a |ros| environment after setting the
+#. Running the RGB camera node in a ROS 2 environment after setting the
    ``ROS_DOMAIN_ID``.
 
    .. code-block:: bash
@@ -447,7 +447,7 @@ You can check your current configuration by:
 
       ros2 topic list
 
-#. Once your configuration is set, you can proceed to run the |esdq| test
+#. Once your configuration is set, you can proceed to run the Intel® Edge Software Device Qualification (Intel® ESDQ) test
    and generate the report.
 
    .. code-block:: bash
@@ -465,17 +465,17 @@ Run the Self-Certification Application for Depth Cameras
 This self-certification test expects the camera stream to be on the
 ``/camera/depth/color/points`` and on the ``/camera/depth/image_rect_raw`` topics.
 These topics must be visible in rviz2 using the `camera_link` fixed frame.
-If your camera |ros| node does not stream to that topic by default, use
-|ros| remapping to publish to that topic.
+If your camera ROS 2 node does not stream to that topic by default, use
+ROS 2 remapping to publish to that topic.
 
 .. note::
 
-   The following steps use the |realsense| camera's |ros| node as an example. You must
-   change the node to your actual camera's |ros| node.
+   The following steps use the Intel® RealSense™ camera's ROS 2 node as an example. You must
+   change the node to your actual camera's ROS 2 node.
 
 You can check your current configuration by:
 
-#. Running the depth camera node in a |ros| environment after setting the ``ROS_DOMAIN_ID``.
+#. Running the depth camera node in a ROS 2 environment after setting the ``ROS_DOMAIN_ID``.
 
    .. code-block:: bash
 
@@ -490,7 +490,7 @@ You can check your current configuration by:
 
       ros2 topic list
 
-#. Once your configuration is set, you can proceed to run the |esdq| test
+#. Once your configuration is set, you can proceed to run the Intel® Edge Software Device Qualification (Intel® ESDQ) test
    and generate the report.
 
    .. code-block:: bash
@@ -500,7 +500,7 @@ You can check your current configuration by:
       esdq --verbose module run Robotics_SDK --arg sensors_depth
 
 
-Send Results to |Intel_Corporation|
+Send Results to Intel
 -----------------------------------
 
 Once the automated and manual tests are executed successfully, you can
@@ -509,7 +509,7 @@ Software Recommended Hardware
 <https://www.intel.com/content/www/us/en/developer/topic-technology/edge-5g/edge-solutions/hardware.html>`__
 site.
 
-Send the zip file that is created after running |esdq| tests to:
+Send the zip file that is created after running Intel® Edge Software Device Qualification (Intel® ESDQ) tests to:
 edge.software.device.qualification@intel.com.
 
 For example, after one of our local runs the following files were generated in the

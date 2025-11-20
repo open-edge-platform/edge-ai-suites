@@ -1,8 +1,8 @@
 
 .. _rvc_index:
 
-|rvc_full|
-##########
+Stationary Robot Vision & Control
+######################################
 
 .. image:: images/html/robotic-arm-graphic.png
 
@@ -57,8 +57,8 @@ and place industrial problems.
 .. image:: images/html/RobotBackground.png
 
 
-|rvc_full| Resources
-====================
+Stationary Robot Vision & Control Resources
+==============================================
 
 - :doc:`Get Started <getstarted>`
 
@@ -77,7 +77,7 @@ and place industrial problems.
 .. toctree::
    :maxdepth: 2
    :hidden:
-   
+
    getstarted
    components
    use_cases
@@ -85,4 +85,3 @@ and place industrial problems.
    releasenotes
    troubleshooting
    legal
-

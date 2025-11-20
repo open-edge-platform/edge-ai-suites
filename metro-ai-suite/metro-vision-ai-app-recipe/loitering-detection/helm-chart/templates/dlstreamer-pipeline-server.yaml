@@ -91,8 +91,8 @@ spec:
         securityContext:
           privileged: true  # Required for direct access to /dev
         {{- end }}
-      {{- if $.Values.gpu.enabled }}
-          resources:
+        {{- if $.Values.gpu.enabled }}
+        resources:
           limits:
             {{ $.Values.gpu.type }}: {{ $.Values.gpu.count }}
         {{- end }}

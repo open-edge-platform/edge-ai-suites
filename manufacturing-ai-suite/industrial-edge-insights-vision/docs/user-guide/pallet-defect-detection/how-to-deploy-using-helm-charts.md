@@ -26,10 +26,10 @@
 
     - Download helm chart with the following command
 
-        `helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.4.0`
+        `helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.5.0-rc1`
     - unzip the package using the following command
 
-        `tar -xvf pallet-defect-detection-reference-implementation-2.4.0.tgz`
+        `tar -xvf pallet-defect-detection-reference-implementation-2.5.0-rc1.tgz`
     - Replace the helm directory
 
         `rm -rf helm && mv pallet-defect-detection-reference-implementation helm`
@@ -42,7 +42,7 @@
         http_proxy: <http proxy> # proxy details if behind proxy
         https_proxy: <https proxy>
         POSTGRES_PASSWORD: <POSTGRES PASSWORD> #  example: intel1234
-        MR_URL: https://<HOST_IP>:30443/registry/models # Model reigstry URL
+        MR_URL: https://<HOST_IP>:30443/registry/ # Model reigstry URL
         SAMPLE_APP: pallet-defect-detection # application directory
     webrtcturnserver:
         username: <username>  # WebRTC credentials e.g. intel1234
@@ -138,7 +138,7 @@
     Posting payload to REST server at http://<HOST_IP>:30107/pipelines/user_defined_pipelines/pallet_defect_detection
     Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "99ac50d852b511f09f7c2242868ff651"
     ```
-    >NOTE- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:31111/pdd/ for Pallet Defect Detection.
+    >NOTE- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/pdd/ for Pallet Defect Detection.
 
 5.  Get status of pipeline instance(s) running.
     ```sh
@@ -359,7 +359,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     ```
 
 7. Run the following curl command to upload the local model. 
-    pa```sh
+    ```sh
     curl -k -L -X POST "https://<HOST_IP>:30443/registry/models" \
     -H 'Content-Type: multipart/form-data' \
     -F 'name="YOLO_Test_Model"' \
@@ -404,7 +404,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 
     > NOTE- The data above assumes there is a model in the registry that contains these properties. Also, the pipeline name that follows `user_defined_pipelines/`, will affect the `deployment` folder name.
 
-11. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+11. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
     ![WebRTC streaming](./images/webrtc-streaming.png)
 

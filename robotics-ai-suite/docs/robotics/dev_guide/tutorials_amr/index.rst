@@ -10,7 +10,7 @@ Tutorials |tutorials_robot|
 Prerequisite: Follow the instructions in :doc:`../../gsg_robot/index`.
 
 With step-by-step instructions covering real world usage scenarios,
-these tutorials provide a learning path for developers to use and configure |p_amr|.
+these tutorials provide a learning path for developers to use and configure Autonomous Mobile Robot.
 
 
 .. toctree::

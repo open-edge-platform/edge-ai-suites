@@ -41,7 +41,7 @@ During each test run, the script logs the `avg_fps` for every active pipeline in
 These are the recommended parameters by Edge Benchmarking and Workloads team for workload with similar characteristics. These are configurable parameters that can be adjusted based on your specific requirements:
 
 ```
-inference-region=1 inference-interval=3 batch-size=8 nireq=2 ie-config="NUM_STREAMS=2" threshold=0.7
+inference-region=1 inference-interval=3 batch-size=8 nireq=2 ie-config="GPU_THROUGHPUT_STREAMS=2" threshold=0.7
 ```
 
 **Parameter Descriptions:**
@@ -49,7 +49,7 @@ inference-region=1 inference-interval=3 batch-size=8 nireq=2 ie-config="NUM_STRE
 - `inference-interval=3`: Run inference on every 3rd frame.
 - `batch-size=8`: Process 8 frames in a single batch for better GPU utilization.
 - `nireq=2`: Number of inference requests to run in parallel.
-- `ie-config="NUM_STREAMS=2"`: Intel OpenVINO engine streams configuration.
+- `ie-config="GPU_THROUGHPUT_STREAMS=2"`: Intel OpenVINO engine streams configuration.
 - `threshold=0.7`: Detection confidence threshold (70%).
 
 ## Step 2: Prepare for Benchmarking
@@ -83,7 +83,7 @@ Here is an example of a GPU pipeline configuration that includes both `detection
 
 ```json
 {
-    "pipeline": "yolov11s_1_gpu",
+    "pipeline": "yolov11s_gpu",
     "payload": {
         "source": {
             "uri": "file:///home/pipeline-server/videos/new_video_1_looped.mp4",
@@ -108,7 +108,7 @@ Here is an example of a GPU pipeline configuration that includes both `detection
                 "inference-region": 0,
                 "batch-size": 8,
                 "nireq": 2,
-                "ie-config": "NUM_STREAMS=2",
+                "ie-config": "GPU_THROUGHPUT_STREAMS=2",
                 "pre-process-backend": "va-surface-sharing",
                 "threshold": 0.7
             },
@@ -118,7 +118,7 @@ Here is an example of a GPU pipeline configuration that includes both `detection
                 "inference-interval": 3,
                 "batch-size": 8,
                 "nireq": 2,
-                "ie-config": "NUM_STREAMS=2",
+                "ie-config": "GPU_THROUGHPUT_STREAMS=2",
                 "pre-process-backend": "va-surface-sharing"
             }
         }
@@ -131,12 +131,12 @@ Here is an example of a GPU pipeline configuration that includes both `detection
 
 This example will find the maximum number of smart parking streams that can run on the CPU while maintaining at least 15 FPS.
 
-1.  Execute the `benchmark_start.sh` script, providing the desired pipeline name (`yolov11s_1_gpu` in this case). Here, we test a range of 1 to 16 streams.
+1.  Execute the `benchmark_start.sh` script, providing the desired pipeline name (`yolov11s_gpu` in this case). Here, we test a range of 1 to 16 streams.
 
     ```bash
     # Usage: ./benchmark_start.sh -p <pipeline_name> -l <lower_bound> -u <upper_bound> -t <target_fps>
     
-    ./benchmark_start.sh -p yolov11s_1_gpu -l 1 -u 16 -t 15
+    ./benchmark_start.sh -p yolov11s_gpu -l 1 -u 16 -t 15
     ```
 
 2.  The script will output its progress as it tests different stream counts. The final output will show the optimal stream density found.

@@ -1,19 +1,19 @@
-Control the |jackal| Motors Using a Keyboard
+Control the Jackal Motors Using a Keyboard
 ============================================
 
 This page describes how to run a quick test, which verifies that the
-|jackal| robot has been set up appropriately. 
-It verifies that the |ros| middleware is working and that the
-onboard computer of the |jackal| robot can communicate with the Motor
+Jackal robot has been set up appropriately.
+It verifies that the ROS 2 middleware is working and that the
+onboard computer of the Jackal robot can communicate with the Motor
 Control Unit (MCU).
 
-Make sure that you have set up your |jackal| robot as described on the
+Make sure that you have set up your Jackal robot as described on the
 :doc:`./jackal-intel-robotics-sdk` page.
 
 To execute the following steps, you must be logged in as the ``administrator``
 user.
 
-Run the following command to test whether the |clearpath_robotics|
+Run the following command to test whether the Clearpath Robotics
 services are running on your robot:
 
 .. code-block:: bash
@@ -47,10 +47,10 @@ subscribed by the ``twist_mux`` node, as shown here:
      Liveliness lease duration: Infinite
 
 If you don't see this output, there might be an issue with your installation
-of the |clearpath_robotics| services. See the :ref:`jackal-troubleshooting`
+of the Clearpath Robotics services. See the :ref:`jackal-troubleshooting`
 section for debugging hints.
 
-Now you can install the ``ros-humble-teleop-twist-keyboard`` |ros| package:
+Now you can install the ``ros-humble-teleop-twist-keyboard`` ROS 2 package:
 
 .. code-block:: bash
 

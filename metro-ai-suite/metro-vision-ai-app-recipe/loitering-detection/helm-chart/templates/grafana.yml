@@ -23,13 +23,7 @@ spec:
           name: http
         env:
         - name: GF_INSTALL_PLUGINS
-          value: "yesoreyeram-infinity-datasource,ryantxu-ajax-panel,grafana-mqtt-datasource"
-        - name: GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS
-          value: "intel-custom-panel"
-        - name: GF_FEATURE_TOGGLES_ENABLE
-          value: "angularDeprecationUI"
-        - name: GF_ANGULAR_SUPPORT_ENABLED
-          value: "true"
+          value: "grafana-mqtt-datasource"
         - name: GF_PANELS_DISABLE_SANITIZE_HTML
           value: "true"
         - name: http_proxy

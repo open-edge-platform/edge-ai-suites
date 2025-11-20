@@ -1,8 +1,8 @@
-# How to Generate Offline Package
+# How to Generate and Deploy Offline Package
 
 ## Overview
 
-The Offline Package Generator creates self-contained deployment packages for Metro Vision AI applications that can be deployed in environments without internet connectivity. This tool is specifically designed for Denied, Disrupted, Intermittent, and Limited (DDIL) environments where traditional cloud-dependent deployments are not feasible.
+The Offline Package Generator creates self-contained deployment packages for Metro Vision AI applications that can be deployed in environments without internet connectivity. This tool is specifically designed for environment with no internet connectivity where traditional cloud-dependent deployments are not feasible.
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ Package location: ./offline-package
 ### Step 2: Prepare Package for Transfer
 *Package the generated files for secure transport to offline environment*
 
-**Objective**: Create a compressed, transferable archive optimized for DDIL environments.
+**Objective**: Create a compressed, transferable archive optimized for offline environments.
 
 ```bash
 # Create a timestamped compressed package for easy identification
@@ -71,7 +71,7 @@ sha256sum smart-parking-offline-*.tar.gz > package-checksum.txt
 # - package-checksum.txt (integrity verification file)
 ```
 
-**Transfer options for DDIL environments:**
+**Transfer options for offline environments:**
 - **USB/External drive**: Copy files to removable media
 - **Secure network**: Use SCP, SFTP, or approved file transfer protocols
 - **Physical media**: Burn to DVD/Blu-ray for highly secure environments

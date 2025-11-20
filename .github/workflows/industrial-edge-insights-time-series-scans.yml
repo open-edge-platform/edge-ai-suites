@@ -202,83 +202,106 @@ jobs:
       
       - name: Trivy Image Scan
         continue-on-error: true
-        shell: bash
         run: |
-              pwd
-              CWD=$(pwd)
-              if [[ "${{ inputs.application }}" == "time-series" || "${{ inputs.application }}" == "both" ]]; then
-                echo "Building Time Series Sample app and scanning docker images"
-                cd $CWD/manufacturing-ai-suite/industrial-edge-insights-time-series/
-                make down
+            pwd
+            CWD=$(pwd)
+            INFLUXDB_USERNAME=$(tr -dc 'a-zA-Z' < /dev/urandom | head -c 8)
+            INFLUXDB_PASSWORD=$(openssl rand -hex 10)
+            VISUALIZER_GRAFANA_USER=$(tr -dc 'a-zA-Z' < /dev/urandom | head -c 8)
+            VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 10)
+            MTX_WEBRTCICESERVERS2_0_USERNAME=$(tr -dc 'a-zA-Z' < /dev/urandom | head -c 8)
+            MTX_WEBRTCICESERVERS2_0_PASSWORD=$(openssl rand -hex 10)
+            HOST_IP=$(hostname -I | awk '{print $1}')
 
-                OPC_UA_SERVER_IMAGE=$(grep '^OPC_UA_SERVER_IMAGE=' .env | cut -d'=' -f2)
-                MQTT_PUBLISHER_IMAGE=$(grep '^MQTT_PUBLISHER_IMAGE=' .env | cut -d'=' -f2)
-                IMAGE_SUFFIX=$(grep '^IMAGE_SUFFIX=' .env | cut -d'=' -f2 | tr -d '"')
-                if [ -n "$IMAGE_SUFFIX" ]; then
-                  OPC_UA_SERVER_IMAGE="${OPC_UA_SERVER_IMAGE}-${IMAGE_SUFFIX}"
-                  MQTT_PUBLISHER_IMAGE="${MQTT_PUBLISHER_IMAGE}-${IMAGE_SUFFIX}"
-                fi
-                make build
+            echo "INFLUXDB_USERNAME: $INFLUXDB_USERNAME"
+            echo "VISUALIZER_GRAFANA_USER: $VISUALIZER_GRAFANA_USER"
+            echo "MTX_WEBRTCICESERVERS2_0_USERNAME: $MTX_WEBRTCICESERVERS2_0_USERNAME"
+            
+            if [[ "${{ inputs.application }}" == "time-series" || "${{ inputs.application }}" == "both" ]]; then
+              echo "Building Time Series Sample app and scanning docker images"
+              cd $CWD/manufacturing-ai-suite/industrial-edge-insights-time-series/
+              make down
 
-                declare -A IMAGE_MAP
-                IMAGE_MAP[$OPC_UA_SERVER_IMAGE]="opcua-server"
-                IMAGE_MAP[$MQTT_PUBLISHER_IMAGE]="mqtt-publisher"
+              sed -i "s|^INFLUXDB_USERNAME=.*|INFLUXDB_USERNAME=$INFLUXDB_USERNAME|g" .env
+              sed -i "s|INFLUXDB_PASSWORD=.*|INFLUXDB_PASSWORD=$INFLUXDB_PASSWORD|g" .env
+              sed -i "s|VISUALIZER_GRAFANA_USER=.*|VISUALIZER_GRAFANA_USER=$VISUALIZER_GRAFANA_USER|g" .env
+              sed -i "s|VISUALIZER_GRAFANA_PASSWORD=.*|VISUALIZER_GRAFANA_PASSWORD=$VISUALIZER_GRAFANA_PASSWORD|g" .env
+              cat .env
+              make build
+              make up_mqtt_ingestion
+              make down
 
-                # Loop through images and perform Trivy scans
-                for IMAGE in "${!IMAGE_MAP[@]}"; do
-                    PREFIX="${IMAGE_MAP[$IMAGE]}"
-                    
-                    echo "Scanning image: $IMAGE"
-                    
-                    # All scan types
-                    trivy image "$IMAGE" --ignore-unfixed --format template --template "@$CWD/trivy-html.tpl" -o "trivy-image-scan-${PREFIX}-ignore-unfixed.html"
-                    trivy image "$IMAGE" --ignore-unfixed --format template --template "@$CWD/csv.tpl" -o "trivy-image-scan-${PREFIX}-ignore-unfixed.csv"
-                    trivy image --quiet --format spdx-json --output "trivy-image-scan-${PREFIX}.spdx.json" "$IMAGE"
-                    trivy image --list-all-pkgs --format template --template "@$CWD/csv.tpl" --output "trivy-image-scan-${PREFIX}-list-all-pkgs.csv" "$IMAGE"
-                    trivy image --ignore-unfixed "$IMAGE" | tee "trivy-image-scan-${PREFIX}-ignore-unfixed.txt"
-                    
-                    echo "Completed scanning $IMAGE"
-                done
+              declare -A IMAGE_MAP_TS
+              images=$(docker compose config | grep 'image:' | awk '{print $2}')
+              for image in $images; do
+                  image_prefix=$(echo "$image" | sed 's|/|-|g')
+                  image_prefix=$(echo "$image_prefix" | cut -d':' -f1)
+                  IMAGE_MAP_TS["$image"]="$image_prefix"
+              done
 
-                echo "completed Time Series Sample App Image scanning"
-              fi
+              # Loop through images and perform Trivy scans
+              for IMAGE in "${!IMAGE_MAP_TS[@]}"; do
+                  PREFIX="${IMAGE_MAP_TS[$IMAGE]}"
 
-              if [[ "${{ inputs.application }}" == "multimodal" || "${{ inputs.application }}" == "both" ]]; then
-                echo "Building Multimodal Weld Defect Detection Sample app and scanning docker images"
-                cd $CWD/manufacturing-ai-suite/industrial-edge-insights-multimodal/
-                make down
+                  echo "Scanning image: $IMAGE"
+                  
+                  # All scan types
+                  trivy image "$IMAGE" --ignore-unfixed --format template --template "@$CWD/trivy-html.tpl" -o "trivy-image-scan-${PREFIX}-ignore-unfixed.html"
+                  trivy image "$IMAGE" --ignore-unfixed --format template --template "@$CWD/csv.tpl" -o "trivy-image-scan-${PREFIX}-ignore-unfixed.csv"
+                  trivy image --quiet --format spdx-json --output "trivy-image-scan-${PREFIX}.spdx.json" "$IMAGE"
+                  trivy image --list-all-pkgs --format template --template "@$CWD/csv.tpl" --output "trivy-image-scan-${PREFIX}-list-all-pkgs.csv" "$IMAGE"
+                  trivy image --ignore-unfixed "$IMAGE" | tee "trivy-image-scan-${PREFIX}-ignore-unfixed.txt"
+                  
+                  echo "Completed scanning $IMAGE"
+              done
 
-                WELD_SIMULATOR_IMAGE=$(grep '^WELD_SIMULATOR_IMAGE=' .env | cut -d'=' -f2)
-                FUSION_MODULE_IMAGE=$(grep '^FUSION_MODULE_IMAGE=' .env | cut -d'=' -f2)
-                IMAGE_SUFFIX=$(grep '^IMAGE_SUFFIX=' .env | cut -d'=' -f2 | tr -d '"')
-                if [ -n "$IMAGE_SUFFIX" ]; then
-                  WELD_SIMULATOR_IMAGE="${WELD_SIMULATOR_IMAGE}-${IMAGE_SUFFIX}"
-                  FUSION_MODULE_IMAGE="${FUSION_MODULE_IMAGE}-${IMAGE_SUFFIX}"
-                fi
-                make build
+              echo "completed Time Series Sample App Image scanning"
+            fi
 
-                declare -A IMAGE_MAP
-                IMAGE_MAP[$WELD_SIMULATOR_IMAGE]="weld-simulator"
-                IMAGE_MAP[$FUSION_MODULE_IMAGE]="fusion-analytics"
+            if [[ "${{ inputs.application }}" == "multimodal" || "${{ inputs.application }}" == "both" ]]; then
+              echo "Building Multimodal Weld Defect Detection Sample app and scanning docker images"
+              cd $CWD/manufacturing-ai-suite/industrial-edge-insights-multimodal/
+              make down              
 
-                # Loop through images and perform Trivy scans
-                for IMAGE in "${!IMAGE_MAP[@]}"; do
-                    PREFIX="${IMAGE_MAP[$IMAGE]}"
-                    
-                    echo "Scanning image: $IMAGE"
-                    
-                    # All scan types
-                    trivy image "$IMAGE" --ignore-unfixed --format template --template "@$CWD/trivy-html.tpl" -o "trivy-image-scan-${PREFIX}-ignore-unfixed.html"
-                    trivy image "$IMAGE" --ignore-unfixed --format template --template "@$CWD/csv.tpl" -o "trivy-image-scan-${PREFIX}-ignore-unfixed.csv"
-                    trivy image --quiet --format spdx-json --output "trivy-image-scan-${PREFIX}.spdx.json" "$IMAGE"
-                    trivy image --list-all-pkgs --format template --template "@$CWD/csv.tpl" --output "trivy-image-scan-${PREFIX}-list-all-pkgs.csv" "$IMAGE"
-                    trivy image --ignore-unfixed "$IMAGE" | tee "trivy-image-scan-${PREFIX}-ignore-unfixed.txt"
-                    
-                    echo "Completed scanning $IMAGE"
-                done
+              sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
+              sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
+              sed -i "s/VISUALIZER_GRAFANA_USER=.*/VISUALIZER_GRAFANA_USER=${VISUALIZER_GRAFANA_USER}/g" .env
+              sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
+              sed -i "s/MTX_WEBRTCICESERVERS2_0_USERNAME=.*/MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME}/g" .env
+              sed -i "s/MTX_WEBRTCICESERVERS2_0_PASSWORD=.*/MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}/g" .env
+              sed -i "s/HOST_IP=.*/HOST_IP=${HOST_IP}/g" .env
+              make build
+              make up
+              make down
 
-                echo "completed Multimodal Weld Defect Detection Sample App Image scanning"
-              fi
+              declare -A IMAGE_MAP_MM
+
+              images=$(docker compose config | grep 'image:' | awk '{print $2}')
+              for image in $images; do
+                  image_prefix=$(echo "$image" | sed 's|/|-|g')
+                  image_prefix=$(echo "$image_prefix" | cut -d':' -f1)
+                  IMAGE_MAP_MM["$image"]="$image_prefix"
+              done
+
+
+              # Loop through images and perform Trivy scans
+              for IMAGE in "${!IMAGE_MAP_MM[@]}"; do
+                  PREFIX="${IMAGE_MAP_MM[$IMAGE]}"
+
+                  echo "Scanning image: $IMAGE"
+                  
+                  # All scan types
+                  trivy image "$IMAGE" --ignore-unfixed --format template --template "@$CWD/trivy-html.tpl" -o "trivy-image-scan-${PREFIX}-ignore-unfixed.html"
+                  trivy image "$IMAGE" --ignore-unfixed --format template --template "@$CWD/csv.tpl" -o "trivy-image-scan-${PREFIX}-ignore-unfixed.csv"
+                  trivy image --quiet --format spdx-json --output "trivy-image-scan-${PREFIX}.spdx.json" "$IMAGE"
+                  trivy image --list-all-pkgs --format template --template "@$CWD/csv.tpl" --output "trivy-image-scan-${PREFIX}-list-all-pkgs.csv" "$IMAGE"
+                  trivy image --ignore-unfixed "$IMAGE" | tee "trivy-image-scan-${PREFIX}-ignore-unfixed.txt"
+                  
+                  echo "Completed scanning $IMAGE"
+              done
+
+              echo "completed Multimodal Weld Defect Detection Sample App Image scanning"
+            fi
             
       - name: Upload Trivy Image Scan Report
         continue-on-error: true
@@ -886,4 +909,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Multimodal Weld Defect Detection Sample app CodeQL Reports
+
           path: codeql_multimodal_reports.zip
+
+

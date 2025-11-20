@@ -57,3 +57,18 @@ Create a fully qualified app name.
   {{- $name := default .Chart.Name (default "" .Values.visualSearchQaApp.name) -}}
   {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "multimodalembeddingServing.name" -}}
+  {{- default .Chart.Name (default "" .Values.multimodalembeddingServing.name) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Create a fully qualified app name.
+*/}}
+{{- define "multimodalembeddingServing.fullname" -}}
+  {{- $name := default .Chart.Name (default "" .Values.multimodalembeddingServing.name) -}}
+  {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}

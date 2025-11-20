@@ -1,5 +1,14 @@
 # Release Notes
 
+## v1.1.0 (Upcoming release)
+
+### Updates
+- Consumed latest DL Streamer Pipeline Server version 2025.2
+- Introduced nginx server as reverse proxy and TLS
+- Optimized pipelines.
+
+---
+
 ## 1.0.0 (August 2025)
 
 ### Updates

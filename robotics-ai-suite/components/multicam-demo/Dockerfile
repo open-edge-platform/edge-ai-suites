@@ -1,5 +1,6 @@
 
 # SPDX-License-Identifier: Apache-2.0
+#
 # Copyright (C) 2025 Intel Corporation
 FROM openvino/ubuntu20_dev
 ARG DEBIAN_FRONTEND=noninteractive

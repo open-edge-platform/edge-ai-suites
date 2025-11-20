@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+    _usb_port_id: ''
+    align_depth:
+      enable: true
+    allow_no_texture_points: false
+    calib_odom_file: ''
+    clip_distance: -0.8
+    color_info_qos: SENSOR_DATA
+    color_qos: SENSOR_DATA
+    colorizer:
+      enable: false
+    decimation_filter:
+      enable: false
+    depth_info_qos: SENSOR_DATA
+    depth_module:
+      depth_profile: 640x480x30
+      emitter_enabled: 1
+      laser_power: 360.0
+      enable_auto_exposure: true
+      enable_auto_white_balance: true
+      exposure: 6000
+      gain: 16
+      infra_profile: 640x480x30
+    depth_qos: SENSOR_DATA
+    diagnostics_period: 0.0
+    enable_color: true
+    enable_depth: true
+    enable_infra: false
+    enable_infra1: false
+    enable_infra2: false
+    enable_rgbd: false
+    enable_sync: true
+    infra1_info_qos: SENSOR_DATA
+    infra1_qos: SENSOR_DATA
+    infra2_info_qos: SENSOR_DATA
+    infra2_qos: SENSOR_DATA
+    infra_info_qos: SENSOR_DATA
+    infra_qos: SENSOR_DATA
+    initial_reset: false
+    json_file_path: ''
+    linear_accel_cov: 0.01
+    pointcloud:
+      enable: true
+      ordered_pc: true
+      pointcloud_qos: SENSOR_DATA
+      frames_queue_size: 1
+    # 0: disable texture, 1: depth texture 2: RGB, see: https://intelrealsense.github.io/librealsense/doxygen/rs__sensor_8h.html#a01b4027af33139de861408872dd11b93a58a1d3d8a392aafe15b30b6d4575c153
+      stream_filter: 2
+      stream_index_filter: 0
+      pose_fps: 200
+    reconnect_timeout: 6.0
+    rgb_camera:
+      auto_exposure_roi:
+        bottom: 479
+        left: 0
+        right: 639
+        top: 0
+      enable_auto_exposure: true
+      enable_auto_white_balance: true
+      exposure: 100
+      color_profile: 640x480x30
+    rosbag_filename: ''
+    tf_publish_rate: 0.0
+    unite_imu_method: 0
+    wait_for_device_timeout: -1.0

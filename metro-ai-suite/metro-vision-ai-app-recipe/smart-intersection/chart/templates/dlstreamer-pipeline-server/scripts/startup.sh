@@ -11,5 +11,9 @@ chmod a+rwx /home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.p
 chown -R intelmicroserviceuser:intelmicroserviceuser /home/pipeline-server/models &&
 chown -R intelmicroserviceuser:intelmicroserviceuser /home/pipeline-server/videos &&
 echo "$SMART_INTERSECTION_BROKER_SERVICE_HOST    $MQTT_HOST" >> /etc/hosts &&
+{{- if .Values.dlstreamerPipelineServer.gpuWorkload }}
+./run.sh
+{{- else }}
 runuser -u intelmicroserviceuser ./run.sh
+{{- end }}
 {{- end -}}

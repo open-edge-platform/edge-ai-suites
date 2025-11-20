@@ -1,5 +1,5 @@
-Set up the |lp_amr| APT Repositories
-####################################
+Set up the Autonomous Mobile Robot APT Repositories
+####################################################
 
 A target running a compatible OS can install Deb packages from hosted APT repositories.
 
@@ -18,7 +18,7 @@ Make sure that you have :doc:`prepared the system <prepare-system>`
 
       wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | sudo tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null
 
-#. Add the signed entry to |lp_amr| APT sources and configure the APT client to use the |lp_amr| APT repositories:
+#. Add the signed entry to Autonomous Mobile Robot APT sources and configure the APT client to use the Autonomous Mobile Robot APT repositories:
 
    .. code-block:: bash
 
@@ -27,20 +27,20 @@ Make sure that you have :doc:`prepared the system <prepare-system>`
       echo "deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://amrdocs.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) amr main" | sudo tee /etc/apt/sources.list.d/amr.list > /dev/null
       echo "deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://amrdocs.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) amr main" | sudo tee -a /etc/apt/sources.list.d/amr.list > /dev/null
 
-#. Configure the |lp_amr| APT repository to have higher priority over other repositories:
+#. Configure the Autonomous Mobile Robot APT repository to have higher priority over other repositories:
 
    .. code-block:: bash
 
       echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" | sudo tee /etc/apt/preferences.d/isar
       echo -e "Package: *\nPin: origin amrdocs.intel.com\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/amr
 
-#. Configure the |lp_amr| APT repository to ignore FLANN 1.19 version
+#. Configure the Autonomous Mobile Robot APT repository to ignore FLANN 1.19 version
 
    .. code-block:: bash
 
       echo -e "\nPackage: libflann*\nPin: version 1.19.*\nPin-Priority: -1\n\nPackage: flann*\nPin: version 1.19.*\nPin-Priority: -1" | sudo tee -a /etc/apt/preferences.d/isar
 
-#. Configure the APT repository of the |intel| |oneapi| Base Toolkit:
+#. Configure the APT repository of the Intel® oneAPI Base Toolkit:
 
    .. code-block:: bash
 
@@ -60,4 +60,3 @@ Make sure that you have :doc:`prepared the system <prepare-system>`
 
 
 #. Continue the installation as described on page :doc:`install-openvino`.
-

@@ -4,9 +4,9 @@
 Modify Hardware Setup
 =====================
 
-RVC Framework has been designed with modularity and abstraction in mind. 
-In theory, this means that every hardware component could be substituted. 
-However, due to the diverse range of devices and control mechanisms, 
+RVC Framework has been designed with modularity and abstraction in mind.
+In theory, this means that every hardware component could be substituted.
+However, due to the diverse range of devices and control mechanisms,
 the specific modifications required for seamless operation may vary considerably.
 
 Change Camera
@@ -18,7 +18,7 @@ cameras:
 Use a camera of same model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To use a camera of the same model, such as Intel\ |reg| RealSense\ |TM| D415, but a
+To use a camera of the same model, such as Intel® RealSense™ D415, but a
 different location, make the following change in the
 *<usecaseinstallationpath>/urdf/d415camera<namespace>.xacro* file to reflect the real
 position:
@@ -32,17 +32,17 @@ position:
 
 .. note::
 
-    To help the Vision component, measure the distance between the center of camera and the first 
+    To help the Vision component, measure the distance between the center of camera and the first
     flat surface (in our case the conveyor belt surface) and modify the value of the ``z_threshold``
-    (in meters) parameter in the *<visioncomponentsinstallpath>/rvc_pose_detector/config/parameters.yaml*. 
-    If ``z_threshold`` is closer to the camera than the maximum distance an object could be, the 
+    (in meters) parameter in the *<visioncomponentsinstallpath>/rvc_pose_detector/config/parameters.yaml*.
+    If ``z_threshold`` is closer to the camera than the maximum distance an object could be, the
     object will be cropped and never be detected.
 
 Use Different Stereo Camera
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Note:** Only Intel\ |reg| RealSense\ |tm| cameras have been tested. To adapt
-the |RVC| Framework to a different camera, note that the |ROS| node handling
+**Note:** Only Intel® RealSense™ cameras have been tested. To adapt
+the RVC Framework to a different camera, note that the ROS 2 node handling
 the new camera must expose a pointcloud ordered (that is, the pointcloud
 is not monodimensional array, but must be a 640x480 pointcloud and
 ordered). This is necessary to extract the cropped pointcloud from the
@@ -72,7 +72,7 @@ reference. In the RVC demonstration, the base of the camera is at
 right camera xacro that the manufacturer provides.
 
 Additionally, make modifications on the AI side, such as removing the
-RealSense ros2 node and replacing with a |ROS| of the new camera.
+RealSense ros2 node and replacing with a ROS 2 of the new camera.
 
 The AI publishes the detected pose with:
 
@@ -102,7 +102,7 @@ model from the same family, do either one of the following:
 -  Modify ``ur_type_arg = LaunchConfiguration`` in the launch file
 
    ``<dynamicusecaseinstallationpath>/launch/dynamic_demo_launch.py.``
-   
+
    The default value of ``ur_type`` is ``ur5e``.
 
 -  Append ``ur_type`` in the launch command line:
@@ -182,9 +182,8 @@ connected to that link.
 Change Manipulator without supported drivers
 --------------------------------------------
 
-RVC is based on |ros2| framework, hence its able to drive manupulators with |ros| support.
-This means the manufacturer has to provide a |ros2| driver, fully implementing the |ros2_control|
-interfaces and |moveit2| support.
+RVC is based on ROS 2 framework, hence its able to drive manupulators with ROS 2 support.
+This means the manufacturer has to provide a ROS 2 driver, fully implementing the `ROS 2 Control <https://control.ros.org/master/index.html>`__
+interfaces and `MoveIt 2 <https://moveit.picknik.ai/main/index.html>`__ support.
 
 If the robot is not supported, there is another way, albeit potentially not straight forward:
-

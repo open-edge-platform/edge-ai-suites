@@ -819,6 +819,10 @@
 			<is_python_api_used value="False" />
 			<output_dir value="DIR" />
 		</conversion_parameters>
+        <model_info>
+            <labels value="black silver" />
+            <model_type value="label" />
+        </model_info>
 		<legacy_frontend value="False" />
 	</rt_info>
 </net>

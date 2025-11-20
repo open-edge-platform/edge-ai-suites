@@ -1,7 +1,7 @@
-Tutorials 
+Tutorials
 ================================
 
-These tutorials have been written to use |up_xtreme| and the |clearpath_robotics| |jackal| robots equipped with |realsense| cameras. More details can be found in the individual sections.
+These tutorials have been written to use AAEON UP Xtreme i11 Robotic Development Kit and the Clearpath Robotics Jackal robots equipped with Intel® RealSense™ cameras. More details can be found in the individual sections.
 
 .. toctree::
    :maxdepth: 1

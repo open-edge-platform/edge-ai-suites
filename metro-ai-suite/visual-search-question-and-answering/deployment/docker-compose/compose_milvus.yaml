@@ -5,13 +5,6 @@ services:
   vlm-openvino-serving:
     image: ${REGISTRY:-}vlm-openvino-serving:${TAG:-latest}
     container_name: vlm-openvino-serving
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      args:
-        no_proxy: ${no_proxy_env},${HOST_IP}
-        http_proxy: ${http_proxy}
-        https_proxy: ${https_proxy}
     ports:
       - "${VLM_SERVICE_PORT}:8000"
     ipc: host
@@ -53,6 +46,12 @@ services:
       - ETCD_AUTO_COMPACTION_RETENTION=1000
       - ETCD_QUOTA_BACKEND_BYTES=4294967296
       - ETCD_SNAPSHOT_COUNT=50000
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
     volumes:
       - ${DOCKER_VOLUME_DIRECTORY:-}/volumes/etcd:/etcd
     command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
@@ -89,6 +88,12 @@ services:
     environment:
       ETCD_ENDPOINTS: milvus-etcd:2379
       MINIO_ADDRESS: milvus-minio:9000
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: ""
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      NO_PROXY: ""
     volumes:
       - ./config/milvus.yaml:/milvus/configs/milvus.yaml
       - ${DOCKER_VOLUME_DIRECTORY:-}/volumes/milvus:/var/lib/milvus
@@ -107,10 +112,7 @@ services:
 
   multimodal-embedding-serving:
     image: ${REGISTRY:-}multimodal-embedding-serving:${TAG:-latest}
-    container_name: multimodal-embedding
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
+    container_name: multimodal-embedding-serving
     ports:
       - "${EMBEDDING_SERVER_PORT}:8000"
     ipc: host
@@ -119,15 +121,15 @@ services:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       HF_ENDPOINT: ${HF_ENDPOINT}
-      TEXT_EMBEDDING_MODEL_NAME: ${QWEN_MODEL}
-      IMAGE_EMBEDDING_MODEL_NAME: ${VCLIP_MODEL}
+      EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME}
+      EMBEDDING_DEVICE: ${EMBEDDING_DEVICE}
+      EMBEDDING_USE_OV: ${EMBEDDING_USE_OV}
+      EMBEDDING_OV_MODELS_DIR: ${EMBEDDING_OV_MODELS_DIR:-/app/ov_models}
+      # Legacy support for backward compatibility
+      MODEL_NAME: ${EMBEDDING_MODEL_NAME}
       DEFAULT_START_OFFSET_SEC: ${DEFAULT_START_OFFSET_SEC}
       DEFAULT_CLIP_DURATION: ${DEFAULT_CLIP_DURATION}
       DEFAULT_NUM_FRAMES: ${DEFAULT_NUM_FRAMES}
-      EMBEDDING_USE_OV: ${EMBEDDING_USE_OV}
-      USE_ONLY_TEXT_EMBEDDINGS: ${USE_ONLY_TEXT_EMBEDDINGS:-False}
-      EMBEDDING_DEVICE: ${EMBEDDING_DEVICE}
-      DEBUG_MODE: ${DEBUG_MODE:-False}
     group_add:
       - ${USER_GROUP_ID:-1000}
       - ${VIDEO_GROUP_ID:-44}
@@ -145,7 +147,7 @@ services:
       - default
     volumes:
       - ov-models:/home/appuser/.cache/huggingface
-      - ov-models:/app/ov-models
+      - ov-models:/app/ov_models
 
   dataprep-visualdata-milvus:
     image: ${REGISTRY:-}dataprep-visualdata-milvus:${TAG:-latest}
@@ -163,7 +165,7 @@ services:
       - MILVUS_HOST=${MILVUS_HOST}
       - MILVUS_PORT=${MILVUS_PORT}
       - EMBEDDING_BASE_URL=${EMBEDDING_BASE_URL}
-      - VCLIP_MODEL=${VCLIP_MODEL}
+      - EMBEDDING_MODEL_NAME=${EMBEDDING_MODEL_NAME}
     restart: unless-stopped
     devices:
       - /dev/dri:/dev/dri
@@ -201,7 +203,7 @@ services:
       - MILVUS_HOST=${MILVUS_HOST}
       - MILVUS_PORT=${MILVUS_PORT}
       - EMBEDDING_BASE_URL=${EMBEDDING_BASE_URL}
-      - VCLIP_MODEL=${VCLIP_MODEL}
+      - EMBEDDING_MODEL_NAME=${EMBEDDING_MODEL_NAME}
     restart: unless-stopped
     devices:
       - /dev/dri:/dev/dri
@@ -234,7 +236,7 @@ services:
       host_ip: ${host_ip}
       HOST_DATA_PATH: ${HOST_DATA_PATH}
       VLM_MODEL_NAME: ${VLM_MODEL_NAME}
-      VCLIP_MODEL: ${VCLIP_MODEL}
+      EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME}
       BACKEND_VQA_BASE_URL: ${BACKEND_VQA_BASE_URL}
       BACKEND_SEARCH_BASE_URL: ${BACKEND_SEARCH_BASE_URL}
       BACKEND_DATAPREP_BASE_URL: ${BACKEND_DATAPREP_BASE_URL}

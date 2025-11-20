@@ -1,0 +1,75 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+## [2025.2] - December 2025
+
+### Added
+- Integrated new "Weld Anomaly Detection" sample application with CatBoost ML model and dashboards. ([#742])
+- Enabled scaling for OPC-UA ingestion in wind turbine sample app via Docker Compose and updated telegraf config generation. ([#732])
+- Added GPU inferencing support for both Docker Compose and Helm deployments. ([#718])
+- Added Nginx as a reverse proxy with Helm template support, including SSL certificate generation and MQTT proxy configuration. ([#705])
+- Added legends to Grafana graphs for weld anomaly detection. ([#839])
+- Added updated architecture diagram for 2025.2 release. ([#800])
+- Added logger for fusion analytics and weld simulator. ([#777])
+- Added installation of requirements.txt for Python packages in venv for Ubuntu 24.04 compatibility. ([#804])
+- Added .gitignore file for improved repo hygiene. ([#791])
+- Added comprehensive documentation and visualization dashboards for weld sensor data.
+
+### Changed
+- Migrated from Bitnami/nginx to official nginx image for enhanced security and compatibility. ([#726])
+- Changed internal HTTPS port for nginx from 443 to 15443 to comply with Kubernetes security policies. ([#741])
+- Updated build system to support multiple sample applications via app parameter.
+- Updated hardcoded localhost references to dynamic host_ip placeholders in documentation. ([#888])
+- Updated Grafana dashboard to display processing times in seconds instead of milliseconds. ([#897])
+- Updated influx query and measurement/table names for accuracy. ([#695])
+- Updated arch diagram to drawio UX template. ([#800])
+- Updated docs to pull Helm charts for weekly tag. ([#721])
+- Updated Helm docs to download artifacts for sample apps. ([#766])
+- Updated Python script execution to use virtual environment.
+- Updated volume mounts in Docker Compose and Helm charts for unified configs folder. ([#781])
+- Updated fusion analytics MQTT topic name and improved comment formatting. ([#889])
+- Restructured alert configuration headings to distinguish Docker vs Helm deployment. ([#888])
+- Modular refactoring of time series documentation for maintainability.
+
+### Removed
+- Removed Model Registry related code and docs from sample apps. ([#769])
+
+### Fixed
+- Fixed missing Python package installation for fresh systems. ([#791])
+- Fixed path and port issues in documentation and configuration files. ([#740])
+- Fixed table of contents in wind turbine documentation. ([#806])
+- Fixed minor documentation bugs and improved clarity. ([#695], [#888])
+- Fixed missing version parameter in Helm charts for weld anomaly detection. ([#863])
+
+### Security
+- Added SSL/TLS protocol restrictions and cipher configurations to nginx. ([#847], [#851])
+- Implemented security headers (HSTS, X-Frame-Options, etc.) and proxy buffering limits in nginx. ([#847])
+- Addressed Trivy image scan vulnerabilities by updating Python base image and pip in Dockerfiles. ([#928])
+
+---
+
+[#742]: https://github.com/open-edge-platform/edge-ai-suites/commit/adce01b6468752154da9fd477337a045e33eed42
+[#732]: https://github.com/open-edge-platform/edge-ai-suites/commit/03d67d5fc97361d858e92e749a3d76ce12882074
+[#718]: https://github.com/open-edge-platform/edge-ai-suites/commit/b5f19b19a279aea6cfd5e202ee421075bf467c1d
+[#705]: https://github.com/open-edge-platform/edge-ai-suites/commit/343f832c0e32cacd38417ae8032496067ff9bdb0
+[#839]: https://github.com/open-edge-platform/edge-ai-suites/commit/9e8330475d0b10a5fa257b82c15ba4e2addbe299
+[#800]: https://github.com/open-edge-platform/edge-ai-suites/commit/4dadcb69937e68a42fa83baa8aad97b0b8592b96
+[#777]: https://github.com/open-edge-platform/edge-ai-suites/commit/5c156ad4581b528df01ed6fcd13f5895f15d4127
+[#804]: https://github.com/open-edge-platform/edge-ai-suites/commit/8c946ff3857d159f64aa49ec56c326211ddd2c08
+[#791]: https://github.com/open-edge-platform/edge-ai-suites/commit/ac4fba464a8406983a4ea80a3a28a4e420356d41
+[#726]: https://github.com/open-edge-platform/edge-ai-suites/commit/931fef94fbf6295bcbfd1952cd307d9ee02d8ac6
+[#741]: https://github.com/open-edge-platform/edge-ai-suites/commit/37cdcdf97f476e67f1e3b720953cf37b944e9a56
+[#888]: https://github.com/open-edge-platform/edge-ai-suites/commit/1c110bbf5427616a01f30cc12e3d44369e289ad3
+[#897]: https://github.com/open-edge-platform/edge-ai-suites/commit/f3ad24b7420d5f8043fa303ce3aa145626a8f7a2
+[#695]: https://github.com/open-edge-platform/edge-ai-suites/commit/bf232d19b68b870c40c7252dd1c37f34c2bc7f60
+[#721]: https://github.com/open-edge-platform/edge-ai-suites/commit/a1c6aaecc147306d9ae92c3f0f028e70263eed18
+[#766]: https://github.com/open-edge-platform/edge-ai-suites/commit/5763626d628cf567cb46f9d2c9cec2a98d4ac3d5
+[#781]: https://github.com/open-edge-platform/edge-ai-suites/commit/f0c548ab64421c25b16d8293790042e1686bc689
+[#769]: https://github.com/open-edge-platform/edge-ai-suites/commit/451d41020b674b102edb4d9e882091773b71db0d
+[#740]: https://github.com/open-edge-platform/edge-ai-suites/commit/dc826ae0e0019b16998f32c615dedd38826a1958
+[#806]: https://github.com/open-edge-platform/edge-ai-suites/commit/43d848dabb494d65f86f36db426f2563e272d696
+[#863]: https://github.com/open-edge-platform/edge-ai-suites/commit/de96f388ab6770f05aa65d22e9f40d489607075c
+[#847]: https://github.com/open-edge-platform/edge-ai-suites/commit/6d6e18dab3780b09b6a8f76ecbf194d081111c0d
+[#851]: https://github.com/open-edge-platform/edge-ai-suites/commit/b9ab22fde4668f7ff412eff741ca1d1c880b2c85
+[#928]: https://github.com/open-edge-platform/edge-ai-suites/commit/307b4925f70268f97081e05c5726943775e873dc

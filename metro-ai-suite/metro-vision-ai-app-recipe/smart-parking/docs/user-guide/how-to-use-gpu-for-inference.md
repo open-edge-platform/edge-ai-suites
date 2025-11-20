@@ -37,7 +37,7 @@ DL Streamer inference elements also provides property such as `device=GPU` and `
 
 > Note - This sample application already provides a default `compose-without-scenescape.yml` file that includes the necessary GPU access to the containers.
 
-The pipeline `yolov11s_1_gpu` in [pipeline-server-config](../../src/dlstreamer-pipeline-server/config.json) contains GPU specific elements and uses GPU backend for inferencing. We can start the pipeline as follows:
+The pipeline `yolov11s_gpu` in [pipeline-server-config](../../src/dlstreamer-pipeline-server/config.json) contains GPU specific elements and uses GPU backend for inferencing. We can start the pipeline as follows:
 
 ```sh
 ./sample_start.sh gpu

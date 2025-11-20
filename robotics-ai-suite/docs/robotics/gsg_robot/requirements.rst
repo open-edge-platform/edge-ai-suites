@@ -8,8 +8,8 @@ Requirements |checklist_robot|
 Knowledge/Experience
 --------------------
 
--  You are familiar with executing |Linux| commands.
+-  You are familiar with executing Linux commands.
 
--  |ros| background strongly recommended.
+-  ROS 2 background strongly recommended.
 
 .. include:: ../shared/requirements_robot.rst

@@ -12,3 +12,6 @@ spec:
       protocol: TCP
       port: {{ .Values.influxdb.service.port }}
       targetPort: {{ .Values.influxdb.service.port }}
+      {{- if eq .Values.influxdb.service.type "NodePort" }}
+      nodePort: {{ .Values.influxdb.service.nodePort | default 30086 }}
+      {{- end }}

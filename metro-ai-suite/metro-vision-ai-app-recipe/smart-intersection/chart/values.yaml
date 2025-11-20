@@ -1,8 +1,13 @@
 namespace:
 replicaCount: 1
-http_proxy:
-https_proxy:
-no_proxy:
+http_proxy: 
+https_proxy: 
+no_proxy: 
+
+# Global configuration
+global:
+  # External IP address for certificate generation
+  externalIP: 
 
 # Global image pull policy for all containers
 imagePullPolicy: IfNotPresent
@@ -60,8 +65,9 @@ influxdb:
   retention: 1w
 
   service:
-    type: ClusterIP
+    type: NodePort
     port: 8086
+    nodePort: 30086
 
   # Optional: storage class (used if you add PVCs later)
   storageClassName: "standard"
@@ -122,10 +128,10 @@ web:
 
 dlstreamerPipelineServer:
   repository: docker.io/intel/dlstreamer-pipeline-server
-  tag: 3.1.0-ubuntu24
+  tag: 2025.2-ubuntu24-rc1
   # Overrides the storage class name
   storageClassName: "standard"
-
+  gpuWorkload: false
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.multimodalembeddingServing.name }}
+spec:
+  type: {{ .Values.multimodalembeddingServing.service.type }}
+  ports:
+    - port: {{ .Values.multimodalembeddingServing.service.port }}
+      targetPort: {{ .Values.multimodalembeddingServing.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Values.multimodalembeddingServing.name }}

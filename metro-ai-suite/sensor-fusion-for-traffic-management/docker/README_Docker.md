@@ -78,7 +78,7 @@ newgrp docker
 6. Then pull base image
 
 ```bash
-docker pull ubuntu:22.04
+docker pull ubuntu:24.04
 ```
 
 
@@ -97,12 +97,12 @@ bash install_driver_related_libs.sh
 
 > **Note that the default username is `tfcc` and password is `intel` in docker image.**
 
-##### Build and run docker image
+#### Build and run docker image
 
 Usage:
 
 ```bash
-bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 22.04> 
+bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04> 
 ```
 
 ```
@@ -118,7 +118,7 @@ bash run_docker.sh tfcc:latest false
 # After the run is complete, the container ID will be output, or you can view it through docker ps 
 ```
 
-##### Enter docker
+#### Enter docker
 
 Get the container id by command bellow:
 
@@ -134,7 +134,7 @@ docker exec -it <container id> /bin/bash
 
 
 
-##### Copy dataset
+#### Copy dataset
 
 If you want to copy dataset or other files to docker, you can refer the command bellow:
 
@@ -156,7 +156,7 @@ https_proxy=
 http_proxy=
 # base image settings
 BASE=ubuntu
-BASE_VERSION=22.04
+BASE_VERSION=24.04
 # group IDs for various services
 VIDEO_GROUP_ID=44
 RENDER_GROUP_ID=110
@@ -175,7 +175,7 @@ echo $(getent group render | awk -F: '{printf "%s\n", $3}')
 
 
 
-##### Build and run docker image
+#### Build and run docker image
 Uasge:
 ```bash
 cd $PROJ_DIR/docker
@@ -196,7 +196,7 @@ cd $PROJ_DIR/docker
 docker compose up tfcc-npu -d
 ```
 
-##### Enter docker
+#### Enter docker
 Usage:
 ```bash
 docker compose exec <services-name> /bin/bash
@@ -206,7 +206,7 @@ Example:
 docker compose exec tfcc /bin/bash
 ```
 
-##### Copy dataset
+#### Copy dataset
 
 Find the container name or ID:
 
@@ -226,7 +226,3 @@ copy dataset
 ```bash
 docker cp /path/to/dataset docker-tfcc-1:/path/to/dataset
 ```
-
-### Running inside docker
-
-Enter the project directory `/home/tfcc/metro-2.0` then following the guides [How it works](../docs/user-guide/Advanced-User-Guide.md#how-it-works) to run sensor fusion application.

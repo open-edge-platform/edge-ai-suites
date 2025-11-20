@@ -147,7 +147,7 @@ double PoseTracking::getGripperPositionFeedback()
                 return internal_joint_state_.position[i];
     }
     RCLCPP_WARN(LOGGER,
-        "Couldnt find gripper joint in moveit config!");
+        "Couldn't find gripper joint in moveit config!");
     return -1.0;
 }
 PoseTrackingStatusCode PoseTracking::moveToPose()
