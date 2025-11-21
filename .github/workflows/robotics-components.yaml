@@ -32,6 +32,8 @@ jobs:
           filters: |
             fast-mapping-location:
               - 'robotics-ai-suite/components/fast-mapping/**'
+            groundfloor-location:
+              - 'robotics-ai-suite/components/groundfloor/**'
             its-planner-location:
               - 'robotics-ai-suite/components/its-planner/**'
             multicam-demo-location:
@@ -44,6 +46,12 @@ jobs:
     needs: check-changes
     if: ${{ needs.check-changes.outputs.fast-mapping-changed == 'true' }}
     uses: "./.github/workflows/robotics-components-fast-mapping.yaml"
+
+  groundfloor:
+    name: "Groundfloor"
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.groundfloor-changed == 'true' }}
+    uses: "./.github/workflows/robotics-components-groundfloor.yaml"
 
   its-planner:
     name: "ITS Planner"

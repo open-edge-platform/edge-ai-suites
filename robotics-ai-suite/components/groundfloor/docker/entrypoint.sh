@@ -1,6 +1,9 @@
 #!/bin/bash
-# SPDX-License-Identifier: Apache-2.0
+
 # Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 set -e
 
 # setup ros2 environment

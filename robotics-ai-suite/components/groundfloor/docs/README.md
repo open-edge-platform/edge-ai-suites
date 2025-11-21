@@ -1,3 +1,8 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
 
 # 3D Pointcloud Groundfloor Segmentation for Intel® RealSense™ Camera and 3D LiDAR
 
