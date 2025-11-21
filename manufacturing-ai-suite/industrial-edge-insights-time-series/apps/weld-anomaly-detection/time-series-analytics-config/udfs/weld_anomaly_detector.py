@@ -29,6 +29,9 @@ enable_benchmarking = os.getenv('ENABLE_BENCHMARKING', 'false').upper() == 'TRUE
 total_no_pts = int(os.getenv('BENCHMARK_TOTAL_PTS', "0"))
 logging_level = getattr(logging, log_level, logging.INFO)
 
+# Primary weld current threshold
+WELD_CURRENT_THRESHOLD = 50
+
 # Configure logging
 logging.basicConfig(
     level=logging_level,  # Set the log level to DEBUG
@@ -104,31 +107,30 @@ class AnomalyDetectorHandler(Handler):
     def point(self, point):
         """ A point has arrived.
         """
-        server = None
+        stream_src = None
         start_time = time.time_ns()
         if "source" in point.tags:
-            server = point.tags["source"]
+            stream_src = point.tags["source"]
+        elif "source" in point.fieldsString:
+            stream_src = point.fieldsString["source"]
 
         global enable_benchmarking
         if enable_benchmarking:
-            if server not in self.points_received:
-                self.points_received[server] = 0
-            if self.points_received[server] >= self.max_points:
+            if stream_src not in self.points_received:
+                self.points_received[stream_src] = 0
+            if self.points_received[stream_src] >= self.max_points:
+                logger.info(f"Benchmarking: Reached max points {self.max_points} for source {stream_src}. Skipping further processing.")
                 return
-            self.points_received[server] += 1
-
+            self.points_received[stream_src] += 1
         fields = {}
         for key, value in point.fieldsDouble.items():
             fields[key] = value
             
         for key, value in point.fieldsInt.items():
             fields[key] = value
-            
-        for key, value in point.fieldsString.items():
-            fields[key] = value
 
         point_series = pd.Series(fields)
-        if "Primary Weld Current" in point_series and point_series["Primary Weld Current"] > 50:
+        if "Primary Weld Current" in point_series and point_series["Primary Weld Current"] > WELD_CURRENT_THRESHOLD:
             defect_likelihood_main = self.model.predict_proba(point_series)
             bad_defect = defect_likelihood_main[0]*100
             good_defect = defect_likelihood_main[1]*100
@@ -136,7 +138,7 @@ class AnomalyDetectorHandler(Handler):
                 point.fieldsDouble["anomaly_status"] = 1.0
             logger.info(f"Good Weld: {good_defect:.2f}%, Defective Weld: {bad_defect:.2f}%")
         else:
-            logger.info("Good Weld: N/A, Defective Weld: N/A") 
+            logger.info("Primary Weld Current below threshold (%d). Skipping anomaly detection.", WELD_CURRENT_THRESHOLD)
 
         point.fieldsDouble["Good Weld"] = round(good_defect, 2) if "good_defect" in locals() else 0.0
         point.fieldsDouble["Defective Weld"] = round(bad_defect, 2) if "bad_defect" in locals() else 0.0
@@ -147,7 +149,7 @@ class AnomalyDetectorHandler(Handler):
         point.fieldsDouble["processing_time"] = processing_time
         point.fieldsDouble["end_end_time"] = end_end_time
 
-        logger.info("Processing point %s %s for source %s", point.time, time.time(), server)
+        logger.info("Processing point %s %s for source %s", point.time, time.time(), stream_src)
 
         response = udf_pb2.Response()
         if "anomaly_status" not in point.fieldsDouble:
