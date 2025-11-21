@@ -1,20 +1,17 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
-# Sample debian/rules that uses debhelper.
 # This file was originally written by Joey Hess and Craig Small.
+# Sample debian/rules that uses debhelper.
 # As a special exception, when this file is copied by dh-make into a
 # dh-make output file, you may use that output file without restriction.
 # This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Modified by Intel Corporation with build performance optimizations.
 
 export ROS_DISTRO=humble
 
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
-# TODO: remove the LDFLAGS override.  It's here to avoid esoteric problems
-# of this sort:
-#  https://code.ros.org/trac/ros/ticket/2977
-#  https://code.ros.org/trac/ros/ticket/3842
-export LDFLAGS=-pthread
 export PKG_CONFIG_PATH=/opt/ros/$(ROS_DISTRO)/lib/pkgconfig
 # Explicitly enable -DNDEBUG, see:
 # 	https://github.com/ros-infrastructure/bloom/issues/327
@@ -22,6 +19,18 @@ export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG
 ifneq ($(filter nocheck,$(DEB_BUILD_OPTIONS)),)
 	BUILD_TESTING_ARG=-DBUILD_TESTING=OFF
 endif
+
+# CI Build Performance Optimizations
+export CI=1
+export CMAKE_BUILD_TYPE=Release
+# Enable ccache if available
+export PATH:=/usr/lib/ccache:$(PATH)
+# Use all available CPU cores for parallel builds
+NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+ifeq (,$(NUMJOBS))
+	NUMJOBS := $(shell nproc)
+endif
+MAKEFLAGS += -j$(NUMJOBS)
 
 DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 
