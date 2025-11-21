@@ -644,11 +644,9 @@ main() {
   
   echo ""
   info "Next steps:"
-  info "1. Reboot your system to ensure GPU drivers are properly loaded"
-  info "2. Navigate to ${HOME}/metro/ to explore the cloned repositories"
-  info "3. Check repository documentation for usage instructions"
-  info "4. Verify GPU installation with: clinfo"
-  info "5. Start developing with ${NAME}!"
+  info "1. Navigate to ${HOME}/metro/ to explore the cloned repositories"
+  info "2. Check repository documentation for usage instructions"
+  info "3. Start developing with ${NAME}!"
 
 }
 
