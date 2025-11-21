@@ -1,0 +1,1732 @@
+From a53c81208c30faabd3b6b4f97d269f55e702c2f6 Mon Sep 17 00:00:00 2001
+From: AnnikaWU <109574074+AnnikaWU@users.noreply.github.com>
+Date: Tue, 18 Nov 2025 09:49:43 +0800
+Subject: [PATCH] Modify for dual-arm ACT+OCS2+MUJOCO in simulation (#57)
+
+* add single-arm aloha in mujoco simualtion
+
+* add dual-arm launch file and modify for dual-arm in mujoco simualtion
+
+* modify for general mpc and mrt node
+
+* modify for better compatibility
+
+* remove unnecessary modification and ros1 launch file for aloha
+
+* Update manipulator_aloha_dual_arm.launch.py
+---
+ log/COLCON_IGNORE                             |   0
+ log/latest                                    |   1 +
+ log/latest_build                              |   1 +
+ .../config/aloha/task.info                    | 337 +++++++++++
+ .../config/aloha_dual_arm/task.info           | 568 ++++++++++++++++++
+ .../MobileManipulatorInterface.h              |   4 +
+ .../src/MobileManipulatorInterface.cpp        |   3 +
+ .../launch/manipulator_aloha.launch.py        |  69 +++
+ .../manipulator_aloha_dual_arm.launch.py      | 135 +++++
+ .../src/MobileManipulatorDummyMRT.cpp         |   9 +-
+ .../src/MobileManipulatorMpcNode.cpp          |  48 +-
+ ocs2_ros_interfaces/CMakeLists.txt            |  51 +-
+ .../common/RosMsgConversions.h                |   6 +
+ .../mpc/MPC_ROS_Interface.h                   |  10 +
+ .../synchronized_module/RosReferenceManager.h |  12 +
+ ocs2_ros_interfaces/package.xml               |   2 +
+ .../src/common/RosMsgConversions.cpp          |  17 +
+ .../src/mpc/MPC_ROS_Interface.cpp             |  41 ++
+ .../src/mrt/MRT_ROS_Dummy_Loop.cpp            |   8 +-
+ .../src/mrt/MRT_ROS_Interface.cpp             |   2 +-
+ .../RosReferenceManager.cpp                   |  64 ++
+ 21 files changed, 1366 insertions(+), 22 deletions(-)
+ create mode 100644 log/COLCON_IGNORE
+ create mode 120000 log/latest
+ create mode 120000 log/latest_build
+ create mode 100644 ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha/task.info
+ create mode 100644 ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha_dual_arm/task.info
+ create mode 100644 ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha.launch.py
+ create mode 100644 ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha_dual_arm.launch.py
+
+diff --git a/log/COLCON_IGNORE b/log/COLCON_IGNORE
+new file mode 100644
+index 000000000..e69de29bb
+diff --git a/log/latest b/log/latest
+new file mode 120000
+index 000000000..b57d247c7
+--- /dev/null
++++ b/log/latest
+@@ -0,0 +1 @@
++latest_build
+\ No newline at end of file
+diff --git a/log/latest_build b/log/latest_build
+new file mode 120000
+index 000000000..0210ecd9a
+--- /dev/null
++++ b/log/latest_build
+@@ -0,0 +1 @@
++build_2025-10-23_11-13-03
+\ No newline at end of file
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha/task.info b/ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha/task.info
+new file mode 100644
+index 000000000..2a68267c4
+--- /dev/null
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha/task.info
+@@ -0,0 +1,337 @@
++; robot model meta-information
++model_information {
++  manipulatorModelType     0      // 0: Default-arm, 1: Wheel-based manipulator, 2: Floating-arm manipulator, 3: Fully actuated floating-arm manipulator
++  
++  ; motion joints in the URDF to consider fixed
++  removeJoints {
++  }
++
++  ; base frame of the robot (from URDF)
++  baseFrame                       "vx300s/base_link"
++  ; end-effector frame of the robot (from URDF)
++  eeFrame                         "vx300s/gripper_link"
++}
++
++model_settings
++{
++  usePreComputation               true
++  recompileLibraries              true
++}
++
++; DDP settings
++ddp
++{
++  algorithm                       SLQ
++
++  nThreads                        3
++  threadPriority                  50
++
++  maxNumIterations                1
++  minRelCost                      0.1
++  constraintTolerance             1e-3
++
++  displayInfo                     false
++  displayShortSummary             false
++  checkNumericalStability         false
++  debugPrintRollout               false
++  debugCaching                    false
++
++  AbsTolODE                       1e-5
++  RelTolODE                       1e-3
++  maxNumStepsPerSecond            100000
++  timeStep                        1e-3
++  backwardPassIntegratorType      ODE45
++
++  constraintPenaltyInitialValue   20.0
++  constraintPenaltyIncreaseRate   2.0
++
++  preComputeRiccatiTerms          true
++
++  useFeedbackPolicy               false
++
++  strategy                        LINE_SEARCH
++  lineSearch
++  {
++    minStepLength                 1e-2
++    maxStepLength                 1.0
++    hessianCorrectionStrategy     DIAGONAL_SHIFT
++    hessianCorrectionMultiple     1e-3
++  }
++}
++
++; Rollout settings
++rollout
++{
++  AbsTolODE                       1e-5
++  RelTolODE                       1e-3
++  timeStep                        1e-2
++  integratorType                  ODE45
++  maxNumStepsPerSecond            100000
++  checkNumericalStability         false
++}
++
++; MPC settings
++mpc
++{
++  timeHorizon                     1.0   ; [s]
++  solutionTimeWindow              0.2   ; [s]
++  coldStart                       false
++  
++  debugPrint                      false
++
++  mpcDesiredFrequency             100   ; [Hz]
++  mrtDesiredFrequency             400   ; [Hz]
++}
++
++; initial state
++initialState
++{
++  ; initial state for the different types of arm base DOFs
++  base
++  {
++    defaultManipulator
++    {
++    }
++
++    floatingArmManipulator
++    {
++      (0,0)  0.0  ; position x
++      (1,0)  0.0  ; position y
++      (2,0)  0.5  ; position z
++      (3,0)  0.0  ; euler angle z
++      (4,0)  0.0  ; euler angle y
++      (5,0)  1.7  ; euler angle x
++    }
++
++    fullyActuatedFloatingArmManipulator
++    {
++      (0,0)  0.0  ; position x
++      (1,0)  0.0  ; position y
++      (2,0)  0.0  ; position z
++      (3,0)  0.0  ; euler angle z
++      (4,0)  0.0  ; euler angle y
++      (5,0)  0.0  ; euler angle x
++    }
++
++    wheelBasedMobileManipulator
++    {
++      (0,0)  0.0  ; position x
++      (1,0)  0.0  ; position y
++      (2,0)  0.0  ; heading
++    }
++  }
++
++  ; initial state for the arm DOFs // get from urdf? need to check arm num
++  arm
++  {
++    (0,0)   0.0       ; arm_1
++    (1,0)  -0.96      ; arm_2
++    (2,0)   1.16      ; arm_3
++    (3,0)   0.0       ; arm_4
++    (4,0)  -0.3       ; arm_5
++    (5,0)   0.0       ; arm_6
++    (6,0)   0.024     ; arm_7
++    (7,0)   0.024     ; arm_8
++  }
++}
++
++inputCost
++{
++  ; control weight matrix
++  R
++  {
++    ; input costs for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        scaling 1e-2
++        (0,0)  5.0  ; position x
++        (1,1)  5.0  ; position y
++        (2,2)  5.0  ; position z
++        (3,3)  5.0  ; euler angle z
++        (4,4)  5.0  ; euler angle y
++        (5,5)  5.0  ; euler angle x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        scaling 1e-2
++        (0,0)  5.0  ; forward velocity
++        (1,1)  5.0  ; turning velocity
++      }
++    }
++    
++    ; input costs for the arm DOFs // need to check arm num
++    arm
++    {
++      scaling 1e-2
++
++      (0,0)  1.0  ; arm_1 velocity
++      (1,1)  1.0  ; arm_2 velocity
++      (2,2)  1.0  ; arm_3 velocity
++      (3,3)  1.0  ; arm_4 velocity
++      (4,4)  1.0  ; arm_5 velocity
++      (5,5)  1.0  ; arm_6 velocity
++      (6,6)  1.0  ; arm_7 velocity
++      (7,7)  1.0  ; arm_8 velocity
++    }
++  }
++}
++
++endEffector // need to update data
++{
++  ; end effector quadratic penalty scaling
++  muPosition      50.0
++  muOrientation   25.0
++}
++
++finalEndEffector // need to update data
++{
++  muPosition      50.0
++  muOrientation   25.0
++}
++
++selfCollision
++{ 
++  ; activate self-collision constraint
++  activate  false
++
++  ; Self Collision raw object pairs // need to add
++  collisionObjectPairs
++  {
++  }
++
++  ; Self Collision pairs // need to add
++  collisionLinkPairs
++  {
++  }
++
++  ; minimum distance allowed between the pairs
++  minimumDistance  0.05
++
++  ; relaxed log barrier mu
++  mu      1e-2
++
++  ; relaxed log barrier delta
++  delta   1e-3
++}
++
++; Only applied for arm joints: limits parsed from URDF // need to add
++jointPositionLimits
++{
++  ; activate constraint
++  activate  false
++
++  ; relaxed log barrier mu
++  mu      1e-3
++
++  ; relaxed log barrier delta
++  delta   1e-4
++}
++
++jointVelocityLimits
++{
++  ; relaxed log barrier mu
++  mu      0.01
++
++  ; relaxed log barrier delta
++  delta   1e-3
++  
++  lowerBound
++  {
++    ; velocity limits for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        (0,0)  -0.1  ; linear velocity x
++        (1,0)  -0.1  ; linear velocity y
++        (2,0)  -0.1  ; linear velocity z
++        (3,0)  -0.3  ; euler angle velocity z
++        (4,0)  -0.3  ; euler angle velocity y
++        (5,0)  -0.3  ; euler angle velocity x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        (0,0)  -0.1 ; forward velocity
++        (1,0)  -0.3 ; turning velocity
++      }
++    }
++
++    ; velocity limits for the arm DOFs // all need to change from urdf
++    arm
++    {
++      (0,0)  -3.141592653589793    ; arm_1 [rad/s]
++      (1,0)  -3.141592653589793	   ; arm_2 [rad/s]
++      (2,0)  -3.141592653589793	   ; arm_3 [rad/s]
++      (3,0)  -3.141592653589793	   ; arm_4 [rad/s]
++      (4,0)  -3.141592653589793	   ; arm_5 [rad/s]
++      (5,0)  -3.141592653589793	   ; arm_6 [rad/s]
++      (6,0)  -3.141592653589793	   ; arm_7 [rad/s]
++      (7,0)  -3.141592653589793	   ; arm_8 [rad/s]
++    }
++  }
++
++  
++  upperBound
++  {
++    ; velocity limits for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        (0,0)  0.1  ; linear velocity x
++        (1,0)  0.1  ; linear velocity y
++        (2,0)  0.1  ; linear velocity z
++        (3,0)  0.3  ; euler angle velocity z
++        (4,0)  0.3  ; euler angle velocity y
++        (5,0)  0.3  ; euler angle velocity x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        (0,0)  0.1 ; forward velocity
++        (1,0)  0.3 ; turning velocity
++      }
++    }
++
++    ; velocity limits for the arm DOFs // all need to change from urdf
++    arm
++    {
++      (0,0)  3.141592653589793     ; arm_1 [rad/s]
++      (1,0)  3.141592653589793	   ; arm_2 [rad/s]
++      (2,0)  3.141592653589793	   ; arm_3 [rad/s]
++      (3,0)  3.141592653589793 	   ; arm_4 [rad/s]
++      (4,0)  3.141592653589793 	   ; arm_5 [rad/s]
++      (5,0)  3.141592653589793 	   ; arm_6 [rad/s]
++      (6,0)  3.141592653589793 	   ; arm_7 [rad/s]
++      (7,0)  3.141592653589793 	   ; arm_8 [rad/s]
++    }
++  }
++}
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha_dual_arm/task.info b/ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha_dual_arm/task.info
+new file mode 100644
+index 000000000..c270c13d8
+--- /dev/null
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha_dual_arm/task.info
+@@ -0,0 +1,568 @@
++; robot model meta-information
++model_information {
++  manipulatorModelType 4          // 0: Default-arm, 1: Wheel-based manipulator, 2: Floating-arm manipulator, 3: Fully actuated floating-arm manipulator, 4: Dual-arm with fixed base
++  
++  ; motion joints in the URDF to consider fixed
++  removeJoints {
++    left 
++    {
++      [0]  "right_base_joint"
++      [1]  "vx300s_right/waist"
++      [2]  "vx300s_right/shoulder"
++      [3]  "vx300s_right/elbow"
++      [4]  "vx300s_right/forearm_roll"
++      [5]  "vx300s_right/wrist_angle"
++      [6]  "vx300s_right/wrist_rotate"
++    }
++    right 
++    {
++      [0]  "left_base_joint"
++      [1]  "vx300s_left/waist"
++      [2]  "vx300s_left/shoulder"
++      [3]  "vx300s_left/elbow"
++      [4]  "vx300s_left/forearm_roll"
++      [5]  "vx300s_left/wrist_angle"
++      [6]  "vx300s_left/wrist_rotate"
++    }
++  }
++  
++  ; base frame of the robot (from URDF)
++  leftBaseFrame                  "vx300s_left/base_link"
++  rightBaseFrame                 "vx300s_right/base_link"
++  
++  ; end-effector frames of the robot (from URDF)
++  leftEeFrame                     "vx300s_left/gripper_link"
++  rightEeFrame                    "vx300s_right/gripper_link"
++  
++}
++
++model_settings
++{
++  usePreComputation               true
++  recompileLibraries              true
++}
++
++; DDP settings
++ddp
++{
++  algorithm                       SLQ
++
++  nThreads                        3
++  threadPriority                  50
++
++  maxNumIterations                1
++  minRelCost                      0.1
++  constraintTolerance             1e-3
++
++  displayInfo                     false
++  displayShortSummary             false
++  checkNumericalStability         false
++  debugPrintRollout               false
++  debugCaching                    false
++
++  AbsTolODE                       1e-5
++  RelTolODE                       1e-3
++  maxNumStepsPerSecond            100000
++  timeStep                        1e-3
++  backwardPassIntegratorType      ODE45
++
++  constraintPenaltyInitialValue   20.0
++  constraintPenaltyIncreaseRate   2.0
++
++  preComputeRiccatiTerms          true
++
++  useFeedbackPolicy               false
++
++  strategy                        LINE_SEARCH
++  lineSearch
++  {
++    minStepLength                 1e-2
++    maxStepLength                 1.0
++    hessianCorrectionStrategy     DIAGONAL_SHIFT
++    hessianCorrectionMultiple     1e-3
++  }
++}
++
++; Rollout settings
++rollout
++{
++  AbsTolODE                       1e-5
++  RelTolODE                       1e-3
++  timeStep                        1e-1  // change from 1e-2
++  integratorType                  ODE45
++  maxNumStepsPerSecond            10000  // change from 100000
++  checkNumericalStability         false
++}
++
++; MPC settings
++mpc
++{
++  ; timeHorizon                   1.0   ; [s]
++  timeHorizon                     2.0   ; [s] extend timeHorizon for unstable ALOHA feedback state freq (next feedback state time must <= current feedback time+timeHorizon)
++  solutionTimeWindow              0.2   ; [s]
++  coldStart                       false
++  
++  debugPrint                      false
++ 
++  mpcDesiredFrequency             50   ; [Hz] change from 100Hz as to apply realtime strategy in ocs2_ros_interfaces/src/mrt/MRT_ROS_Dummy_Loop.cpp
++  mrtDesiredFrequency             200   ; [Hz] change from 400Hz to allocate with ALOHA
++}
++
++; initial state
++initialState
++{
++  ; initial state for the different types of arm base DOFs
++  base
++  {
++    defaultManipulator
++    {
++    }
++
++    floatingArmManipulator
++    {
++      (0,0)  0.0  ; position x
++      (1,0)  0.0  ; position y
++      (2,0)  0.5  ; position z
++      (3,0)  0.0  ; euler angle z
++      (4,0)  0.0  ; euler angle y
++      (5,0)  1.7  ; euler angle x
++    }
++
++    fullyActuatedFloatingArmManipulator
++    {
++      (0,0)  0.0  ; position x
++      (1,0)  0.0  ; position y
++      (2,0)  0.0  ; position z
++      (3,0)  0.0  ; euler angle z
++      (4,0)  0.0  ; euler angle y
++      (5,0)  0.0  ; euler angle x
++    }
++
++    wheelBasedMobileManipulator
++    {
++      (0,0)  0.0  ; position x
++      (1,0)  0.0  ; position y
++      (2,0)  0.0  ; heading
++    }
++  }
++
++  ; initial state for the dual arm DOFs  // need to check arm num
++  dualArm
++  {
++    leftArm 
++    {
++      (0,0)   0.0       ; arm_1
++      (1,0)  -0.96      ; arm_2
++      (2,0)   1.16      ; arm_3
++      (3,0)   0.0       ; arm_4
++      (4,0)  -0.3       ; arm_5
++      (5,0)   0.0       ; arm_6
++      (6,0)   0.024     ; arm_7
++      (7,0)   0.024     ; arm_8
++    }
++
++    rightArm 
++    {
++      (0,0)   0.0       ; arm_1
++      (1,0)  -0.96      ; arm_2
++      (2,0)   1.16      ; arm_3
++      (3,0)   0.0       ; arm_4
++      (4,0)  -0.3       ; arm_5
++      (5,0)   0.0       ; arm_6
++      (6,0)   0.024     ; arm_7
++      (7,0)   0.024     ; arm_8
++    }
++
++  }
++}
++
++inputCost
++{
++  ; control weight matrix
++  R
++  {
++    ; input costs for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        scaling 1e-2
++        (0,0)  5.0  ; position x
++        (1,1)  5.0  ; position y
++        (2,2)  5.0  ; position z
++        (3,3)  5.0  ; euler angle z
++        (4,4)  5.0  ; euler angle y
++        (5,5)  5.0  ; euler angle x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        scaling 1e-2
++        (0,0)  5.0  ; forward velocity
++        (1,1)  5.0  ; turning velocity
++      }
++    }
++
++    ; input costs for the arm DOFs // need to check arm num
++    dualArm
++    {
++      leftArm 
++      {
++        scaling 1e-2;
++
++        (0,0)  1.0  ; arm_1 velocity
++        (1,1)  1.0  ; arm_2 velocity
++        (2,2)  1.0  ; arm_3 velocity
++        (3,3)  1.0  ; arm_4 velocity
++        (4,4)  1.0  ; arm_5 velocity
++        (5,5)  1.0  ; arm_6 velocity
++        (6,6)  1.0  ; arm_7 velocity
++        (7,7)  1.0  ; arm_8 velocity
++      }
++
++      rightArm 
++      {
++        scaling 1e-2;
++
++        (0,0)  1.0  ; arm_1 velocity
++        (1,1)  1.0  ; arm_2 velocity
++        (2,2)  1.0  ; arm_3 velocity
++        (3,3)  1.0  ; arm_4 velocity
++        (4,4)  1.0  ; arm_5 velocity
++        (5,5)  1.0  ; arm_6 velocity
++        (6,6)  1.0  ; arm_7 velocity
++        (7,7)  1.0  ; arm_8 velocity
++      }
++    }
++  }
++}
++
++endEffector 
++{
++    leftArm
++    {
++      ; end effector quadratic penalty scaling
++      muPosition      50.0
++      muOrientation   25.0
++    }
++
++    rightArm
++    {
++      ; end effector quadratic penalty scaling
++      muPosition      50.0
++      muOrientation   25.0
++    }
++
++}
++
++finalEndEffector 
++{
++    leftArm
++    {
++      muPosition      50.0
++      muOrientation   25.0
++    }
++
++    rightArm
++    {
++      muPosition      50.0
++      muOrientation   25.0
++    }
++
++}
++
++selfCollision
++{ 
++  ; activate self-collision constraint
++  activate  false
++
++  ; Self Collision raw object pairs // need to add
++  collisionObjectPairs
++  {
++  }
++
++  ; Self Collision pairs // need to add
++  collisionLinkPairs
++  {
++  }
++
++  ; minimum distance allowed between the pairs
++  minimumDistance  0.05
++
++  ; relaxed log barrier mu
++  mu      1e-2
++
++  ; relaxed log barrier delta
++  delta   1e-3
++}
++
++; Only applied for arm joints: limits parsed from URDF // need to add
++jointPositionLimits
++{
++  ; activate constraint
++  activate  true
++
++  ; relaxed log barrier mu
++  mu      1e-3
++
++  ; relaxed log barrier delta
++  delta   1e-4
++
++  lowerBound
++  {
++    ; position limits for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++      
++      ; add for avoiding bug
++      fullyActuatedFloatingArmManipulator 
++      {
++        (0,0)  -0.1  ; linear velocity x
++        (1,0)  -0.1  ; linear velocity y
++        (2,0)  -0.1  ; linear velocity z
++        (3,0)  -0.3  ; euler angle velocity z
++        (4,0)  -0.3  ; euler angle velocity y
++        (5,0)  -0.3  ; euler angle velocity x
++      }
++      
++      ; add for avoiding bug
++      wheelBasedMobileManipulator
++      {
++        (0,0)  -0.1 ; forward velocity
++        (1,0)  -0.3 ; turning velocity
++      }
++    }
++
++    ; position limits for the arm DOFs // all need to change from urdf
++    dualArm
++    {
++      leftArm
++      {
++        (0,0)  -3.141582653589793    ; arm_1 
++        (1,0)  -1.8500490071139892   ; arm_2 
++        (2,0)  -1.7627825445142729   ; arm_3 
++        (3,0)  -3.141592653589793	 ; arm_4 
++        (4,0)  -1.8675022996339325   ; arm_5 
++        (5,0)  -3.141592653589793	 ; arm_6 
++        (6,0)   0.021                ; left_finger
++        (7,0)  -0.057                ; right_finger
++      }
++
++      rightArm
++      {
++        (0,0)  -3.141582653589793    ; arm_1 
++        (1,0)  -1.8500490071139892   ; arm_2 
++        (2,0)  -1.7627825445142729   ; arm_3 
++        (3,0)  -3.141592653589793	 ; arm_4 
++        (4,0)  -1.8675022996339325   ; arm_5 
++        (5,0)  -3.141592653589793	 ; arm_6 
++        (6,0)   0.021                ; left_finger
++        (7,0)  -0.057                ; right_finger
++      }
++    }
++  }
++
++  upperBound
++  {
++    ;position limits for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++      
++      ; add for avoiding bug
++      fullyActuatedFloatingArmManipulator
++      {
++        (0,0)  0.1  ; linear velocity x
++        (1,0)  0.1  ; linear velocity y
++        (2,0)  0.1  ; linear velocity z
++        (3,0)  0.3  ; euler angle velocity z
++        (4,0)  0.3  ; euler angle velocity y
++        (5,0)  0.3  ; euler angle velocity x
++      }
++      
++      ; add for avoiding bug
++      wheelBasedMobileManipulator
++      {
++        (0,0)  0.1 ; forward velocity
++        (1,0)  0.3 ; turning velocity
++      }
++    }
++
++    ; position limits for the arm DOFs // all need to change from urdf
++    dualArm
++    {
++      leftArm
++      {
++        (0,0)  3.141582653589793       ; arm_1 
++        (1,0)  1.2566370614359172	   ; arm_2 
++        (2,0)  1.6057029118347832	   ; arm_3 
++        (3,0)  3.141592653589793 	   ; arm_4 
++        (4,0)  2.234021442552742 	   ; arm_5
++        (5,0)  3.141592653589793 	   ; arm_6
++        (6,0)  0.057                   ; left_finger
++        (7,0)  -0.021                  ; right_finger
++      }
++      
++      rightArm
++      {
++        (0,0)  3.141582653589793       ; arm_1 
++        (1,0)  1.2566370614359172	   ; arm_2 
++        (2,0)  1.6057029118347832	   ; arm_3 
++        (3,0)  3.141592653589793 	   ; arm_4 
++        (4,0)  2.234021442552742 	   ; arm_5
++        (5,0)  3.141592653589793 	   ; arm_6
++        (6,0)  0.057                   ; left_finger
++        (7,0)  -0.021                  ; right_finger
++      }
++    }
++  }
++}
++
++
++jointVelocityLimits
++{
++  ; relaxed log barrier mu
++  mu      0.01
++
++  ; relaxed log barrier delta
++  delta   1e-3
++  
++  lowerBound
++  {
++    ; velocity limits for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        (0,0)  -0.1  ; linear velocity x
++        (1,0)  -0.1  ; linear velocity y
++        (2,0)  -0.1  ; linear velocity z
++        (3,0)  -0.3  ; euler angle velocity z
++        (4,0)  -0.3  ; euler angle velocity y
++        (5,0)  -0.3  ; euler angle velocity x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        (0,0)  -0.1 ; forward velocity
++        (1,0)  -0.3 ; turning velocity
++      }
++    }
++
++    ; velocity limits for the arm DOFs // all need to change from urdf
++    dualArm
++    {
++      leftArm
++      {
++        (0,0)  -3.141592653589793      ; arm_1 [rad/s]
++        (1,0)  -3.141592653589793	   ; arm_2 [rad/s]
++        (2,0)  -3.141592653589793	   ; arm_3 [rad/s]
++        (3,0)  -3.141592653589793	   ; arm_4 [rad/s]
++        (4,0)  -3.141592653589793	   ; arm_5 [rad/s]
++        (5,0)  -3.141592653589793	   ; arm_6 [rad/s]
++        (6,0)  -1.000000000000000	   ; left_finger [rad/s]
++        (7,0)  -1.000000000000000	   ; right_finger [rad/s]
++      }
++
++      rightArm
++      {
++        (0,0)  -3.141592653589793      ; arm_1 [rad/s]
++        (1,0)  -3.141592653589793	   ; arm_2 [rad/s]
++        (2,0)  -3.141592653589793	   ; arm_3 [rad/s]
++        (3,0)  -3.141592653589793	   ; arm_4 [rad/s]
++        (4,0)  -3.141592653589793	   ; arm_5 [rad/s]
++        (5,0)  -3.141592653589793	   ; arm_6 [rad/s]
++        (6,0)  -1.000000000000000	   ; left_finger [rad/s]
++        (7,0)  -1.000000000000000	   ; right_finger [rad/s]
++      }
++    }
++  }
++
++  upperBound
++  {
++    ; velocity limits for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        (0,0)  0.1  ; linear velocity x
++        (1,0)  0.1  ; linear velocity y
++        (2,0)  0.1  ; linear velocity z
++        (3,0)  0.3  ; euler angle velocity z
++        (4,0)  0.3  ; euler angle velocity y
++        (5,0)  0.3  ; euler angle velocity x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        (0,0)  0.1 ; forward velocity
++        (1,0)  0.3 ; turning velocity
++      }
++    }
++
++    ; velocity limits for the arm DOFs // all need to change from urdf
++    dualArm
++    {
++      leftArm
++      {
++        (0,0)  3.141592653589793       ; arm_1 [rad/s]
++        (1,0)  3.141592653589793	   ; arm_2 [rad/s]
++        (2,0)  3.141592653589793	   ; arm_3 [rad/s]
++        (3,0)  3.141592653589793 	   ; arm_4 [rad/s]
++        (4,0)  3.141592653589793 	   ; arm_5 [rad/s]
++        (5,0)  3.141592653589793 	   ; arm_6 [rad/s]
++        (6,0)  1.000000000000000 	   ; left_finger [rad/s] 
++        (7,0)  1.000000000000000 	   ; right_finger [rad/s]
++      }
++
++      rightArm
++      {
++        (0,0)  3.141592653589793       ; arm_1 [rad/s]
++        (1,0)  3.141592653589793	   ; arm_2 [rad/s]
++        (2,0)  3.141592653589793	   ; arm_3 [rad/s]
++        (3,0)  3.141592653589793 	   ; arm_4 [rad/s]
++        (4,0)  3.141592653589793 	   ; arm_5 [rad/s]
++        (5,0)  3.141592653589793 	   ; arm_6 [rad/s]
++        (6,0)  1.000000000000000 	   ; left_finger [rad/s] 
++        (7,0)  1.000000000000000 	   ; right_finger [rad/s]
++      }
++    }
++  }
++}
+\ No newline at end of file
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator/include/ocs2_mobile_manipulator/MobileManipulatorInterface.h b/ocs2_robotic_examples/ocs2_mobile_manipulator/include/ocs2_mobile_manipulator/MobileManipulatorInterface.h
+index dacd6b9d3..d4cca55a3 100644
+--- a/ocs2_robotic_examples/ocs2_mobile_manipulator/include/ocs2_mobile_manipulator/MobileManipulatorInterface.h
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator/include/ocs2_mobile_manipulator/MobileManipulatorInterface.h
+@@ -63,6 +63,8 @@ class MobileManipulatorInterface final : public RobotInterface {
+ 
+   const vector_t& getInitialState() { return initialState_; }
+ 
++  const int getEeFrameId() { return eeFrameId_; }
++
+   ddp::Settings& ddpSettings() { return ddpSettings_; }
+ 
+   mpc::Settings& mpcSettings() { return mpcSettings_; }
+@@ -102,6 +104,8 @@ class MobileManipulatorInterface final : public RobotInterface {
+   ManipulatorModelInfo manipulatorModelInfo_;
+ 
+   vector_t initialState_;
++
++  int eeFrameId_;
+ };
+ 
+ }  // namespace mobile_manipulator
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator/src/MobileManipulatorInterface.cpp b/ocs2_robotic_examples/ocs2_mobile_manipulator/src/MobileManipulatorInterface.cpp
+index 1fdee8f26..01cbb918d 100644
+--- a/ocs2_robotic_examples/ocs2_mobile_manipulator/src/MobileManipulatorInterface.cpp
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator/src/MobileManipulatorInterface.cpp
+@@ -119,6 +119,9 @@ MobileManipulatorInterface::MobileManipulatorInterface(const std::string& taskFi
+   pinocchioInterfacePtr_.reset(new PinocchioInterface(createPinocchioInterface(urdfFile, modelType, removeJointNames)));
+   std::cerr << *pinocchioInterfacePtr_;
+ 
++  // get end Effector ID
++  eeFrameId_ = pinocchioInterfacePtr_->getModel().getFrameId(eeFrame);
++
+   // ManipulatorModelInfo
+   manipulatorModelInfo_ = mobile_manipulator::createManipulatorModelInfo(*pinocchioInterfacePtr_, modelType, baseFrame, eeFrame);
+ 
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha.launch.py b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha.launch.py
+new file mode 100644
+index 000000000..f375a93eb
+--- /dev/null
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha.launch.py
+@@ -0,0 +1,69 @@
++#!/usr/bin/env python3
++"""Launch file for ALOHA mobile manipulator example."""
++
++import os
++from ament_index_python.packages import get_package_share_directory
++from launch import LaunchDescription
++from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
++from launch.launch_description_sources import PythonLaunchDescriptionSource
++from launch.substitutions import LaunchConfiguration
++
++def generate_launch_description():
++    # Package directories
++    ocs2_mobile_manipulator_ros_dir = get_package_share_directory('ocs2_mobile_manipulator_ros')
++    interbotix_xsarm_descriptions_dir = get_package_share_directory('interbotix_xsarm_descriptions')
++    ocs2_mobile_manipulator_dir = get_package_share_directory('ocs2_mobile_manipulator')
++
++    # Launch arguments
++    rviz_arg = DeclareLaunchArgument(
++        'rviz',
++        default_value='true',
++        description='Enable rviz visualization'
++    )
++    
++    debug_arg = DeclareLaunchArgument(
++        'debug',
++        default_value='false',
++        description='Set nodes on debug mode'
++    )
++    
++    urdf_file_arg = DeclareLaunchArgument(
++        'urdfFile',
++        default_value=os.path.join(interbotix_xsarm_descriptions_dir, 'urdf', 'vx300s.urdf'),
++        description='The URDF model of the robot'
++    )
++    
++    task_file_arg = DeclareLaunchArgument(
++        'taskFile',
++        default_value=os.path.join(ocs2_mobile_manipulator_dir, 'config', 'aloha', 'task.info'),
++        description='The task file for the mpc'
++    )
++    
++    lib_folder_arg = DeclareLaunchArgument(
++        'libFolder',
++        default_value=os.path.join(ocs2_mobile_manipulator_dir, 'auto_generated', 'aloha'),
++        description='The library folder to generate CppAD codegen into'
++    )
++
++    # Include main launch file
++    mobile_manipulator_launch = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            os.path.join(ocs2_mobile_manipulator_ros_dir, 'launch', 'mobile_manipulator.launch.py')
++        ),
++        launch_arguments={
++            'rviz': LaunchConfiguration('rviz'),
++            'debug': LaunchConfiguration('debug'),
++            'urdfFile': LaunchConfiguration('urdfFile'),
++            'taskFile': LaunchConfiguration('taskFile'),
++            'libFolder': LaunchConfiguration('libFolder'),
++        }.items()
++    )
++
++    return LaunchDescription([
++        rviz_arg,
++        debug_arg,
++        urdf_file_arg,
++        task_file_arg,
++        lib_folder_arg,
++        mobile_manipulator_launch
++    ])
+\ No newline at end of file
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha_dual_arm.launch.py b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha_dual_arm.launch.py
+new file mode 100644
+index 000000000..a389bf242
+--- /dev/null
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha_dual_arm.launch.py
+@@ -0,0 +1,135 @@
++#!/usr/bin/env python3
++"""Launch file for ALOHA dual arm mobile manipulator example."""
++
++import os
++from ament_index_python.packages import get_package_share_directory
++from launch import LaunchDescription
++from launch.actions import DeclareLaunchArgument
++from launch.substitutions import LaunchConfiguration
++from launch_ros.actions import Node
++from launch.conditions import IfCondition
++
++def generate_launch_description():
++    # Package directories
++    ocs2_mobile_manipulator_ros_dir = get_package_share_directory('ocs2_mobile_manipulator_ros')
++    ocs2_robotic_assets_dir = get_package_share_directory('ocs2_robotic_assets')
++    ocs2_mobile_manipulator_dir = get_package_share_directory('ocs2_mobile_manipulator')
++
++    # Launch arguments
++    rviz_arg = DeclareLaunchArgument(
++        'rviz',
++        default_value='false',
++        description='Enable rviz visualization'
++    )
++    
++    debug_arg = DeclareLaunchArgument(
++        'debug',
++        default_value='false',
++        description='Set nodes on debug mode'
++    )
++    
++    urdf_file_arg = DeclareLaunchArgument(
++        'urdfFile',
++        default_value=os.path.join(ocs2_robotic_assets_dir, 'resources', 'mobile_manipulator', 'aloha', 'urdf', 'vx300s.urdf'),
++        description='The URDF model of the robot'
++    )
++    
++    task_file_arg = DeclareLaunchArgument(
++        'taskFile',
++        default_value=os.path.join(ocs2_mobile_manipulator_dir, 'config', 'aloha', 'task.info'),
++        description='The task file for the mpc'
++    )
++    
++    lib_folder_arg = DeclareLaunchArgument(
++        'libFolder',
++        default_value=os.path.join(ocs2_mobile_manipulator_dir, 'auto_generated', 'aloha_dual_arm'),
++        description='The library folder to generate CppAD codegen into'
++    )
++
++    nodes = []
++
++    # left arm MPC node
++    nodes.append(Node(
++        package='ocs2_mobile_manipulator_ros',
++        # executable='mobile_manipulator_dual_arm_mpc_node',
++        executable='mobile_manipulator_mpc_node',
++        name='left_arm_mpc_node',
++        namespace='left_arm',
++        parameters=[
++            {'armSide': 'LEFT'},
++            {'robotName': 'mobile_manipulator'},
++            {'taskFile': LaunchConfiguration('taskFile')},
++            {'libFolder': LaunchConfiguration('libFolder')},
++            {'urdfFile': LaunchConfiguration('urdfFile')}
++        ],
++        output='screen'
++    ))
++
++    # right arm MPC node
++    nodes.append(Node(
++        package='ocs2_mobile_manipulator_ros',
++        # executable='mobile_manipulator_dual_arm_mpc_node',
++        executable='mobile_manipulator_mpc_node',
++        name='right_arm_mpc_node',
++        namespace='right_arm',
++        parameters=[
++            {'armSide': 'RIGHT'},
++            {'robotName': 'mobile_manipulator'},
++            {'taskFile': LaunchConfiguration('taskFile')},
++            {'libFolder': LaunchConfiguration('libFolder')},
++            {'urdfFile': LaunchConfiguration('urdfFile')}
++        ],
++        output='screen'
++    ))
++
++    # left arm MRT node
++    nodes.append(Node(
++        package='ocs2_mobile_manipulator_ros',
++        # executable='mobile_manipulator_dual_arm_dummy_mrt_node',
++        executable='mobile_manipulator_dummy_mrt_node',
++        name='left_arm_mrt_node',
++        namespace='left_arm',
++        parameters=[
++            {'armSide': 'LEFT'},
++            {'robotName': 'mobile_manipulator'},
++            {'taskFile': LaunchConfiguration('taskFile')},
++            {'libFolder': LaunchConfiguration('libFolder')},
++            {'urdfFile': LaunchConfiguration('urdfFile')}
++        ],
++        output='screen'
++    ))
++
++    # right arm MRT node
++    nodes.append(Node(
++        package='ocs2_mobile_manipulator_ros',
++        # executable='mobile_manipulator_dual_arm_dummy_mrt_node',
++        executable='mobile_manipulator_dummy_mrt_node',
++        name='right_arm_mrt_node',
++        namespace='right_arm',
++        parameters=[
++            {'armSide': 'RIGHT'},
++            {'robotName': 'mobile_manipulator'},
++            {'taskFile': LaunchConfiguration('taskFile')},
++            {'libFolder': LaunchConfiguration('libFolder')},
++            {'urdfFile': LaunchConfiguration('urdfFile')}
++        ],
++        output='screen'
++    ))
++
++    # # RViz node
++    # nodes.append(Node(
++    #     package='rviz2',
++    #     executable='rviz2',
++    #     name='rviz2',
++    #     arguments=['-d', os.path.join(ocs2_mobile_manipulator_ros_dir, 'rviz', 'mobile_manipulator.rviz')],
++    #     condition=IfCondition(LaunchConfiguration('rviz')),
++    #     output='screen'
++    # ))
++
++    return LaunchDescription([
++        rviz_arg,
++        debug_arg,
++        urdf_file_arg,
++        task_file_arg,
++        lib_folder_arg,
++    ] + nodes)
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorDummyMRT.cpp b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorDummyMRT.cpp
+index 33d3a7027..f1f45809d 100644
+--- a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorDummyMRT.cpp
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorDummyMRT.cpp
+@@ -83,8 +83,13 @@ int main(int argc, char** argv) {
+ 
+   // initial command
+   vector_t initTarget(7);
+-  initTarget.head(3) << 1, 0, 1;
+-  initTarget.tail(4) << Eigen::Quaternion<scalar_t>(1, 0, 0, 0).coeffs();
++  if (taskFile.find("aloha") != std::string::npos) {
++    initTarget << 0.151811, 0, 0.295251, 0, -0.0499792, 0, 0.99875; // ALOHA waiting state (more suitable than sleeping state)
++    // initTarget << 0.0526199, 0.00505283, 0.159145, 0.0552305, 0.246959, 0.0233511, 0.967169; // ALOHA sleeping state
++  } else {
++    initTarget.head(3) << 1, 0, 1;
++    initTarget.tail(4) << Eigen::Quaternion<scalar_t>(1, 0, 0, 0).coeffs();
++  }
+   const vector_t zeroInput = vector_t::Zero(interface.getManipulatorModelInfo().inputDim);
+   const TargetTrajectories initTargetTrajectories({initObservation.time}, {initTarget}, {zeroInput});
+ 
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorMpcNode.cpp b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorMpcNode.cpp
+index 7dfc58d76..3513b4789 100644
+--- a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorMpcNode.cpp
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorMpcNode.cpp
+@@ -46,33 +46,57 @@ int main(int argc, char** argv) {
+            rclcpp::NodeOptions()
+            .allow_undeclared_parameters(true)
+            .automatically_declare_parameters_from_overrides(true));
++  
++  rclcpp::sleep_for(std::chrono::milliseconds(100));
+ 
+   // Get node parameters
+-  std::string taskFile, libFolder, urdfFile;
+-  // node->declare_parameter("taskFile", std::string(""));
+-  // node->declare_parameter("libFolder", std::string(""));
+-  // node->declare_parameter("urdfFile", std::string(""));
++  std::string taskFile, libFolder, urdfFile, armSide;
+   taskFile = node->get_parameter("taskFile").as_string();
+   libFolder = node->get_parameter("libFolder").as_string();
+   urdfFile = node->get_parameter("urdfFile").as_string();
++  // Check if armSide parameter exists, if not set default to "LEFT"
++  if (node->has_parameter("armSide")) {
++    armSide = node->get_parameter("armSide").as_string();
++    std::cerr << "Set arm side: " << armSide << std::endl;
++  } else {
++    armSide = "LEFT";
++    std::cerr << "armSide parameter not found in launch file, setting default to: " << armSide << std::endl;
++  }
++
+   std::cerr << "Loading task file: " << taskFile << std::endl;
+   std::cerr << "Loading library folder: " << libFolder << std::endl;
+   std::cerr << "Loading urdf file: " << urdfFile << std::endl;
++  
+   // Robot interface
+   MobileManipulatorInterface interface(taskFile, libFolder, urdfFile);
+ 
+   // ROS ReferenceManager
+   auto rosReferenceManagerPtr = std::make_shared<ocs2::RosReferenceManager>(robotName, interface.getReferenceManagerPtr());
+-  rosReferenceManagerPtr->subscribe(node);
+ 
+-  // MPC
+-  ocs2::GaussNewtonDDP_MPC mpc(interface.mpcSettings(), interface.ddpSettings(), interface.getRollout(),
++  // Check if taskFile contains "aloha" to decide which subscribe and launch method to use
++  if (taskFile.find("aloha") != std::string::npos) {
++    std::cerr << "For aloha robotic arm, using subscribe_act and launchNodes_mujoco method" << std::endl;
++    // Subscribe target from act
++    rosReferenceManagerPtr->subscribe_act(node, interface.getPinocchioInterface(), interface.getEeFrameId(), armSide);
++    // MPC
++    ocs2::GaussNewtonDDP_MPC mpc(interface.mpcSettings(), interface.ddpSettings(), interface.getRollout(),
++                                interface.getOptimalControlProblem(), interface.getInitializer());
++    mpc.getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
++    // Launch MPC mujoco ROS node
++    MPC_ROS_Interface mpcNode(mpc, robotName);
++    mpcNode.launchNodes_mujoco(node);
++  } else {
++    std::cerr << "For non-aloha, using standard subscribe and launchNodes method" << std::endl;
++    // Subscribe target in Rviz
++    rosReferenceManagerPtr->subscribe(node);
++    // MPC
++    ocs2::GaussNewtonDDP_MPC mpc(interface.mpcSettings(), interface.ddpSettings(), interface.getRollout(),
+                                interface.getOptimalControlProblem(), interface.getInitializer());
+-  mpc.getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
+-
+-  // Launch MPC ROS node
+-  MPC_ROS_Interface mpcNode(mpc, robotName);
+-  mpcNode.launchNodes(node);
++    mpc.getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
++    // Launch MPC ROS node
++    MPC_ROS_Interface mpcNode(mpc, robotName);
++    mpcNode.launchNodes(node);
++  }
+ 
+   rclcpp::shutdown();
+ 
+diff --git a/ocs2_ros_interfaces/CMakeLists.txt b/ocs2_ros_interfaces/CMakeLists.txt
+index 60b49ecd0..695d16b76 100644
+--- a/ocs2_ros_interfaces/CMakeLists.txt
++++ b/ocs2_ros_interfaces/CMakeLists.txt
+@@ -21,6 +21,16 @@ find_package(interactive_markers REQUIRED)
+ find_package(eigen3_cmake_module REQUIRED)
+ find_package(Eigen3)
+ 
++find_package(ocs2_pinocchio_interface REQUIRED)
++pkg_check_modules(pinocchio REQUIRED pinocchio)
++find_package(pinocchio REQUIRED)
++
++find_package(urdf REQUIRED)
++find_package(urdfdom REQUIRED)
++
++pkg_check_modules(hpp-fcl REQUIRED hpp-fcl)
++find_package(hpp-fcl REQUIRED)
++
+ ###########
+ ## Build ##
+ ###########
+@@ -36,6 +46,16 @@ set(dependencies
+   interactive_markers
+   Boost
+   Eigen3
++  ocs2_pinocchio_interface
++  pinocchio
++  hpp-fcl
++  urdf
++  urdfdom
++  Eigen3
++)
++
++link_directories(
++  ${pinocchio_LIBRARY_DIRS}
+ )
+ 
+ add_library(${PROJECT_NAME} SHARED
+@@ -61,9 +81,26 @@ target_include_directories(${PROJECT_NAME} PUBLIC
+   ${includes_${PROJECT_NAME}}
+ )
+ ament_target_dependencies(${PROJECT_NAME}
+-  ${dependencies}
++  rclcpp
++  ocs2_msgs
++  ocs2_core
++  ocs2_mpc
++  std_msgs
++  visualization_msgs
++  geometry_msgs
++  interactive_markers
++  ocs2_pinocchio_interface
++  pinocchio
++  hpp-fcl
++  urdf
++  urdfdom
++  Eigen3
++)
++
++target_link_libraries(${PROJECT_NAME}
++  ${Boost_LIBRARIES}
++  ${pinocchio_LIBRARIES}
+ )
+-target_compile_options(${PROJECT_NAME} PUBLIC ${OCS2_CXX_FLAGS})
+ 
+ add_executable(test_custom_callback_queue
+   test/test_custom_callback_queue.cpp
+@@ -105,11 +142,11 @@ find_package(cmake_clang_tools QUIET)
+ if(cmake_clang_tools_FOUND)
+   message(STATUS "Run clang tooling for target " ${PROJECT_NAME}_lintTarget)
+   add_clang_tooling(
+-  TARGETS ${PROJECT_NAME}_lintTarget
++    TARGETS ${PROJECT_NAME}_lintTarget
+     SOURCE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/include
+     CT_HEADER_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
+     CF_WERROR
+-)
++  )
+ endif(cmake_clang_tools_FOUND)
+ 
+ #############
+@@ -130,7 +167,9 @@ install(TARGETS multiplot_remap DESTINATION lib/${PROJECT_NAME})
+ install(DIRECTORY multiplot
+   DESTINATION include/${PROJECT_NAME}/
+ )
+-ament_export_dependencies(${dependencies})  
++ament_export_dependencies(
++  ${dependencies}
++)
+ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ 
+ #############
+@@ -143,4 +182,4 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ ## to see the summary of unit test results run
+ ## $ catkin_test_results ../../../build/ocs2_ros_interfaces
+ 
+-ament_package()
++ament_package()
+\ No newline at end of file
+diff --git a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/common/RosMsgConversions.h b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/common/RosMsgConversions.h
+index 1c59c8835..aa409ca75 100644
+--- a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/common/RosMsgConversions.h
++++ b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/common/RosMsgConversions.h
+@@ -46,6 +46,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #include <ocs2_msgs/msg/mpc_target_trajectories.hpp>
+ #include <ocs2_msgs/msg/multiplier.hpp>
+ 
++// ACT messages
++#include <std_msgs/msg/float32_multi_array.hpp>
++
+ namespace ocs2 {
+ namespace ros_msg_conversions {
+ 
+@@ -73,6 +76,9 @@ ocs2_msgs::msg::MpcTargetTrajectories createTargetTrajectoriesMsg(
+ TargetTrajectories readTargetTrajectoriesMsg(
+     const ocs2_msgs::msg::MpcTargetTrajectories& targetTrajectoriesMsg);
+ 
++/** Reads the ACT target qpos message. */
++vector_t readActTargetQposMsg(const std_msgs::msg::Float32MultiArray& actTargetMsg);
++
+ /**
+  * Creates the performance indices message.
+  *
+diff --git a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mpc/MPC_ROS_Interface.h b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mpc/MPC_ROS_Interface.h
+index 2de03e08e..473db49a6 100644
+--- a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mpc/MPC_ROS_Interface.h
++++ b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mpc/MPC_ROS_Interface.h
+@@ -53,6 +53,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ #include <rclcpp/rclcpp.hpp>
+ 
++// ACT messages
++#include <std_msgs/msg/float32_multi_array.hpp>
++
+ #define PUBLISH_THREAD
+ 
+ namespace ocs2 {
+@@ -101,6 +104,13 @@ class MPC_ROS_Interface {
+    */
+   void launchNodes(const rclcpp::Node::SharedPtr& node);
+ 
++    /**
++* This is the main routine which launches all the nodes required for MPC to run which includes:
++* (1) The MPC policy publisher (either feedback or feedforward policy).
++* (2) The observation subscriber which gets the current measured state to invoke the MPC run routine.
++*/
++  void launchNodes_mujoco(const rclcpp::Node::SharedPtr& node);
++
+  protected:
+   /**
+    * Callback to reset MPC.
+diff --git a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h
+index 0dbfbc625..6a5ebee8e 100644
+--- a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h
++++ b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h
+@@ -39,6 +39,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ #include <rclcpp/rclcpp.hpp>
+ 
++#include <ocs2_pinocchio_interface/PinocchioInterface.h>
++#include <std_msgs/msg/float32_multi_array.hpp> 
++
+ namespace ocs2 {
+ 
+ /**
+@@ -84,6 +87,14 @@ class RosReferenceManager final : public ReferenceManagerDecorator {
+    */
+   void subscribe(const rclcpp::Node::SharedPtr& node);
+ 
++  /**
++   * Subscribers to "topicPrefix_mode_schedule" and "act_aloha_target_qpos" 
++   * topics to receive respectively:
++   * (1) ModeSchedule : The predefined mode schedule for time-triggered hybrid systems.
++   * (2) TargetTrajectories : The commanded TargetTrajectories from act.
++   */
++  void subscribe_act(const rclcpp::Node::SharedPtr& node, PinocchioInterface pinocchioInterface, int eeFrameId, const std::string& armSide);
++
+  private:
+   const std::string topicPrefix_;
+   rclcpp::Node::SharedPtr node_;
+@@ -91,6 +102,7 @@ class RosReferenceManager final : public ReferenceManagerDecorator {
+       modeScheduleSubscriber_;
+   rclcpp::Subscription<ocs2_msgs::msg::MpcTargetTrajectories>::SharedPtr
+       targetTrajectoriesSubscriber_;
++  rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr actTargetTrajectoriesSubscriber_;
+ };
+ 
+ /******************************************************************************************************/
+diff --git a/ocs2_ros_interfaces/package.xml b/ocs2_ros_interfaces/package.xml
+index 00914665b..6f38bc975 100644
+--- a/ocs2_ros_interfaces/package.xml
++++ b/ocs2_ros_interfaces/package.xml
+@@ -20,6 +20,8 @@
+   <depend>ocs2_msgs</depend>
+   <depend>ocs2_core</depend>
+   <depend>ocs2_mpc</depend>
++  <depend>ocs2_pinocchio_interface</depend>
++  <depend>hpp-fcl</depend>
+   <depend>std_msgs</depend>
+   <depend>visualization_msgs</depend>
+   <depend>geometry_msgs</depend>
+diff --git a/ocs2_ros_interfaces/src/common/RosMsgConversions.cpp b/ocs2_ros_interfaces/src/common/RosMsgConversions.cpp
+index 9ade81948..bda354292 100644
+--- a/ocs2_ros_interfaces/src/common/RosMsgConversions.cpp
++++ b/ocs2_ros_interfaces/src/common/RosMsgConversions.cpp
+@@ -242,6 +242,23 @@ TargetTrajectories readTargetTrajectoriesMsg(
+           desiredInputTrajectory};
+ }
+ 
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++vector_t readActTargetQposMsg(const std_msgs::msg::Float32MultiArray& actTargetMsg) {
++
++  if (actTargetMsg.data.empty()) {
++      throw std::runtime_error("Input array is empty.");
++  }
++
++  std::vector<float> act_state(actTargetMsg.data.size());
++  for (int i = 0; i < actTargetMsg.data.size(); i++){
++    act_state[i] = actTargetMsg.data.at(i);
++  }
++
++  return Eigen::Map<const Eigen::VectorXf>(act_state.data(), act_state.size()).cast<scalar_t>();
++}
++
+ /******************************************************************************************************/
+ /******************************************************************************************************/
+ /******************************************************************************************************/
+diff --git a/ocs2_ros_interfaces/src/mpc/MPC_ROS_Interface.cpp b/ocs2_ros_interfaces/src/mpc/MPC_ROS_Interface.cpp
+index 24b8ba3d2..10c8f039c 100644
+--- a/ocs2_ros_interfaces/src/mpc/MPC_ROS_Interface.cpp
++++ b/ocs2_ros_interfaces/src/mpc/MPC_ROS_Interface.cpp
+@@ -389,4 +389,45 @@ void MPC_ROS_Interface::launchNodes(const rclcpp::Node::SharedPtr& node) {
+   spin();
+ }
+ 
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++void MPC_ROS_Interface::launchNodes_mujoco(const rclcpp::Node::SharedPtr& node) {
++  RCLCPP_INFO(LOGGER, "MPC node is setting up ...");
++  node_ = node;
++
++  // Observation subscriber
++  // modify to /left_arm/pose and /right_arm/pose when applying dual-arm
++  mpcObservationSubscriber_ = node_->create_subscription<ocs2_msgs::msg::MpcObservation>(
++      "pose", 
++      1, 
++      std::bind(&MPC_ROS_Interface::mpcObservationCallback, this, std::placeholders::_1)
++  );
++
++  // MPC publisher
++  mpcPolicyPublisher_ = node_->create_publisher<ocs2_msgs::msg::MpcFlattenedController>(
++      topicPrefix_ + "_mpc_policy", 
++      1
++  );
++
++  // MPC reset service server
++  mpcResetServiceServer_ = node_->create_service<ocs2_msgs::srv::Reset>(
++      topicPrefix_ + "_mpc_reset",
++      [this](const std::shared_ptr<ocs2_msgs::srv::Reset::Request>& request,
++             const std::shared_ptr<ocs2_msgs::srv::Reset::Response>& response) {
++        return resetMpcCallback(request, response);
++      });
++
++  // display
++#ifdef PUBLISH_THREAD
++  RCLCPP_INFO(LOGGER, "Publishing SLQ-MPC messages on a separate thread.");
++#endif
++
++  RCLCPP_INFO(LOGGER, "MPC node is ready.");
++
++  // spin
++  spin();
++}
++
++
+ }  // namespace ocs2
+diff --git a/ocs2_ros_interfaces/src/mrt/MRT_ROS_Dummy_Loop.cpp b/ocs2_ros_interfaces/src/mrt/MRT_ROS_Dummy_Loop.cpp
+index a9c760c10..02610fe14 100644
+--- a/ocs2_ros_interfaces/src/mrt/MRT_ROS_Dummy_Loop.cpp
++++ b/ocs2_ros_interfaces/src/mrt/MRT_ROS_Dummy_Loop.cpp
+@@ -101,7 +101,8 @@ void MRT_ROS_Dummy_Loop::synchronizedDummyLoop(
+   // old policy instead of the latest one.
+   const auto policyUpdatedForTime = [this](scalar_t time) {
+     constexpr scalar_t tol =
+-        0.1;  // policy must start within this fraction of dt
++        1.0;  // policy must start within this fraction of dt
++            // change from 0.1 to 1 as more lenient synchronization requirements
+     return mrt_.updatePolicy() &&
+            std::abs(mrt_.getPolicy().timeTrajectory_.front() - time) <
+                (tol / mpcDesiredFrequency_);
+@@ -119,6 +120,11 @@ void MRT_ROS_Dummy_Loop::synchronizedDummyLoop(
+       // Wait for the policy to be updated
+       while (!policyUpdatedForTime(currentObservation.time) && rclcpp::ok()) {
+         mrt_.spinMRT();
++        // reset current observation time in case of large gap between mrt policy update time, need to better modify later
++        if (std::abs(mrt_.getPolicy().timeTrajectory_.front() - currentObservation.time) >= 10.0 / mrtDesiredFrequency_){
++          currentObservation.time = mrt_.getPolicy().timeTrajectory_.front();
++          std::cout << "[Warning] The MPC time and MRT time interval exceeds the MRT period. Force MRT to synchronize with MPC.\n";
++        }
+       }
+       std::cout << "<<< New MPC policy starting at "
+                 << mrt_.getPolicy().timeTrajectory_.front() << "\n";
+diff --git a/ocs2_ros_interfaces/src/mrt/MRT_ROS_Interface.cpp b/ocs2_ros_interfaces/src/mrt/MRT_ROS_Interface.cpp
+index 73f959434..78ff536b8 100644
+--- a/ocs2_ros_interfaces/src/mrt/MRT_ROS_Interface.cpp
++++ b/ocs2_ros_interfaces/src/mrt/MRT_ROS_Interface.cpp
+@@ -99,7 +99,7 @@ void MRT_ROS_Interface::setCurrentObservation(
+   lk.unlock();
+   msgReady_.notify_one();
+ #else
+-  mpcObservationPublisher_.publish(mpcObservationMsg_);
++  mpcObservationPublisher_->publish(mpcObservationMsg_);
+ #endif
+ }
+ 
+diff --git a/ocs2_ros_interfaces/src/synchronized_module/RosReferenceManager.cpp b/ocs2_ros_interfaces/src/synchronized_module/RosReferenceManager.cpp
+index 3af495a4b..7ac9da2c0 100644
+--- a/ocs2_ros_interfaces/src/synchronized_module/RosReferenceManager.cpp
++++ b/ocs2_ros_interfaces/src/synchronized_module/RosReferenceManager.cpp
+@@ -27,6 +27,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+ 
++#include <pinocchio/fwd.hpp>
++#include <pinocchio/algorithm/frames.hpp>
++
+ #include "ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h"
+ 
+ #include "ocs2_ros_interfaces/common/RosMsgConversions.h"
+@@ -74,4 +77,65 @@ void RosReferenceManager::subscribe(const rclcpp::Node::SharedPtr& node) {
+           topicPrefix_ + "_mpc_target", 1, targetTrajectoriesCallback);
+ }
+ 
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++void RosReferenceManager::subscribe_act(const rclcpp::Node::SharedPtr& node, PinocchioInterface pinocchioInterface, int eeFrameId, const std::string& armSide) {
++  node_ = node;
++  
++  // ModeSchedule
++  auto modeScheduleCallback = [this](const ocs2_msgs::msg::ModeSchedule& msg) {
++    auto modeSchedule = ros_msg_conversions::readModeScheduleMsg(msg);
++    referenceManagerPtr_->setModeSchedule(std::move(modeSchedule));
++  };
++  modeScheduleSubscriber_ =
++      node_->create_subscription<ocs2_msgs::msg::ModeSchedule>(
++          topicPrefix_ + "_mode_schedule", 1, modeScheduleCallback);
++
++  // get robot model for forward kinematics
++  auto model = pinocchioInterface.getModel(); 
++
++  // TargetTrajectories
++  auto actTargetTrajectoriesCallback = [this, model, eeFrameId, armSide](const std_msgs::msg::Float32MultiArray& msg) {
++    // msg = [ left_arm_qpos (6),          # absolute joint position
++    //         left_gripper_position (1),  # normalized gripper position (0: close, 1: open)
++    //         right_arm_qpos (6),         # absolute joint position
++    //         right_gripper_qpos (1),     # normalized gripper position (0: close, 1: open)
++    //         ros_time_stamp ]            # rospy.Time.now().to_sec()
++    auto actTargetQpos = ros_msg_conversions::readActTargetQposMsg(msg);
++    // Split into left arm and right arm
++    Eigen::VectorXd armTargetQpos;
++    if (armSide == "LEFT") {
++      armTargetQpos = actTargetQpos.head(6);  // left_arm_qpos
++    } else if (armSide == "RIGHT") {
++      armTargetQpos = actTargetQpos.segment(7, 6);  // right_arm_qpos
++    } else {
++      std::cerr << "[Error] Invalid armSide parameter " << armSide << ". Use LEFT or RIGHT.\n";
++      return;
++    }
++    
++    pinocchio::Data data(model);
++    pinocchio::forwardKinematics(model, data, armTargetQpos);
++    pinocchio::updateFramePlacements(model, data);
++
++    // calculate end frame quaternion
++    Eigen::Quaterniond quaternion(data.oMf[eeFrameId].rotation());
++    const vector_t target = (vector_t(7) << data.oMf[eeFrameId].translation(), quaternion.coeffs()).finished();
++
++    // set time stamp
++    const scalar_array_t desiredTimeTrajectory{actTargetQpos[14]}; 
++    // set end frame position and quaternion
++    const vector_array_t desiredStateTrajectory{target};
++    // set input trajectory all zero
++    const vector_array_t desiredInputTrajectory{vector_t::Zero(model.nv)};
++    TargetTrajectories targetTrajectories(desiredTimeTrajectory, desiredStateTrajectory, desiredInputTrajectory);
++
++    referenceManagerPtr_->setTargetTrajectories(std::move(targetTrajectories));
++  };
++
++  actTargetTrajectoriesSubscriber_ =
++      node_->create_subscription<std_msgs::msg::Float32MultiArray>(
++          "/act_aloha_target_qpos", 1, actTargetTrajectoriesCallback);
++}
++
+ }  // namespace ocs2
+-- 
+2.34.1
+
