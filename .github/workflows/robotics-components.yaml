@@ -22,8 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       fast-mapping-changed: ${{ steps.filter.outputs.fast-mapping-location || inputs.rebuild-all }}
+      groundfloor-changed: ${{ steps.filter.outputs.groundfloor-location || inputs.rebuild-all }}
       its-planner-changed: ${{ steps.filter.outputs.its-planner-location || inputs.rebuild-all }}
       multicam-demo-changed: ${{ steps.filter.outputs.multicam-demo-location || inputs.rebuild-all }}
+      object-detection-changed: ${{ steps.filter.outputs.object-detection-location || inputs.rebuild-all }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
@@ -36,16 +38,26 @@ jobs:
           filters: |
             fast-mapping-location:
               - 'robotics-ai-suite/components/fast-mapping/**'
+            groundfloor-location:
+              - 'robotics-ai-suite/components/groundfloor/**'
             its-planner-location:
               - 'robotics-ai-suite/components/its-planner/**'
             multicam-demo-location:
               - 'robotics-ai-suite/components/multicam-demo/**'
+            object-detection-location:
+              - 'robotics-ai-suite/components/object-detection/**'
 
   fast-mapping:
     name: "Fast Mapping"
     needs: check-changes
     if: ${{ needs.check-changes.outputs.fast-mapping-changed == 'true' }}
     uses: "./.github/workflows/robotics-components-fast-mapping.yaml"
+
+  groundfloor:
+    name: "Groundfloor"
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.groundfloor-changed == 'true' }}
+    uses: "./.github/workflows/robotics-components-groundfloor.yaml"
 
   its-planner:
     name: "ITS Planner"
@@ -58,3 +70,9 @@ jobs:
     needs: check-changes
     if: ${{ needs.check-changes.outputs.multicam-demo-changed == 'true' }}
     uses: "./.github/workflows/robotics-components-multicam-demo.yaml"
+
+  object-detection:
+    name: "Object Detection"
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.object-detection-changed == 'true' }}
+    uses: "./.github/workflows/robotics-components-object-detection.yaml"
