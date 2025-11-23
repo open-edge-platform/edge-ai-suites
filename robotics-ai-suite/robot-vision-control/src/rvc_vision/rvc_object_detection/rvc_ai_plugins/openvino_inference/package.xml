@@ -5,7 +5,7 @@
   <version>2.0.0</version>
   <description>RVC AI interface-based Plugin implementing yolo V5, v6 and V8 using openvino inferencing </description>
   <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
-  <license>Rapid Prototype License</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 

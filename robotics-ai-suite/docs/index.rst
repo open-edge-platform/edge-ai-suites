@@ -2,31 +2,31 @@
 
 .. _introduction:
 
-|top_name_robotics|
+Robotics AI Suite
 ###################
 
 .. attention:: Robotics AI Suite is currently a preview release! A formal release will follow shortly.
 
-The |top_name_robotics| provides a collection of robotics applications spanning AI, libraries, samples, benchmarking, and more to help developers quickly build solutions.
+The Robotics AI Suite provides a collection of robotics applications spanning AI, libraries, samples, benchmarking, and more to help developers quickly build solutions.
 
 Based on your needs, you can install one, two, or all of the following kits and framework at the same time. While they are not prerequisites to each other, they complement each other:
 
-- |lp_amr|: This kit provides tools that help you develop, train, and deploy AI models, for example, recognizing text on boxes and deciding what to do with them, based on the text.
+- Autonomous Mobile Robot: This kit provides tools that help you develop, train, and deploy AI models, for example, recognizing text on boxes and deciding what to do with them, based on the text.
 
-- |rvc_full|: This framework enables robots to see and act physically based on what they see in their environment, for example, picking up boxes with the right text.
+- Robot Vision & Control Framework: This framework enables robots to see and act physically based on what they see in their environment, for example, picking up boxes with the right text.
 
-- |lp_embodied|: This kit enables robots to learn and improve their performance over time, for example, picking up boxes more efficiently over time, even with physical obstacles.
+- Humanoid - Imitation Learning: This kit enables robots to learn and improve their performance over time, for example, picking up boxes more efficiently over time, even with physical obstacles.
 
-|lp_amr|
-********
+Autonomous Mobile Robot
+*************************
 
-Develop, build, and deploy end-to-end mobile robot applications with this purpose-built, open, and modular software development kit that includes libraries, middleware, and sample applications based on the open source |l_ros| robot operating system.
+Develop, build, and deploy end-to-end mobile robot applications with this purpose-built, open, and modular software development kit that includes libraries, middleware, and sample applications based on the open source ROS 2 Humble robot operating system.
 
 Click each icon to learn more.
 
 .. grid:: 2
 
-    .. grid-item-card:: Get Started with |lp_amr|
+    .. grid-item-card:: Get Started with Autonomous Mobile Robot
         :link: robotics/gsg_robot/index
         :link-type: doc
         :link-alt: clickable cards
@@ -40,8 +40,8 @@ Click each icon to learn more.
 
         Resources to get started with development.
 
-|rvc_full|
-**********
+Stationary Robot Vision & Control Framework
+**************************************************
 
 Robot Vision and Control is a robotic software framework aimed at tackling Pick and place, Track and place industrial problems.
 
@@ -49,12 +49,12 @@ Click each icon to learn more.
 
 .. grid:: 2
 
-    .. grid-item-card:: Get Started with |rvc_full|
+    .. grid-item-card:: Get Started with Stationary Robot Vision & Control Framework
         :link: rvc/getstarted
         :link-type: doc
         :link-alt: clickable cards
 
-        Install |rvc_full|.
+        Install Stationary Robot Vision & Control Framework.
 
     .. grid-item-card:: Developer Guide
         :link: rvc/development
@@ -63,8 +63,8 @@ Click each icon to learn more.
 
         Resources to get started with development.
 
-|lp_embodied|
-*************
+Humanoid - Imitation Learning
+***********************************
 
 Embodied Intelligence SDK is a suite of intuitive, easy-to-use software stack designed to streamline the development process of Embodied Intelligence product and applications on Intel platform. The SDK provides developers with a comprehensive environment for developing, testing, and optimizing Embodied Intelligence software and algorithms efficiently. It also provides necessary software framework, libraries, tools, Best known configuration(BKC), tutorials and example codes to facilitate AI solution development.
 
@@ -72,14 +72,14 @@ Click each icon to learn more.
 
 .. grid:: 3
 
-    .. grid-item-card:: Understand |lp_embodied|
+    .. grid-item-card:: Understand Humanoid - Imitation Learning
         :link: embodied/index
         :link-type: doc
         :link-alt: clickable cards
 
-        Learn how |lp_embodied| works and available solutions.
+        Learn how Humanoid - Imitation Learning works and available solutions.
 
-    .. grid-item-card:: Get Started with |lp_embodied|
+    .. grid-item-card:: Get Started with Humanoid - Imitation Learning
         :link: embodied/installation_setup
         :link-type: doc
         :link-alt: clickable cards
@@ -101,4 +101,3 @@ Click each icon to learn more.
    embodied/index
    rvc/index
    legal
-

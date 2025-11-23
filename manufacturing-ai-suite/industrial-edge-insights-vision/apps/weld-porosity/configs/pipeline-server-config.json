@@ -86,7 +86,7 @@
                 "name": "weld_porosity_classification_gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaclassify inference-region=full-frame device=GPU pre-process-backend=va-surface-sharing model-instance-id=instgpu0 inference-interval=1 batch-size=8 nireq=2 ie-config=\"NUM_STREAMS=2\" name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaclassify inference-region=full-frame device=GPU pre-process-backend=va-surface-sharing model-instance-id=instgpu0 inference-interval=1 batch-size=8 nireq=2 ie-config=\"GPU_THROUGHPUT_STREAMS=2\" name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -104,7 +104,7 @@
                 "name": "weld_porosity_classification_npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaclassify inference-region=full-frame device=NPU pre-process-backend=va model-instance-id=instnpu0 inference-interval=1 batch-size=1 nireq=4 ie-config=\"NUM_STREAMS=2\" name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaclassify inference-region=full-frame device=NPU pre-process-backend=va model-instance-id=instnpu0 inference-interval=1 batch-size=1 nireq=4 name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {

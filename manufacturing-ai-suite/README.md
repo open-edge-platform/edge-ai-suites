@@ -21,7 +21,8 @@ The Manufacturing AI Suite helps you develop solutions for:
 | [Weld Porosity](./industrial-edge-insights-vision/apps/weld-porosity)                     | Real-time detection of welding defects.                                                         | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/weld-porosity/get-started.html)                           |
 | [Worker Safety Gear Detection](./industrial-edge-insights-vision/apps/worker-safety-gear-detection) | Real-time visual analysis of safety gear compliance for workers.                      | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/worker-safety-gear-detection/index.html)                  |
 | [Wind Turbine Anomaly Detection](./industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection) | A time series use case of detecting anomalous power generation patterns relative to wind speed. | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-time-series/index.html) |
-
+| [Weld Defect Detection](./industrial-edge-insights-time-series/apps/weld-anomaly-detection) | A time series use case of detecting anomalous weld patterns relative to weld sensor parameters. | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-time-series/index.html) |
+| [Multimodal Weld Defect Detection](./industrial-edge-insights-multimodal/) | A multimodal use case combining vision and sensor data analysis to identify anomalies in welding data. | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/index.html) |
 
 **Main tools and AI Libraries the Suite uses**
 

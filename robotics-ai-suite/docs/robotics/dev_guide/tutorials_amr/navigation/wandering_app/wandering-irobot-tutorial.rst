@@ -1,19 +1,19 @@
 
-|irobot_create3| Wandering tutorial
+iRobot Create 3 Wandering tutorial
 -----------------------------------
 
 This tutorial presents the Wandering application running on an
-|irobot_create3| mobile robotics platform extended with an |intel|
-compute board, an |realsense| camera and a |slamtec_rplidar| 2D lidar sensor.
+iRobot Create 3 mobile robotics platform extended with an Intel®
+compute board, an Intel® RealSense™ camera and a Slamtec RPLIDAR 2D lidar sensor.
 
-The tutorial uses the |realsense| camera and the |slamtec_rplidar| 2D
+The tutorial uses the Intel® RealSense™ camera and the Slamtec RPLIDAR 2D
 lidar sensor for both mapping with RTAB-Map and navigation with Nav2.
-For navigation, |intel| :doc:`ground floor segmentation
+For navigation, Intel® :doc:`ground floor segmentation
 <../../../../dev_guide/tutorials_amr/perception/pointcloud-groundfloor-segmentation>`
-is used for segmenting ground level and remove it from the |realsense|
+is used for segmenting ground level and remove it from the Intel® RealSense™
 camera pointcloud.
 
-Watch the video for a demonstration of the |irobot_create3| navigating
+Watch the video for a demonstration of the iRobot Create 3 navigating
 in a testing playground:
 
 .. video:: ../../../../videos/irobot-create3-demo-wandering-rviz.mp4
@@ -30,17 +30,17 @@ Prerequisites
 
 - Complete the :doc:`../../../../gsg_robot/index` before continuing.
 
-|intel| board connected to |irobot_create3|
+Intel® board connected to iRobot Create 3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Follow the instructions on page
 `iRobot® Create® 3 - Network Recommendations
 <https://iroboteducation.github.io/create3_docs/setup/network-config/>`__
 to set up an Ethernet over USB connection and to configure the network
-device on the |intel| board.
-Use an IP address of the same subnet as used on the |irobot_create3|.
+device on the Intel® board.
+Use an IP address of the same subnet as used on the iRobot Create 3.
 
-Check that the |irobot_create3| is reachable over the Ethernet
+Check that the iRobot Create 3 is reachable over the Ethernet
 connection. Output on the robot with the configuration from the image
 above:
 
@@ -57,7 +57,7 @@ above:
    rtt min/avg/max/mdev = 1.989/2.105/2.308/0.144 ms
 
 Install the ``ros-humble-wandering-irobot-tutorial`` package on the
-|intel| board connected to the robot.
+Intel® board connected to the robot.
 
 .. code-block:: bash
 
@@ -69,7 +69,7 @@ Start the discovery server in a new terminal:
 
    fastdds discovery --server-id 0
 
-In a new terminal set the environment variables for |ros| to use the
+In a new terminal set the environment variables for ROS 2 to use the
 discovery server:
 
 .. code-block:: bash
@@ -78,7 +78,7 @@ discovery server:
    export ROS_SUPER_CLIENT=true
    unset ROS_DOMAIN_ID
 
-Check that the setup is correct by listing the |ros| topics provided
+Check that the setup is correct by listing the ROS 2 topics provided
 by the robot:
 
 .. code-block:: bash
@@ -86,7 +86,7 @@ by the robot:
    ros2 topic list
 
 
-The |irobot_create3| topics should be listed:
+The iRobot Create 3 topics should be listed:
 
 .. code-block:: bash
 
@@ -108,8 +108,8 @@ The |irobot_create3| topics should be listed:
 .. note::
 
    If only ``/parameter_events`` and ``/rosout`` topics are listed then
-   the communication between the robot and the |intel| board is not
-   working. Check the |irobot_create3_documentation| to troubleshoot
+   the communication between the robot and the Intel® board is not
+   working. Check the `iRobot Create 3 mobile robotics platform documentation <https://iroboteducation.github.io/create3_docs/>`__ to troubleshoot
    the issue.
 
 Start the tutorial using its launch file; provide the namespace set on

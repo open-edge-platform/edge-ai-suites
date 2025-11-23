@@ -1,10 +1,10 @@
-Execute the Wandering Application on the |jackal| Robot
+Execute the Wandering Application on the Jackal Robot
 =======================================================
 
 This tutorial details the steps to install and run the Wandering Application
-with |realsense| camera input on a |clearpath_robotics| |jackal| robot.
+with Intel® RealSense™ camera input on a Clearpath Robotics Jackal robot.
 The Wandering Application will use the Nav2 navigation stack and the
-RTAB-Map SLAM application to let the |jackal| robot move around and create
+RTAB-Map SLAM application to let the Jackal robot move around and create
 a map of the environment.
 
 Prerequisites
@@ -15,12 +15,12 @@ Complete the :doc:`../../../../gsg_robot/index` before continuing.
 Installation and Execution
 --------------------------
 
-Make sure that you have set up your |jackal| robot as described on the
+Make sure that you have set up your Jackal robot as described on the
 :doc:`./jackal-intel-robotics-sdk` page. In addition, you can run the
 steps on page :doc:`./jackal-keyboard-teleop` in order to verify that
-your |ros| installation can communicate with the Motor Control Unit (MCU).
+your ROS 2 installation can communicate with the Motor Control Unit (MCU).
 
-To install the |deb_pack| of the Wandering tutorial on |jackal| robots,
+To install the Deb package of the Wandering tutorial on Jackal robots,
 run the following command:
 
 .. code-block:: bash
@@ -30,7 +30,7 @@ run the following command:
 
 Make sure that you are logged in as the ``administrator`` user.
 Run the following script, which will start the Wandering Application. After
-a few seconds, the |jackal| robot will start moving and the
+a few seconds, the Jackal robot will start moving and the
 RTAB-Map SLAM application will create the map.
 
 .. code-block:: bash
@@ -41,17 +41,17 @@ RTAB-Map SLAM application will create the map.
 .. figure:: ../../../../images/wandering-jackal-rviz2.png
    :align: center
 
-   Wandering Application running on the |jackal| robot: the rviz2 tool
+   Wandering Application running on the Jackal robot: the rviz2 tool
    shows the robot with the identified map and the image of the
-   |realsense| camera.
+   Intel® RealSense™ camera.
 
 
 
-|jackal|-Specific Adaptations
+Jackal-Specific Adaptations
 -----------------------------
 
 The shell script and the launch file of the Wandering tutorial have been
-adapted to the ecosystem of the |jackal| robot. In particular, they include
+adapted to the ecosystem of the Jackal robot. In particular, they include
 several remapping definitions, which align the camera and IMU related topics
 with the topic names expected by the nodes of the Wandering tutorial.
 
@@ -79,11 +79,11 @@ checks the name of the camera-related topics and assigns the variable
 Adaptation of the depthimage_to_laserscan Node
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This node converts the depth image of the |realsense| camera into a 2D laser
+This node converts the depth image of the Intel® RealSense™ camera into a 2D laser
 scan. The node expects that it can subscribe to the topics ``depth`` and
 ``depth_camera_info``.
 This requirement is fulfilled by remapping the following topics, which are
-published by the ``camera`` node of the |jackal| robot:
+published by the ``camera`` node of the Jackal robot:
 
 *  if ``ros-humble-realsense2-camera`` version is 4.55:
 
@@ -91,7 +91,7 @@ published by the ``camera`` node of the |jackal| robot:
       :widths: 50,50
 
       ===============================  ==============================================
-      Topic name expected by the node  True topic name on the |jackal| robot
+      Topic name expected by the node  True topic name on the Jackal robot
       ===============================  ==============================================
       ``depth``                        ``/sensors/camera_0/camera/depth/image_rect_raw``
       ``depth_camera_info``            ``/sensors/camera_0/camera/depth/camera_info``
@@ -103,7 +103,7 @@ published by the ``camera`` node of the |jackal| robot:
       :widths: 50,50
 
       ===============================  ==============================================
-      Topic name expected by the node  True topic name on the |jackal| robot
+      Topic name expected by the node  True topic name on the Jackal robot
       ===============================  ==============================================
       ``depth``                        ``/sensors/camera_0/depth/image_rect_raw``
       ``depth_camera_info``            ``/sensors/camera_0/depth/camera_info``
@@ -121,11 +121,11 @@ considers the necessary remapping of both topics when it starts the
             -p scan_time:=0.033 -p range_min:=0.1 -p range_max:=2.5 \
             -p output_frame:=camera_0_depth_frame &
 
-The ``depthimage_to_laserscan`` node publishes the topic ``/scan``, which is 
+The ``depthimage_to_laserscan`` node publishes the topic ``/scan``, which is
 subscribed by several other nodes. The laser scan messages, which are broadcast
-via this topic, must include a frame id. This frame id, whose default value is 
+via this topic, must include a frame id. This frame id, whose default value is
 ``camera_depth_frame``, must be adapted to the actual link name on the robot.
-According to the TF2 tree of the |jackal| robot, which is shown on the
+According to the TF2 tree of the Jackal robot, which is shown on the
 :doc:`./jackal-intel-robotics-sdk` page, the actual link name is
 ``camera_0_depth_frame``.
 
@@ -142,13 +142,13 @@ IMU device into an orientation. The node expects that it
 can subscribe to the topic ``/imu/data_raw``.
 The topic ``/imu/data_raw`` is a remapped representation of the topic
 ``/sensors/imu_0/data_raw``, which is published by
-the ``jackal_mcu`` node of the |jackal| robot:
+the ``jackal_mcu`` node of the Jackal robot:
 
 .. table::
    :widths: 50,50
 
    ===============================  ==============================================
-   Topic name expected by the node  True topic name on the |jackal| robot
+   Topic name expected by the node  True topic name on the Jackal robot
    ===============================  ==============================================
    ``/imu/data_raw``                ``/sensors/imu_0/data_raw``
    ===============================  ==============================================
@@ -170,7 +170,7 @@ This node synchronizes RGB, depth and camera_info messages into a single message
 The node expects that it can subscribe to the topics
 ``rgb/image``, ``rgb/camera_info``, and ``depth/image``.
 This requirement is fulfilled by remapping the following topics, which are
-published by the ``camera`` node of the |jackal| robot:
+published by the ``camera`` node of the Jackal robot:
 
 *  if ``ros-humble-realsense2-camera`` version is 4.55:
 
@@ -178,7 +178,7 @@ published by the ``camera`` node of the |jackal| robot:
       :widths: 50,50
 
       ===============================  ==============================================
-      Topic name expected by the node  True topic name on the |jackal| robot
+      Topic name expected by the node  True topic name on the Jackal robot
       ===============================  ==============================================
       ``rgb/image``                    ``/sensors/camera_0/camera/color/image_raw``
       ``rgb/camera_info``              ``/sensors/camera_0/camera/color/camera_info``
@@ -191,7 +191,7 @@ published by the ``camera`` node of the |jackal| robot:
       :widths: 50,50
 
       ===============================  ==============================================
-      Topic name expected by the node  True topic name on the |jackal| robot
+      Topic name expected by the node  True topic name on the Jackal robot
       ===============================  ==============================================
       ``rgb/image``                    ``/sensors/camera_0/color/image_raw``
       ``rgb/camera_info``              ``/sensors/camera_0/color/camera_info``

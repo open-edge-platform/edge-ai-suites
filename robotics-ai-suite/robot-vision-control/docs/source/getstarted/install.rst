@@ -4,7 +4,7 @@ Install RVC
 Requirements
 ------------
 
-1. |Docker_Engine| (Cannot be rootless, see `the installation <https://docs.docker.com/engine/install/ubuntu/>`_)
+1. Docker Engine (Cannot be rootless, see `the installation <https://docs.docker.com/engine/install/ubuntu/>`_)
 
    * Docker version 20.10.0 or higher
 
@@ -24,11 +24,11 @@ To get started with the Robot Vision Control (RVC) project, you need to clone fr
 
 Open the folder ``robot-vision-control`` in VSCode and follow the instructions to open it in a devcontainer.
 This will automatically build a container with all the required dependencies to run RVC.
-The container is based on |Ubuntu_OS| 22.04 LTS (Jammy Jellyfish).
+The container is based on Canonical Ubuntu OS 22.04 LTS (Jammy Jellyfish).
 
 Build RVC image
 -------------------
-Build the RVC |docker| image outside of the devcontainer, after the devcontainer has been built. The Devcontainer provides the base container image for RVC.
+Build the RVC Docker image outside of the devcontainer, after the devcontainer has been built. The Devcontainer provides the base container image for RVC.
 
 .. code-block:: bash
 

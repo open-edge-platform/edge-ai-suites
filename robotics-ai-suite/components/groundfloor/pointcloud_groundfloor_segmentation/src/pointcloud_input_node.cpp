@@ -17,15 +17,15 @@
 //
 // ----------------- END LICENSE BLOCK -----------------------------------
 
-#include <functional>
+#include "groundfloor_segmentation/pointcloud_input_node.hpp"
+
 #include <pcl/common/transforms.h>
+
+#include <functional>
 #include <sensor_msgs/msg/point_field.hpp>
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 
-#include "groundfloor_segmentation/pointcloud_input_node.hpp"
-
-PointCloudInput::PointCloudInput()
-  : Node("pointcloud_input_for_segmentation")
+PointCloudInput::PointCloudInput() : Node("pointcloud_input_for_segmentation")
 {
   rclcpp::QoS topicQoS = 10;
   topicQoS.keep_last(3);
@@ -33,14 +33,15 @@ PointCloudInput::PointCloudInput()
   mPCLSub = create_subscription<sensor_msgs::msg::PointCloud2>(
     "/input/points", topicQoS, std::bind(&PointCloudInput::onData, this, std::placeholders::_1));
 
-  mPseudoImagePub = create_publisher<sensor_msgs::msg::Image>("/pseudo_camera/depth/image_rect_raw", topicQoS);
-  mCameraInfoPub = create_publisher<sensor_msgs::msg::CameraInfo>("/pseudo_camera/depth/camera_info", topicQoS);
+  mPseudoImagePub =
+    create_publisher<sensor_msgs::msg::Image>("/pseudo_camera/depth/image_rect_raw", topicQoS);
+  mCameraInfoPub =
+    create_publisher<sensor_msgs::msg::CameraInfo>("/pseudo_camera/depth/camera_info", topicQoS);
 }
 
 void PointCloudInput::onData(const sensor_msgs::msg::PointCloud2::ConstSharedPtr pointCloudMsg)
 {
-  if (!pointCloudMsg->is_dense)
-  {
+  if (!pointCloudMsg->is_dense) {
     RCLCPP_WARN(get_logger(), "Only dense pointclouds are supported");
     return;
   }
@@ -53,8 +54,7 @@ void PointCloudInput::onData(const sensor_msgs::msg::PointCloud2::ConstSharedPtr
   sensor_msgs::PointCloud2ConstIterator<float> iter_y(*pointCloudMsg, "y");
   sensor_msgs::PointCloud2ConstIterator<float> iter_z(*pointCloudMsg, "z");
 
-  for (std::size_t i = 0; iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z, i += 3)
-  {
+  for (std::size_t i = 0; iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z, i += 3) {
     auto x = *iter_x;
     auto y = *iter_y;
     auto z = *iter_z;
@@ -86,18 +86,18 @@ void PointCloudInput::onData(const sensor_msgs::msg::PointCloud2::ConstSharedPtr
   mCameraInfoPub->publish(infoMsg);
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  try
-  {
+
+  try {
     auto node = std::make_shared<PointCloudInput>();
     rclcpp::spin(node);
-  }
-  catch (const std::exception &e)
-  {
+  } catch (const std::exception & e) {
     std::cout << e.what();
   }
+
   rclcpp::shutdown();
+
   return 0;
 }

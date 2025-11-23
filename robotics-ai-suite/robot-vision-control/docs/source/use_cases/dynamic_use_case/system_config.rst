@@ -7,6 +7,9 @@ Preliminary System Configuration
 
 Before running RVC for the first time, ensure proper configuration has occurred:
 
+- RVC must know the exact pose (i.e.: position and orientation) of the Intel® RealSense™ camera as explained in :ref:`Camera pose calibration<camera_pose_calibration>`
+- Prepare the robot for communication with the Intel® platform as in :ref:`Universal Robots configuration<universal_robot_configuration>`
+- The robot calibration parameters from the real robot must be extracted, as explained further in :ref:`Universal Robots Calibration Procedure<robot_calibration_procedure>`
 
 - Camera 
     - :ref:`Integration<camera_integration>`: These demonstrations support all |Realsense| |D4xx| cameras, though were designed with the D415. 
@@ -20,6 +23,8 @@ Camera
 The RVC demonstrations assume use of the Intel® RealSense™ D415 camera. If you plan on exploring these exercises with a different 
 model from (e.g., D435, D455), the below modifications are required. 
 
+Before starting the Vision component, verify that the camera location matches the position
+and orientation specified in the file
 
 .. _camera_integration:
 
@@ -29,11 +34,10 @@ A .xacro file is an XML-based macro language that lets one define reusable compo
 can construct shorter and more readable XML files by using macros that expand to larger XML expressions. This is used 
 to avoid repetition, improve readability, and make robot models configurable (e.g., by passing arguments).
 
-In the case of the |Realsense| |D4xx| cameras, the .xacro file for each device are stored in the realsense2_description package. 
-Each examplary use case requires one to extend these files and provide the cameras origin within the physical world. Below is an example
-of an .xacro extension for the D455f to be used in the `Dynamic Use Case <../use_cases/dynamic_use_case.html>`_`. Note that the origin is placing
-the camera within the world frame at a specific location while refernecing the Intel-provided xacro file found in the **realsense2_description**
-package.
+    Location might change according to installation procedure and the suffix `ipc` depends on the
+    ``namespace:=`` option, by default `ipc` in this case
+
+The default content of this file is:
 
 .. code-block:: xml
 
@@ -48,23 +52,15 @@ package.
     </robot>
 
 
-The important part is the origin:
+The important part is
 
 .. code-block:: xml
 
     <origin xyz="0.36 0.66 0.755" rpy="-3.141592654 1.570796327 -1.570796327"/>
 
-
-The ``xyz`` triplet is expressed in meters, and the ``rpy`` is in radians, both express respectively
-the cartesian coordinates of the base of the camera in reference to the ``world`` frame_id, which should 
-coincide with the center of the base of the robot, if not modified. These numbers are important because 
-if not accurate, the robot will not go to the proper location when picking the objects, as the detection 
-is in reference system of the camera, and the system has to transform it to robot reference system, 
-and these numbers give the relation between the two systems.
-
-Each demonstration utilizes these files, if you have selected a camera other than the D415, you will need to create an .xacro extension and store it 
-in the correct location. Again, if doing so please note that the camera location wihtin the physical world must match 
-the original configuration or you will need to retrain the neural network processing the streams.
+where the ``xyz`` triplet is expressed in meters, and the ``rpy`` is in radians and they express respectively
+the cartesian coordinates of the base of the camera in reference to the ``world`` frame_id, which should
+coincide with the center of the base of the robot, if not modified.
 
 +---------------+--------------------------------------------+---------------------------------------------------------------+------------------------+
 | Use Case      | Package                                    | Location                                                      | File Name              |
@@ -85,20 +81,19 @@ Universal Robots Configuration
 --------------------------------------
 
 
-The real robot or the simulator must be configured to accept 
-connection from RVC and configure the RVC system for real time capabilities.
+The real robot or the simulator has to be configured to accept
+connection from RVC and configure the RVC system for real time capabilities
 
 
 Set up Universal Robots UR5e Robot
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------------
 
- 
 
 This section briefly discusses the steps to set up the Universal Robots UR5e robot.
 
 .. note::
-    For more details, refer to the 
-    `Universal Robots repositories README <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/foxy/README.md>`_ 
+    For more details, refer to the
+    `Universal Robots repositories README <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/foxy/README.md>`_
     to configure the robot.
 
 
@@ -152,12 +147,12 @@ Overwrite Model-specific Kinematics Parameters (Calibration)
 
 There might be slight differences (variance) in the physical attributes of various robots. To address this issue, the robot is calibrated at the factory and the variance in these parameters is saved on the robot controller file system. Extract the kinematics parameters specific to your robot and overwrite the distributed parameters file. This avoids the robot accumulating errors in inverse kinematics computation due to parameter variance.
 
-For information on the Universal Robots robot calibration, refer to 
+For information on the Universal Robots robot calibration, refer to
 `README.md <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/foxy/ur_calibration/README.md>`_
 
 .. note::
 
-    If the calibration parameters do not match with that of the real robot, the motion controller logs will show the following message:  
+    If the calibration parameters do not match with that of the real robot, the motion controller logs will show the following message:
 
 ::
 

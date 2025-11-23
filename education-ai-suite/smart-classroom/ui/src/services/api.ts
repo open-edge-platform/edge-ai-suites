@@ -60,6 +60,7 @@ export async function saveSettings(settings: Settings): Promise<ProjectConfig> {
       location: settings.projectLocation,
       microphone: settings.microphone,
     };
+    console.log('Sending payload to /project:', payload);
     const res = await fetch(`${BASE_URL}/project`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -111,38 +112,68 @@ return res.json();
 }
 
 
-export async function* streamTranscript(audioPath: string, opts: StreamOptions = {}): AsyncGenerator<StreamEvent> {
+export async function* streamTranscript(
+  audioPath: string,
+  opts: StreamOptions = {}
+): AsyncGenerator<StreamEvent> {
+ 
+  // Prepare request body based on whether it's microphone or file
+  const requestBody =
+    audioPath === "MICROPHONE" || audioPath === ""
+      ? {
+          audio_filename: "",
+          source_type: "microphone",
+        }
+      : {
+          audio_filename: audioPath,
+          source_type: "audio_file",
+        };
+ 
+  console.log("Sending transcription request:", requestBody);
+ 
   const res = await fetch(`${BASE_URL}/transcribe`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ audio_filename: audioPath }),
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(requestBody),
     signal: opts.signal,
-    cache: 'no-store', // avoid buffering
+    cache: "no-store",
     keepalive: true,
   });
-  if (!res.ok) throw new Error('Failed to start transcription');
-  const sessionId = res.headers.get('x-session-id');
-  console.log('Received sessionId from header:', sessionId);
+ 
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error("Transcription request failed:", errorText);
+    throw new Error(`Failed to start transcription: ${res.status} - ${errorText}`);
+  }
+  const sessionId = res.headers.get("x-session-id");
+  console.log("Received sessionId from header:", sessionId);
   if (opts.onSessionId) opts.onSessionId(sessionId);
-
   const reader = res.body?.getReader();
   const decoder = new TextDecoder();
-  let buffer = '';
+  let buffer = "";
   while (reader) {
     const { value, done } = await reader.read();
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
-    let lines = buffer.split('\n');
-    buffer = lines.pop() || '';
+    let lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+ 
     for (const line of lines) {
       if (!line.trim()) continue;
+ 
       const chunk = JSON.parse(line);
-      for await (const token of typewriterStream(chunk.text, opts.tokenDelayMs ?? 30, opts.signal)) {
-        yield { type: 'transcript', token };
+      const text = chunk.text || "";
+      for await (const token of typewriterStream(
+        text,
+        opts.tokenDelayMs ?? 0,   
+        opts.signal
+      )) {
+        yield { type: "transcript", token };
       }
     }
   }
-  yield { type: 'done' };
+ 
+  yield { type: "done" };
 }
 
 
@@ -276,4 +307,76 @@ export async function getPlatformInfo(): Promise<any> {
     const text = await res.text();
     return text ? JSON.parse(text) : {};
   } );
+}
+
+export async function getAudioDevices(): Promise<string[]> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/devices`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Failed to fetch audio devices: ${res.status}`);
+    const data = await res.json();
+    return data.devices || [];
+  });
+}
+
+export async function stopMicrophone(sessionId: string): Promise<{ status: string; message: string }> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/stop-mic?session_id=${sessionId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Failed to stop microphone: ${res.status}`);
+    return await res.json();
+  });
+}
+
+export async function startMicrophone(): Promise<{ status: string; message: string; sessionId?: string }> {
+  const res = await fetch(`${BASE_URL}/transcribe`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "x-source-type": "microphone"
+    },
+    body: JSON.stringify({
+      audio_filename: "",
+      source_type: "microphone"
+    }),
+    cache: "no-store",
+    keepalive: true,
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error("❌ Failed to start microphone:", errorText);
+    throw new Error(`Failed to start microphone: ${res.status}`);
+  }
+
+  // ✅ Extract X-Session-ID from headers
+  const sessionId = res.headers.get("x-session-id") || undefined;
+  if (sessionId) {
+    localStorage.setItem("sessionId", sessionId);
+    console.log("🟢 Session ID saved:", sessionId);
+  }
+
+  // ✅ Stream-safe handling: just confirm first chunk
+  const reader = res.body?.getReader();
+  const decoder = new TextDecoder();
+  let firstChunk = "";
+
+  if (reader) {
+    const { value, done } = await reader.read();
+    if (!done && value) {
+      firstChunk = decoder.decode(value, { stream: true });
+      console.log("🎙️ Microphone stream started:", firstChunk.slice(0, 100)); // preview only
+    }
+  }
+
+  // ✅ Clean up reader to avoid hanging
+  reader?.cancel();
+
+  return {
+    status: "recording",
+    message: "Microphone streaming started successfully.",
+    sessionId
+  };
 }

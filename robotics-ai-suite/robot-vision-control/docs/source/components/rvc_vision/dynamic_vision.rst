@@ -18,7 +18,7 @@ The component of this container are:
 
 
 -  :ref:`Realsense Camera node <realsense_node>`
--  :ref:`2D AI perception<object_detection>`. Yolo inference on |OpenVino| provided as example
+-  :ref:`2D AI perception<object_detection>`. Yolo inference on OpenVINO™ provided as example
 -  :ref:`3D pointcloud alignment of the object in space<pose_detector>`
 -  :ref:`Profiler for performance evaluation<profiler>`
 
@@ -31,7 +31,7 @@ The component of this container are:
 The above :ref:`high level diagram <vision_container_high_level_diagram>` shows how the vision
 components interact each other:
 
-- The |realsense| camera node captures and publishes RGB and Point Cloud streams from the physical camera.
+- The Intel® RealSense™ camera node captures and publishes RGB and Point Cloud streams from the physical camera.
 
 - The Object Detection node runs AI inference on the RGB stream and publishes the result for the Pose Detector.
 
@@ -45,4 +45,3 @@ components interact each other:
    dynamic_vision/object_detection
    dynamic_vision/pose_detector
    dynamic_vision/profiler
-

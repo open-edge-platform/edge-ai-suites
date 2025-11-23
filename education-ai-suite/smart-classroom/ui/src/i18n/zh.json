@@ -22,7 +22,8 @@
     "summaryReady": "摘要已准备好",
     "mindmapReady": "思维导图准备就绪",
     "uploadSuccess": "文件上传成功！",
-    "uploadFailed": "文件上传失败。"
+    "uploadFailed": "文件上传失败。",
+    "mindmapError": "思维导图生成失败：格式无效"
   },
   "settings": {
     "title": "设置",

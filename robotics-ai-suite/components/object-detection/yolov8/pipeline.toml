@@ -1,3 +1,7 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 title = "Yolo ROS2 node"
 
 [main]
@@ -12,7 +16,7 @@ model_path_bin = "" # use only if you want to provide your own model in OpenVINO
 task = "segmentation" # options: detection, segmentation, pose
 # w,h of internal resolution, input frames are resized
 # consider using smaller resolution for faster inference
-width = 480 
+width = 480
 height = 480
 model_size = "s" # options: n, s, m, l, x (refer to Ultralytics docs)
 precision = 0 # available are 0 = INT8, 1=FP16 2=FP32

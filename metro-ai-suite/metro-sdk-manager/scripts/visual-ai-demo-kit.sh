@@ -16,22 +16,21 @@
 #######################################
 
 
-  # Array of repositories to clone: "url|branch|directory"
-  repositories=(
-    "https://github.com/open-edge-platform/edge-ai-suites|v1.2.0|edge-ai-suites"
-  )
-  
-  images=(
-    eclipse-mosquitto:2.0.21
-    intel/dlstreamer-pipeline-server:3.1.0-ubuntu24
-    bluenviron/mediamtx:1.11.3
-    coturn/coturn:4.7
-    grafana/grafana:11.5.4
-    nodered/node-red:3.1
-  )
+# Array of repositories to clone: "url|branch|directory"
+repositories=(
+  "https://github.com/open-edge-platform/edge-ai-suites|release-2025.2.0|edge-ai-suites"
+)
 
-  NAME="Visual AI Demo Kit"
+images=(
+  eclipse-mosquitto:2.0.21
+  intel/dlstreamer-pipeline-server:3.1.0-ubuntu24
+  bluenviron/mediamtx:1.11.3
+  coturn/coturn:4.7
+  grafana/grafana:11.5.4
+  nodered/node-red:3.1
+)
 
+NAME="Visual AI Demo Kit"
 
 set -euo pipefail
 

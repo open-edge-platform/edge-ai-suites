@@ -9,10 +9,10 @@ Control
 .. image:: images/html/RVCControl.png
    :alt: High Level Design
 
-The above :ref:`High Level Design <High Level Design>` diagram shows in communication between 
+The above :ref:`High Level Design <High Level Design>` diagram shows in communication between
 the motion controller components.
-This interaction is left to be implemented in a |ros| node. Our use cases utilize a state machine. The |ros| node
-will initialize the |ros| framework, initialize the intended plugins and delegate the use case handling to the state machine:
+This interaction is left to be implemented in a ROS 2 node. Our use cases utilize a state machine. The ROS 2 node
+will initialize the ROS 2 framework, initialize the intended plugins and delegate the use case handling to the state machine:
 
 
 
@@ -20,7 +20,7 @@ will initialize the |ros| framework, initialize the intended plugins and delegat
 of interface "MotionController" according to the specified configuration as in :ref:`Example Configuration<example_configuration>`
 
 
-2. The Grasp Plugin will subscribe to the :ref:`RVC API messages<rvc_api_messages>` RotatedBBList and compute the 
+2. The Grasp Plugin will subscribe to the :ref:`RVC API messages<rvc_api_messages>` RotatedBBList and compute the
 target pose for the robot.
 
 3. According to the state of the state machine, this is used

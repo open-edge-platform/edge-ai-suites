@@ -5,11 +5,17 @@ They detect anomalous weld patterns and alert operators for timely intervention,
 ensuring proactive maintenance, safety, and operational efficiency. No more failures
 and unplanned downtime.
 
+In this article, you can learn about the architecture of the sample and its data flow.
+
+If you want to start working with it, instead, check out the
+[Get Started Guide](../get-started.md) or [How-to Guides](../how-to-guides/index.md)
+for Time-series applications.
+
 ## App Architecture
 
 As seen in the following architecture diagram, the sample app at a high-level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana.
 
-![Time Series AI Stack Architecture Diagram](../_images/time-series-ai-stack-architecture.png)
+![Weld Anomaly Detection - Time Series AI Stack Architecture Diagram](../_images/weld-anomaly-detection-timeseries-ai-stack-architecture.png)
 
 ### Data flow explanation
 
@@ -74,8 +80,11 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 ##### **`udfs/`**
 
 Contains the python script to process the incoming data.
-Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with Intel® Extension for Scikit-learn*
-to run on CPU to detect the anomalous power generation data points relative to wind speed.
+
+Uses CatBoostClassifier machine learning algo from CatBoost library to run on CPU to
+detect the anomalous power generation data points relative to wind speed.
+
+**Note**: Please note, CatBoost models doesn't run on Intel GPUs.
 
 ##### **`tick_scripts/`**
 
@@ -85,11 +94,5 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 ##### **`models/`**
 
-The `weld_anomaly_detector.cb` is a model built using the RandomForestRegressor Algo.
+The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier algorithm from the CatBoost library.
 
-<!--hide_directive
-:::{toctree}
-:hidden:
-
-:::
-hide_directive-->

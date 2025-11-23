@@ -209,7 +209,7 @@ PreProcess::PreProcess(const int max_num_pillars,
       grid_z_size_(grid_z_size), pillar_x_size_(pillar_x_size), pillar_y_size_(pillar_y_size), pillar_z_size_(pillar_z_size), min_x_range_(min_x_range),
       min_y_range_(min_y_range), min_z_range_(min_z_range), dev_mgr_(dev_mgr)
 {
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     // allocate memory
     dev_pillar_x_in_coors_ = sycl::malloc_device<float>(grid_y_size_ * grid_x_size_ * max_num_points_per_pillar_, queue);
     dev_pillar_y_in_coors_ = sycl::malloc_device<float>(grid_y_size_ * grid_x_size_ * max_num_points_per_pillar_, queue);
@@ -224,7 +224,7 @@ PreProcess::PreProcess(const int max_num_pillars,
 
 PreProcess::~PreProcess()
 {
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     sycl::free(dev_pillar_x_in_coors_, queue);
     sycl::free(dev_pillar_y_in_coors_, queue);
     sycl::free(dev_pillar_z_in_coors_, queue);
@@ -252,7 +252,7 @@ void PreProcess::DoPreProcess(const float *dev_points,
                               int *host_pillar_count)
 {
     // Set Pillar input features to 0
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     // TODO: test queue.fill vs queue.memset
     queue.memset(dev_pillar_x_in_coors_, 0, grid_y_size_ * grid_x_size_ * max_num_points_per_pillar_ * sizeof(float));
     queue.memset(dev_pillar_y_in_coors_, 0, grid_y_size_ * grid_x_size_ * max_num_points_per_pillar_ * sizeof(float));

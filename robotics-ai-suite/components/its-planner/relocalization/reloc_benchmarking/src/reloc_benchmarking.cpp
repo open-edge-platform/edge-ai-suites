@@ -35,7 +35,7 @@ bool demo = false;
 class Benchmark : public rclcpp::Node
 {
 private:
-  bool pose_recieved_ = false;
+  bool pose_received_ = false;
   rclcpp_action::Client<NavigateToPose>::SharedPtr send_goal_;
   rclcpp::Client<std_srvs::srv::Empty>::SharedPtr reset_world_;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr publish_initial_pose_;
@@ -303,7 +303,7 @@ public:
   {
     reset_services();
     activate_services();
-    pose_recieved_ = false;
+    pose_received_ = false;
     auto request_reset = std::make_shared<std_srvs::srv::Empty::Request>();
     while (!reset_world_->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
@@ -350,7 +350,7 @@ public:
 
   void testRelocalization(std::vector<int> & relocalization_time)
   {
-    pose_recieved_ = false;
+    pose_received_ = false;
     ReinitializeGlobalLocalization();
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     // send re-localization request
@@ -423,11 +423,11 @@ public:
   {
     auto pose_ = msg->pose;
     current_pose_ = msg;
-    pose_recieved_ = true;
+    pose_received_ = true;
   }
   bool isLocalized()
   {
-    if (pose_recieved_ &&
+    if (pose_received_ &&
       current_pose_->pose.covariance[cov_x_] < 0.25 &&
       current_pose_->pose.covariance[cov_y_] < 0.25 &&
       current_pose_->pose.covariance[cov_a_] < 0.25)
