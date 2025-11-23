@@ -4,8 +4,12 @@ import '../../assets/css/UploadFilesModal.css';
 import folderIcon from '../../assets/images/folder.svg';
 import { startVideoAnalyticsPipeline, uploadAudio, getClassStatistics } from '../../services/api';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { setFrontCamera, setBackCamera, setBoardCamera, setUploadedAudioPath, startProcessing, processingFailed } from '../../redux/slices/uiSlice';
-
+import { setFrontCamera, setBackCamera, setBoardCamera, setUploadedAudioPath, startProcessing, processingFailed, resetFlow, setSessionId, setActiveStream, startStream, stopStream } from '../../redux/slices/uiSlice';
+import { resetTranscript } from '../../redux/slices/transcriptSlice';
+import { resetSummary } from '../../redux/slices/summarySlice';
+import { clearMindmap } from '../../redux/slices/mindmapSlice';
+import { setClassStatistics } from '../../redux/slices/fetchClassStatistics';
+import { constants } from '../../constants';
 interface UploadFilesModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,12 +23,15 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
   const [baseDirectory, setBaseDirectory] = useState("C:\\Users\\Default\\Videos\\"); // Default base directory
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [notification, setNotification] = useState(constants.START_NOTIFICATION);
 
   const dispatch = useAppDispatch();
   const sessionId = useAppSelector((state) => state.ui.sessionId);
 
   const constructFilePath = (fileName: string): string => {
-    return `${baseDirectory}${fileName}`;
+    const normalizedBaseDirectory = baseDirectory.endsWith("\\") ? baseDirectory : `${baseDirectory}\\`;
+    return `${normalizedBaseDirectory}${fileName}`;
   };
 
   const handleFileSelect = (setter: React.Dispatch<React.SetStateAction<File | null>>, accept: string) => {
@@ -42,39 +49,83 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     };
     input.click();
   };
-
   const handleApply = async () => {
-    if (!audioPath || !frontCameraPath || !rearCameraPath || !boardCameraPath) {
+    if (!audioFile || !frontCameraPath || !rearCameraPath || !boardCameraPath) {
       setError('All file paths are required.');
       return;
     }
-  
+
+    // Clear state for a new operation
+    //clearForNewOp();
+    setNotification('Uploading audio...');
+    dispatch(resetFlow());
+    dispatch(resetTranscript());
+    dispatch(resetSummary());
+    dispatch(clearMindmap());
+    dispatch(startProcessing());
+
     setLoading(true);
     setError(null);
-  
+
     try {
-      dispatch(startProcessing());
-  
-      // Construct full file paths for video files
+      // Step 1: Upload the audio file
+      const audioResponse = await uploadAudio(audioFile); // Pass the File object directly
+      dispatch(setUploadedAudioPath(audioResponse.path));
+      console.log('Audio uploaded successfully:', audioResponse);
+
+      // Notify the user that transcription will start automatically
+      setNotification('Audio uploaded. Starting transcription...');
+
+      // Transcription will be triggered automatically by TranscriptsTab
+    } catch (err) {
+      console.error('Failed to upload audio:', err);
+      setError('Failed to upload audio. Please try again.');
+      setNotification('');
+      dispatch(processingFailed());
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Step 2: Wait for sessionId to be available in Redux
+      const waitForSessionId = async (): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const interval = setInterval(() => {
+            const currentSessionId = sessionId;
+            if (currentSessionId) {
+              clearInterval(interval);
+              resolve(currentSessionId);
+            }
+          }, 500);
+
+          setTimeout(() => {
+            clearInterval(interval);
+            reject(new Error('Session ID not generated within timeout.'));
+          }, 30000); // Timeout after 30 seconds
+        });
+      };
+
+      const generatedSessionId = await waitForSessionId();
+      console.log('Session ID retrieved:', generatedSessionId);
+
+      // Step 3: Construct full file paths for video files
       const frontFullPath = constructFilePath(frontCameraPath.name);
       const rearFullPath = constructFilePath(rearCameraPath.name);
       const boardFullPath = constructFilePath(boardCameraPath.name);
-  
-      // Construct the payload for all pipelines
+
+      // Step 4: Trigger the video pipeline
+      setNotification('Starting video analytics...');
+      dispatch(startStream());
       const pipelines = [
         { pipeline_name: 'front', source: frontFullPath },
         { pipeline_name: 'back', source: rearFullPath },
         { pipeline_name: 'content', source: boardFullPath },
       ];
-  
-      // Trigger both audio and video pipelines in parallel
-      const [audioResponse, videoResponse] = await Promise.all([
-        uploadAudio(audioPath), // Audio upload remains unchanged
-        startVideoAnalyticsPipeline(pipelines, sessionId!), // Send all pipelines in one request
-      ]);
-  
-      // Update Redux state with the uploaded audio path and HLS stream URLs
-      dispatch(setUploadedAudioPath(audioResponse.path));
+
+      const videoResponse = await startVideoAnalyticsPipeline(pipelines, generatedSessionId);
+      console.log('Video analytics pipeline started successfully:', videoResponse);
+
+      // Step 5: Update Redux state with the results
       videoResponse.results.forEach((result: any) => {
         if (result.pipeline_name === 'front') {
           dispatch(setFrontCamera(result.hls_stream));
@@ -84,15 +135,30 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
           dispatch(setBoardCamera(result.hls_stream));
         }
       });
-  
-      // Fetch class statistics after all pipelines are started
-      const classStatistics = await getClassStatistics(sessionId!);
-      console.log('Class Statistics:', classStatistics);
-  
+
+      // Step 6: Set the active stream to "all"
+      dispatch(setActiveStream('all'));
+
+      dispatch(stopStream()); // Indicate that the video pipeline has stopped
+      setNotification('Video analytics completed.');
+
+      // Step 6: Fetch Class Statistics
+      setNotification('Fetching class statistics...');
+      try {
+        const classStatistics = await getClassStatistics(generatedSessionId);
+        console.log('Class Statistics:', classStatistics);
+        dispatch(setClassStatistics(classStatistics));
+      } catch (err) {
+        console.error('Failed to fetch class statistics:', err);
+        setError('Failed to fetch class statistics. Please try again.');
+      }
+
+      setNotification('Processing completed successfully.');
       onClose();
     } catch (err) {
-      console.error('Failed to start pipelines:', err);
-      setError('Failed to start pipelines. Please try again.');
+      console.error('Failed to start video analytics pipeline:', err);
+      setError('Failed to start video analytics pipeline. Please try again.');
+      setNotification('');
       dispatch(processingFailed());
     } finally {
       setLoading(false);
@@ -195,3 +261,5 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
 };
 
 export default UploadFilesModal;
+
+

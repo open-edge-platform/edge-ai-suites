@@ -1,35 +1,27 @@
-import React, { useEffect, useRef } from 'react';
-import Hls from 'hls.js';
+import React from 'react';
 
 interface HLSPlayerProps {
   streamUrl: string;
 }
 
 const HLSPlayer: React.FC<HLSPlayerProps> = ({ streamUrl }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  // Check if the URL is a webpage or an HLS stream
+  const isWebpage = !streamUrl.endsWith('.m3u8');
 
-  useEffect(() => {
-    if (Hls.isSupported() && videoRef.current) {
-      const hls = new Hls();
-      hls.loadSource(streamUrl);
-      hls.attachMedia(videoRef.current);
-
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        videoRef.current?.play();
-      });
-
-      return () => {
-        hls.destroy();
-      };
-    } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
-      videoRef.current.src = streamUrl;
-      videoRef.current.addEventListener('loadedmetadata', () => {
-        videoRef.current?.play();
-      });
-    }
-  }, [streamUrl]);
-
-  return <video ref={videoRef} controls width="100%" height="auto" />;
+  return isWebpage ? (
+    <iframe
+      src={streamUrl}
+      scrolling="no"
+      width="100%"
+      height="auto"
+      style={{ border: 'none' }}
+    />
+  ) : (
+    <video controls width="100%" height="auto">
+      <source src={streamUrl} type="application/vnd.apple.mpegurl" />
+      Your browser does not support the video tag.
+    </video>
+  );
 };
 
 export default HLSPlayer;

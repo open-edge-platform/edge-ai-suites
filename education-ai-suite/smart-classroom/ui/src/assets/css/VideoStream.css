@@ -24,7 +24,7 @@
   left: 0;
   width: 100%;
   height: calc(70vh - 64px - 56px); /* Adjust height to exclude HeaderBar and TopPanel */
-  z-index: 1000;
+  z-index: 10A00;
   background: #fff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   border-radius: 8px;

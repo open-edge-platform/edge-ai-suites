@@ -14,7 +14,6 @@ import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { useTranslation } from 'react-i18next';
 import { uploadAudio, stopMicrophone, getAudioDevices } from '../../services/api';
 import Toast from '../common/Toast';
-import { startVideoAnalyticsPipeline, stopVideoAnalyticsPipeline } from '../../services/api';
 import UploadFilesModal from '../Modals/UploadFilesModal';
 
 // Safe error extraction helper
@@ -201,52 +200,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         console.error('Failed to stop microphone:', error);
         setErrorMsg('Failed to stop microphone recording');
       }
-    }
-  };
-  
-  // const handleFileUpload = async (file: File) => {
-  //   if (isBusy || isRecording) return;
-  //   clearForNewOp();
-  //   setNotification(t('notifications.uploading'));
-  //   dispatch(resetFlow());
-  //   dispatch(resetTranscript());
-  //   dispatch(resetSummary());
-  //   dispatch(startProcessing());
-  //   try {
-  //     const result = await uploadAudio(file);
-  //     dispatch(setUploadedAudioPath(result.path));
-  //     setNotification(t('notifications.uploadSuccess'));
-  //     setErrorMsg(null); // Clear any previous error
-  //   } catch (e) {
-  //     const msg = getErrorMessage(e, 'Upload failed');
-  //     setNotification(''); // Clear the notification
-  //     setErrorMsg(msg); // Set error message for NotificationsDisplay
-  //     dispatch(processingFailed());
-  //   }
-  // };
- 
-
-  const handleFileUpload = async (file: File) => {
-    if (isBusy || isRecording) return;
-    clearForNewOp();
-    setNotification(t('notifications.uploading'));
-    dispatch(resetFlow());
-    dispatch(resetTranscript());
-    dispatch(resetSummary());
-    dispatch(clearMindmap());
-    dispatch(startProcessing());
-
-    try {
-      const result = await uploadAudio(file);
-      dispatch(setUploadedAudioPath(result.path));
-      setNotification(t('notifications.uploadSuccess'));
-      setErrorMsg(null);
-    } catch (e: any) {
-      const msg = e?.response?.data?.message || 'Upload failed';
-      setErrorMsg(msg);
-      setNotification('');
-      setErrorMsg(msg);
-      dispatch(processingFailed());
     }
   };
 

@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 interface FrontCameraSelectProps {
   selectedFrontCamera: string;
   onChange: (camera: string) => void;
+  isabled?: boolean; // Add the disabled property
+  placeholder?: string; 
 }
 
 const FrontCameraSelect: React.FC<FrontCameraSelectProps> = ({

@@ -19,6 +19,7 @@ export interface UIState {
   frontCamera: string;
   backCamera: string;
   boardCamera: string;
+  activeStream: 'front' | 'back' | 'content' | 'all' | null;
 }
 
 const initialState: UIState = {
@@ -35,6 +36,7 @@ const initialState: UIState = {
   shouldStartSummary: false,
   shouldStartMindmap: false,
   projectLocation: 'storage/',
+  activeStream: null,
   frontCamera: 'Default Front Camera',
   backCamera: 'Default Back Camera',
   boardCamera: 'Default Board Camera'
@@ -90,7 +92,9 @@ const uiSlice = createSlice({
         state.sessionId = v;
       }
     },
-
+    setActiveStream(state, action: PayloadAction<'front' | 'back' | 'content' | 'all' | null>) {
+      state.activeStream = action.payload;
+    },
     firstSummaryToken(state) {
       state.summaryLoading = false; 
     },
@@ -140,6 +144,20 @@ const uiSlice = createSlice({
     setBoardCamera(state, action: PayloadAction<string>) {
       state.boardCamera = action.payload;
     },
+    resetStream(state) {
+      state.activeStream = null;
+      state.frontCamera = 'Default Front Camera';
+      state.backCamera = 'Default Back Camera';
+      state.boardCamera = 'Default Board Camera';
+    },
+
+    startStream(state) {
+      state.activeStream = 'all'; // Default to "all" when starting the video pipeline
+    },
+
+    stopStream(state) {
+      state.activeStream = null; // Clear the active stream when stopping the video pipeline
+    },
     resetFlow() {
       return initialState;
     },
@@ -153,6 +171,10 @@ export const {
   clearSummaryStartRequest,
   setUploadedAudioPath,
   setSessionId,
+  setActiveStream,
+  resetStream,
+  startStream,
+  stopStream,
   firstSummaryToken,
   summaryDone,
   mindmapStart,
