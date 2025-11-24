@@ -2,9 +2,9 @@
 
 The following is a list of Debian update packages for Embodied Intelligence SDK components.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: tab1
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1 hide_directive-->
 
 |Component Group|Package |Description |
 |---|---|---|
@@ -20,9 +20,9 @@ The following is a list of Debian update packages for Embodied Intelligence SDK 
 |[LLM Robotics Demo](./sample_pipelines/llm_robotics.md)|funasr<br> llm-robotics|LLM Robotics demo, a code generation pipeline for robotics, which uses a large language model and vision model to generate pick and place actions.|
 |[Robotics Diffusion Transformer](./sample_pipelines/robotics_diffusion_transformer.rst)|rdt-ov|Robotics Diffusion Transformer (RDT), the largest bimanual manipulation foundation model with strong generalizability.|
 
-:::
-:::{tab-item} **Humble**
-:sync: tab2
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2 hide_directive-->
 
 |Component Group|Package |Description |
 |---|---|---|
@@ -38,8 +38,8 @@ The following is a list of Debian update packages for Embodied Intelligence SDK 
 |[LLM Robotics Demo](./sample_pipelines/llm_robotics.md)|funasr<br> llm-robotics|LLM Robotics demo, a code generation pipeline for robotics, which uses a large language model and vision model to generate pick and place actions.|
 |[Robotics Diffusion Transformer](./sample_pipelines/robotics_diffusion_transformer.rst)|rdt-ov|Robotics Diffusion Transformer (RDT), the largest bimanual manipulation foundation model with strong generalizability.|
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 <!--hide_directive
 :::{toctree}

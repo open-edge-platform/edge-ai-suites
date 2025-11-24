@@ -48,28 +48,28 @@ ROS is a set of open-source software libraries and tools that help you build rob
 
 6. (Optional) Install the ROS wrappers for Intel RealSense depth cameras:
 
-    ::::{tab-set}
-    :::{tab-item} **Jazzy**
-    :sync: tab1
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: tab1 hide_directive-->
 
-    ```bash
-sudo apt install ros-jazzy-realsense2-camera
-    ```
+   ```bash
+   sudo apt install ros-jazzy-realsense2-camera
+   ```
 
-    :::
-    :::{tab-item} **Humble**
-    :sync: tab2
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: tab2 hide_directive-->
 
-    ```bash
-sudo apt install ros-humble-realsense2-camera
-    ```
+   ```bash
+   sudo apt install ros-humble-realsense2-camera
+   ```
 
-    :::
-    ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 #. (Optional) Install other tools or packages of Intel RealSense depth cameras:
 
-    See `the installation link <https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md>`_
+    See the [installation link](https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md)>
     to install librealsense packages and more other tools from Intel® RealSense™ depth camera sources.
 
 ## Troubleshooting
@@ -84,8 +84,8 @@ If errors occur during ``librealsense2-dkms`` package installation, you have opt
 
   ```bash
 
-sudo rm -rf /var/lib/dpkg/info/librealsense2-dkms*
-sudo apt install librealsense2-dkms
+  sudo rm -rf /var/lib/dpkg/info/librealsense2-dkms*
+  sudo apt install librealsense2-dkms
   ```
 
 - If the option above doesn't work , try to build and install from the source code.
@@ -106,23 +106,23 @@ E: Unable to correct problems, you have held broken packages.
 This issue is probably caused by the mismatched versions of the ROS wrapper and the librealsense2 package.
 You can try to fix it by specifying the version of the dependent package. You can try the following for the example given above:
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: tab1
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item} hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1 hide_directive-->
 
 ```bash
 sudo apt install ros-jazzy-librealsense2=2.55.1-1eci9
 sudo apt install ros-jazzy-librealsense2-tools=2.55.1-1eci9
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: tab2
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2 hide_directive-->
 
 ```bash
 sudo apt install ros-humble-librealsense2=2.55.1-1eci9
 sudo apt install ros-humble-librealsense2-tools=2.55.1-1eci9
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
