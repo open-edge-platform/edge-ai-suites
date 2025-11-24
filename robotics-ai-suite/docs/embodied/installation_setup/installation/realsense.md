@@ -17,12 +17,14 @@ ROS is a set of open-source software libraries and tools that help you build rob
 
    sudo mkdir -p /etc/apt/keyrings
    curl -sSf https://librealsense.intel.com/Debian/librealsense.pgp | sudo tee /etc/apt/keyrings/librealsense.pgp > /dev/null
+   ```
 
 2. Ensure that apt HTTPS support is installed:
 
    ```bash
 
    sudo apt-get install apt-transport-https
+   ```
 
 3. Add the server to the list of repositories:
 
@@ -30,18 +32,21 @@ ROS is a set of open-source software libraries and tools that help you build rob
 
    echo "deb [signed-by=/etc/apt/keyrings/librealsense.pgp] https://librealsense.intel.com/Debian/apt-repo `lsb_release -cs` main" | \
    sudo tee /etc/apt/sources.list.d/librealsense.list
+   ```
 
 4. Update your apt repository caches after setting up the repositories:
 
    ```bash
 
    sudo apt update
+   ```
 
 5. Install the RealSense drivers and libraries:
 
    ```bash
    sudo apt install librealsense2-dkms
    sudo apt install librealsense2=2.55.1-0~realsense.12474
+   ```
 
 >  **Attention:**
    The command above has fixed the ``librealsense2`` package version; therefore, you need to install dependent packages, for example ``librealsense2-utils``, ``librealsense2-dev``, and ``librealsense2-gl``.
