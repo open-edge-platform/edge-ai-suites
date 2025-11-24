@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Modal from './Modal';
 import '../../assets/css/UploadFilesModal.css';
 import folderIcon from '../../assets/images/folder.svg';
-import { startVideoAnalyticsPipeline, uploadAudio, getClassStatistics } from '../../services/api';
+import { startVideoAnalyticsPipeline, uploadAudio, getClassStatistics, streamTranscript } from '../../services/api';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { setFrontCamera, setBackCamera, setBoardCamera, setUploadedAudioPath, startProcessing, processingFailed, resetFlow, setSessionId, setActiveStream, startStream, stopStream } from '../../redux/slices/uiSlice';
 import { resetTranscript } from '../../redux/slices/transcriptSlice';
@@ -65,21 +65,31 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       // Step 1: Upload the audio file
       console.log('Uploading audio file...');
       const audioResponse = await uploadAudio(audioFile); // Upload the audio file
-      dispatch(setUploadedAudioPath(audioResponse.path));
+      dispatch(setUploadedAudioPath(audioResponse.path));                                                                                                                                           
       console.log('Audio uploaded successfully:', audioResponse);
   
       // Notify the user that transcription will start automatically
       setNotification('Audio uploaded. Starting transcription...');
-    } catch (err) {
-      console.error('Failed to upload audio:', err);
-      setError('Failed to upload audio. Please try again.');
-      setNotification('');
-      dispatch(processingFailed());
-      setLoading(false);
-      return; // Exit the function if audio upload fails
-    }
+      console.log('Starting transcription...');
+      const aborter = new AbortController();
+      const stream = streamTranscript(audioResponse.path, {
+        signal: aborter.signal,
+        tokenDelayMs: 120,
+        onSessionId: (id) => {
+          console.log('Dispatching setSessionId:', id);
+          dispatch(setSessionId(id));
+        },
+      });
+    // } catch (err) {
+    //   console.error('Failed to upload audio:', err);
+    //   setError('Failed to upload audio. Please try again.');
+    //   setNotification('');
+    //   dispatch(processingFailed());
+    //   setLoading(false);
+    //   return; // Exit the function if audio upload fails
+    // }
   
-    try {
+    // try {
       // Step 2: Wait for sessionId to be available in Redux
       const waitForSessionId = async (): Promise<string> => {
         return new Promise((resolve, reject) => {
