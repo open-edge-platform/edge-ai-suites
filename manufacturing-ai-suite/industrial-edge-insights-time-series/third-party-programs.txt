@@ -115,6 +115,14 @@ tzdata==2025.2
 License-Identifier: MIT License / Proprietary
 pip==25.3
 
+---------------------------------------------------------------------------------------------------------------------------
+Dataset:
+========
+
+Distributing only subset of video and csv files for testing
+
+Link - https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset
+License-Identifier: Apache License 2.0
 
 ---------------------------------------------------------------------------------------------------------------------------
 

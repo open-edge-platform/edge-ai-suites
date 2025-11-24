@@ -136,4 +136,13 @@ influxdb==5.3.2
 paho-mqtt==2.1.0
 
 ---------------------------------------------------------------------------------------------------------------------------
+Dataset:
+========
+
+Distributing only subset of video and csv files for testing
+
+Link - https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset
+License-Identifier: Apache License 2.0
+
+---------------------------------------------------------------------------------------------------------------------------
 * Other names and brands may be claimed as the property of others.
