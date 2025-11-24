@@ -127,14 +127,32 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
 
       // Step 5: Update Redux state with the results
       videoResponse.results.forEach((result: any) => {
+        if (result.status === "success" && result.hls_stream) {
         if (result.pipeline_name === 'front') {
-          dispatch(setFrontCamera(result.hls_stream));
+          dispatch(setFrontCamera(result.hls_stream || null)); // Set to null if no stream is available
         } else if (result.pipeline_name === 'back') {
-          dispatch(setBackCamera(result.hls_stream));
+          dispatch(setBackCamera(result.hls_stream || null)); // Set to null if no stream is available
         } else if (result.pipeline_name === 'content') {
-          dispatch(setBoardCamera(result.hls_stream));
+          dispatch(setBoardCamera(result.hls_stream || null)); // Set to null if no stream is available
         }
+      }else {
+        // If the pipeline failed or the stream is invalid, set the corresponding state to null
+        if (result.pipeline_name === "front") {
+          dispatch(setFrontCamera(""));
+        } else if (result.pipeline_name === "back") {
+          dispatch(setBackCamera(""));
+        } else if (result.pipeline_name === "content") {
+          dispatch(setBoardCamera(""));
+        }
+      }
       });
+      
+      // Set the active stream to "all" only if at least one stream is available
+      if (
+        videoResponse.results.some(
+          (result: any) => result.pipeline_name && result.hls_stream
+        )
+      )
 
       // Step 6: Set the active stream to "all"
       dispatch(setActiveStream('all'));

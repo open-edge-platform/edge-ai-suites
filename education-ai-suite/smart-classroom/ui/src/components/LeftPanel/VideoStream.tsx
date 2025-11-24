@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "../../assets/css/VideoStream.css";
 import UploadFilesModal from "../Modals/UploadFilesModal";
 import streamingIcon from "../../assets/images/streamingIcon.svg";
+import fullScreenIcon from "../../assets/images/fullScreenIcon.svg";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";
 import { setActiveStream } from "../../redux/slices/uiSlice";
 
@@ -23,6 +24,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
 
   const handleToggleRoomView = () => {
     setIsRoomView(!isRoomView);
+    console.log("Room View Toggled:", !isRoomView);
   };
 
   const handleFullScreenToggle = () => {
@@ -35,6 +37,10 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
 
   const handleStreamClick = (pipeline: "front" | "back" | "content" | "all") => {
     dispatch(setActiveStream(pipeline));
+  };
+  const isValidStream = (stream: string | null) => {
+    // Check if the stream is a valid URL
+    return stream && stream.startsWith("http");
   };
 
   return (
@@ -64,78 +70,20 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
             ))}
           </div>
         )}
-        <button className="fullscreen-toggle" onClick={handleFullScreenToggle}>
-          {isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
-        </button>
+        <img
+          src={fullScreenIcon}
+          alt="Fullscreen Icon"
+          className="fullscreen-icon"
+        />
       </div>
-
+        {/* <button className="fullscreen-toggle" onClick={handleFullScreenToggle}>
+          {isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
+        </button> */}
+      /
       {isRoomView && (
         <div className="video-stream-body">
-          {Object.keys(streams).length > 0 ? (
-            <div className={`stream-container ${Object.keys(streams).length === 3 ? "split-screen" : ""}`}>
-              {activeStream === null || activeStream === "all" ? (
-                <>
-                  {streams.front && (
-                    <iframe
-                      src={streams.front}
-                      scrolling="no"
-                      width="100%"
-                      height="auto"
-                      style={{ border: "none" }}
-                    />
-                  )}
-                  {streams.back && (
-                    <iframe
-                      src={streams.back}
-                      scrolling="no"
-                      width="100%"
-                      height="auto"
-                      style={{ border: "none" }}
-                    />
-                  )}
-                  {streams.content && (
-                    <iframe
-                      src={streams.content}
-                      scrolling="no"
-                      width="100%"
-                      height="auto"
-                      style={{ border: "none" }}
-                    />
-                  )}
-                </>
-              ) : (
-                <>
-                  {activeStream === "front" && streams.front && (
-                    <iframe
-                      src={streams.front}
-                      scrolling="no"
-                      width="100%"
-                      height="auto"
-                      style={{ border: "none" }}
-                    />
-                  )}
-                  {activeStream === "back" && streams.back && (
-                    <iframe
-                      src={streams.back}
-                      scrolling="no"
-                      width="100%"
-                      height="auto"
-                      style={{ border: "none" }}
-                    />
-                  )}
-                  {activeStream === "content" && streams.content && (
-                    <iframe
-                      src={streams.content}
-                      scrolling="no"
-                      width="100%"
-                      height="auto"
-                      style={{ border: "none" }}
-                    />
-                  )}
-                </>
-              )}
-            </div>
-          ) : (
+          {
+          activeStream === null ? (
             <div className="stream-placeholder">
               <img
                 src={streamingIcon}
@@ -150,8 +98,108 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
                 Upload File
               </button>
             </div>
-          )}
-        </div>
+          ) : Object.values(streams).every((stream) => !isValidStream(stream)) ? ( // Check if all streams are invalid
+            <div className="stream-placeholder">
+              <p>No video streams available. Please upload files to start streaming.</p>
+            </div>
+        ) :  (
+          <div className={`stream-container ${activeStream === "all" ? "split-screen" : ""}`}>
+            {activeStream === "all" && (
+              <>
+                {streams.front && <iframe src={streams.front} scrolling="no" width="100%" height="auto" />}
+                {streams.back && <iframe src={streams.back} scrolling="no" width="100%" height="auto" />}
+                {streams.content && <iframe src={streams.content} scrolling="no" width="100%" height="auto" />}
+              </>
+            )}
+            {activeStream === "front" && streams.front && <iframe src={streams.front} scrolling="no" width="100%" height="auto" />}
+            {activeStream === "back" && streams.back && <iframe src={streams.back} scrolling="no" width="100%" height="auto" />}
+            {activeStream === "content" && streams.content && <iframe src={streams.content} scrolling="no" width="100%" height="auto" />}
+          </div>
+        )}
+      </div>
+        // <div className="video-stream-body">
+        //   {activeStream === null ? ( // Show placeholder by default
+        //     <div className="stream-placeholder">
+        //       <img
+        //       src={streamingIcon}
+        //       alt="Streaming Icon"
+        //       className="streaming-icon"
+        //     />
+        //       <p>Go to settings to configure your recorders or upload audio/video files</p>
+        //       <button
+        //         className="upload-file-button"
+        //         onClick={() => setIsUploadModalOpen(true)}
+        //       >
+        //         Upload File
+        //       </button>
+        //     </div>
+        //   ) :(
+        //   // {Object.keys(streams).length > 0 ? (
+        //     <div className={`stream-container ${activeStream === "all" ? "split-screen" : ""}`}>
+        //       {/* Render all streams in split-screen layout when "All" is selected */}
+        //       {activeStream === "all" && (
+        //         <>
+        //           {streams.front && (
+        //             <iframe
+        //               src={streams.front}
+        //               scrolling="no"
+        //               width="100%"
+        //               height="auto"
+        //               style={{ border: "none" }}
+        //             />
+        //           )}
+        //           {streams.back && (
+        //             <iframe
+        //               src={streams.back}
+        //               scrolling="no"
+        //               width="100%"
+        //               height="auto"
+        //               style={{ border: "none" }}
+        //             />
+        //           )}
+        //           {streams.content && (
+        //             <iframe
+        //               src={streams.content}
+        //               scrolling="no"
+        //               width="100%"
+        //               height="auto"
+        //               style={{ border: "none" }}
+        //             />
+        //           )}
+        //         </>
+        //       )}
+
+        //       {/* Render individual streams when a specific stream is selected */}
+        //       {activeStream === "front" && streams.front && (
+        //         <iframe
+        //           src={streams.front}
+        //           scrolling="no"
+        //           width="100%"
+        //           height="auto"
+        //           style={{ border: "none" }}
+        //         />
+        //       )}
+        //       {activeStream === "back" && streams.back && (
+        //         <iframe
+        //           src={streams.back}
+        //           scrolling="no"
+        //           width="100%"
+        //           height="auto"
+        //           style={{ border: "none" }}
+        //         />
+        //       )}
+        //       {activeStream === "content" && streams.content && (
+        //         <iframe
+        //           src={streams.content}
+        //           scrolling="no"
+        //           width="100%"
+        //           height="auto"
+        //           style={{ border: "none" }}
+        //         />
+        //       )}
+        //     </div>
+        //   ) }
+        //</div>
       )}
       {isUploadModalOpen && (
         <UploadFilesModal

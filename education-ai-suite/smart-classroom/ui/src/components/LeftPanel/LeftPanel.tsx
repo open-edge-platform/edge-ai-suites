@@ -70,7 +70,7 @@ const LeftPanel = () => {
 
   return (
   <div className={`left-panel-container ${isFullScreen ? "fullscreen" : ""}`}>
-    <div className={`left-panel ${isFullScreen ? "fullscreen" : ""}`}>
+    {/* <div className={`left-panel ${isFullScreen ? "fullscreen" : ""}`}> */}
       <VideoStream isFullScreen={isFullScreen} onToggleFullScreen={handleToggleFullScreen} />
       <div className="tabs">
         <button
@@ -104,7 +104,7 @@ const LeftPanel = () => {
         {activeTab === "mindmap" && <MindMapTab />}
       </div>
     </div>
-  </div>
+  // </div>
   );
 };
 

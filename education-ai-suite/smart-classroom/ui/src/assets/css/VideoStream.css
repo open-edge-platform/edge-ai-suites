@@ -40,6 +40,12 @@
   height: auto;
   min-height: 48px;
 }
+.video-stream.room-view .video-stream-body {
+  display: flex !important; /* Ensure visibility */
+  height: 100%; /* Ensure it fills the parent container */
+  overflow: hidden; /* Prevent content overflow */
+  background: #f8f9fa; /* Optional: Set a background color */
+}
 
 .video-stream.collapsed .video-stream-body,
 .video-stream.collapsed .stream-controls {
@@ -192,6 +198,17 @@
 
 .upload-file-button:hover {
   background-color: #0056b3;
+}
+.stream-container.split-screen {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns for front, back, and content */
+  gap: 10px; /* Add spacing between streams */
+}
+
+.stream-container iframe {
+  width: 100%;
+  height: 200px; /* Adjust height as needed */
+  border: none;
 }
 
 .container:not(.fullscreen) .left-panel .video-stream {
