@@ -286,7 +286,7 @@ Download ``Phi-4-mini-instruct-int8-ov`` models:
 
    $ sudo apt install git-lfs
    $ mkdir ~/ov_models && cd ~/ov_models
-   $ GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/OpenVINO/Phi-4-mini-instruct-int8-ov
+   $ GIT_LFS_SKIP_SMUDGE=1 git clone https://hf-mirror.com/OpenVINO/Phi-4-mini-instruct-int8-ov
    $ git lfs pull
 ```
 
@@ -380,7 +380,7 @@ The LLM Robotic demo includes the real-time component, non-real-time ROS2 compon
    ![llm-robotics-demo-UI](./assets/images/llm-robotics-demo-UI.png)
 
    In the "Apps" tab:
-   
+
    - Camera Stream and Depth Stream: displays the real-time color and depth streams from the camera.
    - App status: indicates the status and outcome of code generation.
    - Inference Result: presents the results from the SAM and CLIP models.
