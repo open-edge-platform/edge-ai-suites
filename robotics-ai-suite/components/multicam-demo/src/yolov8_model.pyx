@@ -1,17 +1,6 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions
-# and limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import os, argparse
 import math
@@ -42,16 +31,16 @@ from ultralytics.yolo.utils.plotting import colors
 
 np.import_array()
 
-labels = [ 
-	"person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "trafficlight", 
-	"firehydrant", "stopsign", "parkingmeter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", 
+labels = [
+	"person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "trafficlight",
+	"firehydrant", "stopsign", "parkingmeter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
 	"elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
 	"skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle",
 	"wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange",
 	"broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant", "bed",
 	"dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven",
 	"toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
-] 
+]
 
 
 cdef class YoloV8ModelBase():
@@ -73,7 +62,7 @@ cdef class YoloV8ModelBase():
 
 		self.core = Core()
 		self.ov_model = self.core.read_model(model_path)
-		
+
 		self.ov_model.reshape({0: [1, 3, image_size, image_size]})
 
 		self.compiled_model = self.core.compile_model(self.ov_model, device)
@@ -116,7 +105,7 @@ cdef class YoloV8ModelBase():
 	def result(self):
 		image = None
 		try:
-			
+
 			boxes, masks, image = self.outputs.pop()
 			boxes, scores, class_ids, mask_maps = self.postprocess(boxes, masks, image )
 
@@ -136,7 +125,7 @@ cdef class YoloV8ModelBase():
 	def callback(self, infer_request, info) -> None:
 		image, start_time = info
 
-		infer_time = (perf_counter() - start_time)	
+		infer_time = (perf_counter() - start_time)
 		self.infer_times.append(infer_time)
 		boxes = infer_request.results[self.compiled_model.output(0)]
 		masks = infer_request.results[self.compiled_model.output(1)] if len(infer_request.results) > 1 else None
@@ -160,7 +149,7 @@ cdef class YoloV8ModelBase():
 				mask_maps = self.process_mask_output(mask_pred, pred_masks, boxes, orig_img)
 		except:
 			pass
-			
+
 		return (boxes, scores, class_ids, mask_maps)
 
 	cdef get_boxes(self, np.ndarray[float, ndim=2] box_predictions, np.ndarray[uint8_t, ndim=3] orig_img):
@@ -175,12 +164,12 @@ cdef class YoloV8ModelBase():
 		boxes *= np.array([img_width, img_height, img_width, img_height])
 
 		# Convert bounding box (x, y, w, h) to bounding box (x1, y1, x2, y2)
-		cdef np.ndarray[float, ndim=2] xy = boxes.copy(); 
+		cdef np.ndarray[float, ndim=2] xy = boxes.copy();
 		boxes[..., 0] = xy[..., 0] - xy[..., 2] / 2
 		boxes[..., 1] = xy[..., 1] - xy[..., 3] / 2
 		boxes[..., 2] = xy[..., 0] + xy[..., 2] / 2
 		boxes[..., 3] = xy[..., 1] + xy[..., 3] / 2
-		
+
 		# Check the boxes are within the image
 		boxes[:, 0] = np.clip(boxes[:, 0], 0, img_width)
 		boxes[:, 1] = np.clip(boxes[:, 1], 0, img_height)
@@ -190,7 +179,7 @@ cdef class YoloV8ModelBase():
 		return boxes
 
 	cdef compute_iou(self, np.ndarray[float, ndim=1] box, np.ndarray[float, ndim=2] boxes):
-		
+
 		# Compute xmin, ymin, xmax, ymax for both boxes
 		cdef np.ndarray[float, ndim=1] xmin = np.maximum(box[0], boxes[:, 0])
 		cdef np.ndarray[float, ndim=1] ymin = np.maximum(box[1], boxes[:, 1])
@@ -208,7 +197,7 @@ cdef class YoloV8ModelBase():
 		cdef np.ndarray[float, ndim=1]  iou = intersection_area / union_area
 
 		return iou
-	
+
 	cdef nms(self, np.ndarray[float, ndim=2] boxes, np.ndarray[float, ndim=1] scores, float iou_threshold):
 		# Sort by score
 		cdef np.ndarray[long, ndim=1] sorted_indices = np.argsort(scores)[::-1]
@@ -271,12 +260,12 @@ cdef class YoloV8ModelBase():
 		return boxes
 
 
-	cdef process_mask_output(self,  mask_predictions,  mask_output, 
+	cdef process_mask_output(self,  mask_predictions,  mask_output,
 						      np.ndarray[float, ndim=2] boxes, np.ndarray[uint8_t, ndim=3] orig_img):
 
 		if mask_predictions.shape[0] == 0:
 			return []
-		
+
 		cdef int img_height = orig_img.shape[0]
 		cdef int img_width = orig_img.shape[1]
 
@@ -287,7 +276,7 @@ cdef class YoloV8ModelBase():
 		num_mask, mask_height, mask_width = (<object>mask_output_).shape  # CHW
 		mask_predictions = dpnp.array(mask_predictions, device=self.post_proc_device)
 		mask_output =  dpnp.array(mask_output.reshape((num_mask, -1)), device=self.post_proc_device)
-		
+
 		masks_ = self.sigmoid(mask_predictions @ mask_output).asnumpy()
 
 		cdef np.ndarray[float, ndim=3] masks = masks_.reshape((-1, mask_height, mask_width))
@@ -323,7 +312,7 @@ cdef class YoloV8ModelBase():
 	def sigmoid(self, x):
 		return 1 / (1 + dpnp.exp(-x))
 
-	
+
 
 	def draw_detections(self, image, boxes, scores, class_ids, mask_alpha=0.3, mask_maps=None):
 		img_height, img_width = image.shape[:2]
@@ -386,6 +375,6 @@ cdef class YoloV8ModelBase():
 class YoloV8Model(YoloV8ModelBase):
 	def __init__(self, model_path, device, image_size=640):
 		super().__init__(model_path, device, image_size)
-		
 
-	
+
+

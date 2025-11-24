@@ -60,7 +60,7 @@ Install ROS2 Iron
 
       $ sudo apt update && sudo apt install -y locales curl gnupg2 lsb-release
 
-#. Setup the |Intel| oneAPI APT repository:
+#. Setup the Intel® oneAPI APT repository:
 
    .. code-block:: bash
 
@@ -115,7 +115,7 @@ Install JAKA robot arm application
 FunASR setup
 =============
 
-This section will provide a step-by-step guide to setup a FunASR (A Fundamental End-to-End Speech Recognition Toolkit) server. 
+This section will provide a step-by-step guide to setup a FunASR (A Fundamental End-to-End Speech Recognition Toolkit) server.
 
 Install dependency
 :::::::::::::::::::
@@ -201,7 +201,7 @@ Add OpenVINO speech model to FunASR
 LLM and vision models setup
 ============================
 
-This section will provide a step-by-step guide to setup a virtual Python environment to run LLM demo. 
+This section will provide a step-by-step guide to setup a virtual Python environment to run LLM demo.
 
 Setup a virtual environment for application
 :::::::::::::::::::::::::::::::::::::::::::
@@ -261,7 +261,7 @@ Follow the below commands to download ``Phi-4-mini-instruct-int8-ov`` models:
 
    $ sudo apt install git-lfs
    $ mkdir ~/ov_models && cd ~/ov_models
-   $ GIT_LFS_SKIP_SMUDGE=1 git clone https://hf-mirror.com/OpenVINO/Phi-4-mini-instruct-int8-ov
+   $ GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/OpenVINO/Phi-4-mini-instruct-int8-ov
    $ git lfs pull
 
 Set the environment variable:
@@ -281,7 +281,7 @@ This section will provide a step-by-step guide to launch LLM robotics demo.
 Prepare System
 :::::::::::::::
 
-Please connect the following items to the |Core| Ultra IPC.
+Please connect the following items to the Intel® Core™ Ultra IPC.
 
 .. list-table::
    :widths: 100 500 500
@@ -333,7 +333,11 @@ The LLM Robotic demo includes the real-time component, non-real-time ROS2 compon
 
 #. Launch the JAKA robot arm ROS2 node:
 
-   .. important:: Execute the following commands as privileged user (``root``).
+   .. important:: Execute the following commands as privileged user (``root``). Open a root terminal using the following command:
+
+      .. code-block:: bash
+
+         $ sudo -i
 
    .. code-block:: bash
 

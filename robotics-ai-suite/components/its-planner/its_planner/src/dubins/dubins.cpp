@@ -706,7 +706,7 @@ bool isDubinsCollision(
 vector<pair<double, double>> removeRedundantNodes(
   vector<std::array<double, 3>> & pathWithHeadings,
   const vector<pair<double, double>> & dubinsPath,
-  const vector<int> & nodeIndeces,
+  const vector<int> & nodeIndices,
   const double & turnRadius,
   const double & headingTolerance,
   const vector<vector<int>> & costmap)
@@ -736,7 +736,7 @@ vector<pair<double, double>> removeRedundantNodes(
       bool done = false;
 
       originalPathSeg = vector<pair<double, double>>(
-        dubinsPath.begin() + nodeIndeces[currNode], dubinsPath.begin() + nodeIndeces[compareNode]);
+        dubinsPath.begin() + nodeIndices[currNode], dubinsPath.begin() + nodeIndices[compareNode]);
       double newHeadingTolerance = (compareNode == goalNode) ? M_PI / 48 : headingTolerance;
       if (!isDubinsCollision(
           costmap, pt1, pt2, 1.0, turnRadius, q1[2], q2[2], newHeadingTolerance,
@@ -782,7 +782,7 @@ vector<pair<double, double>> removeRedundantNodes(
     vector<pair<double, double>> pathSeg;
     if (path_segments.find({curr, next}) == path_segments.end()) {
       pathSeg = vector<pair<double, double>>(
-        dubinsPath.begin() + nodeIndeces[curr], dubinsPath.begin() + nodeIndeces[next]);
+        dubinsPath.begin() + nodeIndices[curr], dubinsPath.begin() + nodeIndices[next]);
     } else {
       pathSeg = path_segments[{essentialNodes[i], essentialNodes[i + 1]}];
     }

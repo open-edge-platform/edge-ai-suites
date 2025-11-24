@@ -30,4 +30,4 @@ Make sure docker is corrently installed and configured.
 
 ## Run docker compose
 1. Run `sudo init 3` switch to non-GUI mode
-2. Run `./startup.sh`
+2. Run `bash ./startup.sh`

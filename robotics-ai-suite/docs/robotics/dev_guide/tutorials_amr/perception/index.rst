@@ -2,8 +2,8 @@
 Perception
 ==========
 
-The following tutorials offer solutions for sensors and computer vision to use with the 
-|ros|-based |lp_amr| APT packages.
+The following tutorials offer solutions for sensors and computer vision to use with the
+ROS 2-based Autonomous Mobile Robot APT packages.
 
 .. toctree::
    :maxdepth: 2

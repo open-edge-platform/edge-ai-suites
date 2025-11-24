@@ -129,7 +129,7 @@ void AnchorGrid::ClearHostMemory()
 
 void AnchorGrid::ClearDeviceMemory()
 {
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     sycl::free(dev_anchors_px_, queue);
     sycl::free(dev_anchors_py_, queue);
     sycl::free(dev_anchors_pz_, queue);
@@ -150,7 +150,7 @@ void AnchorGrid::ClearDeviceMemory()
 
 void AnchorGrid::AllocateDeviceMemory()
 {
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     dev_anchors_px_ = sycl::malloc_device<float>(num_anchors_, queue);
     dev_anchors_py_ = sycl::malloc_device<float>(num_anchors_, queue);
     dev_anchors_pz_ = sycl::malloc_device<float>(num_anchors_, queue);
@@ -164,7 +164,7 @@ void AnchorGrid::AllocateDeviceMemory()
 void AnchorGrid::MoveAnchorsToDevice()
 {
     AllocateDeviceMemory();
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     queue.memcpy(dev_anchors_px_, host_anchors_px_, num_anchors_ * sizeof(float));
     queue.memcpy(dev_anchors_py_, host_anchors_py_, num_anchors_ * sizeof(float));
     queue.memcpy(dev_anchors_pz_, host_anchors_pz_, num_anchors_ * sizeof(float));
@@ -301,7 +301,7 @@ void AnchorGrid::MaskAnchors(const float *dev_anchors_px,
                              const int H,
                              const int W)
 {
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
 
     if (!dev_mgr_->getDev().is_gpu()) {
         sycl::range<3> block(H, R, 1);

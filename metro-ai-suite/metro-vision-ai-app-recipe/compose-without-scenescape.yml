@@ -124,7 +124,7 @@ services:
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},${HOST_IP}
       - NO_PROXY=${no_proxy},${HOST_IP}
-      - GF_SERVER_ROOT_URL=http://localhost/grafana/
+      - GF_SERVER_ROOT_URL=https://localhost/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - GF_PANELS_DISABLE_SANITIZE_HTML=true
       - GF_SECURITY_ALLOW_EMBEDDING=true

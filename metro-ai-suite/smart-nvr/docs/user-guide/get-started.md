@@ -64,7 +64,12 @@ Set up the required environment variables:
 ```bash
 # Docker Registry Details
 export REGISTRY_URL="intel"
-export TAG="1.2.1"
+export TAG="1.2.2"
+
+# VSS Service Endpoints
+export http_proxy=<http-proxy>
+export https_proxy=<https-proxy>
+export no_proxy=<no_proxy>             # Default localhost,127.0.0.1,192.168.0.0/16,172.16.0.0/12,127.0.0.0/8,10.0.0.0/8,.svc.cluster.local
 
 # VSS Service Endpoints
 export VSS_SUMMARY_IP=<vss-summary-device-ip>

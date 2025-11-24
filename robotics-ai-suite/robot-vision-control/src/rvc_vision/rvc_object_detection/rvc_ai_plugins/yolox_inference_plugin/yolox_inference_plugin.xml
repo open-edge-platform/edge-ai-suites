@@ -1,0 +1,5 @@
+<library path="yolox_inference_plugin">
+  <class type="RVC_AI::YoloxInference" base_class_type="RVC_AI::RVCAIInterface">
+    <description>This is a direct openvino yolox plugin.</description>
+  </class>
+</library>

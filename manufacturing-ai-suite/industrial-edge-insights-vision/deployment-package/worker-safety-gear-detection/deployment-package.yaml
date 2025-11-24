@@ -8,11 +8,11 @@ $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 name: "wsgd"
 displayName: "wsgd"
 description: "Worker Safety Gear Detection Deployment Package"
-version: "1.0.0"
+version: "1.1.0"
 
 applications:
   - name: wsgd-app
-    version: 1.0.0
+    version: 1.1.0
 
 defaultNamespaces:
   wsgd-app: wsgd

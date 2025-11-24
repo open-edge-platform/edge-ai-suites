@@ -2,15 +2,16 @@ import { configureStore } from '@reduxjs/toolkit';
 import uiReducer from './slices/uiSlice';
 import transcriptReducer from './slices/transcriptSlice';
 import summaryReducer from './slices/summarySlice';
+import mindmapReducer from './slices/mindmapSlice';
 // import fileReducer from './slices/fileSlice';
 import resourceReducer from './slices/resourceSlice';
-
 
 export const store = configureStore({
   reducer: {
     ui: uiReducer,
     transcript: transcriptReducer,
     summary: summaryReducer,
+    mindmap: mindmapReducer,
     // file: fileReducer,
     resource: resourceReducer,
   },

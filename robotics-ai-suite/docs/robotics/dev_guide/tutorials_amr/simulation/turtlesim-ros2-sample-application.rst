@@ -1,6 +1,6 @@
 .. turtlesim-ros2-sample-application:
 
-Turtlesim |ros| Sample Application
+Turtlesim ROS 2 Sample Application
 ==============================================================
 
 
@@ -20,25 +20,25 @@ Prerequisites
 Complete the :doc:`../../../gsg_robot/index` before continuing.
 
 
-Run the Turtlesim |ros| Sample application
+Run the Turtlesim ROS 2 Sample application
 --------------------------------------------------------------
 
 
-#. To download and install the Turtlesim |ros| sample application run the command below:
+#. To download and install the Turtlesim ROS 2 sample application run the command below:
 
    .. code-block::
 
 
       sudo apt-get install ros-humble-turtlesim-tutorial-demo
 
-#. Set up your |ros| environment
+#. Set up your ROS 2 environment
 
    .. code-block::
 
 
       source /opt/ros/humble/setup.bash
 
-#. Run the Turtlesim |ros| sample application:
+#. Run the Turtlesim ROS 2 sample application:
 
    .. code-block::
 

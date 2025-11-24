@@ -28,6 +28,7 @@ The architecture is designed to facilitate seamless integration and operation of
 - **WebRTC Stream Viewer:** Displays real-time video streams processed by the pipeline for end-user visualization.
 - **Grafana Dashboard:** A monitoring and visualization tool for analyzing pipeline metrics, logs, and other performance data.
 - **Inputs (Video Files and Cameras):** Provide raw video streams or files as input data for processing in the pipeline.
+- **Nginx:** High-performance web server and reverse proxy that provides TLS termination and unified HTTPS access.
 
 The DL Streamer Pipeline Server is a core component, designed to handle video analytics at the edge. It leverages pre-trained deep learning models to perform tasks such as object detection, classification, and tracking in real-time. The DL Streamer Pipeline Server is highly configurable, allowing users to adjust parameters like detection thresholds and object types to suit specific use cases. This flexibility ensures that users can deploy AI-driven video analytics solutions quickly and efficiently, without the need for extensive coding or deep learning expertise.
 

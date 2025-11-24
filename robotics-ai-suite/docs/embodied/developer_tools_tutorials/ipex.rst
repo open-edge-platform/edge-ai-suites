@@ -1,7 +1,7 @@
-|IPEX|
-#######
+Intel® Extension for PyTorch
+################################
 
-|IPEX| extends the |PyTorch| library with the latest performance optimizations for Intel's hardware. Optimizations take advantage of Intel® Advanced Vector Extensions 512 (Intel® AVX-512) Vector Neural Network Instructions (VNNI) and Intel® Advanced Matrix Extensions (Intel® AMX) on Intel CPUs as well as Intel XeMatrix Extensions (XMX) AI engines on Intel discrete GPUs. Moreover, |IPEX| provides easy GPU acceleration for Intel discrete GPUs through the |PyTorch| xpu device.
+Intel® Extension for PyTorch extends the PyTorch library with the latest performance optimizations for Intel's hardware. Optimizations take advantage of Intel® Advanced Vector Extensions 512 (Intel® AVX-512) Vector Neural Network Instructions (VNNI) and Intel® Advanced Matrix Extensions (Intel® AMX) on Intel CPUs as well as Intel XeMatrix Extensions (XMX) AI engines on Intel discrete GPUs. Moreover, Intel® Extension for PyTorch provides easy GPU acceleration for Intel discrete GPUs through the PyTorch xpu device.
 
 The extension can be loaded as a Python module for Python programs or linked as a C++ library for C++ programs. In Python scripts users can enable it dynamically by importing ``intel_extension_for_pytorch``.
 
@@ -9,10 +9,10 @@ The extension can be loaded as a Python module for Python programs or linked as 
    :width: 85%
    :align: center
 
-|IPEX| allows developers run their applications on Intel® XPU and get optimized performance without excessive changes from |PyTorch| code, which shortens development and validation cycles.
+Intel® Extension for PyTorch allows developers run their applications on Intel® XPU and get optimized performance without excessive changes from PyTorch code, which shortens development and validation cycles.
 
 | Please see more details on `intel-extension-for-pytorch Documentation Website <https://intel.github.io/intel-extension-for-pytorch/>`_ and github repository https://github.com/intel/intel-extension-for-pytorch/.
-| Install |IPEX| in your python environment by running the following command:
+| Install Intel® Extension for PyTorch in your python environment by running the following command:
 
 .. code-block:: bash
 

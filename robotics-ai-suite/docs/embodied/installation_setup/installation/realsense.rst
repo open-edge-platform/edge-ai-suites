@@ -70,7 +70,7 @@ Errors for ``librealsense2-dkms`` installation
 
 If errors occur during ``librealsense2-dkms`` package installation, you have options to fix it:
 
-- Install librealsense SDK by using original |Linux| drivers
+- Install librealsense SDK by using original Linux drivers
 
     Once errors occur during installing ``librealsenses2-dkms`` package, it probably is introduced by unmatched kernel version. You can try the below steps for a work-around:
 

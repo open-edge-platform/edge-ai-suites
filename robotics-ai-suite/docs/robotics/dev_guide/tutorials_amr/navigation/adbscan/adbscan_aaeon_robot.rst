@@ -1,7 +1,7 @@
 ADBSCAN on AAEON Robot Kit
 =====================================
 
-This tutorial describes how to run the ADBSCAN algorithm on the real robot `UP Xtreme i11 AAEON Robot Kit <https://up-shop.org/up-xtreme-i11-robotic-kit.html>`__ using the |realsense| camera input.
+This tutorial describes how to run the ADBSCAN algorithm on the real robot `UP Xtreme i11 AAEON Robot Kit <https://up-shop.org/up-xtreme-i11-robotic-kit.html>`__ using the Intel® RealSense™ camera input.
 During the execution of the program the ADBSCAN algorithm detects objects, and draws them in rviz. Then, the FastMapping algorithm uses data from the ADBSCAN to generate a 2D Map of the environment around.
 User can use the default setup to move robot via gamepad or keyboard, so the 3D-camera on the robot can scan surroundings around.
 
@@ -121,7 +121,7 @@ Keyboard Robot Control Method
 
    .. note::
 
-      To keep keyboard controls working keep second terminal window above other windows. 
+      To keep keyboard controls working keep second terminal window above other windows.
 
    .. image:: ../../../../images/adbscan_aaeon_pic4.png
       :width: 600
@@ -132,7 +132,7 @@ Expected Results
 
 
 #. On the server rviz, you will see how ADBSCAN interprets
-   the |realsense| camera data based on real objects around the robot:
+   the Intel® RealSense™ camera data based on real objects around the robot:
 
    -  Green blocks indicate objects around.
            .. image:: ../../../../images/adbscan_aaeon_pic1.png
