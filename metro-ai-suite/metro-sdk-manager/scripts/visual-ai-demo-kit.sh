@@ -252,30 +252,6 @@ check_docker_installation() {
 }
 
 #######################################
-# Install GPU drivers using OpenCL
-# Installs OpenCL runtime and Intel GPU drivers
-#######################################
-install_gpu_drivers() {
-  info "Installing GPU drivers with OpenCL support..."
-  
-  # Update package list
-  info "Updating package list for GPU driver installation..."
-  sudo apt-get update || err "Failed to update package list"
-  
-  # Install OpenCL and Intel GPU drivers
-  info "Installing OpenCL runtime and Intel GPU drivers..."
-  sudo apt-get install -y \
-    ocl-icd-libopencl1 \
-    intel-opencl-icd \
-    intel-level-zero-gpu \
-    level-zero \
-    htop \
-    intel-gpu-tools || err "Failed to install GPU drivers"
-  
-  success "GPU drivers with OpenCL support installed successfully!"
-}
-
-#######################################
 # Install Docker and Docker Compose
 # Installs Docker CE and Docker Compose if not present
 #######################################
@@ -520,7 +496,6 @@ show_help() {
   echo ""
   echo -e "${BOLD}Options:${NC}"
   echo -e "  ${GREEN}--skip-system-check${NC}    Skip system resource verification"
-  echo -e "  ${GREEN}--skip-gpu-drivers${NC}     Skip GPU driver installation"
   echo -e "  ${GREEN}--skip-docker${NC}          Skip Docker installation check"
   echo -e "  ${GREEN}--skip-images${NC}          Skip Docker image download"
   echo -e "  ${GREEN}--skip-git-clone${NC}       Skip git repository cloning"
@@ -529,7 +504,6 @@ show_help() {
   echo -e "${BOLD}Examples:${NC}"
   echo -e "  $0                           # Full installation"
   echo -e "  $0 --skip-system-check       # Skip hardware check"
-  echo -e "  $0 --skip-gpu-drivers        # Skip GPU driver installation"
   echo -e "  $0 --skip-docker             # Only do system check and images"
   echo ""
 }
@@ -539,7 +513,6 @@ show_help() {
 #######################################
 main() {
   local skip_system_check=false
-  local skip_gpu_drivers=false
   local skip_docker=false
   local skip_images=false
   local skip_git_clone=false
@@ -549,10 +522,6 @@ main() {
     case $1 in
       --skip-system-check)
         skip_system_check=true
-        shift
-        ;;
-      --skip-gpu-drivers)
-        skip_gpu_drivers=true
         shift
         ;;
       --skip-docker)
@@ -592,18 +561,6 @@ main() {
     echo -e "${BOLD}${BLUE}==================================================${NC}"
   else
     info "Skipping system requirements check"
-  fi
-  
-  # GPU Driver Installation
-  if [[ "${skip_gpu_drivers}" != "true" ]]; then
-    echo -e "${BOLD}${CYAN}GPU Driver Installation${NC}"
-    echo -e "${BOLD}${BLUE}==================================================${NC}"
-    
-    install_gpu_drivers
-    
-    echo -e "${BOLD}${BLUE}==================================================${NC}"
-  else
-    info "Skipping GPU driver installation"
   fi
   
   # Docker Installation and Setup
@@ -688,11 +645,9 @@ main() {
   
   echo ""
   info "Next steps:"
-  info "1. Reboot your system to ensure GPU drivers are properly loaded"
-  info "2. Navigate to ${HOME}/metro/ to explore the cloned repositories"
-  info "3. Check repository documentation for usage instructions"
-  info "4. Verify GPU installation with: clinfo"
-  info "5. Start developing with ${NAME}!"
+  info "1. Navigate to ${HOME}/metro/ to explore the cloned repositories"
+  info "2. Check repository documentation for usage instructions"
+  info "3. Start developing with ${NAME}!"
 
 }
 

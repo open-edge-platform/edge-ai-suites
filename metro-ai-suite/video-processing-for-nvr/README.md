@@ -2,7 +2,8 @@
 This sample application allows users to evaluate and optimize video processing workflows for NVR. Users can configure concurrent video processing, including video decode, post-processing, and concurrent display, utilizing the integrated GPUs. Users can also utilize application multiview to evaluate runtime performance or debug core video processing workload.
 
 # Overview
-This sample application based on VPP SDK, user can configure workload with config file, svet will read the config file and run the user defined workload.  
+This sample application is built on the VPP SDK and can serve as a reference for various video processing use cases.
+`SVET` is a subcomponent designed for the NVR scenario. With `SVET`, users can configure NVR workloads (such as decode, composition, and display) through a configuration file. The application reads this file and executes the user-defined workload accordingly.
 Programming Language: C++  
 
 # How it works
@@ -21,10 +22,10 @@ The sample application depends on VPP SDK and [live555](http://www.live555.com/)
   * [License](#license)
   * [System requirements](#system-requirements)
   * [How to build](#how-to-build)
-  * [Known limitations](#know-limitations)
+  * [Known limitations](#known-limitations)
 
 ## License
-The sample application is licensed under LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE. See [LICENSE](./LICENSE.txt) for details.
+The sample application is licensed under [APACHE 2.0](https://github.com/open-edge-platform/edge-ai-suites/blob/main/LICENSE).
 
 ## System requirements
 
@@ -61,12 +62,12 @@ source /opt/intel/vppsdk/env.sh
 ./build/svet_app load sample_config/basic/1dec1disp.txt
 ```
 
-
 ## Known limitations
 
-The sample application has been validated on Intel® platforms Meteor Lake, Raptor Lake, Adler Lake and Tiger Lake 
+The sample application has been validated on Intel® platforms Arrow Lake, Meteor Lake, Raptor Lake, Adler Lake and Tiger Lake 
 
 
 # Learn More  
 - Get started with basic workloads [Get Started Guide](./docs/user-guide/get-started-guide.md)
 - VPP SDK Overview [VPP SDK Overview](./docs/user-guide/Overview.md)
+- [Release Notes](./docs/user-guide/release-notes.md)
