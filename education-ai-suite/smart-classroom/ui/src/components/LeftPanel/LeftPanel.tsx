@@ -104,7 +104,6 @@ const LeftPanel = () => {
         {activeTab === "mindmap" && <MindMapTab />}
       </div>
     </div>
-  // </div>
   );
 };
 

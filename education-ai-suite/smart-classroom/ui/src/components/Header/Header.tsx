@@ -156,7 +156,27 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const isRecordingDisabled = (isBusy && !isRecording) || !hasAudioDevices;
+  const isRecordingDisabled =
+    isBusy ||
+    transcriptStatus === 'streaming' ||     
+    summaryLoading ||                         
+    (mindmapEnabled && (
+      mindmapLoading ||
+      mindmapState.isLoading ||
+      !mindmapState.finalText                
+    )) ||
+    !hasAudioDevices;                         
+
+  const isUploadDisabled =
+    isRecording ||
+    transcriptStatus === 'streaming' ||      
+    isBusy ||                                
+    summaryLoading ||                         
+    (mindmapEnabled && (
+      mindmapLoading ||
+      mindmapState.isLoading ||
+      !mindmapState.finalText                
+    ));
 
   const handleRecordingToggle = async () => {
     if (isRecordingDisabled) return;
@@ -231,13 +251,18 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           {isRecording ? t('header.stopRecording') : t('header.startRecording')}
         </button>
 
-    <button
-      className="upload-button"
-      style={{ opacity: isBusy || isRecording ? 0.6 : 1, cursor: isBusy || isRecording ? 'not-allowed' : 'pointer' }}
-      onClick={handleOpenUploadModal}    
-    >
-      {t('header.uploadFile')}
-    </button>
+        <button
+          className="upload-button"
+          disabled={isUploadDisabled}   
+          onClick={!isUploadDisabled ? handleOpenUploadModal : undefined} 
+          style={{
+            opacity: isUploadDisabled ? 0.6 : 1,                           
+            cursor: isUploadDisabled ? 'not-allowed' : 'pointer'            
+          }}
+        >
+          {t('header.uploadFile')}
+        </button>
+
       </div>
 
       <div className="navbar-center">

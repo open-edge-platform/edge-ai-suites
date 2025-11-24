@@ -20,6 +20,8 @@
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 8px;
+  margin-top: 1rem;
+  gap:4px;
 }
 
 .file-input-wrapper {
@@ -78,4 +80,17 @@
 .error-message {
   color: #c00;
   font-size: 12px;
+}
+
+.modal-body{
+  display: flex;
+  flex-direction: column;
+  font-family: "IntelOne Text", system-ui, sans-serif;
+  padding: clamp(12px, 4vw, 18px);
+  color: #2B2C30;
+  align-items: stretch;
+  z-index: var(--z-index-modal);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
