@@ -1,5 +1,12 @@
 # Security Enablement
 
+In today's rapidly evolving transportation landscape, Edge AI is transforming how we manage traffic and enhance road safety. However, these advancements come with significant AI cybersecurity with AI systems managing critical transportation infrastructure and acting on a vast amount of cities data. There is increased focus on cybersecurity regulations to protect against potential vulnerabilities and attacks, especially with Agentic AI making lot of autonomous decision. Intel platforms, equipped with built-in security features, offer robust solutions to address these concerns, ensuring data privacy, infrastructure protection, and secure AI processing.
+ 
+This tutorial provides steps and guidance to enable Intel buildt-in security features with the smart intersection application to ensure
+- Comprehensive Data Privacy: Protect sensitive personal data with strong encryption protocols and blockchain technology, ensuring secure transactions and compliance with regulations.
+- Infrastructure Protection: Safeguard your critical infrastructure with regular firmware updates and advanced threat detection systems, mitigating vulnerabilities in distributed edge devices.
+- Secure AI Processing: Leverage privacy-by-design principles and hardware-level security features to prevent AI model manipulation and ensure secure, compliant AI operations.
+
 This guide covers security enablement for the Smart Intersection application, including:
 - dTPM (Discrete Trusted Platform Module)
 - FDE (Full Disk Encryption) 
@@ -339,7 +346,7 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
 ### Step 3: Replace the Deployment YAML
 
-Inside the `smart-intersection/chart/templates/dlstreamer-pipeline-server/` directory, replace the deployment.yaml with the YAML file provided in the trusted compute repository.
+Inside the `smart-intersection/chart/templates/dlstreamer-pipeline-server/` directory, replace the deployment.yaml with the YAML file available [here](https://github.com/open-edge-platform/trusted-compute/blob/main/samples/ai/smart-intersection/deployment.yaml)
 
 ```bash
 # Navigate to the templates directory
@@ -392,6 +399,8 @@ kubectl logs <dl-streamer-deployment-name> -n smart-intersection
 This trusted compute implementation adds an additional layer of security by isolating video analytics pipelines within secure virtual machines, ensuring that sensitive traffic analysis operations are protected from potential threats.
 
 ## Summary
+
+By leveraging Intel's cutting-edge security solutions, transportation systems can fully harness the potential of Edge AI and Agentic AI while safeguarding against potential threats. This paves the way for smarter, safer cities, where AI-driven threat detection and digital twins for cybersecurity scenarios continue to evolve. Trust Intel to provide the security technologies needed to meet the demands of modern urban environments, with affordable and secure AI and protect your transportation infrastructure.
 
 With these security features enabled, your Smart Intersection application will benefit from:
 

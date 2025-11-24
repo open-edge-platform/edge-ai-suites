@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Efficient Groundfloor Segmentation for 3D Pointclouds
 
 This repository contains a realization of an efficient groundfloor segmentation approach for 3D pointclouds.

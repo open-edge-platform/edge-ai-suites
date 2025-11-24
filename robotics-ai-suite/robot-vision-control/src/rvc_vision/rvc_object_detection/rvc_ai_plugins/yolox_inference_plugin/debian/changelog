@@ -1,0 +1,10 @@
+ros-humble-yolox-inference-plugin (2.0.0jammy) jammy; urgency=high
+
+  * Initial release of YOLOX inference plugin
+  * Support for YOLOX object detection using OpenVINO
+  * Includes pre-trained model for industrial parts: cube, gear, nut, bolt
+  * Implements RVC AI interface for seamless integration
+
+ -- Intel Robotics Team <robotics@intel.com>  Thu, 21 Nov 2025 16:57:06 -0000
+
+

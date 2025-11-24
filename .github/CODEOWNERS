@@ -31,7 +31,7 @@ README.md          @xwu2intel
 /metro-ai-suite/smart-parking/                                   @vagheshp @tjanczak @xwu2intel
 
 # robotics-ai
-/robotics-ai-suite/        @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel
+/robotics-ai-suite/        @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @dariorusso1972
 
 # education-ai
 /education-ai-suite/        @avinash-palleti @unarayan
@@ -80,9 +80,9 @@ README.md          @xwu2intel
 
 
 # documentation content - robotics-ai
-/robotics-ai-suite/docs/               @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/robotics-ai-suite/README.md           @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/robotics-ai-suite/**/docs/            @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/robotics-ai-suite/**/README.md        @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/docs/               @jouillet @jb-balaji @dariorusso1972 @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/README.md           @jouillet @jb-balaji @dariorusso1972 @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/**/docs/            @jouillet @jb-balaji @dariorusso1972 @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/**/README.md        @jouillet @jb-balaji @dariorusso1972 @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 
 # documentation content - retail-ai - needs to be defined once content appears

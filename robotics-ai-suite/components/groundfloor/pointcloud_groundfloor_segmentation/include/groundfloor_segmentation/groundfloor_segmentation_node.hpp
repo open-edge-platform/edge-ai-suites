@@ -17,14 +17,13 @@
 //
 // ----------------- END LICENSE BLOCK -----------------------------------
 
-#include <cstdint>
-#include <functional>
-#include <memory>
-
-#include <rclcpp/rclcpp.hpp>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
@@ -62,9 +61,10 @@ private:
   void onData(const sensor_msgs::msg::Image::ConstSharedPtr camMsg);
 
   // callback for camera intrinsics
-  void onCameraInfo(const sensor_msgs::msg::CameraInfo::SharedPtr msg, std::shared_ptr<CameraSensor> sensor);
+  void onCameraInfo(
+    const sensor_msgs::msg::CameraInfo::SharedPtr msg, std::shared_ptr<CameraSensor> sensor);
 
-  bool setStaticSensorTransforms(const sensor_msgs::msg::Image::ConstSharedPtr &camMsg);
+  bool setStaticSensorTransforms(const sensor_msgs::msg::Image::ConstSharedPtr & camMsg);
 
   void publishData();
 
