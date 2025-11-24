@@ -28,7 +28,7 @@ Please also find information for the models of imitation learning, grasp generat
 > **Note:**
   Before using these models, read the [AI Content Disclaimer](../../legal.rst).
 
-:::{toctree}
+<!--hide_directive:::{toctree}
 :maxdepth: 1
 
 model_tutorials/model_act
@@ -40,4 +40,4 @@ model_tutorials/model_lightglue
 model_tutorials/model_fastbev
 model_tutorials/model_depthanythingv2
 model_tutorials/model_rdt
-:::
+:::hide_directive-->

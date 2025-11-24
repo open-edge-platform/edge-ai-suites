@@ -74,18 +74,18 @@ This section shows how to set up a simulation of the JAKA robot-arm ROS2 applica
 
 1. Download the JAKA robot arm source code:
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: tab1
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: tab1 hide_directive-->
 
    ```bash
    cd ~/Downloads/
    sudo apt source ros-jazzy-pykdl-utils ros-jazzy-jaka-bringup ros-jazzy-jaka-description ros-jazzy-jaka-hardware ros-jazzy-jaka-moveit-config ros-jazzy-jaka-moveit-py ros-jazzy-jaka-servo ros-jazzy-run-jaka-moveit ros-jazzy-run-jaka-plc
    ```
 
-   :::
-   :::{tab-item} **Humble**
-   :sync: tab2
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: tab2 hide_directive-->
 
    ```bash
 
@@ -93,8 +93,8 @@ This section shows how to set up a simulation of the JAKA robot-arm ROS2 applica
    sudo apt source ros-humble-pykdl-utils ros-humble-jaka-bringup ros-humble-jaka-description ros-humble-jaka-hardware ros-humble-jaka-moveit-config ros-humble-jaka-moveit-py ros-humble-jaka-servo ros-humble-run-jaka-moveit ros-humble-run-jaka-plc
    ```
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 2. Create a workspace for the robot arm source code:
 
@@ -123,9 +123,9 @@ This section shows how to set up a simulation of the JAKA robot-arm ROS2 applica
 3. Build the JAKA robot arm source code:
 
    ```bash
-      cd ~/ws_jaka/ && source /opt/ros/iron/setup.bash
-      touch src/robot_arm/jaka/jaka_servo/COLCON_IGNORE
-      colcon build
+   cd ~/ws_jaka/ && source /opt/ros/iron/setup.bash
+   touch src/robot_arm/jaka/jaka_servo/COLCON_IGNORE
+   colcon build
    ```
 
 ## Set up the Fundamental End-to-End Speech Recognition (FunASR) Toolkit
@@ -135,7 +135,7 @@ This section shows how to set up the FunASR toolkit server.
 ### Install Dependencies
 
 ```bash
-   sudo apt-get install cmake libopenblas-dev libssl-dev portaudio19-dev ffmpeg git python3-pip -y
+sudo apt-get install cmake libopenblas-dev libssl-dev portaudio19-dev ffmpeg git python3-pip -y
 ```
 
 ### Add OpenVINO Toolkit Speech Model to FunASR Toolkit
@@ -143,44 +143,44 @@ This section shows how to set up the FunASR toolkit server.
 1. Install FunASR environment:
 
    ```bash
-      sudo apt install funasr llm-robotics
-      cd /opt/funasr/
-      sudo bash install_funasr.sh
+   sudo apt install funasr llm-robotics
+   cd /opt/funasr/
+   sudo bash install_funasr.sh
    ```
 
 2. Install the ``asr-openvino`` model script:
 
    ```bash
-      sudo chown -R $USER /opt/funasr/
-      sudo chown -R $USER /opt/llm-robotics/
-      mkdir /opt/funasr/FunASR/funasr/models/intel/
-      cp -r /opt/llm-robotics/asr-openvino-demo/models/* /opt/funasr/FunASR/funasr/models/intel/
+   sudo chown -R $USER /opt/funasr/
+   sudo chown -R $USER /opt/llm-robotics/
+   mkdir /opt/funasr/FunASR/funasr/models/intel/
+   cp -r /opt/llm-robotics/asr-openvino-demo/models/* /opt/funasr/FunASR/funasr/models/intel/
    ```
 
 3. Create a virtual Python environment for running FunASR toolkit:
 
    ```bash
-      cd /opt/funasr/
-      python3 -m venv venv-asr
-      source venv-asr/bin/activate
-      pip install modelscope==1.17.1 onnx==1.16.2 humanfriendly==10.0 pyaudio websocket==0.2.1 websockets==12.0 translate==3.6.1 kaldi_native_fbank==1.20.0 onnxruntime==1.18.1 torchaudio==2.4.0 openvino==2024.3.0
+   cd /opt/funasr/
+   python3 -m venv venv-asr
+   source venv-asr/bin/activate
+   pip install modelscope==1.17.1 onnx==1.16.2 humanfriendly==10.0 pyaudio websocket==0.2.1 websockets==12.0 translate==3.6.1 kaldi_native_fbank==1.20.0 onnxruntime==1.18.1 torchaudio==2.4.0 openvino==2024.3.0
    ```
 
 4. Build the ``asr-openvino`` model:
 
    ```bash
-      cd /opt/funasr/FunASR/
-      pip install -e ./
-      python ov_convert_FunASR.py
-      cp -r ~/.cache/modelscope/hub/iic/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch /opt/llm-robotics/asr-openvino-demo/
+   cd /opt/funasr/FunASR/
+   pip install -e ./
+   python ov_convert_FunASR.py
+   cp -r ~/.cache/modelscope/hub/iic/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch /opt/llm-robotics/asr-openvino-demo/
    ```
 
 5. Quantize the model using ``ovc``:
 
    ```bash
-      cd /opt/llm-robotics/asr-openvino-demo/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/
-      ovc model.onnx --output_model=model_bb_fp16
-      ovc model_eb.onnx --output_model=model_eb_fp16
+   cd /opt/llm-robotics/asr-openvino-demo/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/
+   ovc model.onnx --output_model=model_bb_fp16
+   ovc model_eb.onnx --output_model=model_eb_fp16
    ```
 
 6. Modify the ``configuration.json`` file of the speech model:
