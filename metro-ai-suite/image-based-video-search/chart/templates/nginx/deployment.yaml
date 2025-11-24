@@ -27,9 +27,9 @@ spec:
           readOnlyRootFilesystem: true
           runAsUser: 1000
           runAsGroup: 1000
-        capabilities:
-          drop:
-            - ALL
+          capabilities:
+            drop:
+              - ALL
         command: 
         - /bin/sh
         - -c
