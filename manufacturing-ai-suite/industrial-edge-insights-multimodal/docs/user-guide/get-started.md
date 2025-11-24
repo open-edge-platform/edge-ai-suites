@@ -76,8 +76,8 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    > - The sample app is deployed by pulling the pre-built container images of the sample app
    >   from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY`
    >   env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal`)
-   > - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) and in `helm/values.yaml` (for Helm deployments)
-   >   is set to `true` by default, enabling continuous looping of simulator data. To ingest the simulator data only once (without looping),
+   > - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) is set to `true` by default, 
+   >   enabling continuous looping of simulator data. To ingest the simulator data only once (without looping),
    >   set this variable to `false`.
    > - The update rate of the graph and table may lag by a few seconds and might not perfectly align with the video stream, since
    >   Grafana’s minimum refresh interval is 5 seconds.
@@ -104,10 +104,6 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
 1. Get into the InfluxDB* container.
 
-   > **Note**: Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
-   > where for <namespace> replace with namespace name where the application was deployed and
-   > for <influxdb-pod-name> replace with InfluxDB pod name.
-
    ``` bash
     docker exec -it ia-influxdb bash
    ```
@@ -120,7 +116,6 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
     ``` bash
     # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
-    # for docker compose deployment and `values.yml` for helm deployment
     influx -username <username> -password <passwd>
     use datain # database access
     show measurements
@@ -132,8 +127,6 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 3. Check the output in Grafana.
 
     - Use link `http://<host_ip>:3000` to launch Grafana from browser (preferably, chrome browser)
-
-      > **Note**: Use link `http://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
 
     - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
       in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.

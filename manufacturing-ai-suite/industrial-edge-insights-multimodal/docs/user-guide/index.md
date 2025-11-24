@@ -42,5 +42,6 @@ system-requirements
 weld-defect-detection/index
 how-to-guides/index
 release_notes/Overview.md
+troubleshoot-guide
 :::
 hide_directive-->
