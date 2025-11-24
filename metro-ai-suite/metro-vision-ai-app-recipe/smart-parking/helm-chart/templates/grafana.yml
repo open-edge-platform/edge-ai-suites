@@ -33,7 +33,7 @@ spec:
         - name: no_proxy
           value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
         - name: GF_SERVER_ROOT_URL
-          value: http://localhost/grafana/
+          value: https://localhost:30443/grafana/
         - name: GF_SERVER_SERVE_FROM_SUB_PATH
           value: "true"
         - name: GF_SECURITY_ALLOW_EMBEDDING
