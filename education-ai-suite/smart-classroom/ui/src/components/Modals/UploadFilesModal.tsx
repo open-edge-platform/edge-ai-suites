@@ -197,7 +197,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
             <div className="file-input-wrapper">
               <input
                 type="text"
-                value={audioPath?.name || ''}
+                value={audioFile?.name || ''}
                 readOnly
                 placeholder="Select an audio file"
               />
@@ -205,7 +205,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
                 src={folderIcon}
                 alt="Choose File"
                 className="folder-icon"
-                onClick={() => handleFileSelect(setAudioPath, 'audio/*')}
+                onClick={() => handleFileSelect(setAudioFile, 'audio/*')}
               />
             </div>
           </div>
