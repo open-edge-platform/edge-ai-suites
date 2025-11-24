@@ -55,7 +55,7 @@ Info available at [third-party-programs.txt](https://github.com/open-edge-platfo
 ia-mqtt-publisher microservice:
 ===============================
 
-1. Base docker image: python:3.13.4-slim
+1. Base docker image: python:3.13-slim
 License-Identifier: PSF License
 
 2. requirements.txt
