@@ -37,8 +37,7 @@ This tutorial monitors and controls the RRBot, a double inverted pendulum robots
    :sync: tab1
 
    ```bash
-
-      $ sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf rt-data-agent ros-jazzy-controller-manager ros-jazzy-rrbot-bringup ros-jazzy-rrbot-moveit-demo
+sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf rt-data-agent ros-jazzy-controller-manager ros-jazzy-rrbot-bringup ros-jazzy-rrbot-moveit-demo
    ```
 
    :::
@@ -56,9 +55,8 @@ This tutorial monitors and controls the RRBot, a double inverted pendulum robots
 #. Open a terminal and run the PLCopen IEC-61131-3 motion-control driver:
 
    ```bash
-
-      $ isolcpus=$(cat /sys/devices/system/cpu/isolated)
-      $ sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_rrbot
+   isolcpus=$(cat /sys/devices/system/cpu/isolated)
+   sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_rrbot
    ```
 
    **Note**: By default, ECI isolates CPU cores 1 & 3 (see :doc:`Real-Time Linux <../installation_setup/installation/rt_linux>`).
@@ -68,8 +66,7 @@ This tutorial monitors and controls the RRBot, a double inverted pendulum robots
 #. Open a second terminal with elevated permissions:
 
    ```bash
-
-      $ sudo -i
+   sudo -i
    ```
 
 #. In the second terminal, set up the ROS2 environment and run the RRBot ROS2 demo:
@@ -79,10 +76,9 @@ This tutorial monitors and controls the RRBot, a double inverted pendulum robots
    :sync: tab1
 
    ```bash
-
-      $ source /opt/ros/jazzy/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 launch rrbot_bringup rrbot_moveit_demo.launch.py
+    source /opt/ros/jazzy/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 launch rrbot_bringup rrbot_moveit_demo.launch.py
    ```
 
    :::
@@ -90,10 +86,9 @@ This tutorial monitors and controls the RRBot, a double inverted pendulum robots
    :sync: tab2
 
    ```bash
-
-      $ source /opt/ros/humble/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 launch rrbot_bringup rrbot_moveit_demo.launch.py
+   source /opt/ros/humble/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 launch rrbot_bringup rrbot_moveit_demo.launch.py
    ```
 
    :::
@@ -172,10 +167,9 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
    :sync: tab1
 
    ```bash
-
-      $ sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
-      $ sudo apt install ros-jazzy-run-hiwin-plc
-      $ sudo apt install ros-jazzy-run-hiwin-moveit
+   sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
+   sudo apt install ros-jazzy-run-hiwin-plc
+   sudo apt install ros-jazzy-run-hiwin-moveit
    ```
 
    :::
@@ -183,10 +177,9 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
    :sync: tab2
 
    ```bash
-
-      $ sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
-      $ sudo apt install ros-humble-run-hiwin-plc
-      $ sudo apt install ros-humble-run-hiwin-moveit
+   sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
+   sudo apt install ros-humble-run-hiwin-plc
+   sudo apt install ros-humble-run-hiwin-moveit
    ```
 
    :::
@@ -195,9 +188,8 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
 #. Open a terminal and run the Robot-ARM PLCopen IEC-61131-3 motion-control driver:
 
    ```bash
-
-      $ isolcpus=$(cat /sys/devices/system/cpu/isolated)
-      $ sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_robot_arm_rtmotion
+   isolcpus=$(cat /sys/devices/system/cpu/isolated)
+   sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_robot_arm_rtmotion
    ```
 
    **Note**: By default, ECI isolates CPU cores 1 & 3 (see :doc:`Real-Time Linux <../installation_setup/installation/rt_linux>`).
@@ -205,8 +197,7 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
 #. Open a second terminal with elevated permissions:
 
    ```bash
-
-      $ sudo -i
+   sudo -i
    ```
 
 #. In the second terminal, set up the ROS2 environment and run the ROS2 HIWIN databus messages with IEC-61131-3 motion-control demo:
@@ -216,10 +207,9 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
    :sync: tab1
 
    ```bash
-
-      $ source /opt/ros/jazzy/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 run run_hiwin_plc run_hiwin_plc
+   source /opt/ros/jazzy/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 run run_hiwin_plc run_hiwin_plc
    ```
 
    :::
@@ -227,10 +217,9 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
    :sync: tab2
 
    ```bash
-
-      $ source /opt/ros/humble/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 run run_hiwin_plc run_hiwin_plc
+   source /opt/ros/humble/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 run run_hiwin_plc run_hiwin_plc
    ```
 
    :::
@@ -239,8 +228,7 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
 #. Open a third terminal with elevated permissions:
 
    ```bash
-
-      $ sudo -i
+   sudo -i
    ```
 
 #. In the third terminal, set up the ROS2 environment and run the ROS2 HIWIN MoveIt2 launch file:
@@ -251,9 +239,9 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
 
    ```bash
 
-      $ source /opt/ros/jazzy/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 launch run_hiwin_plc run_hiwin_plc.launch.py
+   source /opt/ros/jazzy/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 launch run_hiwin_plc run_hiwin_plc.launch.py
    ```
 
    :::
@@ -261,10 +249,9 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
    :sync: tab2
 
    ```bash
-
-      $ source /opt/ros/humble/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 launch run_hiwin_plc run_hiwin_plc.launch.py
+   source /opt/ros/humble/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 launch run_hiwin_plc run_hiwin_plc.launch.py
    ```
 
    :::
@@ -341,9 +328,8 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
    :sync: tab1
 
    ```bash
-
-      $ sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
-      $ sudo apt install ros-jazzy-agvm
+   sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
+   sudo apt install ros-jazzy-agvm
    ```
 
    :::
@@ -362,9 +348,8 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
 #. Run the Robot-ARM PLCopen IEC-61131-3 motion-control driver:
 
    ```bash
-
-      $ isolcpus=$(cat /sys/devices/system/cpu/isolated)
-      $ sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_amr_rtmotion
+   isolcpus=$(cat /sys/devices/system/cpu/isolated)
+   sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_amr_rtmotion
    ```
 
    **Note**: By default, ECI isolates CPU cores 1 & 3 (13th generation processors and older) or 2 & 4 (14th generation processors and newer) (see [Real-Time Linux](../installation_setup/installation/rt_linux.rst)).
@@ -374,8 +359,7 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
 #. Open a second terminal with elevated permissions:
 
    ```bash
-
-      $ sudo -i
+   sudo -i
    ```
 
 #. In the second terminal, set up the ROS2 environment and run the ROS2 AGVM databus messages with IEC-61131-3 motion-control demo:
@@ -396,10 +380,9 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
    :sync: tab2
 
    ```bash
-
-      $ source /opt/ros/humble/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 launch agvm agvm_base.launch.py
+   source /opt/ros/humble/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 launch agvm agvm_base.launch.py
    ```
 
    :::
@@ -437,8 +420,7 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
 #. Open a third terminal with elevated permissions:
 
    ```bash
-
-      $ sudo -i
+   sudo -i
    ```
 
 #. In the third terminal, set up the ROS2 environment and run the following command:
@@ -448,10 +430,9 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
    :sync: tab1
 
    ```bash
-
-      $ source /opt/ros/jazzy/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: -0.1}, angular: {z: -0.1}}"
+   source /opt/ros/jazzy/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: -0.1}, angular: {z: -0.1}}"
    ```
 
    :::
@@ -459,10 +440,9 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
    :sync: tab2
 
    ```bash
-
-      $ source /opt/ros/humble/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: -0.1}, angular: {z: -0.1}}"
+   source /opt/ros/humble/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: -0.1}, angular: {z: -0.1}}"
    ```
 
    :::
