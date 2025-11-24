@@ -20,12 +20,15 @@ Docker images pulled from docker hub:
 License-Identifier: MIT
 - telegraf:1.34.3
 - influxdb:1.11.8
+----------------------------------------------------------------------
 
 License-Identifier: AGPLv3
 - grafana/grafana-oss:12.0.0-ubuntu
+----------------------------------------------------------------------
 
 License-Identifier: EPL-2.0/EPL-1.0
 - eclipse-mosquitto:2.0.21
+----------------------------------------------------------------------
 
 License-Identifier: 2-clause BSD-like
 - nginx:1.29.1-bookworm-perl
@@ -49,22 +52,23 @@ License-Identifier: PSF License
 2. requirements.txt
 
 License-Identifier: Apache License 2.0
-
 aiofiles==25.1.0
 cryptography==44.0.1
 pyOpenSSL==25.1.0
 sortedcontainers==2.4.0
+----------------------------------------------------------------------
 
 License-Identifier: MIT License
-
 aiosqlite==0.21.0
 cffi==2.0.0
 pytz==2025.2
 six==1.17.0
 tzdata==2025.2
+----------------------------------------------------------------------
 
 License-Identifier: LGPL-3.0
 asyncua==1.1.5
+----------------------------------------------------------------------
 
 License-Identifier: BSD License
 cryptography==44.0.1
@@ -75,6 +79,7 @@ python-dateutil==2.9.0.post0
 
 License-Identifier: PSF-2.0
 typing_extensions==4.15.0
+----------------------------------------------------------------------
 
 License-Identifier: MIT License / Proprietary
 pip==25.3
@@ -91,9 +96,11 @@ License-Identifier: PSF License
 
 License-Identifier: Apache License 2.0
 aiofiles==25.1.0
+----------------------------------------------------------------------
 
 License-Identifier: EPL-2.0
 paho-mqtt==1.4.0
+----------------------------------------------------------------------
 
 
 License-Identifier: BSD License
@@ -103,6 +110,7 @@ python-dateutil==2.9.0.post0
 pytz==2025.2
 six==1.17.0
 tzdata==2025.2
+----------------------------------------------------------------------
 
 License-Identifier: MIT License / Proprietary
 pip==25.3
