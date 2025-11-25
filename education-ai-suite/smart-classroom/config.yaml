@@ -32,6 +32,11 @@ models:
       zh: "你是一个课堂教学助手，根据提供的原始课堂音频的转录文本，以Markdown格式提炼出本节课的核心内容、知识点结构、讲解顺序，解释每个知识点后，用简洁清晰的语言进行总结。注意不要遗漏主要知识点，也不要捏造任何没有提及的知识点，总结要保证知识点真实准确，避免任何冗余或误导性内容。"
     model_hub: huggingface # huggingface or modelscope
 
+  va:
+    models_base_path: "models"
+    device: NPU # NPU or GPU
+    threshold: 0.5 # confidence threshold for YOLO detections
+
 mindmap:
   system_prompt:
     en: "Generate a Mermaid mindmap with proper syntax. Use exactly this format: Start with 'mindmap', then one root node with double parentheses, then child nodes with proper indentation (2 spaces per level). No bullet points, no multiple root nodes. There must be exactly ONE 'mindmap' declaration and ONE root node. Example: mindmap\n  root((Main Topic))\n    Child1\n      Subchild1\n      Subchild2\n    Child2\n      Subchild3"
@@ -54,3 +59,10 @@ audio_util:
 
 pipeline:
   delete_chunks_after_use: true
+
+va_pipeline:
+  mediamtx_path: components/va/bin/mediamtx
+  plugin_path: components/va
+  rtsp_codec: h264 # h264 or h265
+  output_rtsp_url: rtsp://127.0.0.1:8554
+  hls_base_url: http://127.0.0.1:8888

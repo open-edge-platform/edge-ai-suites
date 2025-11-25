@@ -20,20 +20,18 @@ Docker images pulled from docker hub:
 License-Identifier: MIT
 - telegraf:1.34.3
 - influxdb:1.11.8
+----------------------------------------------------------------------
 
 License-Identifier: AGPLv3
 - grafana/grafana-oss:12.0.0-ubuntu
-- minio/minio:RELEASE.2020-12-12T08-39-07Z
+----------------------------------------------------------------------
 
 License-Identifier: EPL-2.0/EPL-1.0
 - eclipse-mosquitto:2.0.21
+----------------------------------------------------------------------
 
-License-Identifier: Apache-2.0
-- intel/model-registry:1.0.3
-
-License-Identifier: PostgreSQL
-- postgres:13
-
+License-Identifier: 2-clause BSD-like
+- nginx:1.29.1-bookworm-perl
 
 ---------------------------------------------------------------------------------------------------------------------------
 
@@ -43,40 +41,48 @@ ia-time-series-analytics-microservice:
 
 Info available at [third-party-programs.txt](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/time-series-analytics/third-party-programs.txt)
 
+---------------------------------------------------------------------------------------------------------------------------
+
 ia-opcua-server microservice:
 =============================
 
-1. Base docker image: python:3.13.4-slim
+1. Base docker image: python:3.13-slim
 License-Identifier: PSF License
 
 2. requirements.txt
 
 License-Identifier: Apache License 2.0
-
+aiofiles==25.1.0
 cryptography==44.0.1
 pyOpenSSL==25.1.0
 sortedcontainers==2.4.0
-typing_extensions==4.14.0
-tzdata==2025.2
+----------------------------------------------------------------------
 
 License-Identifier: MIT License
-aiofiles==24.1.0
 aiosqlite==0.21.0
-cffi==1.17.1
+cffi==2.0.0
+pytz==2025.2
 six==1.17.0
+tzdata==2025.2
+----------------------------------------------------------------------
 
 License-Identifier: LGPL-3.0
 asyncua==1.1.5
+----------------------------------------------------------------------
 
 License-Identifier: BSD License
-numpy==2.3.0
+cryptography==44.0.1
+numpy==2.3.5
 pandas==2.2.3
-pycparser==2.22
+pycparser==2.23
 python-dateutil==2.9.0.post0
-pytz==2025.2
+
+License-Identifier: PSF-2.0
+typing_extensions==4.15.0
+----------------------------------------------------------------------
 
 License-Identifier: MIT License / Proprietary
-pip==25.1.1
+pip==25.3
 
 ---------------------------------------------------------------------------------------------------------------------------
 
@@ -89,31 +95,34 @@ License-Identifier: PSF License
 2. requirements.txt
 
 License-Identifier: Apache License 2.0
-cryptography==44.0.1
-pyOpenSSL==25.1.0
-sortedcontainers==2.4.0
-typing_extensions==4.14.0
-tzdata==2025.2
+aiofiles==25.1.0
+----------------------------------------------------------------------
 
-License-Identifier: MIT License
-aiofiles==24.1.0
-aiosqlite==0.21.0
-cffi==1.17.1
-six==1.17.0
+License-Identifier: EPL-2.0
+paho-mqtt==1.4.0
+----------------------------------------------------------------------
 
-License-Identifier: LGPL-3.0
-asyncua==1.1.5
 
 License-Identifier: BSD License
-numpy==2.3.0
-pandas==2.2.3
-pycparser==2.22
+numpy==2.3.5
+pandas==2.3.1
 python-dateutil==2.9.0.post0
 pytz==2025.2
+six==1.17.0
+tzdata==2025.2
+----------------------------------------------------------------------
 
 License-Identifier: MIT License / Proprietary
-pip==25.1.1
+pip==25.3
 
+---------------------------------------------------------------------------------------------------------------------------
+Dataset:
+========
+
+Distributing only subset of video and csv files for testing
+
+Link - https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset
+License-Identifier: Apache License 2.0
 
 ---------------------------------------------------------------------------------------------------------------------------
 
