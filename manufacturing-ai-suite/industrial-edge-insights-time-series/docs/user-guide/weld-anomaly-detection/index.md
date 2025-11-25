@@ -1,7 +1,7 @@
 # Weld Anomaly Detection
 
 This sample app demonstrates how AI-driven analytics enable edge devices to monitor weld quality.
-It detects anomalous weld patterns and alerts operators for timely intervention,
+The sample app detects anomalous weld patterns and alerts operators for timely intervention,
 ensuring proactive maintenance, safety, and operational efficiency. No more failures
 and unplanned downtime.
 
