@@ -3,9 +3,9 @@ From: AnnikaWU <109574074+AnnikaWU@users.noreply.github.com>
 Date: Tue, 18 Nov 2025 09:49:43 +0800
 Subject: [PATCH] Modify for dual-arm ACT+OCS2+MUJOCO in simulation (#57)
 
-* add single-arm aloha in mujoco simualtion
+* add single-arm aloha in mujoco simulation
 
-* add dual-arm launch file and modify for dual-arm in mujoco simualtion
+* add dual-arm launch file and modify for dual-arm in mujoco simulation
 
 * modify for general mpc and mrt node
 

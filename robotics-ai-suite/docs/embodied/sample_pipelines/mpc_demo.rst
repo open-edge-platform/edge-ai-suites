@@ -1,3 +1,6 @@
+.. Copyright (C) 2025 Intel Corporation
+   SPDX-License-Identifier: Apache-2.0
+
 .. _mpc_demo:
 
 Model Predictive Control Demo
@@ -30,7 +33,7 @@ First, please follow the ACT installation guide in :doc:`./imitation_learning_ac
 OCS2 setup
 ==========
 
-Here, we adpoted and modified the `open-source project OCS2 <https://github.com/leggedrobotics/ocs2>`_ as the MPC module. OCS2 is a C++ toolbox tailored for Optimal Control for Switched Systems (OCS2). It provides an efficient implementation of Continuous-time domain constrained DDP (SLQ) and many other helpful algorithms. To facilitate the application of OCS2 in robotic tasks, it provides the user with additional tools to set up the system dynamics (such as kinematic or dynamic models) and cost/constraints (such as self-collision avoidance and end-effector tracking) from a URDF model. Your can go to `OCS2 official web <https://leggedrobotics.github.io/ocs2/overview.html>`_ for more details.
+Here, we adopted and modified the `open-source project OCS2 <https://github.com/leggedrobotics/ocs2>`_ as the MPC module. OCS2 is a C++ toolbox tailored for Optimal Control for Switched Systems (OCS2). It provides an efficient implementation of Continuous-time domain constrained DDP (SLQ) and many other helpful algorithms. To facilitate the application of OCS2 in robotic tasks, it provides the user with additional tools to set up the system dynamics (such as kinematic or dynamic models) and cost/constraints (such as self-collision avoidance and end-effector tracking) from a URDF model. Your can go to `OCS2 official web <https://leggedrobotics.github.io/ocs2/overview.html>`_ for more details.
 
 It should be noted that the original OCS2 project is based on ROS1 Noetic, while we migrate it to ROS2 humble and enable it on ACT Aloha.
 
@@ -104,7 +107,7 @@ Download `ocs2 <https://github.com/open-edge-platform/edge-ai-suites/tree/main/r
 MUJOCO setup
 ============
 
-Here, we adpoted and modified the open-source Mujoco Plugin project `MujocoRosUtils <https://github.com/isri-aist/MujocoRosUtils/tree/main>`_ to visualize and simulate the ACT cube transmiting task in Mujoco 2.3.7. Installation is as follows:
+Here, we adopted and modified the open-source Mujoco Plugin project `MujocoRosUtils <https://github.com/isri-aist/MujocoRosUtils/tree/main>`_ to visualize and simulate the ACT cube transmitting task in Mujoco 2.3.7. Installation is as follows:
 
 1. Download Mujoco 2.3.7 library:
 

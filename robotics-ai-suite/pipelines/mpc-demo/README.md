@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Model Predictive Control
 
 Model predictive control (MPC) is an advanced method of process control that is used to control a process while satisfying a set of constraints. Model predictive controllers rely on dynamic models of the process, most often linear empirical models obtained by system identification. The main advantage of MPC is the fact that it allows the current timeslot to be optimized, while keeping future timeslots in account. Also MPC has the ability to anticipate future events and can take control actions accordingly. These features can benefit current model-based robotics control in Perception-Action frequency gap, unsmoothness of generated trajectories, and potential collision.
@@ -106,7 +112,7 @@ colcon build --packages-skip mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=Re
 
 ## MUJOCO setup
 
-The required Mujoco module is based on the open-source Mujoco Plugin project [MujocoRosUtils ](https://github.com/isri-aist/MujocoRosUtils/tree/main) to visualize and simulate the ACT cube transmiting task in Mujoco 2.3.7. Installation guide is as follows:
+The required Mujoco module is based on the open-source Mujoco Plugin project [MujocoRosUtils ](https://github.com/isri-aist/MujocoRosUtils/tree/main) to visualize and simulate the ACT cube transmitting task in Mujoco 2.3.7. Installation guide is as follows:
 
 1. Download Mujoco 2.3.7 library:
 ```
@@ -166,7 +172,7 @@ If launching successfully, the OCS2 terminal will print out information indicati
 
 3. Run ACT:
 
-You can download our pre-trained weights from transmiting cube task and set the argument ``--ckpt_dir`` to the path of the pre-trained weights. Then, open new terminal and run the following commands:
+You can download our pre-trained weights from transmitting cube task and set the argument ``--ckpt_dir`` to the path of the pre-trained weights. Then, open new terminal and run the following commands:
 
 ```
 # env
