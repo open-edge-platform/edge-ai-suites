@@ -5,32 +5,55 @@ import streamingIcon from "../../assets/images/streamingIcon.svg";
 import fullScreenIcon from "../../assets/images/fullScreenIcon.svg";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";
 import { setActiveStream } from "../../redux/slices/uiSlice";
-import { startVideoAnalyticsPipeline } from "../../services/api"; 
-import { setFrontCamera, setBackCamera, setBoardCamera, setBackCameraStream, setFrontCameraStream, setBoardCameraStream } from "../../redux/slices/uiSlice";
 import HLSPlayer from "../common/HLSPlayer";
+ 
 interface VideoStreamProps {
   isFullScreen: boolean;
   onToggleFullScreen: () => void;
 }
-
+ 
 const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScreen }) => {
   const [isRoomView, setIsRoomView] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  
+ 
   const dispatch = useAppDispatch();
   const activeStream = useAppSelector((state) => state.ui.activeStream);
-  const sessionId = useAppSelector((state) => state.ui.sessionId); // Move this to top level
+  const sessionId = useAppSelector((state) => state.ui.sessionId);
+  const videoAnalyticsLoading = useAppSelector((state) => state.ui.videoAnalyticsLoading);
   const streams = useAppSelector((state) => ({
     front: state.ui.frontCameraStream,
     back: state.ui.backCameraStream,
     content: state.ui.boardCameraStream,
   }));
-
+ 
+  const isValidStream = (stream: string | null): boolean => {
+    const isValid = stream && (
+      stream.startsWith("http://") ||
+      stream.startsWith("https://") ||
+      stream.startsWith("rtsp://")
+    );
+    return !!isValid;
+  };
+ 
+  const hasValidStreams = (): boolean => {
+    return isValidStream(streams.front) || isValidStream(streams.back) || isValidStream(streams.content);
+  };
+ 
+  console.log('VideoStream Debug:', {
+    activeStream,
+    streams,
+    isValidStreams: {
+      front: isValidStream(streams.front),
+      back: isValidStream(streams.back),
+      content: isValidStream(streams.content)
+    }
+  });
+ 
   const handleToggleRoomView = () => {
     setIsRoomView(!isRoomView);
     console.log("Room View Toggled:", !isRoomView);
   };
-
+ 
   const handleFullScreenToggle = () => {
     onToggleFullScreen();
     const container = document.querySelector(".container");
@@ -38,112 +61,31 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
       container.classList.toggle("fullscreen", !isFullScreen);
     }
   };
-
-  const handleStreamClick = async (pipeline: "front" | "back" | "content" | "all") => {
-    const currentSessionId = sessionId; // Use the sessionId from state
-  
-    if (!currentSessionId) {
-      console.error("Session ID is null. Cannot start video analytics pipeline.");
-      return;
-    }
-  
-    try {
-      if (pipeline === "all") {
-        // Start all three pipelines
-        const pipelines = [
-          { pipeline_name: "front", source: streams.front },
-          { pipeline_name: "back", source: streams.back },
-          { pipeline_name: "content", source: streams.content },
-        ];
-  
-        // Validate all streams before starting
-        const invalidPipelines = pipelines.filter((p) => !isValidStream(p.source));
-        if (invalidPipelines.length > 0) {
-          console.error("Invalid streams detected:", invalidPipelines);
-          return;
-        }
-  
-        const response = await startVideoAnalyticsPipeline(pipelines, currentSessionId);
-  
-        // Process each result
-        response.results.forEach((result: any) => {
-          if (result.status === "success" && result.hls_stream) {
-            switch (result.pipeline_name) {
-              case "front":
-                dispatch(setFrontCamera(result.hls_stream));
-                break;
-              case "back":
-                dispatch(setBackCamera(result.hls_stream));
-                break;
-              case "content":
-                dispatch(setBoardCamera(result.hls_stream));
-                break;
-            }
-          } else if (result.status === "error") {
-            console.error(`Error with ${result.pipeline_name}:`, result.error);
-          }
-        });
-  
-        dispatch(setActiveStream("all"));
-      } else {
-        // Start individual pipeline
-        let source = "";
-        switch (pipeline) {
-          case "front":
-            source = streams.front;
-            break;
-          case "back":
-            source = streams.back;
-            break;
-          case "content":
-            source = streams.content;
-            break;
-        }
-  
-        // Validate the stream before starting
-        if (!isValidStream(source)) {
-          console.error(`Invalid stream for ${pipeline}:`, source);
-          return;
-        }
-  
-        // Prevent duplicate requests
-        if (activeStream === pipeline) {
-          console.log(`Pipeline ${pipeline} is already running.`);
-          return;
-        }
-  
-        const pipelines = [{ pipeline_name: pipeline, source }];
-        const response = await startVideoAnalyticsPipeline(pipelines, currentSessionId);
-        const result = response.results[0];
-  
-        if (result.status === "success" && result.hls_stream) {
-          // Update the appropriate camera stream based on pipeline_name from response
-          switch (result.pipeline_name) {
-            case "front":
-              dispatch(setFrontCameraStream(result.hls_stream));
-              break;
-            case "back":
-              dispatch(setBackCameraStream(result.hls_stream));
-              break;
-            case "content":
-              dispatch(setBoardCameraStream(result.hls_stream));
-              break;
-          }
-          dispatch(setActiveStream(result.pipeline_name as "front" | "back" | "content"));
-        } else if (result.status === "error") {
-          console.error(`Error starting ${pipeline}:`, result.error);
-        }
+ 
+  const handleStreamClick = (pipeline: "front" | "back" | "content" | "all") => {
+    console.log(`Switching to ${pipeline} stream view`);
+    if (pipeline === "all") {
+      if (!hasValidStreams()) {
+        console.warn("No valid streams available to display");
+        return;
       }
-    } catch (error) {
-      console.error("Failed to start video analytics pipeline:", error);
+    } else {
+      const streamUrl = streams[pipeline];
+      if (!isValidStream(streamUrl)) {
+        console.warn(`${pipeline} stream is not available:`, streamUrl);
+        return;
+      }
     }
+    dispatch(setActiveStream(pipeline));
   };
-  
-  const isValidStream = (stream: string | null) => {
-    // Check if the stream is a valid URL
-    return stream && (stream.startsWith("http://") || stream.startsWith("https://") || stream.startsWith("rtsp://"));
-  };
-
+ 
+  const Spinner = () => (
+    <div className="video-analytics-spinner">
+      <div className="spinner-circle"></div>
+      <p>Loading video streams...</p>
+    </div>
+  );
+ 
   return (
     <div className={`video-stream ${isRoomView ? "room-view" : "collapsed"} ${isFullScreen ? "full-screen" : ""}`}>
       <div className="video-stream-header">
@@ -160,15 +102,26 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
         </div>
         {isRoomView && (
           <div className="stream-controls">
-            {["front", "back", "content", "all"].map((pipeline) => (
-              <span
-                key={pipeline}
-                className={`stream-label ${activeStream === pipeline ? "active" : ""}`}
-                onClick={() => handleStreamClick(pipeline as "front" | "back" | "content" | "all")}
-              >
-                {pipeline.charAt(0).toUpperCase() + pipeline.slice(1)}
-              </span>
-            ))}
+            {["front", "back", "content", "all"].map((pipeline) => {
+              const isAvailable = pipeline === "all"
+                ? hasValidStreams()
+                : isValidStream(streams[pipeline as keyof typeof streams]);
+             
+              return (
+                <span
+                  key={pipeline}
+                  className={`stream-control-label ${activeStream === pipeline ? "active" : ""} ${!isAvailable || videoAnalyticsLoading ? "disabled" : ""}`}
+                  onClick={() => !videoAnalyticsLoading && isAvailable && handleStreamClick(pipeline as "front" | "back" | "content" | "all")}
+                  style={{
+                    opacity: isAvailable && !videoAnalyticsLoading ? 1 : 0.5,
+                    cursor: isAvailable && !videoAnalyticsLoading ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  {pipeline.charAt(0).toUpperCase() + pipeline.slice(1)}
+                  {videoAnalyticsLoading && <span className="control-spinner" />}
+                </span>
+              );
+            })}
           </div>
         )}
         <img
@@ -178,10 +131,15 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
           onClick={handleFullScreenToggle}
         />
       </div>
-        
+       
       {isRoomView && (
         <div className="video-stream-body">
-          {activeStream === null ? (
+          {videoAnalyticsLoading ? (
+            <div className="stream-placeholder">
+              <Spinner />
+              <p>Initializing video analytics...</p>
+            </div>
+          ) : activeStream === null ? (
             <div className="stream-placeholder">
               <img
                 src={streamingIcon}
@@ -196,27 +154,71 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
                 Upload File
               </button>
             </div>
-          ) : Object.values(streams).every((stream) => !isValidStream(stream)) ? (
+          ) : !hasValidStreams() ? (
             <div className="stream-placeholder">
               <p>No video streams available. Please upload files to start streaming.</p>
+              <button
+                className="upload-file-button"
+                onClick={() => setIsUploadModalOpen(true)}
+              >
+                Upload File
+              </button>
             </div>
           ) : (
-            <div className={`stream-container ${activeStream === "all" ? "split-screen" : ""}`}>
-            {activeStream === "all" && (
-              <>
-                {streams.front && <HLSPlayer streamUrl={streams.front} />}
-                {streams.back && <HLSPlayer streamUrl={streams.back} />}
-                {streams.content&& <HLSPlayer streamUrl={streams.content} />}
-              </>
-            )}
-            {activeStream === "front" && streams.front && <HLSPlayer streamUrl={streams.front} />}
-            {activeStream === "back" && streams.back && <HLSPlayer streamUrl={streams.back} />}
-            {activeStream === "content" && streams.content && <HLSPlayer streamUrl={streams.content} />}
-          </div>
+            <div className="streams-layout">
+              {activeStream === "all" && (
+                <div className="multi-stream-container">
+                  {/* Main front camera stream */}
+                  {streams.front && isValidStream(streams.front) && (
+                    <div className="main-stream">
+                      <HLSPlayer streamUrl={streams.front} />
+                      <div className="stream-overlay-label">Front Camera</div>
+                    </div>
+                  )}
+                 
+                  {/* Side streams */}
+                  <div className="side-streams-container">
+                    {streams.back && isValidStream(streams.back) && (
+                      <div className="side-stream">
+                        <HLSPlayer streamUrl={streams.back} />
+                        <div className="stream-overlay-label">Back Camera</div>
+                      </div>
+                    )}
+                    {streams.content && isValidStream(streams.content) && (
+                      <div className="side-stream">
+                        <HLSPlayer streamUrl={streams.content} />
+                        <div className="stream-overlay-label">Board Camera</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+             
+              {activeStream === "front" && streams.front && isValidStream(streams.front) && (
+                <div className="single-stream">
+                  <HLSPlayer streamUrl={streams.front} />
+                  <div className="stream-overlay-label">Front Camera</div>
+                </div>
+              )}
+             
+              {activeStream === "back" && streams.back && isValidStream(streams.back) && (
+                <div className="single-stream">
+                  <HLSPlayer streamUrl={streams.back} />
+                  <div className="stream-overlay-label">Back Camera</div>
+                </div>
+              )}
+             
+              {activeStream === "content" && streams.content && isValidStream(streams.content) && (
+                <div className="single-stream">
+                  <HLSPlayer streamUrl={streams.content} />
+                  <div className="stream-overlay-label">Board Camera</div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
-      
+     
       {isUploadModalOpen && (
         <UploadFilesModal
           isOpen={isUploadModalOpen}

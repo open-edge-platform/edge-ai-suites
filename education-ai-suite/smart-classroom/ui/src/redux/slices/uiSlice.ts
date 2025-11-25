@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-
+ 
 export type Tab = 'transcripts' | 'summary' | 'mindmap';
-
+ 
 export interface UIState {
   aiProcessing: boolean;
   summaryEnabled: boolean;
@@ -23,8 +23,9 @@ export interface UIState {
   backCameraStream: string;
   boardCameraStream: string;
   activeStream: 'front' | 'back' | 'content' | 'all' | null;
+  videoAnalyticsLoading: boolean;
 }
-
+ 
 const initialState: UIState = {
   aiProcessing: false,
   summaryEnabled: false,
@@ -46,8 +47,9 @@ const initialState: UIState = {
   frontCameraStream: '',
   backCameraStream: '',
   boardCameraStream: '',
+  videoAnalyticsLoading: false,
 };
-
+ 
 const uiSlice = createSlice({
   name: 'ui',
   initialState,
@@ -65,14 +67,16 @@ const uiSlice = createSlice({
       state.uploadedAudioPath = null;
       state.shouldStartSummary = false;
       state.shouldStartMindmap = false;
+      state.videoAnalyticsLoading = false;
     },
-
+ 
     processingFailed(state) {
       state.aiProcessing = false;
       state.summaryLoading = false;
       state.mindmapLoading = false;
+      state.videoAnalyticsLoading = false;
     },
-
+ 
     transcriptionComplete(state) {
       console.log('transcriptionComplete reducer called');
       state.summaryEnabled = true;
@@ -83,15 +87,15 @@ const uiSlice = createSlice({
         state.autoSwitched = true;
       }
     },
-
+ 
     clearSummaryStartRequest(state) {
       state.shouldStartSummary = false;
     },
-
+ 
     setUploadedAudioPath(state, action: PayloadAction<string>) {
       state.uploadedAudioPath = action.payload;
     },
-
+ 
     setSessionId(state, action: PayloadAction<string | null>) {
       const v = action.payload;
       if (typeof v === 'string' && v.trim().length > 0) {
@@ -102,45 +106,46 @@ const uiSlice = createSlice({
       state.activeStream = action.payload;
     },
     firstSummaryToken(state) {
-      state.summaryLoading = false; 
+      state.summaryLoading = false;
     },
-
+ 
     summaryDone(state) {
       state.aiProcessing = false;
       state.mindmapEnabled = true;
-      state.mindmapLoading = true; 
+      state.mindmapLoading = true;
       state.shouldStartMindmap = true;
-
+ 
       if (!state.autoSwitchedToMindmap) {
         state.activeTab = 'mindmap';
         state.autoSwitchedToMindmap = true;
       }
     },
-    
+   
     mindmapStart(state) {
       state.mindmapLoading = true;
       state.shouldStartMindmap = true;
     },
-
+ 
     mindmapSuccess(state) {
       state.mindmapLoading = false;
       state.shouldStartMindmap = false;
     },
-
+ 
     mindmapFailed(state) {
       state.mindmapLoading = false;
       state.shouldStartMindmap = false;
     },
-
+ 
     clearMindmapStartRequest(state) {
       state.shouldStartMindmap = false;
     },
-
+ 
     setActiveTab(state, action: PayloadAction<Tab>) {
       state.activeTab = action.payload;
     },
-    setProjectLocation(state, action: PayloadAction<string>) { // Add reducer to update projectLocation
-      state.projectLocation = action.payload;},
+    setProjectLocation(state, action: PayloadAction<string>) {
+      state.projectLocation = action.payload;
+    },
     setFrontCamera(state, action: PayloadAction<string>) {
       state.frontCamera = action.payload;
     },
@@ -165,20 +170,25 @@ const uiSlice = createSlice({
       state.backCamera = 'Default Back Camera';
       state.boardCamera = 'Default Board Camera';
     },
-
+ 
     startStream(state) {
-      state.activeStream = 'all'; // Default to "all" when starting the video pipeline
+      state.activeStream = 'all';
     },
-
+ 
     stopStream(state) {
-      state.activeStream = null; // Clear the active stream when stopping the video pipeline
+      state.activeStream = null;
     },
+ 
+    setVideoAnalyticsLoading(state, action: PayloadAction<boolean>) {
+      state.videoAnalyticsLoading = action.payload;
+    },
+ 
     resetFlow() {
       return initialState;
     },
   },
 });
-
+ 
 export const {
   startProcessing,
   processingFailed,
@@ -203,6 +213,7 @@ export const {
   setFrontCameraStream,
   setBackCameraStream,
   setBoardCameraStream,
+  setVideoAnalyticsLoading,
 } = uiSlice.actions;
-
+ 
 export default uiSlice.reducer;
