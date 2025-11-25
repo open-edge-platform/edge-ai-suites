@@ -18,16 +18,15 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction
-from launch.conditions import IfCondition, LaunchConfigurationEquals
+from launch.actions import DeclareLaunchArgument, GroupAction
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 import launch
 from launch_ros.actions import Node, PushRosNamespace
 from nav2_common.launch import RewrittenYaml
 
-def generate_launch_description():
 
+def generate_launch_description():
     launch_dir = get_package_share_directory('pointcloud_groundfloor_segmentation')
 
     # Create the launch configuration variables
@@ -43,61 +42,102 @@ def generate_launch_description():
 
     node_params = RewrittenYaml(
         source_file=node_params_file,
-        param_rewrites={'use_best_effort_qos' : use_best_effort_qos, 'name' : camera_name},
+        param_rewrites={'use_best_effort_qos': use_best_effort_qos, 'name': camera_name},
         root_key=namespace,
-        convert_types=True)
+        convert_types=True,
+    )
 
     # Create the launch description and populate
-    return LaunchDescription([
-        DeclareLaunchArgument('namespace', description='Namespace of nodes/topics.', default_value=''),
-        DeclareLaunchArgument('camera_name', description='Name of the RealSense camera (or another sensor) this node will contect to.', default_value='camera'),
-        DeclareLaunchArgument('use_best_effort_qos', description='Use BestEffort as QoS for subscriber/publisher topics', default_value='False'),
-        DeclareLaunchArgument('standalone', description='Run this application only with a RealSense camera but without any robot (assumes camera is parallel to ground)', default_value='False'),
-        DeclareLaunchArgument('standalone_height_above_ground', description='Can be used with standalone flag to provide indication of camera position above ground', default_value='0.1'),
-        DeclareLaunchArgument('with_rviz', description='Run with rviz', default_value='False'),
-        DeclareLaunchArgument('node_params_file', description='Path to the node params', default_value=os.path.join(launch_dir, 'params', 'groundfloor_segmentation_params.yaml')),
-
-        GroupAction([
-            PushRosNamespace(
-                condition=IfCondition(PythonExpression(['"" != "', namespace,'"'])),
-                namespace=namespace),
-            
-            Node(
-                condition=IfCondition(PythonExpression([standalone])),
-                package='tf2_ros',
-                executable='static_transform_publisher',
-                name = 'base_link_static_tf',
-                arguments = ['0', '0', standalone_height_above_ground, '0', '0', '0', '1', '/base_link', PythonExpression(["'", camera_name, "_link'"])],
-                remappings=[('/tf_static', 'tf_static')],
-                on_exit=launch.actions.Shutdown()
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                'namespace', description='Namespace of nodes/topics.', default_value=''
             ),
-
-            Node(
-                condition=IfCondition(PythonExpression([standalone])),
-                package='tf2_ros',
-                executable='static_transform_publisher',
-                name = 'base_link_static_tf',
-                arguments = ['0', '0', '0.0', '0', '0', '0', '1', '/map', '/base_link'],
-                remappings=[('/tf_static', 'tf_static')],
-                on_exit=launch.actions.Shutdown()
+            DeclareLaunchArgument(
+                'camera_name',
+                description='Name of the RealSense camera (or another sensor) this node will contect to.',  # noqa: E501
+                default_value='camera',
             ),
-
-            Node(
-                package='pointcloud_groundfloor_segmentation',
-                executable='pointcloud_groundfloor_segmentation',
-                output='screen',
-                parameters=[node_params],
-                remappings=[('/tf_static', 'tf_static'), ('/tf', 'tf')],
-                on_exit=launch.actions.Shutdown()
+            DeclareLaunchArgument(
+                'use_best_effort_qos',
+                description='Use BestEffort as QoS for subscriber/publisher topics',
+                default_value='False',
             ),
-
-            Node(
-                condition=IfCondition(PythonExpression([with_rviz])),
-                package='rviz2',
-                executable='rviz2',
-                arguments=['-d', rviz_config_file, '--ros-args', '--remap', 'use_sim_time:=True'],
-                output={'both': 'log'},
-                remappings=[("/tf", "tf"), ("/tf_static", "tf_static")]
-            )
-        ])
-    ])
+            DeclareLaunchArgument(
+                'standalone',
+                description='Run this application only with a RealSense camera but without any robot (assumes camera is parallel to ground)',  # noqa: E501
+                default_value='False',
+            ),
+            DeclareLaunchArgument(
+                'standalone_height_above_ground',
+                description='Can be used with standalone flag to provide indication of camera position above ground',  # noqa: E501
+                default_value='0.1',
+            ),
+            DeclareLaunchArgument('with_rviz', description='Run with rviz', default_value='False'),
+            DeclareLaunchArgument(
+                'node_params_file',
+                description='Path to the node params',
+                default_value=os.path.join(
+                    launch_dir, 'params', 'groundfloor_segmentation_params.yaml'
+                ),
+            ),
+            GroupAction(
+                [
+                    PushRosNamespace(
+                        condition=IfCondition(PythonExpression(['"" != "', namespace, '"'])),
+                        namespace=namespace,
+                    ),
+                    Node(
+                        condition=IfCondition(PythonExpression([standalone])),
+                        package='tf2_ros',
+                        executable='static_transform_publisher',
+                        name='base_link_static_tf',
+                        arguments=[
+                            '0',
+                            '0',
+                            standalone_height_above_ground,
+                            '0',
+                            '0',
+                            '0',
+                            '1',
+                            '/base_link',
+                            PythonExpression(["'", camera_name, "_link'"]),
+                        ],
+                        remappings=[('/tf_static', 'tf_static')],
+                        on_exit=launch.actions.Shutdown(),
+                    ),
+                    Node(
+                        condition=IfCondition(PythonExpression([standalone])),
+                        package='tf2_ros',
+                        executable='static_transform_publisher',
+                        name='base_link_static_tf',
+                        arguments=['0', '0', '0.0', '0', '0', '0', '1', '/map', '/base_link'],
+                        remappings=[('/tf_static', 'tf_static')],
+                        on_exit=launch.actions.Shutdown(),
+                    ),
+                    Node(
+                        package='pointcloud_groundfloor_segmentation',
+                        executable='pointcloud_groundfloor_segmentation',
+                        output='screen',
+                        parameters=[node_params],
+                        remappings=[('/tf_static', 'tf_static'), ('/tf', 'tf')],
+                        on_exit=launch.actions.Shutdown(),
+                    ),
+                    Node(
+                        condition=IfCondition(PythonExpression([with_rviz])),
+                        package='rviz2',
+                        executable='rviz2',
+                        arguments=[
+                            '-d',
+                            rviz_config_file,
+                            '--ros-args',
+                            '--remap',
+                            'use_sim_time:=True',
+                        ],
+                        output={'both': 'log'},
+                        remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
+                    ),
+                ]
+            ),
+        ]
+    )

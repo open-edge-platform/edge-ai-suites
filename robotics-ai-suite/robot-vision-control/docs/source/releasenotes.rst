@@ -5,14 +5,14 @@
 Release Notes
 ###################################
 
-Click each tab to learn about the new and updated features in each release of Intel® |rvc_full|.
+Click each tab to learn about the new and updated features in each release of Intel® Robot Vision & Control Framework.
 
 .. tabs::
 
-   .. group-tab:: |rvc| v2.1
+   .. group-tab:: RVC v2.1
 
-      |rvc| v2.1 release includes bug and security updates as well as adds two new components: Intel Lab's Dobby Path Planner, an adaptive path planner that improves robot arm performance in complex environments; and Intel Lab’s Histodepth Pointcloud Segmentation algorithm in a Virtual Fence application. 
-      
+      RVC v2.1 release includes bug and security updates as well as adds two new components: Intel Lab's Dobby Path Planner, an adaptive path planner that improves robot arm performance in complex environments; and Intel Lab’s Histodepth Pointcloud Segmentation algorithm in a Virtual Fence application.
+
       - **Intel Lab's Dobby Path Planner**: This new planner, available as an option in RVC's dynamic motion use case, enables fast collision checking, a new geometric path planner based on rapidly exploring random trees, new trajectory generation methods for user-specific optimization criteria, and a novel cartesian trajectory generation algorithm that allows tracking time-dependent trajectories in cartesian space enabling self and obstacle collision avoided while producing dynamically feasible trajectories.
       - **Intel Lab's Histodepth Pointcloud Segmentation Virtual Fence**: Now part of the RVC package, this virtual fence application running on ROS uses depth information from an Intel RealSense camera to create dynamic and static scene segmentation maps to enable live robotic virtual fencing and safety bounding. The use of this segmentation algorithm enables a drop-in approach to virtual fencing, requiring no training or learning before deployment.
 
@@ -23,13 +23,13 @@ Click each tab to learn about the new and updated features in each release of In
 
       **Known Limitations and Issues**
 
-   .. group-tab:: |rvc| v2.0
+   .. group-tab:: RVC v2.0
 
-      |rvc| v2.0 provides a SW framework to control a robot based on vision based object detection.
+      RVC v2.0 provides a SW framework to control a robot based on vision based object detection.
       It's a collection of SW components that can be deployed provided a debian packages.
       But it is expected to be customized, hardened, optimized and extended by customers before it’s used as a final product.
 
-      |rvc| focuses on demonstrating consolidation of the following functionalities:
+      RVC focuses on demonstrating consolidation of the following functionalities:
 
       - Camera input
       - Vision based object classification and 3D pose detection.
@@ -132,10 +132,10 @@ Click each tab to learn about the new and updated features in each release of In
            - ``ros-humble-ur-pendant-motion-controller_1.0.0jammy_amd64.deb``
            - Direct Universal Robot pendant controller.
 
-   .. group-tab:: |rvc| v1.0
+   .. group-tab:: RVC v1.0
 
-      Initial release of |rvc_full| (|rvc|).
-      |rvc| allows closed loop automatic object recognition and robot manipulation of a set of moving objects.
+      Initial release of Robot Vision & Control Framework (RVC).
+      RVC allows closed loop automatic object recognition and robot manipulation of a set of moving objects.
 
       **Features**
 

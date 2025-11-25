@@ -46,5 +46,15 @@ This page provides troubleshooting steps, FAQs, and resources to help you resolv
      sudo systemctl restart docker
      ```
 
+4. **Video stream not displaying on Grafana UI**
+   - If you do not see the video stream because of a URL issue, then ensure that `WEBRTC_URL` in Grafana has:
+      ```bash
+      # When Grafana is opened on https://localhost/grafana
+      https://localhost/mediamtx/
+
+      # When Grafana is opened on https://<HOST_IP>/grafana
+      https://<HOST_IP>/mediamtx/
+      ```
+
 ## Support
 - **Raise an Issue on GitHub**: [GitHub Issues](https://github.com/open-edge-platform/edge-ai-suites/issues)

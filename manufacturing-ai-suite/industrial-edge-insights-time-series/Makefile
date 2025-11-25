@@ -133,7 +133,11 @@ up_mqtt_ingestion: check_env_variables down
 	if [ $(INCLUDE) = 'validation' ]; then \
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-opcua-server=0 -d; \
 	else \
-		$(DOCKER_COMPOSE) up --scale ia-mqtt-publisher=$(num_of_streams) --scale ia-opcua-server=0 -d; \
+		for i in $$(seq 1 $(num_of_streams)); do \
+			echo "Starting ia-mqtt-publisher instance $$i for SAMPLE_APP: $$SAMPLE_APP";\
+			$(DOCKER_COMPOSE) run -d --name ia-mqtt-publisher-$$i -e INSTANCE_ID=$$i ia-mqtt-publisher; \
+		done; \
+		$(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d $(shell $(DOCKER_COMPOSE) config --services | grep -v ia-mqtt-publisher); \
 	fi;
 
 # Run Docker containers
@@ -215,6 +219,7 @@ gen_helm_charts:
 	@cp -f configs/influxdb/config/*.conf helm/
 	@cp -f configs/influxdb/init-influxdb.sh helm/
 	@cp -f configs/mqtt-broker/*.conf helm/
+	@rm -rf helm/simulation-data
 	@cp -rf apps/${SAMPLE_APP}/simulation-data helm/
 	@cp -f apps/${SAMPLE_APP}/telegraf-config/*.conf helm
 	@cp -f apps/${SAMPLE_APP}/time-series-analytics-config/config.json helm/

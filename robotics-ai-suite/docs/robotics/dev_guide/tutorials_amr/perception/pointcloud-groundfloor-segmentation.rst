@@ -1,10 +1,10 @@
 .. pointcloud-groundfloor-segmentation:
 
-3D Pointcloud Groundfloor Segmentation for |realsense| Camera and 3D LiDAR
-============================================================================
+3D Pointcloud Groundfloor Segmentation for Intel® RealSense™ Camera and 3D LiDAR
+=================================================================================
 
-This demo showcases an |intel| algorithm designed for the segmentation of depth sensor data,
-compatible with 3D LiDAR or a |realsense| camera inputs. The application processes either a 3D pointcloud
+This demo showcases an Intel® algorithm designed for the segmentation of depth sensor data,
+compatible with 3D LiDAR or a Intel® RealSense™ camera inputs. The application processes either a 3D pointcloud
 or a depth image, producing a refined 3D pointcloud as output. Each endpoint within this pointcloud
 is classified, distinguishing between ground floor, elevated surfaces, obstacles and structures above ground level.
 
@@ -12,7 +12,7 @@ The algorithm addresses situations like non-flat floors, ramps, inclines, declin
 and other challenging conditions. Its capabilities extend beyond standard segmentation approaches,
 making it suited for diverse scenarios.
 
-This tutorial guides users on running the algorithm from |p_amr| using either a 3D LiDAR or a |realsense|
+This tutorial guides users on running the algorithm from Autonomous Mobile Robot using either a 3D LiDAR or a Intel® RealSense™
 camera input, generating ``segmentation/labeled_points`` and ``segmentation/obstacle_points`` topic of type
 ``sensor_msgs/PointCloud2``. The first output topic assigns labels (ground, elevated, obstacle or above the roof)
 to points within the sensor's 3D pointcloud.
@@ -29,7 +29,7 @@ The source code of this component can be found here: `Groundfloor <https://githu
 Getting Started
 ----------------
 
-|p_amr| provides a |ros| |deb_pack| for the application, supported by the following platform:
+Autonomous Mobile Robot provides a ROS 2 Deb package for the application, supported by the following platform:
 
 - OS: Ubuntu 22.04 LTS
 
@@ -42,10 +42,10 @@ Prerequisites
 Complete the :doc:`../../../gsg_robot/index` before continuing.
 
 
-Install |deb_pack|
+Install Deb package
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Install ``ros-humble-pointcloud-groundfloor-segmentation`` |deb_pack| from |intel| |p_amr| APT repository
+Install ``ros-humble-pointcloud-groundfloor-segmentation`` Deb package from Intel® Autonomous Mobile Robot APT repository
 
    .. code-block:: bash
 
@@ -53,17 +53,17 @@ Install ``ros-humble-pointcloud-groundfloor-segmentation`` |deb_pack| from |inte
       sudo apt install ros-humble-pointcloud-groundfloor-segmentation
 
 
-Run the Segmentation with |realsense| Camera Input
-----------------------------------------------------
+Run the Segmentation with Intel® RealSense™ Camera Input
+---------------------------------------------------------
 
-Execute the following command to run the demo using a |realsense| camera input, after starting the |realsense| |ros| node.
+Execute the following command to run the demo using a Intel® RealSense™ camera input, after starting the Intel® RealSense™ ROS 2 node.
 
    .. code-block:: bash
 
       source /opt/ros/humble/setup.bash
       ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py
 
-One can view the list of running |ros| topics by typing ``ros2 topic list`` in a terminal.
+One can view the list of running ROS 2 topics by typing ``ros2 topic list`` in a terminal.
 
    .. code-block:: console
 
@@ -78,9 +78,9 @@ One can view the list of running |ros| topics by typing ``ros2 topic list`` in a
 
    .. note::
 
-      Your topic list may differ, if you use additional |ros| nodes or other camera settings.
+      Your topic list may differ, if you use additional ROS 2 nodes or other camera settings.
 
-The |ros| launch file provides additional arguments, for example to run the |ros| node only together with a camera,
+The ROS 2 launch file provides additional arguments, for example to run the ROS 2 node only together with a camera,
 or with rviz. These can be activated as follows:
 
 Terminal 1:
@@ -115,7 +115,7 @@ Execute the following script to run the demo if a given pointcloud, for example 
       source /opt/ros/humble/setup.bash
       ros2 launch pointcloud_groundfloor_segmentation pointcloud_groundfloor_segmentation_launch.py
 
-One can view the list of running |ros| topics by typing ``ros2 topic list`` in a terminal.
+One can view the list of running ROS 2 topics by typing ``ros2 topic list`` in a terminal.
 
    .. code-block:: console
 
@@ -131,7 +131,7 @@ One can view the list of running |ros| topics by typing ``ros2 topic list`` in a
 
    .. note::
 
-      Your topic list may differ, if you use additional |ros| nodes or other camera settings.
+      Your topic list may differ, if you use additional ROS 2 nodes or other camera settings.
 
 The LiDAR node, that needs to be started in parallel, has to provide the topic ``/input/points`` otherwise the topic has to be remapped.
 
@@ -158,7 +158,7 @@ Terminal 2: Run the following commands to establish a TF link between robot and 
       source /opt/ros/humble/setup.bash
       ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 1 /map /odom
 
-Terminal 3: Run the segmentation application with |realsense| camera input:
+Terminal 3: Run the segmentation application with Intel® RealSense™ camera input:
    .. code-block:: bash
 
       source /opt/ros/humble/setup.bash
@@ -168,17 +168,17 @@ Terminal 3: Run the segmentation application with |realsense| camera input:
 Adjusting Application Parameters
 ----------------------------------
 
-The |ros| node supports a set of parameters, that can be found under:
+The ROS 2 node supports a set of parameters, that can be found under:
 
    .. code-block:: bash
 
       /opt/ros/humble/share/pointcloud_groundfloor_segmentation/params/
 
-There is one example configuration how the application's output can be used for the |ros| nav2 application,
+There is one example configuration how the application's output can be used for the ROS 2 nav2 application,
 and a second file providing parameter values for the segmentation task. These include:
 
 * ``base_frame``:
-   This is the |ros| TF frame that the underlying algorithm operates on. The default value  is ``base_link``.
+   This is the ROS 2 TF frame that the underlying algorithm operates on. The default value  is ``base_link``.
    There must be a complete transform between the sensor frame and this ``base_frame``.
 
 * ``use_best_effort_qos``:
@@ -217,7 +217,7 @@ To achieve optimal output quality, it is essential to fulfill following requirem
 
 * The input sensor should be forward facing, ideally in parallel to the groundfloor.
 
-* The |ros| TF tree between ``base_frame`` and the sensor frame must be complete.
+* The ROS 2 TF tree between ``base_frame`` and the sensor frame must be complete.
 
 * Satisfactory input data quality is crucial. Incomplete depth images or pointclouds may result in incorrect labels.
 
@@ -225,7 +225,7 @@ To achieve optimal output quality, it is essential to fulfill following requirem
 Troubleshooting
 ----------------------------
 
-- Failed to install |deb_pack|: Please make sure to run ``sudo apt update`` before installing the necessary |deb_packs|.
+- Failed to install Deb package: Please make sure to run ``sudo apt update`` before installing the necessary Deb packages.
 
 - You can stop the demo anytime by pressing ``ctrl-C``.
 
@@ -233,4 +233,3 @@ Troubleshooting
 
 - The quality of the segmentation and labeling depends on the quality of the input data. Noisy data, especially major outliers
   could result in wrong labels. If this is the case, the input data should be pre-processed to reduce noise.
-

@@ -92,3 +92,35 @@ select {
   background-color: #ccc; 
   margin: 8px 0 16px;    
 }
+
+.error-message {
+  color: #c00;
+  font-family: "IntelOne Text", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 14px;
+  margin-top: 4px;
+}
+
+.no-devices-message {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 0px;
+  font-family: "IntelOne Text", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #6A6D75;
+  line-height: 16px;
+  box-sizing: border-box;
+  background: #f7f7f7;
+}
+
+.debug-info {
+  font-family: "IntelOne Text", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #6A6D75;
+  line-height: 14px;
+  margin-top: 4px;
+}

@@ -11,7 +11,7 @@ It enables energy-efficient execution of artificial neural network tasks.
 To make sure that your system has an NPU available, please follow
 `the steps <https://www.intel.com/content/www/us/en/support/articles/000097597/processors.html>`_.
 
-The full device name is Neural Processing Unit, but the |Linux| kernel driver uses
+The full device name is Neural Processing Unit, but the Linux kernel driver uses
 the older name - Versatile Processing Unit (VPU).
 
 Installation

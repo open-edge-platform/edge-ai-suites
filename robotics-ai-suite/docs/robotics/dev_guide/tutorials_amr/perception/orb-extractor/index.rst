@@ -1,4 +1,4 @@
-GPU ORB Extractor  
+GPU ORB Extractor
 ===========================================================
 
 .. list-table::
@@ -6,14 +6,14 @@ GPU ORB Extractor
 
    * - Collateral
      - Description
-   * - :doc:`package-use` 
-     - Provides GPU ORB Extractor Feature overview and |deb_pack| information  
+   * - :doc:`package-use`
+     - Provides GPU ORB Extractor Feature overview and Deb package information
    * - :doc:`api-use`
-     - how to use ORB Extractor Feature library 
+     - how to use ORB Extractor Feature library
    * - :doc:`orbocvfree-use`
-     - Additional information to use OpenCV free GPU ORB Extractor Feature.  
+     - Additional information to use OpenCV free GPU ORB Extractor Feature.
    * - :doc:`limitation`
-     - GPU ORB Extractor Feature Limitation  
+     - GPU ORB Extractor Feature Limitation
 
 .. toctree::
    :hidden:
@@ -21,6 +21,6 @@ GPU ORB Extractor
 
    package-use
    api-use
-   orbocvfree-use 
+   orbocvfree-use
    limitation
-   
+

@@ -1,14 +1,14 @@
-|p_amr| Algorithms
--------------------
+Autonomous Mobile Robot Algorithms
+-------------------------------------
 
 
-|p_amr| includes reference algorithms as well as deep learning models, providing practical examples of automated robot control functions.
+Autonomous Mobile Robot includes reference algorithms as well as deep learning models, providing practical examples of automated robot control functions.
 
 
-Open Model Zoo for |openvino|
+Open Model Zoo for OpenVINO™
 ++++++++++++++++++++++++++++++
 
-The Open Model Zoo for |openvino| toolkit delivers optimized deep learning
+The Open Model Zoo for OpenVINO™ toolkit delivers optimized deep learning
 models and a set of demos to expedite development of high-performance deep
 learning inference applications. You can use these pre-trained models instead of
 training your own models to speed up the development and production deployment
@@ -37,7 +37,7 @@ average.
 
 **Tutorial**: :doc:`../../dev_guide/tutorials_amr/perception/pointcloud-groundfloor-segmentation`
 
-An algorithm, along with a demo application, that transforms (|realsense|) Depth Camera images to 3D
+An algorithm, along with a demo application, that transforms (Intel® RealSense™) Depth Camera images to 3D
 pointclouds. This algorithm further assigns classification labels such as 'ground floor' or
 'obstacle' to each point, delivering both the resulting and filtered pointclouds as output.
 
@@ -49,14 +49,14 @@ Point Cloud Library (PCL)
 
 The Point Cloud Library (PCL), a standalone, large scale, open project for
 2D/3D image and point cloud processing (see also https://pointclouds.org/).
-The |p_amr| SDK version of PCL adds optimized implementations of several PCL
+The Autonomous Mobile Robot SDK version of PCL adds optimized implementations of several PCL
 modules which allow you to offload computation to a GPU.
 
 
-|ros| Depth Image to Laser Scan
+ROS 2 Depth Image to Laser Scan
 ++++++++++++++++++++++++++++++++
 
-|ros| Depth Image to Laser Scan, converts a depth image to a laser scan
+ROS 2 Depth Image to Laser Scan, converts a depth image to a laser scan
 for use with navigation and localization.
 
 
@@ -85,7 +85,7 @@ FastMapping
 **Tutorial**: :doc:`../../dev_guide/tutorials_amr/navigation/run-fastmapping-algorithm`
 
 FastMapping, is an algorithm to create a 3D voxel map of a robot's
-surrounding, based on |realsense| Depth Camera sensor data.
+surrounding, based on Intel® RealSense™ Depth Camera sensor data.
 
 
 Collaborative Visual SLAM
@@ -116,10 +116,10 @@ For collaborative visual SLAM details, refer to `A Collaborative Visual SLAM
 Framework for Service Robots paper <https://arxiv.org/abs/2102.03228>`__.
 
 
-|ros| Cartographer
+ROS 2 Cartographer
 +++++++++++++++++++
 
-|ros| Cartographer is a system that provides real-time simultaneous
+ROS 2 Cartographer is a system that provides real-time simultaneous
 localization and mapping (SLAM) based on real-time 2D LiDAR sensor data. It
 is used to generate as-built floor plans in the form of occupancy grids.
 
@@ -178,12 +178,12 @@ ITS Global Path Planner
 
 **Tutorial**: :doc:`../../dev_guide/tutorials_amr/navigation/its-path-planner-plugin`
 
-The Intelligent Sampling and Two-Way Search (ITS) Global Path Planner is a plugin for the |ros| Navigation package.
+The Intelligent Sampling and Two-Way Search (ITS) Global Path Planner is a plugin for the ROS 2 Navigation package.
 It performs a path planning search on a roadmap from two directions
 simultaneously. The main inputs are 2D occupancy grid map, robot position,
 and the goal position. The occupancy is converted into a roadmap and can be
 saved for future inquiries. The output is a list of waypoints which
-constructs the global path. All inputs and outputs are in standard |ros|
+constructs the global path. All inputs and outputs are in standard ROS 2
 formats. This plugin is a global path planner module which is based on the
 Intelligent Sampling and Two-Way Search (ITS). Currently, the ITS plugin does
 not support continuous replanning. To use this plugin, a simple behavior tree
@@ -216,10 +216,10 @@ Navigation 2
 
 **Tutorials**: :doc:`../../dev_guide/tutorials_amr/navigation/index`
 
-|ros| Navigation stack, which seeks a safe way to have a mobile robot move
+ROS 2 Navigation stack, which seeks a safe way to have a mobile robot move
 from point A to point B. This completes dynamic path planning, computes
 velocities for motors, detects and avoids obstacles, and structures recovery
 behaviors. Navigation 2 uses behavior trees to call modular servers to
 complete an action. An action can be computing a path, controlling effort,
 recovery, or any other navigation-related action. These are separate nodes
-that communicate with the behavior tree over a |ros| action server.
+that communicate with the behavior tree over a ROS 2 action server.

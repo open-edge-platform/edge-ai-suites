@@ -5,7 +5,7 @@
   <version>2.0.0</version>
   <description>AI inference pipeling Stage 1 object detection engine, plugin based to allow different AI models, and devices</description>
   <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
-  <license>Rapid Prototype License</license>
+  <license>Apache-2.0</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_index_cpp</buildtool_depend>
   <depend>rclcpp</depend>

@@ -4,8 +4,8 @@ Time Series predictive maintenance apps allow for detecting anomalous patterns a
 
 In the Energy Sector unexpected equipment failures result in costly downtime and operational inefficiencies. Using AI-driven predictive analytics, edge devices can monitor equipment health through sensor data (for example, power output) detect anomalous trends indicative of wear or failure, and alert operators to schedule maintenance proactively. This enhances productivity, reduces costs, and extends equipment lifespan.
 
-[Wind Turbine Anomaly Detection](./wind-turbine-anomaly-detection/index.md) demonstrates a time series use case by detecting anomalous power generation patterns
-in wind turbines, relative to wind speed.
+[Wind Turbine Anomaly Detection](./wind-turbine-anomaly-detection/index.md) demonstrates a time series use case by detecting anomalous power generation patterns in wind turbines, 
+relative to wind speed.
 
 [Weld Anomaly Detection](./weld-anomaly-detection/index.md) demonstrates how AI-driven analytics enable edge devices to monitor weld quality.
 
@@ -22,10 +22,10 @@ physical devices, in a real deployment scenario. If you are interested, document
 sample application provide detailed architectural descriptions.
 
 <!--hide_directive
-::::{grid} 1 2 3 4
+::::{grid} 1 2 2 2
 :::{grid-item-card} Wind Turbine Anomaly Detection
 :class-card: homepage-card-container-big
-:link: ./wind-turbine-anomaly/index.html
+:link: ./wind-turbine-anomaly-detection/index.html
 
 Monitoring power generation anomalies for preventive maintenance.
 :::
@@ -48,5 +48,7 @@ how-to-guides/index
 weld-anomaly-detection/index
 wind-turbine-anomaly-detection/index
 Release Notes <release_notes>
+troubleshoot-guide
 :::
 hide_directive-->
+

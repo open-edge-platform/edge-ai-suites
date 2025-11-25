@@ -1,10 +1,10 @@
-Follow-me with ADBSCAN on |irobot_create3|
+Follow-me with ADBSCAN on iRobot Create 3
 ================================================
 
-This tutorial provides instructions for running the ADBSCAN-based Follow-me algorithm from |p_amr| using |realsense| camera input. 
-Validation of the the algorithm was performed on a custom |irobot_create3|.
-The |realsense| camera publishes to ``/camera/depth/color/points`` topic. The `adbscan_sub_node` subscribes to the corresponding topic, 
-detects the obstacle array, computes the robot's velocity and publishes to the ``/cmd_vel`` topic of type `geometry_msg/msg/Twist`. 
+This tutorial provides instructions for running the ADBSCAN-based Follow-me algorithm from Autonomous Mobile Robot using Intel® RealSense™ camera input.
+Validation of the the algorithm was performed on a custom iRobot Create 3.
+The Intel® RealSense™ camera publishes to ``/camera/depth/color/points`` topic. The `adbscan_sub_node` subscribes to the corresponding topic,
+detects the obstacle array, computes the robot's velocity and publishes to the ``/cmd_vel`` topic of type `geometry_msg/msg/Twist`.
 This ``twist`` message consists of the updated angular and linear velocity of the robot to follow the target, which can be subsequently subscribed by a robot-driver.
 
 
@@ -18,17 +18,17 @@ Prerequisites
 
 - Complete the :doc:`../../../../../gsg_robot/index` before continuing.
 
-|intel| board connected to |irobot_create3|
+Intel® board connected to iRobot Create 3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Follow the instructions on page
 `iRobot® Create® 3 - Network Recommendations
 <https://iroboteducation.github.io/create3_docs/setup/network-config/>`__
 to set up an Ethernet over USB connection and to configure the network
-device on the |intel| board.
-Use an IP address of the same subnet as used on the |irobot_create3|.
+device on the Intel® board.
+Use an IP address of the same subnet as used on the iRobot Create 3.
 
-Check that the |irobot_create3| is reachable over the Ethernet
+Check that the iRobot Create 3 is reachable over the Ethernet
 connection. Output on the robot with the configuration from the image
 above:
 
@@ -44,10 +44,10 @@ above:
    3 packets transmitted, 3 received, 0% packet loss, time 2004ms
    rtt min/avg/max/mdev = 1.989/2.105/2.308/0.144 ms
 
-Install the |deb_pack|
+Install the Deb package
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Install the ``ros-humble-follow-me-tutorial`` |deb_pack| from the |intel| |p_amr| APT repository.
+Install the ``ros-humble-follow-me-tutorial`` Deb package from the Intel® Autonomous Mobile Robot APT repository.
 
    .. code-block::
 
@@ -57,16 +57,16 @@ Install the ``ros-humble-follow-me-tutorial`` |deb_pack| from the |intel| |p_amr
 Run Demo
 ----------------
 
-To launch the Follow-me application tutorial on the |irobot_create3| robot, use the following ROS 2 launch file.
+To launch the Follow-me application tutorial on the iRobot Create 3 robot, use the following ROS 2 launch file.
 
    .. code-block::
 
       source /opt/ros/humble/setup.bash
       ros2 launch tutorial_follow_me irobot_followme_launch.py
 
-After executing the above command, you can observe that the robot detecting the target within a tracking radius 
-(~0.5 - 1.5 m; `min_dist` and `max_dist` are set in `/opt/ros/humble/share/tutorial_follow_me/params/followme_adbscan_RS_params.yaml`) 
-and subsequently following the moving target person.  
+After executing the above command, you can observe that the robot detecting the target within a tracking radius
+(~0.5 - 1.5 m; `min_dist` and `max_dist` are set in `/opt/ros/humble/share/tutorial_follow_me/params/followme_adbscan_RS_params.yaml`)
+and subsequently following the moving target person.
 
 .. note::
 
@@ -78,7 +78,7 @@ and subsequently following the moving target person.
       :widths: 20 80
 
       * - ``Lidar_type``
-        - Type of the point cloud sensor. For |realsense| camera and LIDAR inputs, the default value is set to ``RS`` and ``2D``, respectively.
+        - Type of the point cloud sensor. For Intel® RealSense™ camera and LIDAR inputs, the default value is set to ``RS`` and ``2D``, respectively.
       * - ``Lidar_topic``
         - Name of the topic publishing point cloud data.
       * - ``Verbose``
@@ -109,11 +109,11 @@ and subsequently following the moving target person.
         - The robot will keep following the target for ``max_frame_blocked`` number of frames in the event of a temporary occlusion.
       * - ``tracking_radius``
         - The robot will keep following the target as long as the current target location = previous location +/- ``tracking_radius``
-   
+
 Troubleshooting
 ----------------------------
 
-- Failed to install |deb_pack|: Please make sure to run ``sudo apt update`` before installing the necessary |deb_packs|.
+- Failed to install Deb package: Please make sure to run ``sudo apt update`` before installing the necessary Deb packages.
 
 - You may stop the demo anytime by pressing ``ctrl-C``.
 

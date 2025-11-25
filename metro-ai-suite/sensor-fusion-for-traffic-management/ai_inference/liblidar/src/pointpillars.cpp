@@ -286,7 +286,7 @@ PointPillars::Impl::Impl(const float score_threshold, const float nms_threshold,
 PointPillars::Impl::~Impl()
 {
     // Upon destruction clear all SYCL memory
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     sycl::free(dev_x_coors_, queue);
     sycl::free(dev_y_coors_, queue);
     sycl::free(dev_num_points_per_pillar_, queue);
@@ -482,7 +482,7 @@ void PointPillars::Impl::SetupRpnNetwork(bool resize_input)
 
 void PointPillars::Impl::DeviceMemoryMalloc()
 {
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     // Allocate all device memory vector
     dev_x_coors_ = sycl::malloc_device<int>(max_num_pillars_, queue);
     dev_y_coors_ = sycl::malloc_device<int>(max_num_pillars_, queue);
@@ -518,10 +518,10 @@ void PointPillars::Impl::DeviceMemoryMalloc()
 
 void PointPillars::Impl::PreProcessing(const float *in_points_array, const int in_num_points)
 {
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     if (num_points < in_num_points) {
         if (NULL != dev_points)
-            sycl::free(dev_points, dev_mgr_->getQue());
+            sycl::free(dev_points, queue);
         dev_points = sycl::malloc_device<float>(in_num_points * num_box_corners_, queue);
     }
     // Before starting the PreProcessing, the device memory has to be reset
@@ -599,7 +599,7 @@ void PointPillars::Impl::Detect(const float *in_points_array, const int in_num_p
     // std::cout<<"in_num_points: "<<in_num_points<<std::endl;
     // reset the detections
     detections.clear();
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     // std::cout << "Starting PointPillars\n";
     // First run the preprocessing to convert the LiDAR pointcloud into the required pillar format
     const auto t0 = std::chrono::high_resolution_clock::now();
@@ -629,7 +629,7 @@ void PointPillars::Impl::Detect(const float *in_points_array, const int in_num_p
     pfe_infer_request_.set_tensor(pfe_output_name, pfe_output_tensor_);
     // Launch the inference
     pfe_infer_request_.start_async();
-    cl_command_queue q = sycl::get_native<sycl::backend::opencl>(dev_mgr_->getQue());
+    cl_command_queue q = sycl::get_native<sycl::backend::opencl>(queue);
     // clEnqueueBarrierWithWaitList(q, 0, nullptr, nullptr);
     //  Wait for the inference to finish
     pfe_infer_request_.wait();

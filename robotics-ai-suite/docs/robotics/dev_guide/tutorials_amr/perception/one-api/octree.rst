@@ -9,8 +9,8 @@ In this tutorial we will learn how to use the octree for spatial partitioning an
 
 .. note::
 
-  This tutorial can be run both inside and outside a |docker| image. We assume that the
-  *pcl-oneapi-tutorials* |deb_pack| has been installed, and the user has copied the *tutorial*
+  This tutorial can be run both inside and outside a Docker image. We assume that the
+  *pcl-oneapi-tutorials* Deb package has been installed, and the user has copied the *tutorial*
   directory from */opt/intel/pcl/oneapi/tutorials/* to a user-writable directory.
 
 #. Prepare the environment:
@@ -27,7 +27,7 @@ In this tutorial we will learn how to use the octree for spatial partitioning an
       :linenos:
 
 
-#. Source the |l_oneapi| environment:
+#. Source the Intel® oneAPI Base Toolkit environment:
 
    .. code-block::
 
@@ -92,15 +92,15 @@ Generate point cloud data, queries, radiuses, indices with a random number.
    :lines: 33-57
    :dedent:
 
-Create and build the |oneapi| point cloud; then upload the queries and
-   radiuses to a |oneapi| device.
+Create and build the oneAPI point cloud; then upload the queries and
+   radiuses to a oneAPI device.
 
 .. literalinclude:: ../../../../sources/octree/oneapi_octree_search.cpp
    :language: cpp
    :lines: 59-72
    :dedent:
 
-Create output buffers where we can download output from the |oneapi| device.
+Create output buffers where we can download output from the oneAPI device.
 
 .. literalinclude:: ../../../../sources/octree/oneapi_octree_search.cpp
    :language: cpp
@@ -146,7 +146,7 @@ Perform KNN search.
    :lines: 100-103
    :dedent:
 
-Download the search results from the |oneapi| device. The size vector contains
+Download the search results from the oneAPI device. The size vector contains
 the size of found neighbors for each query. The downloaded_buffer vector
 contains the index of all found neighbors for each query.
 

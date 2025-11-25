@@ -3,7 +3,7 @@
 > **Note**: The system metrics dashboard is only supported with docker compose deployments and requires `Telegraf` to run as the `root` user.
 > Verified only for `Wind Turbine Anomaly Detection` sample app.
 
-Please follow [prerequisites](../get-started.md#configure-docker) and understand [data flow explanation](./index.md#data-flow-explanation) as
+Please follow [prerequisites](../get-started.md#configure-docker) and understand [data flow explanation](../wind-turbine-anomaly-detection/index.md#data-flow-explanation) as
 a prerequisite.
 
 To enable the system metrics dashboard showcasing the host and docker containers CPU, memory, network, disk IO usage, run the following command:

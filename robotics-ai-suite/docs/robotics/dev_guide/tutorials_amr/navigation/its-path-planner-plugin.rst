@@ -1,11 +1,11 @@
 .. use-its-path-planner-plugin:
 
-ITS Path Planner |ros| Navigation Plugin
+ITS Path Planner ROS 2 Navigation Plugin
 ========================================
 
-Intelligent Sampling and Two-Way Search (ITS) global path planner is an |intel| patented algorithm.
+Intelligent Sampling and Two-Way Search (ITS) global path planner is an Intel® patented algorithm.
 
-The ITS Plugin for the |ros| Navigation 2 application plugin is a global path
+The ITS Plugin for the ROS 2 Navigation 2 application plugin is a global path
 planner module that is based on Intelligent sampling and Two-way Search (ITS).
 
 
@@ -35,7 +35,7 @@ Path planning steps summary:
 #. The ITS planner conducts a two-way search to find a path from the source to
    the destination. Either the smoothing filter or a catmull spline
    interpolation can be used to create a smooth and continuous path. The
-   generated smooth path is in the form of a |ros| navigation message type
+   generated smooth path is in the form of a ROS 2 navigation message type
    (``nav_msgs::msg``).
 
 For customization options, see :doc:`../../../dev_guide/tutorials_amr/navigation/its-customization`.
@@ -48,7 +48,7 @@ The source code of this component can be found here: `ITS-Planner <https://githu
 Getting Started
 ----------------
 
-|p_amr| provides a |ros| |deb_pack| for the application, supported by the following platform:
+Autonomous Mobile Robot provides a ROS 2 Deb package for the application, supported by the following platform:
 
 - ROS version: humble
 
@@ -57,10 +57,10 @@ Prerequisites
 
 Complete the :doc:`../../../gsg_robot/index` before continuing.
 
-Install |deb_pack|
+Install Deb package
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Install the ``ros-humble-its-planner`` |deb_pack| from the |intel| |p_amr| APT repository
+Install the ``ros-humble-its-planner`` Deb package from the Intel® Autonomous Mobile Robot APT repository
 
    .. code-block:: bash
 
@@ -103,7 +103,7 @@ ITS Planner also supports Ackermann steering; to launch the Ackermann ITS planne
          reference, use the robot pose as it appears in Gazebo*.
 
       #. Set the orientation by dragging forward from the down-click. This also
-         enables |ros| navigation.
+         enables ROS 2 navigation.
 
       .. image:: ../../../images//2d_pose_estimate.png
 

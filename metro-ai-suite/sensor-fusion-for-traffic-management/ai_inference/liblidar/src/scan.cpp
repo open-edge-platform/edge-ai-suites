@@ -124,7 +124,7 @@ void ScanYKernel(int *output, const int *input, int n, sycl::nd_item<3> item_ct1
 
 void ScanX(int *dev_output, const int *dev_input, int w, int h, int n, DeviceManager *dev_mgr)
 {
-    sycl::queue queue = dev_mgr->getQue();
+    sycl::queue &queue = dev_mgr->getQue();
 
     if (!dev_mgr->getDev().is_cpu()) {
         // For host and GPU (due to worker limitations) we use a sequential
@@ -162,7 +162,7 @@ void ScanX(int *dev_output, const int *dev_input, int w, int h, int n, DeviceMan
 
 void ScanY(int *dev_output, const int *dev_input, int w, int h, int n, DeviceManager *dev_mgr)
 {
-    sycl::queue queue = dev_mgr->getQue();
+    sycl::queue &queue = dev_mgr->getQue();
 
     if (!dev_mgr->getDev().is_cpu()) {
         // For host and GPU (due to worker limitations) we use a sequential

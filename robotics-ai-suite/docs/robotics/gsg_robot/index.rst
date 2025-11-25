@@ -6,7 +6,7 @@ Getting Started Guide |gsg_robot|
 ==========================================
 
 
-This Get Started Guide explains how to install the |lp_amr|.
+This Get Started Guide explains how to install the Autonomous Mobile Robot.
 
 .. toctree::
    :maxdepth: 1

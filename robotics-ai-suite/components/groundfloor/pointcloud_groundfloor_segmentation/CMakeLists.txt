@@ -101,11 +101,3 @@ install(
   DIRECTORY launch params rviz
   DESTINATION share/${PROJECT_NAME}
 )
-
-####################################################################
-# tests
-####################################################################
-IF(BUILD_TEST)
-  include(${CMAKE_SOURCE_DIR}/cmake/gtest.cmake)
-  add_subdirectory(test)
-ENDIF(BUILD_TEST)

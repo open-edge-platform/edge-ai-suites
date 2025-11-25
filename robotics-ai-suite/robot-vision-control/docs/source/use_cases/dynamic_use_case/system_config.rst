@@ -9,8 +9,8 @@ Camera pose and robot calibration
 
 Before first RVC Execution, we have to ensure a few parameters that has to match the physical setup:
 
-- RVC must known the exact pose (i.e.: position and orientation) of the |realsense| camera as explained in :ref:`Camera pose calibration<camera_pose_calibration>`
-- Prepare the robot for communication with the |Intel| platform as in :ref:`Universal Robots configuration<universal_robot_configuration>`
+- RVC must known the exact pose (i.e.: position and orientation) of the Intel® RealSense™ camera as explained in :ref:`Camera pose calibration<camera_pose_calibration>`
+- Prepare the robot for communication with the Intel® platform as in :ref:`Universal Robots configuration<universal_robot_configuration>`
 - The robot calibration parameters from the real robot must be extracted, as explained further in :ref:`Universal Robots Calibration Procedure<robot_calibration_procedure>`
 
 .. _camera_pose_calibration:
@@ -19,8 +19,8 @@ Camera pose calibration
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Before starting the Vision component, verify that the camera location matches the position 
-and orientation specified in the file 
+Before starting the Vision component, verify that the camera location matches the position
+and orientation specified in the file
 
 .. code-block:: bash
 
@@ -28,7 +28,7 @@ and orientation specified in the file
 
 .. note::
 
-    Location might change according to installation procedure and the suffix `ipc` depends on the 
+    Location might change according to installation procedure and the suffix `ipc` depends on the
     ``namespace:=`` option, by default `ipc` in this case
 
 The default content of this file is:
@@ -50,14 +50,14 @@ The default content of this file is:
     </robot>
 
 
-The important part is 
+The important part is
 
 .. code-block:: xml
 
     <origin xyz="0.36 0.66 0.755" rpy="-3.141592654 1.570796327 -1.570796327"/>
 
 where the ``xyz`` triplet is expressed in meters, and the ``rpy`` is in radians and they express respectively
-the cartesian coordinates of the base of the camera in reference to the ``world`` frame_id, which should 
+the cartesian coordinates of the base of the camera in reference to the ``world`` frame_id, which should
 coincide with the center of the base of the robot, if not modified.
 
 These numbers are important because if not accurate, the robot will not go to the proper location when
@@ -70,19 +70,19 @@ transform it to robot reference system, and these numbers give the relation betw
 Universal Robots Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The real robot or the simulator has to be configured to accept 
+The real robot or the simulator has to be configured to accept
 connection from RVC and configure the RVC system for real time capabilities
 
 
 Set up Universal Robots UR5e Robot
 --------------------------------------
- 
+
 
 This section discusses, in brief, the steps to set up Universal Robots UR5e robot.
 
 .. note::
-    For more details, refer to the 
-    `Universal Robots repositories README <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/foxy/README.md>`_ 
+    For more details, refer to the
+    `Universal Robots repositories README <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/foxy/README.md>`_
     to configure the robot.
 
 
@@ -132,12 +132,12 @@ Overwrite Model-specific Kinematics Parameters (Calibration)
 
 There might be slight differences (variance) in the physical attributes of various robots. To address this issue, the robot is calibrated at the factory and the variance in these parameters are saved on the robot controller file system. Extract the kinematics parameters specific to your robot and overwrite the distributed parameters file to avoid the robot being sent elsewhere for accumulating errors on inverse kinematics computation due to this parameter variance.
 
-For information on the Universal Robots robot calibration, refer to 
+For information on the Universal Robots robot calibration, refer to
 `README.md <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/foxy/ur_calibration/README.md>`_
 
 .. note::
 
-    If the calibration parameters do not match with that of the real robot, the motion controller logs will show the following message:  
+    If the calibration parameters do not match with that of the real robot, the motion controller logs will show the following message:
 
 ::
 

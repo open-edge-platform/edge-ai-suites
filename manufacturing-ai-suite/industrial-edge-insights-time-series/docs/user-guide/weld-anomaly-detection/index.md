@@ -1,7 +1,7 @@
 # Weld Anomaly Detection
 
 This sample app demonstrates how AI-driven analytics enable edge devices to monitor weld quality.
-It detects anomalous weld patterns and alerts operators for timely intervention,
+They detect anomalous weld patterns and alert operators for timely intervention,
 ensuring proactive maintenance, safety, and operational efficiency. No more failures
 and unplanned downtime.
 
@@ -19,15 +19,16 @@ As seen in the following architecture diagram, the sample app at a high-level co
 
 ### Data flow explanation
 
-Let's discuss how this architecture translates to data flow in the weld anomaly detection use case, by ingesting the data using the MQTT publisher simulator and publishing the anomaly alerts to MQTT broker.
+Let's discuss how this architecture translates to data flow in the weld anomaly detection use case, by ingesting the data using the OPC-UA simulator and publishing the anomaly alerts to MQTT broker.
 
 #### **Data Sources**
 
-Simulation data in CSV format from `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/simulation-data` is ingested into **Telegraf** using the **MQTT** protocol using the **MQTT publisher** data simulator.
+Simulation data in CSV format from `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/simulation-data`.
+This data is being ingested into **Telegraf** using the **OPC-UA** protocol using the **OPC-UA** data simulator.
 
 #### **Data Ingestion**
 
-**Telegraf** through its input plugins **MQTT** gathers the data and sends this input data to both **InfluxDB** and **Time Series Analytics Microservice**.
+**Telegraf** through its input plugins (**OPC-UA** OR **MQTT**) gathers the data and sends this input data to both **InfluxDB** and **Time Series Analytics Microservice**.
 
 #### **Data Storage**
 
@@ -55,13 +56,16 @@ The `udfs` section specifies the details of the UDFs used in the task.
 |---------|---------------------------------------------------------------------------------------------|----------------------------------------|
 | `name`  | The name of the UDF script.                                                                 | `"weld_anomaly_detector.py"`       |
 | `models`| The name of the model file used by the UDF.                                                 | `"weld_anomaly_detector.cb"`   |
+| `device`| Specifies the hardware `CPU` or `GPU` for executing the UDF model inference.Default is `cpu`| `cpu`                                  |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 ---
 
 **Alerts Configuration**:
 
-The `alerts` section defines the settings for alerting over MQTT protocol.
+The `alerts` section defines the settings for alerting mechanisms, such as MQTT protocol.
+For OPC-UA configuration, please refer [Publishing OPC-UA alerts](../how-to-guides/how-to-configure-alerts.md#helm---publish-opc-ua-alerts).
+Please note to enable only one of the MQTT or OPC-UA alerts.
 
 **MQTT Configuration**:
 
@@ -76,11 +80,11 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 ##### **`udfs/`**
 
 Contains the python script to process the incoming data.
+
 Uses CatBoostClassifier machine learning algo from CatBoost library to run on CPU to
 detect the anomalous power generation data points relative to wind speed.
 
 **Note**: Please note, CatBoost models doesn't run on Intel GPUs.
-
 
 ##### **`tick_scripts/`**
 
@@ -90,6 +94,5 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 ##### **`models/`**
 
-The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier Algo of CatBoost ML
-library.
+The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier algorithm from the CatBoost library.
 

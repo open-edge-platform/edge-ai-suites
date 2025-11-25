@@ -1,4 +1,4 @@
-|intel-extension-for-openxla|
+Intel® Extension for OpenXLA
 #############################
 
 The `OpenXLA <https://github.com/openxla/xla>`_ Project brings together a community of developers and leading AI/ML teams to accelerate ML and address infrastructure fragmentation across ML frameworks and hardware.
