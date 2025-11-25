@@ -75,7 +75,7 @@ By following this guide, you will learn how to:
      ```bash
      ./sample_start.sh
      ```
-   - To check the status:
+   - To check the status of the pipelines:
       ```bash
       ./sample_status.sh
       ```

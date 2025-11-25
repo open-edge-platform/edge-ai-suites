@@ -79,7 +79,7 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      ```bash
      ./sample_start.sh
      ```
-   - To check the status:
+   - To check the status of the pipelines:
       ```bash
       ./sample_status.sh
       ```
