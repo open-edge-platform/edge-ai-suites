@@ -47,7 +47,7 @@ There are 2 options to get the charts in your workspace:
 Use the following command to pull the Helm chart from Docker Hub:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/smart-nvr --version 1.2.2
+helm pull oci://registry-1.docker.io/intel/smart-nvr --version 1.2.3
 ```
 
 Refer to the release notes for details on the latest version number to use for the sample application.
