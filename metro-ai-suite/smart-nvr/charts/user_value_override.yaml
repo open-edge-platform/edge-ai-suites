@@ -5,15 +5,15 @@ global:
   claimSize: "50Gi"  
   # keepPvc should be set to true to retain the PVC after uninstalling the chart.
   keepPvc: false
-  storageClassName: 
+  storageClassName: ""
 
   proxy:
-    no_proxy: "localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,10.223.22.72,10.223.22.75,10.223.22.68,10.223.22.67,10.223.23.95,10.223.22.176,10.223.24.120,localhost,127.0.0.1,intel.com,.intel.com,192.168.0.0/16,172.16.0.0/12,127.0.0.0/8,10.0.0.0/8,/var/run/docker.sock,*.cluster.local,*.svc,localhost,*.intel.com"
-    http_proxy: "http://proxy-pilot.intel.com:916"
-    https_proxy: "http://proxy-pilot.intel.com:916"
+    no_proxy: ""
+    http_proxy: ""
+    https_proxy: ""
   env:
-    FRIGATE_MQTT_USER: "frigate"
-    FRIGATE_MQTT_PASSWORD: "mqtt"
+    FRIGATE_MQTT_USER: ""
+    FRIGATE_MQTT_PASSWORD: ""
 
 frigate:
   env:
@@ -22,12 +22,12 @@ frigate:
 
 nvr-event-router:
   env:
-    VSS_SEARCH_IP: "http://10.223.24.242"
-    VSS_SEARCH_PORT: 12345
-    VSS_SUMMARY_IP: "http://10.223.24.242"
-    VSS_SUMMARY_PORT: 12346
+    VSS_SEARCH_IP: ""
+    VSS_SEARCH_PORT: 
+    VSS_SUMMARY_IP: ""
+    VSS_SUMMARY_PORT: 
 
 nvr-event-router-ui:
   env:
-    NVR_GENAI: "false"
+    NVR_GENAI: ""
 
