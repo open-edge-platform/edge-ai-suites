@@ -19,6 +19,9 @@ export interface UIState {
   frontCamera: string;
   backCamera: string;
   boardCamera: string;
+  frontCameraStream: string;
+  backCameraStream: string;
+  boardCameraStream: string;
   activeStream: 'front' | 'back' | 'content' | 'all' | null;
 }
 
@@ -37,9 +40,12 @@ const initialState: UIState = {
   shouldStartMindmap: false,
   projectLocation: 'storage/',
   activeStream: null,
-  frontCamera: 'Default Front Camera',
-  backCamera: 'Default Back Camera',
-  boardCamera: 'Default Board Camera'
+  frontCamera: '',
+  backCamera: '',
+  boardCamera: '',
+  frontCameraStream: '',
+  backCameraStream: '',
+  boardCameraStream: '',
 };
 
 const uiSlice = createSlice({
@@ -144,6 +150,15 @@ const uiSlice = createSlice({
     setBoardCamera(state, action: PayloadAction<string>) {
       state.boardCamera = action.payload;
     },
+    setFrontCameraStream(state, action: PayloadAction<string>) {
+      state.frontCameraStream = action.payload;
+    },
+    setBackCameraStream(state, action: PayloadAction<string>) {
+      state.backCameraStream = action.payload;
+    },
+    setBoardCameraStream(state, action: PayloadAction<string>) {
+      state.boardCameraStream = action.payload;
+    },
     resetStream(state) {
       state.activeStream = null;
       state.frontCamera = 'Default Front Camera';
@@ -184,7 +199,10 @@ export const {
   setActiveTab,
   setProjectLocation,
   resetFlow,
-  setFrontCamera, setBackCamera, setBoardCamera
+  setFrontCamera, setBackCamera, setBoardCamera,
+  setFrontCameraStream,
+  setBackCameraStream,
+  setBoardCameraStream,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

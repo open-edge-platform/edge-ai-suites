@@ -4,7 +4,7 @@ import '../../assets/css/UploadFilesModal.css';
 import folderIcon from '../../assets/images/folder.svg';
 import { startVideoAnalyticsPipeline, uploadAudio, getClassStatistics, streamTranscript } from '../../services/api';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { setFrontCamera, setBackCamera, setBoardCamera, setUploadedAudioPath, startProcessing, processingFailed, resetFlow, setSessionId, setActiveStream, startStream, stopStream, transcriptionComplete } from '../../redux/slices/uiSlice';
+import { setFrontCamera, setBackCamera, setBoardCamera, setUploadedAudioPath, startProcessing, processingFailed, resetFlow, setSessionId, setActiveStream, startStream, stopStream, transcriptionComplete, setFrontCameraStream, setBackCameraStream, setBoardCameraStream } from '../../redux/slices/uiSlice';
 import { resetTranscript, appendTranscript, finishTranscript, startTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
 import { clearMindmap } from '../../redux/slices/mindmapSlice';
@@ -84,11 +84,11 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
               // Update Redux state with the results
               videoResponse.results.forEach((result: any) => {
                 if (result.pipeline_name === 'front') {
-                  dispatch(setFrontCamera(result.hls_stream));
+                  dispatch(setFrontCameraStream(result.hls_stream));
                 } else if (result.pipeline_name === 'back') {
-                  dispatch(setBackCamera(result.hls_stream));
+                  dispatch(setBackCameraStream(result.hls_stream));
                 } else if (result.pipeline_name === 'content') {
-                  dispatch(setBoardCamera(result.hls_stream));
+                  dispatch(setBoardCameraStream(result.hls_stream));
                 }
               });
 

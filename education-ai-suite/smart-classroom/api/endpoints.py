@@ -243,6 +243,14 @@ def start_video_analytics_pipeline(
                 status_code=400,
                 detail=f"Invalid pipeline_name '{request.pipeline_name}'. Must be one of: {valid_pipelines}",
             )
+<<<<<<< HEAD
+=======
+        if request.source is None or request.source.strip() == "":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Source cannot be empty for pipeline '{request.pipeline_name}'"
+            )
+>>>>>>> upstream/main
 
     results = []
 

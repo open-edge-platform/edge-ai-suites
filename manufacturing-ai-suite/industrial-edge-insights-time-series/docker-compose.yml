@@ -3,7 +3,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-version: '3.6'
+
 services:
   ia-telegraf:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -118,11 +118,11 @@ services:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/udfs/:/tmp/${SAMPLE_APP}/udfs/
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/tick_scripts/:/tmp/${SAMPLE_APP}/tick_scripts/
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/config.json:/app/config.json
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/models/:/tmp/${SAMPLE_APP}/models/
-    - /dev/dri:/dev/dri
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/udfs/:/tmp/${SAMPLE_APP}/udfs/:ro
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/tick_scripts/:/tmp/${SAMPLE_APP}/tick_scripts/:ro
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/config.json:/app/config.json:ro
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/models/:/tmp/${SAMPLE_APP}/models/:ro
+    - /dev/dri:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:
     # render group ID for ubuntu 20.04 host OS
@@ -238,7 +238,6 @@ services:
         http_proxy:
         https_proxy:
         no_proxy:
-    hostname: ia-mqtt-publisher
     read_only: true
     image: ${DOCKER_REGISTRY}${MQTT_PUBLISHER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
     restart: unless-stopped

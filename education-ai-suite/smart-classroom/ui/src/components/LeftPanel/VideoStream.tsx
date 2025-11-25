@@ -6,8 +6,8 @@ import fullScreenIcon from "../../assets/images/fullScreenIcon.svg";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";
 import { setActiveStream } from "../../redux/slices/uiSlice";
 import { startVideoAnalyticsPipeline } from "../../services/api"; 
-import { setFrontCamera, setBackCamera, setBoardCamera } from "../../redux/slices/uiSlice";
-
+import { setFrontCamera, setBackCamera, setBoardCamera, setBackCameraStream, setFrontCameraStream, setBoardCameraStream } from "../../redux/slices/uiSlice";
+import HLSPlayer from "../common/HLSPlayer";
 interface VideoStreamProps {
   isFullScreen: boolean;
   onToggleFullScreen: () => void;
@@ -21,9 +21,9 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
   const activeStream = useAppSelector((state) => state.ui.activeStream);
   const sessionId = useAppSelector((state) => state.ui.sessionId); // Move this to top level
   const streams = useAppSelector((state) => ({
-    front: state.ui.frontCamera,
-    back: state.ui.backCamera,
-    content: state.ui.boardCamera,
+    front: state.ui.frontCameraStream,
+    back: state.ui.backCameraStream,
+    content: state.ui.boardCameraStream,
   }));
 
   const handleToggleRoomView = () => {
@@ -40,19 +40,31 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
   };
 
   const handleStreamClick = async (pipeline: "front" | "back" | "content" | "all") => {
-    const currentSessionId = sessionId || "1111"; // Use the sessionId from state
-
+    const currentSessionId = sessionId; // Use the sessionId from state
+  
+    if (!currentSessionId) {
+      console.error("Session ID is null. Cannot start video analytics pipeline.");
+      return;
+    }
+  
     try {
       if (pipeline === "all") {
         // Start all three pipelines
         const pipelines = [
-          { pipeline_name: "front", source: "" },
-          { pipeline_name: "back", source: "" },
-          { pipeline_name: "content", source: "" }
+          { pipeline_name: "front", source: streams.front },
+          { pipeline_name: "back", source: streams.back },
+          { pipeline_name: "content", source: streams.content },
         ];
-        
+  
+        // Validate all streams before starting
+        const invalidPipelines = pipelines.filter((p) => !isValidStream(p.source));
+        if (invalidPipelines.length > 0) {
+          console.error("Invalid streams detected:", invalidPipelines);
+          return;
+        }
+  
         const response = await startVideoAnalyticsPipeline(pipelines, currentSessionId);
-        
+  
         // Process each result
         response.results.forEach((result: any) => {
           if (result.status === "success" && result.hls_stream) {
@@ -71,25 +83,50 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
             console.error(`Error with ${result.pipeline_name}:`, result.error);
           }
         });
-        
+  
         dispatch(setActiveStream("all"));
       } else {
         // Start individual pipeline
-        const pipelines = [{ pipeline_name: pipeline, source: "" }];
+        let source = "";
+        switch (pipeline) {
+          case "front":
+            source = streams.front;
+            break;
+          case "back":
+            source = streams.back;
+            break;
+          case "content":
+            source = streams.content;
+            break;
+        }
+  
+        // Validate the stream before starting
+        if (!isValidStream(source)) {
+          console.error(`Invalid stream for ${pipeline}:`, source);
+          return;
+        }
+  
+        // Prevent duplicate requests
+        if (activeStream === pipeline) {
+          console.log(`Pipeline ${pipeline} is already running.`);
+          return;
+        }
+  
+        const pipelines = [{ pipeline_name: pipeline, source }];
         const response = await startVideoAnalyticsPipeline(pipelines, currentSessionId);
         const result = response.results[0];
-        
+  
         if (result.status === "success" && result.hls_stream) {
           // Update the appropriate camera stream based on pipeline_name from response
           switch (result.pipeline_name) {
             case "front":
-              dispatch(setFrontCamera(result.hls_stream));
+              dispatch(setFrontCameraStream(result.hls_stream));
               break;
             case "back":
-              dispatch(setBackCamera(result.hls_stream));
+              dispatch(setBackCameraStream(result.hls_stream));
               break;
             case "content":
-              dispatch(setBoardCamera(result.hls_stream));
+              dispatch(setBoardCameraStream(result.hls_stream));
               break;
           }
           dispatch(setActiveStream(result.pipeline_name as "front" | "back" | "content"));
@@ -101,10 +138,10 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
       console.error("Failed to start video analytics pipeline:", error);
     }
   };
-
+  
   const isValidStream = (stream: string | null) => {
     // Check if the stream is a valid URL
-    return stream && stream.startsWith("http");
+    return stream && (stream.startsWith("http://") || stream.startsWith("https://") || stream.startsWith("rtsp://"));
   };
 
   return (
@@ -165,17 +202,17 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
             </div>
           ) : (
             <div className={`stream-container ${activeStream === "all" ? "split-screen" : ""}`}>
-              {activeStream === "all" && (
-                <>
-                  {streams.front && <iframe src={streams.front} scrolling="no" width="100%" height="auto" />}
-                  {streams.back && <iframe src={streams.back} scrolling="no" width="100%" height="auto" />}
-                  {streams.content && <iframe src={streams.content} scrolling="no" width="100%" height="auto" />}
-                </>
-              )}
-              {activeStream === "front" && streams.front && <iframe src={streams.front} scrolling="no" width="100%" height="auto" />}
-              {activeStream === "back" && streams.back && <iframe src={streams.back} scrolling="no" width="100%" height="auto" />}
-              {activeStream === "content" && streams.content && <iframe src={streams.content} scrolling="no" width="100%" height="auto" />}
-            </div>
+            {activeStream === "all" && (
+              <>
+                {streams.front && <HLSPlayer streamUrl={streams.front} />}
+                {streams.back && <HLSPlayer streamUrl={streams.back} />}
+                {streams.content&& <HLSPlayer streamUrl={streams.content} />}
+              </>
+            )}
+            {activeStream === "front" && streams.front && <HLSPlayer streamUrl={streams.front} />}
+            {activeStream === "back" && streams.back && <HLSPlayer streamUrl={streams.back} />}
+            {activeStream === "content" && streams.content && <HLSPlayer streamUrl={streams.content} />}
+          </div>
           )}
         </div>
       )}

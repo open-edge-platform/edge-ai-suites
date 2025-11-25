@@ -48,6 +48,7 @@ how-to-guides/index
 weld-anomaly-detection/index
 wind-turbine-anomaly-detection/index
 Release Notes <release_notes>
+troubleshoot-guide
 :::
 hide_directive-->
 
