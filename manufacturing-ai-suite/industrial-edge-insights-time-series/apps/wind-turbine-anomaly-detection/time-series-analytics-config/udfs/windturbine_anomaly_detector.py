@@ -117,22 +117,24 @@ class AnomalyDetectorHandler(Handler):
         """
         start_time = time.time_ns()
         check_for_anomalies = 1
-        server = None
         x = None
         y = None
 
+        stream_src = None
         if "source" in point.tags:
-            server = point.tags["source"]
+            stream_src = point.tags["source"]
+        elif "source" in point.fieldsString:
+            stream_src = point.fieldsString["source"]
+
 
         global enable_benchmarking
         if enable_benchmarking:
-            if server not in self.points_received:
-                self.points_received[server] = 0
-            if self.points_received[server] >= self.max_points:
+            if stream_src not in self.points_received:
+                self.points_received[stream_src] = 0
+            if self.points_received[stream_src] >= self.max_points:
                 return
-            self.points_received[server] += 1
-
-        logger.info("Processing point %s %s for source %s", point.time, time.time(), server)
+            self.points_received[stream_src] += 1
+        logger.info("Processing point %s %s for source %s", point.time, time.time(), stream_src)
 
         def process_the_point(x,y):
             if (math.isnan(x) or math.isnan(y)):
