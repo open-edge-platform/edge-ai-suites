@@ -65,10 +65,6 @@ So the effective expiration time is **1 hour RP + 1 hour shard duration
 | 1 hour | 1 hour | 2 hours |
 | 2 days | 1 hour | 2 days + 1 hr |
 | 30 days | 24 hours | 30 days + 24 hr |
-<<<<<<< HEAD
-=======
-
->>>>>>> 129e7302 ([DOCS] Fix issues in IEI Time Series docs)
 
 ### Solution
 
