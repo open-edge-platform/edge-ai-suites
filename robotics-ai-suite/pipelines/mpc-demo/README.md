@@ -44,28 +44,7 @@ It should be noted that the original OCS2 project is based on ROS1 Noetic, so th
 
 ### Install ROS2 Humble
 
-Please refer to the [official ROS2 Humble installation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html). The following is a quick installation guide:
-
-1. Setup the public ROS2 Humble APT repository:
-
-```
-sudo apt update && sudo apt install curl -y
-export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
-curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
-sudo dpkg -i /tmp/ros2-apt-source.deb
-```
-
-2. Install ROS2 Humble desktop:
-```
-sudo apt update
-sudo apt upgrage
-sudo apt install ros-humble-desktop
-```
-
-3. Source ros2 humble environment:
-```
-source /opt/ros/humble/setup.bash
-```
+Please refer to the [official ROS2 Humble installation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html).
 
 ### Install OCS2
 

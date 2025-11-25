@@ -3,9 +3,9 @@
 Model Predictive Control Demo
 #############################
 
-Model predictive control (MPC) is an advanced method of process control that is used to control a process while satisfying a set of constraints. Model predictive controllers rely on dynamic models of the process, most often linear empirical models obtained by system identification. The main advantage of MPC is the fact that it allows the current timeslot to be optimized, while keeping future timeslots in account. Also MPC has the ability to anticipate future events and can take control actions accordingly. These features can benefit current model-based roboics control in Perception-Action frequency gap, unsmoothness of generated trajectories, and potential collision.
+Model predictive control (MPC) is an advanced method of process control that is used to control a process while satisfying a set of constraints. Model predictive controllers rely on dynamic models of the process, most often linear empirical models obtained by system identification. The main advantage of MPC is the fact that it allows the current timeslot to be optimized, while keeping future timeslots in account. Also MPC has the ability to anticipate future events and can take control actions accordingly. These features can benefit current model-based robotics control in Perception-Action frequency gap, unsmoothness of generated trajectories, and potential collision.
  
-Here, we adopted an open-source MPC project named Optimal Control for Switched Systems (OCS2) and built a complete pipeline consisting of AI reference model(ACT), MPC(OCS2), and simulation(MUJOCO). The picture below shows the ROS node/topic graph of this demo with three modules: ACT AI model module (marked as red), OCS2 MPC optimization module (marked as green), and Mujoco simualtion module (marked as blue).
+Here, we adopted an open-source MPC project named Optimal Control for Switched Systems (OCS2) and built a complete pipeline consisting of AI reference model(ACT), MPC(OCS2), and simulation(MUJOCO). The picture below shows the ROS node/topic graph of this demo with three modules: ACT AI model module (marked as red), OCS2 MPC optimization module (marked as green), and Mujoco simulation module (marked as blue).
 
 .. image:: assets/images/mpc-ros-graph.jpg
    :width: 85%
@@ -37,34 +37,7 @@ It should be noted that the original OCS2 project is based on ROS1 Noetic, while
 Install ROS2 Humble
 :::::::::::::::::::
 
-Please refer to the `official ROS2 Humble installation <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html>`_. The following is a quick installation guide:
-
-#. Setup the public ROS2 Humble APT repository:
-
-   .. code-block:: bash
-    
-      $ sudo apt update && sudo apt install curl -y
-      $ export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
-      $ curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
-      $ sudo dpkg -i /tmp/ros2-apt-source.deb
-
-#. Install ROS2 Humble desktop:
-
-   .. code-block:: bash
-    
-      $ sudo apt update
-      $ sudo apt upgrage
-      $ sudo apt install ros-humble-desktop
-
-#. Source ros2 humble environment:
-
-   .. code-block:: bash
-    
-      $ source /opt/ros/humble/setup.bash
-
-   .. note::
-
-      Replace ``.bash`` with your shell if you’re not using bash. Possible values are: ``setup.bash``, ``setup.sh``, ``setup.zsh``.
+Please refer to the `official ROS2 Humble installation <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html>`_.
 
 Install OCS2
 :::::::::::::::::::::::::
@@ -102,7 +75,7 @@ Install OCS2
 
 3. Download ocs2 and ocs2_robotic_assets
 
-Download `ocs2 <https://github.com/AnnikaWU/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc_demo/ocs2>`_ and `ocs2_robotic_assets <https://github.com/AnnikaWU/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc_demo/ocs2_robotic_assets>`_ with ``git clone --recursive``. Then, initialize submodules and apply patches:
+Download `ocs2 <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc_demo/ocs2>`_ and `ocs2_robotic_assets <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc_demo/ocs2_robotic_assets>`_ with ``git clone --recursive``. Then, initialize submodules and apply patches:
 
    .. code-block:: bash
 
@@ -131,7 +104,7 @@ Download `ocs2 <https://github.com/AnnikaWU/edge-ai-suites/tree/main/robotics-ai
 MUJOCO setup
 ============
 
-Here, we adpoted and modified the open-source Mujoco Plugin project `MujocoRosUtils <https://github.com/isri-aist/MujocoRosUtils/tree/main>`_ to visualize and simulate the ACT cube transmiting task in Mujoco 2.3.7. Installatoin is as follows:
+Here, we adpoted and modified the open-source Mujoco Plugin project `MujocoRosUtils <https://github.com/isri-aist/MujocoRosUtils/tree/main>`_ to visualize and simulate the ACT cube transmiting task in Mujoco 2.3.7. Installation is as follows:
 
 1. Download Mujoco 2.3.7 library:
 

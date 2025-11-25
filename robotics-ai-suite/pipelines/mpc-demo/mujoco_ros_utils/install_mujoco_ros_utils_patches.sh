@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: APACHE-2.0
+
 # MuJoCo ROS Utils Patch Installation Script (Parameterized Version)
 # Usage: ./install_mujoco_ros_utils_patches.sh [patch-list-file]
 

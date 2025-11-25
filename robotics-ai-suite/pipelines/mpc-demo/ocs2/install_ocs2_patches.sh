@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: APACHE-2.0
+
 # OCS2 Project Patch Installation Script
 # Usage: ./install_ocs2_patches.sh [patch-list-file]
 
