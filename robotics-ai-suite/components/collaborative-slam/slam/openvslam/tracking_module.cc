@@ -776,7 +776,7 @@ bool tracking_module::search_all_landmarks()
     spdlog::debug(" {} of {} server landmarks(not existed in local map) are obserrved ", observed_server_landmarks_num,
                   server_landmarks.size());
 
-    spdlog::debug(" {} of {} landmarks are succesfully matched ", matched_num, nearby_landmarks.size());
+    spdlog::debug(" {} of {} landmarks are successfully matched ", matched_num, nearby_landmarks.size());
 
     return matched_num > min_matched_num_thr;
 }
@@ -852,7 +852,7 @@ bool tracking_module::search_local_landmarks()
     spdlog::debug(" {} of {} local landmarks are observed when tracking local map", observed_local_landmarks_num,
                   local_landmarks_.size());
 
-    spdlog::debug(" {} of {} local landmarks are succesfully matched ", matched_num, local_landmarks_.size());
+    spdlog::debug(" {} of {} local landmarks are successfully matched ", matched_num, local_landmarks_.size());
 
     return matched_num > min_matched_num_thr_;
 }

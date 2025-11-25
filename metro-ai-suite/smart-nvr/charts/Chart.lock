@@ -1,18 +1,18 @@
 dependencies:
 - name: frigate
   repository: file://subchart/frigate
-  version: 1.2.1
+  version: 1.2.2
 - name: nvr-event-router
   repository: file://subchart/nvr-event-router
-  version: 1.2.1
+  version: 1.2.2
 - name: nvr-event-router-ui
   repository: file://subchart/nvr-event-router-ui
-  version: 1.2.1
+  version: 1.2.2
 - name: mqtt-broker
   repository: file://subchart/mqtt-broker
-  version: 1.2.1
+  version: 1.2.2
 - name: redis
   repository: file://subchart/redis
-  version: 1.2.1
-digest: sha256:397d025cda5fce3a0d8cc4dffa54fbcb885cf7cba87535ce9452a72a0f45f869
-generated: "2025-10-29T19:26:36.992676738+05:30"
+  version: 1.2.2
+digest: sha256:aabb9a8d1e5722d3c797d055b549d7a76dba95ef5bb229de5235ef38f9eeb48d
+generated: "2025-11-14T21:14:41.301222497+05:30"

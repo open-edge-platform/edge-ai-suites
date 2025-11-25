@@ -123,7 +123,7 @@ void CameraFusionModule::process_new_keyframe(Keyframe* keyframe)
 {
     ClientID client1 = keyframe->client_id_;
     if (client_group_.find(client1) == client_group_.end()) {
-        spdlog::warn("Skip un-configurated client {}", client1);
+        spdlog::warn("Skip unconfigured client {}", client1);
         return;
     }
     int group = client_group_.at(client1);

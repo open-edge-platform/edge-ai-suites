@@ -58,9 +58,9 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    sudo systemctl start docker
    ```
 
-    ```bash
-    docker compose up -d
-    ```
+   ```bash
+   docker compose up -d
+   ```
 
 6.  Fetch the list of pipeline loaded available to launch:
 

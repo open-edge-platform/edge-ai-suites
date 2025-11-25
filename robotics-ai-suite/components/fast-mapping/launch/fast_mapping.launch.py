@@ -37,9 +37,18 @@ def generate_launch_description():
     """
 
     package_share_directory = get_package_share_directory('fast_mapping')
-    bags_dir = os.path.join('/opt/ros/humble', 'share', 'bagfiles', 'spinning')
+
+    # Get ROS distro from environment variable
+    ros_distro = os.environ.get('ROS_DISTRO', 'humble')
+    bags_dir = os.path.join(
+        '/opt/ros', ros_distro, 'share', 'bagfiles', 'spinning'
+    )
+
     rviz_dir = os.path.join(
-        package_share_directory, 'launch', 'config', 'fastmapping_tutorial_config.rviz'
+        package_share_directory,
+        'launch',
+        'config',
+        'fastmapping_tutorial_config.rviz'
     )
 
     # Define nodes and actions
@@ -71,7 +80,9 @@ def generate_launch_description():
 
     for i in range(len(nodes)):
         if i > 0:
-            delay_actions.append(TimerAction(period=delay_duration, actions=[]))
+            delay_actions.append(
+                TimerAction(period=delay_duration, actions=[])
+            )
 
     # Combine nodes and delay actions
     launch_description = LaunchDescription(nodes + delay_actions)
