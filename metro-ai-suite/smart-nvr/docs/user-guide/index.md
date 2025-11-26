@@ -63,7 +63,7 @@ The diagram shows the key components of the Smart NVR application. The descripti
 - [Get Started](./get-started.md): Follow step-by-step instructions to set up the application.
 - [How to build from source](./how-to-build-from-source.md): How to build and deploy the application using Docker Compose.
 - [How to Use the Application](./how-to-use-application.md): Explore the application's features and verify its functionality.
-- [Support and Troubleshooting](./Troubleshooting.md): Find solutions to common issues and troubleshooting steps.
+- [Support and Troubleshooting](./troubleshooting.md): Find solutions to common issues and troubleshooting steps.
 
 
 :::{toctree}

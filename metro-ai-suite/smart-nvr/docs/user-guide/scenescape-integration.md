@@ -5,7 +5,6 @@ This guide covers the integration of Intel Scenescape with Smart NVR for enhance
 ## Overview
 
 Smart NVR system integrates with Intel Scenescape to enable:
-
 - Real-time object counting and tracking (vehicles, pedestrians)
 - Traffic flow analysis
 - Automated event routing based on count thresholds
@@ -110,23 +109,12 @@ When Scenescape is enabled (`NVR_SCENESCAPE=true`) and scenescape source is sele
 
 When Scenescape is enabled but frigate source is selected:
 
+- Currently frigate object detection is disabled in this mode
 - Source dropdown still shows both **"frigate"** and **"scenescape"** options
 - **Count** field is automatically hidden (not applicable for frigate)
 - Standard frigate rule configuration with detection labels
 - Rules table shows "Count" column but displays "-" for frigate rules
 - Full frigate functionality remains available
-
-### With Scenescape Completely Disabled (`NVR_SCENESCAPE=false`)
-
-![Scenescape Disabled Interface](_images/Scenescape_disabled.png)
-
-When Scenescape is disabled in environment variables:
-
-- Source dropdown shows **only** "frigate" option
-- Count field is never visible
-- Rules table **excludes** the "Count" column entirely
-- Pure frigate-only functionality and interface
-- Scenescape MQTT client will not start
 
 ## Auto-Route Events Configuration
 
@@ -177,7 +165,6 @@ Action: Add to Search
 ### Common Issues
 
 **Scenescape features not visible:**
-
 ```bash
 # Check and set environment variable
 echo $NVR_SCENESCAPE  # Should show 'true'
