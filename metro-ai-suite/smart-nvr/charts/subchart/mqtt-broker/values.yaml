@@ -1,13 +1,33 @@
 image:
   repository: eclipse-mosquitto
   tag: 2.0
+
+auth:
+  mountPath: /mosquitto/secrets
+  passwordFilePath: /mosquitto/secrets/pwfile
+
 env:
   MQTT_USER: ""
   MQTT_PASSWORD: ""
 
-# Service configuration
 service:
-  # Name of the Service
   name: mqtt-broker
-  # Kubernetes Service type (ClusterIP, NodePort, LoadBalancer)
   type: ClusterIP
+
+podSecurityContext:
+  enabled: true
+  fsGroup: 1883
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1883
+  runAsGroup: 1883
+
+initContainerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1883
+  runAsGroup: 1883

@@ -61,7 +61,7 @@ helm install ibvs . --create-namespace -n ibvs \
 ```
 
 
-Now frontend should be accessible at https://<ip-addr>:30443/.
+Now frontend should be accessible at `https://<ip-addr>:30443/`.
 > Note: To access the above url remotely, replace the `<ip-addr>` with your system IP address. 
 
 Finally, the app can be uninstalled using the following command:
