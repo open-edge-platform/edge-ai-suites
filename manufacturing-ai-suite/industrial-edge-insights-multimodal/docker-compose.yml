@@ -311,9 +311,6 @@ services:
     restart: unless-stopped
     security_opt:
     - no-new-privileges
-    ports:
-    - '8080:8080'
-    - '8554:8554'
     depends_on:
       - ia-weld-data-simulator
     environment:
