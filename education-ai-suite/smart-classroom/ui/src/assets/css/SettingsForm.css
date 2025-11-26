@@ -1,7 +1,6 @@
 .settings-form {
   display: flex;
   flex-direction: column;
-  gap: 5px;
   font-family: "IntelOne Text", system-ui, sans-serif;
   padding: clamp(12px, 4vw, 18px);
   background-color: #fff;
@@ -29,7 +28,7 @@ h2 {
 .settings-body {
   display: flex;
   flex-direction: column;
-  gap: clamp(16px, 4vw, 24px);
+  gap: clamp(4vw, 24px);
   margin-bottom: 20px;
   width: 100%;
   max-width: 456px;
@@ -317,3 +316,23 @@ select {
 .w-75 { width: 75% !important; }
 .w-50 { width: 50% !important; }
 .w-25 { width: 25% !important; }
+
+.camera-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.camera-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.camera-input::placeholder {
+  color: #999;
+  font-style: italic;
+}

@@ -20,6 +20,8 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
   const activeStream = useAppSelector((state) => state.ui.activeStream);
   const sessionId = useAppSelector((state) => state.ui.sessionId);
   const videoAnalyticsLoading = useAppSelector((state) => state.ui.videoAnalyticsLoading);
+  const videoAnalyticsActive = useAppSelector((state) => state.ui.videoAnalyticsActive);
+  const isRecording = useAppSelector((state) => state.ui.aiProcessing);
   const streams = useAppSelector((state) => ({
     front: state.ui.frontCameraStream,
     back: state.ui.backCameraStream,
@@ -27,10 +29,12 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
   }));
  
   const isValidStream = (stream: string | null): boolean => {
-    const isValid = stream && (
+    const isValid = stream && stream.trim() !== '' && (
       stream.startsWith("http://") ||
       stream.startsWith("https://") ||
-      stream.startsWith("rtsp://")
+      stream.startsWith("rtsp://") ||
+      stream.includes("/stream") ||
+      stream.includes(".m3u8")
     );
     return !!isValid;
   };
@@ -38,15 +42,55 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
   const hasValidStreams = (): boolean => {
     return isValidStream(streams.front) || isValidStream(streams.back) || isValidStream(streams.content);
   };
+
+  const getAvailableStreams = () => {
+    const available = [];
+    if (isValidStream(streams.front)) available.push('front');
+    if (isValidStream(streams.back)) available.push('back');
+    if (isValidStream(streams.content)) available.push('content');
+    return available;
+  };
+
+  const getStreamStatus = () => {
+    if (videoAnalyticsLoading) {
+      return "loading";
+    }
+    if (videoAnalyticsActive && hasValidStreams()) {
+      return "active";
+    }
+    if (isRecording && !videoAnalyticsActive && !videoAnalyticsLoading) {
+      return "audio_only"; // Recording but no video analytics
+    }
+    return "inactive";
+  };
+
+  // Auto-select appropriate stream view based on available streams
+  React.useEffect(() => {
+    const availableStreams = getAvailableStreams();
+    if (availableStreams.length > 0 && videoAnalyticsActive) {
+      // If we have multiple streams, show all
+      if (availableStreams.length > 1) {
+        dispatch(setActiveStream('all'));
+      } else {
+        // If we have only one stream, show that specific stream
+        dispatch(setActiveStream(availableStreams[0] as "front" | "back" | "content"));
+      }
+    }
+  }, [streams.front, streams.back, streams.content, videoAnalyticsActive, dispatch]);
  
   console.log('VideoStream Debug:', {
     activeStream,
     streams,
+    videoAnalyticsActive,
+    videoAnalyticsLoading,
+    isRecording,
+    streamStatus: getStreamStatus(),
     isValidStreams: {
       front: isValidStream(streams.front),
       back: isValidStream(streams.back),
       content: isValidStream(streams.content)
-    }
+    },
+    availableStreams: getAvailableStreams()
   });
  
   const handleToggleRoomView = () => {
@@ -85,6 +129,8 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
       <p>Loading video streams...</p>
     </div>
   );
+
+  const streamStatus = getStreamStatus();
  
   return (
     <div className={`video-stream ${isRoomView ? "room-view" : "collapsed"} ${isFullScreen ? "full-screen" : ""}`}>
@@ -134,19 +180,32 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
        
       {isRoomView && (
         <div className="video-stream-body">
-          {videoAnalyticsLoading ? (
+          {streamStatus === "loading" ? (
             <div className="stream-placeholder">
               <Spinner />
               <p>Initializing video analytics...</p>
             </div>
-          ) : activeStream === null ? (
+          ) : streamStatus === "audio_only" ? (
+            <div className="stream-placeholder">
+              <img
+                src={streamingIcon}
+                alt="Audio Recording Icon"
+                className="streaming-icon"
+              />
+              <h3>Audio Recording Active</h3>
+              <p>Recording audio without video analytics.</p>
+              <p>Video analytics service may not be available or cameras not configured.</p>
+              <small>Configure cameras in settings to enable video analytics.</small>
+            </div>
+          ) : streamStatus === "inactive" ? (
             <div className="stream-placeholder">
               <img
                 src={streamingIcon}
                 alt="Streaming Icon"
                 className="streaming-icon"
               />
-              <p>Go to settings to configure your recorders or upload audio/video files</p>
+              <p>Configure cameras in settings to enable video analytics</p>
+              <p>Or upload audio/video files to get started</p>
               <button
                 className="upload-file-button"
                 onClick={() => setIsUploadModalOpen(true)}
@@ -154,21 +213,10 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
                 Upload File
               </button>
             </div>
-          ) : !hasValidStreams() ? (
-            <div className="stream-placeholder">
-              <p>No video streams available. Please upload files to start streaming.</p>
-              <button
-                className="upload-file-button"
-                onClick={() => setIsUploadModalOpen(true)}
-              >
-                Upload File
-              </button>
-            </div>
-          ) : (
+          ) : streamStatus === "active" && hasValidStreams() ? (
             <div className="streams-layout">
               {activeStream === "all" && (
                 <div className="multi-stream-container">
-                  {/* Main front camera stream */}
                   {streams.front && isValidStream(streams.front) && (
                     <div className="main-stream">
                       <HLSPlayer streamUrl={streams.front} />
@@ -176,7 +224,6 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
                     </div>
                   )}
                  
-                  {/* Side streams */}
                   <div className="side-streams-container">
                     {streams.back && isValidStream(streams.back) && (
                       <div className="side-stream">
@@ -214,6 +261,17 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
                   <div className="stream-overlay-label">Board Camera</div>
                 </div>
               )}
+            </div>
+          ) : (
+            <div className="stream-placeholder">
+              <img
+                src={streamingIcon}
+                alt="Streaming Icon"
+                className="streaming-icon"
+              />
+              <p>Video analytics attempted but no streams available</p>
+              <p>Check camera configurations or backend video service</p>
+              <small>Audio recording continues normally</small>
             </div>
           )}
         </div>
