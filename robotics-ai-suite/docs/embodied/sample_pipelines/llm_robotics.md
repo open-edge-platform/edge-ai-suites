@@ -74,51 +74,18 @@ This section shows how to set up a simulation of the JAKA robot-arm ROS2 applica
 
 1. Download the JAKA robot arm source code:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1 hide_directive-->
-
-   ```bash
-   cd ~/Downloads/
-   sudo apt source ros-jazzy-pykdl-utils ros-jazzy-jaka-bringup ros-jazzy-jaka-description ros-jazzy-jaka-hardware ros-jazzy-jaka-moveit-config ros-jazzy-jaka-moveit-py ros-jazzy-jaka-servo ros-jazzy-run-jaka-moveit ros-jazzy-run-jaka-plc
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
-
    ```bash
 
    cd ~/Downloads/
    sudo apt source ros-humble-pykdl-utils ros-humble-jaka-bringup ros-humble-jaka-description ros-humble-jaka-hardware ros-humble-jaka-moveit-config ros-humble-jaka-moveit-py ros-humble-jaka-servo ros-humble-run-jaka-moveit ros-humble-run-jaka-plc
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
-
 2. Create a workspace for the robot arm source code:
-
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
-
-   ```bash
-
-   mkdir -p ~/ws_jaka/src
-   cp -r ~/Downloads/ros-jazzy-jaka-bringup-3.2.0/robot_arm/ ~/ws_jaka/src
-   ```
-
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
 
    ```bash
    mkdir -p ~/ws_jaka/src
    cp -r ~/Downloads/ros-humble-jaka-bringup-3.2.0/robot_arm/ ~/ws_jaka/src
    ```
-
-   <!--hide_directive:::
-   ::::hide_directive-->
 
 3. Build the JAKA robot arm source code:
 

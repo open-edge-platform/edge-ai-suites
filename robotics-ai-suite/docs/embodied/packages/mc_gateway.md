@@ -15,42 +15,14 @@ This tutorial monitors and controls the RRBot, a double inverted pendulum robots
 
 #. If not already completed, install **ROS2 Desktop** components in the desired ROS distribution:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1 hide_directive-->
-
-   [https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html)
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
-
    [https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html)
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
-
 #. Install PLCopen Motion Control, ROS2 RRBot databus messages with IEC-61131-3 motion-control demo, and ROS2 RRBot MoveIt2 launcher:
-
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1 hide_directive-->
-
-   ```bash
-   sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf rt-data-agent ros-jazzy-controller-manager ros-jazzy-rrbot-bringup ros-jazzy-rrbot-moveit-demo
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
 
    ```bash
 
    sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf rt-data-agent ros-humble-controller-manager ros-humble-rrbot-bringup ros-humble-rrbot-moveit-demo
    ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
 #. Open a terminal and run the PLCopen IEC-61131-3 motion-control driver:
 
@@ -71,28 +43,11 @@ This tutorial monitors and controls the RRBot, a double inverted pendulum robots
 
 #. In the second terminal, set up the ROS2 environment and run the RRBot ROS2 demo:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1 hide_directive-->
-
-   ```bash
-    source /opt/ros/jazzy/setup.bash
-   export ROS_DOMAIN_ID=31
-   ros2 launch rrbot_bringup rrbot_moveit_demo.launch.py
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
-
    ```bash
    source /opt/ros/humble/setup.bash
    export ROS_DOMAIN_ID=31
    ros2 launch rrbot_bringup rrbot_moveit_demo.launch.py
    ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
    **Expected Result:**
 
@@ -145,45 +100,15 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
 
 #. If not already completed, install **ROS2 Desktop** components in the desired ROS distribution:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1 hide_directive-->
-
-   [https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html)
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
-
    [https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html)
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
-
 #. Install PLCopen Motion Control, ROS2 HIWIN databus messages with IEC-61131-3 motion-control demo, and ROS2 HIWIN MoveIt2 launcher:
-
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1 hide_directive-->
-
-   ```bash
-   sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
-   sudo apt install ros-jazzy-run-hiwin-plc
-   sudo apt install ros-jazzy-run-hiwin-moveit
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
 
    ```bash
    sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
    sudo apt install ros-humble-run-hiwin-plc
    sudo apt install ros-humble-run-hiwin-moveit
    ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
 #. Open a terminal and run the Robot-ARM PLCopen IEC-61131-3 motion-control driver:
 
@@ -202,28 +127,11 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
 
 #. In the second terminal, set up the ROS2 environment and run the ROS2 HIWIN databus messages with IEC-61131-3 motion-control demo:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1 hide_directive-->
-
-   ```bash
-   source /opt/ros/jazzy/setup.bash
-   export ROS_DOMAIN_ID=31
-   ros2 run run_hiwin_plc run_hiwin_plc
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
-
    ```bash
    source /opt/ros/humble/setup.bash
    export ROS_DOMAIN_ID=31
    ros2 run run_hiwin_plc run_hiwin_plc
    ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
 #. Open a third terminal with elevated permissions:
 
@@ -233,29 +141,11 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
 
 #. In the third terminal, set up the ROS2 environment and run the ROS2 HIWIN MoveIt2 launch file:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1 hide_directive-->
-
-   ```bash
-
-   source /opt/ros/jazzy/setup.bash
-   export ROS_DOMAIN_ID=31
-   ros2 launch run_hiwin_plc run_hiwin_plc.launch.py
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
-
    ```bash
    source /opt/ros/humble/setup.bash
    export ROS_DOMAIN_ID=31
    ros2 launch run_hiwin_plc run_hiwin_plc.launch.py
    ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
 
    The demo begins by computing a simple motion plan which is visualized via a transparent RobotState display. This step alone involves a large number of components, such as IK, collision checking, planning scene, robot model, OMPL planning plugin, and planner adapters. Immediately after, the trajectory is executed on the HIWIN `ros2_control` hardware interface.
@@ -306,44 +196,15 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
 
 #. If not already completed, install **ROS2 Desktop** components in the desired ROS distribution:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1 hide_directive-->
-
-   [https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html)
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
-
    [https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html)
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
-
 #. Install PLCopen Motion Control and the ROS2 AGVM databus messages with IEC-61131-3 motion-control demo:
-
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1 hide_directive-->
-
-   ```bash
-   sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
-   sudo apt install ros-jazzy-agvm
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
 
    ```bash
 
    sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
    sudo apt install ros-humble-agvm
    ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
 #. Run the Robot-ARM PLCopen IEC-61131-3 motion-control driver:
 
@@ -364,29 +225,11 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
 
 #. In the second terminal, set up the ROS2 environment and run the ROS2 AGVM databus messages with IEC-61131-3 motion-control demo:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1 hide_directive-->
-
-   ```bash
-
-   source /opt/ros/jazzy/setup.bash
-   export ROS_DOMAIN_ID=31
-   ros2 launch agvm agvm_base.launch.py
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
-
    ```bash
    source /opt/ros/humble/setup.bash
    export ROS_DOMAIN_ID=31
    ros2 launch agvm agvm_base.launch.py
    ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
    **Expected Result:**
 
@@ -425,28 +268,11 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
 
 #. In the third terminal, set up the ROS2 environment and run the following command:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
-
-   ```bash
-   source /opt/ros/jazzy/setup.bash
-   export ROS_DOMAIN_ID=31
-   ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: -0.1}, angular: {z: -0.1}}"
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
-
    ```bash
    source /opt/ros/humble/setup.bash
    export ROS_DOMAIN_ID=31
    ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: -0.1}, angular: {z: -0.1}}"
    ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
    **Note**: ``linear: {x: -0.1}`` is the linear velocity(m/s) for AMR. ``angular: {x: -0.1}`` is the angular velocity(rad/s) for Autonomous Mobile Robot.
 
