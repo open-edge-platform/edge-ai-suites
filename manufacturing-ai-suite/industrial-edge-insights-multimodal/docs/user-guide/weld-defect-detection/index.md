@@ -14,6 +14,7 @@ Let's discuss how this architecture translates to data flow in the weld defect d
 The Weld Data Simulator uses the sets of time synchronized .avi and .csv files from the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator/simulation-data/`, subset of test dataset coming from [Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset).
 It ingests the .avi files as RTSP streams via the **mediamtx** server. This enables real-time video ingestion, simulating camera feeds for weld defect detection.
 Similarly, it ingests the .csv files as data points into **Telegraf** using the **MQTT** protocol.
+
 ---
 
 ### 2. **Analytics Modules**
@@ -55,7 +56,7 @@ defect classification model, publishes the frame metadata results over MQTT and 
 
 ---
 
-#### 2.2. **Time Series Analytics Microservice**
+#### 2.2 **Time Series Analytics Microservice**
 
 **Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points point by point coming from **Telegraf**, runs the ML CatBoost model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. Also, publishes all the processed weld sensor data points over MQTT.
 
@@ -75,6 +76,7 @@ The `udfs` section specifies the details of the UDFs used in the task.
 | `models`| The name of the model file used by the UDF.                                 | `"weld_anomaly_detector.cb"`   |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
+
 ---
 
 **Alerts Configuration**:
@@ -91,15 +93,15 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 | `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
 | `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
 
-##### **`config/`**
-
-`kapacitor_devmode.conf` would be updated as per the `config.json` at runtime for usage.
 
 ##### **`udfs/`**
 
 Contains the python script to process the incoming data.
-Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with Intel® Extension for Scikit-learn*
-to run on CPU to detect the anomalous welding using sensor.
+Uses CatBoostClassifier machine learning algo from CatBoost library to run on CPU to
+detect the anomalous power generation data points relative to wind speed.
+
+**Note**: Please note, CatBoost models doesn't run on Intel GPUs.
+
 
 ##### **`tick_scripts/`**
 
@@ -109,7 +111,8 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 ##### **`models/`**
 
-The `weld_anomaly_detector.cb` is a model built using the Catboost machine learning library.
+The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier Algo of CatBoost ML
+library.
 
 ---
 
