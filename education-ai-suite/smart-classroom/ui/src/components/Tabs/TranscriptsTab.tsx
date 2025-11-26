@@ -16,44 +16,53 @@ const TranscriptsTab: React.FC = () => {
     console.log('Updated sessionId:', sessionId);
   }, [sessionId]);
 
-  useEffect(() => {
-    if (!aiProcessing || !audioPath || startedRef.current) return;
-    startedRef.current = true;
+// In TranscriptsTab.tsx
+useEffect(() => {
+  console.log('TranscriptsTab useEffect:', { aiProcessing, audioPath, startedRef: startedRef.current });
+  
+  // Don't start if there's an uploaded audio path (means UploadFilesModal is handling it)
+  if (!aiProcessing || !audioPath || startedRef.current || audioPath.includes('storage\\')) {
+    console.log('🚫 TranscriptsTab: Skipping - uploaded file detected or other condition');
+    return;
+  }
+  
+  console.log('🎤 TranscriptsTab: Starting transcript stream');
+  startedRef.current = true;
 
-    const aborter = new AbortController();
-    abortRef.current = aborter;
+  const aborter = new AbortController();
+  abortRef.current = aborter;
 
-    const run = async () => {
-      const stream = streamTranscript(audioPath, {
-        signal: aborter.signal,
-        tokenDelayMs: 120,
-        onSessionId: (id) => {
-          console.log('Dispatching setSessionId:', id);
-          dispatch(setSessionId(id));
-        }, 
-      });
-      let sentFirst = false;
-      try {
-        for await (const ev of stream) {
-          if (ev.type === "transcript") {
-            if (!sentFirst) { dispatch(startTranscript()); sentFirst = true; }
-            dispatch(appendTranscript(ev.token));
-          } else if (ev.type === 'error') {
-            window.dispatchEvent(new CustomEvent('global-error', { detail: ev.message || 'Transcription error' }));
-            dispatch(finishTranscript());
-            break;
-          } else if (ev.type === 'done') {
-            dispatch(finishTranscript());
-            dispatch(transcriptionComplete());
-            break;
-          }
+  const run = async () => {
+    const stream = streamTranscript(audioPath, {
+      signal: aborter.signal,
+      tokenDelayMs: 120,
+      onSessionId: (id) => {
+        console.log('Dispatching setSessionId:', id);
+        dispatch(setSessionId(id));
+      }, 
+    });
+    let sentFirst = false;
+    try {
+      for await (const ev of stream) {
+        if (ev.type === "transcript") {
+          if (!sentFirst) { dispatch(startTranscript()); sentFirst = true; }
+          dispatch(appendTranscript(ev.token));
+        } else if (ev.type === 'error') {
+          window.dispatchEvent(new CustomEvent('global-error', { detail: ev.message || 'Transcription error' }));
+          dispatch(finishTranscript());
+          break;
+        } else if (ev.type === 'done') {
+          dispatch(finishTranscript());
+          dispatch(transcriptionComplete());
+          break;
         }
-      } catch { /* ignore aborts */ }
-    };
+      }
+    } catch { /* ignore aborts */ }
+  };
 
-    run();
-    return () => aborter.abort();
-  }, [dispatch, aiProcessing, audioPath]);
+  run();
+  return () => aborter.abort();
+}, [dispatch, aiProcessing, audioPath]);
 
   const text = finalText ?? streamingText;
 

@@ -2,12 +2,12 @@
 
 ## Current Release
 
-**Version**: 1.2.2 \
-**Release Date**: 14 November 2025
+**Version**: 1.2.3 \
+**Release Date**: 24 November 2025
 
 **New Features**
 
-- Bug Fixes
+- Minor Fixes
 
 **Known Issues**
 
@@ -18,6 +18,13 @@
 
 
 ## Previous Release
+
+**Version**: 1.2.2 \
+**Release Date**: 14 November 2025
+
+**New Features**
+
+- Bug Fixes
 
 **Version**: 1.2.1 \
 **Release Date**: 30 October 2025

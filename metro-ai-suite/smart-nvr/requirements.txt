@@ -1,6 +1,7 @@
 # For directory watcher support
 watchdog==4.0.0
-fastapi==0.115.5  # Upgraded for starlette 0.49.1 compatibility (CVE fix)
+fastapi==0.121.0  # Allows starlette >=0.49 for CVE-2025-62727
+starlette==0.49.3  # Patched release for CVE-2025-62727
 uvicorn[standard]==0.29.0  # Upgraded from 0.24.0
 requests==2.32.4  # Upgraded from 2.31.0 (fixes CVE-2024-35195 and CVE-2024-47081)
 aiofiles==23.2.1  # Latest is 23.2.1 (no update needed)
