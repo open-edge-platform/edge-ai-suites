@@ -124,7 +124,7 @@ library.
 
 **InfluxDB** stores the incoming data coming from **Telegraf**, **Time Series Analytics Microservice** and **Fusion Analytics** .
 
-### 3. **Data Visualization**
+### 4. **Data Visualization**
 
 **Grafana** provides an intuitive user interface for visualizing time series data stored in **InfluxDB** and also rendering the output of `DL Streamer Pipeline Server` coming as WebRTC stream. Additionally, it visualizes the fusion analytics results stored in **InfluxDB**.
 
