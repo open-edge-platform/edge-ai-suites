@@ -33,8 +33,26 @@
       "ok": "OK",
       "projectNamePlaceholder": "Enter project name",
       "projectLocationPlaceholder": "Select project folder",
-      "ipMicrophone": "IP Microphone"
+      "ipMicrophone": "IP Microphone",
+      "frontCamera": "Front Camera",
+      "backCamera": "Back Camera",
+      "boardCamera": "Board Camera",
+      "defaultFrontCamera": "Default Front Camera",
+      "defaultBackCamera": "Default Back Camera",
+      "defaultBoardCamera": "Default Board Camera",
+      "frontCamera1": "Front Camera 1",
+      "frontCamera2": "Front Camera 2",
+      "backCamera1": "Back Camera 1",
+      "backCamera2": "Back Camera 2",
+      "boardCamera1": "Board Camera 1",
+      "boardCamera2": "Board Camera 2"
     },
+    "uploadFiles": {
+    "title": "Upload Files",
+    "audioPath": "Audio Path",
+    "videoPath": "Video Path",                             
+    "applyAndStart": "Apply and Start Processing"
+  },
     "menu": {
       "settings": "Settings",
       "help": "Help",

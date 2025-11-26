@@ -128,3 +128,4 @@ Learn More
    get-started
    deploy-with-helm
    tutorials
+   release-notes

@@ -5,7 +5,7 @@ global:
   claimSize: "50Gi"  
   # keepPvc should be set to true to retain the PVC after uninstalling the chart.
   keepPvc: false
-  storageClassName: 
+  storageClassName: ""
 
   proxy:
     no_proxy: ""
