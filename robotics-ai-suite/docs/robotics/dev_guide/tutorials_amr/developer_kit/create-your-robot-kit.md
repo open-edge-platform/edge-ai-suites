@@ -1,19 +1,15 @@
-Create Your Own Robot Kit
-==========================
+# Create Your Own Robot Kit
 
 This tutorial guides guides you through creating an autonomous mobile robot capable of
 exploring and mapping an area. It involves adding an Intel® compute system, placing a
 Intel® RealSense™ camera on top of any robot base, and using the Autonomous Mobile Robot software.
 
-Use the :doc:`robot-keyboard-teleop` ROS 2 node to validate that the robot kit's hardware
+Use the [robot-keyboard-teleop](./robot-keyboard-teleop.rst) ROS 2 node to validate that the robot kit's hardware
 setup has been done correctly.
 
+## Requirements
 
-Requirements
-#############
-
-Hardware Requirements
-+++++++++++++++++++++
+### Hardware Requirements
 
 The robot base should contain:
 
@@ -32,9 +28,7 @@ The robot base should contain:
 
 *  Batteries for all components
 
-
-Software Requirements
-+++++++++++++++++++++
+### Software Requirements
 
 The robot base should feature a ROS 2 node with the ability to:
 
@@ -59,29 +53,24 @@ The robot base should feature a ROS 2 node with the ability to:
    This ROS 2 node runs on the compute system and retrieving information from the
    motor robot's controller via a wired connection, usually a USB connection.
 
-Steps To Create Your Own Robot Kit
-##################################
+## Steps To Create Your Own Robot Kit
 
-
-Step 1: Prerequisites
-+++++++++++++++++++++++++
+### Step 1: Prerequisites
 
 To create a functional autonomous mobile robot, follow the instructions of the manufacturer.
 
 The standard assembly involves the following steps:
 
-#. Mount the motors onto the lower chassis board and then assemble the wheels.
-#. Fix the motor controller on the chassis board and establish connections with the motors.
-#. Attach the Intel® RealSense™ camera and the SSD drive to the upper chassis board.
-#. Mount the Intel® compute system to the the upper chassis board.
-#. Connect the two chassis boards.
-#. Establish a connection between the Intel® compute system and both Intel® RealSense™ camera and motor controller via USB.
-#. Connect both the the Intel® compute system and the motor controller to a power source.
-#. Power the Intel® compute system using a power source.
+1. Mount the motors onto the lower chassis board and then assemble the wheels.
+2. Fix the motor controller on the chassis board and establish connections with the motors.
+3. Attach the Intel® RealSense™ camera and the SSD drive to the upper chassis board.
+4. Mount the Intel® compute system to the the upper chassis board.
+5. Connect the two chassis boards.
+6. Establish a connection between the Intel® compute system and both Intel® RealSense™ camera and motor controller via USB.
+7. Connect both the the Intel® compute system and the motor controller to a power source.
+8. Power the Intel® compute system using a power source.
 
-
-Step 2: Integration into Autonomous Mobile Robot
-+++++++++++++++++++++++++++++++++++++++++++++++++++
+### Step 2: Integration into Autonomous Mobile Robot
 
 Start the robot base ROS 2 node on the native system OS or inside a Docker
 container.
@@ -90,11 +79,9 @@ the Autonomous Mobile Robot pipeline are configured with the same ROS_DOMAIN_ID.
 
 .. _create_your_robot_kit_step3:
 
-Step 3: Robot Base Node ROS 2 Node
-++++++++++++++++++++++++++++++++++++
+### Step 3: Robot Base Node ROS 2 Node
 
-Introduction to Robotic Base Node
------------------------------------
+#### Introduction to Robotic Base Node
 
 The Autonomous Mobile Robot pipeline assumes that the robot base ROS 2 node:
 
@@ -113,63 +100,140 @@ The Autonomous Mobile Robot pipeline assumes that the robot base ROS 2 node:
 *  Is subscribed to ``cmd_vel`` which is used by the Navigation 2 package to
    give instructions to the robot like spin in place or move forward
 
-The Autonomous Mobile Robot provides the following examples with the ``ros-humble-aaeon-ros2-amr-interface`` Deb package:
+The Autonomous Mobile Robot provides the following examples within Deb packages:
+
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1hide_directive-->
+
+In ``ros-jazzy-aaeon-ros2-amr-interface`` Deb package:
+
+* `/opt/ros/jazzy/share/ros2_amr_interface/params/aaeon_node_params_uncalibrated_imu.yaml`
+* `/opt/ros/jazzy/share/ros2_amr_interface/params/aaeon_node_params.yaml`
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2hide_directive-->
+
+In ``ros-humble-aaeon-ros2-amr-interface`` Deb package:
 
 * `/opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params_uncalibrated_imu.yaml`
 * `/opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml`
 
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
+
 These samples are for the `AAEON UP Xtreme* i11 Robotic Development Kit <https://up-shop.org/up-xtreme-i11-robotic-kit.html>`__.
 
-Robotic Base Node Deep Dive
---------------------------------
+#### Robotic Base Node Deep Dive
 
 This section details the commands required to startup the motor controller of an AAEON UP Xtreme i11 Robotic Development Kit.
 
 To start the node on the AAEON UP Xtreme i11 Robotic Development Kit, you can reference and initiate it as follows:
 
-* Ensure that the ``ros-humble-aaeon-ros2-amr-interface`` Deb package is installed.
+* Ensure that the `ROS2 AMR Interface` Deb package is installed:
 
-  .. code-block:: bash
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1hide_directive-->
+
+  ```bash
+
+     sudo apt update
+     sudo apt install ros-jazzy-aaeon-ros2-amr-interface
+  ```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2hide_directive-->
+
+  ```bash
 
      sudo apt update
      sudo apt install ros-humble-aaeon-ros2-amr-interface
+  ```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 * Check the device name of the motor controller.
 
-  .. code-block:: bash
+  ```bash
 
      sudo dmesg | grep ttyUSB
+  ```
 
 * The output should contain the ``ch341-uart`` device providing the interface to the motor controller board.
 
-  .. code-block:: bash
+  ```bash
 
      [1452443.462213] usb 1-9: ch341-uart converter now attached to ttyUSB0
      [1452444.061111] ch341-uart ttyUSB0: ch341-uart converter now disconnected from ttyUSB0
+  ```
 
 * Ensure the AAEON UP Xtreme i11 Robotic Development Kit node configuration file has the proper USB device configured as value of  ``port_name``.
 
-  .. code-block:: bash
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1hide_directive-->
 
-     vi /opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml
+```bash
+
+   vi /opt/ros/jazzy/share/ros2_amr_interface/params/aaeon_node_params.yaml
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2hide_directive-->
+
+```bash
+
+   vi /opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 * Start the motor control node.
 
-  .. code-block:: bash
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1hide_directive-->
 
-     AAEON_NODE_CONFIG_FILE=/opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml
+```bash
+
+     AAEON_NODE_CONFIG_FILE=/opt/ros/jazzy/share/ros2_amr_interface/params/aaeon_node_params.yaml
 
      # Launch the AAEON Robot Motor Board Interface
      ros2 run ros2_amr_interface amr_interface_node --ros-args \
         --params-file $AAEON_NODE_CONFIG_FILE \
         --remap /amr/cmd_vel:=/cmd_vel \
         --remap /amr/battery:=/sensors/battery_state
+  ```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2hide_directive-->
+
+```bash
+
+   AAEON_NODE_CONFIG_FILE=/opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml
+
+   # Launch the AAEON Robot Motor Board Interface
+   ros2 run ros2_amr_interface amr_interface_node --ros-args \
+      --params-file $AAEON_NODE_CONFIG_FILE \
+      --remap /amr/cmd_vel:=/cmd_vel \
+      --remap /amr/battery:=/sensors/battery_state
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 You can check the following:
 
 -  ROS 2 topics
 
-   .. code-block::
+   ```bash
 
       ros2 topic list
       # The result for UP Xtreme i11 Robotic Kit is similar to:
@@ -188,10 +252,11 @@ You can check the following:
       # /odom
       # /parameter_events
       # /tf
+   ```
 
 -  ``odom`` and ``base_link`` frames
 
-   .. code-block::
+   ```
 
       ros2 run tf2_tools view_frames.py
       cp frames.pdf /home/<user>
@@ -202,18 +267,15 @@ You can check the following:
 
 .. _create_your_robot_kit_step4:
 
-Step 4: Robot Base Node ROS 2 Navigation Parameter File
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+### Step 4: Robot Base Node ROS 2 Navigation Parameter File
 
-Introduction to the ROS 2 Navigation Parameter File
-----------------------------------------------------------
+#### Introduction to the ROS 2 Navigation Parameter File
 
 The Autonomous Mobile Robot pipeline for AMRs uses the `Navigation 2 package
 <https://navigation.ros.org/>`__ from ROS 2. Setting parameters specific to the
 robot and the mapping area is essential for the Navigation 2 packages to function properly.
 
-Robot Navigation Parameter File
--------------------------------
+#### Robot Navigation Parameter File
 
 To help understand the options in this parameter file, see ROS 2 `Navigation 2
 Packages Configuration Guide <https://navigation.ros.org/configuration/index.html>`__:
@@ -262,11 +324,9 @@ The most important parameters to set are:
    rotational velocity allowed for the base in radians/second.
 
 
-Step 5: Navigation Full Stack
-+++++++++++++++++++++++++++++++++++
+### Step 5: Navigation Full Stack
 
-Introduction to the Navigation Full Stack
--------------------------------------------
+#### Introduction to the Navigation Full Stack
 
 The Autonomous Mobile Robot navigation full stack contains numerous components designed to assist the robot in navigation, obstacle avoidance, and mapping an area. For example:
 
@@ -301,65 +361,146 @@ The Autonomous Mobile Robot navigation full stack contains numerous components d
    ROS 2 navigation stack to navigate a robot within an unknown environment without hitting
    obstacles.
 
+#### Create a Parameter File for Your Robotic Kit
 
-Create a Parameter File for Your Robotic Kit
-----------------------------------------------
-
-The :doc:`../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial` tutorial provides a parameter file for the AAEON UP Xtreme i11 Robotic Development Kit, that file can be used as a template to create a parameter file for your robotic kit.
+The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial.rst) tutorial provides a parameter file for the AAEON UP Xtreme i11 Robotic Development Kit, that file can be used as a template to create a parameter file for your robotic kit.
 
 * First install the tutorial.
 
-.. code-block:: bash
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1hide_directive-->
+
+```bash
+
+   sudo apt update
+   sudo apt install ros-jazzy-wandering-aaeon-tutorial
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2hide_directive-->
+
+```bash
 
    sudo apt update
    sudo apt install ros-humble-wandering-aaeon-tutorial
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 * Use the AAEON UP Xtreme i11 Robotic Development Kit navigation parameter file as a template, make a copy of it, and adapt the content to match your robot.
 
-.. code-block::
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1hide_directive-->
+
+```bash
+
+   # Replace <your_robot>_robot_nav to a name that makes sense to your robotic kit.
+   cp /opt/ros/jazzy/share/wandering_aaeon_tutorial/params/aaeon_nav.param.yaml /opt/ros/jazzy/share/wandering_aaeon_tutorial/params/<your_robot>_nav.param.yaml
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2hide_directive-->
+
+```bash
 
    # Replace <your_robot>_robot_nav to a name that makes sense to your robotic kit.
    cp /opt/ros/humble/share/wandering_aaeon_tutorial/params/aaeon_nav.param.yaml /opt/ros/humble/share/wandering_aaeon_tutorial/params/<your_robot>_nav.param.yaml
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 * Make all of the changes that are specific to your robotic kit:
 
-.. code-block::
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1hide_directive-->
 
+```bash
+   vi /opt/ros/jazzy/share/wandering_aaeon_tutorial/params/<your_robot>_nav.param.yaml
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2hide_directive-->
+
+```bash
    vi /opt/ros/humble/share/wandering_aaeon_tutorial/params/<your_robot>_nav.param.yaml
+```
 
-#. Replace the ``aaeon-amr-interface`` target with the generic robot node you created in ":ref:`create_your_robot_kit_step3`".
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
-#. In the ROS 2 command file, change the Navigation 2 target so that
-   ``params_file`` targets the parameter file you created in ":ref:`create_your_robot_kit_step4`".
+1. Replace the ``aaeon-amr-interface`` target with the generic robot node you created in [Step 3](#step-3-robot-base-node-ros-2-node).
+
+2. In the ROS 2 command file, change the Navigation 2 target so that
+   ``params_file`` targets the parameter file you created in [Step 4](#step-4-robot-base-node-ros-2-navigation-parameter-file).
+
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: tab1hide_directive-->
+
+   from: ``params_file:=/opt/ros/jazzy/share/ros2_amr_interface/params/<your_robot>_node_params.yaml``
+
+   to: ``params_file:=/opt/ros/jazzy/share/wandering_aaeon_tutorial/params/<your_robot>_nav.param.yaml``
+
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: tab2hide_directive-->
 
    from: ``params_file:=/opt/ros/humble/share/ros2_amr_interface/params/<your_robot>_node_params.yaml``
 
    to: ``params_file:=/opt/ros/humble/share/wandering_aaeon_tutorial/params/<your_robot>_nav.param.yaml``
 
-#. In the ``ros-base-camera-tf`` target, change the transform values from
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
+
+3. In the ``ros-base-camera-tf`` target, change the transform values from
    ``static_transform_publisher``. The values for x, y, and z depend on where
    your Intel® RealSense™ camera is set.
 
-Start Mapping an Area with Your Robot
-----------------------------------------
+#### Start Mapping an Area with Your Robot
 
-#. Place the robot in an area with multiple objects around it.
+1. Place the robot in an area with multiple objects around it.
 
-#. Check that Autonomous Mobile Robot environment is set:
+2. Check that Autonomous Mobile Robot environment is set:
 
-   Run the following script to create a map by using the :doc:`../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial`.
+   Run the following script to create a map by using the [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial.rst)
 
-   .. code-block:: bash
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1hide_directive-->
 
-      source /opt/ros/humble/setup.bash
-      export ROS_DOMAIN_ID=<value>
-      /opt/ros/humble/share/wandering_aaeon_tutorial/scripts/wandering_aaeon.sh
+```bash
 
-#. Follow the :doc:`../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial` tutorial.
+   source /opt/ros/jazzy/setup.bash
+   export ROS_DOMAIN_ID=<value>
+   /opt/ros/humble/share/wandering_aaeon_tutorial/scripts/wandering_aaeon.sh
+```
 
-Troubleshooting
-----------------
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2hide_directive-->
+
+```bash
+
+   source /opt/ros/humble/setup.bash
+   export ROS_DOMAIN_ID=<value>
+   /opt/ros/humble/share/wandering_aaeon_tutorial/scripts/wandering_aaeon.sh
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
+
+3. Follow the [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial.rst).
+
+#### Troubleshooting
 
 You can stop the demo anytime by pressing ``ctrl-C``.
 
-For general robot issues, go to: :doc:`../robot-tutorials-troubleshooting`.
+For general robot issues, go to: [robot-tutorials-troubleshooting](../robot-tutorials-troubleshooting.rst).

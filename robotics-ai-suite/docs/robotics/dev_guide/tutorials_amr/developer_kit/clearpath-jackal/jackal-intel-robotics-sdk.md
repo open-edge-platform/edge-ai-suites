@@ -1,5 +1,4 @@
-Install the Autonomous Mobile Robot on the Jackal Onboard Computer
-====================================================================
+# Install the Autonomous Mobile Robot on the Jackal Onboard Computer
 
 This chapter describes how to install the Autonomous Mobile Robot together with the
 ROS 2 middleware and the Clearpath Robotics ecosystem on
@@ -11,116 +10,97 @@ ROS 2 Humble, and the Clearpath Robotics software packages. Intel
 recommends using the pre-installed software for the initial bring-up
 of your Jackal robot. During the initial bring-up, you should also update
 the firmware of the MCU, as described on the
-`Robot Installation
-<https://docs.clearpathrobotics.com/docs/ros/installation/robot/>`__
+[Robot Installation](https://docs.clearpathrobotics.com/docs/ros/installation/robot/)
 page of the Clearpath Robotics documentation.
 
 We recommend that you create a backup of the default software installation
 or replace the pre-installed SATA M.2 SSD with an empty storage device,
 before you continue with the next steps.
 
-Install ROS 2 Humble and the Autonomous Mobile Robot
------------------------------------------------------------
+## Install ROS 2 Humble and the Autonomous Mobile Robot
 
 To install ROS 2 Humble and the Autonomous Mobile Robot on the
 Clearpath Robotics Jackal robot, follow the instructions in the
-:doc:`../../../../gsg_robot/index` of the Autonomous Mobile Robot.
+[GSG Robot Guide](../../../../gsg_robot/index.rst)` of the Autonomous Mobile Robot.
 
 Since the Clearpath Robotics services will need an account with the
 username ``administrator``, you can create this account during the
 installation of the Canonical Ubuntu operating system. Otherwise, you can create this
 account and set its group membership by means of:
 
-.. code-block:: bash
+```bash
 
    sudo adduser administrator
    sudo usermod -a -G sudo administrator
+```
 
-
-.. _install-clearpath-software-packages:
-
-Install the Clearpath Robotics Software Packages
---------------------------------------------------
+## Install the Clearpath Robotics Software Packages
 
 After you have installed ROS 2 Humble and the Autonomous Mobile Robot, you also need the
 ROS 2 development tools (compilers and other tools to build ROS 2 packages).
 They can be installed as described by the official
-`ROS 2 Installation Instructions
-<https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html>`__:
+[ROS 2 Installation Instructions](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html):
 
-.. code-block:: bash
+```bash
 
    sudo apt-get install ros-dev-tools
+```
 
 Now you can install the Clearpath Robotics software packages as described in the
-`Package Install <https://docs.clearpathrobotics.com/docs/ros/installation/robot/#package-install>`__
-section of the Clearpath Robotics documentation. Clearpath Robotics offers two
+[Package Install](https://docs.clearpathrobotics.com/docs/ros/installation/robot/#package-install) section of the Clearpath Robotics documentation. Clearpath Robotics offers two
 alternative ways to install the software:
 
-* `Option 1: Install Script
-  <https://docs.clearpathrobotics.com/docs/ros/installation/robot/#option-1-install-script>`__
-  uses an automated installer.
-* `Option 2: Manual Source Install
-  <https://docs.clearpathrobotics.com/docs/ros/installation/robot/#option-2-manual-source-install>`__
-  provides detailed instructions on how to install the software with higher flexibility.
+* [Option 1: Install Script](https://docs.clearpathrobotics.com/docs/ros/installation/robot/#option-1-install-script) uses an automated installer.
+* [Option 2: Manual Source Install](https://docs.clearpathrobotics.com/docs/ros/installation/robot/#option-2-manual-source-install) provides detailed instructions on how to install the software with higher flexibility.
 
 Use one of these procedures to install the software on the Jackal onboard computer.
 
-
-.. _create-your-robot-config:
-
-Create Your Robot Configuration
--------------------------------
+## Create Your Robot Configuration
 
 This section describes how you can create the ``robot.yaml`` configuration
 file for your Jackal robot with an Intel® RealSense™ camera D435i. Make sure
 that you have completed the steps described in the previous section,
-:ref:`install-clearpath-software-packages`.
-
+[Install Clearpath Software Packages](#install-the-clearpath-robotics-software-packages).
 
 .. _identify-realsense-serial-number:
 
-Identify the Serial Number of your Intel® RealSense™ Camera
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### Identify the Serial Number of your Intel® RealSense™ Camera
 
 The serial number of the Intel® RealSense™ camera has to be included in the
 ``robot.yaml`` file. To identify the serial number, connect the camera
 to the onboard computer of the Jackal robot and run this command:
 
-.. code-block:: bash
+```bash
 
    ros2 launch realsense2_camera rs_launch.py
+```
 
 The output of this command will print the serial number. The serial
 number of the camera in the example below is ``207522xxxx38`` (some digits
 are masked here to preserve confidentiality).
 
-.. code-block:: text
+```txt
 
    [realsense2_camera_node-1] [INFO] [1709051840.999128954] [camera.camera]: RealSense ROS v4.54.1
    [realsense2_camera_node-1] [INFO] [1709051840.999193090] [camera.camera]: Built with LibRealSense v2.55.0
    [realsense2_camera_node-1] [INFO] [1709051840.999200850] [camera.camera]: Running with LibRealSense v2.55.0
    [realsense2_camera_node-1] [INFO] [1709051841.005234011] [camera.camera]: Device with serial number 207522xxxx38 was found.
+```
 
 Now you can stop the command by pressing ``Ctrl-c``.
 
-.. note::
+> **Note:** Don't use the command ``lsusb -v`` to identify the serial number. The
+  number displayed by this command might differ from the true serial number.
 
-   Don't use the command ``lsusb -v`` to identify the serial number. The
-   number displayed by this command might differ from the true serial number.
-
-
-Create your Robot YAML File
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### Create your Robot YAML File
 
 To create the ``robot.yaml`` file with the configuration of your
 Jackal robot, follow the instructions on the
-`Robot YAML Overview <https://docs.clearpathrobotics.com/docs/ros/config/yaml/overview/>`__
+[Robot YAML Overview](https://docs.clearpathrobotics.com/docs/ros/config/yaml/overview/)
 page of the Clearpath Robotics documentation. As a starting point, you
 can use the example configuration
-`j100_sample.yaml <https://github.com/clearpathrobotics/clearpath_config/blob/main/clearpath_config/sample/j100/j100_sample.yaml>`__
-in the Clearpath Robotics
-`configuration repository <https://github.com/clearpathrobotics/clearpath_config>`__.
+[j100_sample.yaml](https://github.com/clearpathrobotics/clearpath_config/blob/main/clearpath_config/sample/j100/j100_sample.yaml) in the Clearpath Robotics
+[configuration repository](https://github.com/clearpathrobotics/clearpath_config).
 Open this yaml file with an editor and adapt the sections ``serial_number``
 and ``system`` according to your needs.
 
@@ -141,26 +121,23 @@ and ``system`` according to your needs.
   other ROS 2 installations in your neighborhood. The value that you
   use here will be propagated into the ``/etc/clearpath/setup.bash`` script,
   whose execution has been added to your ``~/.basrc`` script when you
-  executed one of the installation options in section
-  :ref:`install-clearpath-software-packages`.
+  executed one of the installation options in the section
+  [Install](#install-the-clearpath-robotics-software-packages)`install-clearpath-software-packages`.
   In consequence, your ``ROS_DOMAIN_ID`` environment variable will be
   set to the value that you define here.
-* If you have used the manual installation option in section
-  :ref:`install-clearpath-software-packages`, add the ``workspaces`` entry
+* If you have used the manual installation option in the [Install Clearpath Software Packages](#install-the-clearpath-robotics-software-packages) section, add the ``workspaces`` entry
   to the ``system/ros2`` section. This entry provides a list of setup
   scripts that need to be sourced. Provide the path to the ``setup.bash``
   script of the workspace that was created when you executed the steps in
-  `Option 2: Manual Source Install <https://docs.clearpathrobotics.com/docs/ros/installation/robot/#option-2-manual-source-install>`__,
-  section "Source Install". The path of this script is
+  [Option 2: Manual Source Install](https://docs.clearpathrobotics.com/docs/ros/installation/robot/#option-2-manual-source-install), section "Source Install". The path of this script is
   ``/home/administrator/clearpath_ws/install/setup.bash``
 
 Details on these configuration entries are provided on the
-`System
-<https://docs.clearpathrobotics.com/docs/ros/config/yaml/system/>`__
+[System](https://docs.clearpathrobotics.com/docs/ros/config/yaml/system/)
 page of the Clearpath Robotics documentation. To provide an example,
 the following listing shows the first sections of a ``robot.yaml`` file.
 
-.. code-block:: text
+```txt
 
    serial_number: j100-1234
    version: 0
@@ -175,6 +152,7 @@ the following listing shows the first sections of a ``robot.yaml`` file.
          - /home/administrator/clearpath_ws/install/setup.bash
    platform:
      ...
+```
 
 After you have completed the configuration, copy the ``robot.yaml`` file
 to the ``/etc/clearpath/`` folder on the onboard computer of your
@@ -191,21 +169,19 @@ configured your ``robot.yaml`` file, you can run the commands
 the Clearpath Robotics services have started the Jackal-specific ROS 2
 nodes, so that the related ROS 2 topics are published.
 
-
-Add your Intel® RealSense™ Camera D435i to the Robot YAML File
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### Add your Intel® RealSense™ Camera D435i to the Robot YAML File
 
 The robot configuration file, which you have created in the previous section,
 still requires to define a camera in the ``sensors`` section.
 
-The `Sensors/Cameras <https://docs.clearpathrobotics.com/docs/ros/config/yaml/sensors/cameras>`__
+The [Sensors/Cameras](https://docs.clearpathrobotics.com/docs/ros/config/yaml/sensors/cameras)
 page of the Clearpath Robotics documentation shows an example of the
 data structure that defines an Intel® RealSense™ camera instance. Intel proposes to
 add the following ``camera`` configuration as the first device in the
 ``sensors`` section. This configuration has been tested successfully with
 the Autonomous Mobile Robot:
 
-.. code-block:: text
+```txt
 
    sensors:
      camera:
@@ -229,6 +205,7 @@ the Autonomous Mobile Robot:
            align_depth.enable: true
            enable_sync: true
            initial_reset: true
+   ```
 
 In comparison to the example data structure in the Clearpath Robotics documentation,
 the following items have been adapted:
@@ -239,7 +216,7 @@ the following items have been adapted:
 * The ``device_type`` has been set to ``d435i``.
 * The ``serial_no`` has been replaced with the actual serial number of the
   camera, which can be identified as described in the
-  :ref:`identify-realsense-serial-number` section.
+  [Identify Realsense Serial Number](#identify-the-serial-number-of-your-intel-realsense-camera) section.
 * The following features have been enabled:
   ``enable_infra1``, ``align_depth.enable``, ``enable_sync``, and ``initial_reset``.
 
@@ -247,66 +224,60 @@ Copy the ``robot.yaml`` file to the ``/etc/clearpath/`` folder on the onboard co
 of your Jackal robot.
 Reboot the robot, so that the new configuration will be propagated.
 
-.. figure:: ../../../../images/jackal_with_camera2.png
-   :width: 500px
-   :align: center
+![jackal_with_camera2](../../../../images/jackal_with_camera2.png)
 
    Jackal robot with an Intel® RealSense™ camera above the front fender.
    The image has been rendered by the rviz2 tool using the TF data
    published by the Clearpath Robotics services running on the robot.
 
+## Verify the Robot Configuration
 
-Verify the Robot Configuration
-------------------------------
-
-Verify the Frames of the TF2 Tree
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### Verify the Frames of the TF2 Tree
 
 If not already installed, use the following command to install the ROS2 TF2 Tools:
 
-.. code-block:: bash
+```bash
 
    sudo apt install ros-humble-tf2-tools
+```
 
 To verify that the robot state publisher communicates the correct TF2 tree,
 run the following command:
 
-.. code-block:: bash
+```bash
 
    ros2 run tf2_tools view_frames
+```
 
 This command will listen to the frames that are being broadcast over the ROS 2
 middleware and generate a PDF file showing how the frames of the robot are connected.
 Open the PDF file and verify that the TF2 tree contains the ``camera_0_link``
 and its children as shown in the images below.
 
-
-.. figure:: ../../../../images/frames_jackal_2024-02-28.png
-   :align: center
+![frames_jackal_2024-02-28](../../../../images/frames_jackal_2024-02-28.png)
 
    Complete TF2 tree of the Jackal robot with Intel® RealSense™ camera;
    to increase the figure, right-click on the image and open the image
    in a new browser tab
 
-.. figure:: ../../../../images/frames_jackal_camera_2024-02-28.png
-   :align: center
+![frames_jackal_camera_2024-02-28](../../../../images/frames_jackal_camera_2024-02-28.png)
 
    TF2 tree of the Jackal robot -- detailed view on the camera_0_link
 
 .. _verify-ros-topics:
 
-Verify the ROS 2 Topics
-~~~~~~~~~~~~~~~~~~~~~~~
+### Verify the ROS 2 Topics
 
 Execute the command
 
-.. code-block:: bash
+```bash
 
    ros2 topic list
+```
 
 and verify that the required ROS 2 topics are published:
 
-.. code-block:: text
+```txt
 
    /cmd_vel
    /diagnostics
@@ -390,6 +361,7 @@ and verify that the required ROS 2 topics are published:
    /twist_marker_server/cmd_vel
    /twist_marker_server/feedback
    /twist_marker_server/update
+```
 
 The names of the camera-related topics depend on the version of the
 ``ros-humble-realsense2-camera`` package on your system. The list above
@@ -397,27 +369,20 @@ has been created on a system with version 4.55 of this package.
 
 To identify the installed package version on your board, run the command:
 
-.. code-block:: bash
+```bash
 
    apt show ros-humble-realsense2-camera
+```
 
 The following table shows how the names of the camera-related topics
 depend on the package version.
 
-+-----------------------------------+----------------------------------+
-| Version of                        | Camera-related topics start with |
-| ``ros-humble-realsense2-camera``  |                                  |
-+===================================+==================================+
-| 4.55                              | ``/sensors/camera_0/camera/``    |
-+-----------------------------------+----------------------------------+
-| 4.54                              | ``/sensors/camera_0/``           |
-+-----------------------------------+----------------------------------+
+|Version of ``ros-humble-realsense2-camera``|Camera-related topics start with|
+|---|---|
+|4.55|``/sensors/camera_0/camera/``|
+|4.54|``/sensors/camera_0/``|
 
-
-.. _jackal-troubleshooting:
-
-Jackal Troubleshooting
-------------------------
+## Jackal Troubleshooting
 
 If the output of the ``ros2 topic list`` command does not show any topics,
 verify that you are logged in as the ``administrator`` user. Furthermore,
@@ -426,27 +391,27 @@ that is defined in your ``/etc/clearpath/robot.yaml`` file
 under the ``system/ros2/domain_id`` entry.
 
 If the output of the ``ros2 topic list`` command shows that there are some
-ROS 2 topics missing (see the :ref:`verify-ros-topics` section for a list of topics),
+ROS 2 topics missing (see the [verify ROS topics](#verify-the-ros-2-topics) section for a list of topics),
 there might be an issue with your installation of the Clearpath Robotics
 services. In this case, you can check whether the required services are
 up and running. These services are responsible for parsing the ``robot.yaml``
 file and for staring the required ROS 2 nodes.
 
-.. code-block:: bash
+```bash
 
    sudo systemctl status clearpath-platform.service clearpath-sensors.service clearpath-robot.service
+```
 
 If any of these services are not active (running), you can check whether
 the systemd journal shows any error messages:
 
-.. code-block:: bash
+```bash
 
    sudo journalctl -b | grep clearpath
+```
 
+## References
 
-References
-----------
-
--  `Clearpath Robotics - Jackal Unmanned Ground Vehicle Overview <https://clearpathrobotics.com/jackal-small-unmanned-ground-vehicle/>`__
--  `Clearpath Robotics - Jackal Unmanned Ground Vehicle User Manual <https://docs.clearpathrobotics.com/docs_robots/outdoor_robots/jackal/user_manual_jackal/>`__
--  `Clearpath Robotics - Robot Installation <https://docs.clearpathrobotics.com/docs/ros/installation/robot/>`__
+-  [Clearpath Robotics - Jackal Unmanned Ground Vehicle Overview](https://clearpathrobotics.com/jackal-small-unmanned-ground-vehicle/)
+-  [Clearpath Robotics - Jackal Unmanned Ground Vehicle User Manual](https://docs.clearpathrobotics.com/docs_robots/outdoor_robots/jackal/user_manual_jackal/)
+-  [Clearpath Robotics - Robot Installation](https://docs.clearpathrobotics.com/docs/ros/installation/robot/)
