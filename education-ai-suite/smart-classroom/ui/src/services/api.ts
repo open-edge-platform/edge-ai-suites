@@ -1,7 +1,7 @@
 import { typewriterStream } from '../utils/typewriterStream';
 import type { StreamEvent, StreamOptions } from './streamSimulator';
-export type ProjectConfig = { name: string; location: string; microphone: string };
-export type Settings = { projectName: string; projectLocation: string; microphone: string };
+export type ProjectConfig = { name: string; location: string; microphone: string; frontCamera?: string; backCamera?: string; boardCamera?: string };
+export type Settings = { projectName: string; projectLocation: string; microphone: string; frontCamera?: string; backCamera?: string; boardCamera?: string };
 export type SessionMode = 'record' | 'upload';
 export type StartSessionRequest = { projectName: string; projectLocation: string; microphone: string; mode: SessionMode };
 export type StartSessionResponse = { sessionId: string };
@@ -49,6 +49,9 @@ export async function getSettings(): Promise<Settings> {
       projectName: cfg.name ?? '',
       projectLocation: cfg.location ?? '',
       microphone: cfg.microphone ?? '',
+      frontCamera: cfg.frontCamera || 'Default Front Camera', // Default value
+      backCamera: cfg.backCamera || 'Default Back Camera',   // Default value
+      boardCamera: cfg.boardCamera || 'Default Board Camera' // Default value
     };
   });
 }
@@ -59,6 +62,9 @@ export async function saveSettings(settings: Settings): Promise<ProjectConfig> {
       name: settings.projectName,
       location: settings.projectLocation,
       microphone: settings.microphone,
+      frontCamera: settings.frontCamera,
+      backCamera: settings.backCamera,
+      boardCamera: settings.boardCamera
     };
     console.log('Sending payload to /project:', payload);
     const res = await fetch(`${BASE_URL}/project`, {
@@ -290,6 +296,89 @@ export async function getConfigurationMetrics(sessionId: string): Promise<any> {
   });
 }
 
+export const startVideoAnalyticsPipeline = async (
+  pipelines: { pipeline_name: string; source: string }[],
+  sessionId: string
+): Promise<{ results: any[] }> => {
+  return safeApiCall(async () => {
+    const response = await fetch(`${BASE_URL}/start-video-analytics-pipeline`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-session-id": sessionId, // Include session ID in the headers
+      },
+      body: JSON.stringify(pipelines), // Send the array of pipelines
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || `Failed to start pipelines: ${response.status}`);
+    }
+
+    return response.json();
+  });
+};
+export const stopVideoAnalyticsPipeline = async (
+  pipelineName: "front" | "back" | "content",
+  sessionId: string
+): Promise<{ status: string; pipeline_name: string; session_id: string }> => {
+  return safeApiCall(async () => {
+    const response = await fetch(`${BASE_URL}/stop-video-analytics-pipeline`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-session-id": sessionId,
+      },
+      body: JSON.stringify({
+        pipeline_name: pipelineName,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || `Failed to stop pipeline: ${response.status}`);
+    }
+
+    return response.json();
+  });
+};
+
+export async function getClassStatistics(sessionId: string): Promise<{
+  student_count: number;
+  stand_count: number;
+  raise_up_count: number;
+  stand_reid: { student_id: number; count: number }[];
+}> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/class-statistics`, {
+      method: 'GET',
+      headers: {
+        'x-session-id': sessionId,
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      console.warn(`Class statistics endpoint returned ${res.status}`);
+      return {
+        student_count: 0,
+        stand_count: 0,
+        raise_up_count: 0,
+        stand_reid: [],
+      };
+    }
+
+    const text = await res.text();
+    return text
+      ? JSON.parse(text)
+      : {
+          student_count: 0,
+          stand_count: 0,
+          raise_up_count: 0,
+          stand_reid: [],
+        };
+  });
+}
 export async function getPlatformInfo(): Promise<any> {
   return safeApiCall(async () => {
     const res = await fetch(`${BASE_URL}/platform-info`, {

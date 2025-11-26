@@ -14,6 +14,18 @@ import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { useTranslation } from 'react-i18next';
 import { uploadAudio, stopMicrophone, getAudioDevices } from '../../services/api';
 import Toast from '../common/Toast';
+import UploadFilesModal from '../Modals/UploadFilesModal';
+
+// Safe error extraction helper
+type ApiError = { response?: { data?: { message?: string } } };
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === 'object') {
+    const resp = (err as ApiError).response;
+    const msg = resp?.data?.message;
+    if (typeof msg === 'string' && msg.trim() !== '') return msg;
+  }
+  return fallback;
+};
 
 interface HeaderBarProps {
   projectName: string;
@@ -34,6 +46,16 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const summaryEnabled = useAppSelector((s) => s.ui.summaryEnabled);
   const summaryLoading = useAppSelector((s) => s.ui.summaryLoading);
   const transcriptStatus = useAppSelector((s) => s.transcript.status);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); 
+
+  const handleOpenUploadModal = () => {
+    setIsUploadModalOpen(true); // Open the UploadFilesModal
+  };
+
+  const handleCloseUploadModal = () => {
+    setIsUploadModalOpen(false); // Close the UploadFilesModal
+  };
   const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
   const mindmapLoading = useAppSelector((s) => s.ui.mindmapLoading);
   const sessionId = useAppSelector((s) => s.ui.sessionId);
@@ -134,7 +156,27 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const isRecordingDisabled = (isBusy && !isRecording) || !hasAudioDevices;
+  const isRecordingDisabled =
+    isBusy ||
+    transcriptStatus === 'streaming' ||     
+    summaryLoading ||                         
+    (mindmapEnabled && (
+      mindmapLoading ||
+      mindmapState.isLoading ||
+      !mindmapState.finalText                
+    )) ||
+    !hasAudioDevices;                         
+
+  const isUploadDisabled =
+    isRecording ||
+    transcriptStatus === 'streaming' ||      
+    isBusy ||                                
+    summaryLoading ||                         
+    (mindmapEnabled && (
+      mindmapLoading ||
+      mindmapState.isLoading ||
+      !mindmapState.finalText                
+    ));
 
   const handleRecordingToggle = async () => {
     if (isRecordingDisabled) return;
@@ -181,30 +223,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     }
   };
 
-  const handleFileUpload = async (file: File) => {
-    if (isBusy || isRecording) return;
-    clearForNewOp();
-    setNotification(t('notifications.uploading'));
-    dispatch(resetFlow());
-    dispatch(resetTranscript());
-    dispatch(resetSummary());
-    dispatch(clearMindmap());
-    dispatch(startProcessing());
-
-    try {
-      const result = await uploadAudio(file);
-      dispatch(setUploadedAudioPath(result.path));
-      setNotification(t('notifications.uploadSuccess'));
-      setErrorMsg(null);
-    } catch (e: any) {
-      const msg = e?.response?.data?.message || 'Upload failed';
-      setErrorMsg(msg);
-      setNotification('');
-      setErrorMsg(msg);
-      dispatch(processingFailed());
-    }
-  };
-
   return (
     <div className="header-bar">
       <div className="navbar-left">
@@ -233,26 +251,18 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           {isRecording ? t('header.stopRecording') : t('header.startRecording')}
         </button>
 
-        <label
+        <button
           className="upload-button"
+          disabled={isUploadDisabled}   
+          onClick={!isUploadDisabled ? handleOpenUploadModal : undefined} 
           style={{
-            opacity: (isBusy || isRecording) ? 0.6 : 1,
-            cursor: (isBusy || isRecording) ? 'not-allowed' : 'pointer'
+            opacity: isUploadDisabled ? 0.6 : 1,                           
+            cursor: isUploadDisabled ? 'not-allowed' : 'pointer'            
           }}
         >
-          <input
-            type="file"
-            accept="audio/*"
-            style={{ display: 'none' }}
-            disabled={isBusy || isRecording}
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) handleFileUpload(f);
-              e.currentTarget.value = '';
-            }}
-          />
           {t('header.uploadFile')}
-        </label>
+        </button>
+
       </div>
 
       <div className="navbar-center">
@@ -269,6 +279,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           onClose={handleClose}
           onCopy={handleCopy}
         />
+      )}
+      {isUploadModalOpen && (
+        <UploadFilesModal isOpen={isUploadModalOpen} onClose={handleCloseUploadModal} />
       )}
     </div>
   );

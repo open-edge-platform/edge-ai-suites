@@ -1,0 +1,96 @@
+.upload-files-modal {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.upload-files-modal h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.modal-input-group {
+  margin-bottom: 16px;
+}
+
+.modal-input-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  margin-top: 1rem;
+  gap:4px;
+}
+
+.file-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.folder-icon {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.folder-icon:hover {
+  transform: scale(1.1);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-actions button {
+  padding: 8px 16px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-actions .apply-button {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.modal-actions .apply-button:hover {
+  background-color: #0056b3;
+}
+.apply-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.apply-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #c00;
+  font-size: 12px;
+}
+
+.modal-body{
+  display: flex;
+  flex-direction: column;
+  font-family: "IntelOne Text", system-ui, sans-serif;
+  padding: clamp(12px, 4vw, 18px);
+  color: #2B2C30;
+  align-items: stretch;
+  z-index: var(--z-index-modal);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
