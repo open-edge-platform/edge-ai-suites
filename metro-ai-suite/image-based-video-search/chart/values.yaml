@@ -89,7 +89,7 @@ dlstreamerpipelineserver:
     # key: dlstreamerpipelineserver.repository.image
     image: docker.io/intel/dlstreamer-pipeline-server
     # key: dlstreamerpipelineserver.repository.tag
-    tag: 2025.2-ubuntu22-rc1
+    tag: 2025.2-ubuntu22-rc2
   # key: dlstreamerpipelineserver.replicas
   replicas: 1
   # key: dlstreamerpipelineserver.nodeSelector

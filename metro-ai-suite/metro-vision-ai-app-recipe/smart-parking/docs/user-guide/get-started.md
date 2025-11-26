@@ -75,18 +75,17 @@ By following this guide, you will learn how to:
      ```bash
      ./sample_start.sh
      ```
-
+   - To check the status of the pipelines:
+      ```bash
+      ./sample_status.sh
+      ```
      <details>
      <summary>
-     Check Status and Stop pipelines
+     Stop pipelines
      </summary>
 
-     - To check the status:
-       ```bash
-       ./sample_status.sh
-       ```
-
      - To stop the pipelines without waiting for video streams to finish replay:
+     > NOTE: This will stop all the pipelines and the streams. DO NOT run this if you want to see smart parking detection
        ```bash
        ./sample_stop.sh
        ```

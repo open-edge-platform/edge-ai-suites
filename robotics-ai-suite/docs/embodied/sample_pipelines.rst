@@ -9,6 +9,7 @@ These pipelines are designed to showcase some core features of the SDK, includin
     :maxdepth: 1
 
     sample_pipelines/imitation_learning_act
+    sample_pipelines/mpc_demo
     sample_pipelines/diffusion_policy
     sample_pipelines/ORB_VSLAM
     sample_pipelines/llm_robotics

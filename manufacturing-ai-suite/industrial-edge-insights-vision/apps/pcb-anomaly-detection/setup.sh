@@ -3,7 +3,7 @@
 # Download artifacts for a specific sample application
 #   by calling respective app's setup.sh script
 SCRIPT_DIR=$(dirname $(readlink -f "$0"))
-MODEL_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/FP16/pcb-anomaly-detection.zip"
+MODEL_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/ea2b2a606f45ae28e9a97e58a6488e7000dea263/models/FP16/pcb-anomaly-detection.zip"
 VIDEO_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/c13b8dbf23d514c2667d39b66615bd1400cb889d/videos/anomalib_pcb_test.avi"
 
 err() {
