@@ -55,7 +55,7 @@ pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download
 > 💡 *Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.*
 python ma 
 **e. Install DL Streamer**
-Download the archive from [DL Streamer assets on GitHub](https://github.com/intel-innersource/frameworks.ai.dlstreamer.pipeline-framework/actions/runs/19419048344/artifacts/4584789120) Extract to a new folder, for example `C:\\dlstreamer_dlls`.
+Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/edge-ai-libraries/releases) Extract to a new folder, for example `C:\\dlstreamer_dlls`.
 
 Step 2: Run setup script
 Open a PowerShell prompt as and administrator, run the following script and follow instructions:
