@@ -1,7 +1,24 @@
 import { typewriterStream } from '../utils/typewriterStream';
 import type { StreamEvent, StreamOptions } from './streamSimulator';
-export type ProjectConfig = { name: string; location: string; microphone: string; frontCamera?: string; backCamera?: string; boardCamera?: string };
-export type Settings = { projectName: string; projectLocation: string; microphone: string; frontCamera?: string; backCamera?: string; boardCamera?: string };
+
+export type ProjectConfig = { 
+  name: string; 
+  location: string; 
+  microphone: string; 
+  frontCamera?: string; 
+  backCamera?: string; 
+  boardCamera?: string 
+};
+
+export type Settings = { 
+  projectName: string; 
+  projectLocation: string; 
+  microphone: string; 
+  frontCamera?: string; 
+  backCamera?: string; 
+  boardCamera?: string 
+};
+
 export type SessionMode = 'record' | 'upload';
 export type StartSessionRequest = { projectName: string; projectLocation: string; microphone: string; mode: SessionMode };
 export type StartSessionResponse = { sessionId: string };
@@ -49,9 +66,9 @@ export async function getSettings(): Promise<Settings> {
       projectName: cfg.name ?? '',
       projectLocation: cfg.location ?? '',
       microphone: cfg.microphone ?? '',
-      frontCamera: cfg.frontCamera || 'Default Front Camera', // Default value
-      backCamera: cfg.backCamera || 'Default Back Camera',   // Default value
-      boardCamera: cfg.boardCamera || 'Default Board Camera' // Default value
+      frontCamera: cfg.frontCamera || '', // Empty string as default
+      backCamera: cfg.backCamera || '',   // Empty string as default
+      boardCamera: cfg.boardCamera || ''  // Empty string as default
     };
   });
 }
@@ -75,7 +92,6 @@ export async function saveSettings(settings: Settings): Promise<ProjectConfig> {
     if (!res.ok) throw new Error(`Failed to save project config: ${res.status}`);
     return (await res.json()) as ProjectConfig;
   });
-
 }
 
 // Compatibility aliases (use getSettings/saveSettings internally)
@@ -91,7 +107,6 @@ export async function updateProjectConfig(config: ProjectConfig): Promise<Projec
     return saveSettings({ projectName: config.name, projectLocation: config.location, microphone: config.microphone });
   });
 }
-
 
 export async function startSession(req: StartSessionRequest): Promise<StartSessionResponse> {
   return safeApiCall(async () => {
@@ -116,7 +131,6 @@ export async function uploadAudio(file: File): Promise<{ filename: string; messa
 return res.json();
 });
 }
-
 
 export async function* streamTranscript(
   audioPath: string,
@@ -181,7 +195,6 @@ export async function* streamTranscript(
  
   yield { type: "done" };
 }
-
 
 export async function* streamSummary(sessionId: string, opts: StreamOptions = {}): AsyncGenerator<StreamEvent> {
   const res = await fetch(`${BASE_URL}/summarize`, {
@@ -296,52 +309,61 @@ export async function getConfigurationMetrics(sessionId: string): Promise<any> {
   });
 }
 
-export const startVideoAnalyticsPipeline = async (
-  pipelines: { pipeline_name: string; source: string }[],
+// Updated video analytics functions to match backend API structure
+export const startVideoAnalytics = async (
+  requests: Array<{
+    pipeline_name: string;
+    source: string;
+  }>,
   sessionId: string
-): Promise<{ results: any[] }> => {
+): Promise<any> => {
   return safeApiCall(async () => {
     const response = await fetch(`${BASE_URL}/start-video-analytics-pipeline`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "x-session-id": sessionId, // Include session ID in the headers
+        'Content-Type': 'application/json',
+        'X-Session-ID': sessionId,
       },
-      body: JSON.stringify(pipelines), // Send the array of pipelines
+      body: JSON.stringify(requests),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail || `Failed to start pipelines: ${response.status}`);
+      throw new Error(error.detail || `Failed to start video analytics: ${response.status}`);
     }
 
     return response.json();
   });
 };
-export const stopVideoAnalyticsPipeline = async (
-  pipelineName: "front" | "back" | "content",
+
+export const stopVideoAnalytics = async (
+  requests: Array<{
+    pipeline_name: string;
+    source?: string;
+  }>,
   sessionId: string
-): Promise<{ status: string; pipeline_name: string; session_id: string }> => {
+): Promise<any> => {
   return safeApiCall(async () => {
     const response = await fetch(`${BASE_URL}/stop-video-analytics-pipeline`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "x-session-id": sessionId,
+        'Content-Type': 'application/json',
+        'X-Session-ID': sessionId,
       },
-      body: JSON.stringify({
-        pipeline_name: pipelineName,
-      }),
+      body: JSON.stringify(requests),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail || `Failed to stop pipeline: ${response.status}`);
+      throw new Error(error.detail || `Failed to stop video analytics: ${response.status}`);
     }
 
     return response.json();
   });
 };
+
+// Backward compatibility aliases
+export const startVideoAnalyticsPipeline = startVideoAnalytics;
 
 export async function getClassStatistics(sessionId: string): Promise<{
   student_count: number;
@@ -379,6 +401,7 @@ export async function getClassStatistics(sessionId: string): Promise<{
         };
   });
 }
+
 export async function getPlatformInfo(): Promise<any> {
   return safeApiCall(async () => {
     const res = await fetch(`${BASE_URL}/platform-info`, {

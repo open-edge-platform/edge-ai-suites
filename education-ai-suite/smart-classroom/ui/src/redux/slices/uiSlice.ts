@@ -24,6 +24,7 @@ export interface UIState {
   boardCameraStream: string;
   activeStream: 'front' | 'back' | 'content' | 'all' | null;
   videoAnalyticsLoading: boolean;
+  videoAnalyticsActive: boolean;
 }
  
 const initialState: UIState = {
@@ -41,13 +42,14 @@ const initialState: UIState = {
   shouldStartMindmap: false,
   projectLocation: 'storage/',
   activeStream: null,
-  frontCamera: '',
-  backCamera: '',
-  boardCamera: '',
+  frontCamera: '', // Empty string as default for text input
+  backCamera: '', // Empty string as default for text input
+  boardCamera: '', // Empty string as default for text input
   frontCameraStream: '',
   backCameraStream: '',
   boardCameraStream: '',
   videoAnalyticsLoading: false,
+  videoAnalyticsActive: false,
 };
  
 const uiSlice = createSlice({
@@ -68,6 +70,7 @@ const uiSlice = createSlice({
       state.shouldStartSummary = false;
       state.shouldStartMindmap = false;
       state.videoAnalyticsLoading = false;
+      state.videoAnalyticsActive = false;
     },
  
     processingFailed(state) {
@@ -75,6 +78,7 @@ const uiSlice = createSlice({
       state.summaryLoading = false;
       state.mindmapLoading = false;
       state.videoAnalyticsLoading = false;
+      state.videoAnalyticsActive = false;
     },
  
     transcriptionComplete(state) {
@@ -102,9 +106,11 @@ const uiSlice = createSlice({
         state.sessionId = v;
       }
     },
+    
     setActiveStream(state, action: PayloadAction<'front' | 'back' | 'content' | 'all' | null>) {
       state.activeStream = action.payload;
     },
+    
     firstSummaryToken(state) {
       state.summaryLoading = false;
     },
@@ -143,32 +149,38 @@ const uiSlice = createSlice({
     setActiveTab(state, action: PayloadAction<Tab>) {
       state.activeTab = action.payload;
     },
+    
     setProjectLocation(state, action: PayloadAction<string>) {
       state.projectLocation = action.payload;
     },
+    
     setFrontCamera(state, action: PayloadAction<string>) {
       state.frontCamera = action.payload;
     },
+    
     setBackCamera(state, action: PayloadAction<string>) {
       state.backCamera = action.payload;
     },
+    
     setBoardCamera(state, action: PayloadAction<string>) {
       state.boardCamera = action.payload;
     },
+    
     setFrontCameraStream(state, action: PayloadAction<string>) {
       state.frontCameraStream = action.payload;
     },
+    
     setBackCameraStream(state, action: PayloadAction<string>) {
       state.backCameraStream = action.payload;
     },
+    
     setBoardCameraStream(state, action: PayloadAction<string>) {
       state.boardCameraStream = action.payload;
     },
+    
     resetStream(state) {
       state.activeStream = null;
-      state.frontCamera = 'Default Front Camera';
-      state.backCamera = 'Default Back Camera';
-      state.boardCamera = 'Default Board Camera';
+      // Don't reset camera values when resetting stream
     },
  
     startStream(state) {
@@ -181,6 +193,20 @@ const uiSlice = createSlice({
  
     setVideoAnalyticsLoading(state, action: PayloadAction<boolean>) {
       state.videoAnalyticsLoading = action.payload;
+    },
+
+    setVideoAnalyticsActive(state, action: PayloadAction<boolean>) {
+      state.videoAnalyticsActive = action.payload;
+    },
+
+    loadCameraSettingsFromStorage(state) {
+      const frontCamera = localStorage.getItem('frontCamera');
+      const backCamera = localStorage.getItem('backCamera');
+      const boardCamera = localStorage.getItem('boardCamera');
+      
+      if (frontCamera) state.frontCamera = frontCamera;
+      if (backCamera) state.backCamera = backCamera;
+      if (boardCamera) state.boardCamera = boardCamera;
     },
  
     resetFlow() {
@@ -209,11 +235,15 @@ export const {
   setActiveTab,
   setProjectLocation,
   resetFlow,
-  setFrontCamera, setBackCamera, setBoardCamera,
+  setFrontCamera, 
+  setBackCamera, 
+  setBoardCamera,
   setFrontCameraStream,
   setBackCameraStream,
   setBoardCameraStream,
   setVideoAnalyticsLoading,
+  setVideoAnalyticsActive,
+  loadCameraSettingsFromStorage,
 } = uiSlice.actions;
  
 export default uiSlice.reducer;
