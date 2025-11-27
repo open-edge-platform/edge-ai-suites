@@ -11,6 +11,9 @@ DOCKER_COMPOSE_VALIDATION_FILE=./docker-compose-validation.override.yml
 DOCKER_COMPOSE = docker compose
 SECURE_MODE='false'
 
+DRI_MOUNT_PATH := $(shell [ -d /dev/dri ] && [ -n "$$(ls -A /dev/dri 2>/dev/null)" ] && echo "/dev/dri" || echo "/dev/null")
+export DRI_MOUNT_PATH
+
 # Define the path to the .env file and scripts
 ENV_FILE = ./.env
 HELM_PACKAGE_SCRIPT = ./package_helm.sh
@@ -94,6 +97,18 @@ check_env_variables:
 					exit 1; \
 				fi \
 				;; \
+			MTX_WEBRTCICESERVERS2_0_USERNAME) \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z]{5,}$$"; then \
+					echo "MTX_WEBRTCICESERVERS2_0_USERNAME must contain only alphabets and be at least 5 characters minimum"; \
+					exit 1; \
+				fi \
+				;; \
+			MTX_WEBRTCICESERVERS2_0_PASSWORD) \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
+					echo "MTX_WEBRTCICESERVERS2_0_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit"; \
+					exit 1; \
+				fi \
+				;; \
 		esac; \
 	done
 
@@ -101,6 +116,7 @@ check_env_variables:
 up: check_env_variables validate_host_ip down
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
 	echo "Starting Docker containers..."; \
+	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
 	if [ $(INCLUDE) = 'validation' ]; then \
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d; \
 	else \
