@@ -19,25 +19,24 @@ iRobot Create 3 contains a compute unit running ROS 2 that provides
 access to the on-board sensors and actuators. For this tutorial, the
 following modifications have been applied to the robot:
 
- - two support layers added on top of the robot,
+- two support layers added on top of the robot,
 
- - Intel® board mounted on the bottom layer,
+- Intel® board mounted on the bottom layer,
 
- - Intel® RealSense™ camera mounted on the front of the top layer and
-   connected to a USB port on the Intel® board,
+- Intel® RealSense™ camera mounted on the front of the top layer and
+  connected to a USB port on the Intel® board,
 
- - Slamtec RPLIDAR 2D ([Slamtec RPLIDAR A3 laser range scanner](https://www.slamtec.ai/product/slamtec-rplidar-a3) or [Slamtec RPLIDAR A2 laser range scanner (A2M8)](https://www.slamtec.ai/product/slamtec-rplidar-a2)) sensor on a mount in the center of the
-   top layer and connected to two USB ports on the Intel® board,
+- Slamtec RPLIDAR 2D ([Slamtec RPLIDAR A3 laser range scanner](https://www.slamtec.ai/product/slamtec-rplidar-a3) or [Slamtec RPLIDAR A2 laser range scanner (A2M8)](https://www.slamtec.ai/product/slamtec-rplidar-a2)) sensor on a mount in the center of the
+  top layer and connected to two USB ports on the Intel® board,
 
- - custom battery in the cargo bay to power the Intel® board and
-   accessories, namely the camera and the lidar,
+- custom battery in the cargo bay to power the Intel® board and
+  accessories, namely the camera and the lidar,
 
- - an Ethernet adapter connected to the iRobot Create 3 adapter board
-   and to the Intel® board,
+- an Ethernet adapter connected to the iRobot Create 3 adapter board
+  and to the Intel® board,
 
- - a rear caster wheel attached to the cargo bay, as described in the
-   [iRobot® Create® 3 Mechanical System](https://iroboteducation.github.io/create3_docs/hw/mechanical/) documentation.
-
+- a rear caster wheel attached to the cargo bay, as described in the
+  [iRobot® Create® 3 Mechanical System](https://iroboteducation.github.io/create3_docs/hw/mechanical/) documentation.
 
 ![IR3 Center View](../../../images/iRobot/IAF1-iRobot-Create-3-MTL-Custom-setup-front-view-without-static-stand.jpg)
 
@@ -46,7 +45,6 @@ following modifications have been applied to the robot:
 ![IR3 Rear View](../../../images/iRobot/IAF1-iRobot-Create-3-MTL-Custom-setup-back-view-2.jpg)
 
    iRobot Create 3 robot rear view.
-
 
 ### iRobot Create 3 software configuration
 

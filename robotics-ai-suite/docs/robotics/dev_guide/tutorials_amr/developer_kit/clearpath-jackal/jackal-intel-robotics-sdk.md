@@ -29,9 +29,8 @@ installation of the Canonical Ubuntu operating system. Otherwise, you can create
 account and set its group membership by means of:
 
 ```bash
-
-   sudo adduser administrator
-   sudo usermod -a -G sudo administrator
+sudo adduser administrator
+sudo usermod -a -G sudo administrator
 ```
 
 ## Install the Clearpath Robotics Software Packages
@@ -42,16 +41,17 @@ They can be installed as described by the official
 [ROS 2 Installation Instructions](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html):
 
 ```bash
-
-   sudo apt-get install ros-dev-tools
+sudo apt-get install ros-dev-tools
 ```
 
 Now you can install the Clearpath Robotics software packages as described in the
 [Package Install](https://docs.clearpathrobotics.com/docs/ros/installation/robot/#package-install) section of the Clearpath Robotics documentation. Clearpath Robotics offers two
 alternative ways to install the software:
 
-* [Option 1: Install Script](https://docs.clearpathrobotics.com/docs/ros/installation/robot/#option-1-install-script) uses an automated installer.
-* [Option 2: Manual Source Install](https://docs.clearpathrobotics.com/docs/ros/installation/robot/#option-2-manual-source-install) provides detailed instructions on how to install the software with higher flexibility.
+- [Option 1: Install Script](https://docs.clearpathrobotics.com/docs/ros/installation/robot/#option-1-install-script)
+  uses an automated installer.
+- [Option 2: Manual Source Install](https://docs.clearpathrobotics.com/docs/ros/installation/robot/#option-2-manual-source-install)
+  provides detailed instructions on how to install the software with higher flexibility.
 
 Use one of these procedures to install the software on the Jackal onboard computer.
 
@@ -62,8 +62,6 @@ file for your Jackal robot with an Intel® RealSense™ camera D435i. Make sure
 that you have completed the steps described in the previous section,
 [Install Clearpath Software Packages](#install-the-clearpath-robotics-software-packages).
 
-.. _identify-realsense-serial-number:
-
 ### Identify the Serial Number of your Intel® RealSense™ Camera
 
 The serial number of the Intel® RealSense™ camera has to be included in the
@@ -71,26 +69,24 @@ The serial number of the Intel® RealSense™ camera has to be included in the
 to the onboard computer of the Jackal robot and run this command:
 
 ```bash
-
-   ros2 launch realsense2_camera rs_launch.py
+ros2 launch realsense2_camera rs_launch.py
 ```
 
 The output of this command will print the serial number. The serial
 number of the camera in the example below is ``207522xxxx38`` (some digits
 are masked here to preserve confidentiality).
 
-```txt
-
-   [realsense2_camera_node-1] [INFO] [1709051840.999128954] [camera.camera]: RealSense ROS v4.54.1
-   [realsense2_camera_node-1] [INFO] [1709051840.999193090] [camera.camera]: Built with LibRealSense v2.55.0
-   [realsense2_camera_node-1] [INFO] [1709051840.999200850] [camera.camera]: Running with LibRealSense v2.55.0
-   [realsense2_camera_node-1] [INFO] [1709051841.005234011] [camera.camera]: Device with serial number 207522xxxx38 was found.
+```console
+[realsense2_camera_node-1] [INFO] [1709051840.999128954] [camera.camera]: RealSense ROS v4.54.1
+[realsense2_camera_node-1] [INFO] [1709051840.999193090] [camera.camera]: Built with LibRealSense v2.55.0
+[realsense2_camera_node-1] [INFO] [1709051840.999200850] [camera.camera]: Running with LibRealSense v2.55.0
+[realsense2_camera_node-1] [INFO] [1709051841.005234011] [camera.camera]: Device with serial number 207522xxxx38 was found.
 ```
 
 Now you can stop the command by pressing ``Ctrl-c``.
 
 > **Note:** Don't use the command ``lsusb -v`` to identify the serial number. The
-  number displayed by this command might differ from the true serial number.
+> number displayed by this command might differ from the true serial number.
 
 ### Create your Robot YAML File
 
@@ -99,24 +95,25 @@ Jackal robot, follow the instructions on the
 [Robot YAML Overview](https://docs.clearpathrobotics.com/docs/ros/config/yaml/overview/)
 page of the Clearpath Robotics documentation. As a starting point, you
 can use the example configuration
-[j100_sample.yaml](https://github.com/clearpathrobotics/clearpath_config/blob/main/clearpath_config/sample/j100/j100_sample.yaml) in the Clearpath Robotics
+[j100_sample.yaml](https://github.com/clearpathrobotics/clearpath_config/blob/main/clearpath_config/sample/j100/j100_sample.yaml)
+in the Clearpath Robotics
 [configuration repository](https://github.com/clearpathrobotics/clearpath_config).
 Open this yaml file with an editor and adapt the sections ``serial_number``
 and ``system`` according to your needs.
 
-* Change the ``serial_number`` according to the serial
+- Change the ``serial_number`` according to the serial
   number of your robot, for example ``j100-1234``.
-* In the ``system/hosts`` section, adapt the ``hostname`` according to the
+- In the ``system/hosts`` section, adapt the ``hostname`` according to the
   hostname of the onboard computer of your Jackal robot.
-* In the ``system/hosts`` section, adapt the ``ip`` value according to the
+- In the ``system/hosts`` section, adapt the ``ip`` value according to the
   IP address of your Jackal robot -- either its static address or
   the dynamic address that is assigned by the router of your network.
-* In the ``system/ros2`` section, adapt the ``namespace`` string.
+- In the ``system/ros2`` section, adapt the ``namespace`` string.
   While the Clearpath Robotics default configuration usually defines
   a namespace for the ROS 2 topics, we recommend to use an empty
   namespace, as it is used by the tutorials of the Autonomous Mobile Robot. An empty
   namespace is indicated by a slash character: ``namespace: /``
-* In the ``system/ros2`` section, add the ``domain_id`` entry and set it
+- In the ``system/ros2`` section, add the ``domain_id`` entry and set it
   to a value that does not conflict with the ``ROS_DOMAIN_ID`` of
   other ROS 2 installations in your neighborhood. The value that you
   use here will be propagated into the ``/etc/clearpath/setup.bash`` script,
@@ -125,7 +122,7 @@ and ``system`` according to your needs.
   [Install](#install-the-clearpath-robotics-software-packages)`install-clearpath-software-packages`.
   In consequence, your ``ROS_DOMAIN_ID`` environment variable will be
   set to the value that you define here.
-* If you have used the manual installation option in the [Install Clearpath Software Packages](#install-the-clearpath-robotics-software-packages) section, add the ``workspaces`` entry
+- If you have used the manual installation option in the [Install Clearpath Software Packages](#install-the-clearpath-robotics-software-packages) section, add the ``workspaces`` entry
   to the ``system/ros2`` section. This entry provides a list of setup
   scripts that need to be sourced. Provide the path to the ``setup.bash``
   script of the workspace that was created when you executed the steps in
@@ -137,22 +134,21 @@ Details on these configuration entries are provided on the
 page of the Clearpath Robotics documentation. To provide an example,
 the following listing shows the first sections of a ``robot.yaml`` file.
 
-```txt
-
-   serial_number: j100-1234
-   version: 0
-   system:
-     hosts:
-       - hostname: jackal-cfls-01
-         ip: 192.168.1.78
-     ros2:
-       namespace: /
-       domain_id: 68
-       workspaces:
-         - /home/administrator/clearpath_ws/install/setup.bash
-   platform:
-     ...
-```
+> ```yaml
+> serial_number: j100-1234
+> version: 0
+> system:
+>   hosts:
+>     - hostname: jackal-cfls-01
+>       ip: 192.168.1.78
+>   ros2:
+>     namespace: /
+>     domain_id: 68
+>     workspaces:
+>       - /home/administrator/clearpath_ws/install/setup.bash
+> platform:
+>   ...
+> ```
 
 After you have completed the configuration, copy the ``robot.yaml`` file
 to the ``/etc/clearpath/`` folder on the onboard computer of your
@@ -181,43 +177,42 @@ add the following ``camera`` configuration as the first device in the
 ``sensors`` section. This configuration has been tested successfully with
 the Autonomous Mobile Robot:
 
-```txt
-
-   sensors:
-     camera:
-     - model: intel_realsense
-       urdf_enabled: true
-       launch_enabled: true
-       parent: base_link
-       xyz: [0.21, 0.0, 0.19]
-       rpy: [0.0, 0.0, 0.0]
-       ros_parameters:
-         camera:
-           camera_name: camera_0
-           device_type: d435i
-           serial_no: "207522xxxx38"
-           enable_color: true
-           rgb_camera.profile: 640,480,30
-           enable_depth: true
-           depth_module.profile: 640,480,30
-           pointcloud.enable: true
-           enable_infra1: true
-           align_depth.enable: true
-           enable_sync: true
-           initial_reset: true
-   ```
+> ```yaml
+> sensors:
+>   camera:
+>   - model: intel_realsense
+>     urdf_enabled: true
+>     launch_enabled: true
+>     parent: base_link
+>     xyz: [0.21, 0.0, 0.19]
+>     rpy: [0.0, 0.0, 0.0]
+>     ros_parameters:
+>       camera:
+>         camera_name: camera_0
+>         device_type: d435i
+>         serial_no: "207522xxxx38"
+>         enable_color: true
+>         rgb_camera.profile: 640,480,30
+>         enable_depth: true
+>         depth_module.profile: 640,480,30
+>         pointcloud.enable: true
+>         enable_infra1: true
+>         align_depth.enable: true
+>         enable_sync: true
+>         initial_reset: true
+> ```
 
 In comparison to the example data structure in the Clearpath Robotics documentation,
 the following items have been adapted:
 
-* The ``xyz`` position of the ``camera`` joint relative to the ``base_link``
+- The ``xyz`` position of the ``camera`` joint relative to the ``base_link``
   has been set to ``[0.21, 0.0, 0.19]``. This means that the camera sits above
   the front fender of the Jackal robot as shown in the image below.
-* The ``device_type`` has been set to ``d435i``.
-* The ``serial_no`` has been replaced with the actual serial number of the
+- The ``device_type`` has been set to ``d435i``.
+- The ``serial_no`` has been replaced with the actual serial number of the
   camera, which can be identified as described in the
   [Identify Realsense Serial Number](#identify-the-serial-number-of-your-intel-realsense-camera) section.
-* The following features have been enabled:
+- The following features have been enabled:
   ``enable_infra1``, ``align_depth.enable``, ``enable_sync``, and ``initial_reset``.
 
 Copy the ``robot.yaml`` file to the ``/etc/clearpath/`` folder on the onboard computer
@@ -237,16 +232,14 @@ Reboot the robot, so that the new configuration will be propagated.
 If not already installed, use the following command to install the ROS2 TF2 Tools:
 
 ```bash
-
-   sudo apt install ros-humble-tf2-tools
+sudo apt install ros-humble-tf2-tools
 ```
 
 To verify that the robot state publisher communicates the correct TF2 tree,
 run the following command:
 
 ```bash
-
-   ros2 run tf2_tools view_frames
+ros2 run tf2_tools view_frames
 ```
 
 This command will listen to the frames that are being broadcast over the ROS 2
@@ -264,103 +257,99 @@ and its children as shown in the images below.
 
    TF2 tree of the Jackal robot -- detailed view on the camera_0_link
 
-.. _verify-ros-topics:
-
 ### Verify the ROS 2 Topics
 
 Execute the command
 
 ```bash
-
-   ros2 topic list
+ros2 topic list
 ```
 
 and verify that the required ROS 2 topics are published:
 
-```txt
-
-   /cmd_vel
-   /diagnostics
-   /diagnostics_agg
-   /diagnostics_toplevel_state
-   /joint_state_broadcaster/transition_event
-   /joy_teleop/cmd_vel
-   /joy_teleop/joy
-   /joy_teleop/joy/set_feedback
-   /parameter_events
-   /platform/bms/state
-   /platform/cmd_vel_unstamped
-   /platform/dynamic_joint_states
-   /platform/emergency_stop
-   /platform/joint_states
-   /platform/mcu/status
-   /platform/mcu/status/power
-   /platform/mcu/status/stop
-   /platform/motors/cmd_drive
-   /platform/motors/feedback
-   /platform/odom
-   /platform/odom/filtered
-   /platform/wifi_connected
-   /platform/wifi_status
-   /platform_velocity_controller/transition_event
-   /rc_teleop/cmd_vel
-   /robot_description
-   /rosout
-   /sensors/camera_0/camera/aligned_depth_to_color/camera_info
-   /sensors/camera_0/camera/aligned_depth_to_color/image_raw
-   /sensors/camera_0/camera/aligned_depth_to_color/image_raw/compressed
-   /sensors/camera_0/camera/aligned_depth_to_color/image_raw/compressedDepth
-   /sensors/camera_0/camera/aligned_depth_to_color/image_raw/theora
-   /sensors/camera_0/camera/aligned_depth_to_infra1/camera_info
-   /sensors/camera_0/camera/aligned_depth_to_infra1/image_raw
-   /sensors/camera_0/camera/aligned_depth_to_infra1/image_raw/compressed
-   /sensors/camera_0/camera/aligned_depth_to_infra1/image_raw/compressedDepth
-   /sensors/camera_0/camera/aligned_depth_to_infra1/image_raw/theora
-   /sensors/camera_0/camera/color/camera_info
-   /sensors/camera_0/camera/color/image_raw
-   /sensors/camera_0/camera/color/image_raw/compressed
-   /sensors/camera_0/camera/color/image_raw/compressedDepth
-   /sensors/camera_0/camera/color/image_raw/theora
-   /sensors/camera_0/camera/color/metadata
-   /sensors/camera_0/camera/depth/camera_info
-   /sensors/camera_0/camera/depth/color/points
-   /sensors/camera_0/camera/depth/image_rect_raw
-   /sensors/camera_0/camera/depth/image_rect_raw/compressed
-   /sensors/camera_0/camera/depth/image_rect_raw/compressedDepth
-   /sensors/camera_0/camera/depth/image_rect_raw/theora
-   /sensors/camera_0/camera/depth/metadata
-   /sensors/camera_0/camera/extrinsics/depth_to_color
-   /sensors/camera_0/camera/extrinsics/depth_to_infra1
-   /sensors/camera_0/camera/infra1/camera_info
-   /sensors/camera_0/camera/infra1/image_rect_raw
-   /sensors/camera_0/camera/infra1/image_rect_raw/compressed
-   /sensors/camera_0/camera/infra1/image_rect_raw/compressedDepth
-   /sensors/camera_0/camera/infra1/image_rect_raw/theora
-   /sensors/camera_0/camera/infra1/metadata
-   /sensors/camera_0/color/image
-   /sensors/camera_0/depth/image
-   /sensors/camera_0/points
-   /sensors/gps_0/nmea_sentence
-   /sensors/imu_0/data
-   /sensors/imu_0/data_raw
-   /sensors/imu_0/magnetic_field
-   /sensors/lidar2d_0/diagnostics
-   /sensors/lidar2d_0/laser_status
-   /sensors/lidar2d_0/scan
-   /sensors/lidar2d_1/diagnostics
-   /sensors/lidar2d_1/laser_status
-   /sensors/lidar2d_1/scan
-   /sensors/lidar3d_0/diagnostics
-   /sensors/lidar3d_0/points
-   /sensors/lidar3d_0/scan
-   /sensors/lidar3d_0/velodyne_packets
-   /sensors/lidar3d_0/velodyne_points
-   /set_pose
-   /tf
-   /tf_static
-   /twist_marker_server/cmd_vel
-   /twist_marker_server/feedback
-   /twist_marker_server/update
+```console
+/cmd_vel
+/diagnostics
+/diagnostics_agg
+/diagnostics_toplevel_state
+/joint_state_broadcaster/transition_event
+/joy_teleop/cmd_vel
+/joy_teleop/joy
+/joy_teleop/joy/set_feedback
+/parameter_events
+/platform/bms/state
+/platform/cmd_vel_unstamped
+/platform/dynamic_joint_states
+/platform/emergency_stop
+/platform/joint_states
+/platform/mcu/status
+/platform/mcu/status/power
+/platform/mcu/status/stop
+/platform/motors/cmd_drive
+/platform/motors/feedback
+/platform/odom
+/platform/odom/filtered
+/platform/wifi_connected
+/platform/wifi_status
+/platform_velocity_controller/transition_event
+/rc_teleop/cmd_vel
+/robot_description
+/rosout
+/sensors/camera_0/camera/aligned_depth_to_color/camera_info
+/sensors/camera_0/camera/aligned_depth_to_color/image_raw
+/sensors/camera_0/camera/aligned_depth_to_color/image_raw/compressed
+/sensors/camera_0/camera/aligned_depth_to_color/image_raw/compressedDepth
+/sensors/camera_0/camera/aligned_depth_to_color/image_raw/theora
+/sensors/camera_0/camera/aligned_depth_to_infra1/camera_info
+/sensors/camera_0/camera/aligned_depth_to_infra1/image_raw
+/sensors/camera_0/camera/aligned_depth_to_infra1/image_raw/compressed
+/sensors/camera_0/camera/aligned_depth_to_infra1/image_raw/compressedDepth
+/sensors/camera_0/camera/aligned_depth_to_infra1/image_raw/theora
+/sensors/camera_0/camera/color/camera_info
+/sensors/camera_0/camera/color/image_raw
+/sensors/camera_0/camera/color/image_raw/compressed
+/sensors/camera_0/camera/color/image_raw/compressedDepth
+/sensors/camera_0/camera/color/image_raw/theora
+/sensors/camera_0/camera/color/metadata
+/sensors/camera_0/camera/depth/camera_info
+/sensors/camera_0/camera/depth/color/points
+/sensors/camera_0/camera/depth/image_rect_raw
+/sensors/camera_0/camera/depth/image_rect_raw/compressed
+/sensors/camera_0/camera/depth/image_rect_raw/compressedDepth
+/sensors/camera_0/camera/depth/image_rect_raw/theora
+/sensors/camera_0/camera/depth/metadata
+/sensors/camera_0/camera/extrinsics/depth_to_color
+/sensors/camera_0/camera/extrinsics/depth_to_infra1
+/sensors/camera_0/camera/infra1/camera_info
+/sensors/camera_0/camera/infra1/image_rect_raw
+/sensors/camera_0/camera/infra1/image_rect_raw/compressed
+/sensors/camera_0/camera/infra1/image_rect_raw/compressedDepth
+/sensors/camera_0/camera/infra1/image_rect_raw/theora
+/sensors/camera_0/camera/infra1/metadata
+/sensors/camera_0/color/image
+/sensors/camera_0/depth/image
+/sensors/camera_0/points
+/sensors/gps_0/nmea_sentence
+/sensors/imu_0/data
+/sensors/imu_0/data_raw
+/sensors/imu_0/magnetic_field
+/sensors/lidar2d_0/diagnostics
+/sensors/lidar2d_0/laser_status
+/sensors/lidar2d_0/scan
+/sensors/lidar2d_1/diagnostics
+/sensors/lidar2d_1/laser_status
+/sensors/lidar2d_1/scan
+/sensors/lidar3d_0/diagnostics
+/sensors/lidar3d_0/points
+/sensors/lidar3d_0/scan
+/sensors/lidar3d_0/velodyne_packets
+/sensors/lidar3d_0/velodyne_points
+/set_pose
+/tf
+/tf_static
+/twist_marker_server/cmd_vel
+/twist_marker_server/feedback
+/twist_marker_server/update
 ```
 
 The names of the camera-related topics depend on the version of the
@@ -370,8 +359,7 @@ has been created on a system with version 4.55 of this package.
 To identify the installed package version on your board, run the command:
 
 ```bash
-
-   apt show ros-humble-realsense2-camera
+apt show ros-humble-realsense2-camera
 ```
 
 The following table shows how the names of the camera-related topics
@@ -398,20 +386,18 @@ up and running. These services are responsible for parsing the ``robot.yaml``
 file and for staring the required ROS 2 nodes.
 
 ```bash
-
-   sudo systemctl status clearpath-platform.service clearpath-sensors.service clearpath-robot.service
+sudo systemctl status clearpath-platform.service clearpath-sensors.service clearpath-robot.service
 ```
 
 If any of these services are not active (running), you can check whether
 the systemd journal shows any error messages:
 
 ```bash
-
-   sudo journalctl -b | grep clearpath
+sudo journalctl -b | grep clearpath
 ```
 
 ## References
 
--  [Clearpath Robotics - Jackal Unmanned Ground Vehicle Overview](https://clearpathrobotics.com/jackal-small-unmanned-ground-vehicle/)
--  [Clearpath Robotics - Jackal Unmanned Ground Vehicle User Manual](https://docs.clearpathrobotics.com/docs_robots/outdoor_robots/jackal/user_manual_jackal/)
--  [Clearpath Robotics - Robot Installation](https://docs.clearpathrobotics.com/docs/ros/installation/robot/)
+- [Clearpath Robotics - Jackal Unmanned Ground Vehicle Overview](https://clearpathrobotics.com/jackal-small-unmanned-ground-vehicle/)
+- [Clearpath Robotics - Jackal Unmanned Ground Vehicle User Manual](https://docs.clearpathrobotics.com/docs_robots/outdoor_robots/jackal/user_manual_jackal/)
+- [Clearpath Robotics - Robot Installation](https://docs.clearpathrobotics.com/docs/ros/installation/robot/)
