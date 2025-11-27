@@ -6,7 +6,7 @@ This tutorial uses the Intel® RealSense™ camera image as input and performs i
 
 ## Prerequisites
 
-Complete the [GSG Robot guide](../../../../gsg_robot/index.rst) before continuing.
+Complete the [get started guide](../../../../gsg_robot/index.rst) before continuing.
 
 ## Install OpenVINO™ tutorial packages
 
@@ -33,17 +33,17 @@ sudo apt install ros-humble-segmentation-realsense-tutorial
 
 Run one of the following commands to launch the segmentation tutorial with a specific inference engine:
 
-*  GPU inference engine
+- GPU inference engine
 
-   ```bash
-   ros2 launch segmentation_realsense_tutorial openvino_segmentation.launch.py device:=GPU
-   ```
+  ```bash
+  ros2 launch segmentation_realsense_tutorial openvino_segmentation.launch.py device:=GPU
+  ```
 
-*  CPU inference engine
+- CPU inference engine
 
-   ```bash
-   ros2 launch segmentation_realsense_tutorial openvino_segmentation.launch.py device:=CPU
-   ```
+  ```bash
+  ros2 launch segmentation_realsense_tutorial openvino_segmentation.launch.py device:=CPU
+  ```
 
 > **Note:** If no device is specified, the GPU is selected by default as inference engine.
 
@@ -54,4 +54,5 @@ To exit the application, press ``Ctrl-c`` in the terminal where the launch scrip
 
 ### Troubleshooting
 
-For general robot issues, go to: [Robot Tutorials Troubleshooting](../../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting).
+For general robot issues, refer to
+[Troubleshooting](../../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst).

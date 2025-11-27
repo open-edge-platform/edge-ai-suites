@@ -17,17 +17,15 @@ The second topic provides a reduced pointcloud containing only points labeled as
 
 ## Source Code
 
-The source code of this component can be found here: `Groundfloor <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/groundfloor>`_
-
+The source code of this component can be found here:
+[Groundfloor](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/groundfloor)
 
 ## Getting Started
 
 Autonomous Mobile Robot provides a ROS 2 Deb package for the application, supported by the following platform:
 
 - OS: Ubuntu 22.04 LTS
-
 - ROS version: Jazzy or Humble
-
 
 ## Prerequisites
 
@@ -89,19 +87,18 @@ ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentati
 
 One can view the list of running ROS 2 topics by typing ``ros2 topic list`` in a terminal.
 
-   ```shell
+```bash
+/camera/depth/camera_info
+/camera/depth/image_rect_raw
+/parameter_events
+/rosout
+/segmentation/labeled_points
+/segmentation/obstacle_points
+/tf
+/tf_static
+```
 
-   /camera/depth/camera_info
-   /camera/depth/image_rect_raw
-   /parameter_events
-   /rosout
-   /segmentation/labeled_points
-   /segmentation/obstacle_points
-   /tf
-   /tf_static
-   ```
-
-   >**Note:** Your topic list may differ, if you use additional ROS 2 nodes or other camera settings.
+>**Note:** Your topic list may differ, if you use additional ROS 2 nodes or other camera settings.
 
 The ROS 2 launch file provides additional arguments, for example to run the ROS 2 node only together with a camera,
 or with rviz. These can be activated as follows:
@@ -111,15 +108,15 @@ or with rviz. These can be activated as follows:
 <!--hide_directive:sync: tab1hide_directive-->
 
 Terminal 1:
-```bash
 
+```bash
 source /opt/ros/jazzy/setup.bash
 ros2 launch realsense2_camera rs_launch.py enable_infra1:=true align_depth.enable:=true enable_sync:=true init_reset:=true pointcloud.enable:=true camera_namespace:=/
 ```
 
 Terminal 2:
-```bash
 
+```bash
 source /opt/ros/jazzy/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py with_rviz:=True standalone:=True
 ```
@@ -129,15 +126,15 @@ ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentati
 <!--hide_directive:sync: tab2hide_directive-->
 
 Terminal 1:
-```bash
 
+```bash
 source /opt/ros/humble/setup.bash
 ros2 launch realsense2_camera rs_launch.py enable_infra1:=true align_depth.enable:=true enable_sync:=true init_reset:=true pointcloud.enable:=true camera_namespace:=/
 ```
 
 Terminal 2:
-```bash
 
+```bash
 source /opt/ros/humble/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py with_rviz:=True standalone:=True
 ```
@@ -149,11 +146,11 @@ The commandline option '-s' will show all available flags.
 
 In case of the standalone execution, the rviz view for the labeled pointcloud should look as follows:
 
-   ![pointcloud_groundfloor_segmentation_demo_camera_labeled_points](../../../images/pointcloud_groundfloor_segmentation_demo_camera_labeled_points.png)
+![pointcloud_groundfloor_segmentation_demo_camera_labeled_points](../../../images/pointcloud_groundfloor_segmentation_demo_camera_labeled_points.png)
 
 In case of the standalone execution, the rviz view for the filtered pointcloud should look as follows:
 
-   ![pointcloud_groundfloor_segmentation_demo_camera_obstacle_points](../../../images/pointcloud_groundfloor_segmentation_demo_camera_obstacle_points.png)
+![pointcloud_groundfloor_segmentation_demo_camera_obstacle_points](../../../images/pointcloud_groundfloor_segmentation_demo_camera_obstacle_points.png)
 
 ## Run the Segmentation with a 3D LiDAR sensor
 
@@ -164,7 +161,6 @@ Execute the following script to run the demo if a given pointcloud, for example 
 <!--hide_directive:sync: tab1hide_directive-->
 
 ```bash
-
 source /opt/ros/jazzy/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation pointcloud_groundfloor_segmentation_launch.py
 ```
@@ -174,7 +170,6 @@ ros2 launch pointcloud_groundfloor_segmentation pointcloud_groundfloor_segmentat
 <!--hide_directive:sync: tab2hide_directive-->
 
 ```bash
-
 source /opt/ros/humble/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation pointcloud_groundfloor_segmentation_launch.py
 ```
@@ -184,20 +179,19 @@ ros2 launch pointcloud_groundfloor_segmentation pointcloud_groundfloor_segmentat
 
 One can view the list of running ROS 2 topics by typing ``ros2 topic list`` in a terminal.
 
-   ```shell
+```bash
+/input/points
+/parameter_events
+/pseudo_camera/depth/camera_info
+/pseudo_camera/depth/image_rect_raw
+/rosout
+/segmentation/labeled_points
+/segmentation/obstacle_points
+/tf
+/tf_static
+```
 
-   /input/points
-   /parameter_events
-   /pseudo_camera/depth/camera_info
-   /pseudo_camera/depth/image_rect_raw
-   /rosout
-   /segmentation/labeled_points
-   /segmentation/obstacle_points
-   /tf
-   /tf_static
-   ```
-
-   >**Note:** Your topic list may differ, if you use additional ROS 2 nodes or other camera settings.
+>**Note:** Your topic list may differ, if you use additional ROS 2 nodes or other camera settings.
 
 The LiDAR node, that needs to be started in parallel, has to provide the topic ``/input/points`` otherwise the topic has to be remapped.
 
@@ -215,22 +209,22 @@ Afterwards open three terminal sessions:
 <!--hide_directive:sync: tab1hide_directive-->
 
 Terminal 1: Run the following commands to establish a TF link between robot and camera:
-```bash
 
+```bash
 source /opt/ros/jazzy/setup.bash
 ros2 run tf2_ros static_transform_publisher 0 0 0.1 0 0 0 1 /base_link /camera_link
 ```
 
 Terminal 2: Run the following commands to establish a TF link between robot and map:
-```bash
 
+```bash
 source /opt/ros/jazzy/setup.bash
 ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 1 /map /odom
 ```
 
 Terminal 3: Run the segmentation application with Intel® RealSense™ camera input:
-```bash
 
+```bash
 source /opt/ros/jazzy/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py with_rviz:=True
 ```
@@ -240,22 +234,22 @@ ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentati
 <!--hide_directive:sync: tab2hide_directive-->
 
 Terminal 1: Run the following commands to establish a TF link between robot and camera:
-```bash
 
+```bash
 source /opt/ros/humble/setup.bash
 ros2 run tf2_ros static_transform_publisher 0 0 0.1 0 0 0 1 /base_link /camera_link
 ```
 
 Terminal 2: Run the following commands to establish a TF link between robot and map:
-```bash
 
+```bash
 source /opt/ros/humble/setup.bash
 ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 1 /map /odom
 ```
 
 Terminal 3: Run the segmentation application with Intel® RealSense™ camera input:
-```bash
 
+```bash
 source /opt/ros/humble/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py with_rviz:=True
 ```
@@ -272,7 +266,6 @@ The ROS 2 node supports a set of parameters, that can be found under:
 <!--hide_directive:sync: tab1hide_directive-->
 
 ```bash
-
 /opt/ros/jazzy/share/pointcloud_groundfloor_segmentation/params/
 ```
 
@@ -281,7 +274,6 @@ The ROS 2 node supports a set of parameters, that can be found under:
 <!--hide_directive:sync: tab2hide_directive-->
 
 ```bash
-
 /opt/ros/humble/share/pointcloud_groundfloor_segmentation/params/
 ```
 
@@ -291,55 +283,50 @@ The ROS 2 node supports a set of parameters, that can be found under:
 There is one example configuration how the application's output can be used for the ROS 2 nav2 application,
 and a second file providing parameter values for the segmentation task. These include:
 
-* ``base_frame``:
-   This is the ROS 2 TF frame that the underlying algorithm operates on. The default value  is ``base_link``.
-   There must be a complete transform between the sensor frame and this ``base_frame``.
+- ``base_frame``:
+  This is the ROS 2 TF frame that the underlying algorithm operates on. The default value  is ``base_link``.
+  There must be a complete transform between the sensor frame and this ``base_frame``.
 
-* ``use_best_effort_qos``:
-   Defines if ``best_effort`` QoS should be used. By default ``reliable`` is used.
+- ``use_best_effort_qos``:
+  Defines if ``best_effort`` QoS should be used. By default ``reliable`` is used.
 
-* ``sensor.name``:
-   Name of the connected sensor e.g. camera or realsense_camera.
-   The default is ``camera``. This is the prefix of the input topic, e.g. /camera/depth/image_rect_raw.
+- ``sensor.name``:
+  Name of the connected sensor e.g. camera or realsense_camera.
+  The default is ``camera``. This is the prefix of the input topic, e.g. /camera/depth/image_rect_raw.
 
-* ``sensor.max_surface_height``:
-   The maximum height of a perfectly flat groundfloor. Default value is 0.05 meter.
-   If no incline is detected, measurements higher than this value will be flagged as ``obstacle``.
+- ``sensor.max_surface_height``:
+  The maximum height of a perfectly flat groundfloor. Default value is 0.05 meter.
+  If no incline is detected, measurements higher than this value will be flagged as ``obstacle``.
 
-* ``sensor.min_distance_to_ego``:
-   Sensor measurements closer than this value are ignored during processing. Default value is 0.4 meter.
+- ``sensor.min_distance_to_ego``:
+  Sensor measurements closer than this value are ignored during processing. Default value is 0.4 meter.
 
-* ``sensor.max_incline``:
-   The maximum allowed incline (or decline) of a ramp on the groundfloor.
-   If an incline above this value is detected, the corresponding points will no longer receive the label ``groundfloor``.
-   The default value is 15 degrees.
+- ``sensor.max_incline``:
+  The maximum allowed incline (or decline) of a ramp on the groundfloor.
+  If an incline above this value is detected, the corresponding points will no longer receive the label ``groundfloor``.
+  The default value is 15 degrees.
 
-* ``sensor.robot_height``:
-   Measurements above this value do not impose a collision risk for the robot and will be flagged as ``above``.
-   The default value is 2.0 meter.
-
+- ``sensor.robot_height``:
+  Measurements above this value do not impose a collision risk for the robot and will be flagged as ``above``.
+  The default value is 2.0 meter.
 
 An example illustrating these parameters is provided in the image below:
 
-   ![pointcloud_groundfloor_segmentation_demo_parameters](../../../images/pointcloud_groundfloor_segmentation_demo_parameters.png)
+![pointcloud_groundfloor_segmentation_demo_parameters](../../../images/pointcloud_groundfloor_segmentation_demo_parameters.png)
 
 ## Requirements
 
 To achieve optimal output quality, it is essential to fulfill following requirements:
 
-* The input sensor should be forward facing, ideally in parallel to the groundfloor.
-
-* The ROS 2 TF tree between ``base_frame`` and the sensor frame must be complete.
-
-* Satisfactory input data quality is crucial. Incomplete depth images or pointclouds may result in incorrect labels.
+- The input sensor should be forward facing, ideally in parallel to the groundfloor.
+- The ROS 2 TF tree between ``base_frame`` and the sensor frame must be complete.
+- Satisfactory input data quality is crucial. Incomplete depth images or pointclouds may result in incorrect labels.
 
 ## Troubleshooting
 
 - Failed to install Deb package: Please make sure to run ``sudo apt update`` before installing the necessary Deb packages.
-
 - You can stop the demo anytime by pressing ``ctrl-C``.
-
-- For general robot issues, go to: [Robot Tutorials Troubleshooting](../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst)`.
-
+- For general robot issues, refer to
+  [Troubleshooting](../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst).
 - The quality of the segmentation and labeling depends on the quality of the input data. Noisy data, especially major outliers
   could result in wrong labels. If this is the case, the input data should be pre-processed to reduce noise.

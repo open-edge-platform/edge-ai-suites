@@ -8,11 +8,11 @@ using a Intel® RealSense™ camera image as the input.
 
 ### Prerequisites
 
-Complete the [GSG Robot Guide](../../../../gsg_robot/index) before continuing.
+Complete the [get started guide](../../../../gsg_robot/index.rst) before continuing.
 
 ### Install OpenVINO™ package
 
-Follow the [Install Opnevino](../../../../gsg_robot/install-openvino) instructuins to install OpenVINO™.
+Follow the [Install Openvino](../../../../gsg_robot/install-openvino.rst) instructions to install OpenVINO™.
 
 ### Install Python packages (optional)
 
@@ -44,10 +44,11 @@ sudo apt install ros-humble-openvino-yolov8 ros-humble-openvino-yolov8-msgs
 <!--hide_directive:::hide_directive-->
 <!--hide_directive::::hide_directive-->
 
-
 ## Run Demo with Intel® RealSense™ Camera Topic Input
 
-First create a config file `pipeline.toml`. If not present, sample content for this configuration file (including the comments) will be generated in the command output when executing the ``ros2 run yolo yolo`` command.
+First create a config file `pipeline.toml`. If not present, sample content for
+this configuration file (including the comments) will be generated in the
+command output when executing the ``ros2 run yolo yolo`` command.
 
 ```bash
 title = "Yolo Ros Node"
@@ -67,7 +68,6 @@ width = 640
 height = 480
 model_size = "n" # options: n, s, m, l, x (refer to ultralytics docs)
 half = true # use half precision
-
 
 [pipeline1]
 model = "model1" # model name from [main] section
@@ -115,59 +115,76 @@ Then you can subscribe to the ``/pipeline1/color/image_raw/yolo_video`` topic to
 
 ## Advanced usage
 
-Besides generating a video, this node is also capable of providing the number of post processed detections.
-Detections are published on a topic ``<pipeline_name>/<rgb_topic>/yolo_frame``. For example for above configuration it would be ``pipeline1/color/image_raw/yolo_frame``.
+Besides generating a video, this node is also capable of providing the number
+of post processed detections.
+Detections are published on a topic ``<pipeline_name>/<rgb_topic>/yolo_frame``.
+For example for above configuration it would be ``pipeline1/color/image_raw/yolo_frame``.
 
 The messages have following structure:
 
-   ```bash
-   std_msgs/Header header # Header timestamp should be acquisition time of image
+```bash
+std_msgs/Header header # Header timestamp should be acquisition time of image
 
-   sensor_msgs/Image rgb_image # Original image
-   sensor_msgs/Image depth_image # only if topic depth is provided
+sensor_msgs/Image rgb_image # Original image
+sensor_msgs/Image depth_image # only if topic depth is provided
 
-   string task # "Detection" "Segmentation "Pose"
+string task # "Detection" "Segmentation "Pose"
 
-   geometry_msgs/TransformStamped camera_transform # Camera transform captured at the time of image arrival
+geometry_msgs/TransformStamped camera_transform # Camera transform captured at the time of image arrival
 
-   YoloDetection[] detections # Array of detections
-   ```
+YoloDetection[] detections # Array of detections
+```
 
 Structure of the YoloDetection message object:
 
-   ```bash
-   float32 confidence
+```bash
+float32 confidence
 
-   # Coordinates of bounding box
-   uint32 x
-   uint32 y
-   uint32 height
-   uint32 width
+# Coordinates of bounding box
+uint32 x
+uint32 y
+uint32 height
+uint32 width
 
-   string class_name
+string class_name
 
-   # Only used for Pose task
-   float32[] pose_xy #  X,Y of joints in image coordinates (17 total)
-   float32[] pose_visible # Probability of joint being visible
+# Only used for Pose task
+float32[] pose_xy #  X,Y of joints in image coordinates (17 total)
+float32[] pose_visible # Probability of joint being visible
 
-   # Only used for Segmentation task, this is flatten array of mask, same size as bounding box
-   float32[] mask
-   ```
+# Only used for Segmentation task, this is flatten array of mask, same size as bounding box
+float32[] mask
+```
 
-The same message structure is used for all 3 tasks (detection, segmentation, pose) with some fields being empty when not used.
+The same message structure is used for all 3 tasks (detection, segmentation,
+pose) with some fields being empty when not used.
 
-For body pose related tasks there is an image that helps in understanding the meaning of joints and how they are connected.
+For body pose related tasks there is an image that helps in understanding the
+meaning of joints and how they are connected.
 
 [Connected Joints (Research gate)](https://www.researchgate.net/figure/Key-points-for-human-poses-according-to-the-COCO-output-format-R-L-right-left_fig3_353746430)
 
 ## Other considerations
 
-Yolov8 model requires a commercial license from Ultralytics. This package only provides an efficient way to run the model on OpenVINO™ with ROS 2. Models and weights are downloaded from ultralytics and converted to IR format.
+Yolov8 model requires a commercial license from Ultralytics. This package only
+provides an efficient way to run the model on OpenVINO™ with ROS 2. Models and
+weights are downloaded from ultralytics and converted to IR format.
 
-This package requires the model to have fixed shape, and to have 80 classes (for detection/segmentation). Keep this in mind when providing fine tuned models.
+This package requires the model to have fixed shape, and to have 80 classes
+(for detection/segmentation). Keep this in mind when providing fine tuned models.
 
-Automatic downloading of INT8 models is only supported for square input shapes and only for detection task. This is a limitation of ultralytics/nncf library. Therefore if you posses an quantized model for another task or resolution you can still use it.
+Automatic downloading of INT8 models is only supported for square input shapes
+and only for detection task. This is a limitation of ultralytics/nncf library.
+Therefore if you posses an quantized model for another task or resolution
+you can still use it.
 
-Resolution of input images (coming from ROS 2 topic) is not tied to the input resolution of the model. In case of size mismatch bicubic interpolation is used. At the same time outputs of the models are also scaled back to original image size. You can leverage this to take advantage of larger models as they provide more stable detection.
+Resolution of input images (coming from ROS 2 topic) is not tied to the input
+resolution of the model. In case of size mismatch bicubic interpolation is used.
+At the same time outputs of the models are also scaled back to original image
+size. You can leverage this to take advantage of larger models as they provide
+more stable detection.
 
-Something that might be also useful is to play with performance_mode and inference requests, count to get the best balance between latency and throughput. The code is optimized to in such a way that if no major hiccups are present using throughput mode will provide the best of both worlds.
+Something that might be also useful is to play with performance_mode and
+inference requests, count to get the best balance between latency and throughput.
+The code is optimized to in such a way that if no major hiccups are present
+using throughput mode will provide the best of both worlds.

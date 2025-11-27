@@ -7,7 +7,8 @@ device parameters (NPU, GPU, or CPU) to specify which inference engine should be
 
 ## Source Code
 
-The source code of this component can be found here: [Object-Detection](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/object-detection)
+The source code of this component can be found here:
+[Object-Detection](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/object-detection)
 
 ## Prerequisites
 
@@ -20,7 +21,6 @@ Complete the [GSG robot guide](../../../../gsg_robot/index.rst) before continuin
 <!--hide_directive:sync: tab1hide_directive-->
 
 ```bash
-
 sudo apt install ros-jazzy-object-detection-tutorial
 ```
 
@@ -29,7 +29,6 @@ sudo apt install ros-jazzy-object-detection-tutorial
 <!--hide_directive:sync: tab2hide_directive-->
 
 ```bash
-
 sudo apt install ros-humble-object-detection-tutorial
 ```
 
@@ -40,19 +39,19 @@ sudo apt install ros-humble-object-detection-tutorial
 
 Run one of the following commands to launch the object detection node with a specific inference engine:
 
-* GPU inference engine
+- GPU inference engine
 
   ```bash
   ros2 launch object_detection_tutorial openvino_object_detection.launch.py device:=GPU
   ```
 
-* CPU  inference engine
+- CPU  inference engine
 
   ```bash
   ros2 launch object_detection_tutorial openvino_object_detection.launch.py device:=CPU
   ```
 
-* NPU  inference engine
+- NPU  inference engine
 
   ```bash
   ros2 launch object_detection_tutorial openvino_object_detection.launch.py device:=NPU
@@ -70,4 +69,5 @@ To close this application, type ``Ctrl-c`` in the terminal where you ran the lau
 
 ### Troubleshooting
 
-For general robot issues, go to: [Robot Tutorials Troubleshooting](../../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst).
+For general robot issues, refer to
+[Troubleshooting](../../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst).
