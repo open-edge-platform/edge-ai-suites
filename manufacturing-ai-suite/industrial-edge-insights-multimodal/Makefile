@@ -116,7 +116,7 @@ check_env_variables:
 up: check_env_variables validate_host_ip down
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
 	echo "Starting Docker containers..."; \
-	echo "GPU device path set to: $(DRI_MOUNT_PATH)" based on its existence; \
+	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence; \
 	if [ $(INCLUDE) = 'validation' ]; then \
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d; \
 	else \
