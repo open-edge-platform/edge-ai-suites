@@ -30,7 +30,7 @@ to a certain number before you execute a tutorial:
 The ``ROS_DOMAIN_ID`` should be an integer between 0 and 101 and it should
 be the same for all the nodes launched for a particular use case. If you run only
 one use case at a time, you can set this variable in your ``.bashrc`` file,
-as described in the :ref:`prepare-ros-environment` section.
+as described in the [prepare-ros-environment](../../gsg_robot/prepare-system.md#prepare-your-ros-2-environment) section.
 
 
 .. _shared_robot-tutorials-troubleshooting_aaeon-motor-control-board:
