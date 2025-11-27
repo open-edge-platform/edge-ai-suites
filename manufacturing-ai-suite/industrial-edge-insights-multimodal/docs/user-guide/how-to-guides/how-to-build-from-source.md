@@ -30,8 +30,8 @@ before proceeding with the below steps.
 
     ```bash
     git clone https://github.com/open-edge-platform/edge-ai-suites.git
-    git checkout release-2025.2.0
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+    git checkout release-2025.2.0
 
     # build
     make build # builds only data simulator and fusion analytics docker images
@@ -47,4 +47,5 @@ before proceeding with the below steps.
 3. **Deploy with Docker compose and verify**.
 
     Follow the remaining steps/sections starting from
+
     [docker compose deployment](../get-started.md#deploy-with-docker-compose)
