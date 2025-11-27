@@ -19,3 +19,5 @@ Also, set `"auto_start": false` for the other pipelines in the same configuratio
 
 Start the application with:
 `docker compose up -d`
+
+Note: If you have multiple GPUs (integrated/discrete), please follow [this](https://dlstreamer.github.io/dev_guide/gpu_device_selection.html) DL Streamer document for selecting the GPU render device of your choice for VA codecs plugins.

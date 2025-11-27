@@ -1,39 +1,35 @@
 :next_page: None
 :prev_page: ../packages
 
-.. _mc_gateway:
+# Industrial Motion-Control ROS2 Gateway
 
-Industrial Motion-Control ROS2 Gateway
-#########################################
+The Industrial Motion-Control ROS2 Gateway is the communication bridge between the DDS and RSTP wire-protocol ROS2 implementation, and Motion Control (MC) IEC-61131-3 standard Intel implementation. It subscribes velocity commands (commonly from Navigation2 stack) and joint trajectories (commonly from MoveIt2 stack), communicates real-time (RT) domain through the Shared Ring Buffer, and gathers the robot's status (Autonomous Mobile Robot's odometry or the industrial robotic arm's joint state) and publishes to the ROS domain.
 
-The Industrial Motion-Control ROS2 Gateway is the communication bridge between DDS/RSTP wire-protocol ROS2 implementation and Motion Control (MC) IEC-61131-3 standard Intel implementation. It subscribes velocity commands (commonly from Navigation2 stack) and joint trajectories (commonly from MoveIt2 stack), communicates Real-Time (RT) Domain through Shared Ring Buffer, and gathers the robot's status (AMR's odometry or industrial arm's joint state) and publishes to ROS domain.
+![arch](./assets/images/mc_gateway_arch.png)
 
-.. figure:: assets/images/mc_gateway_arch.png
-   :align: center
+## Launch Revolute-Revolute Manipulator Robot (RRBot) 2-axis Robotic Arm ROS2 tutorial
 
-.. _ros2-2axis-rrbot:
+This tutorial monitors and controls the RRBot, a double inverted pendulum robots-arm, within the ROS2 framework. It demonstrates motion-control concepts through the [ros2_control](https://control.ros.org/humble/index.html) using a simple 3-linkage, 2-joint arm.
 
-Launch RRBot 2-axis Robotic Arm ROS2 tutorial
-***********************************************
+>  **Note:** This demo uses the Shared Memory Ring Buffer Library ``libshmringbuf``, and requires ``root`` permissions to set up the shared memory. As such, ``sudo -i`` will be used to get elevated permissions.
 
-This tutorial monitors and controls the RRBot (`Revolute-Revolute Manipulator Robot`), a double inverted pendulum robots-arm, within the ROS2 framework. It demonstrates motion-control concepts through the `ros2_control <https://control.ros.org/humble/index.html>`_ using a simple 3-linkage, 2-joint arm.
+#. If not already completed, install **ROS2 Desktop** components in the desired ROS distribution:
 
-.. note:: This demo uses the Shared Memory Ring Buffer Library ``libshmringbuf``, and requires ``root`` permissions to set up the shared memory. As such, ``sudo -i`` will be used to get elevated permissions.
-
-#. Install `ROS2 Desktop <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html>`_ components, if not already completed.
+   [https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html)
 
 #. Install PLCopen Motion Control, ROS2 RRBot databus messages with IEC-61131-3 motion-control demo, and ROS2 RRBot MoveIt2 launcher:
 
-   .. code-block:: bash
+   ```bash
 
-      $ sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf rt-data-agent ros-humble-controller-manager ros-humble-rrbot-bringup ros-humble-rrbot-moveit-demo
+   sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf rt-data-agent ros-humble-controller-manager ros-humble-rrbot-bringup ros-humble-rrbot-moveit-demo
+   ```
 
 #. Open a terminal and run the PLCopen IEC-61131-3 motion-control driver:
 
-   .. code-block:: bash
-
-      $ isolcpus=$(cat /sys/devices/system/cpu/isolated)
-      $ sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_rrbot
+   ```bash
+   isolcpus=$(cat /sys/devices/system/cpu/isolated)
+   sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_rrbot
+   ```
 
    **Note**: By default, ECI isolates CPU cores 1 & 3 (see :doc:`Real-Time Linux <../installation_setup/installation/rt_linux>`).
 
@@ -41,17 +37,17 @@ This tutorial monitors and controls the RRBot (`Revolute-Revolute Manipulator Ro
 
 #. Open a second terminal with elevated permissions:
 
-   .. code-block:: bash
-
-      $ sudo -i
+   ```bash
+   sudo -i
+   ```
 
 #. In the second terminal, set up the ROS2 environment and run the RRBot ROS2 demo:
 
-   .. code-block:: bash
-
-      $ source /opt/ros/humble/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 launch rrbot_bringup rrbot_moveit_demo.launch.py
+   ```bash
+   source /opt/ros/humble/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 launch rrbot_bringup rrbot_moveit_demo.launch.py
+   ```
 
    **Expected Result:**
 
@@ -59,9 +55,9 @@ This tutorial monitors and controls the RRBot (`Revolute-Revolute Manipulator Ro
 
    .. figure:: assets/images/rrbot-rviz.png
 
-   **Note**: The command is correctly executed if no “Error” messages are printed (some warnings might be printed due to missing data). The following is a sample result: 
+   **Note**: The command is correctly executed if no “Error” messages are printed (some warnings might be printed due to missing data). The following is a sample result:
 
-   .. code-block:: console
+   ```shell
 
       [INFO] [launch]: All log files can be found below /root/.ros/log/2022-03-09-18-35-23-491029-2c3d06ed879c-62
       [INFO] [launch]: Default logging verbosity is set to INFO
@@ -91,83 +87,82 @@ This tutorial monitors and controls the RRBot (`Revolute-Revolute Manipulator Ro
       [ros2_control_node-4] [INFO] [1646850936.278047163] [joint_trajectory_controller]: Goal reached, success!
       [run_moveit_cpp-3] [INFO] [1646850936.279264357] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Controller joint_trajectory_controller successfully finished
       [run_moveit_cpp-3] [INFO] [1646850936.308323717] [moveit_ros.trajectory_execution_manager]: Completed trajectory execution with status SUCCEEDED ...
+   ```
 
+## Launch HIWIN 6-axis Robotic Arm ROS2 tutorial
 
-.. _ros2-6axis-hiwin:
+This demo allows you to monitor and control the [HIWIN industrial robots](https://hiwin.com/products/industrial-robotics/#IndustrialRobots) within the ROS2 framework:
 
-Launch HIWIN 6-axis Robotic Arm ROS2 tutorial
-**********************************************
-
-This demo allows you to monitor and control the `HIWIN industrial robots <https://hiwin.com/products/industrial-robotics/#IndustrialRobots>`_ within the ROS2 framework:
-
-.. note:: 
-
-   The HIWIN robot controller's HRSS software must be be updated to at least version 3.2.16
+>  **Note**
+   Update the HIWIN robot controller's HRSS software to at least version 3.2.16
 
    This demo uses the Shared Memory Ring Buffer Library ``libshmringbuf``, and requires ``root`` permissions to set up the shared memory. As such, ``sudo -i`` will be used to get elevated permissions.
 
-#. Install `ROS2 Desktop <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html>`_ components, if not already completed.
+#. If not already completed, install **ROS2 Desktop** components in the desired ROS distribution:
+
+   [https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html)
 
 #. Install PLCopen Motion Control, ROS2 HIWIN databus messages with IEC-61131-3 motion-control demo, and ROS2 HIWIN MoveIt2 launcher:
 
-   .. code-block:: bash
-
-      $ sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
-      $ sudo apt install ros-humble-run-hiwin-plc 
-      $ sudo apt install ros-humble-run-hiwin-moveit
+   ```bash
+   sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
+   sudo apt install ros-humble-run-hiwin-plc
+   sudo apt install ros-humble-run-hiwin-moveit
+   ```
 
 #. Open a terminal and run the Robot-ARM PLCopen IEC-61131-3 motion-control driver:
 
-   .. code-block:: bash
-
-      $ isolcpus=$(cat /sys/devices/system/cpu/isolated)
-      $ sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_robot_arm_rtmotion
+   ```bash
+   isolcpus=$(cat /sys/devices/system/cpu/isolated)
+   sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_robot_arm_rtmotion
+   ```
 
    **Note**: By default, ECI isolates CPU cores 1 & 3 (see :doc:`Real-Time Linux <../installation_setup/installation/rt_linux>`).
 
 #. Open a second terminal with elevated permissions:
 
-   .. code-block:: bash
-
-      $ sudo -i
+   ```bash
+   sudo -i
+   ```
 
 #. In the second terminal, set up the ROS2 environment and run the ROS2 HIWIN databus messages with IEC-61131-3 motion-control demo:
 
-   .. code-block:: bash
-
-      $ source /opt/ros/humble/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 run run_hiwin_plc run_hiwin_plc
+   ```bash
+   source /opt/ros/humble/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 run run_hiwin_plc run_hiwin_plc
+   ```
 
 #. Open a third terminal with elevated permissions:
 
-   .. code-block:: bash
-
-      $ sudo -i
+   ```bash
+   sudo -i
+   ```
 
 #. In the third terminal, set up the ROS2 environment and run the ROS2 HIWIN MoveIt2 launch file:
 
-   .. code-block:: bash
+   ```bash
+   source /opt/ros/humble/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 launch run_hiwin_plc run_hiwin_plc.launch.py
+   ```
 
-      $ source /opt/ros/humble/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 launch run_hiwin_plc run_hiwin_plc.launch.py
 
-   The demo begins by computing a simple motion plan which is visualized via a transparent RobotState display. This step alone involves a large number of components, such as IK, collision checking, planning scene, robot model, OMPL planning plugin and planner adapters. Immediately after, the trajectory is executed on the HIWIN `ros2_control` hardware interface.
+   The demo begins by computing a simple motion plan which is visualized via a transparent RobotState display. This step alone involves a large number of components, such as IK, collision checking, planning scene, robot model, OMPL planning plugin, and planner adapters. Immediately after, the trajectory is executed on the HIWIN `ros2_control` hardware interface.
 
    **Expected Result:**
 
    MoveIt2 and other ROS2 nodes start correctly without errors if RViz GUI is active and shows a robot arm moving periodically.
 
-   .. figure:: assets/images/hiwin-rviz.png
+   ![hiwin-rviz](./assets/images//hiwin-rviz.png)
 
-   .. tip:: 
-         
-         If no messages are displayed on the third terminal, verify that the environment variable ``ROS_DOMAIN_ID`` has been properly set to the same value in both terminal environments.
+   > **Tip:**
+     If no messages are displayed on the third terminal, verify that the environment variable ``ROS_DOMAIN_ID`` has been properly set to the same value in both terminal environments.
 
-   **Note**: The command is correctly executed if no “Error” messages are printed (some warnings might be printed due to missing data). The following is a sample result: 
+   > **Note:**
+     The command is correctly executed if no “Error” messages are printed (some warnings might be printed due to missing data). The following is a sample result:
 
-   .. code-block:: console
+   ```shell
 
       [INFO] [launch]: All log files can be found below /home/root/.ros/log/2020-12-01-06-23-24-352240-ecs-intel-4273-3533
       [INFO] [launch]: Default logging verbosity is set to INFO
@@ -190,49 +185,51 @@ This demo allows you to monitor and control the `HIWIN industrial robots <https:
       [run_hiwin_moveit-3] [INFO] [1606803831.723565262] [ompl]: /usr/src/debug/ompl/1.5.0-1-r0/git/src/ompl/tools/multiplan/src/ParallelPlan.cpp:135 - ParallelPlan::solve(): Solution found by one or more threads in 0.000756 seconds
       [run_hiwin_moveit-3] [INFO] [1606803831.726168559] [ompl]: /usr/src/debug/ompl/1.5.0-1-r0/git/src/ompl/geometric/src/SimpleSetup.cpp:179 - SimpleSetup: Path simplification took 0.002559 seconds and changed from 3 to 2 states
       [run_hiwin_moveit-3] [INFO] [1606803831.728662079] [moveit_cpp_demo]: Sending the trajectory for execution
+   ```
 
-.. _ros2-agvm:
+## Launch AGV ROS2 tutorial
 
-Launch AGV ROS2 tutorial
-*****************************
+This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) using the EtherCAT wired-protocol control on four Mecanum wheel-drive chassis within the ROS2 framework. [YDLidar Communication Protocol for ROS2](https://github.com/YDLIDAR/YDLidar-SDK/blob/master/doc/YDLidar-SDK-Communication-Protocol.md) is used for ``ydlidar`` devices to configure Light Detection and Ranging (LiDAR) in the ROS2 environment.
 
-This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) using the EtherCAT wired-protocol control on four Mecanum wheel-drive chassis within the ROS2 framework. `YDLidar Communication Protocol for ROS2 <https://github.com/YDLIDAR/YDLidar-SDK/blob/master/doc/YDLidar-SDK-Communication-Protocol.md>`_ is used for ``ydlidar`` devices to configure LiDAR in the ROS2 environment. 
+> **Note:**
+  This demo uses the Shared Memory Ring Buffer Library ``libshmringbuf``, and requires ``root`` permissions to set up the shared memory. As such, ``sudo -i`` will be used to get elevated permissions.
 
-.. note:: This demo uses the Shared Memory Ring Buffer Library ``libshmringbuf``, and requires ``root`` permissions to set up the shared memory. As such, ``sudo -i`` will be used to get elevated permissions.
-   
-#. Install `ROS2 Desktop <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html>`_ components, if not already completed.
+#. If not already completed, install **ROS2 Desktop** components in the desired ROS distribution:
 
-#. Install PLCopen Motion Control and the ROS2 AGVM databus messages with IEC-61131-3 motion-control demo: 
+   [https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html)
 
-   .. code-block:: bash
+#. Install PLCopen Motion Control and the ROS2 AGVM databus messages with IEC-61131-3 motion-control demo:
 
-      $ sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
-      $ sudo apt install ros-humble-agvm
+   ```bash
+
+   sudo apt install pciutils plcopen-motion plcopen-servo plcopen-databus libshmringbuf-dev libshmringbuf
+   sudo apt install ros-humble-agvm
+   ```
 
 #. Run the Robot-ARM PLCopen IEC-61131-3 motion-control driver:
 
-   .. code-block:: bash
+   ```bash
+   isolcpus=$(cat /sys/devices/system/cpu/isolated)
+   sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_amr_rtmotion
+   ```
 
-      $ isolcpus=$(cat /sys/devices/system/cpu/isolated)
-      $ sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_amr_rtmotion
-
-   **Note**: By default, ECI isolates CPU cores 1 & 3 (13th generation processors and older) or 2 & 4 (14th generation processors and newer) (see :doc:`Real-Time Linux <../installation_setup/installation/rt_linux>`).
+   **Note**: By default, ECI isolates CPU cores 1 & 3 (13th generation processors and older) or 2 & 4 (14th generation processors and newer) (see [Real-Time Linux](../installation_setup/installation/rt_linux.rst)).
 
    **Note**: ``/opt/plcopen/plc_rt_amr_rtmotion_symg`` is a sample application using EtherCAT to control the Mecanum Wheel Platform.
 
 #. Open a second terminal with elevated permissions:
 
-   .. code-block:: bash
-
-      $ sudo -i
+   ```bash
+   sudo -i
+   ```
 
 #. In the second terminal, set up the ROS2 environment and run the ROS2 AGVM databus messages with IEC-61131-3 motion-control demo:
 
-   .. code-block:: bash
-
-      $ source /opt/ros/humble/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 launch agvm agvm_base.launch.py
+   ```bash
+   source /opt/ros/humble/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 launch agvm agvm_base.launch.py
+   ```
 
    **Expected Result:**
 
@@ -240,9 +237,9 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
 
    **Note**: Since the joystick is disconnected, it is normal to see the error ``[ERROR] [1657850097.527093048] [agvm_joystick_node]: Cannot open /dev/input/js0 -1!``.
 
-   **Note**: The command is correctly executed if no “Error” messages are printed (some warnings might be printed due to missing data). The following is a sample result: 
+   **Note**: The command is correctly executed if no “Error” messages are printed (some warnings might be printed due to missing data). The following is a sample result:
 
-   .. code-block:: console
+   ```shell
 
       [INFO] [launch]: All log files can be found below /root/.ros/log/2022-07-15-01-54-57-311770-d2d206ef9a2c-117
       [INFO] [launch]: Default logging verbosity is set to INFO
@@ -261,24 +258,24 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
       [agvm_plcshm_node-3] [INFO] [1657850097.500876573] [agvm_plcshm_node]: AGV vel: 0.000000 0.000000 345860.687500
       [agvm_plcshm_node-3] [INFO] [1657850097.500895089] [agvm_plcshm_node]: AGV mOdom: 0.000000 0.000000 34586.068726
       [agvm_plcshm_node-3]
+   ```
 
 #. Open a third terminal with elevated permissions:
 
-   .. code-block:: bash
-
-      $ sudo -i
+   ```bash
+   sudo -i
+   ```
 
 #. In the third terminal, set up the ROS2 environment and run the following command:
 
-   .. code-block:: bash
+   ```bash
+   source /opt/ros/humble/setup.bash
+   export ROS_DOMAIN_ID=31
+   ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: -0.1}, angular: {z: -0.1}}"
+   ```
 
-      $ source /opt/ros/humble/setup.bash
-      $ export ROS_DOMAIN_ID=31
-      $ ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: -0.1}, angular: {z: -0.1}}"
-
-   **Note**: ``linear: {x: -0.1}`` is the linear velocity(m/s) for AMR. ``angular: {x: -0.1}`` is the angular velocity(rad/s) for AMR.
+   **Note**: ``linear: {x: -0.1}`` is the linear velocity(m/s) for AMR. ``angular: {x: -0.1}`` is the angular velocity(rad/s) for Autonomous Mobile Robot.
 
    **Expected Result:**
 
    Variables ``AGV cmd/pose/vel/mOdom`` in the second terminal console will be refreshed.
-

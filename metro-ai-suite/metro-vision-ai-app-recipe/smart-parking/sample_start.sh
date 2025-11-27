@@ -92,19 +92,36 @@ function stop_all_pipelines() {
 }
 
 
-forcedCPU=true
+forcedCPU=false
 forcedGPU=false
 forcedNPU=false
 
 for arg in "$@"; do
   if [ "$arg" == "cpu" ]; then
       forcedCPU=true
+      forcedGPU=false
+      forcedNPU=false
   elif [ "$arg" == "gpu" ]; then
+      forcedCPU=false
       forcedGPU=true
+      forcedNPU=false
   elif [ "$arg" == "npu" ]; then
+      forcedCPU=false
+      forcedGPU=false
       forcedNPU=true
+  else
+      echo "Unknown argument '$arg', defaulting to CPU"
+      forcedCPU=true
+      forcedGPU=false
+      forcedNPU=false
   fi
 done
+
+# If no arguments provided, default to CPU
+if [ $# -eq 0 ]; then
+  echo "No device selected, defaulting to CPU"
+  forcedCPU=true
+fi
 
 
 stop_all_pipelines

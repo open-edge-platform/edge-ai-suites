@@ -14,6 +14,9 @@ All notable changes to this project are documented in this file.
 - Enabled publishing of source timestamp from simulator for time-series data. ([#801])
 - Added comprehensive Helm chart structure and deployment documentation for multimodal app. ([#813])
 - Added "How to Deploy with Helm" section to documentation. ([#837])
+- Added comprehensive troubleshooting guides covering Grafana data visibility, InfluxDB retention policies, microservice startup delays, and deployment issues. ([#1130])
+- Added configurable session timeout settings for Grafana to control inactive user logout duration. ([#1000])
+- Added DLStreamer pipeline server references and detailed pipeline configuration documentation. ([#1002], [#1010])
 
 ### Changed
 - Updated fusion logic default mode from "AND" to "OR" for anomaly detection, improving detection flexibility. ([#794])
@@ -31,19 +34,38 @@ All notable changes to this project are documented in this file.
 - Fixed dashboard name references in documentation. ([#881])
 - Updated documentation for multimodal weld defect detection, transitioning from wind turbine anomaly detection theme. ([#838])
 - Improved documentation clarity and consistency across files.
+- Updated documentation to include DLStreamer pipeline server references and modernized system requirements. ([#1002], [#1010])
+- Improved formatting and organization of multimodal documentation. ([#1035], [#1036], [#1037])
+- Updated README with proper links and references. ([#1042])
+- Fixed documentation issues including spelling errors, incorrect URLs, and content organization. ([#1099])
+- Updated to rc1 and rc2 tag references instead of weekly releases. ([#1004], [#1129])
+- Added default values for environment variables in docker-compose.yml to overcome warnings. ([#1004])
+- Updated logging levels and message formatting in weld-data-simulator for improved clarity. ([#1082])
+- Updated MQTT client initialization to use newer API version. ([#1082])
+- Updated third-party dependency information, license attribution, package versions, and Docker image references. ([#1187])
+- Updated source key extraction to check both point.tags and point.fieldsString fields in UDFs. ([#1145])
+- Renamed server variable to stream_src for better clarity and introduced WELD_CURRENT_THRESHOLD constant. ([#1145])
 
 ### Removed
-- Removed Helm chart deployment support for the industrial-edge-insights-multimodal sample application due to Kubernetes networking issues. Docker Compose deployment remains supported. ([#896])
+- Removed Helm chart deployment support for the industrial-edge-insights-multimodal sample application due to Kubernetes networking issues. Docker Compose deployment remains supported. ([#896], [#1158])
+- Removed Helm deployment references from troubleshooting and getting started documentation. ([#1158])
+- Hidden toctree directive in release notes and updated configuration variable documentation to reference only Docker Compose. ([#1158])
 
 ### Security
 - Addressed Trivy image scan vulnerabilities by updating Python base image version and upgrading pip in all affected Dockerfiles. ([#928])
 - Added SSL configuration to nginx for secure communications. ([#851])
+- Enhanced container security by implementing read-only filesystem configurations and privilege restrictions across multiple Docker services (nginx_proxy, ia-fusion-analytics, dlstreamer-pipeline-server, mediamtx, coturn). ([#1149])
 
 ### Fixed
 - Fixed DBS GitHub workflow by adding HOST_IP environment variable and correcting scan names. ([#916])
 - Reordered CWD variable assignment in workflow scripts.
 - Fixed minor documentation issues. ([#841])
 - Fixed table of contents in MultiModal Weld Defect Detection documentation. ([#842])
+- Fixed WebRTC publishing issues in secure mode by updating nginx configuration to properly route WHIP/WHEP traffic. ([#1089])
+- Updated Grafana dashboard iframe to use HTTPS protocol with explicit port handling. ([#1089])
+- Moved simulation data from Dockerfile to volume mount for optimized Weld Data Simulator container. ([#1004])
+- Fixed UDF implementations for handling source key from data points. ([#1145])
+- Fixed documentation issues including typos, broken links, and image references. ([#1099], [#1135])
 
 ---
 
@@ -70,3 +92,21 @@ All notable changes to this project are documented in this file.
 [#916]: https://github.com/open-edge-platform/edge-ai-suites/commit/9480ed085f9807fc081a63d3239ded4066ac8423
 [#841]: https://github.com/open-edge-platform/edge-ai-suites/commit/9c21e8fbdc32ebf46f8bb8e6314cfa4bee6bb31e
 [#842]: https://github.com/open-edge-platform/edge-ai-suites/commit/fb37dc26b86020ce0ea256a568a2a16a8781c185
+[#1000]: https://github.com/open-edge-platform/edge-ai-suites/commit/5bd639ac6ddb6a718526d6c674bb18bcb4e7f0f1
+[#1002]: https://github.com/open-edge-platform/edge-ai-suites/commit/6974f43d176573dea3147b90c9da5f3cf20944a8
+[#1004]: https://github.com/open-edge-platform/edge-ai-suites/commit/acb9d60139e771be75f432f778b3ab080e0befcb
+[#1010]: https://github.com/open-edge-platform/edge-ai-suites/commit/6974f43d176573dea3147b90c9da5f3cf20944a8
+[#1035]: https://github.com/open-edge-platform/edge-ai-suites/commit/6b9376ffba85c586cdc7cd511c6317aa4b37a5be
+[#1036]: https://github.com/open-edge-platform/edge-ai-suites/commit/3b83c5efb6dd1762f9853d34af163345caad2ec4
+[#1037]: https://github.com/open-edge-platform/edge-ai-suites/commit/3b83c5efb6dd1762f9853d34af163345caad2ec4
+[#1042]: https://github.com/open-edge-platform/edge-ai-suites/commit/e12c57aeb7a55412e83c5bee941add50965b80bf
+[#1082]: https://github.com/open-edge-platform/edge-ai-suites/commit/54a098bf320e2793d96c5645d1f5f8148bcd226b
+[#1089]: https://github.com/open-edge-platform/edge-ai-suites/commit/81c43c8dd1d5f68725a7b880a68956e3abcb9e3e
+[#1099]: https://github.com/open-edge-platform/edge-ai-suites/commit/8eee2a0cdd4d10f98d33068440e362c3ee0eb34a
+[#1129]: https://github.com/open-edge-platform/edge-ai-suites/commit/4fc8736cda1bf2ac035993ed7e72001e38433d77
+[#1130]: https://github.com/open-edge-platform/edge-ai-suites/commit/489dd1611edf8f235a7f68cf8b247a8c3ef328d4
+[#1135]: https://github.com/open-edge-platform/edge-ai-suites/commit/5a67258537099aeb5a3018d50deabe6466c4decb
+[#1145]: https://github.com/open-edge-platform/edge-ai-suites/commit/6ce8356e5e362db0831a3c0004c84b5ee13d16d6
+[#1149]: https://github.com/open-edge-platform/edge-ai-suites/commit/4f19e57527e496ac2a9c13f11515028a616fc9d0
+[#1158]: https://github.com/open-edge-platform/edge-ai-suites/commit/4e2659f30f5c78c20f8659da8db2a3225cd64d09
+[#1187]: https://github.com/open-edge-platform/edge-ai-suites/commit/b61e0cada9f4a4dfb64b2b5928b7be07832f8c87

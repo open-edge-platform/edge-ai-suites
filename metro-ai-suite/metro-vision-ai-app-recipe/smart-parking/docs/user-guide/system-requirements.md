@@ -27,7 +27,7 @@ This section provides detailed hardware, software, and platform requirements to 
 **Required Software**:
 - Docker 24.0 or higher 
 - Python 3.10+
-- Git
+- Git, jq, unzip
 
 ## Compatibility Notes
 
