@@ -1,9 +1,23 @@
-Smart Intersection
-========================================
+# Smart Intersection
+
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2025.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2025.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/README.md">
+     Readme
+  </a>
+  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2025.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md">
+     Installation guide
+  </a>
+</div>
+hide_directive-->
 
 Smart Intersection Sample Application uses edge AI to improve traffic flow. It combines feeds from multiple cameras to track vehicles across angles, analyze speed and direction, and understand interactions in real space. The system can run on existing cameras and deliver real-time, coordinated insights for smarter traffic monitoring.
 
 **Example Use Cases**
+
 - **Pedestrian Safety**: Enhance safety for people crossing the street. The system tracks pedestrians at crosswalks. It alerts when people walk outside safe crossing areas.
 - **Traffic Flow Monitoring**: Count vehicles and measure dwell time in each lane. The system detects when vehicles stay too long in lanes. This identifies stalled cars, accidents, and traffic jams.
 
@@ -18,16 +32,18 @@ The key benefits are as follows:
 
 This guide is designed to help developers understand the architecture, setup, and customization of the sample application.
 
+<!--hide_directive
+:::{toctree}
 
-.. toctree::
-
-   Overview
-   how-it-works
-   system-requirements
-   get-started
-   how-to-deploy-helm
-   how-to-use-gpu-for-inference
-   how-to-deploy-with-edge-orchestrator
-   application-security-enablement
-   release-notes
-   support
+Overview
+how-it-works
+system-requirements
+get-started
+how-to-deploy-helm
+how-to-use-gpu-for-inference
+how-to-deploy-with-edge-orchestrator
+application-security-enablement
+release-notes
+support
+:::
+hide_directive-->

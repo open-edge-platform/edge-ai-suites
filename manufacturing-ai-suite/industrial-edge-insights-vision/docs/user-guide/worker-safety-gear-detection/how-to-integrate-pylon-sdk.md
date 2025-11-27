@@ -35,9 +35,9 @@ RUN apt-get update && apt-get install -y wget gnupg gstreamer1.0-plugins-base li
 
 RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
 
-RUN wget https://downloads-ctf.baslerweb.com/dg51pdwahxgw/16EbjATpV78LtOFUQ1VpJM/ab3db40227afb59df3eb1cccf0c5addc/pylon-7.5.0.15658-linux-x86_64_debs.tar.gz &&     tar -xvzf pylon-7.5.0.15658-linux-x86_64_debs.tar.gz && rm pylon-7.5.0.15658-linux-x86_64_debs.tar.gz && dpkg -i pylon_7.5.0.15658-deb0_amd64.deb || apt-get install -fy && rm pylon_7.5.0.15658-deb0_amd64.deb
+RUN cd /tmp && wget https://downloads-ctf.baslerweb.com/dg51pdwahxgw/16EbjATpV78LtOFUQ1VpJM/ab3db40227afb59df3eb1cccf0c5addc/pylon-7.5.0.15658-linux-x86_64_debs.tar.gz &&     tar -xvzf pylon-7.5.0.15658-linux-x86_64_debs.tar.gz && rm pylon-7.5.0.15658-linux-x86_64_debs.tar.gz && dpkg -i pylon_7.5.0.15658-deb0_amd64.deb || apt-get install -fy && rm pylon_7.5.0.15658-deb0_amd64.deb
 
-RUN wget https://github.com/basler/gst-plugin-pylon/releases/download/v1.0.0/gst-plugin-pylon_1.0.0-1.ubuntu-24.04_amd64.deb && dpkg -i gst-plugin-pylon_1.0.0-1.ubuntu-24.04_amd64.deb && rm gst-plugin-pylon_1.0.0-1.ubuntu-24.04_amd64.deb
+RUN cd /tmp && wget https://github.com/basler/gst-plugin-pylon/releases/download/v1.0.0/gst-plugin-pylon_1.0.0-1.ubuntu-24.04_amd64.deb && dpkg -i gst-plugin-pylon_1.0.0-1.ubuntu-24.04_amd64.deb && rm gst-plugin-pylon_1.0.0-1.ubuntu-24.04_amd64.deb
 
 COPY ./thirdparty/install_gencamsrc_gstreamer_plugin.sh /home/pipeline-server/install_gencamsrc_gstreamer_plugin.sh
 COPY ./plugins/camera/src-gst-gencamsrc /home/pipeline-server/src-gst-gencamsrc

@@ -90,6 +90,7 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, folder_name="/simulation-
             # The rest of the code will process each file in the loop
             csv_data = pd.read_csv(filename, nrows=0)
             columns = csv_data.columns.tolist()
+            source = f"mqtt-publisher-{os.getenv('INSTANCE_ID', '1')}"
             chunk_size = 1000
             start_time = time.time()
             row_served = 0
@@ -102,7 +103,7 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, folder_name="/simulation-
                         row_served += 1
                         continue
                     try:
-                        msg = jencoder.encode({col: row[col] for col in columns})
+                        msg = jencoder.encode({**{col: row[col] for col in columns}, 'source': source})
                         print("Publishing message %s", msg)
                         mqttc.publish(topic, msg)
                     except (ValueError, IndexError):

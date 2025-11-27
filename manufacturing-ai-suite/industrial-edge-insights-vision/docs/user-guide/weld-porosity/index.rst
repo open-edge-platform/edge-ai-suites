@@ -95,8 +95,6 @@ This sample application offers the following features:
    how-to-use-gpu-for-inference
    how-to-use-opcua-publisher
    how-to-benchmark
-   how-to-install-balluff-sdk-on-host
-   how-to-install-pylon-sdk-on-host
    api-reference
    environment-variables
    release_notes/Overview

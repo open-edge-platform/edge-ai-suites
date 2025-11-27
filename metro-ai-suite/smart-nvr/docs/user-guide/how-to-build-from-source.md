@@ -58,6 +58,7 @@ export TAG=<your-tag>                                # e.g. "rc4" or "latest"
 # Run the build script that takes the build values
 ./build.sh
 ```
+
 ### Building with Copyleft Sources
 
 If you need to include copyleft sources in your build, you can set the following environment variable:
@@ -73,6 +74,6 @@ When this environment variable is set to `true`, it allows the Dockerfiles to co
 - **[Get Started](./get-started.md)**: Complete the initial setup and configuration steps
 - **[How to Use the Application](./how-to-use-application.md)**: Learn about the application's features and functionality
 - **[API Reference](./api-reference.md)**: Explore the available REST API endpoints
-- **[Troubleshooting](./Troubleshooting.md#troubleshooting-docker-deployments)**: Find solutions to common deployment issues
+- **[Troubleshooting](./troubleshooting.md#troubleshooting-docker-deployments)**: Find solutions to common deployment issues
 - **[System Requirements](./system-requirements.md)**: Review hardware and software requirements
 

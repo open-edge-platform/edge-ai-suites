@@ -132,7 +132,7 @@ services:
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
       NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
-      GF_SERVER_ROOT_URL: http://localhost/grafana/
+      GF_SERVER_ROOT_URL: https://localhost/grafana/
       GF_SERVER_SERVE_FROM_SUB_PATH: true
       GF_PANELS_DISABLE_SANITIZE_HTML: true
       GF_SECURITY_ALLOW_EMBEDDING: true
