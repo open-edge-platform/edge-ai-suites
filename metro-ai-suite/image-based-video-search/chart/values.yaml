@@ -254,7 +254,7 @@ streaming:
     # key: streaming.repository.image
     image: docker.io/intel/streaming-pipeline
     # key: streaming.repository.tag
-    tag: v1.1.0-RC1
+    tag: v1.1.0-RC2
   # key: streaming.replicas
   replicas: 1
   # key: streaming.nodeSelector
@@ -297,7 +297,7 @@ app:
     # key: app.repository.image
     image: docker.io/intel/image-based-video-search
     # key: app.repository.tag
-    tag: v1.1.0-RC1
+    tag: v1.1.0-RC2
   # key: app.replicas
   replicas: 1
   # key: app.nodeSelector
@@ -354,7 +354,7 @@ featurematching:
     # key: featurematching.repository.image
     image: docker.io/intel/feature-matching
     # key: featurematching.repository.tag
-    tag: v1.1.0-RC1
+    tag: v1.1.0-RC2
   # key: featurematching.replicas
   replicas: 1
   # key: featurematching.nodeSelector
