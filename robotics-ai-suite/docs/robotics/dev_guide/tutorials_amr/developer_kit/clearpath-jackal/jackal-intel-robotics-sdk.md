@@ -231,9 +231,25 @@ Reboot the robot, so that the new configuration will be propagated.
 
 If not already installed, use the following command to install the ROS2 TF2 Tools:
 
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1hide_directive-->
+
+```bash
+sudo apt install ros-jazzy-tf2-tools
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2hide_directive-->
+
 ```bash
 sudo apt install ros-humble-tf2-tools
 ```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
+
 
 To verify that the robot state publisher communicates the correct TF2 tree,
 run the following command:
@@ -353,22 +369,53 @@ and verify that the required ROS 2 topics are published:
 ```
 
 The names of the camera-related topics depend on the version of the
-``ros-humble-realsense2-camera`` package on your system. The list above
+``ros-jazzy-realsense2-camera`` package on your system. The list above
 has been created on a system with version 4.55 of this package.
 
 To identify the installed package version on your board, run the command:
+
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1hide_directive-->
+
+```bash
+apt show ros-jazzy-realsense2-camera
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2hide_directive-->
 
 ```bash
 apt show ros-humble-realsense2-camera
 ```
 
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
+
 The following table shows how the names of the camera-related topics
 depend on the package version.
+
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: tab1hide_directive-->
+
+|Version of ``ros-jazzy-realsense2-camera``|Camera-related topics start with|
+|---|---|
+|4.55|``/sensors/camera_0/camera/``|
+|4.54|``/sensors/camera_0/``|
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: tab2hide_directive-->
 
 |Version of ``ros-humble-realsense2-camera``|Camera-related topics start with|
 |---|---|
 |4.55|``/sensors/camera_0/camera/``|
 |4.54|``/sensors/camera_0/``|
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Jackal Troubleshooting
 
