@@ -22,6 +22,11 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
   const videoAnalyticsLoading = useAppSelector((state) => state.ui.videoAnalyticsLoading);
   const videoAnalyticsActive = useAppSelector((state) => state.ui.videoAnalyticsActive);
   const isRecording = useAppSelector((state) => state.ui.aiProcessing);
+  
+  // Add these selectors to track the overall recording state
+  const uploadedAudioPath = useAppSelector((state) => state.ui.uploadedAudioPath);
+  const transcriptStatus = useAppSelector((state) => state.transcript.status);
+  
   const streams = useAppSelector((state) => ({
     front: state.ui.frontCameraStream,
     back: state.ui.backCameraStream,
@@ -51,47 +56,61 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
     return available;
   };
 
+  // Check if any recording/streaming is currently active
+  const isCurrentlyRecording = () => {
+    return isRecording || 
+           uploadedAudioPath === 'MICROPHONE' || 
+           transcriptStatus === 'streaming' ||
+           videoAnalyticsActive;
+  };
+
   const getStreamStatus = () => {
+    // Check if video analytics is loading (starting or stopping)
     if (videoAnalyticsLoading) {
       return "loading";
     }
+    
+    // Check if video analytics is active and has streams
     if (videoAnalyticsActive && hasValidStreams()) {
       return "active";
     }
-    if (isRecording && !videoAnalyticsActive && !videoAnalyticsLoading) {
-      return "audio_only"; // Recording but no video analytics
+    
+    // Check if we're currently recording/streaming
+    const currentlyRecording = isCurrentlyRecording();
+    
+    if (currentlyRecording && !videoAnalyticsActive && !videoAnalyticsLoading) {
+      return "audio_only"; 
     }
+    
+    // If nothing is recording and no video analytics, show upload option
+    if (!currentlyRecording && !videoAnalyticsActive && !videoAnalyticsLoading) {
+      return "inactive";
+    }
+    
+    // Check if video analytics was attempted but failed during recording
+    if (currentlyRecording && !videoAnalyticsActive && !videoAnalyticsLoading) {
+      const hasEmptyStreams = streams.front === '' && streams.back === '' && streams.content === '';
+      if (hasEmptyStreams) {
+        return "video_failed";
+      }
+    }
+    
     return "inactive";
   };
 
-  // Auto-select appropriate stream view based on available streams
   React.useEffect(() => {
     const availableStreams = getAvailableStreams();
     if (availableStreams.length > 0 && videoAnalyticsActive) {
-      // If we have multiple streams, show all
       if (availableStreams.length > 1) {
         dispatch(setActiveStream('all'));
       } else {
-        // If we have only one stream, show that specific stream
         dispatch(setActiveStream(availableStreams[0] as "front" | "back" | "content"));
       }
+    } else if (!videoAnalyticsActive) {
+      // Clear active stream when video analytics is not active
+      dispatch(setActiveStream(null));
     }
   }, [streams.front, streams.back, streams.content, videoAnalyticsActive, dispatch]);
- 
-  console.log('VideoStream Debug:', {
-    activeStream,
-    streams,
-    videoAnalyticsActive,
-    videoAnalyticsLoading,
-    isRecording,
-    streamStatus: getStreamStatus(),
-    isValidStreams: {
-      front: isValidStream(streams.front),
-      back: isValidStream(streams.back),
-      content: isValidStream(streams.content)
-    },
-    availableStreams: getAvailableStreams()
-  });
  
   const handleToggleRoomView = () => {
     setIsRoomView(!isRoomView);
@@ -183,7 +202,12 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
           {streamStatus === "loading" ? (
             <div className="stream-placeholder">
               <Spinner />
-              <p>Initializing video analytics...</p>
+              <p>
+                {videoAnalyticsActive 
+                  ? "Stopping video analytics..." 
+                  : "Initializing video analytics..."
+                }
+              </p>
             </div>
           ) : streamStatus === "audio_only" ? (
             <div className="stream-placeholder">
@@ -196,6 +220,18 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
               <p>Recording audio without video analytics.</p>
               <p>Video analytics service may not be available or cameras not configured.</p>
               <small>Configure cameras in settings to enable video analytics.</small>
+            </div>
+          ) : streamStatus === "video_failed" ? (
+            <div className="stream-placeholder">
+              <img
+                src={streamingIcon}
+                alt="Video Failed Icon"
+                className="streaming-icon"
+              />
+              <h3>Audio Recording Active</h3>
+              <p>Video analytics attempted but failed to start.</p>
+              <p>Continuing with audio-only recording.</p>
+              <small>Check camera configurations or backend video service.</small>
             </div>
           ) : streamStatus === "inactive" ? (
             <div className="stream-placeholder">
@@ -269,9 +305,14 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
                 alt="Streaming Icon"
                 className="streaming-icon"
               />
-              <p>Video analytics attempted but no streams available</p>
-              <p>Check camera configurations or backend video service</p>
-              <small>Audio recording continues normally</small>
+              <p>Configure cameras in settings to enable video analytics</p>
+              <p>Or upload audio/video files to get started</p>
+              <button
+                className="upload-file-button"
+                onClick={() => setIsUploadModalOpen(true)}
+              >
+                Upload File
+              </button>
             </div>
           )}
         </div>

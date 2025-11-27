@@ -12,6 +12,7 @@ export interface UIState {
   autoSwitched: boolean;
   autoSwitchedToMindmap: boolean;
   sessionId: string | null;
+  videoSessionId: string | null; // Add video session ID
   uploadedAudioPath: string | null;
   shouldStartSummary: boolean;
   shouldStartMindmap: boolean;
@@ -37,6 +38,7 @@ const initialState: UIState = {
   autoSwitched: false,
   autoSwitchedToMindmap: false,
   sessionId: null,
+  videoSessionId: null, // Initialize video session ID
   uploadedAudioPath: null,
   shouldStartSummary: false,
   shouldStartMindmap: false,
@@ -71,6 +73,7 @@ const uiSlice = createSlice({
       state.shouldStartMindmap = false;
       state.videoAnalyticsLoading = false;
       state.videoAnalyticsActive = false;
+      // Don't reset videoSessionId here as it's managed independently
     },
  
     processingFailed(state) {
@@ -79,6 +82,7 @@ const uiSlice = createSlice({
       state.mindmapLoading = false;
       state.videoAnalyticsLoading = false;
       state.videoAnalyticsActive = false;
+      // Don't reset videoSessionId here as it might still be needed
     },
  
     transcriptionComplete(state) {
@@ -105,6 +109,10 @@ const uiSlice = createSlice({
       if (typeof v === 'string' && v.trim().length > 0) {
         state.sessionId = v;
       }
+    },
+
+    setVideoSessionId(state, action: PayloadAction<string | null>) {
+      state.videoSessionId = action.payload;
     },
     
     setActiveStream(state, action: PayloadAction<'front' | 'back' | 'content' | 'all' | null>) {
@@ -222,6 +230,7 @@ export const {
   clearSummaryStartRequest,
   setUploadedAudioPath,
   setSessionId,
+  setVideoSessionId, // Export the new action
   setActiveStream,
   resetStream,
   startStream,

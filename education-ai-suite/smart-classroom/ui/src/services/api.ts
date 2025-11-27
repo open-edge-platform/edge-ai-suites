@@ -492,3 +492,24 @@ export async function startMicrophone(): Promise<{ status: string; message: stri
     sessionId
   };
 }
+
+export async function createSession(): Promise<{ sessionId: string }> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/create-session`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+ 
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('❌ Failed to create session:', errorText);
+      throw new Error(`Failed to create session: ${res.status}`);
+    }
+ 
+    const data = await res.json();
+    const sessionId = data['session-id'];
+    console.log('🟢 Session ID fetched:', sessionId);
+ 
+    return { sessionId };
+  });
+}
