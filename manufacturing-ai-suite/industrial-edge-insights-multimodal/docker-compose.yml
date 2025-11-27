@@ -118,7 +118,7 @@ services:
     - ./configs/time-series-analytics-microservice/tick_scripts/:/tmp/weld_anomaly_detector/tick_scripts/:ro
     - ./configs/time-series-analytics-microservice/config.json:/app/config.json:ro
     - ./configs/time-series-analytics-microservice/models/:/tmp/weld_anomaly_detector/models/:ro
-    - /dev/dri:/dev/dri:ro
+    - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:
     # render group ID for ubuntu 20.04 host OS
@@ -130,7 +130,7 @@ services:
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
-    - "/dev/dri:/dev/dri"
+    - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   ia-grafana:
     image: grafana/grafana-oss:12.0.0-ubuntu
