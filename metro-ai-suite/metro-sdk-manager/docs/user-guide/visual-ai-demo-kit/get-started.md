@@ -56,8 +56,6 @@ Navigate to the metro-vision-ai-app-recipe directory:
 cd ~/metro/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ```
 
-![Visual AI Demo Kit Installation](images/visual-ai-demo-kit-install.png)
-
 ### Step 2: Setup Application and Download Assets
 
 Use the installation script to configure the application and download required models. Available applications include smart-parking, smart-intersection, and other visual AI use cases:
@@ -103,7 +101,7 @@ Start video streams to run video inference pipelines:
 
 ### Step 5: View the Application Output
 
-1. Open a browser and go to `http://localhost:3000` to access the Grafana dashboard
+1. Open a browser and go to `https://localhost/grafana` to access the Grafana dashboard
    - Change localhost to your host IP if accessing remotely
 2. Log in with the following credentials:
    - **Username**: `admin`

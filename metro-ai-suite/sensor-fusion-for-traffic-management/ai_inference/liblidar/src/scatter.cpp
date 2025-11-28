@@ -50,7 +50,7 @@ Scatter::Scatter(const int num_features, const int max_num_pillars, const int gr
 void Scatter::DoScatter(const int pillar_count, int *x_coors, int *y_coors, float *pfe_output, float *scattered_feature)
 {
     // Launch the scatter kernel on each (n-pillar , m-feature)
-    sycl::queue queue = dev_mgr_->getQue();
+    sycl::queue &queue = dev_mgr_->getQue();
     queue.submit([&](auto &h) {
         auto max_num_pillars_ct4 = max_num_pillars_;
         auto grid_x_size_ct5 = grid_x_size_;

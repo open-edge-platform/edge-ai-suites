@@ -44,10 +44,10 @@ Optional: Pull the helm chart and replace the existing helm-chart folder with it
 cd smart-parking
 
 #Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.3.0-rc1
+helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.3.0-rc2
 
 #unzip the package using the following command
-tar -xvf smart-parking-1.3.0-rc1.tgz
+tar -xvf smart-parking-1.3.0-rc2.tgz
 
 #Replace the helm directory
 rm -rf helm-chart && mv smart-parking helm-chart
@@ -93,7 +93,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 
 ``` sh
 #!/bin/bash
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_cpu -X POST -H 'Content-Type: application/json' -d '
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/new_video_1.mp4",
@@ -115,7 +115,7 @@ curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_
     }
 }'
 
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_cpu -X POST -H 'Content-Type: application/json' -d '
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/new_video_2.mp4",
@@ -137,7 +137,7 @@ curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_
     }
 }'
 
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_cpu -X POST -H 'Content-Type: application/json' -d '
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/new_video_3.mp4",
@@ -159,7 +159,7 @@ curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_
     }
 }'
 
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s_1_cpu -X POST -H 'Content-Type: application/json' -d '
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
 {
     "source": {
         "uri": "file:///home/pipeline-server/videos/new_video_4.mp4",

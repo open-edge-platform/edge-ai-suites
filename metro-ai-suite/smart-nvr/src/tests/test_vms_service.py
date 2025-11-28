@@ -36,7 +36,8 @@ async def test_upload_video_success(monkeypatch, tmp_path):
     v = VmsService(fs, ss)
     # Provide large enough stream
     monkeypatch.setattr(fs, 'get_clip_from_timestamps', lambda *a, **k: DummyStream([b'a' * 150]))
-    monkeypatch.setattr(ss, 'video_upload', lambda path, base: {'videoId': 'vid123'})
+    # Updated signature includes camera_name
+    monkeypatch.setattr(ss, 'video_upload', lambda path, base, cam: {'videoId': 'vid123'})
     resp = await v.upload_video_to_summarizer('cam', 1, 5, False)
     assert resp['status'] == 200 and resp['message'] == 'vid123'
 

@@ -39,7 +39,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
 
     # application directory
-    SAMPLE_APP=env_weld_porosity_classification
+    SAMPLE_APP=weld-porosity
     ```
 
 4.  Install pre-requisites. Run with sudo if needed.
@@ -59,9 +59,9 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    sudo systemctl start docker
    ```
 
-    ```bash
-    docker compose up -d
-    ```
+   ```bash
+   docker compose up -d
+   ```
 
 6.  Fetch the list of pipeline loaded available to launch
 

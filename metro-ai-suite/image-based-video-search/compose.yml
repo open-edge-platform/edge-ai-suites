@@ -46,14 +46,14 @@ services:
         condition: service_healthy
 
   feature-matching:
-    image: ${DOCKER_REGISTRY}intel/feature-matching:v1.1.0-RC1
+    image: ${DOCKER_REGISTRY}intel/feature-matching:v1.1.0-RC2
     container_name: ibvs-featurematching
     build:
       context: src/feature-matching
       dockerfile: Dockerfile
     read_only: true
     tmpfs:
-    - /usr/src/app/static
+    - /usr/src/app/static:uid=1999,gid=1999,mode=775
     environment:
       MILVUS_ENDPOINT: http://milvus-db:19530
       COLLECTION_NAME: my_image_collection
@@ -83,7 +83,7 @@ services:
       start_period: 10s
     restart: on-failure:5
   streaming-pipeline:
-    image: ${DOCKER_REGISTRY}intel/streaming-pipeline:v1.1.0-RC1
+    image: ${DOCKER_REGISTRY}intel/streaming-pipeline:v1.1.0-RC2
     build:
       context: src/streaming-pipeline
       dockerfile: Dockerfile
@@ -203,7 +203,7 @@ services:
         condition: service_started
     restart: on-failure:5
   app:
-    image: ${DOCKER_REGISTRY}intel/image-based-video-search:v1.1.0-RC1
+    image: ${DOCKER_REGISTRY}intel/image-based-video-search:v1.1.0-RC2
     container_name: ibvs-app
     build:
       context: src/app

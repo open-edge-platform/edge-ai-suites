@@ -1,20 +1,20 @@
-Install the |intel| NPU Driver on |core| Ultra Processors
-#########################################################
+Install the Intel® NPU Driver on Intel® Core™ Ultra Processors
+##################################################################
 
-If you want to run |openvino| inferencing applications on the NPU device
-of |core| Ultra processors, you need to install the |intel| NPU driver.
-If your system does not have an |core| Ultra Processor, you should skip
+If you want to run OpenVINO™ inferencing applications on the NPU device
+of Intel® Core™ Ultra processors, you need to install the Intel® NPU driver.
+If your system does not have an Intel® Core™ Ultra Processor, you should skip
 this step.
 
-General information on the |intel| NPU driver can be found on the
+General information on the Intel® NPU driver can be found on the
 `Linux NPU Driver <https://github.com/intel/linux-npu-driver/releases>`__
 website. The driver consists of the following packages:
 
-*  ``intel-driver-compiler-npu``: |intel| driver compiler for NPU hardware;
-   the driver compiler enables compilation of |openvino| IR models using
+*  ``intel-driver-compiler-npu``: Intel® driver compiler for NPU hardware;
+   the driver compiler enables compilation of OpenVINO™ IR models using
    the Level Zero Graph Extension API.
-*  ``intel-fw-npu``: |intel| firmware package for NPU hardware.
-*  ``intel-level-zero-npu``: |intel| Level Zero driver for NPU hardware;
+*  ``intel-fw-npu``: Intel® firmware package for NPU hardware.
+*  ``intel-level-zero-npu``: Intel® Level Zero driver for NPU hardware;
    this library implements the Level Zero API to interact with the NPU
    hardware.
 
@@ -27,13 +27,13 @@ website. The driver consists of the following packages:
    For this reason, it's better to use packages from an APT package feed,
    as it is described in the following.
 
-The packages of the |intel| NPU driver are provided by the
+The packages of the Intel® NPU driver are provided by the
 APT package feed, which you have added to your system when you followed
 the instructions on page :doc:`./apt-setup`.
-This APT package feed also provides all dependencies of the |intel| NPU
+This APT package feed also provides all dependencies of the Intel® NPU
 driver packages.
 
-To install the |intel| NPU driver, run the commands:
+To install the Intel® NPU driver, run the commands:
 
 .. code-block:: bash
 
@@ -79,7 +79,6 @@ access rights. Verify that you can see the ``/dev/accel/accel0`` device
 and that the device belongs to the ``render`` group:
 
 .. code-block:: bash
-   
+
    $ ls -lah /dev/accel/accel0
    crw-rw---- 1 root render 261, 0 Jul  1 13:10 /dev/accel/accel0
-

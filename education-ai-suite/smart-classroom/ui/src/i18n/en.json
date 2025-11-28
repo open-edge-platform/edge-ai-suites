@@ -15,12 +15,15 @@
       "recording": "Recording…",
       "uploading": "Uploading transcript…",
       "generatingSummary": "Generating summary…",
+      "generatingMindmap": "Generating MindMap…",
       "streamingSummary": "Streaming summary…",
       "loadingTranscript": "Loading transcript…",
       "analyzingAudio": "Analyzing audio…",
       "summaryReady": "Summary ready",
+      "mindmapReady": "MindMap Ready",
       "uploadSuccess": "File uploaded successfully!",
-      "uploadFailed": "Failed to upload file."
+      "uploadFailed": "Failed to upload file.",
+      "mindmapError": "MindMap generation failed due to invalid format."
     },
     "settings": {
       "title": "Settings",
@@ -30,8 +33,26 @@
       "ok": "OK",
       "projectNamePlaceholder": "Enter project name",
       "projectLocationPlaceholder": "Select project folder",
-      "ipMicrophone": "IP Microphone"
+      "ipMicrophone": "IP Microphone",
+      "frontCamera": "Front Camera",
+      "backCamera": "Back Camera",
+      "boardCamera": "Board Camera",
+      "defaultFrontCamera": "Default Front Camera",
+      "defaultBackCamera": "Default Back Camera",
+      "defaultBoardCamera": "Default Board Camera",
+      "frontCamera1": "Front Camera 1",
+      "frontCamera2": "Front Camera 2",
+      "backCamera1": "Back Camera 1",
+      "backCamera2": "Back Camera 2",
+      "boardCamera1": "Board Camera 1",
+      "boardCamera2": "Board Camera 2"
     },
+    "uploadFiles": {
+    "title": "Upload Files",
+    "audioPath": "Audio Path",
+    "videoPath": "Video Path",                             
+    "applyAndStart": "Apply and Start Processing"
+  },
     "menu": {
       "settings": "Settings",
       "help": "Help",
@@ -39,7 +60,8 @@
     },
     "tabs": {
       "transcripts": "Transcripts",
-      "summary": "AI Summary"
+      "summary": "AI Summary",
+      "mindmap":"Mind Map"
     },
   
   "accordion": {

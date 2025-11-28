@@ -205,7 +205,7 @@ void StateMachine::run(void)
               {
                   RCLCPP_INFO_THROTTLE(
                       get_logger(), *this->get_clock(), 100,
-                      "Didnt received GuiSettings yet..");
+                      "Didn't receive GuiSettings yet..");
                   break;
               }
 
@@ -220,7 +220,7 @@ void StateMachine::run(void)
 
               if (firstGraspReceived == false)
               {
-                  RCLCPP_INFO_THROTTLE(get_logger(), *this->get_clock(), 1000, "didnt receive first grasp ");
+                  RCLCPP_INFO_THROTTLE(get_logger(), *this->get_clock(), 1000, "didn't receive first grasp ");
                   //break;
               }
 
@@ -251,7 +251,7 @@ void StateMachine::run(void)
                           cc = 0;
                           RCLCPP_FATAL(
                               get_logger(),
-                              "DARIO: OVERRIDE STARTSTATE FAILED!!, targetAcquired didnt became"
+                              "OVERRIDE STARTSTATE FAILED!!, targetAcquired didn't become"
                               " true for 500 cycles after publisher was online... going_to_safe_position_state");
 
                           motionController->sendGoal(safe_point_pose);

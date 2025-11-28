@@ -54,6 +54,17 @@ pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download
 ```
 > 💡 *Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.*
 
+**e. Install DL Streamer**
+Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/edge-ai-libraries/releases) Extract to a new folder, for example `C:\\dlstreamer_dlls`.
+
+Step 2: Run setup script
+Open a PowerShell prompt as and administrator, run the following script and follow instructions:
+```
+cd C:\\dlstreamer_dlls
+.\setup_dls_env.ps1
+```
+For details, refer to [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/get_started/install/install_guide_windows.html).
+
 ## Step 2: Configuration
 
 ### a. Default Configuration  
@@ -173,3 +184,13 @@ If you changed the port, adjust the URL accordingly.
   ```
   
   Delete the models folder from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
+
+## Uninstall the Application
+
+To uninstall the application, follow these steps:
+
+1. **Delete the Python virtual environment folder:**
+   Navigate to the directory and remove *education-ai-suite/smartclassroom*
+2. **Remove the models directory:**
+   Remove the models folder located under *education-ai-suite/smart-classroom*.
+

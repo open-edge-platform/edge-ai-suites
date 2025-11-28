@@ -28,19 +28,19 @@ Robotics Diffusion Transformer with 1.2B parameters (RDT-1B), is a diffusion-bas
 Model Conversion
 ================
 
-| RDT-1B model is consists of several components, the conversion process involves exporting these components to |OpenVINO| IR format.
-| The conversion python script and jupyter notebook are available, please refer to :ref:`Sample Pipeline - RDT Installation <rdt_installation>` to get installation and environment ready.  
+| RDT-1B model is consists of several components, the conversion process involves exporting these components to OpenVINO™ IR format.
+| The conversion python script and jupyter notebook are available, please refer to :ref:`Sample Pipeline - RDT Installation <rdt_installation>` to get installation and environment ready.
 | You can download a `pre-trained RDT-1B weights <https://hf-mirror.com/robotics-diffusion-transformer/rdt-1b>`_ from the Hugging Face Hub.
 
 Convert by Script
 -------------------
 
-| Converting by script is recommended when you want to get the |OpenVINO| IR format quickly. 
-| Simply run the following command at project directory to convert the pre-trained RDT-1B model to |OpenVINO| IR format:
+| Converting by script is recommended when you want to get the OpenVINO™ IR format quickly.
+| Simply run the following command at project directory to convert the pre-trained RDT-1B model to OpenVINO™ IR format:
 
 .. code-block:: bash
 
-   $ python -m scripts.convert.ov_convert --pretrained <pretrained_rdt_model_path> --output_dir <output_dir> 
+   $ python -m scripts.convert.ov_convert --pretrained <pretrained_rdt_model_path> --output_dir <output_dir>
 
 
 - ``<pretrained_rdt_model_path>``: The path to the pre-trained RDT-1B model.
@@ -51,7 +51,7 @@ Convert by Jupyter Notebook
 -----------------------------
 
 | Converting by Jupyter Notebook is recommended when you want to understand the conversion process step by step, or if you want to modify the conversion parameters.
-| The notebook provides a step-by-step guide to load the pre-trained model and convert several components into |OpenVINO| IR format.
+| The notebook provides a step-by-step guide to load the pre-trained model and convert several components into OpenVINO™ IR format.
 
 You can find the notebook in the same directory as the conversion script. Open it in Jupyter Notebook or JupyterLab, and follow the instructions provided within the notebook to perform the conversion.
 
@@ -78,4 +78,3 @@ You can find the notebook in the same directory as the conversion script. Open i
    .. code-block:: bash
 
       $ jupyter notebook --notebook-dir <path_to_your_project>/scripts/convert  --ip <your_ip_address> --port <your_port>
-

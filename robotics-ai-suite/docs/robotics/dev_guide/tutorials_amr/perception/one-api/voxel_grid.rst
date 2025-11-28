@@ -7,8 +7,8 @@ This tutorial covers the process of downsampling / reducing the number of points
 
 .. note::
 
-  This tutorial is applicable for execution both within inside and outside a |docker| image. It assumes that the
-  *pcl-oneapi-tutorials* |deb_pack| is installed, and the user has copied the *tutorial*
+  This tutorial is applicable for execution both within inside and outside a Docker image. It assumes that the
+  *pcl-oneapi-tutorials* Deb package is installed, and the user has copied the *tutorial*
   directory from */opt/intel/pcl/oneapi/tutorials/* to a user-writable directory.
 
 
@@ -26,7 +26,7 @@ This tutorial covers the process of downsampling / reducing the number of points
       :linenos:
 
 
-#. Source the |l_oneapi| environment:
+#. Source the Intel® oneAPI Base Toolkit environment:
 
    .. code-block::
 

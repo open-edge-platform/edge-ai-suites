@@ -8,11 +8,11 @@ $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 name: "pdd"
 displayName: "pdd"
 description: "Pallet Defect Detection Deployment Package"
-version: "2.4.0"
+version: "2.5.0"
 
 applications:
   - name: pdd-app
-    version: 2.4.0
+    version: 2.5.0
 
 defaultNamespaces:
   pdd-app: pdd

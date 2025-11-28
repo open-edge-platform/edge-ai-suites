@@ -45,8 +45,8 @@ This page provides detailed hardware, software, and platform requirements to hel
 - List software dependencies, libraries, and tools.
 -->
 **Required Software**:
-- Docker 23.0 or higher
-- GNU Make 4.0 or higher
+- Docker 24.0 or higher
+- Git, jq, unzip
 
 ## Compatibility Notes
 <!--

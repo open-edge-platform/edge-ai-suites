@@ -44,6 +44,7 @@ spec:
         args:
           - |
             wget -O /resources/file.mp4 https://github.com/intel-iot-devkit/sample-videos/raw/master/person-bicycle-car-detection.mp4 && \
+            unset http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY && \
             gst-launch-1.0 filesrc location=/resources/file.mp4 ! qtdemux name=mdemux ! h264parse ! video/x-h264,stream-format=byte-stream ! mpegtsmux name=mux ! filesink location=/resources/file.ts && \
             gst-launch-1.0 multifilesrc location=/resources/file.ts loop=true ! tsdemux ! h264parse ! rtspclientsink protocols=tcp location=rtsp://{{ include "image_based_video_search.fullname" . }}-mediamtx:8554/stream
         volumeMounts:

@@ -64,7 +64,12 @@ Set up the required environment variables:
 ```bash
 # Docker Registry Details
 export REGISTRY_URL="intel"
-export TAG="1.2.1"
+export TAG="1.2.3"
+
+# VSS Service Endpoints
+export http_proxy=<http-proxy>
+export https_proxy=<https-proxy>
+export no_proxy=<no_proxy>            
 
 # VSS Service Endpoints
 export VSS_SUMMARY_IP=<vss-summary-device-ip>

@@ -16,20 +16,20 @@
 #######################################
 
 
-  # Array of repositories to clone: "url|branch|directory"
-  repositories=(
-    "https://github.com/open-edge-platform/edge-ai-libraries|v1.2.0|edge-ai-libraries"
-    "https://github.com/open-edge-platform/edge-ai-suites|v1.2.0|edge-ai-suites"
-  )
-  
-  images=(
-    "intel/audio-analyzer:1.2.1"
-    "intel/document-ingestion:1.2.1"
-    "intel/multimodal-embedding-serving:1.2.1"
-    "intel/vdms-dataprep:1.2.1"
-    "intel/vlm-openvino-serving:1.2.1"
-  )
-  NAME="Metro Gen AI SDK"
+# Array of repositories to clone: "url|branch|directory"
+repositories=(
+  "https://github.com/open-edge-platform/edge-ai-libraries|release-2025.2.0|edge-ai-libraries"
+  "https://github.com/open-edge-platform/edge-ai-suites|release-2025.2.0|edge-ai-suites"
+)
+
+images=(
+  "intel/audio-analyzer:1.2.1"
+  "intel/document-ingestion:1.2.1"
+  "intel/multimodal-embedding-serving:1.2.1"
+  "intel/vdms-dataprep:1.2.1"
+  "intel/vlm-openvino-serving:1.2.1"
+)
+NAME="Metro Gen AI SDK"
 
 set -euo pipefail
 

@@ -16,6 +16,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    working-directory: robotics-ai-suite/components/its-planner
+
 jobs:
   dummy:
     name: '[${{ inputs.component-name }}] Dummy job'

@@ -88,11 +88,12 @@ RUN python3 -m venv /python3venv && \
     six==1.16.0 \
     pycairo==1.26.0 \
     PyGObject==3.50.0 \
-    setuptools==78.1.1 \
+    setuptools \
     pytest==8.3.3 \
     pluggy==1.5.0 \
     exceptiongroup==1.2.2 \
-    iniconfig==2.0.0
+    iniconfig==2.0.0  && \
+    /python3venv/bin/pip3 install --upgrade setuptools
 
 USER root
 
@@ -380,6 +381,8 @@ COPY --from=project-builder /usr/lib /usr/lib
 COPY --from=project-builder /lib/x86_64-linux-gnu /lib/x86_64-linux-gnu
 
 COPY --from=project-builder /home/tfcc/metro /home/tfcc/metro
+
+RUN python3 -m pip install --upgrade setuptools --break-system-packages
 
 # environment variables and bashrc configuration
 RUN echo "source /opt/intel/openvino_2025/setupvars.sh" >> /home/tfcc/.bashrc && \
