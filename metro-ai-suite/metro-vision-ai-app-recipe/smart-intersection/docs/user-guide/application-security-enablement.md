@@ -23,7 +23,7 @@ By leveraging Intel's cutting-edge security solutions, transportation systems ca
 With these security features enabled, your **Smart Intersection** application will benefit from:
 
 - **dTPM**: Hardware-based cryptographic operations and secure key storage
-- **UEFI Secure Boot**: Verified boot chain ensuring system integrity 
+- **UEFI Secure Boot**: Verified boot chain ensuring system integrity
 - **Full Disk Encryption**: Protection of traffic analysis data and system configurations
 - **Total Memory Encryption**: Runtime protection of sensitive algorithms and detection models
 - **Trusted Compute**: Isolated execution environment for video analytics pipelines with enhanced security
@@ -34,13 +34,10 @@ This comprehensive security implementation ensures that your Smart Intersection 
 :::{toctree}
 :hidden:
 
- 
-
-   security_features/enable_dtpm
-   security_features/enable_full_disk_install
-   security_features/enable_uefi
-   security_features/enable_tme
-   security_features/enable_trusted_compute
-
+security_features/enable_dtpm
+security_features/enable_full_disk_install
+security_features/enable_uefi
+security_features/enable_tme
+security_features/enable_trusted_compute
 :::
 hide_directive-->

@@ -7,7 +7,8 @@ from launch.actions import ExecuteProcess
 
 
 def generate_launch_description():
-    ros_distro = 'humble'
+    # Get ROS distro from environment variable
+    ros_distro = os.environ.get('ROS_DISTRO', 'humble')
     install_dir = f'/opt/ros/{ros_distro}/share/adbscan_ros2'
     rviz_config_file = f'{install_dir}/config/adbscan_RS_config.rviz'
     adbscan_param_file = f'{install_dir}/config/adbscan_sub_RS.yaml'
