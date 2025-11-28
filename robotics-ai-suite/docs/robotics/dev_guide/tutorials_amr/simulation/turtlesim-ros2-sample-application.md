@@ -12,8 +12,7 @@ This tutorial describes how to:
 
 ## Prerequisites
 
-Complete the [GSG Robot Guide](../../../gsg_robot/index.rst) before continuing.
-
+Complete the [get started guide](../../../gsg_robot/index.rst) before continuing.
 
 ## Run the Turtlesim ROS 2 Sample application
 
@@ -65,8 +64,10 @@ Complete the [GSG Robot Guide](../../../gsg_robot/index.rst) before continuing.
    ros2 launch turtlesim_tutorial turtlesim_tutorial.launch.py
    ```
 
-4. In the rqt application, navigate to **Plugins** > **Services** > **Service Caller**. To move 'turtle1',
-   choose /turtle1/teleport_absolute from the service dropdown list.
+4. In the rqt application, navigate to **Plugins** > **Services** > **Service Caller**.
+
+   To move 'turtle1',
+   choose `/turtle1/teleport_absolute` from the 'Service' dropdown list.
    Ensure to update the x and y values from their original settings.
    Press the 'Call' button to execute the teleportation.
    To close the Service Caller window, click the 'X' button.
@@ -75,9 +76,12 @@ Complete the [GSG Robot Guide](../../../gsg_robot/index.rst) before continuing.
 
    ![23D9D8D8-AFB8-43EF-98A3-995EE956EF5B-low](../../../images/23D9D8D8-AFB8-43EF-98A3-995EE956EF5B-low.png)
 
-5. In the rviz application, navigate to **Add** > **By topic**. Check the option 'Show Unvisualizable Topics' to view hidden topics.
-   You will now be able to view the hidden topics from 'turtlesim'. To close the window, click the 'Cancel' button.
+5. In the rviz application, navigate to **Add** > **By topic**. Check the option
+   'Show Unvisualizable Topics' to view hidden topics.
+
+   You will now be able to view the hidden topics from 'turtlesim'.
+   To close the window, click the 'Cancel' button.
 
 6. To close this tutorial, do the following:
 
-   -  Type ``Ctrl-c`` in the terminal where you executed the command for the tutorial.
+   Type ``Ctrl-c`` in the terminal where you executed the command for the tutorial.
