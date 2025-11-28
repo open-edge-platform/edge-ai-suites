@@ -26,10 +26,10 @@
 
     - Download helm chart with the following command
 
-        `helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.0.0`
+        `helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.1.0-rc1`
     - unzip the package using the following command
 
-        `tar -xvf pcb-anomaly-detection-1.0.0.tgz`
+        `tar -xvf pcb-anomaly-detection-1.1.0-rc1.tgz`
     - Replace the helm directory
 
         `rm -rf helm && mv pcb-anomaly-detection helm`
@@ -138,7 +138,7 @@
     Posting payload to REST server at http://10.223.23.156:8080/pipelines/user_defined_pipelines/pcb_anomaly_detection
     Payload for pipeline 'pcb_anomaly_detection' posted successfully. Response: "f0c0b5aa5d4911f0bca7023bb629a486"
     ```
-    >NOTE- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to http://<HOST_IP>:31111/anomaly/ for PCB Anomaly Detection.
+    >NOTE- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/anomaly/ for PCB Anomaly Detection.
 
 5.  Get status of pipeline instance(s) running.
     ```sh

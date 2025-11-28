@@ -15,6 +15,7 @@
 #include <csignal>
 #include <cstring>
 #include <fstream>
+#include <sys/wait.h>
 #include <boost/program_options.hpp>
 #include <boost/exception/all.hpp>
 #include "common/logger.hpp"
@@ -39,6 +40,7 @@ struct Config{
     unsigned httpServerPort;
     unsigned gRPCServerPort;
 
+    unsigned numOfProcess;
     unsigned maxConcurrentWorkload;
     unsigned maxPipelineLifetime;
     unsigned pipelineManagerPoolSize;
@@ -77,6 +79,7 @@ Config parseConf(int argc, char** argv){
             ("HTTP.RESTfulPort", po::value<unsigned>(&config.httpServerPort), "HTTP server port")
             ("HTTP.gRPCPort", po::value<unsigned>(&config.gRPCServerPort), "gRPC server port")
 
+            ("Pipeline.numOfProcess", po::value<unsigned>(&config.numOfProcess)->default_value(1), "Number of processes to start. Default as 1.")
             ("Pipeline.maxConcurrentWorkload", po::value<unsigned>(&config.maxConcurrentWorkload), "Max pipeline counts running concurrently")
             ("Pipeline.maxPipelineLifetime", po::value<unsigned>(&config.maxPipelineLifetime)->default_value(30),
                                               "Max pipeline lifetime (seconds). Default as 30.")
@@ -146,12 +149,43 @@ int main(int argc, char* argv[]){
 
     Config config = parseConf(argc, argv);
 
-    Logger::init(config.logDir, config.logMaxFileCount, config.logMaxFileSize, config.logSeverity);
+    if (config.numOfProcess == 1) {
+        Logger::init(config.logDir, config.logMaxFileCount, config.logMaxFileSize, config.logSeverity);
 
-    std::thread t1([config](){startHTTPServer(config);});
-    std::thread t2([config](){startgRPCServer(config);});
-    t1.join();
-    t2.join();
+        std::thread t1([config](){startHTTPServer(config);});
+        std::thread t2([config](){startgRPCServer(config);});
+        t1.join();
+        t2.join();
 
-    return 0;
+        return 0;
+    } else {
+        for (int i = 0; i < config.numOfProcess; ++i) {
+            pid_t pid = fork();
+            if (pid == 0) {
+                // Child process
+                // 1. Set the pipeline id environment variable
+                setenv("PIPELINE_ID", std::to_string(i).c_str(), 1);
+                // 2. Dynamically modify gRPC port
+                int grpc_port = config.gRPCServerPort + i;
+                int restful_port = config.httpServerPort + i;
+                // 3. Parse configuration
+                Config subConfig = parseConf(argc, argv);
+                subConfig.gRPCServerPort = grpc_port;
+                subConfig.httpServerPort = restful_port;
+                // 4. Log differentiation
+                Logger::init(config.logDir + "/pipeline_" + std::to_string(i), subConfig.logMaxFileCount, subConfig.logMaxFileSize, subConfig.logSeverity);
+
+                // 5. Start HTTP/gRPC services (can only start gRPC)
+                std::thread t1([subConfig](){startHTTPServer(subConfig);});
+                std::thread t2([subConfig](){startgRPCServer(subConfig);});
+                t1.join();
+                t2.join();
+                exit(0);
+            }
+        }
+        // Parent process waits for all child processes
+        for (int i = 0; i < config.numOfProcess; ++i) wait(NULL);
+
+        return 0;
+    }
 }

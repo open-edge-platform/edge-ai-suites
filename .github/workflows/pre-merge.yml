@@ -22,6 +22,7 @@ jobs:
       hmi-augmented-worker_changed: ${{ steps.filter.outputs.hmi-augmented-worker }}
       image-based-video-search_changed: ${{ steps.filter.outputs.image-based-video-search }}
       industrial-edge-insights-time-series_changed: ${{ steps.filter.outputs.industrial-edge-insights-time-series }}
+      industrial-edge-insights-multimodal_changed: ${{ steps.filter.outputs.industrial-edge-insights-multimodal }}
       loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
       metro-sdk-manager_changed: ${{ steps.filter.outputs.metro-sdk-manager }}
       pallet-defect-detection_changed: ${{ steps.filter.outputs.pallet-defect-detection }}
@@ -47,6 +48,8 @@ jobs:
               - 'metro-ai-suite/image-based-video-search/docs/**'
             industrial-edge-insights-time-series:
               - 'manufacturing-ai-suite/industrial-edge-insights-time-series/docs/**'
+            industrial-edge-insights-multimodal:
+              - 'manufacturing-ai-suite/industrial-edge-insights-multimodal/docs/**'
             loitering-detection:
               - 'metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/docs/**'
             metro-sdk-manager:
@@ -107,6 +110,20 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: manufacturing-ai-suite/industrial-edge-insights-time-series
+      exclude_patterns: "**/Overview.md"
+  
+  build_industrial-edge-insights-multimodal:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.industrial-edge-insights-multimodal_changed == 'true' }}
+    uses: open-edge-platform/orch-ci/.github/workflows/build-documentation.yml@b14b0105bf312a2c98457dd021622de4c14f6bff
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+    with:
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-multimodal
       exclude_patterns: "**/Overview.md"
 
   build_loitering-detection:

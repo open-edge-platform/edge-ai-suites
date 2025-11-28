@@ -1,3 +1,5 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 import pytest
 from unittest.mock import patch, MagicMock
 from datetime import datetime

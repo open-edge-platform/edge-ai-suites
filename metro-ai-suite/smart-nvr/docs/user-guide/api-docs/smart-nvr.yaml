@@ -407,6 +407,72 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  '/watchers/enable':
+    post:
+      summary: Enable/disable directory watcher for cameras
+      description: >-
+        Enable or disable directory watchers for one or more cameras. Accepts a list
+        of objects where each object maps a single camera name to a boolean flag
+        indicating whether the watcher should be enabled (true) or disabled (false).
+        Returns the merged mapping after persistence along with convenience lists
+        of enabled and disabled camera names.
+      operationId: set_camera_watchers_watchers_enable_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CameraWatcherRequest'
+      responses:
+        '200':
+          description: Updated watcher mapping
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CameraWatcherUpdateResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      summary: Alias to fetch current watcher mapping (GET)
+      description: >-
+        Convenience alias for GET /watchers/mapping. Provided so clients that
+        probe the POST endpoint with a GET will receive the current mapping
+        state instead of an error.
+      operationId: get_camera_watcher_mapping_alias_watchers_enable_get
+      responses:
+        '200':
+          description: Current watcher mapping
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CameraWatcherMappingResponse'
+  '/watchers/mapping':
+    get:
+      summary: Get current camera watcher enable/disable mapping
+      description: >-
+        Returns the merged camera watcher mapping. Merge order / precedence:
+        1) Persisted Redis mapping (authoritative across restarts)
+        2) In-memory runtime overrides (reflects changes since process start)
+        If Redis is unavailable, only the in-memory mapping is returned and a
+        warning field MAY be included.
+      operationId: get_camera_watcher_mapping_watchers_mapping_get
+      responses:
+        '200':
+          description: Current watcher mapping (and optional warning)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CameraWatcherMappingResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /:
     get:
       summary: Root
@@ -492,3 +558,56 @@ components:
         - msg
         - type
       title: ValidationError
+    CameraWatcherRequest:
+      type: object
+      title: CameraWatcherRequest
+      required:
+        - cameras
+      properties:
+        cameras:
+          type: array
+          description: >-
+            List of per-camera mapping objects. Each object maps a single camera
+            name (string) to a boolean indicating whether its watcher should be
+            enabled (true) or disabled (false).
+          items:
+            type: object
+            additionalProperties:
+              type: boolean
+    CameraWatcherUpdateResponse:
+      type: object
+      title: CameraWatcherUpdateResponse
+      properties:
+        mapping:
+          type: object
+          description: Final persisted mapping of camera name to enabled flag.
+          additionalProperties:
+            type: boolean
+        enabled:
+          type: array
+          description: List of camera names whose watcher is enabled.
+          items:
+            type: string
+        disabled:
+          type: array
+          description: List of camera names whose watcher is disabled.
+          items:
+            type: string
+      required:
+        - mapping
+        - enabled
+        - disabled
+    CameraWatcherMappingResponse:
+      type: object
+      title: CameraWatcherMappingResponse
+      properties:
+        mapping:
+          type: object
+          description: Current merged mapping of camera name to enabled flag.
+          additionalProperties:
+            type: boolean
+        warning:
+            type: string
+            description: Optional warning if Redis lookup failed.
+      required:
+        - mapping

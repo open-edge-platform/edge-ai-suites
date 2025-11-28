@@ -1,0 +1,92 @@
+[
+    {
+        "pipeline": "yolov11s_1_cpu",
+        "payload":{
+            "source": {
+                "uri": "file:///home/pipeline-server/videos/new_video_1_looped.mp4",
+                "type": "uri"
+            },
+            "destination": {
+                "metadata": {
+                    "type": "mqtt",
+                    "topic": "object_detection_$x",
+                    "publish_frame": false
+                },
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "object_detection_$x"
+                }
+            },
+            "parameters": {
+                "detection-properties": {
+                    "model": "/home/pipeline-server/models/public/yolo11s/INT8/yolo11s.xml",
+                    "device": "CPU"
+                },
+                "classification-properties": {
+                    "model": "/home/pipeline-server/models/colorcls2/colorcls2.xml",
+                    "device": "CPU"
+                }
+            }
+        }
+    },
+        {
+        "pipeline": "yolov11s_1_gpu",
+        "payload": {
+            "source": {
+                "uri": "file:///home/pipeline-server/videos/new_video_1_looped.mp4",
+                "type": "uri"
+            },
+            "destination": {
+                "metadata": {
+                    "type": "mqtt",
+                    "topic": "object_detection_$x",
+                    "publish_frame": false
+                },
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "object_detection_$x"
+                }
+            },
+            "parameters": {
+                "detection-properties": {
+                    "model": "/home/pipeline-server/models/public/yolo11s/INT8/yolo11s.xml",
+                    "device": "GPU"
+                },
+                "classification-properties": {
+                    "model": "/home/pipeline-server/models/colorcls2/colorcls2.xml",
+                    "device": "GPU"
+                }
+            }
+        }
+    },
+        {
+        "pipeline": "yolov11s_1_npu",
+        "payload": {
+            "source": {
+                "uri": "file:///home/pipeline-server/videos/new_video_1_looped.mp4",
+                "type": "uri"
+            },
+            "destination": {
+                "metadata": {
+                    "type": "mqtt",
+                    "topic": "object_detection_$x",
+                    "publish_frame": false
+                },
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "object_detection_$x"
+                }
+            },
+            "parameters": {
+                "detection-properties": {
+                    "model": "/home/pipeline-server/models/public/yolo11s/INT8/yolo11s.xml",
+                    "device": "NPU"
+                },
+                "classification-properties": {
+                    "model": "/home/pipeline-server/models/colorcls2/colorcls2.xml",
+                    "device": "NPU"
+                }
+            }
+        }
+    }
+]  

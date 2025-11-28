@@ -1,0 +1,4 @@
+apiVersion: v2
+name: redis
+description: Redis cache
+version: 1.2.1

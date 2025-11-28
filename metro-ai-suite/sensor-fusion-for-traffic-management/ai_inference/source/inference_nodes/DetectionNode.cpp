@@ -1,28 +1,27 @@
 /*
  * INTEL CONFIDENTIAL
- * 
+ *
  * Copyright (C) 2024 Intel Corporation.
- * 
+ *
  * This software and the related documents are Intel copyrighted materials, and your use of
  * them is governed by the express license under which they were provided to you (License).
  * Unless the License provides otherwise, you may not use, modify, copy, publish, distribute,
  * disclose or transmit this software or the related documents without Intel's prior written permission.
- * 
+ *
  * This software and the related documents are provided as is, with no express or implied warranties,
  * other than those that are expressly stated in the License.
-*/
+ */
 
 #include "inference_nodes/DetectionNode.hpp"
 
-namespace hce{
+namespace hce {
 
-namespace ai{
+namespace ai {
 
-namespace inference{
+namespace inference {
 
-DetectionNode::DetectionNode(std::size_t totalThreadNum)
-    : baseImageInferenceNode(totalThreadNum) {
-
+DetectionNode::DetectionNode(std::size_t totalThreadNum) : baseImageInferenceNode(totalThreadNum)
+{
     // inference type
     m_inferenceProperties.inference_type = InferenceType::HVA_DETECTION_TYPE;
     m_inferenceProperties.inference_region_type = InferenceRegionType::FULL_FRAME;
@@ -31,22 +30,22 @@ DetectionNode::DetectionNode(std::size_t totalThreadNum)
 DetectionNode::~DetectionNode() {}
 
 /**
-* @brief Parse params, called by hva framework right after node instantiate.
-* @param config Configure string required by this node.
-*/
-hva::hvaStatus_t DetectionNode::configureByString(const std::string& config) {
-    
+ * @brief Parse params, called by hva framework right after node instantiate.
+ * @param config Configure string required by this node.
+ */
+hva::hvaStatus_t DetectionNode::configureByString(const std::string &config)
+{
     hva::hvaStatus_t sts = baseImageInferenceNode::configureByString(config);
 
     if (hva::hvaSuccess != sts) {
         return sts;
     }
-    
+
     if (m_inferenceProperties.model_proc_config.empty()) {
         HVA_ERROR("%s ModelProcConfPath must be configured!", nodeClassName().c_str());
         return hva::hvaStatus_t::hvaFailure;
     }
-    
+
     m_threshold = 0.6;
     m_configParser.getVal<float>("Threshold", m_threshold);
 
@@ -60,16 +59,16 @@ hva::hvaStatus_t DetectionNode::configureByString(const std::string& config) {
     // after all configures being parsed, this node should be trainsitted to `configured`
     transitStateTo(hva::hvaState_t::configured);
     return sts;
-}    
+}
 
 /**
-* @brief prepare and intialize this hvaNode_t instance. Create Postprocessor
-* 
-* @param void
-* @return hvaSuccess if success
-*/
-hva::hvaStatus_t DetectionNode::prepare() {
-    
+ * @brief prepare and intialize this hvaNode_t instance. Create Postprocessor
+ *
+ * @param void
+ * @return hvaSuccess if success
+ */
+hva::hvaStatus_t DetectionNode::prepare()
+{
     hva::hvaStatus_t sts = baseImageInferenceNode::prepare();
 
     if (hva::hvaSuccess != sts) {
@@ -96,8 +95,7 @@ hva::hvaStatus_t DetectionNode::prepare() {
             //           If this cannot be done, an error is returned.
             // RTLD_GLOBAL: The symbols defined by this library will be made available for symbol resolution of subsequently loaded libraries.
             m_postProcessorCustomHandle = dlopen(modelProcLibPath.c_str(), RTLD_NOW | RTLD_GLOBAL);
-            if(!m_postProcessorCustomHandle)
-            {
+            if (!m_postProcessorCustomHandle) {
                 HVA_ERROR("%s failed to load custom post process library, error: %s", nodeClassName().c_str(), dlerror());
                 return hva::hvaFailure;
             }
@@ -115,7 +113,7 @@ hva::hvaStatus_t DetectionNode::prepare() {
         HVA_ERROR("%s failed to create post processor!", nodeClassName().c_str());
         return hva::hvaStatus_t::hvaFailure;
     }
-    
+
     if (!m_postProcessor) {
         HVA_ERROR("%s failed to create post processor!", nodeClassName().c_str());
         return hva::hvaStatus_t::hvaFailure;
@@ -129,20 +127,18 @@ hva::hvaStatus_t DetectionNode::prepare() {
  * DetectionNodeWorker.
  * @param void
  */
-std::shared_ptr<hva::hvaNodeWorker_t> DetectionNode::createNodeWorker() 
-    const {
-    return std::shared_ptr<hva::hvaNodeWorker_t>(new DetectionNodeWorker(
-        (hva::hvaNode_t*)this, m_inferenceProperties, m_inferenceInstance));
+std::shared_ptr<hva::hvaNodeWorker_t> DetectionNode::createNodeWorker() const
+{
+    return std::shared_ptr<hva::hvaNodeWorker_t>(new DetectionNodeWorker((hva::hvaNode_t *)this, m_inferenceProperties, m_inferenceInstance));
 }
 
 
-DetectionNodeWorker::DetectionNodeWorker(
-    hva::hvaNode_t* parentNode, InferenceProperty inferenceProperty,
-    ImageInferenceInstance::Ptr instance) 
-    : baseImageInferenceNodeWorker(parentNode, inferenceProperty, instance) {
-        m_nodeName = ((DetectionNode*)getParentPtr())->nodeClassName();
-        m_postProcessor = ((DetectionNode*)getParentPtr())->getPostProcessors();
-        m_postProcessorCustomHandle = ((DetectionNode*)getParentPtr())->getPostProcessorCustomHandle();
+DetectionNodeWorker::DetectionNodeWorker(hva::hvaNode_t *parentNode, InferenceProperty inferenceProperty, ImageInferenceInstance::Ptr instance)
+    : baseImageInferenceNodeWorker(parentNode, inferenceProperty, instance)
+{
+    m_nodeName = ((DetectionNode *)getParentPtr())->nodeClassName();
+    m_postProcessor = ((DetectionNode *)getParentPtr())->getPostProcessors();
+    m_postProcessorCustomHandle = ((DetectionNode *)getParentPtr())->getPostProcessorCustomHandle();
 }
 
 DetectionNodeWorker::~DetectionNodeWorker() {}
@@ -153,24 +149,24 @@ DetectionNodeWorker::~DetectionNodeWorker() {}
  * @param rois detected rois
  * @param filter_thresh should be different with NMS's iou threshold
  */
-void DetectionNodeWorker::filterROI(const hva::hvaROI_t& filter, std::vector<hva::hvaROI_t>& rois, float filter_thresh) {
-    if(filter.x == 0 && filter.y == 0 && filter.width == 0 && filter.height == 0){
+void DetectionNodeWorker::filterROI(const hva::hvaROI_t &filter, std::vector<hva::hvaROI_t> &rois, float filter_thresh)
+{
+    if (filter.x == 0 && filter.y == 0 && filter.width == 0 && filter.height == 0) {
         // skip filtering if filter is all 0
         return;
     }
 
-    if(filter_thresh == 0){
+    if (filter_thresh == 0) {
         // skip if threshold is 0
         return;
     }
 
-    float areaBaseline = filter.height * filter.width; // rect.height * rect.width;
+    float areaBaseline = filter.height * filter.width;  // rect.height * rect.width;
 
     // traver all rois and erase those outside filter region
-    for(auto iter = rois.begin(); iter != rois.end(); )
-    {
+    for (auto iter = rois.begin(); iter != rois.end();) {
         bool isOverlapped = false;
-        float area = iter->height * iter->width; //rectPrev.height * rectPrev.width;
+        float area = iter->height * iter->width;  // rectPrev.height * rectPrev.width;
 
         float x1 = std::max(filter.x, iter->x);
         float y1 = std::max(filter.y, iter->y);
@@ -179,28 +175,24 @@ void DetectionNodeWorker::filterROI(const hva::hvaROI_t& filter, std::vector<hva
 
         float areaIntersect = std::max(0.0f, x2 - x1) * std::max(0.0f, y2 - y1);
 
-        if (area + areaBaseline - areaIntersect > 0.0f)
-        {
-            float iou1 = areaIntersect / areaBaseline; // not a standard iou!
-            float iou2 = areaIntersect / area; // not a standard iou!
-            isOverlapped = (iou1 >= filter_thresh) || (iou2 >= filter_thresh) ;
+        if (area + areaBaseline - areaIntersect > 0.0f) {
+            float iou1 = areaIntersect / areaBaseline;  // not a standard iou!
+            float iou2 = areaIntersect / area;          // not a standard iou!
+            isOverlapped = (iou1 >= filter_thresh) || (iou2 >= filter_thresh);
         }
-        else
-        {
+        else {
             isOverlapped = true;
         }
 
         // inplace erasing
-        if(!isOverlapped)
-        {
+        if (!isOverlapped) {
             iter = rois.erase(iter);
             HVA_DEBUG("Erased an roi from roi filtering");
         }
-        else{
+        else {
             ++iter;
         }
     }
-    
 }
 
 /**
@@ -212,10 +204,13 @@ void DetectionNodeWorker::filterROI(const hva::hvaROI_t& filter, std::vector<hva
  * @param widthInput original image width
  * @return boolean
  */
-bool DetectionNodeWorker::runPostproc(
-        std::map<std::string, float*> blobData,
-        std::map<std::string, size_t> blobLength,
-        std::vector<hva::hvaROI_t>& hvaROIs, size_t heightInput, size_t widthInput, size_t targetBatchId) {
+bool DetectionNodeWorker::runPostproc(std::map<std::string, float *> blobData,
+                                      std::map<std::string, size_t> blobLength,
+                                      std::vector<hva::hvaROI_t> &hvaROIs,
+                                      size_t heightInput,
+                                      size_t widthInput,
+                                      size_t targetBatchId)
+{
     std::string json_results;
     std::string pp_function = m_postProcessor->getPPFunctioName();
 
@@ -237,16 +232,15 @@ bool DetectionNodeWorker::runPostproc(
         /* load custom library and run corresponding function() to do the post-processing */
         try {
             // function named as {pp_function} should be defined in custom library
-            load_customPostProcessor customPostProc =
-                (load_customPostProcessor)dlsym(m_postProcessorCustomHandle,
-                                                pp_function.c_str());
+            load_customPostProcessor customPostProc = (load_customPostProcessor)dlsym(m_postProcessorCustomHandle, pp_function.c_str());
             char *pPerror = NULL;
             if ((pPerror = dlerror()) != NULL) {
                 HVA_ERROR("%s failed to load custom post processor library, error: %s!", m_nodeName.c_str(), pPerror);
                 return false;
             }
             json_results = customPostProc(blobData, blobLength, m_postProcessor->getConfThreshold(), targetBatchId);
-        } catch (std::exception &e) {
+        }
+        catch (std::exception &e) {
             HVA_ERROR("Not implemented for function: %s yet!", pp_function.c_str());
             return false;
         }
@@ -254,7 +248,7 @@ bool DetectionNodeWorker::runPostproc(
 
     /**
      * @brief Format json_results to std::vector<DetectedObject_t>
-     * 
+     *
      * json_results schema:
      * {
             "format": [
@@ -282,10 +276,10 @@ bool DetectionNodeWorker::runPostproc(
     // write all results to `hvaROIs`
     hvaROIs.clear();
 
-    // 
+    //
     // Clip bboxes and rescale with image size
-    // 
-    for (auto &object : vecObjects){
+    //
+    for (auto &object : vecObjects) {
         // get real coordinates according to image size
         object.x = object.x * widthInput;
         object.w = object.w * widthInput;
@@ -299,8 +293,8 @@ bool DetectionNodeWorker::runPostproc(
 
         std::string predictLabel = m_postProcessor->getLabels()->label_name(object.class_id);
         if (!m_postProcessor->isFilterLabel(predictLabel)) {
-            HVA_DEBUG("object detected: x is %f, y is %f, w is %f, h is %f, label: %s, but filtered it out.", 
-                        object.x, object.y, object.w, object.h, predictLabel.c_str());
+            HVA_DEBUG("object detected: x is %f, y is %f, w is %f, h is %f, label: %s, but filtered it out.", object.x, object.y, object.w, object.h,
+                      predictLabel.c_str());
             continue;
         }
         hva::hvaROI_t roi;
@@ -309,27 +303,27 @@ bool DetectionNodeWorker::runPostproc(
         roi.height = object.h + 0.5f;
         roi.width = object.w + 0.5f;
 
-        if(roi.x >= widthInput){
+        if (roi.x >= widthInput) {
             roi.x = widthInput - 1;
         }
 
-        if(roi.y >= heightInput){
+        if (roi.y >= heightInput) {
             roi.y = heightInput - 1;
         }
 
-        if(roi.width < 1){
+        if (roi.width < 1) {
             roi.width = 1;
         }
 
-        if(roi.height < 1){
+        if (roi.height < 1) {
             roi.height = 1;
         }
 
-        if(roi.x + roi.width > widthInput){
+        if (roi.x + roi.width > widthInput) {
             roi.width = widthInput - roi.x;
         }
 
-        if(roi.y + roi.height > heightInput){
+        if (roi.y + roi.height > heightInput) {
             roi.height = heightInput - roi.y;
         }
 
@@ -338,9 +332,10 @@ bool DetectionNodeWorker::runPostproc(
         roi.labelDetection = predictLabel;
         hvaROIs.push_back(roi);
 
-        HVA_DEBUG("object detected: x is %f, y is %f, w is %f, h is %f, label: %s, confidence: %f", object.x, object.y, object.w, object.h, predictLabel.c_str(), object.confidence);
+        HVA_DEBUG("object detected: x is %f, y is %f, w is %f, h is %f, label: %s, confidence: %f", object.x, object.y, object.w, object.h,
+                  predictLabel.c_str(), object.confidence);
     }
-    
+
     return true;
 }
 
@@ -349,10 +344,9 @@ bool DetectionNodeWorker::runPostproc(
  * downstream nodes.
  * @return void
  */
-void DetectionNodeWorker::processOutput(
-    std::map<std::string, InferenceBackend::OutputBlob::Ptr> blobs,
-    std::vector<std::shared_ptr<InferenceBackend::ImageInference::IFrameBase>> frames) {
-
+void DetectionNodeWorker::processOutput(std::map<std::string, InferenceBackend::OutputBlob::Ptr> blobs,
+                                        std::vector<std::shared_ptr<InferenceBackend::ImageInference::IFrameBase>> frames)
+{
     HVA_DEBUG("%s processOutput", m_nodeName.c_str());
     if (frames.size() == 0) {
         HVA_ERROR("%s received none inference results!", m_nodeName.c_str());
@@ -360,11 +354,10 @@ void DetectionNodeWorker::processOutput(
     }
     size_t batchSize = frames.size();
 
-    // 
+    //
     // processing all outputs in async inference mode.
-    // 
+    //
     for (size_t batchIdx = 0; batchIdx < batchSize; batchIdx++) {
-
         auto inference_result = std::dynamic_pointer_cast<ImageInferenceInstance::InferenceResult>(frames[batchIdx]);
         /* InferenceResult is inherited from IFrameBase */
         assert(inference_result.get() != nullptr && "Expected a valid InferenceResult");
@@ -378,47 +371,50 @@ void DetectionNodeWorker::processOutput(
         std::shared_ptr<InferenceFrame> inference_roi = inference_result->inference_frame;
         inference_roi->image_transform_info = inference_result->GetImageTransformationParams();
 
-        inference_result->image.reset(); // deleter will to not make buffer_unref, see 'SubmitImages' method
+        inference_result->image.reset();  // deleter will to not make buffer_unref, see 'SubmitImages' method
 
-        // 
+        //
         // post-process
-        // 
+        //
         hva::hvaVideoFrameWithROIBuf_t::Ptr ptrFrameBuf = std::dynamic_pointer_cast<hva::hvaVideoFrameWithROIBuf_t>(curInput->get(0));
         HVA_ASSERT(ptrFrameBuf);
         HceDatabaseMeta inputMeta;
         ptrFrameBuf->getMeta(inputMeta);
 
         InferenceTimeStamp_t inferenceTimeMeta;
-        ptrFrameBuf->getMeta(inferenceTimeMeta);
-        std::chrono::time_point<std::chrono::high_resolution_clock> currentTime = std::chrono::high_resolution_clock::now();
-        inferenceTimeMeta.endTime = currentTime;
-        ptrFrameBuf->setMeta(inferenceTimeMeta);
+        if (ptrFrameBuf->getMeta(inferenceTimeMeta) == hva::hvaSuccess) {
+            HVA_DEBUG("DetectionNode get inferenceTimeMeta from input buffer");
+            std::chrono::time_point<std::chrono::high_resolution_clock> currentTime = std::chrono::high_resolution_clock::now();
+            inferenceTimeMeta.endTime = currentTime;
+            ptrFrameBuf->setMeta(inferenceTimeMeta);
+        }
+
 
         // fetch blob data for current batch_index
-        std::map<std::string, float*> blobData;
+        std::map<std::string, float *> blobData;
         std::map<std::string, size_t> blobLength;
         int batchid_index = m_postProcessor->getModelProcParams().model_output.detection_output.batchid_index;
-        for (const auto& output : blobs) {
+        for (const auto &output : blobs) {
             std::string outputLayerName = output.first;
             InferenceBackend::OutputBlob::Ptr outputBlob = output.second;
 
             // dims: [N, ...], the first axis stands for batch
             auto dims = outputBlob->GetDims();
             size_t dataLength = outputBlob->GetSize() / dims[0];
-            float* dataPtr;
+            float *dataPtr;
 
             if (batchid_index >= 0) {
                 // batchid_index may be defined in openvino op: `DetectionOutput`
                 // use batchid_index to specify outputs for batch
-                dataPtr = (float*)outputBlob->GetData();
+                dataPtr = (float *)outputBlob->GetData();
             }
             else {
-                dataPtr = (float*)outputBlob->GetData() + batchIdx * dataLength;
+                dataPtr = (float *)outputBlob->GetData() + batchIdx * dataLength;
             }
             blobData.emplace(outputLayerName, dataPtr);
             blobLength.emplace(outputLayerName, dataLength);
         }
-        
+
         int input_width = ptrFrameBuf->width;
         int input_height = ptrFrameBuf->height;
         std::vector<hva::hvaROI_t> vecObjects;
@@ -455,11 +451,11 @@ void DetectionNodeWorker::processOutput(
                 }
 
                 // clip
-                x = (x < 0) ? 0 : (x >= input_width) ? (input_width-1) : x;
-                y = (y < 0) ? 0 : (y >= input_height) ? (input_height-1) : y;
-                width = ((x+width)>input_width) ? (input_width-x) : width;
-                height = ((y+height)>input_height) ? (input_height-y) : height;
-                
+                x = (x < 0) ? 0 : (x >= input_width) ? (input_width - 1) : x;
+                y = (y < 0) ? 0 : (y >= input_height) ? (input_height - 1) : y;
+                width = ((x + width) > input_width) ? (input_width - x) : width;
+                height = ((y + height) > input_height) ? (input_height - y) : height;
+
                 object.x = (int)x;
                 object.y = (int)y;
                 object.width = (int)width;
@@ -467,13 +463,13 @@ void DetectionNodeWorker::processOutput(
             }
         }
 
-        if(vecObjects.size() != 0){
-        
+        if (vecObjects.size() != 0) {
             // rois received in detection node will be treated as filter region
             hva::hvaROI_t roiFiltered;
-            if(!ptrFrameBuf->rois.empty()){
+            if (!ptrFrameBuf->rois.empty()) {
                 roiFiltered = ptrFrameBuf->rois[0];
-                HVA_DEBUG("%s receives a buffer with filtering roi: [%d, %d, %d, %d]", m_nodeName.c_str(), roiFiltered.x, roiFiltered.y, roiFiltered.width, roiFiltered.height);
+                HVA_DEBUG("%s receives a buffer with filtering roi: [%d, %d, %d, %d]", m_nodeName.c_str(), roiFiltered.x, roiFiltered.y, roiFiltered.width,
+                          roiFiltered.height);
                 // clear the roi buffer as this will only contain the result roi after detection
                 ptrFrameBuf->rois.clear();
             }
@@ -481,22 +477,21 @@ void DetectionNodeWorker::processOutput(
             // filtered rois outside filter region
             filterROI(roiFiltered, vecObjects);
 
-            if(m_postProcessor->getMaxROI() == 0){
+            if (m_postProcessor->getMaxROI() == 0) {
                 // no max, save all the buffers
                 ptrFrameBuf->rois = vecObjects;
             }
-            else{            
-                std::sort(vecObjects.begin(), vecObjects.end(), [](const hva::hvaROI_t& a, const hva::hvaROI_t& b){
-                    return a.confidenceDetection > b.confidenceDetection;
-                });
+            else {
+                std::sort(vecObjects.begin(), vecObjects.end(),
+                          [](const hva::hvaROI_t &a, const hva::hvaROI_t &b) { return a.confidenceDetection > b.confidenceDetection; });
                 // if maxROI is set, keep rois with topK condifence
                 int topk = std::min((int)vecObjects.size(), m_postProcessor->getMaxROI());
-                for(int i = 0; i < topk; ++i){
-                    ptrFrameBuf->rois.push_back(vecObjects[i]); 
+                for (int i = 0; i < topk; ++i) {
+                    ptrFrameBuf->rois.push_back(vecObjects[i]);
                 }
             }
         }
-        else{
+        else {
             HVA_DEBUG("Nothing detected on frameid %u and streamid %u", curInput->frameId, curInput->streamId);
             ptrFrameBuf->rois.clear();
         }
@@ -504,11 +499,10 @@ void DetectionNodeWorker::processOutput(
         // update meta for this input
         ptrFrameBuf->setMeta(inputMeta);
 
-        // 
+        //
         // update output frames
-        // 
+        //
         if (m_inputBlobs.isCompletedInference(curInput, inference_result->region_count)) {
-
             // getLatencyMonitor().stopRecording("inference");
 
             // sendOutput
@@ -538,10 +532,10 @@ void DetectionNodeWorker::processOutput(
 
 #ifdef HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY
 HVA_ENABLE_DYNAMIC_LOADING(DetectionNode, DetectionNode(threadNum))
-#endif //#ifdef HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY
+#endif  // #ifdef HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY
 
-} // namespace inference
+}  // namespace inference
 
-} // namespace ai
+}  // namespace ai
 
-} // namespace hce
+}  // namespace hce

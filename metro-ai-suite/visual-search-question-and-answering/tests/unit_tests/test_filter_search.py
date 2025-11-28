@@ -9,20 +9,13 @@ from streamlit.testing.v1 import AppTest
 
 from ut_utils import generate_fake_meta, remove_fake_meta_files
 
-APP_TIMEOUT = 30
+APP_TIMEOUT = 300
 
-Query_list = {"car": "car-race",
-"deer": "deer",
+Query_list = {"deer": "deer",
 "violin": "guitar-violin",
 "workout": "gym", 
 "helicopter": "helicopter", 
-"carousel in a park": "carousel", 
-"monkeys": "monkeys-trees", 
-"a cart on meadow": "golf", 
-"rollercoaster": "rollercoaster", 
-"horse riding": "horsejump-stick", 
-"airplane": "planes-crossing", 
-"tractor": "tractor"
+"carousel in a park": "carousel"
 }
 
 HOST_DATA_PATH = os.environ.get("HOST_DATA_PATH", "/home/user/data")

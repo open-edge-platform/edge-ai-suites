@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from fastapi import FastAPI
 import uvicorn
+import json
 from redis_store import get_responses
 
 app = FastAPI()

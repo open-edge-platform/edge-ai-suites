@@ -48,9 +48,9 @@ spec:
         {{- end }}
         {{- if .Values.broker.healthcheck.enabled }}
         livenessProbe:
-          {{- toYaml .Values.broker.healthcheck.livenessProbe | nindent 8 }}
+          {{- toYaml .Values.broker.healthcheck.livenessProbe | nindent 10 }}
         readinessProbe:
-          {{- toYaml .Values.broker.healthcheck.readinessProbe | nindent 8 }}
+          {{- toYaml .Values.broker.healthcheck.readinessProbe | nindent 10 }}
         {{- end }}
       volumes:
       - name: mosquitto-config-volume

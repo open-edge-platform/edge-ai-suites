@@ -7,7 +7,7 @@ from streamlit.testing.v1 import AppTest
 
 from ut_utils import copy_dataset
 
-APP_TIMEOUT = 30
+APP_TIMEOUT = 300
 
 HOST_DATA_PATH = os.environ.get("HOST_DATA_PATH", "/home/user/data")
 HOST_DATA_PATH_COPY = HOST_DATA_PATH

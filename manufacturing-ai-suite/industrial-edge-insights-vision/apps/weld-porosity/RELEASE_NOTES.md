@@ -1,11 +1,22 @@
 # Release Notes
 
+## v1.3.0 (Upcoming release)
+
+### Updates
+- Consumed latest DL Streamer Pipeline Server version 2025.2
+- Introduced nginx server as reverse proxy and TLS
+- Optimized pipelines.
+
+---
+
 ## v1.2.0 (August 2025)
 
 ### Updates
 - Consumed latest DL Streamer Pipeline Server version 3.1.0.
 - Model Registry is now accessed as environment variables.
 - Redesigned based on common application template for manufacturing ai suite.
+
+---
 
 ## v1.1.0 (April 2025)
 

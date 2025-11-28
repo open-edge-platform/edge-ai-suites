@@ -21,12 +21,21 @@ spec:
         {{- include "image_based_video_search.selectorLabels" . | nindent 8 }}
         katenary.v3/component: app
     spec:
+      securityContext:
+        fsGroup: 1999
       containers:
       - image: '{{ tpl .Values.app.repository.image $ }}:{{ tpl .Values.app.repository.tag $ | default "latest" }}'
         imagePullPolicy: {{ .Values.app.imagePullPolicy }}
         name: app
-        command: ["npm", "run", "dev"]
-        args: ["--", "--host", "0.0.0.0", "--port", "3000"]
+        workingDir: /usr/src/app
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsUser: 1999
+          runAsGroup: 1999
+        capabilities:
+          drop:
+            - ALL
         {{- if .Values.app.resources }}
         resources:
           {{ .Values.app.resources | toYaml | nindent 10 }}

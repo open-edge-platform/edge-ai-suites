@@ -1,4 +1,4 @@
-# Tutorial 3 - Grafana
+# Visual AI Demo Kit - Tutorial 3
 
 <!--
 **Sample Description**: Learn how to create custom Grafana dashboards that integrate real-time video streams and MQTT data visualization for metro vision AI applications.

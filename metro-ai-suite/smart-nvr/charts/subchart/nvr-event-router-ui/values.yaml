@@ -1,0 +1,26 @@
+image:
+  repository: intel/nvr-event-router
+  tag: 1.2.1
+
+replicaCount: 1
+
+service:
+  name: nvr-event-router-ui
+  type: ClusterIP   # Change to ClusterIP / LoadBalancer / NodePort
+  port: 7860        # Service port inside cluster
+  targetPort: 7860  # Container port
+  nodePort: 30860   # Only used when type=NodePort
+
+
+env:
+  MODE: "ui"
+  API_BASE_URL: "http://localhost:8000"
+  EVENT_POLL_INTERVAL: "10"
+  NVR_GENAI: ""
+  no_proxy: ""
+
+volume:
+  name: localtime
+  mountPath: /etc/localtime
+  hostPath: /etc/localtime
+  readOnly: true

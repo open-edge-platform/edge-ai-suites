@@ -281,7 +281,8 @@ a pre-step to prepare models may be needed
 4. **Save Changes and Restart**:
    - Save the file and restart the application:
      ```bash
-     docker compose restart
+     docker compose down
+     docker compose up -d
      ```
 
 5. **Verify Updates**:

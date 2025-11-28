@@ -44,10 +44,10 @@ Optional: Pull the helm chart and replace the existing helm-chart folder with it
 cd smart-parking
 
 #Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.2.0
+helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.3.0-rc1
 
 #unzip the package using the following command
-tar -xvf smart-parking-1.2.0.tgz
+tar -xvf smart-parking-1.3.0-rc1.tgz
 
 #Replace the helm directory
 rm -rf helm-chart && mv smart-parking helm-chart
@@ -83,11 +83,10 @@ Follow this procedure to run the sample application. In a typical deployment, mu
     helm install smart-parking ./smart-parking/helm-chart -n sp  --create-namespace
     ```
 
-2. Verify all the pods and services are running:
+2. Wait for all pods to be ready:
 
     ```sh
-    kubectl get pods -n sp
-    kubectl get svc -n sp
+    kubectl wait --for=condition=ready pod --all -n sp --timeout=300s
     ```
 
 3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)

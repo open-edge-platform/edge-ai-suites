@@ -2,7 +2,7 @@
     "config": {
         "pipelines": [
             {
-                "name": "intersection-cam1",
+                "name": "intersection-cam1-cpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
@@ -72,7 +72,7 @@
                 }
             },
             {
-                "name": "intersection-cam2",
+                "name": "intersection-cam2-cpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
@@ -142,7 +142,7 @@
                 }
             },
             {
-                "name": "intersection-cam3",
+                "name": "intersection-cam3-cpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
@@ -212,7 +212,7 @@
                 }
             },
             {
-                "name": "intersection-cam4",
+                "name": "intersection-cam4-cpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,

@@ -82,7 +82,7 @@ continuous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "t
 URI = "urn:freeopcua:python:server"
 idx = server.register_namespace(URI)
 
-data = pd.read_csv('./wind-turbine-anomaly-detection.csv')
+data = pd.read_csv('./simulation-data/wind-turbine-anomaly-detection.csv')
 
 # Add a new object to the server
 myobj = server.nodes.objects.add_object(idx, "MyObject")

@@ -19,5 +19,26 @@
                 }
             }
         }
+    },
+    {
+        "pipeline": "worker_safety_gear_detection_gpu",
+        "payload":{
+            "source": {
+                "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
+                "type": "uri"
+            },
+            "destination": {
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "worker_safety"
+                }
+            },
+            "parameters": {
+                "detection-properties": {
+                    "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
+                    "device": "GPU"
+                }
+            }
+        }
     }
 ]

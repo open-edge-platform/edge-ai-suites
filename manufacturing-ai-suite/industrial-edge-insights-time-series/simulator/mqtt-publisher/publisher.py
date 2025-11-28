@@ -21,7 +21,6 @@ import glob
 import paho.mqtt.client as mqtt
 import pandas as pd
 
-
 SERVICE = 'mqtt'
 SAMPLING_RATE = 10  # 500.0 # 2msecdd
 SUBSAMPLE = 1  # 1:every row, 500: every 500 rows (ie. every 1 sec)
@@ -71,19 +70,26 @@ def parse_args():
     return a_p.parse_args()
 
 
-def stream_csv(mqttc, topic, subsample, sampling_rate, filename):
+def stream_csv(mqttc, topic, subsample, sampling_rate, folder_name="/simulation-data"):
     """
-    Stream the csv file
+    Stream CSV files from a folder
     """
     continous_simulator_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true").lower()
 
     print(f"\nMQTT Topic - {topic}\nSubsample - {subsample}\nSampling Rate - \
-          {sampling_rate}\nFilename - {filename}\n")
+          {sampling_rate}\nFolder Name - {folder_name}\n")
     jencoder = json.JSONEncoder()
-    csv_data = pd.read_csv(filename, nrows=0)
-    columns = csv_data.columns.tolist()
-    chunk_size = 1000
-    while True:
+    # Read all CSV files from the folder
+    csv_files = sorted(glob.glob(os.path.join(folder_name, '*.csv')))
+    if not csv_files:
+        print(f"No CSV files found in folder: {folder_name}")
+        return
+    for filename in csv_files:
+        print(f"Processing file: {filename}")
+        # The rest of the code will process each file in the loop
+        csv_data = pd.read_csv(filename, nrows=0)
+        columns = csv_data.columns.tolist()
+        chunk_size = 1000
         start_time = time.time()
         row_served = 0
 
@@ -91,31 +97,25 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, filename):
 
         for chunk in pd.read_csv(filename, chunksize=chunk_size):
             for _, row in chunk.iterrows():
-
                 if subsample > 1 and (row_served % subsample) != 0:
                     row_served += 1
                     continue
-
                 try:
                     msg = jencoder.encode({col: row[col] for col in columns})
                     print("Publishing message", msg)
                     mqttc.publish(topic, msg)
                 except (ValueError, IndexError):
                     print(f"Skipping row {row_served}- {row} due to ValueError: {ValueError} \
-                          or IndexError: {IndexError}")
+                        or IndexError: {IndexError}")
                     continue
-
                 row_served += 1
                 time.sleep(next(tick))
-                if row_served % max(1, int(sampling_rate) // max(1, int(subsample))) == 0:
-                    print(f'{row_served} rows served in {time.time() - start_time:.2f} seconds')
-
         print(f'{filename} Done! {row_served} rows served in {time.time() - start_time:.2f} \
-              seconds')
-        if continous_simulator_ingestion == "false":
-            print("End of data reached.")
-            while True:
-                time.sleep(1)
+                seconds')
+    if continous_simulator_ingestion == "false":
+        print("End of data reached.")
+        while True:
+            time.sleep(1)
 
 
 def send_json_cb(instance_id, host, port, topic, data, qos, service):
@@ -224,7 +224,7 @@ def main():
     if args.csv is not None:
         csv_file_path = args.csv
     else:
-        csv_file_path = "/" + sample_app + ".csv"
+        csv_file_path = "/simulation-data/"
     client = None
     if int(args.streams) == 1:
         client = mqtt.Client(client_id = '', clean_session = True, userdata = None,

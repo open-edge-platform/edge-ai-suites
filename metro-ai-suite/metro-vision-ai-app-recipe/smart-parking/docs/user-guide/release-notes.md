@@ -1,5 +1,14 @@
 # Release Notes
 
+## v1.3.0 (Upcoming release)
+
+### Updates
+- Consumed latest DL Streamer Pipeline Server version 2025.2
+- Introduced nginx server as reverse proxy and TLS
+- Optimized pipelines and updated quantized model from yolo10s FP32 to yolo11s INT8.
+
+---
+
 ## Version 1.2 - March 28th, 2025
 
 ### High-Level Features

@@ -46,7 +46,7 @@ services:
         condition: service_healthy
 
   feature-matching:
-    image: ${DOCKER_REGISTRY}intel/feature-matching:v1.0.2-pre-RC1
+    image: ${DOCKER_REGISTRY}intel/feature-matching:v1.1.0-RC1
     container_name: ibvs-featurematching
     build:
       context: src/feature-matching
@@ -83,7 +83,7 @@ services:
       start_period: 10s
     restart: on-failure:5
   streaming-pipeline:
-    image: ${DOCKER_REGISTRY}intel/streaming-pipeline:v1.0.2-pre-RC1
+    image: ${DOCKER_REGISTRY}intel/streaming-pipeline:v1.1.0-RC1
     build:
       context: src/streaming-pipeline
       dockerfile: Dockerfile
@@ -95,6 +95,7 @@ services:
     command: >
       bash -c "
         wget -O file.mp4 https://github.com/intel-iot-devkit/sample-videos/raw/master/person-bicycle-car-detection.mp4 && \
+        unset http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY && \
         gst-launch-1.0 filesrc location=file.mp4 ! qtdemux name=mdemux ! h264parse ! video/x-h264,stream-format=byte-stream ! mpegtsmux name=mux ! filesink location=file.ts && \
         gst-launch-1.0 multifilesrc location=file.ts loop=true ! tsdemux ! h264parse ! rtspclientsink protocols=tcp location=rtsp://rtsp-server:8554/stream
       "
@@ -202,7 +203,7 @@ services:
         condition: service_started
     restart: on-failure:5
   app:
-    image: ${DOCKER_REGISTRY}intel/image-based-video-search:v1.0.2-pre-RC1
+    image: ${DOCKER_REGISTRY}intel/image-based-video-search:v1.1.0-RC1
     container_name: ibvs-app
     build:
       context: src/app

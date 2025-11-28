@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.name | default "frigate" }}
+spec:
+  type: {{ .Values.service.type | default "ClusterIP" }}
+  selector:
+    app: frigate
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000

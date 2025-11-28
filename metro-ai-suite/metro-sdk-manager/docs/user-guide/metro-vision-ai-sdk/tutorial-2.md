@@ -1,4 +1,4 @@
-# Tutorial 2: Video Decode and Tiled Display
+# Metro Vision AI SDK - Tutorial 2
 
 This tutorial demonstrates advanced video processing capabilities using Intel's hardware-accelerated video decoding and composition. You'll learn to decode multiple video streams simultaneously and display them in a tiled layout on a 4K monitor using VAAPI (Video Acceleration API) and GStreamer.
 
@@ -56,14 +56,6 @@ mkdir -p ~/metro/metro-vision-tutorial-2/videos/
 cd ~/metro/metro-vision-tutorial-2
 
 # Download Big Buck Bunny sample video (Creative Commons licensed)
-wget -O videos/Big_Buck_Bunny.mp4 "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_30MB.mp4s"
-```
-
-**Alternative Download Method:**
-If the above link doesn't work, you can download from the official source:
-
-```bash
-# Alternative: Download from Internet Archive
 wget -O videos/Big_Buck_Bunny.mp4 "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4"
 ```
 
@@ -225,12 +217,10 @@ Monitor system resources during playback:
 ```bash
 # In a separate terminal, monitor GPU utilization
 sudo intel_gpu_top
-
+```
+```bash
 # Monitor CPU and memory usage
 htop
-
-# Check video decoder utilization
-cat /sys/class/drm/card0/gt/gt0/rc6_residency_ms
 ```
 
 ### Step 6: Stop the Application

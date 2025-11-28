@@ -1,0 +1,30 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: "[Robotics] CI"
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/robotics*'
+      - 'robotics-ai-suite/**'
+      - '!robotics-ai-suite/**/docs/**'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-components:
+    name: "Build (AMR)"
+    uses: "./.github/workflows/robotics-components.yaml"
+
+  # build-pipelines:
+  #   name: "Build (Humanoid)"
+  #   uses: "./.github/workflows/robotics-pipelines.yaml"
+
+  # build-rvc:
+  #   name: "Build (RVC)"
+  #   uses: "./.github/workflows/robotics-rvc.yaml"

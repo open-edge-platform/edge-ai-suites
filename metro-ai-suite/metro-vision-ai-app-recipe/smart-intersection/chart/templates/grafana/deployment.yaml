@@ -28,6 +28,12 @@ spec:
               value: {{ .Values.https_proxy | quote }}
             - name: no_proxy
               value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
+            - name: GF_SERVER_ROOT_URL
+              value: "https://localhost:30443/grafana/"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "true"
+            - name: GF_SECURITY_ALLOW_EMBEDDING
+              value: "true"
           ports:
             - containerPort: {{ .Values.grafana.service.port }}
           volumeMounts:

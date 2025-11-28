@@ -45,13 +45,22 @@
     sudo apt-get install -y intel-oneapi-mkl-devel
     ```
 
-4. If you encounter the following errors during running 16C+4R pipeline:
+4. If you encounter the following errors during running on B580 platform:
     ![device_index_error](./_images/device_index_error.png)
 
     <center>Figure 4: Device Index Error</center>
 
-    It may be because the iGPU is not enabled, only the A770 is enabled.
+    It may be because the iGPU is not enabled, only the B580 is enabled.
 
     You can use `lspci | grep VGA` to view the number of GPU devices on the machine.
     
-    The solution is either enable iGPU in BIOS, or change config `Device=(STRING)GPU.1` to `Device=(STRING)GPU` in pipeline config file `ai_inference/test/configs/raddet/16C4R/localFusionPipeline.json`.
+    The solution is either enable iGPU in BIOS, or change the config of `Device=(STRING)GPU.1` to `Device=(STRING)GPU` in `VPLDecoderNode` and `VPLDecoderNode` in pipeline config file, for example: `ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json`.
+    
+5. If you encounter the following backends mismatch errors during running pipeline:
+    ![backends_mismatch_error](./_images/backends_mismatch_error.png)
+
+    <center>Figure 5: Backends Mismatch Error</center>
+
+    This is because the wrong or non-existent device is selected. We need to select the `dGPU+opencl` Backend. As shown in the figure, it should be the second device (numbered starting from 0), that is, `GPU.2`.
+
+    The solution is change config `Device=(STRING)GPU.4` to `Device=(STRING)GPU.2` in `LidarSignalProcessingNode` in pipeline config file, for example:  `ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json`.

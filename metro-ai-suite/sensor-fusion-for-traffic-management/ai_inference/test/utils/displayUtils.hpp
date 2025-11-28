@@ -1,7 +1,7 @@
 /*
  * INTEL CONFIDENTIAL
  * 
- * Copyright (C) 2023-2025 Intel Corporation.
+ * Copyright (C) 2023-2024 Intel Corporation.
  * 
  * This software and the related documents are Intel copyrighted materials, and your use of
  * them is governed by the express license under which they were provided to you (License).
@@ -14,7 +14,6 @@
 
 #include <chrono>
 #include <mutex>
-#include <condition_variable>
 #include <vector>
 #include <string.h>
 #include <opencv2/opencv.hpp>

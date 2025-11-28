@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nvr-event-router
+  labels:
+    app: nvr-event-router
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: nvr-event-router
+  template:
+    metadata:
+      labels:
+        app: nvr-event-router
+    spec:
+      initContainers:
+        - name: wait-for-mqtt
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z mqtt-broker 1883; do echo waiting for mqtt; sleep 2; done;']
+
+        - name: wait-for-frigate
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z frigate 5000; do echo waiting for frigate; sleep 2; done;']
+
+      containers:
+        - name: nvr-event-router
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MODE
+              value: "{{ .Values.env.MODE }}"
+            - name: FRIGATE_BASE_URL
+              value: "{{ .Values.env.FRIGATE_BASE_URL }}"
+            - name: VSS_SEARCH_URL
+              value: "{{ .Values.env.VSS_SEARCH_IP }}:{{ .Values.env.VSS_SEARCH_PORT }}"
+            - name: VSS_SUMMARY_URL
+              value: "{{ .Values.env.VSS_SUMMARY_IP }}:{{ .Values.env.VSS_SUMMARY_PORT }}"
+            - name: no_proxy
+              value: "{{ .Values.global.proxy.no_proxy }},{{ .Values.env.VSS_SEARCH_IP }},{{ .Values.env.VSS_SUMMARY_IP }}"
+            - name: MQTT_USER
+              value: "{{ .Values.global.env.FRIGATE_MQTT_USER }}"
+            - name: MQTT_PASSWORD
+              value: "{{ .Values.global.env.FRIGATE_MQTT_PASSWORD }}"
+            - name: REDIS_PORT
+              value: "{{ .Values.env.REDIS_PORT }}"
+            - name: REDIS_HOST
+              value: "{{ .Values.env.REDIS_HOST }}"
+            - name: MQTT_BROKER
+              value: "{{ .Values.env.MQTT_BROKER }}"   
+            - name: MQTT_PORT
+              value: "{{ .Values.env.MQTT_PORT }}"     
+
+          {{- if .Values.probes.readiness.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: 8000
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+            successThreshold: {{ .Values.probes.readiness.successThreshold }}
+          {{- end }}
+
+          {{- if .Values.probes.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: 8000
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          {{- end }}
+
+          {{- if .Values.probes.startup.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.probes.startup.path }}
+              port: 8000
+            initialDelaySeconds: {{ .Values.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+          {{- end }}
+
+          volumeMounts:
+            - name: {{ .Values.volumes.localtime.name }}
+              mountPath: {{ .Values.volumes.localtime.mountPath }}
+              readOnly: {{ .Values.volumes.localtime.readOnly }}
+            - name: frigate-clips
+              mountPath: /media/frigate/recordings
+              subPath: recordings
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: frigate
+                topologyKey: "kubernetes.io/hostname"
+
+
+
+      volumes:
+        - name: {{ .Values.volumes.localtime.name }}
+          hostPath:
+            path: {{ .Values.volumes.localtime.hostPath }}
+        - name: frigate-clips
+          persistentVolumeClaim:
+            claimName: shared-recordings-pvc

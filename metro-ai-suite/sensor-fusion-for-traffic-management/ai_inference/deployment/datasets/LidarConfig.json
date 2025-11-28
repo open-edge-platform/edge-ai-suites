@@ -1,0 +1,33 @@
+{
+    "PointPillarsConfig": [
+        {
+            "min_x_range": 0.0,
+            "max_x_range": 69.12,
+            "min_y_range": -39.68,
+            "max_y_range": 39.68,
+            "min_z_range": -3.0,
+            "max_z_range": 1.0,
+            "rpn_scale": 0.5,
+            "pillar_x_size": 0.16,
+            "pillar_y_size": 0.16,
+            "pillar_z_size": 4.0,
+            "x_stride": 0.32,
+            "y_stride": 0.32,
+            "max_num_pillars": 12000,
+            "num_classes": 1,
+            "anchors": [
+                1.6,
+                3.9,
+                1.56
+            ],
+            "classes": [
+                "Car"
+            ],
+            "max_num_points_per_pillar": 100,
+            "pillar_features": 64,
+            "grid_x_size": 432,
+            "grid_y_size": 496,
+            "grid_z_size": 1
+        }
+    ]
+}

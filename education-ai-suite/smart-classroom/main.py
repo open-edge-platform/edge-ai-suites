@@ -30,15 +30,15 @@ app.add_middleware(
     expose_headers=["x-session-id"]  # expose custom headers if needed
 )
 
+register_routes(app)
+
 def system_check():
     if (not system_checker.check_system_requirements()) and (not system_checker.show_warning_and_prompt_user_to_continue()):
         sys.exit(1)
 
-
 if __name__ == "__main__":
     
     system_check()
-    register_routes(app)
     RuntimeConfig.ensure_config_exists()
     ensure_model()
     preload_models()

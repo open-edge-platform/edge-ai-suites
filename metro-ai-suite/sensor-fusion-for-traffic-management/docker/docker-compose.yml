@@ -28,12 +28,12 @@ services:
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "${HOME}/.Xauthority:/home/openvino/.Xauthority:rw"
-    working_dir: /home/openvino/metro-2.0
+    working_dir: /home/openvino/metro
     entrypoint: /bin/bash
     tty: true
     stdin_open: true
     healthcheck:
-      test: ["CMD", "test", "-d", "/home/openvino/metro-2.0"]
+      test: ["CMD", "test", "-d", "/home/openvino/metro"]
       interval: 30s
       timeout: 3s
       retries: 3
@@ -69,12 +69,12 @@ services:
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "${HOME}/.Xauthority:/home/openvino/.Xauthority:rw"
-    working_dir: /home/openvino/metro-2.0
+    working_dir: /home/openvino/metro
     entrypoint: /bin/bash
     tty: true
     stdin_open: true
     healthcheck:
-      test: ["CMD", "test", "-d", "/home/openvino/metro-2.0"]
+      test: ["CMD", "test", "-d", "/home/openvino/metro"]
       interval: 30s
       timeout: 3s
       retries: 3

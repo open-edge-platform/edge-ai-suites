@@ -1,4 +1,4 @@
-# Tutorial 2 - Node-Red
+# Visual AI Demo Kit - Tutorial 2
 
 <!--
 **Sample Description**: This tutorial demonstrates how to customize Node-RED flows to process and enhance AI inference data from metro vision applications, enabling real-time data manipulation and custom business logic implementation.

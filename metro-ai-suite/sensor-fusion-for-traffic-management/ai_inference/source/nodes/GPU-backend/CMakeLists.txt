@@ -34,7 +34,7 @@ endif()
 find_package(VPL REQUIRED)
 message("VPL_DIR: ${VPL_DIR}")
 
-add_library(VPLDecoderNode SHARED ${CMAKE_CURRENT_SOURCE_DIR}/VPLDecoderNode.cpp 
+add_library(VPLDecoderNode SHARED ${CMAKE_CURRENT_SOURCE_DIR}/VPLDecoderNode.cpp
                                        ${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp)
 
 target_compile_definitions(VPLDecoderNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
@@ -54,7 +54,7 @@ if(${LSB_RELEASE_ID_SHORT} MATCHES "CentOS")
     message(SEND_ERROR "VPLDecoderNode is not supported on CentOS")
 elseif((${LSB_RELEASE_ID_SHORT} MATCHES "Debian") OR (${LSB_RELEASE_ID_SHORT} MATCHES "Ubuntu"))
     message(STATUS "${LSB_RELEASE_ID_SHORT}: VPLDecoderNode include and link libav.")
-    
+
     find_package(PkgConfig REQUIRED)
     # note: pkg-config version for libva is *API* version
     pkg_check_modules(PKG_LIBVA libva>=1.2 IMPORTED_TARGET GLOBAL)
@@ -65,11 +65,11 @@ elseif((${LSB_RELEASE_ID_SHORT} MATCHES "Debian") OR (${LSB_RELEASE_ID_SHORT} MA
     else()
       set(VA_DEFAULT OFF)
     endif()
-    
+
     set(ENABLE_VA
         ${VA_DEFAULT}
         CACHE BOOL "Enable VA support in tools.")
-        
+
     if(NOT ENABLE_VA)
         message(STATUS "Building VPLDecoderNode without VA support")
 
@@ -90,3 +90,33 @@ elseif((${LSB_RELEASE_ID_SHORT} MATCHES "Debian") OR (${LSB_RELEASE_ID_SHORT} MA
     endif()
 endif()
 
+
+#----------------Generate LidarSignalProcessingNode.so file---------------------#
+find_package(OpenCV REQUIRED)
+message(DEBUG "OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
+message(DEBUG "OpenCV_LIBRARIES: ${OpenCV_LIBRARIES}")
+find_package(MKL CONFIG REQUIRED)
+# include_directories(${PROJECT_SOURCE_DIR/ai_nference/libradar/src})
+add_library(LidarSignalProcessingNode SHARED LidarSignalProcessingNode.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src/liblidar.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/include/nodes/lidarDatabaseMeta.hpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/base64.cpp 
+${PROJECT_SOURCE_DIR}/ai_inference/source/common/common.cpp
+${PROJECT_SOURCE_DIR}/ai_inference/source/modules/inference_util/radar/radar_config_parser.cpp)
+target_compile_definitions(LidarSignalProcessingNode PRIVATE HVA_NODE_COMPILE_TO_DYNAMIC_LIBRARY)
+link_directories(${PROJECT_SOURCE_DIR}/build/lib)
+target_link_libraries(LidarSignalProcessingNode hva)
+target_include_directories(LidarSignalProcessingNode PUBLIC "$<BUILD_INTERFACE:${AI_INF_SERVER_NODES_INC_DIR}>" )
+target_include_directories(LidarSignalProcessingNode PUBLIC "$<BUILD_INTERFACE:${HVA_INC_DIR}>")
+target_include_directories(LidarSignalProcessingNode PUBLIC "${PROJECT_SOURCE_DIR}/ai_inference/liblidar/src")
+target_include_directories(LidarSignalProcessingNode PUBLIC  $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
+target_include_directories(LidarSignalProcessingNode PUBLIC ${JSON_INC_DIR})
+include_directories("${OpenCV_INCLUDE_DIRS}")
+target_link_libraries(LidarSignalProcessingNode "${OpenCV_LIBRARIES}")
+
+target_link_libraries(LidarSignalProcessingNode ${Boost_LIBRARIES})
+target_include_directories(LidarSignalProcessingNode PUBLIC ${Boost_INCLUDE_DIRS})
+target_compile_options(LidarSignalProcessingNode PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_COMPILE_OPTIONS>)
+# target_link_libraries(RadarPreProcessingNode media_storage utility)
+target_link_libraries(LidarSignalProcessingNode $<LINK_ONLY:MKL::MKL>)
+target_link_libraries(LidarSignalProcessingNode Threads::Threads dl ${PROJECT_SOURCE_DIR}/build/lib/liblidar.so)
