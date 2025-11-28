@@ -76,31 +76,21 @@ RUN bash -c 'wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INT
   libnlopt-cxx-dev \
   && rm -rf /var/lib/apt/lists/*
 
-# Install Intel GPU/Level Zero packages
-RUN wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.1.12/intel-igc-core-2_2.1.12+18087_amd64.deb \
-  && wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.1.12/intel-igc-opencl-2_2.1.12+18087_amd64.deb \
-  && wget https://github.com/intel/compute-runtime/releases/download/24.45.31740.9/intel-level-zero-gpu_1.6.31740.9_amd64.deb \
-  && wget https://github.com/intel/compute-runtime/releases/download/24.45.31740.9/intel-opencl-icd_24.45.31740.9_amd64.deb \
-  && wget https://github.com/intel/compute-runtime/releases/download/24.45.31740.9/libigdgmm12_22.5.2_amd64.deb \
-  && dpkg -i intel-igc-core-2_2.1.12+18087_amd64.deb \
-            intel-igc-opencl-2_2.1.12+18087_amd64.deb \
-            intel-level-zero-gpu_1.6.31740.9_amd64.deb \
-            intel-opencl-icd_24.45.31740.9_amd64.deb \
-            libigdgmm12_22.5.2_amd64.deb \
-  && rm -f *.deb \
-  && apt-get update \ 
-  && apt-get install clinfo
+# Add Intel GPU repo key / Add Intel GPU repo / Install GPU runtime packages
+RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | gpg --yes --dearmor --output /usr/share/keyrings/intel-graphics.gpg \
+  && echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy unified" | tee /etc/apt/sources.list.d/intel-gpu-jammy.list \
+  && apt update \
+  && apt-get install -y libze-intel-gpu1=24.52.32224.14-1077~22.04 libze1=1.19.2.0-1077~22.04 intel-opencl-icd=24.52.32224.14-1077~22.04 clinfo xpu-smi
 
+# Add Intel ECI repo key / Pinning preferences
+RUN wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null \
+  && echo "deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/jammy isar main" | tee /etc/apt/sources.list.d/eci.list \
+  && echo "deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/jammy isar main" | tee -a /etc/apt/sources.list.d/eci.list \
+  && echo "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/isar 
+RUN cat /etc/apt/preferences.d/isar 
 
-ENV ROS_DISTRO=humble
-ENV AMENT_PREFIX_PATH=/opt/ros/humble
-ENV COLCON_PREFIX_PATH=/opt/ros/humble
-ENV LD_LIBRARY_PATH=/opt/ros/humble/lib
-ENV PATH=/opt/ros/humble/bin:$PATH
-ENV PYTHONPATH=/opt/ros/humble/lib/python3.10/site-packages
-ENV ROS_PYTHON_VERSION=3
-ENV ROS_VERSION=2
-ENV DEBIAN_FRONTEND=
+# Install the NPU Libraries
+RUN apt-get update && apt-get install -y level-zero* intel-driver-compiler-npu intel-fw-npu intel-level-zero-npu
 
 ###########################################
 #  Development image
