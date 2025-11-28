@@ -92,6 +92,16 @@ RUN cat /etc/apt/preferences.d/isar
 # Install the NPU Libraries
 RUN apt-get update && apt-get install -y level-zero* intel-driver-compiler-npu intel-fw-npu intel-level-zero-npu
 
+ENV ROS_DISTRO=humble
+ENV AMENT_PREFIX_PATH=/opt/ros/humble
+ENV COLCON_PREFIX_PATH=/opt/ros/humble
+ENV LD_LIBRARY_PATH=/opt/ros/humble/lib
+ENV PATH=/opt/ros/humble/bin:$PATH
+ENV PYTHONPATH=/opt/ros/humble/lib/python3.10/site-packages
+ENV ROS_PYTHON_VERSION=3
+ENV ROS_VERSION=2
+ENV DEBIAN_FRONTEND=
+
 ###########################################
 #  Development image
 ###########################################
