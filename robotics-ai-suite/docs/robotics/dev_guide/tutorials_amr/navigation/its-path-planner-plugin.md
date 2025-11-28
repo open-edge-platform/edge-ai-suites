@@ -1,11 +1,15 @@
 # ITS Path Planner ROS 2 Navigation Plugin
 
-Intelligent Sampling and Two-Way Search (ITS) global path planner is an Intel® patented algorithm.
+Intelligent Sampling and Two-Way Search (ITS) global path planner is an Intel®
+patented algorithm.
 
 The ITS Plugin for the ROS 2 Navigation 2 application plugin is a global path
 planner module that is based on Intelligent sampling and Two-way Search (ITS).
 
-ITS is a new search approach based on two-way path planning and intelligent sampling, which reduces the compute time by about 20x-30x on a 1000 nodes map comparing with the A\* search algorithm. The inputs are the 2D occupancy grid map, the robot position, and the goal position.
+ITS is a new search approach based on two-way path planning and intelligent
+sampling, which reduces the compute time by about 20x-30x on a 1000 nodes map
+comparing with the A\* search algorithm. The inputs are the 2D occupancy grid
+map, the robot position, and the goal position.
 
 It does not support continuous replanning.
 
@@ -31,17 +35,20 @@ Path planning steps summary:
    generated smooth path is in the form of a ROS 2 navigation message type
    (`nav_msgs::msg`).
 
-For customization options, see [ITS Path Planner Plugin Customization](./its-customization.md).
+For customization options, see
+[ITS Path Planner Plugin Customization](./its-customization.md).
 
 ## Source Code
 
-The source code of this component can be found here: [ITS-Planner](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/its-planner)
+The source code of this component can be found here:
+[ITS-Planner](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/its-planner)
 
 ## Getting Started
 
-Autonomous Mobile Robot provides a ROS 2 Deb package for the application, supported by the following platform:
+Autonomous Mobile Robot provides a ROS 2 Deb package for the application,
+supported by the following platform:
 
-- ROS version: jazzy, humble
+- ROS version: Jazzy, Humble
 
 ### Prerequisites
 
@@ -49,7 +56,8 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
 
 ### Install Deb package
 
-Install the `ros-jazzy-its-planner` Deb package from the Intel® Autonomous Mobile Robot APT repository
+Install the `ros-jazzy-its-planner` Deb package from the
+Intel® Autonomous Mobile Robot APT repository
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
@@ -116,7 +124,8 @@ ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False params_file:=/
 <!--hide_directive:::
 ::::hide_directive-->
 
-ITS Planner also supports Ackermann steering; to launch the Ackermann ITS planner run:
+ITS Planner also supports Ackermann steering; to launch the Ackermann
+ITS planner run:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
@@ -182,4 +191,5 @@ hide_directive-->
 
 ## Troubleshooting
 
-For general robot issues, refer to [Troubleshooting](../robot-tutorials-troubleshooting.rst).
+For general robot issues, refer to
+[Troubleshooting](../robot-tutorials-troubleshooting.rst).

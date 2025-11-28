@@ -6,7 +6,8 @@ The default installation of Collaborative Visual SLAM is designed to run on the 
 
 ## Source Code
 
-The source code of this component can be found here: [Collaborative-Slam](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/collaborative-slam)
+The source code of this component can be found here:
+[Collaborative-Slam](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/collaborative-slam)
 
 ## Prerequisites
 
@@ -18,7 +19,6 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
 
   ```bash
   # Required for Intel® Atom® processor-based systems
-
   sudo apt-get install ros-humble-collab-slam-sse
   ```
 
@@ -26,7 +26,6 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
 
    ```bash
    # Works only on Intel® Core™ processor-based systems
-
    sudo apt-get install ros-humble-collab-slam-avx2
    ```
 
@@ -34,7 +33,6 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
 
    ```bash
    # Works only on 9th, 11th or 12th Generation Intel® Core™ processors with Intel® Iris® Xe Integrated Graphics or Intel® UHD Graphics
-
    sudo apt-get install ros-humble-collab-slam-lze
    ```
 
@@ -49,7 +47,6 @@ Use the instructions above to switch between version to experiment with differen
 > ```console
 > Configuring liborb-lze
 > ----------------------
->
 > Select the Intel integrated GPU present on this system. Hint: In another
 > terminal install 'intel-gpu-tools' (sudo apt install intel-gpu-tools), then
 > execute 'intel_gpu_top' to view CPU/GPU details (sudo intel_gpu_top -L)
@@ -127,7 +124,8 @@ Use the instructions above to switch between version to experiment with differen
    > **Note:** In this installation package, there are two substantial ROS 2
    > bag files, which are approximately 6.8 GB and 2.6 GB in size.
 
-2. Run the Collaborative Visual SLAM algorithm using two bags simulating two robots going through the same area:
+2. Run the Collaborative Visual SLAM algorithm using two bags simulating two
+   robots going through the same area:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
@@ -157,8 +155,11 @@ Use the instructions above to switch between version to experiment with differen
     ![collab_slam](../../../images/collab_slam.gif)
 
 3. You may stop execution of the script any time by pressing CTRL-C.
-   This tutorial demo is complete when the output to the console indicates that no further images are being processed.
-   (hint: look for the output, "got 0 images in past 3.0s"). Press CTRL-C when you see this to stop the executing script.
+
+   This tutorial demo is complete when the output to the console indicates that
+   no further images are being processed.
+   (hint: look for the output, "got 0 images in past 3.0s"). Press CTRL-C when
+   you see this to stop the executing script.
 
    ```console
    [univloc_tracker_ros-1] [INFO] [1694539167.880197983] [univloc_tracker_0]: UnivLoc (unconnected) got 0 images in past 3.0s. Localized/processed 0/0 (0.00 Hz). Totally 2525/2525 (100.00%).
@@ -242,8 +243,10 @@ Use the instructions above to switch between version to experiment with differen
    ![c-slam-fm-keypoints](../../../images/c-slam-fm-keypoints.png)
 
 4. You may stop execution of the script any time by pressing CTRL-C.
-   This tutorial demo is complete when the output to the console indicates that no further images are being processed.
-   (hint: look for the output, "got 0 images in past 3.0s"). Press CTRL-C when you see this to stop the executing script.
+   This tutorial demo is complete when the output to the console indicates that
+   no further images are being processed.
+   (hint: look for the output, "got 0 images in past 3.0s"). Press CTRL-C when
+   you see this to stop the executing script.
 
    ```console
    [univloc_tracker_ros-1] [INFO] [1694539167.880197983] [univloc_tracker_0]: UnivLoc (unconnected) got 0 images in past 3.0s. Localized/processed 0/0 (0.00 Hz). Totally 2525/2525 (100.00%).
@@ -280,7 +283,8 @@ Use the instructions above to switch between version to experiment with differen
    > **Note**: In this installation package, there is a substantial ROS 2
    > bag file, which is approximately 206 MB in size.
 
-2. Run the collaborative visual SLAM algorithm tracker frame-level pose fusion using Kalman Filter:
+2. Run the collaborative visual SLAM algorithm tracker frame-level pose fusion
+   using Kalman Filter:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
@@ -301,18 +305,21 @@ Use the instructions above to switch between version to experiment with differen
    <!--hide_directive:::
    ::::hide_directive-->
 
-   Expected result: On the opened rviz windows, you see the pose trajectory outputs for each camera.
+   **Expected result:** On the opened rviz windows, you see the pose trajectory
+   outputs for each camera.
 
 3. You may stop execution of the script any time by pressing CTRL-C.
-   This tutorial demo is complete when the output to the console indicates that no further images are being processed.
-   (hint: look for the output, "got 0 images in past 3.0s"). Press CTRL-C when you see this to stop the executing script.
+   This tutorial demo is complete when the output to the console indicates that
+   no further images are being processed.
+   (hint: look for the output, "got 0 images in past 3.0s"). Press CTRL-C when
+   you see this to stop the executing script.
 
    ```console
    [univloc_tracker_ros-1] [INFO] [1694539167.880197983] [univloc_tracker_0]: UnivLoc (unconnected) got 0 images in past 3.0s. Localized/processed 0/0 (0.00 Hz). Totally 2525/2525 (100.00%).
    ```
 
-4. Afterwards, run the Python script to visualize the three trajectories obtained from ROS 2 topics:
-   `univloc_tracker_0/kf_pose`, `univloc_tracker_2/kf_pose`, `/odometry/filtered`.
+4. Afterwards, run the Python script to visualize the three trajectories
+   obtained from ROS 2 topics: `univloc_tracker_0/kf_pose`, `univloc_tracker_2/kf_pose`, `/odometry/filtered`.
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
@@ -335,7 +342,8 @@ Use the instructions above to switch between version to experiment with differen
    <!--hide_directive:::
    ::::hide_directive-->
 
-   Expected result: On the Python window, three trajectories are shown. An example image is as follows:
+   Expected result: On the Python window, three trajectories are shown.
+   An example image is as follows:
 
    - Blue indicates the trajectory generated by front camera.
    - Gray indicates the trajectory generated by rear camera.
@@ -421,8 +429,11 @@ Use the instructions above to switch between version to experiment with differen
    ![use_lidar](../../../images/use_lidar.png)
 
 4. You may stop execution of the script any time by pressing CTRL-C.
-   This tutorial demo is complete when the output to the console indicates that no further images are being processed.
-   (hint: look for the output, "got 0 images in past 3.0s"). Press CTRL-C when you see this to stop the executing script.
+
+   This tutorial demo is complete when the output to the console indicates that
+   no further images are being processed.
+   (hint: look for the output, "got 0 images in past 3.0s"). Press CTRL-C when
+   you see this to stop the executing script.
 
    ```console
    [univloc_tracker_ros-1] [INFO] [1694539167.880197983] [univloc_tracker_0]: UnivLoc (unconnected) got 0 images in past 3.0s. Localized/processed 0/0 (0.00 Hz). Totally 2525/2525 (100.00%).
@@ -454,7 +465,8 @@ Use the instructions above to switch between version to experiment with differen
    > **Note**: In this tutorial installation, there is a substantial ROS 2
    > bag file, which is approximately 2.6 GB in size.
 
-2. Run the collaborative visual SLAM algorithm tracker frame-level pose fusion using Kalman Filter:
+2. Run the collaborative visual SLAM algorithm tracker frame-level pose fusion
+   using Kalman Filter:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
@@ -475,7 +487,8 @@ Use the instructions above to switch between version to experiment with differen
    <!--hide_directive:::
    ::::hide_directive-->
 
-   Expected result: On the opened server rviz, you see the keyframe and landmark constructed in mapping mode.
+   Expected result: On the opened server rviz, you see the keyframe and landmark
+   constructed in mapping mode.
 
    ![constructed_keyframes](../../../images/constructed_keyframes_and_landmarks_map.png)
 
@@ -484,21 +497,24 @@ Use the instructions above to switch between version to experiment with differen
    ![constructed_octree_map](../../../images/constructed_octree_map.png)
 
 3. You may stop execution of the script any time by pressing CTRL-C.
-   This tutorial demo is complete when the output to the console indicates that no further images are being processed.
-   (hint: look for the output, "got 0 images in past 3.0s"). Press CTRL-C when you see this to stop the executing script.
+
+   This tutorial demo is complete when the output to the console indicates that
+   no further images are being processed.
+   (hint: look for the output, "got 0 images in past 3.0s"). Press CTRL-C when
+   you see this to stop the executing script.
 
    ```console
    [univloc_tracker_ros-1] [INFO] [1694539167.880197983] [univloc_tracker_0]: UnivLoc (unconnected) got 0 images in past 3.0s. Localized/processed 0/0 (0.00 Hz). Totally 2525/2525 (100.00%).
    ```
 
-4. Run the collaborative visual SLAM algorithm in remapping mode to load and update pre-constructed
-   keyframe/landmark and 3D octree map:
+4. Run the collaborative visual SLAM algorithm in remapping mode to load and
+   update pre-constructed keyframe/landmark and 3D octree map:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
    <!--hide_directive:sync: tab1hide_directive-->
 
-   ```
+   ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-region-remap/cslam-region-remap.sh
    ```
 
@@ -506,14 +522,14 @@ Use the instructions above to switch between version to experiment with differen
    :::{tab-item}hide_directive-->  **Humble**
    <!--hide_directive:sync: tab2hide_directive-->
 
-   ```
+   ```bash
    /opt/ros/humble/share/collab-slam/tutorial-region-remap/cslam-region-remap.sh
    ```
 
    <!--hide_directive:::
    ::::hide_directive-->
 
-   Expected result: On the opened server rviz, you see the loaded pre-constructed keyframe/landmark map
+   **Expected result**: On the opened server rviz, you see the loaded pre-constructed keyframe/landmark map
    in mapping mode. Within the remapping region, corresponding map will be deleted.
 
    ![loaded_keyframes]( ../../../images/loaded_keyframes_and_landmarks_map.png)
@@ -527,8 +543,11 @@ Use the instructions above to switch between version to experiment with differen
    ![updated_map](../../../images/updated_map_after_remapping.png)
 
 5. You may stop execution of the script any time by pressing CTRL-C.
-   This tutorial demo is complete when the output to the console indicates that no further images are being processed.
-   (hint: look for the output, "got 0 images in past 3.0s"). Press CTRL-C when you see this to stop the executing script.
+
+   This tutorial demo is complete when the output to the console indicates that
+   no further images are being processed.
+   (hint: look for the output, "got 0 images in past 3.0s"). Press CTRL-C when
+   you see this to stop the executing script.
 
    ```console
    [univloc_tracker_ros-1] [INFO] [1694539167.880197983] [univloc_tracker_0]: UnivLoc (unconnected) got 0 images in past 3.0s. Localized/processed 0/0 (0.00 Hz). Totally 2525/2525 (100.00%).
@@ -554,7 +573,9 @@ it is possible to check GPU usage while a tutorial is actively executing.
 
 ## Troubleshooting
 
-- IMU functionality does not currently work properly for the AVX2 and GPU Level-Zero accelerated packages. Please use the SSE-only version of Collaborative SLAM for IMU.
+- IMU functionality does not currently work properly for the AVX2 and GPU
+  Level-Zero accelerated packages. Please use the SSE-only version of
+  Collaborative SLAM for IMU.
 
 - The odometry feature `use_odom:=true` does not work with these bags.
 
@@ -564,4 +585,5 @@ it is possible to check GPU usage while a tutorial is actively executing.
   If the `use_odom:=true` parameter is set, the `collab-slam` reports
   errors.
 
-- For general robot issues, refer to [Troubleshooting](../robot-tutorials-troubleshooting.rst).
+- For general robot issues, refer to
+  [Troubleshooting](../robot-tutorials-troubleshooting.rst).

@@ -14,7 +14,8 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
 
 ## Run the FastMapping Standalone Application
 
-1. To download and install the FastMapping standalone sample application run the command below:
+1. To download and install the FastMapping standalone sample application run
+   the command below:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
@@ -72,16 +73,20 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
 
    <https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/robotics/videos/fast_mapping.mp4>
 
-4. Run the FastMapping sample application using Intel® RealSense™ camera input with RTAB-Map:
+4. Run the FastMapping sample application using Intel® RealSense™ camera
+   input with RTAB-Map:
 
    ```bash
    ros2 launch fast_mapping fast_mapping_rtabmap.launch.py
    ```
 
-Once the tutorial is launched, the input from the Intel® RealSense™ camera is used and a 3D voxel map of the environment can be viewed in rviz.
+Once the tutorial is launched, the input from the Intel® RealSense™ camera is
+used and a 3D voxel map of the environment can be viewed in rviz.
 
-To close this application, type `Ctrl-c` in the terminal where you ran the launch script.
+To close this application, type `Ctrl-c` in the terminal where you ran
+the launch script.
 
 ## Troubleshooting
 
-For general robot issues, refer to [Troubleshooting](../robot-tutorials-troubleshooting.rst).
+For general robot issues, refer to
+[Troubleshooting](../robot-tutorials-troubleshooting.rst).
