@@ -16,14 +16,14 @@ in a testing playground:
 
 <https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/robotics/videos/irobot-create3-demo-wandering-rviz.mp4>
 
-# Getting Started
+## Getting Started
 
-## Prerequisites
+### Prerequisites
 
 - Assemble your robotic kit following the instructions for [irobot-create3](../../developer_kit/irobot-create3-robot.rst)
 - Complete the [get started guide](../../../../gsg_robot/index.rst) before continuing.
 
-## Intel® board connected to iRobot Create 3
+### Intel® board connected to iRobot Create 3
 
 Follow the instructions on page
 [iRobot® Create® 3 - Network Recommendations](https://iroboteducation.github.io/create3_docs/setup/network-config/)
@@ -111,9 +111,9 @@ The iRobot Create 3 topics should be listed:
 
 > **Note**:
 > If only `/parameter_events` and `/rosout` topics are listed then
-> the communication between the robot and the Intel® board is not
-> working. Check the [iRobot Create 3 mobile robotics platform documentation](https://iroboteducation.github.io/create3_docs/) to troubleshoot
-> the issue.
+> the communication between the robot and the Intel® board is not working. Check
+> the [iRobot Create 3 mobile robotics platform documentation](https://iroboteducation.github.io/create3_docs/)
+> to troubleshoot the issue.
 
 Start the tutorial using its launch file; provide the namespace set on
 the robot in the argument `irobot_ns`:

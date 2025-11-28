@@ -31,7 +31,8 @@ sudo apt install ros-humble-adbscan-ros2
 <!--hide_directive:::
 ::::hide_directive-->
 
-Install the following package with ROS 2 bag files in order to publish point cloud data from 2D LIDAR or Intel® RealSense™ camera
+Install the following package with ROS 2 bag files in order to publish point
+cloud data from 2D LIDAR or Intel® RealSense™ camera
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**

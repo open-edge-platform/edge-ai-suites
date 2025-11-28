@@ -1,6 +1,7 @@
 # Wandering Application on AAEON robot with Intel® RealSense™ Camera and RTAB-Map SLAM
 
-This tutorial details the steps to install Wandering Application with Intel® RealSense™ camera input and create a map using RTAB-Map Application.
+This tutorial details the steps to install Wandering Application with
+Intel® RealSense™ camera input and create a map using RTAB-Map Application.
 
 ## Getting Started
 
@@ -10,7 +11,8 @@ Complete the [get started guide](../../../../gsg_robot/index.rst) before continu
 
 ### Install Deb package
 
-Install the `ros-jazzy-wandering-aaeon-tutorial` Deb package from the Intel® Autonomous Mobile Robot APT repository.
+Install the `ros-jazzy-wandering-aaeon-tutorial` Deb package from the
+Intel® Autonomous Mobile Robot APT repository.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
@@ -35,7 +37,8 @@ sudo apt install ros-humble-wandering-aaeon-tutorial
 
 ## Run Demo
 
-Run the following commands to create a map using RTAB-Map and Wandering Application tutorial on the Aaeon robot.
+Run the following commands to create a map using RTAB-Map and Wandering
+Application tutorial on the Aaeon robot.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
@@ -58,11 +61,13 @@ ros2 launch wandering_aaeon_tutorial wandering_aaeon.launch.py
 <!--hide_directive:::
 ::::hide_directive-->
 
-Once the command is executed, the robot starts moving and creates a map with RTAB-Map Application.
+Once the command is executed, the robot starts moving and creates a map with
+RTAB-Map Application.
 
 ![Wandering_aaeon_tutorial](../../../../images/Wandering_aaeon_tutorial.png)
 
 ## Troubleshooting
 
 - You can stop the demo anytime by pressing `ctrl-C`.
-- For general robot issues, refer to [Troubleshooting](../../robot-tutorials-troubleshooting.rst).
+- For general robot issues, refer to
+  [Troubleshooting](../../robot-tutorials-troubleshooting.rst).
