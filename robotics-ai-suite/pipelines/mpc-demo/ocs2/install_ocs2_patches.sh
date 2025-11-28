@@ -19,6 +19,9 @@ fi
 # Step 2: Apply patches
 echo "Step 2: Applying OCS2 patches..."
 
+# Initialize patch counter
+PATCHES_APPLIED=0
+
 # If patch list file is provided, use it
 if [ "$#" -eq 1 ]; then
     PATCH_LIST_FILE="$1"
@@ -29,12 +32,13 @@ if [ "$#" -eq 1 ]; then
         exit 1
     fi
     
+    cd ocs2
     # Apply patches from file
     while IFS= read -r PATCH_FILE; do
         # Skip empty lines and comments
         [[ -z "$PATCH_FILE" || "$PATCH_FILE" =~ ^[[:space:]]*# ]] && continue
         
-        PATCH_PATH="patches/$PATCH_FILE"
+        PATCH_PATH="../patches/$PATCH_FILE"
         
         if [ ! -f "$PATCH_PATH" ]; then
             echo "Warning: Patch file '$PATCH_PATH' not found, skipping..."
@@ -42,13 +46,30 @@ if [ "$#" -eq 1 ]; then
         fi
 
         echo "Applying patch: $PATCH_PATH"
-        patch -d ocs2 -p1 < "$PATCH_PATH"
+        git am "$PATCH_PATH"
 
         if [ $? -ne 0 ]; then
             echo "Error: Failed to apply patch '$PATCH_PATH'"
             exit 1
         fi
+        
+        # Increment patch counter
+        PATCHES_APPLIED=$((PATCHES_APPLIED + 1))
     done < "$PATCH_LIST_FILE"
+else
+    echo "No patch list file provided, checking for patches in patches/ directory..."
 fi
 
-echo "=== All OCS2 patches applied successfully! ==="
+# Check if any patches were applied
+if [ $PATCHES_APPLIED -eq 0 ]; then
+    echo "Error: No patches were applied!"
+    echo "Please ensure:"
+    echo "  1. A patch list file is provided as argument"
+    echo "  2. The patch list file contains valid patch filenames"
+    echo "  3. The corresponding patch files exist in the patches/ directory"
+    echo ""
+    echo "Or you can add patches manually by git am"
+    exit 1
+fi
+
+echo "=== Successfully applied $PATCHES_APPLIED OCS2 patches! ==="

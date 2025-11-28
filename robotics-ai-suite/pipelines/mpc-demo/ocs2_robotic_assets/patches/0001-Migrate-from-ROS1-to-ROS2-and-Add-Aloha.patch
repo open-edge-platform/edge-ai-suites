@@ -167,10 +167,10 @@ index b6160a8..b3de343 100644
 2.34.1
 
 
-From 8ef821c1b74ca90126b0d5fa8f04da66e2729c84 Mon Sep 17 00:00:00 2001
-From: AnnikaWU <xian.wu@intel.com>
-Date: Mon, 3 Nov 2025 08:21:27 -0500
-Subject: [PATCH 3/3] add ALOHA urdf and mesh files
+From 0c4feb89da1225434af58637e755dc69da347c76 Mon Sep 17 00:00:00 2001
+From: AnnikaWU <109574074+AnnikaWU@users.noreply.github.com>
+Date: Tue, 18 Nov 2025 09:51:21 +0800
+Subject: [PATCH 3/3] add ALOHA urdf and mesh files (#4)
 
 ---
  .../aloha/meshes/ar_tag.stl                   | Bin 0 -> 3884 bytes
