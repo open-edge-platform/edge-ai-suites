@@ -1,64 +1,5 @@
 # Get Started Guide
 
-## Run Metro AI Suite Sensor Fusion for Traffic Management Application on EMT systems
-
-This section explains how to run Sensor Fusion for Traffic Management on EMT systems.
-
-For prerequisites and system requirements, please prepare a machine with the EMT system installed.
-
-### Install X11
-
-```bash
-sudo -E tdnf install xorg-x11-server-Xorg xorg-x11-xinit xorg-x11-xinit-session xorg-x11-drv-libinput xorg-x11-apps xterm openbox libXfont2 freefont freetype gtk3 qemu-with-ui  
-sudo dnf install python3
-sudo -E python3 -m pip install PyXDG 
-```
-
-### Modify 20-modesetting.conf
-
-```bash
-cd /usr/share/X11/xorg.conf.d/
-sudo nano 20-modesetting.conf
-
-## Add the following configuration into 20-modesetting.conf
-Section "Device"
-  Identifier "Intel_Graphics"
-    Driver "modesetting"
-    Option "SWcursor" "true"
-    Option "AccelMethod" "glamor"
-    Option "DRI" "3"
-EndSection
-```
-
-### X11 setting
-
-```bash
-export XDG_RUNTIME_DIR=/tmp
-sudo -E bash -c 'xinit /usr/bin/openbox-session &'
-
-export DISPLAY=:0
-xhost +
-
-xhost +local:docker
-```
-
-### Pull docker image
-
-You can pull latest tfcc docker image through [intel/tfcc - Docker Image](https://hub.docker.com/r/intel/tfcc/).
-
-For example:
-
-```bash
-docker pull intel/tfcc:latest
-```
-
-### Run TFCC docker image on EMT systems
-
-To run Sensor Fusion for Traffic Management through docker image on EMT systems, you can following the guides [Build and run docker image](./advanced-user-guide.md#build-and-run-docker-image) at [Advanced-User-Guide.md](./advanced-user-guide.md)
-
-
-
-
 ## Run Metro AI Suite Sensor Fusion for Traffic Management Application on Bare Metal systems
 
 In this section, we describe how to run Metro AI Suite Sensor Fusion for Traffic Management application on Bare Metal systems.
@@ -502,6 +443,65 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     ```
 
     ![Display type: lidar](_images/12C4L-Display-type-lidar.png)
+
+
+## Run Metro AI Suite Sensor Fusion for Traffic Management Application on EMT systems
+
+This section explains how to run Sensor Fusion for Traffic Management on EMT systems.
+
+For prerequisites and system requirements, please prepare a machine with the EMT system installed.
+
+### Install X11
+
+```bash
+sudo -E tdnf install xorg-x11-server-Xorg xorg-x11-xinit xorg-x11-xinit-session xorg-x11-drv-libinput xorg-x11-apps xterm openbox libXfont2 freefont freetype gtk3 qemu-with-ui  
+sudo dnf install python3
+sudo -E python3 -m pip install PyXDG 
+```
+
+### Modify 20-modesetting.conf
+
+```bash
+cd /usr/share/X11/xorg.conf.d/
+sudo nano 20-modesetting.conf
+
+## Add the following configuration into 20-modesetting.conf
+Section "Device"
+  Identifier "Intel_Graphics"
+    Driver "modesetting"
+    Option "SWcursor" "true"
+    Option "AccelMethod" "glamor"
+    Option "DRI" "3"
+EndSection
+```
+
+### X11 setting
+
+```bash
+export XDG_RUNTIME_DIR=/tmp
+sudo -E bash -c 'xinit /usr/bin/openbox-session &'
+
+export DISPLAY=:0
+xhost +
+
+xhost +local:docker
+```
+
+### Pull docker image
+
+You can pull latest tfcc docker image through [intel/tfcc - Docker Image](https://hub.docker.com/r/intel/tfcc/).
+
+For example:
+
+```bash
+docker pull intel/tfcc:latest
+```
+
+### Run TFCC docker image on EMT systems
+
+To run Sensor Fusion for Traffic Management through docker image on EMT systems, you can following the guides [Build and run docker image](./advanced-user-guide.md#build-and-run-docker-image) at [Advanced-User-Guide.md](./advanced-user-guide.md)
+
+
 
 ## Code Reference
 
