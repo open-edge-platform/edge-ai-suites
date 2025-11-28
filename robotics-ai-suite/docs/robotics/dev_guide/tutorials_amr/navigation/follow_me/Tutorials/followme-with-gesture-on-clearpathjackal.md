@@ -45,7 +45,8 @@ before continuing.
 
 ### Install the Deb package
 
-Install `ros-jazzy-follow-me-tutorial-w-gesture` Deb package from Autonomous Mobile Robot APT repository.
+Install `ros-jazzy-follow-me-tutorial-w-gesture` Deb package from Autonomous
+Mobile Robot APT repository.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
@@ -244,5 +245,5 @@ Find a brief description of the parameters in the following list:
 
 - If the motor controller board does not start, restart the robot.
 
-- For general robot issues, go to
+- For general robot issues, refer to
   [Troubleshooting](../../../robot-tutorials-troubleshooting.rst).

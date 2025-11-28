@@ -195,6 +195,6 @@ Find a brief description of the parameters in the following list.
 - You may stop the demo anytime by pressing `ctrl-C`.
 - If the robot rotates more than intended at each step, try reducing the
   parameter `max_angular` in the parameter file.
-- For general robot issues, go to
+- For general robot issues, refer to
   [Troubleshooting](../../../robot-tutorials-troubleshooting.rst).
 - If the motor controller board does not start, restart the robot.

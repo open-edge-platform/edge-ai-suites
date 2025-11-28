@@ -1,5 +1,3 @@
-% followme-with-gesture:
-
 # Follow-me with ADBSCAN and Gesture Control
 
 This demo of the Follow-me algorithm shows a Autonomous Mobile Robot application

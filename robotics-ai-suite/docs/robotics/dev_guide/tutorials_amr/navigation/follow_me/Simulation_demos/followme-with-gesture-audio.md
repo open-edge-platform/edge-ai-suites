@@ -1,10 +1,21 @@
 # Follow-me with ADBSCAN, Gesture and Audio Control
 
-This demo of the Follow-me algorithm shows a Autonomous Mobile Robot application for following a target person where the movement of the robot can be controlled by the person's location, hand gestures as well as audio command. The entire pipeline diagram can be found in the [Simulation Demos](../index.rst) page.
-It takes point cloud sensor (2D Lidar/depth camera) as well as RGB camera image as inputs. These inputs are passed through Intel®-patented Adaptive DBScan and a deep-learning-based gesture recognition pipeline, respectively to publish motion command messages for a differential drive robot. It also takes recorded audio commands for starting and stopping the robot movement. Moreover, the demo is equipped with a text-to-speech synthesis model to narrate the robot's
+This demo of the Follow-me algorithm shows a Autonomous Mobile Robot application
+for following a target person where the movement of the robot can be controlled
+by the person's location, hand gestures as well as audio command. The entire
+pipeline diagram can be found in the [Simulation Demos](../index.rst) page.
+
+It takes point cloud sensor (2D Lidar/depth camera) as well as RGB camera image
+as inputs. These inputs are passed through Intel®-patented Adaptive DBScan and
+a deep-learning-based gesture recognition pipeline, respectively to publish
+motion command messages for a differential drive robot. It also takes recorded
+audio commands for starting and stopping the robot movement. Moreover, the demo
+is equipped with a text-to-speech synthesis model to narrate the robot's
 activity over the course of its movement.
 
-This demo has been tested and validated on 13th Generation Intel® Core™ processors with Intel® Iris® Xe Integrated Graphics and 12th Generation Intel® Core™ processors with Intel® Iris® Xe Integrated Graphics.
+This demo has been tested and validated on 13th Generation Intel® Core™
+processors with Intel® Iris® Xe Integrated Graphics and 12th Generation
+Intel® Core™ processors with Intel® Iris® Xe Integrated Graphics.
 This tutorial describes how to launch the demo in the `Gazebo` simulator.
 
 ## Getting Started
@@ -15,7 +26,10 @@ Complete the [get started guide](../../../../../gsg_robot/index.rst) before cont
 
 ### Install the Deb packages
 
-Install `ros-jazzy-followme-turtlebot3-gazebo` and `ros-jazzy-text-to-speech-pkg` Deb packages from Intel® Autonomous Mobile Robot APT repository. `ros-jazzy-followme-turtlebot3-gazebo` is the wrapper package for the demo which will install all of the dependencies in the backend.
+Install `ros-jazzy-followme-turtlebot3-gazebo` and `ros-jazzy-text-to-speech-pkg`
+Deb packages from Intel® Autonomous Mobile Robot APT repository.
+`ros-jazzy-followme-turtlebot3-gazebo` is the wrapper package for the demo
+which will install all of the dependencies in the backend.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
@@ -63,11 +77,14 @@ pip install -r /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/requirem
 <!--hide_directive:::
 ::::hide_directive-->
 
-If you are under a proxy network, please make sure to use `--proxy <http-proxy-url>` with the `pip install` command.
+If you are under a proxy network, please make sure to use
+`--proxy <http-proxy-url>` with the `pip install` command.
 
 ## Run Demo with 2D Lidar
 
-Please make sure to source the `/opt/ros/jazzy/setup.bash` file at first before executing any command in a new terminal. You can get more details in {doc}`../../../../../gsg_robot/prepare-system` page.
+Please make sure to source the `/opt/ros/jazzy/setup.bash` file at first before
+executing any command in a new terminal. You can get more details in
+[Prepare the Target System](../../../../../gsg_robot/prepare-system.rst) page.
 
 Run the following commands one by one in five separate terminals:
 
@@ -92,7 +109,8 @@ Run the following commands one by one in five separate terminals:
    <!--hide_directive:::
    ::::hide_directive-->
 
-   You will see the ROS 2 rviz2 with a panel for `Image` visualization. It will display the published RGB image in the simulated RGB camera.
+   You will see the ROS 2 rviz2 with a panel for `Image` visualization. It will
+   display the published RGB image in the simulated RGB camera.
 
    ![rviz_display_follow_me](../../../../../images/rviz_display_follow_me.png)
 
@@ -129,14 +147,16 @@ Run the following commands one by one in five separate terminals:
    ```
 
    You will see the `Gazebo` GUI with two simulated robots in an empty `Gazebo` world.
-   We suggest to rescale and place the `Gazebo` and rviz panels side by side (like the following picture) for better visualization of the demo.
+   We suggest to rescale and place the `Gazebo` and rviz panels side by side
+   (like the following picture) for better visualization of the demo.
 
    ![follow_me_demo_gazebo_rviz](../../../../../images/follow_me_demo_gazebo_rviz.png)
 
-   - The green square robot is a guide robot (namely, the target), which will follow a pre-defined trajectory.
+   - The green square robot is a guide robot (namely, the target), which will
+     follow a pre-defined trajectory.
    - The gray circular robot is a
-     [TurtleBot3](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation) robot,
-     which will follow the guide robot.
+     [TurtleBot3](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation)
+     robot, which will follow the guide robot.
 
      TurtleBot3 robot is equipped with a 2D Lidar and an Intel® RealSense™ Depth Camera.
      In this demo, the 2D Lidar is selected as the point cloud input.
@@ -145,7 +165,8 @@ Run the following commands one by one in five separate terminals:
    gesture image as well as pre-recorded audio at different points of time to show
    `start`, `follow` and `stop` activities of the TurtleBot3 robot.
 
-4. Terminal 4: This command will launch the `adbscan` node, which will publish `twist` msg to the `tb3/cmd_vel` topic:
+4. Terminal 4: This command will launch the `adbscan` node, which will publish
+   `twist` msg to the `tb3/cmd_vel` topic:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
@@ -205,7 +226,8 @@ from the following list needs to be true:
 2. The gesture (visualized in the `/image` topic in ROS 2 rviz2) of the target is `thumbs up`.
 3. The detected audio from the recording is `Start Following`.
 
-The stop condition for the TurtleBot3 robot is fulfilled when any one of the following conditions holds true:
+The stop condition for the TurtleBot3 robot is fulfilled when any one of the
+following conditions holds true:
 
 1. The target (guide robot) moves to a distance of more than the tracking radius of
    the TurtleBot3 robot. Radius is a reconfigurable parameter in:
@@ -216,7 +238,8 @@ The stop condition for the TurtleBot3 robot is fulfilled when any one of the fol
 2. The gesture (visualized in the `/image` topic in ROS 2 rviz2) of the target is `thumbs down`.
 3. The detected audio from the recording is `Stop Following`.
 
-The demo will narrate the detected gesture, audio and target location during the `start` and `stop` activity of the TurtleBot3 robot.
+The demo will narrate the detected gesture, audio and target location during
+the `start` and `stop` activity of the TurtleBot3 robot.
 
 > **Note**:
 >
@@ -338,7 +361,8 @@ Execute the following commands one by one in three separate terminals:
 > ros2 launch followme_turtlebot3_gazebo empty_world_followme_w_gesture_audio_2.launch.py soc:='rpl'
 > ```
 
-After running all of the above commands, you will observe similar behavior of the TurtleBot3 robot and guide robot in the `Gazebo` GUI as in
+After running all of the above commands, you will observe similar behavior of
+the TurtleBot3 robot and guide robot in the `Gazebo` GUI as in
 [Run Demo with 2D Lidar](#run-demo-with-2d-lidar).
 
 There are reconfigurable parameters in the

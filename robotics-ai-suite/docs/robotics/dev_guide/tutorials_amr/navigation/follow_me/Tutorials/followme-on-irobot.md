@@ -17,7 +17,7 @@ by a robot-driver.
 
 - Assemble your robotic kit following the instructions for
   [irobot-create3](../../../developer_kit/irobot-create3-robot.rst).
-- Complete the {doc}`../../../../../gsg_robot/index` before continuing.
+- Complete the [get started guide](../../../../../gsg_robot/index.rst) before continuing.
 
 ### Intel® board connected to iRobot Create 3
 
@@ -193,6 +193,6 @@ Find a brief description of the parameters in the following list.
 - You may stop the demo anytime by pressing `ctrl-C`.
 - If the robot rotates more than intended at each step, try reducing the
   parameter `max_angular` in the parameter file.
-- For general robot issues, go to
+- For general robot issues, refer to
   [Troubleshooting](../../../robot-tutorials-troubleshooting.rst).
 - If the motor controller board does not start, restart the robot.
