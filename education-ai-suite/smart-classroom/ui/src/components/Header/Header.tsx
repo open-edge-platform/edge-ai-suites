@@ -107,9 +107,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     const checkAudioDevices = async () => {
       try {
         dispatch(setAudioDevicesLoading(true));
+        dispatch(setAudioStatus('checking'));
         const devices = await getAudioDevices();
         const hasDevices = devices && devices.length > 0;
         dispatch(setHasAudioDevices(hasDevices));
+        dispatch(setAudioStatus(hasDevices ? 'ready' : 'no-devices'));
         
         console.log('Audio devices check:', {
           devices,
@@ -119,6 +121,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       } catch (error) {
         console.error('Failed to check audio devices:', error);
         dispatch(setHasAudioDevices(false));
+        dispatch(setAudioStatus('no-devices'));
       } finally {
         dispatch(setAudioDevicesLoading(false));
       }
@@ -242,9 +245,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         }
         break;
       default:
-        setAudioNotification(t('notifications.audioReady'));
+        setAudioNotification(hasAudioDevices ? t('notifications.audioReady') : t('notifications.noAudioDevices'));
     }
-  }, [audioStatus, summaryLoading, mindmapEnabled, mindmapState.finalText, mindmapState.error, summaryEnabled, t]);
+  }, [audioStatus, summaryLoading, mindmapEnabled, mindmapState.finalText, mindmapState.error, summaryEnabled, hasAudioDevices, t]);
 
   useEffect(() => {
     if (justStoppedRecording && hasVideoCapability) {
@@ -434,6 +437,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     clearForNewOp();
 
     if (next) {
+      // Starting recording
       setTimer(0);
       dispatch(resetFlow());
       dispatch(resetTranscript());
@@ -448,6 +452,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         console.log('🎙️ Starting recording with microphone');
       } else {
         dispatch(setProcessingMode('video-only' as any));
+        dispatch(setAudioStatus('no-devices'));
         console.log('🎥 Starting video-only recording (no audio processing)');
       }
 
@@ -455,6 +460,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         const sessionResponse = await createSession();
         const sharedSessionId = sessionResponse.sessionId;
         dispatch(setSessionId(sharedSessionId));
+        
         try {
           console.log('📊 Starting monitoring for session:', sharedSessionId);
           const monitoringResult = await startMonitoring(sharedSessionId);
@@ -478,8 +484,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
 
         if (hasAudioDevices) {
           dispatch(setUploadedAudioPath('MICROPHONE'));
-          dispatch(startTranscription());
-          console.log('🎙️ Microphone recording started - transcription will begin automatically');
+          console.log('🎙️ Microphone recording started - transcription will begin when recording stops');
         } else {
           console.log('🎙️ No audio devices - skipping microphone recording');
         }
@@ -499,6 +504,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         setErrorMsg(t('errors.failedToStartRecording'));
         dispatch(processingFailed());
         dispatch(setIsRecording(false));
+        // Reset audio status on error
+        dispatch(setAudioStatus(hasAudioDevices ? 'ready' : 'no-devices'));
 
         if (monitoringTimer) {
           clearTimeout(monitoringTimer);
@@ -513,6 +520,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         }
       }
     } else {
+      // Stopping recording
       console.log('🛑 Stopping recording - checking current states...');
       console.log('🔍 Current states:', {
         hasAudioDevices,
@@ -532,17 +540,18 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         
         if (sessionId && wasRecordingAudio) {
           console.log('🎙️ Stopping microphone recording...');
+          dispatch(setAudioStatus('processing'));
+          
           const result = await stopMicrophone(sessionId);
           console.log('🛑 Microphone stopped:', result);
-          console.log('🎙️ Audio processing may continue (transcription → summary → mindmap)');
+          dispatch(startTranscription());
+          console.log('🎙️ Audio processing started (transcription → summary → mindmap)');
         } else if (!hasAudioDevices) {
           console.log('🎙️ No audio devices - preserving audio status as no-devices');
           dispatch(setAudioStatus('no-devices'));
         } else {
           console.log('🎙️ No microphone recording to stop');
-          if (audioStatus === 'recording') {
-            dispatch(setAudioStatus(hasAudioDevices ? 'ready' : 'no-devices'));
-          }
+          dispatch(setAudioStatus(hasAudioDevices ? 'ready' : 'no-devices'));
         }
 
         const wasVideoActive = videoAnalyticsActive && hasVideoCapability;
@@ -588,12 +597,14 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           dispatch(setActiveStream(null));
           dispatch(setVideoAnalyticsActive(false));
         }
+        
         if (!wasRecordingAudio || !hasAudioDevices) {
           dispatch(setProcessingMode(null));
           console.log('🔄 Processing mode reset');
         } else {
           console.log('🔄 Keeping processing mode - audio processing may continue');
         }
+        
         if (uploadedAudioPath === 'MICROPHONE') {
           if (!wasRecordingAudio) {
             dispatch(setUploadedAudioPath(''));
@@ -608,6 +619,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         console.error('Failed to stop recording:', error);
         setErrorMsg(t('errors.failedToStopRecording'));
         dispatch(setVideoAnalyticsStopping(false));
+        // Reset statuses on error
         dispatch(setAudioStatus(hasAudioDevices ? 'ready' : 'no-devices'));
         dispatch(setVideoStatus(hasVideoCapability ? 'ready' : 'no-config'));
         dispatch(setProcessingMode(null));
