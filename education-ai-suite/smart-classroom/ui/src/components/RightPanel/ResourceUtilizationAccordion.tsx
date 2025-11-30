@@ -4,12 +4,12 @@ import { Chart, registerables } from 'chart.js';
 import Accordion from '../common/Accordion'; 
 import '../../assets/css/RightPanel.css'
 import { useTranslation } from 'react-i18next';
-import { useAppSelector } from '../../redux/hooks';
-
+import { setMetrics } from '../../redux/slices/resourceSlice'; 
+import { getResourceMetrics } from '../../services/api'; 
+import { useAppSelector, useAppDispatch } from '../../redux/hooks';
 Chart.register(...registerables);
 
 type GPUMetricKey = 'shared_memory_mb' | '3D_utilization_percent' | 'VideoDecode_utilization_percent' | 'VideoProcessing_utilization_percent' | 'Compute_utilization_percent';
-
 interface GPUMetricConfig {
   index: number;
   color: string;
@@ -22,7 +22,7 @@ type GPUMetricsConfig = Record<GPUMetricKey, GPUMetricConfig>;
 
 const ResourceUtilizationAccordion: React.FC = () => {
   const { t } = useTranslation();
-  
+  const dispatch = useAppDispatch();
   const sessionId = useAppSelector(s => s.ui.sessionId);
   const resourceMetrics = useAppSelector(s => s.resource?.metrics);
   const lastUpdated = useAppSelector(s => s.resource?.lastUpdated);
@@ -30,6 +30,7 @@ const ResourceUtilizationAccordion: React.FC = () => {
   const [resourceData, setResourceData] = useState<any>({
     cpu_utilization: [],
     gpu_utilization: [],
+    npu_utilization: [],
     memory: [],
     power: []
   });
@@ -40,13 +41,24 @@ const ResourceUtilizationAccordion: React.FC = () => {
     }
   }, [resourceMetrics, lastUpdated]);
 
-  useEffect(() => {
-    if (!sessionId) {
-      console.log('No sessionId provided to ResourceUtilizationAccordion');
-    } else {
-      console.log('ResourceUtilizationAccordion sessionId:', sessionId);
-    }
-  }, [sessionId]);
+ useEffect(() => {
+    if (!sessionId) return;
+
+    const fetchResourceMetrics = async () => {
+      try {
+        console.log('🔄 Fetching resource metrics for session:', sessionId);
+        const metrics = await getResourceMetrics(sessionId);
+        console.log('📊 Received resource metrics:', metrics);
+        dispatch(setMetrics(metrics));
+      } catch (error) {
+        console.error('❌ Failed to fetch resource metrics:', error);
+      }
+    };
+    fetchResourceMetrics();
+    const interval = setInterval(fetchResourceMetrics, 5000);
+
+    return () => clearInterval(interval);
+  }, [sessionId, dispatch]);
 
   const gpuMetricsConfig: GPUMetricsConfig = {
     shared_memory_mb: { 
@@ -254,3 +266,5 @@ const ResourceUtilizationAccordion: React.FC = () => {
 };
 
 export default ResourceUtilizationAccordion;
+
+

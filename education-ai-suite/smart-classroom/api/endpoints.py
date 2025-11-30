@@ -20,10 +20,15 @@ from components.ffmpeg import audio_preprocessing
 from utils.audio_util import save_audio_file
 from utils.locks import audio_pipeline_lock, video_analytics_lock
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
+from utils.session_manager import generate_session_id
 import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+@router.get("/create-session")
+def create_session():
+    return JSONResponse(content={"session-id":  generate_session_id()}, status_code=200)
 
 @router.get("/health")
 def health():
@@ -184,8 +189,9 @@ def update_project_config(payload: ProjectSettings):
     return RuntimeConfig.update_section("Project", updates)
 
 @router.post("/start-monitoring")
-def start_monitoring_endpoint():
-    start_monitoring()
+def start_monitoring_endpoint( x_session_id: Optional[str] = Header(None)):
+    project_config = RuntimeConfig.get_section("Project")
+    start_monitoring(os.path.join(project_config.get("location"), project_config.get("name"), x_session_id, "utilization_logs"))
     return JSONResponse(content={"status": "success", "message": "Monitoring started"})
 
 @router.get("/metrics")

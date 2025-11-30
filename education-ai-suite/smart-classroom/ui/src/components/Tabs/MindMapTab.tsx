@@ -21,7 +21,8 @@ import {
 
 import { fetchMindmap } from "../../services/api";
 import "../../assets/css/MindMap.css";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
+
 const activeMindmapSessions = new Set<string>();
 
 const cleanMindmapContent = (content: string): string => {
@@ -82,20 +83,20 @@ const cleanMindmapContent = (content: string): string => {
       .filter((ln, idx) => !(idx === 0 && ln.startsWith("mindmap")))
       .map((ln) => "    " + ln.trim());
 
-    const wrapped = [
-      "mindmap",
-      "  root((Auto Root))",
-      ...body,
-    ];
+    const wrapped = ["mindmap", "  root((Auto Root))", ...body];
 
     return wrapped.join("\n").trim();
   }
+
   const rootLine = topLevel.find((l) => /root\s*\(\(/.test(l));
 
   if (!rootLine) {
     content =
       "mindmap\n  root((Auto Root))\n" +
-      lines.slice(1).map((l) => "    " + l.trim()).join("\n");
+      lines
+        .slice(1)
+        .map((l) => "    " + l.trim())
+        .join("\n");
   } else {
     const rootIndent = rootLine.match(/^(\s*)/)?.[1] || "  ";
     const childIndent = rootIndent + "  ";
@@ -117,8 +118,6 @@ const cleanMindmapContent = (content: string): string => {
   }
   return content.trim();
 };
-
-
 const MindMapTab: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -127,9 +126,7 @@ const MindMapTab: React.FC = () => {
   const sessionId = useAppSelector((s) => s.ui.sessionId);
   const shouldStartMindmap = useAppSelector((s) => s.ui.shouldStartMindmap);
 
-  const { finalText, isRendered, svg, isLoading } = useAppSelector(
-    (s) => s.mindmap
-  );
+  const { finalText, isRendered, svg } = useAppSelector((s) => s.mindmap);
 
   const startedRef = useRef(false);
   const mermaidRef = useRef<HTMLDivElement>(null);
@@ -140,7 +137,6 @@ const MindMapTab: React.FC = () => {
       startOnLoad: false,
       theme: "default",
       securityLevel: "loose",
-      flowchart: { useMaxWidth: true, htmlLabels: true },
       mindmap: { useMaxWidth: true },
     });
   }, []);
@@ -157,37 +153,47 @@ const MindMapTab: React.FC = () => {
     const renderMermaid = async () => {
       try {
         const cleaned = cleanMindmapContent(finalText);
-        const { svg } = await mermaid.render("diagram-" + Date.now(), cleaned);
-        mermaidRef.current!.innerHTML = svg;
 
+        const { svg } = await mermaid.render("diagram-" + Date.now(), cleaned);
+
+        if (/Syntax error/i.test(svg) || /mermaid version/i.test(svg)) {
+          throw new Error("Mermaid syntax error");
+        }
+
+        mermaidRef.current!.innerHTML = svg;
         dispatch(setSVG(svg));
 
         if (startTimeRef.current) {
-          const end = performance.now();
-          const duration = end - startTimeRef.current;
-          dispatch(setGenerationTime(duration));
-          console.log(`🕒 Mindmap generated in ${(duration / 1000).toFixed(2)}s`);
+          dispatch(setGenerationTime(performance.now() - startTimeRef.current));
         }
 
         dispatch(setRendered(true));
       } catch (error: any) {
         console.error("❌ Mermaid render error:", error);
-        window.dispatchEvent(
-          new CustomEvent("global-error", {
-            detail: {       
-              message: "Failed to render MindMap: Invalid format",
-              type: "error"
-            }
-          })
-        );
+
         dispatch(setError("Mindmap rendering failed"));
         dispatch(setRendered(true));
-        mermaidRef.current!.innerHTML = "";
+
+        mermaidRef.current!.innerHTML = `
+          <div class="mermaid-error">
+            ⚠️ ${t("mindmap.invalidFormat") || "Invalid mindmap format"}
+          </div>
+        `;
+
+        window.dispatchEvent(
+          new CustomEvent("global-error", {
+            detail: {
+              message: "Failed to render MindMap: Invalid format",
+              type: "error",
+            },
+          })
+        );
       }
     };
 
     renderMermaid();
   }, [finalText, dispatch, isRendered, t]);
+
   useEffect(() => {
     if (!mindmapEnabled || !sessionId || !shouldStartMindmap) return;
     if (activeMindmapSessions.has(sessionId) || startedRef.current) return;
@@ -195,35 +201,40 @@ const MindMapTab: React.FC = () => {
     startedRef.current = true;
     activeMindmapSessions.add(sessionId);
     startTimeRef.current = performance.now();
+
     dispatch(clearMindmap());
     dispatch(clearMindmapStartRequest());
-    dispatch(uiMindmapStart()); 
-    dispatch(mmStart()); 
+    dispatch(uiMindmapStart());
+    dispatch(mmStart());
 
     (async () => {
       try {
         const fullMindmap = await fetchMindmap(sessionId);
 
         if (typeof fullMindmap === "string" && fullMindmap.length > 0) {
-          dispatch(setMindmap(fullMindmap)); 
-          dispatch(uiMindmapSuccess()); 
+          dispatch(setMindmap(fullMindmap));
+          dispatch(uiMindmapSuccess());
         } else {
-          throw new Error("Empty mindmap returned from server.");
+          throw new Error("Empty mindmap returned");
         }
       } catch (err: any) {
         console.error("❌ Mindmap fetch error:", err);
-        const message = err?.message || "Mindmap generation failed";
-        dispatch(setError(message)); 
-        dispatch(uiMindmapFailed()); 
-        mermaidRef.current!.innerHTML = `
-          <div class="mermaid-error">
-            ⚠️ Failed to generate mindmap: ${message}
-          </div>`;
+        dispatch(setError(err.message || "Mindmap generation failed"));
+        dispatch(uiMindmapFailed());
+
+        if (mermaidRef.current) {
+          mermaidRef.current.innerHTML = `
+            <div class="mermaid-error">
+              ⚠️ Failed to generate mindmap: ${err.message}
+            </div>
+          `;
+        }
       } finally {
         dispatch(clearMindmapStartRequest());
       }
     })();
   }, [mindmapEnabled, shouldStartMindmap, sessionId, dispatch]);
+
 
   return (
     <div className="mindmap-tab">

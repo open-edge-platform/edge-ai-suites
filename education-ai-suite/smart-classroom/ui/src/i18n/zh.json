@@ -86,9 +86,28 @@
     "model2": "模型2",
     "gpt-4": "通义千问2-70亿参数指令模型",
     "model3": "模型3",
-    "model4": "模型4"
+    "model4": "模型4",
+    "classStatistics": "课堂统计",
+    "roomView": "房间视图"
   },
   "errors": {
     "projectNameRequired": "项目名称为必填项"
+  },
+    "videoStream": {
+    "configureCameras": "在设置中配置摄像头以启用视频分析",
+    "uploadFilesToStart": "或上传音频/视频文件以开始",
+    "uploadFileButton": "上传文件",
+    "noStreamsAvailable": "尝试视频分析但没有可用流",
+    "checkCameraConfigurations": "检查摄像头配置或后端视频服务",
+    "audioRecordingContinues": "音频录制正常继续",
+    "streamingIconAlt": "流图标"
+  },
+  "classStatistics": {
+    "studentCount": "学生人数",
+    "standCount": "站立人数",
+    "raiseUpCount": "举手人数",
+    "standReIdData": "站立重新识别数据",
+    "studentId": "学生编号",
+    "count": "计数"
   }
 }
