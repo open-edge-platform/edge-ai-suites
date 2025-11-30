@@ -6,7 +6,7 @@ import fullScreenIcon from "../../assets/images/fullScreenIcon.svg";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";
 import { setActiveStream } from "../../redux/slices/uiSlice";
 import HLSPlayer from "../common/HLSPlayer";
- 
+import { useTranslation } from "react-i18next";
 interface VideoStreamProps {
   isFullScreen: boolean;
   onToggleFullScreen: () => void;
@@ -15,15 +15,13 @@ interface VideoStreamProps {
 const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScreen }) => {
   const [isRoomView, setIsRoomView] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
- 
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const activeStream = useAppSelector((state) => state.ui.activeStream);
   const sessionId = useAppSelector((state) => state.ui.sessionId);
   const videoAnalyticsLoading = useAppSelector((state) => state.ui.videoAnalyticsLoading);
   const videoAnalyticsActive = useAppSelector((state) => state.ui.videoAnalyticsActive);
   const isRecording = useAppSelector((state) => state.ui.aiProcessing);
-  
-  // Add these selectors to track the overall recording state
   const uploadedAudioPath = useAppSelector((state) => state.ui.uploadedAudioPath);
   const transcriptStatus = useAppSelector((state) => state.transcript.status);
   
@@ -56,7 +54,6 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
     return available;
   };
 
-  // Check if any recording/streaming is currently active
   const isCurrentlyRecording = () => {
     return isRecording || 
            uploadedAudioPath === 'MICROPHONE' || 
@@ -65,29 +62,20 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
   };
 
   const getStreamStatus = () => {
-    // Check if video analytics is loading (starting or stopping)
     if (videoAnalyticsLoading) {
       return "loading";
     }
-    
-    // Check if video analytics is active and has streams
     if (videoAnalyticsActive && hasValidStreams()) {
       return "active";
     }
-    
-    // Check if we're currently recording/streaming
     const currentlyRecording = isCurrentlyRecording();
     
     if (currentlyRecording && !videoAnalyticsActive && !videoAnalyticsLoading) {
       return "audio_only"; 
     }
-    
-    // If nothing is recording and no video analytics, show upload option
     if (!currentlyRecording && !videoAnalyticsActive && !videoAnalyticsLoading) {
       return "inactive";
     }
-    
-    // Check if video analytics was attempted but failed during recording
     if (currentlyRecording && !videoAnalyticsActive && !videoAnalyticsLoading) {
       const hasEmptyStreams = streams.front === '' && streams.back === '' && streams.content === '';
       if (hasEmptyStreams) {
@@ -107,7 +95,6 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
         dispatch(setActiveStream(availableStreams[0] as "front" | "back" | "content"));
       }
     } else if (!videoAnalyticsActive) {
-      // Clear active stream when video analytics is not active
       dispatch(setActiveStream(null));
     }
   }, [streams.front, streams.back, streams.content, videoAnalyticsActive, dispatch]);
@@ -162,7 +149,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
               onChange={handleToggleRoomView}
             />
             <span className="toggle-slider"></span>
-            <span className="toggle-label">Room View</span>
+            <span className="toggle-label">{t('accordion.roomView')}</span>
           </label>
         </div>
         {isRoomView && (
@@ -189,12 +176,6 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
             })}
           </div>
         )}
-        <img
-          src={fullScreenIcon}
-          alt="Fullscreen Icon"
-          className="fullscreen-icon"
-          onClick={handleFullScreenToggle}
-        />
       </div>
        
       {isRoomView && (
@@ -240,13 +221,13 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
                 alt="Streaming Icon"
                 className="streaming-icon"
               />
-              <p>Configure cameras in settings to enable video analytics</p>
-              <p>Or upload audio/video files to get started</p>
+<p>{t('videoStream.configureCameras')}</p>
+            <p>{t('videoStream.uploadFilesToStart')}</p>
               <button
                 className="upload-file-button"
                 onClick={() => setIsUploadModalOpen(true)}
               >
-                Upload File
+                {t('videoStream.uploadFileButton')}
               </button>
             </div>
           ) : streamStatus === "active" && hasValidStreams() ? (

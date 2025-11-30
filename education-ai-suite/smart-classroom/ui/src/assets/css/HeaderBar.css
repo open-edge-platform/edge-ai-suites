@@ -131,3 +131,46 @@ button.text-button[disabled] {
   background: none;
   margin-left: 16px;
 }
+
+.navbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0; 
+}
+
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  min-height: 60px; 
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .header-bar {
+    flex-wrap: wrap;
+    min-height: auto;
+    padding: 8px 12px;
+  }
+  
+  .navbar-center {
+    order: 3;
+    width: 100%;
+    margin-top: 8px;
+  }
+}

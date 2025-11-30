@@ -189,8 +189,9 @@ def update_project_config(payload: ProjectSettings):
     return RuntimeConfig.update_section("Project", updates)
 
 @router.post("/start-monitoring")
-def start_monitoring_endpoint():
-    start_monitoring()
+def start_monitoring_endpoint( x_session_id: Optional[str] = Header(None)):
+    project_config = RuntimeConfig.get_section("Project")
+    start_monitoring(os.path.join(project_config.get("location"), project_config.get("name"), x_session_id, "utilization_logs"))
     return JSONResponse(content={"status": "success", "message": "Monitoring started"})
 
 @router.get("/metrics")

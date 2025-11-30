@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import NotificationsDisplay from '../Display/NotificationsDisplay';
 import ProjectNameDisplay from '../Display/ProjectNameDisplay';
 import '../../assets/css/HeaderBar.css';
@@ -19,7 +19,16 @@ import {
   setBackCameraStream,
   setBoardCameraStream,
   setActiveStream,
-  setVideoSessionId // Add this import
+  setProcessingMode,
+  setSessionId,
+  setHasAudioDevices,
+  setAudioDevicesLoading,
+  setIsRecording,
+  setJustStoppedRecording,
+  setVideoAnalyticsStopping,
+  setAudioStatus,
+  setVideoStatus,
+  startTranscription
 } from '../../redux/slices/uiSlice';
 import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
@@ -31,12 +40,16 @@ import {
   getAudioDevices,
   startVideoAnalytics,
   stopVideoAnalytics,
-  createSession
+  createSession,
+  getClassStatistics,
+  getSettings,
+  startMonitoring,  
+  stopMonitoring    
 } from '../../services/api';
+import { setClassStatistics } from '../../redux/slices/fetchClassStatistics';
 import Toast from '../common/Toast';
 import UploadFilesModal from '../Modals/UploadFilesModal';
 
-// Safe error extraction helper
 type ApiError = { response?: { data?: { message?: string } } };
 const getErrorMessage = (err: unknown, fallback: string) => {
   if (err && typeof err === 'object') {
@@ -54,41 +67,85 @@ interface HeaderBarProps {
 
 const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const [showToast, setShowToast] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [notification, setNotification] = useState(constants.START_NOTIFICATION);
-  const [hasAudioDevices, setHasAudioDevices] = useState(true);
+  const [audioNotification, setAudioNotification] = useState('');
+  const [videoNotification, setVideoNotification] = useState('');
   const { t } = useTranslation();
   const [timer, setTimer] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [videoAnalyticsEnabled, setVideoAnalyticsEnabled] = useState(true);
-  const [isStoppingVideoAnalytics, setIsStoppingVideoAnalytics] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); 
+  const [monitoringTimer, setMonitoringTimer] = useState<number | null>(null);
 
   const dispatch = useAppDispatch();
   const isBusy = useAppSelector((s) => s.ui.aiProcessing);
   const summaryEnabled = useAppSelector((s) => s.ui.summaryEnabled);
   const summaryLoading = useAppSelector((s) => s.ui.summaryLoading);
   const transcriptStatus = useAppSelector((s) => s.transcript.status);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); 
-
   const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
   const mindmapLoading = useAppSelector((s) => s.ui.mindmapLoading);
-  const sessionId = useAppSelector((s) => s.ui.sessionId); // Audio session ID
-  const videoSessionId = useAppSelector((s) => s.ui.videoSessionId); // Video session ID from Redux
+  const sessionId = useAppSelector((s) => s.ui.sessionId);
   const projectLocation = useAppSelector((s) => s.ui.projectLocation);
   const mindmapState = useAppSelector((s) => s.mindmap);
-  
-  // Camera settings from Redux
+  const processingMode = useAppSelector((s) => s.ui.processingMode);
+  const uploadedAudioPath = useAppSelector((s) => s.ui.uploadedAudioPath);
   const frontCamera = useAppSelector((s) => s.ui.frontCamera);
   const backCamera = useAppSelector((s) => s.ui.backCamera);
   const boardCamera = useAppSelector((s) => s.ui.boardCamera);
   const videoAnalyticsActive = useAppSelector((s) => s.ui.videoAnalyticsActive);
   const videoAnalyticsLoading = useAppSelector((s) => s.ui.videoAnalyticsLoading);
+  const audioStatus = useAppSelector((s) => s.ui.audioStatus);
+  const videoStatus = useAppSelector((s) => s.ui.videoStatus);
+  const hasAudioDevices = useAppSelector((s) => s.ui.hasAudioDevices);
+  const audioDevicesLoading = useAppSelector((s) => s.ui.audioDevicesLoading);
+  const isRecording = useAppSelector((s) => s.ui.isRecording);
+  const justStoppedRecording = useAppSelector((s) => s.ui.justStoppedRecording);
+  const videoAnalyticsStopping = useAppSelector((s) => s.ui.videoAnalyticsStopping);
 
-  // Load camera settings from localStorage on component mount
   useEffect(() => {
     dispatch(loadCameraSettingsFromStorage());
+
+    const checkAudioDevices = async () => {
+      try {
+        dispatch(setAudioDevicesLoading(true));
+        const devices = await getAudioDevices();
+        const hasDevices = devices && devices.length > 0;
+        dispatch(setHasAudioDevices(hasDevices));
+        
+        console.log('Audio devices check:', {
+          devices,
+          count: devices?.length || 0,
+          hasDevices
+        });
+      } catch (error) {
+        console.error('Failed to check audio devices:', error);
+        dispatch(setHasAudioDevices(false));
+      } finally {
+        dispatch(setAudioDevicesLoading(false));
+      }
+    };
+
+    checkAudioDevices();
   }, [dispatch]);
+
+  useEffect(() => {
+    if (justStoppedRecording) {
+      const timer = setTimeout(() => {
+        dispatch(setJustStoppedRecording(false));
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [justStoppedRecording, dispatch]);
+
+  useEffect(() => {
+    return () => {
+      if (monitoringTimer) {
+        clearTimeout(monitoringTimer);
+        stopMonitoring().catch(error => {
+          console.error('❌ Failed to stop monitoring during cleanup:', error);
+        });
+      }
+    };
+  }, [monitoringTimer]);
 
   const handleOpenUploadModal = () => {
     setIsUploadModalOpen(true);
@@ -106,7 +163,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       await navigator.clipboard.writeText(location);
       setShowToast(true);
     } catch {
-      setErrorMsg('Failed to copy path');
+      setErrorMsg(t('errors.failedToCopyPath'));
     }
   };
 
@@ -122,59 +179,114 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     return () => clearInterval(interval);
   }, [isRecording]);
 
+  const hasVideoCapability = useMemo(() => {
+    return Boolean(
+      frontCamera?.trim() || 
+      backCamera?.trim() || 
+      boardCamera?.trim()
+    );
+  }, [frontCamera, backCamera, boardCamera]);
+
   useEffect(() => {
-    if (mindmapState.error) {
-      setNotification(t('notifications.mindmapError'));
+    if (hasVideoCapability && videoStatus === 'no-config') {
+      dispatch(setVideoStatus('ready'));
+    } else if (!hasVideoCapability && videoStatus !== 'no-config') {
+      dispatch(setVideoStatus('no-config'));
     }
-    else if (mindmapLoading || mindmapState.isLoading) {
-      setNotification(t('notifications.generatingMindmap'));
+  }, [hasVideoCapability, videoStatus, dispatch]);
+
+  useEffect(() => {
+    switch (audioStatus) {
+      case 'checking':
+        setAudioNotification(t('notifications.checkingAudioDevices'));
+        break;
+      case 'no-devices':
+        setAudioNotification(t('notifications.noAudioDevices'));
+        break;
+      case 'ready':
+        setAudioNotification(t('notifications.audioReady'));
+        break;
+      case 'recording':
+        setAudioNotification(t('notifications.recording'));
+        break;
+      case 'processing':
+        setAudioNotification(t('notifications.analyzingAudio'));
+        break;
+      case 'transcribing':
+        setAudioNotification(t('notifications.loadingTranscript'));
+        break;
+      case 'summarizing':
+        if (summaryLoading) {
+          setAudioNotification(t('notifications.generatingSummary'));
+        } else {
+          setAudioNotification(t('notifications.streamingSummary'));
+        }
+        break;
+      case 'mindmapping':
+        setAudioNotification(t('notifications.generatingMindmap'));
+        break;
+      case 'complete':
+        if (mindmapEnabled && mindmapState.finalText) {
+          setAudioNotification(t('notifications.mindmapReady'));
+        } else if (summaryEnabled) {
+          setAudioNotification(t('notifications.summaryReady'));
+        } else {
+          setAudioNotification(t('notifications.audioProcessingComplete'));
+        }
+        break;
+      case 'error':
+        if (mindmapState.error) {
+          setAudioNotification(t('notifications.mindmapError'));
+        } else {
+          setAudioNotification(t('notifications.audioProcessingError'));
+        }
+        break;
+      default:
+        setAudioNotification(t('notifications.audioReady'));
     }
-    else if (mindmapEnabled && !mindmapLoading && mindmapState.finalText) {
-      setNotification(t('notifications.mindmapReady'));
+  }, [audioStatus, summaryLoading, mindmapEnabled, mindmapState.finalText, mindmapState.error, summaryEnabled, t]);
+
+  useEffect(() => {
+    if (justStoppedRecording && hasVideoCapability) {
+      setVideoNotification(t('notifications.videoStreamingStopped'));
+      return;
     }
-    else if (summaryEnabled && summaryLoading) {
-      setNotification(t('notifications.generatingSummary'));
-    } 
-    else if (summaryEnabled && isBusy && !summaryLoading) {
-      setNotification(t('notifications.streamingSummary'));
-    } 
-    else if (!isBusy && summaryEnabled && !mindmapEnabled) {
-      setNotification(t('notifications.summaryReady'));
+
+    switch (videoStatus) {
+      case 'no-config':
+        setVideoNotification(t('notifications.noVideoConfigured'));
+        break;
+      case 'ready':
+        setVideoNotification(t('notifications.videoReady'));
+        break;
+      case 'starting':
+        setVideoNotification(t('notifications.startingVideoAnalytics'));
+        break;
+      case 'streaming':
+        setVideoNotification(t('notifications.analyzingVideo'));
+        break;
+      case 'stopping':
+        setVideoNotification(t('notifications.stoppingVideoAnalytics'));
+        break;
+      case 'failed':
+        setVideoNotification(t('notifications.videoAnalyticsFailed'));
+        break;
+      case 'complete':
+        setVideoNotification(t('notifications.videoProcessingComplete'));
+        break;
+      default:
+        setVideoNotification(hasVideoCapability ? t('notifications.videoReady') : t('notifications.noVideoConfigured'));
     }
-    else if (isBusy && transcriptStatus === 'streaming') {
-      setNotification(t('notifications.loadingTranscript'));
-    } 
-    else if (isBusy && !summaryEnabled) {
-      setNotification(t('notifications.analyzingAudio'));
-    }
-    else if (isStoppingVideoAnalytics) {
-      setNotification(t('notifications.stoppingVideoAnalytics') || 'Stopping video analytics...');
-    }
-    else {
-      setNotification(t('notifications.start'));
-    }
-  }, [
-    isBusy,
-    summaryEnabled,
-    summaryLoading,
-    transcriptStatus,
-    mindmapEnabled,
-    mindmapLoading,
-    mindmapState.isLoading,
-    mindmapState.finalText,
-    mindmapState.error,
-    isStoppingVideoAnalytics,
-    t
-  ]);
+  }, [videoStatus, justStoppedRecording, hasVideoCapability, t]);
 
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<string>).detail;
-      setErrorMsg(detail || 'An error occurred');
+      setErrorMsg(detail || t('errors.anErrorOccurred'));
     };
     window.addEventListener('global-error', handler as EventListener);
     return () => window.removeEventListener('global-error', handler as EventListener);
-  }, []);
+  }, [t]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -182,8 +294,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  // Updated logic: Include video analytics stopping state in the disabled condition
   const isRecordingDisabled = isRecording ? false : (
+    audioDevicesLoading ||
     isBusy ||
     transcriptStatus === 'streaming' ||     
     summaryLoading ||                         
@@ -192,9 +304,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       mindmapState.isLoading ||
       !mindmapState.finalText                
     )) ||
-    !hasAudioDevices ||
-    isStoppingVideoAnalytics ||  // Disable while stopping video analytics
-    videoAnalyticsLoading        // Disable while video analytics is loading/starting
+    videoAnalyticsStopping ||
+    videoAnalyticsLoading
   );
 
   const isUploadDisabled =
@@ -207,48 +318,28 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       mindmapState.isLoading ||
       !mindmapState.finalText                
     )) ||
-    isStoppingVideoAnalytics ||  // Disable upload while stopping video analytics
-    videoAnalyticsLoading;       // Disable upload while video analytics is loading
+    videoAnalyticsStopping ||
+    videoAnalyticsLoading;
 
-  // Create independent session for video analytics
-  const createVideoSession = async () => {
-    try {
-      console.log('🎥 Creating independent session for video analytics...');
-      const { sessionId: newVideoSessionId } = await createSession();
-      console.log('🎥 Video session created:', newVideoSessionId);
-      dispatch(setVideoSessionId(newVideoSessionId)); // Use Redux dispatch
-      return newVideoSessionId;
-    } catch (error) {
-      console.error('Failed to create video session:', error);
-      throw error;
-    }
-  };
-
-  const tryStartVideoAnalytics = async (currentVideoSessionId: string) => {
+  const startVideoAnalyticsInBackground = async (sharedSessionId: string) => {
     if (!videoAnalyticsEnabled) {
       console.log('🎥 Video analytics disabled, skipping');
       return;
     }
 
     try {
-      // Get current camera settings
-      const currentFrontCamera = frontCamera || localStorage.getItem('frontCamera') || '';
-      const currentBackCamera = backCamera || localStorage.getItem('backCamera') || '';
-      const currentBoardCamera = boardCamera || localStorage.getItem('boardCamera') || '';
+      const currentFrontCamera = frontCamera || '';
+      const currentBackCamera = backCamera || '';
+      const currentBoardCamera = boardCamera || '';
 
-      console.log('🎥 Current camera settings:', {
-        front: currentFrontCamera,
-        back: currentBackCamera,
-        board: currentBoardCamera
-      });
-
-      // Only attempt if cameras are configured
       if (!currentFrontCamera.trim() && !currentBackCamera.trim() && !currentBoardCamera.trim()) {
-        console.log('🎥 No cameras configured, skipping video analytics');
+        console.log('🎥 No cameras configured in settings, skipping video analytics');
+        dispatch(setVideoAnalyticsLoading(false));
+        dispatch(setVideoAnalyticsActive(false));
+        dispatch(setVideoStatus('no-config'));
         return;
       }
 
-      // Prepare requests for configured cameras only
       const videoRequests = [];
       if (currentFrontCamera.trim()) {
         videoRequests.push({ pipeline_name: 'front', source: currentFrontCamera.trim() });
@@ -262,17 +353,16 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
 
       if (videoRequests.length === 0) {
         console.log('🎥 No valid camera configurations found');
+        dispatch(setVideoAnalyticsLoading(false));
+        dispatch(setVideoAnalyticsActive(false));
+        dispatch(setVideoStatus('no-config'));
         return;
       }
-
-      console.log('🎥 Attempting to start video analytics with session:', currentVideoSessionId);
-      console.log('🎥 Video requests:', videoRequests);
       dispatch(setVideoAnalyticsLoading(true));
+      dispatch(setVideoStatus('starting'));
       
-      const videoResult = await startVideoAnalytics(videoRequests, currentVideoSessionId);
-      console.log('🎥 Video analytics result:', videoResult);
-      
-      // Process results
+      const videoResult = await startVideoAnalytics(videoRequests, sharedSessionId);
+
       if (videoResult && videoResult.results) {
         let hasSuccessfulStreams = false;
         let successfulPipelines: any[] = [];
@@ -282,9 +372,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           if (result.status === 'success' && result.hls_stream) {
             hasSuccessfulStreams = true;
             successfulPipelines.push(result.pipeline_name);
-            console.log(`✅ ${result.pipeline_name} stream started:`, result.hls_stream);
-            
-            // Set stream URLs in Redux
             switch (result.pipeline_name) {
               case 'front':
                 dispatch(setFrontCameraStream(result.hls_stream));
@@ -308,25 +395,33 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         if (hasSuccessfulStreams) {
           dispatch(setVideoAnalyticsActive(true));
           dispatch(setActiveStream('all'));
-          console.log(`🎥 Video analytics partially successful. Working: ${successfulPipelines.join(', ')}`);
+          dispatch(setVideoStatus('streaming'));
+          console.log(`🎥 Video analytics started successfully. Working: ${successfulPipelines.join(', ')}`);
           
           if (failedPipelines.length > 0) {
             const failedNames = failedPipelines.map(p => p.name).join(', ');
             console.warn(`⚠️ Some cameras failed: ${failedNames}`);
           }
+
+          setTimeout(async () => {
+            try {
+              const classStatistics = await getClassStatistics(sharedSessionId);
+              dispatch(setClassStatistics(classStatistics));
+            } catch (err) {
+              console.error('❌ Failed to fetch class statistics:', err);
+            }
+          }, 10000);
         } else {
           console.warn('🎥 All video streams failed to start');
-          console.warn('🎥 This is likely due to backend video analytics service configuration');
-          console.warn('🎥 Audio recording will continue without video analytics');
-          
           dispatch(setVideoAnalyticsActive(false));
+          dispatch(setVideoStatus('failed'));
         }
       }
       
     } catch (videoError) {
       console.warn('🎥 Video analytics failed:', videoError);
-      console.warn('🎥 Continuing with audio-only recording');
       dispatch(setVideoAnalyticsActive(false));
+      dispatch(setVideoStatus('failed'));
     } finally {
       dispatch(setVideoAnalyticsLoading(false));
     }
@@ -339,59 +434,123 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     clearForNewOp();
 
     if (next) {
-      // 🎙️ Start Recording
       setTimer(0);
-      setNotification(t('notifications.recording'));
       dispatch(resetFlow());
       dispatch(resetTranscript());
       dispatch(resetSummary());
-      dispatch(startProcessing());
       dispatch(clearMindmap());
-
-      try {
-        // Start microphone recording (unchanged implementation)
-        dispatch(setUploadedAudioPath('MICROPHONE'));
-        setIsRecording(true);
-        
-        console.log('🎙️ Microphone recording started - transcription will begin automatically');
-        
-        // Start video analytics independently with its own session
-        const startVideoAnalyticsIndependently = async () => {
-          try {
-            const newVideoSessionId = await createVideoSession();
-            await tryStartVideoAnalytics(newVideoSessionId);
-          } catch (error) {
-            console.warn('🎥 Failed to start video analytics independently:', error);
-          }
-        };
-
-        // Start video analytics in parallel (non-blocking)
-        startVideoAnalyticsIndependently();
-        
-      } catch (error) {
-        console.error('Failed to start microphone:', error);
-        setErrorMsg('Failed to start microphone recording');
-        dispatch(processingFailed());
-        setIsRecording(false);
-      }
-    } else {
-      // 🛑 Stop Recording
-      setIsRecording(false);
+      dispatch(setJustStoppedRecording(false));
       
+      if (hasAudioDevices) {
+        dispatch(startProcessing());
+        dispatch(setProcessingMode('microphone'));
+        dispatch(setAudioStatus('recording'));
+        console.log('🎙️ Starting recording with microphone');
+      } else {
+        dispatch(setProcessingMode('video-only' as any));
+        console.log('🎥 Starting video-only recording (no audio processing)');
+      }
+
       try {
-        // Stop microphone (using original sessionId)
-        if (sessionId) {
-          const result = await stopMicrophone(sessionId);
-          console.log('🛑 Microphone stopped:', result);
-        } else {
-          console.warn('No session ID available to stop microphone recording');
+        const sessionResponse = await createSession();
+        const sharedSessionId = sessionResponse.sessionId;
+        dispatch(setSessionId(sharedSessionId));
+        try {
+          console.log('📊 Starting monitoring for session:', sharedSessionId);
+          const monitoringResult = await startMonitoring(sharedSessionId);
+          console.log('✅ Monitoring started successfully:', monitoringResult.message);
+          const timer = setTimeout(async () => {
+            try {
+              console.log('⏰ 45 minutes elapsed - stopping monitoring');
+              const stopResult = await stopMonitoring();
+              console.log('✅ Monitoring stopped after 45 minutes:', stopResult.message);
+            } catch (error) {
+              console.error('❌ Failed to stop monitoring after 45 minutes:', error);
+            }
+          }, 45 * 60 * 1000);
+
+          setMonitoringTimer(timer);
+          console.log('⏰ Monitoring timer set for 45 minutes');
+
+        } catch (monitoringError) {
+          console.error('❌ Failed to start monitoring (non-critical):', monitoringError);
         }
 
-        // Stop video analytics (using video sessionId)
-        if (videoAnalyticsActive && videoSessionId) {
+        if (hasAudioDevices) {
+          dispatch(setUploadedAudioPath('MICROPHONE'));
+          dispatch(startTranscription());
+          console.log('🎙️ Microphone recording started - transcription will begin automatically');
+        } else {
+          console.log('🎙️ No audio devices - skipping microphone recording');
+        }
+        
+        dispatch(setIsRecording(true));
+
+        if (hasVideoCapability) {
+          console.log('🎥 Starting video analytics with shared session ID...');
+          await startVideoAnalyticsInBackground(sharedSessionId);
+        } else {
+          console.log('🎥 No video streams configured - skipping video analytics');
+          dispatch(setVideoStatus('no-config'));
+        }
+        
+      } catch (error) {
+        console.error('Failed to start recording:', error);
+        setErrorMsg(t('errors.failedToStartRecording'));
+        dispatch(processingFailed());
+        dispatch(setIsRecording(false));
+
+        if (monitoringTimer) {
+          clearTimeout(monitoringTimer);
+          setMonitoringTimer(null);
+
           try {
-            setIsStoppingVideoAnalytics(true); // Set stopping state
-            console.log('🛑 Starting to stop video analytics...');
+            await stopMonitoring();
+            console.log('🧹 Monitoring stopped due to error cleanup');
+          } catch (stopError) {
+            console.error('❌ Failed to stop monitoring during error cleanup:', stopError);
+          }
+        }
+      }
+    } else {
+      console.log('🛑 Stopping recording - checking current states...');
+      console.log('🔍 Current states:', {
+        hasAudioDevices,
+        hasVideoCapability,
+        audioStatus,
+        videoStatus,
+        videoAnalyticsActive,
+        uploadedAudioPath,
+        processingMode
+      });
+
+      dispatch(setIsRecording(false));
+      dispatch(setJustStoppedRecording(true));
+      
+      try {
+        const wasRecordingAudio = hasAudioDevices && uploadedAudioPath === 'MICROPHONE';
+        
+        if (sessionId && wasRecordingAudio) {
+          console.log('🎙️ Stopping microphone recording...');
+          const result = await stopMicrophone(sessionId);
+          console.log('🛑 Microphone stopped:', result);
+          console.log('🎙️ Audio processing may continue (transcription → summary → mindmap)');
+        } else if (!hasAudioDevices) {
+          console.log('🎙️ No audio devices - preserving audio status as no-devices');
+          dispatch(setAudioStatus('no-devices'));
+        } else {
+          console.log('🎙️ No microphone recording to stop');
+          if (audioStatus === 'recording') {
+            dispatch(setAudioStatus(hasAudioDevices ? 'ready' : 'no-devices'));
+          }
+        }
+
+        const wasVideoActive = videoAnalyticsActive && hasVideoCapability;
+        
+        if (wasVideoActive && sessionId) {
+          try {
+            dispatch(setVideoAnalyticsStopping(true));
+            console.log('🎥 Stopping video analytics...');
             
             const videoRequests = [
               { pipeline_name: 'front' },
@@ -399,31 +558,68 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
               { pipeline_name: 'content' },
             ];
 
-            console.log('🛑 Stopping video analytics with session:', videoSessionId);
-            const videoResult = await stopVideoAnalytics(videoRequests, videoSessionId);
+            console.log('🛑 Stopping video analytics with shared session:', sessionId);
+            const videoResult = await stopVideoAnalytics(videoRequests, sessionId);
             console.log('🛑 Video analytics stopped:', videoResult);
+
+            dispatch(setFrontCameraStream(''));
+            dispatch(setBackCameraStream(''));
+            dispatch(setBoardCameraStream(''));
+            dispatch(setActiveStream(null));
+            dispatch(setVideoAnalyticsActive(false));
+            dispatch(setVideoStatus(hasVideoCapability ? 'ready' : 'no-config'));
+            
           } catch (videoError) {
             console.warn('Failed to stop video analytics (non-critical):', videoError);
+            dispatch(setVideoStatus('failed'));
           } finally {
-            setIsStoppingVideoAnalytics(false); // Clear stopping state
+            dispatch(setVideoAnalyticsStopping(false));
             console.log('🛑 Video analytics stopping process completed');
+          }
+        } else if (!hasVideoCapability) {
+          console.log('🎥 No video capability - preserving video status as no-config');
+          dispatch(setVideoStatus('no-config'));
+        } else {
+          console.log('🎥 No active video analytics to stop');
+          dispatch(setVideoStatus(hasVideoCapability ? 'ready' : 'no-config'));
+          dispatch(setFrontCameraStream(''));
+          dispatch(setBackCameraStream(''));
+          dispatch(setBoardCameraStream(''));
+          dispatch(setActiveStream(null));
+          dispatch(setVideoAnalyticsActive(false));
+        }
+        if (!wasRecordingAudio || !hasAudioDevices) {
+          dispatch(setProcessingMode(null));
+          console.log('🔄 Processing mode reset');
+        } else {
+          console.log('🔄 Keeping processing mode - audio processing may continue');
+        }
+        if (uploadedAudioPath === 'MICROPHONE') {
+          if (!wasRecordingAudio) {
+            dispatch(setUploadedAudioPath(''));
+          } else {
+            console.log('🔄 Keeping uploaded audio path - processing continues');
           }
         }
 
-        // Always clear video analytics state
-        dispatch(setFrontCameraStream(''));
-        dispatch(setBackCameraStream(''));
-        dispatch(setBoardCameraStream(''));
-        dispatch(setActiveStream(null));
-        dispatch(setVideoAnalyticsActive(false));
-        dispatch(setVideoSessionId(null)); // Use Redux dispatch to clear video session ID
+        console.log('✅ Recording stopped gracefully with state preservation');
         
       } catch (error) {
         console.error('Failed to stop recording:', error);
-        setErrorMsg('Failed to stop recording');
-        setIsStoppingVideoAnalytics(false); // Ensure we clear the stopping state on error
+        setErrorMsg(t('errors.failedToStopRecording'));
+        dispatch(setVideoAnalyticsStopping(false));
+        dispatch(setAudioStatus(hasAudioDevices ? 'ready' : 'no-devices'));
+        dispatch(setVideoStatus(hasVideoCapability ? 'ready' : 'no-config'));
+        dispatch(setProcessingMode(null));
+        dispatch(setUploadedAudioPath(''));
       }
     }
+  };
+
+  const getRecordingTooltip = () => {
+    if (audioDevicesLoading) return t('tooltips.checkingAudioDevices');
+    if (isRecordingDisabled) return t('tooltips.recordingDisabled');
+    return isRecording ? t('tooltips.stopRecording') : t('tooltips.startRecording');
   };
 
   return (
@@ -434,6 +630,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           alt="Record"
           className="record-icon"
           onClick={handleRecordingToggle}
+          title={getRecordingTooltip()}
           style={{
             opacity: isRecordingDisabled ? 0.5 : 1,
             cursor: isRecordingDisabled ? 'not-allowed' : 'pointer'
@@ -446,6 +643,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           className="text-button"
           onClick={handleRecordingToggle}
           disabled={isRecordingDisabled}
+          title={getRecordingTooltip()}
           style={{
             cursor: isRecordingDisabled ? 'not-allowed' : 'pointer',
             opacity: isRecordingDisabled ? 0.6 : 1
@@ -469,7 +667,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       </div>
 
       <div className="navbar-center">
-        <NotificationsDisplay notification={notification} error={errorMsg} />
+        <NotificationsDisplay 
+          audioNotification={audioNotification} 
+          videoNotification={videoNotification} 
+          error={errorMsg} 
+        />
       </div>
 
       <div className="navbar-right">

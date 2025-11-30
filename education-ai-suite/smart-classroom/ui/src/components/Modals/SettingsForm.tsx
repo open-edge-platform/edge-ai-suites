@@ -37,8 +37,6 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
         if (settings) {
           setProjectLocation(settings.projectLocation || 'storage/');
           if (settings.projectName) setProjectName(settings.projectName);
-          
-          // Load camera settings - first try from API, then localStorage, then empty
           setFrontCameraLocal(settings.frontCamera || localStorage.getItem('frontCamera') || '');
           setBackCameraLocal(settings.backCamera || localStorage.getItem('backCamera') || '');
           setBoardCameraLocal(settings.boardCamera || localStorage.getItem('boardCamera') || '');
@@ -51,7 +49,6 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
             setSelectedMicrophone('');
           }
         } else {
-          // Load camera settings from localStorage if no API settings
           setFrontCameraLocal(localStorage.getItem('frontCamera') || '');
           setBackCameraLocal(localStorage.getItem('backCamera') || '');
           setBoardCameraLocal(localStorage.getItem('boardCamera') || '');
@@ -68,8 +65,6 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
         console.error('Failed to load settings or devices:', error);
         setAvailableDevices([]);
         setSelectedMicrophone('');
-        
-        // Load camera settings from localStorage as fallback
         setFrontCameraLocal(localStorage.getItem('frontCamera') || '');
         setBackCameraLocal(localStorage.getItem('backCamera') || '');
         setBoardCameraLocal(localStorage.getItem('boardCamera') || '');
@@ -95,7 +90,6 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
     console.log('Saving settings with cameras:', { frontCamera, backCamera, boardCamera }); 
     
     try {
-      // Save all settings including cameras to backend
       await saveSettings({ 
         projectName, 
         projectLocation, 
@@ -104,22 +98,24 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
         backCamera,
         boardCamera
       });
-
-      // Also save camera settings to localStorage as backup
       localStorage.setItem('frontCamera', frontCamera);
       localStorage.setItem('backCamera', backCamera);
       localStorage.setItem('boardCamera', boardCamera);
 
-      // Update Redux state
       dispatch(setFrontCamera(frontCamera));
       dispatch(setBackCamera(backCamera));
       dispatch(setBoardCamera(boardCamera));
+
+      console.log('✅ Settings saved and Redux updated:', {
+        frontCamera,
+        backCamera,
+        boardCamera
+      });
 
       onClose();
     } catch (error) {
       console.error('Failed to save settings:', error);
-      
-      // If backend save fails, at least save to localStorage and Redux
+
       localStorage.setItem('frontCamera', frontCamera);
       localStorage.setItem('backCamera', backCamera);
       localStorage.setItem('boardCamera', boardCamera);
@@ -128,7 +124,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
       dispatch(setBackCamera(backCamera));
       dispatch(setBoardCamera(boardCamera));
       
-      onClose(); // Still close the modal
+      onClose(); 
     }
   };
 
@@ -203,8 +199,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
             Selected: {selectedMicrophone || 'None'} | Available: {availableDevices.length}
           </div>
         </div>
-
-        {/* Camera Settings - Text Inputs */}
+        
         <div>
           <label htmlFor="frontCamera">{t('settings.frontCamera')}</label>
           <input
@@ -212,7 +207,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
             id="frontCamera"
             value={frontCamera}
             onChange={handleFrontCameraChange}
-            placeholder={t('settings.frontCameraPlaceholder')}
+            placeholder="rtsp://127.0.0.1:9554/front"
             className="camera-input"
           />
         </div>
@@ -224,7 +219,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
             id="backCamera"
             value={backCamera}
             onChange={handleBackCameraChange}
-            placeholder={t('settings.backCameraPlaceholder')}
+            placeholder="rtsp://127.0.0.1:9554/back"
             className="camera-input"
           />
         </div>
@@ -236,7 +231,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
             id="boardCamera"
             value={boardCamera}
             onChange={handleBoardCameraChange}
-            placeholder={t('settings.boardCameraPlaceholder')}
+            placeholder="rtsp://127.0.0.1:9554/content"
             className="camera-input"
           />
         </div>
