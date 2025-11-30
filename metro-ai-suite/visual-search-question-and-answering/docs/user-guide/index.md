@@ -1,11 +1,20 @@
-Visual Search and QA
-====================
+# Visual Search and QA
+
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2025.2.0/metro-ai-suite/visual-search-question-and-answering">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2025.2.0/metro-ai-suite/visual-search-question-and-answering/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
 
 Combination of a multi-modal search engine and a visual Q&A assistant, allowing users to add
 search results as context for more related answers.
 
-Overview
-########
+## Overview
 
 We deliver a Reference Implementation, named "Visual Search and QA". It is mainly composed
 of three parts: a multi-modal search engine, a multi-modal visual QnA chatbot which can
@@ -13,9 +22,9 @@ answer questions based on the search results, and a fronted web UI which allows 
 interact with and examine the search engine and chatbot.
 
 The search engine is equipped with a data preparation microservice and a retriever
-microservice. Together they support a typical workflow: images and videos data are
-processed and stored into a database, then users can start a query with text description,
-the images and videos that fit the description would be found in the database and returned
+microservice. Together they support a typical workflow: images and video data are
+processed and stored into a database, then users can start a query with a text description,
+and the images and videos that fit the description are found in the database and returned
 to users.
 
 The visual QnA chatbot is a large vision language model that can take text and/or visual
@@ -25,41 +34,34 @@ questions based on the context.
 
 - **Programming Language:** Python
 
-How It Works
-############
+## How It Works
 
 The high-level architecture is shown below
 
-.. figure:: ./_images/visual_search_qa_design.png
-   :alt: Architecture
+![architecture diagram](./_images/visual_search_qa_design.png)
 
-   Figure 1: Architecture Diagram
-
-Dataprep
-++++++++
+### Dataprep
 
 The dataprep microservice processes images and videos, extracts their embeddings using
 the image encoder from the CLIP model, and stores them in a vector database.
 
-Video Processing:
------------------
+#### Video Processing
 
 - Extract frames at configurable intervals.
 
-Image/Frame Processing:
------------------------
+#### Image/Frame Processing
 
 - Resize, convert colors, normalize, and apply object detection with cropping.
 
-.. note::
-
-   Object detection and cropping improve retrieval performance for large-scale scene
-   images (e.g., high-resolution surveillance images with multiple objects).
-   Since the image encoder input size is 224x224, resizing may render some objects
-   (e.g., humans, vehicles) unrecognizable.
-   Object detection and cropping preserve these objects as clear targets in separate
-   cropped images. Metadata links the original image to its cropped versions.
-   During retrieval, if a cropped image matches, the original image is returned.
+> **Note**
+>
+> Object detection and cropping improve retrieval performance for large-scale scene
+> images (e.g., high-resolution surveillance images with multiple objects).
+> Since the image encoder input size is 224x224, resizing may render some objects
+> (e.g., humans, vehicles) unrecognizable.
+> Object detection and cropping preserve these objects as clear targets in separate
+> cropped images. Metadata links the original image to its cropped versions.
+> During retrieval, if a cropped image matches, the original image is returned.
 
 Instead of uploading data, users can specify directories on the host machine as data
 sources. This approach is more efficient for large datasets, which are common in the
@@ -68,59 +70,51 @@ certain access to the server. Then users know where the files are stored on the 
 machine, and can provide the file directory as input so that the microservice can
 process one-after-another or in batches.
 
-Retriever
-+++++++++
+### Retriever
 
 The retriever microservice consists of a local multi-modal embedding model
 (same as the dataprep microservice) and a vector DB search engine.
 
-Workflow:
----------
+#### Workflow
 
 1. The embedding model generates text embeddings for input descriptions
    (e.g., "traffic jam").
 2. The search engine searches the vector database for the top-k most similar matches.
 
-Model Serving
-+++++++++++++
+### Model Serving
 
 Check the
-`model serving doc <https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2025.2.0/microservices>`__
+[model serving doc](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2025.2.0/microservices)
 for more details.
 
-Web UI
-++++++
+### Web UI
 
-The UI, built with ``streamlit``, allows users to:
+The UI, built with `streamlit`, allows users to:
 
 - Enter search queries.
 - View matched results.
 - Interact with the LVM in a chatbox with upload tools.
 
-Visual Search and QA UI Initial Interface:
-------------------------------------------
+#### Visual Search and QA UI Initial Interface
 
-.. figure:: ./_images/web_ui.png
-   :alt: Visual Search and QA UI Init Interface
+![initial web UI image](./_images/web_ui.png)
 
-   Figure 2: Initial Web UI
+   Figure 1: Initial Web UI
 
-Visual Search and QA UI Example:
---------------------------------
+#### Visual Search and QA UI Example
 
-.. figure:: ./_images/web_ui_res.png
-   :alt: Visual Search and QA UI Example
+![web UI with example](./_images/web_ui_res.png)
 
-   Figure 3: Web UI with an example
+   Figure 2: Web UI with an example
 
-Learn More
-##########
+## Learn More
 
-- Check the :doc:`System requirements <./system-requirements>`.
-- Start with the :doc:`Get Started <./get-started>`.
-- Deploy with :doc:`Helm chart <./deploy-with-helm>`.
+- Check the [System requirements](./system-requirements).
+- Start with the [Get Started](./get-started).
+- Deploy with [Helm chart](./deploy-with-helm).
 
-.. toctree::
+<!--hide_directive
+:::{toctree}
    :hidden:
    :maxdepth: 2
 
@@ -129,3 +123,5 @@ Learn More
    deploy-with-helm
    tutorials
    release-notes
+:::
+hide_directive-->

@@ -1,5 +1,13 @@
 # Weld Anomaly Detection
 
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2025.2.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection">
+     GitHub project
+  </a>
+  </div>
+hide_directive-->
+
 This sample app demonstrates how AI-driven analytics enable edge devices to monitor weld quality.
 It detects anomalous weld patterns and alerts operators for timely intervention,
 ensuring proactive maintenance, safety, and operational efficiency. No more failures
@@ -81,7 +89,6 @@ detect the anomalous power generation data points relative to wind speed.
 
 **Note**: Please note, CatBoost models doesn't run on Intel GPUs.
 
-
 ##### **`tick_scripts/`**
 
 The TICKScript `weld_anomaly_detector.tick` determines processing of the input data coming in.
@@ -92,4 +99,3 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier Algo of CatBoost ML
 library.
-

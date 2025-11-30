@@ -1,10 +1,19 @@
-Pallet Defect Detection
-==============================
+# Pallet Defect Detection
+
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2025.2.0/manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2025.2.0/manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
 
 Automated quality control with AI-driven vision systems.
 
-Overview
-########
+## Overview
 
 This Sample Application enables real-time pallet condition monitoring by running inference
 workflows across multiple AI models. It connects multiple video streams from warehouse
@@ -12,8 +21,7 @@ cameras to AI-powered pipelines, all operating efficiently on a single industria
 This solution enhances logistics efficiency and inventory management by detecting
 defects before they impact operations.
 
-How It Works
-############
+## How It Works
 
 This sample application consists of the following microservices:
 DL Streamer Pipeline Server, Model Registry Microservice(MRaaS), MediaMTX server,
@@ -31,39 +39,35 @@ be seen on Prometheus UI. Any desired AI model from the Model Registry Microserv
 (which can interact with Postgres, Minio and Geti Server for getting the model) can be
 pulled into DL Streamer Pipeline Server and used for inference in the sample application.
 
-.. figure:: ./images/industrial-edge-insights-vision-architecture.drawio.svg
-   :alt: Architecture and high-level representation of the flow of data through the architecture
-
-   Figure 1: Architecture diagram
+![architecture and high-level representation of the flow of data through the architecture](./images/industrial-edge-insights-vision-architecture.drawio.svg)
 
 This sample application is built with the following Intel Edge AI Stack Microservices:
 
-- `DL Streamer Pipeline Server <https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/dlstreamer-pipeline-server/index.html>`__
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   is an interoperable containerized microservice based on Python for video ingestion
   and deep learning inferencing functions.
-- `Model Registry Microservice <https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/model-registry/index.html>`__
+- [Model Registry Microservice](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/model-registry/index.html)
   provides a centralized repository that facilitates the management of AI models
 
 It also consists of the below Third-party microservices:
 
-- `Nginx <https://hub.docker.com/_/nginx>`__
+- [Nginx](https://hub.docker.com/_/nginx)
   is a high-performance web server and reverse proxy that provides TLS termination and unified HTTPS access.
-- `MediaMTX Server <https://hub.docker.com/r/bluenviron/mediamtx>`__
+- [MediaMTX Server](https://hub.docker.com/r/bluenviron/mediamtx)
   is a real-time media server and media proxy that allows to publish webrtc stream.
-- `Coturn Server <https://hub.docker.com/r/coturn/coturn>`__
+- [Coturn Server](https://hub.docker.com/r/coturn/)
   is a media traffic NAT traversal server and gateway.
-- `Open telemetry Collector <https://hub.docker.com/r/otel/opentelemetry-collector-contrib>`__
+- [Open telemetry Collector](https://hub.docker.com/r/otel/opentelemetry-collector-contrib)
   is a set of receivers, exporters, processors, connectors for Open Telemetry.
-- `Prometheus <https://hub.docker.com/r/prom/prometheus>`__
+- [Prometheus](https://hub.docker.com/r/prom/prometheus)
   is a systems and service monitoring system used for viewing Open Telemetry.
-- `Postgres <https://hub.docker.com/_/postgres>`__
+- [Postgres](https://hub.docker.com/_/postgres)
   is object-relational database system that provides reliability and data integrity.
-- `Minio <https://hub.docker.com/r/minio/minio>`__
+- [Minio](https://hub.docker.com/r/minio/minio)
   is high performance object storage that is API compatible with
   Amazon S3 cloud storage service.
 
-Features
-########
+## Features
 
 This sample application offers the following features:
 
@@ -73,9 +77,9 @@ This sample application offers the following features:
 - Interconnected warehouses deliver analytics for quick and informed tracking and
   decision making.
 
-
-.. toctree::
-   :hidden:
+<!--hide_directive
+:::{toctree}
+:hidden:
 
    overview-architecture
    system-requirements
@@ -103,3 +107,6 @@ This sample application offers the following features:
    environment-variables
 
    release_notes/Overview
+
+:::
+hide_directive-->

@@ -11,7 +11,7 @@ Let's discuss how this architecture translates to data flow in the weld defect d
 
 ### 1. **Weld Data Simulator**
 
-The Weld Data Simulator uses the sets of time synchronized .avi and .csv files from the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator/simulation-data/`, subset of test dataset coming from [Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset).
+The Weld Data Simulator uses sets of time synchronized .avi and .csv files from the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator/simulation-data/` subset of test dataset coming from [Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset).
 It ingests the .avi files as RTSP streams via the **mediamtx** server. This enables real-time video ingestion, simulating camera feeds for weld defect detection.
 Similarly, it ingests the .csv files as data points into **Telegraf** using the **MQTT** protocol.
 
