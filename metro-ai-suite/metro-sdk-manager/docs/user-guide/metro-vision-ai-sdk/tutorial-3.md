@@ -187,7 +187,7 @@ def postprocess(frame, results):
 
 # --- Inference Loop ---
 frame_count = 0
-display_width, display_height = 1920, 1080  # Desired display size
+display_width, display_height = 960, 540  # Desired display size
 
 while True:
     ret, frame = cap.read()
@@ -251,7 +251,6 @@ pip install opencv-python "numpy<2"
 
 ```
 ```bash
-
 python3 /home/openvino/inference.py 
 ```
 
@@ -291,42 +290,24 @@ For systems with Intel integrated graphics, run detection with GPU acceleration:
 # Run object detection with GPU inference
 docker run -it --rm \
   --volume ${PWD}:/home/openvino \
+  --volume $HOME/.Xauthority:/root/.Xauthority:rw \
   --volume /tmp/.X11-unix:/tmp/.X11-unix:rw \
   --device /dev/dri \
-  --group-add=$(stat -c "%g" /dev/dri/renderD128) \
   --env DISPLAY=$DISPLAY \
   --env http_proxy=$http_proxy \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
-  openvino/ubuntu24_dev:2025.3.0 \
-  python3 /home/openvino/inference.py \
-    --model /home/openvino/public/yolov10s/FP16/yolov10s.xml \
-    --video /home/openvino/intersection.mp4 \
-    --device GPU \
-    --conf 0.4
+  --user root \
+  openvino/ubuntu24_dev:2025.3.0 
 ```
-
-### Step 7: Advanced Usage and Features
-
-**Save Detection Results:**
-
 ```bash
-# Save output video with detections
-docker run -it --rm \
-  --volume ${PWD}:/home/openvino \
-  --volume /tmp/.X11-unix:/tmp/.X11-unix:rw \
-  --env DISPLAY=$DISPLAY \
-  openvino/ubuntu24_dev:2025.3.0 \
-  python3 /home/openvino/inference.py \
-    --video /home/openvino/intersection.mp4 \
-    --save /home/openvino/output_detections.mp4
+apt update
+apt install -y libgtk2.0-dev pkg-config libcanberra-gtk-module libcanberra-gtk3-module build-essential cmake git pkg-config libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev libv4l-dev libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-dev ffmpeg
+pip install opencv-python "numpy<2"
 ```
-
-**Interactive Controls:**
-
-- **'q'**: Quit application
-- **'s'**: Save current frame as image
-- **'p'**: Pause/resume playback
+```bash
+python3 /home/openvino/inference.py 
+```
 
 **Custom Thresholds:**
 
