@@ -36,7 +36,9 @@
       "noVideoConfigured": "No video configured",
       "videoReady": "Video ready",
       "videoAnalyticsFailed": "Video analytics failed",
-      "videoProcessingComplete": "Video processing complete"
+      "videoProcessingComplete": "Video processing complete",
+      "audio": "Audio",
+      "video": "Video"
     },
     "tooltips": {
       "checkingAudioDevices": "Checking audio devices...",
@@ -129,7 +131,11 @@
       "model3": "Model 3",
       "model4": "Model 4",
       "classStatistics": "Class Statistics",
-      "roomView": "Room View"
+      "roomView": "Room View",
+      "frontCamera": "Front",
+      "backCamera": "Back",
+      "boardCamera": "Board",
+      "allCameras": "All"
     },
     "errors": {
       "projectNameRequired": "Project name is required",

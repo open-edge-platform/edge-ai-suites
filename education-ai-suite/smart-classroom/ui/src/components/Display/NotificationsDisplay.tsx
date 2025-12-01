@@ -37,3 +37,4 @@ const NotificationsDisplay: React.FC<NotificationsDisplayProps> = ({
 };
 
 export default NotificationsDisplay;
+
