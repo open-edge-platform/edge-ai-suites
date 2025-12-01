@@ -6,8 +6,16 @@
   width: 100%;
   /* padding: 12px 8px; */
   background: #f8f8f8;
+  position: relative;
+  z-index: 1000;
+}
+.left-panel-container {
+  transition: margin-top 0.3s ease;
 }
 
+.left-panel-container.fullscreen {
+  margin-top: 70vh; /* Push the LeftPanel down to accommodate the full-screen video */
+}
 .tabs {
   display: flex;
   justify-content: flex-start;

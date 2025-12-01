@@ -1,6 +1,6 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)]()
 [![Metro-AI-Suite](https://img.shields.io/badge/Metro%20AI%20Suite-3%20Samples-green)]()
-[![Manufacturing-AI-Suite](https://img.shields.io/badge/Manufacturing%20AI%20Suite-3%20Samples-green)]()
+[![Manufacturing-AI-Suite](https://img.shields.io/badge/Manufacturing%20AI%20Suite-8%20Samples-green)]()
 [![Retail-AI-Suite](https://img.shields.io/badge/Retail%20AI%20Suite-2%20Samples-green)]()
 
 # Edge-AI-Suites

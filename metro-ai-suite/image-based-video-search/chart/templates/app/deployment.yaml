@@ -33,9 +33,9 @@ spec:
           readOnlyRootFilesystem: true
           runAsUser: 1999
           runAsGroup: 1999
-        capabilities:
-          drop:
-            - ALL
+          capabilities:
+            drop:
+              - ALL
         {{- if .Values.app.resources }}
         resources:
           {{ .Values.app.resources | toYaml | nindent 10 }}

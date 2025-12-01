@@ -53,24 +53,9 @@ ROS is a set of open-source software libraries and tools that help you build rob
 
 6. (Optional) Install the ROS wrappers for Intel RealSense depth cameras:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1 hide_directive-->
-
-   ```bash
-   sudo apt install ros-jazzy-realsense2-camera
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2 hide_directive-->
-
    ```bash
    sudo apt install ros-humble-realsense2-camera
    ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
 #. (Optional) Install other tools or packages of Intel RealSense depth cameras:
 
@@ -111,23 +96,7 @@ E: Unable to correct problems, you have held broken packages.
 This issue is probably caused by the mismatched versions of the ROS wrapper and the librealsense2 package.
 You can try to fix it by specifying the version of the dependent package. You can try the following for the example given above:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item} hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1 hide_directive-->
-
-```bash
-sudo apt install ros-jazzy-librealsense2=2.55.1-1eci9
-sudo apt install ros-jazzy-librealsense2-tools=2.55.1-1eci9
-```
-
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2 hide_directive-->
-
 ```bash
 sudo apt install ros-humble-librealsense2=2.55.1-1eci9
 sudo apt install ros-humble-librealsense2-tools=2.55.1-1eci9
 ```
-
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
