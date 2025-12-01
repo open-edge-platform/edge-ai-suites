@@ -30,7 +30,7 @@ cloud data from LIDAR and Intel® RealSense™ camera:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install ros-jazzy-bagfile-laser-pointcloud
@@ -38,7 +38,7 @@ sudo apt install ros-jazzy-bagfile-laser-pointcloud
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install ros-humble-bagfile-laser-pointcloud
@@ -51,7 +51,7 @@ Run the following commands in a terminal:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -60,7 +60,7 @@ ros2 bag play --loop /opt/ros/jazzy/share/bagfiles/laser-pointcloud
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -86,7 +86,7 @@ Robot APT repository:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt update
@@ -95,7 +95,7 @@ sudo apt install ros-jazzy-adbscan-oneapi
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt update
@@ -109,7 +109,7 @@ Run the following command in a terminal:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -118,7 +118,7 @@ ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/jazzy/share/
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -143,7 +143,7 @@ Robot APT repository
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt update
@@ -152,7 +152,7 @@ sudo apt install ros-jazzy-adbscan-ros2
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt update
@@ -166,7 +166,7 @@ Run the following command in a terminal
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -175,7 +175,7 @@ ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/jazzy/share/
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -218,7 +218,7 @@ an average of 5 frames:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/jazzy/share/adbscan_ros2/config/adbscan_sub_RS.yaml  -p benchmark_number_of_frames:=5 -p oneapi_library:=oneapi_octree
@@ -226,7 +226,7 @@ ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/jazzy/share/
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/humble/share/adbscan_ros2/config/adbscan_sub_RS.yaml  -p benchmark_number_of_frames:=5 -p oneapi_library:=oneapi_octree
@@ -338,7 +338,7 @@ a performance-core (P-core).
 
   <!--hide_directive::::{tab-set}
   :::{tab-item}hide_directive--> **Jazzy**
-  <!--hide_directive:sync: tab1hide_directive-->
+  <!--hide_directive:sync: jazzyhide_directive-->
 
   ```bash
   source /opt/ros/jazzy/setup.bash
@@ -347,7 +347,7 @@ a performance-core (P-core).
 
   <!--hide_directive:::
   :::{tab-item}hide_directive-->  **Humble**
-  <!--hide_directive:sync: tab2hide_directive-->
+  <!--hide_directive:sync: humblehide_directive-->
 
   ```bash
   source /opt/ros/humble/setup.bash

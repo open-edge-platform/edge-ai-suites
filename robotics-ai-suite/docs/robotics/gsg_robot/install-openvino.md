@@ -25,7 +25,7 @@ The following steps will add the OpenVINO™ APT repository to your package mana
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    echo -e "\nPackage: openvino-libraries-dev\nPin: version 2024.2.0*\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/intel-openvino
@@ -36,7 +36,7 @@ The following steps will add the OpenVINO™ APT repository to your package mana
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    echo -e "\nPackage: openvino-libraries-dev\nPin: version 2024.2.0*\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/intel-openvino
@@ -72,7 +72,7 @@ The following steps will install the OpenVINO™ packages:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt purge ros-jazzy-openvino-node
@@ -82,7 +82,7 @@ The following steps will install the OpenVINO™ packages:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt purge ros-humble-openvino-node
@@ -103,7 +103,7 @@ The following steps will install the OpenVINO™ packages:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt install ros-jazzy-openvino-node
@@ -111,7 +111,7 @@ The following steps will install the OpenVINO™ packages:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt install ros-humble-openvino-node
@@ -148,7 +148,7 @@ installation, run the following commands:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt purge ros-jazzy-openvino-node
@@ -159,7 +159,7 @@ sudo apt install ros-jazzy-openvino-node
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt purge ros-humble-openvino-node

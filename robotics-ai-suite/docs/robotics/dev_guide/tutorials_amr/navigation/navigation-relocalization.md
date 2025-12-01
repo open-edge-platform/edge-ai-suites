@@ -27,7 +27,7 @@ Intel® Autonomous Mobile Robot APT repository
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install ros-jazzy-its-relocalization-bringup
@@ -35,7 +35,7 @@ sudo apt install ros-jazzy-its-relocalization-bringup
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install ros-humble-its-relocalization-bringup
@@ -51,7 +51,7 @@ navigation, and TurtleBot3 robot in Gazebo simulation:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -62,7 +62,7 @@ ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -89,7 +89,7 @@ open a new terminal to bring up the re-localization:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -98,7 +98,7 @@ ros2 launch relocalization_bringup relocalization.launch.xml
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash

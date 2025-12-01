@@ -91,7 +91,7 @@ ITS planner, at lines 274-291:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 /opt/ros/jazzy/share/its_planner/nav2_params.yaml
@@ -99,7 +99,7 @@ ITS planner, at lines 274-291:
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 /opt/ros/humble/share/its_planner/nav2_params.yaml
@@ -112,7 +112,7 @@ You can modify these values by editing the file below for the Ackermann ITS plan
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 /opt/ros/jazzy/share/its_planner/nav2_params_dubins.yaml
@@ -120,7 +120,7 @@ You can modify these values by editing the file below for the Ackermann ITS plan
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 /opt/ros/humble/share/its_planner/nav2_params_dubins.yaml

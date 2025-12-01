@@ -17,7 +17,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt-get install ros-jazzy-aaeon-adbscan-tutorial-common
@@ -26,7 +26,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt-get install ros-humble-aaeon-adbscan-tutorial-common
@@ -40,7 +40,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    source /opt/ros/jazzy/setup.bash
@@ -49,7 +49,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    source /opt/ros/humble/setup.bash
@@ -75,7 +75,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    source /opt/ros/jazzy/setup.bash
@@ -84,7 +84,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    source /opt/ros/humble/setup.bash
@@ -110,7 +110,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    source /opt/ros/jazzy/setup.bash
@@ -119,7 +119,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    source /opt/ros/humble/setup.bash
@@ -133,7 +133,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    source /opt/ros/jazzy/setup.bash
@@ -142,7 +142,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    source /opt/ros/humble/setup.bash

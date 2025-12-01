@@ -37,7 +37,7 @@ Install the `pointcloud-groundfloor-segmentation` Deb package from Intel® Auton
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 
@@ -47,7 +47,7 @@ sudo apt install ros-jazzy-pointcloud-groundfloor-segmentation
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 
@@ -64,7 +64,7 @@ Execute the following command to run the demo using a Intel® RealSense™ camer
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 
@@ -74,7 +74,7 @@ ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentati
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 
@@ -105,7 +105,7 @@ or with rviz. These can be activated as follows:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 Terminal 1:
 
@@ -123,7 +123,7 @@ ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentati
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 Terminal 1:
 
@@ -158,7 +158,7 @@ Execute the following script to run the demo if a given pointcloud, for example 
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -167,7 +167,7 @@ ros2 launch pointcloud_groundfloor_segmentation pointcloud_groundfloor_segmentat
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -206,7 +206,7 @@ Afterwards open three terminal sessions:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 Terminal 1: Run the following commands to establish a TF link between robot and camera:
 
@@ -231,7 +231,7 @@ ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentati
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 Terminal 1: Run the following commands to establish a TF link between robot and camera:
 
@@ -263,7 +263,7 @@ The ROS 2 node supports a set of parameters, that can be found under:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 /opt/ros/jazzy/share/pointcloud_groundfloor_segmentation/params/
@@ -271,7 +271,7 @@ The ROS 2 node supports a set of parameters, that can be found under:
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 /opt/ros/humble/share/pointcloud_groundfloor_segmentation/params/

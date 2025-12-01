@@ -16,7 +16,7 @@ before continuing.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install ros-jazzy-recorder
@@ -26,7 +26,7 @@ sudo apt install ros-jazzy-bagfile-2d-lidar
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install ros-humble-recorder
@@ -106,7 +106,7 @@ like cameras and so on.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 ros2 bag play /opt/ros/jazzy/share/bagfiles/2d-lidar
@@ -114,7 +114,7 @@ ros2 bag play /opt/ros/jazzy/share/bagfiles/2d-lidar
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 ros2 bag play /opt/ros/humble/share/bagfiles/2d-lidar
