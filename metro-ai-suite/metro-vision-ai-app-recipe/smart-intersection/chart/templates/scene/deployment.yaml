@@ -14,43 +14,15 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-scene
-      annotations:
-        checksum/secrets: {{ include (print $.Template.BasePath "/app-secrets.yaml") . | sha256sum }}
     spec:
       initContainers:
-      - name: wait-for-db-ready
-        image: "{{ .Values.images.curl.repository }}:{{ .Values.images.curl.tag }}"
+      - name: wait-for-web-initcontainer
+        image: {{ .Values.images.busybox.repository }}:{{ .Values.images.busybox.tag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
-        env:
-          - name: http_proxy
-            value: {{ .Values.http_proxy | quote }}
-          - name: https_proxy
-            value: {{ .Values.https_proxy | quote }}
-          - name: no_proxy
-            value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
-        command:
-          - sh
-          - -c
-          - |
-            {{- tpl (include "scene.wait-for-db-script" .) . | nindent 12 }}
-      # initContainers:
-      # - name: init-scene-secrets
-      #   image: busybox
-      #   command: ['sh', '-c', '
-      #     if [ -f /data/secrets.py ]; then
-      #       echo "File exists: /data/secrets.py";
-      #     else
-      #       echo "File does NOT exist: /data/secrets.py";
-      #     fi &&
-      #     until [ -f /data/.done ]; do
-      #       echo "Waiting for .done ...";
-      #       sleep 5;
-      #     done &&
-      #     echo "secrets.py copied to /tmp/secrets/django";
-      #   ']
-      #   volumeMounts:
-      #   - name: scene-secrets-data
-      #     mountPath: /data
+        command: ["/bin/sh", "-c", "until wget -q --spider http://{{ .Release.Name }}-web; do sleep 1; done"]
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsUser: 1000
       containers:
       - name: scene
         image: {{ .Values.scene.repository }}:{{ .Values.scene.tag }}
@@ -72,8 +44,9 @@ spec:
         - name: tracker-config
           mountPath: /home/scenescape/SceneScape/tracker-config.json
           subPath: tracker-config.json
-        - name: secrets
-          mountPath: /tmp/secrets_
+        - mountPath: /tmp/secrets_
+          name: secrets
+          readOnly: true
         - name: scene-secrets-data
           mountPath: /data
         securityContext:
@@ -86,6 +59,10 @@ spec:
             secretKeyRef:
               name: {{ .Release.Name }}-mqtt-auth-secrets
               key: controller.auth
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
       - name: pgserver-media
         persistentVolumeClaim:

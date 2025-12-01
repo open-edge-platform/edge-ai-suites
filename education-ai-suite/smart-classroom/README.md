@@ -9,9 +9,7 @@ The main features are as follows:
 •	MindMap Generation using Mermaid.js for visual diagram rendering of the summary\
 •	Plug-and-play architecture for integrating new ASR and LLM models\
 •	API-first design ready for frontend integration\
-•	Extensible roadmap for real-time streaming, diarization, translation, and video analysis
-
-![Smart Classroom UI](./docs/user-guide/images/smart_classroom_ui.png)
+•	Video analysis
 
 ## Get Started 
 

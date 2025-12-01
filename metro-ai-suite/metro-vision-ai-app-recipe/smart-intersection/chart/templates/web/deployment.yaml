@@ -17,25 +17,26 @@ spec:
       annotations:
         checksum/secrets: {{ include (print $.Template.BasePath "/app-secrets.yaml") . | sha256sum }}
     spec:
-      # initContainers:
-      # - name: init-smart-intersection-ri-web
-      #   image: busybox
-      #   command: ['sh', '-c', '
-      #     if [ -f /data/secrets.py ]; then
-      #       echo "File exists: /data/secrets.py";
-      #     else
-      #       echo "File does NOT exist: /data/secrets.py";
-      #     fi &&
-      #     until [ -f /data/.done ]; do
-      #       echo "Waiting for .done ...";
-      #       sleep 5;
-      #     done &&
-      #     ls /tmp &&
-      #     echo "Files copied to /tmp";
-      #   ']
-      #   volumeMounts:
-      #   - name: smart-intersection-ri-web-data
-      #     mountPath: /data
+      {{- if .Values.externalUrls.githubRepo }}
+      initContainers:
+      - name: download-example-db
+        image: {{ .Values.images.alpine.repository }}:{{ .Values.images.alpine.tag }}
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh" ,"-c"]
+        args:
+        - |
+          {{ tpl (.Files.Get "files/webserver/download_database.sh") . | nindent 10 }}
+        env:
+        - name: http_proxy
+          value: {{ .Values.http_proxy | quote }}
+        - name: https_proxy
+          value: {{ .Values.https_proxy | quote }}
+        - name: no_proxy
+          value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
+        volumeMounts:
+        - name: {{ .Release.Name }}-example-db
+          mountPath: /data
+      {{- end }}
       containers:
       - name: web
         image: {{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}
@@ -49,10 +50,15 @@ spec:
           value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
         - name: DBROOT
           value: /workspace
-        - name: RUNSECRETS
-          value: /run/secrets
-        - name: SSCAPEDIR
-          value: /home/scenescape/SceneScape
+        - name: MODEL_CONFIGS_FOLDER
+          value: /home/scenescape/SceneScape/models/models/model_configs
+        - name: SUPASS
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-supass-secret
+              key: supass
+        - name: EXAMPLEDB
+          value: /home/scenescape/SceneScape/example_db/smart-intersection-ri.tar.bz2
         volumeMounts:
         - name: pgserver-media
           mountPath: /workspace/media
@@ -60,6 +66,8 @@ spec:
           mountPath: /tmp/secrets
         - name: smart-intersection-ri-web-data
           mountPath: /data
+        - name: {{ .Release.Name }}-example-db
+          mountPath: /home/scenescape/SceneScape/example_db
         securityContext:
           runAsUser: 0
           runAsGroup: 0
@@ -72,6 +80,10 @@ spec:
         args:
         - >
           {{- tpl (include "web.startup-script" .) . | nindent 10 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
       - name: pgserver-media
         persistentVolumeClaim:
@@ -98,3 +110,6 @@ spec:
       - name: {{ .Release.Name }}-ri-web-data
         persistentVolumeClaim:
           claimName: {{ .Release.Name }}-ri-pvc
+      - name: {{ .Release.Name }}-example-db
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-example-db
