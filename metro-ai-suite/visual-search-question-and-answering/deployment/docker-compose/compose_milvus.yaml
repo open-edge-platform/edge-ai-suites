@@ -3,7 +3,7 @@
 
 services:
   vlm-openvino-serving:
-    image: ${REGISTRY:-}vlm-openvino-serving:${TAG:-latest}
+    image: intel/vlm-openvino-serving:1.3.1
     container_name: vlm-openvino-serving
     ports:
       - "${VLM_SERVICE_PORT}:8000"
@@ -111,7 +111,7 @@ services:
       - "milvus-minio"
 
   multimodal-embedding-serving:
-    image: ${REGISTRY:-}multimodal-embedding-serving:${TAG:-latest}
+    image: intel/multimodal-embedding-serving:1.3.1
     container_name: multimodal-embedding-serving
     ports:
       - "${EMBEDDING_SERVER_PORT}:8000"
@@ -150,7 +150,7 @@ services:
       - ov-models:/app/ov_models
 
   dataprep-visualdata-milvus:
-    image: ${REGISTRY:-}dataprep-visualdata-milvus:${TAG:-latest}
+    image: intel/dataprep-visualdata-milvus:2025.2-rc2
     container_name: dataprep-visualdata-milvus
     ports:
       - "${DATAPREP_SERVICE_PORT}:9990"
@@ -189,7 +189,7 @@ services:
       - ${HOST_DATA_PATH}:/home/user/data:rw
 
   retriever-milvus:
-    image: ${REGISTRY:-}retriever-milvus:${TAG:-latest}
+    image: intel/retriever-milvus:2025.2-rc2
     container_name: retriever-milvus
     ports:
       - "${RETRIEVER_SERVICE_PORT}:7770"
@@ -224,7 +224,7 @@ services:
       - dataprep-visualdata-milvus
 
   visual-search-qa-app:
-    image: ${REGISTRY:-}visual-search-qa-app:${TAG:-latest}
+    image: intel/visual-search-qa-app:2025.2-rc2
     container_name: visual-search-qa-app
     ports:
       - "${VISUAL_SEARCH_QA_UI_PORT}:17580"

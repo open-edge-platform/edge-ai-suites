@@ -3,7 +3,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-version: '3.6'
 services:
   ia-telegraf:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -115,21 +114,23 @@ services:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
-    - ./configs/time-series-analytics-microservice/udfs/:/tmp/weld_anomaly_detector/udfs/
-    - ./configs/time-series-analytics-microservice/tick_scripts/:/tmp/weld_anomaly_detector/tick_scripts/
-    - ./configs/time-series-analytics-microservice/config.json:/app/config.json
-    - ./configs/time-series-analytics-microservice/models/:/tmp/weld_anomaly_detector/models/
-    - /dev/dri:/dev/dri
+    - ./configs/time-series-analytics-microservice/udfs/:/tmp/weld_anomaly_detector/udfs/:ro
+    - ./configs/time-series-analytics-microservice/tick_scripts/:/tmp/weld_anomaly_detector/tick_scripts/:ro
+    - ./configs/time-series-analytics-microservice/config.json:/app/config.json:ro
+    - ./configs/time-series-analytics-microservice/models/:/tmp/weld_anomaly_detector/models/:ro
+    - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:
     # render group ID for ubuntu 20.04 host OS
     - "109"
     # render group ID for ubuntu 22.04 host OS
     - "110"
+    # render group ID for ubuntu 24.04 host OS
+    - "992"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
-    - "/dev/dri:/dev/dri"
+    - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   ia-grafana:
     image: grafana/grafana-oss:12.0.0-ubuntu
@@ -235,13 +236,14 @@ services:
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
-    # entrypoint: ["sleep", "infinity"]
+    security_opt:
+    - no-new-privileges
     command: >
      /bin/sh -c "/usr/local/bin/nginx-cert-gen.sh && exec nginx -g 'daemon off;'"
     environment:
       no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP}"
       NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP}"
-      HOST_IP: ${HOST_IP}
+      MEDIAMTX_SERVER: mediamtx
       WHIP_SERVER_PORT: ${WHIP_SERVER_PORT}
     ports:
       - "${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API
@@ -270,7 +272,10 @@ services:
         TIMESERIES_UID: ${TIMESERIES_UID}
     container_name: ia-fusion-analytics
     image: ${DOCKER_REGISTRY}${FUSION_MODULE_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
+    read_only: true
     restart: unless-stopped
+    security_opt:
+    - no-new-privileges
     environment:
       # MQTT Configuration
       MQTT_BROKER: ia-mqtt-broker
@@ -297,17 +302,15 @@ services:
     networks:
       - timeseries_network
   dlstreamer-pipeline-server:
-    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
+    image: ${DOCKER_REGISTRY}${DLSTREAMER_PIPELINE_SERVER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
     container_name: dlstreamer-pipeline-server
     hostname: dlstreamer-pipeline-server
+    read_only: true
     networks:
     - timeseries_network
     restart: unless-stopped
     security_opt:
     - no-new-privileges
-    ports:
-    - '8080:8080'
-    - '8554:8554'
     depends_on:
       - ia-weld-data-simulator
     environment:
@@ -381,11 +384,10 @@ services:
     image: bluenviron/mediamtx:1.11.3
     container_name: mediamtx
     restart: unless-stopped
-    ports:
-      - ${WHIP_SERVER_PORT}:8889   # WebRTC
-      - 9554:8554   # RTSP
-      # - "8888:8888"   # HTTP API / Web UI
-      # - "8890:8890"   # RTMP
+    read_only: true
+    security_opt:
+    - no-new-privileges
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     environment:
       - MTX_LOGLEVEL=info
       - MTX_RTSP=yes
@@ -409,6 +411,9 @@ services:
   coturn:
     image: coturn/coturn:4.7.0
     container_name: coturn
+    read_only: true
+    security_opt:
+    - no-new-privileges
     ports:
       - "${COTURN_UDP_PORT}:3478"
       - "${COTURN_UDP_PORT}:3478/udp"

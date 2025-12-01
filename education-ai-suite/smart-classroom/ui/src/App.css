@@ -29,6 +29,8 @@ html, body {
   overflow-y: auto;  
   overflow-x: hidden; 
   padding: 0;
+  position: relative;
+  z-index: var(--z-index-main-content);
 }
 /* App loading state - when checking backend health */
 .app-loading {
@@ -41,7 +43,9 @@ html, body {
   font-family: Arial, sans-serif;
   text-align: center;
 }
-
+.container.fullscreen .main-content {
+  z-index: 1000; /* Ensure it stays below the full-screen video stream */
+}
 /* App error state - when backend is unavailable */
 .app-error {
   display: flex;
@@ -185,6 +189,25 @@ html, body {
 .main-content > * {
   max-width: 100%;
   flex-shrink: 1; 
+}
+.arrow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 100;
+  color: #0071c5;
+  background: #fff;
+  border-radius: 50%;
+  border: 1px solid #e6e7e8;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: left 0.3s ease;
 }
 
 @media (max-width: 900px) {

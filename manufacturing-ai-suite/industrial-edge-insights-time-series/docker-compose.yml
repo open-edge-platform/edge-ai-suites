@@ -118,11 +118,11 @@ services:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/udfs/:/tmp/${SAMPLE_APP}/udfs/
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/tick_scripts/:/tmp/${SAMPLE_APP}/tick_scripts/
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/config.json:/app/config.json
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/models/:/tmp/${SAMPLE_APP}/models/
-    - /dev/dri:/dev/dri
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/udfs/:/tmp/${SAMPLE_APP}/udfs/:ro
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/tick_scripts/:/tmp/${SAMPLE_APP}/tick_scripts/:ro
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/config.json:/app/config.json:ro
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/models/:/tmp/${SAMPLE_APP}/models/:ro
+    - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:
     # render group ID for ubuntu 20.04 host OS
@@ -134,7 +134,7 @@ services:
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
-    - "/dev/dri:/dev/dri"
+    - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri
 
   ia-grafana:
     image: grafana/grafana-oss:12.0.0-ubuntu

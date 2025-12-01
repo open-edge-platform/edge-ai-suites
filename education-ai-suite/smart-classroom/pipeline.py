@@ -5,8 +5,10 @@ from utils.config_loader import config
 import logging, os
 from utils.session_manager import generate_session_id
 from components.summarizer_component import SummarizerComponent
+from components.mindmap_component import MindmapComponent
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.markdown_cleaner import markdown_to_plain
 from monitoring import monitor
 import time
 logger = logging.getLogger(__name__)
@@ -25,11 +27,19 @@ class Pipeline:
             SummarizerComponent(self.session_id, provider=config.models.summarizer.provider, model_name=config.models.summarizer.name, temperature=config.models.summarizer.temperature, device=config.models.summarizer.device)
         ]
 
-    def run_transcription(self, audio_path: str):
-        project_config = RuntimeConfig.get_section("Project")
-        monitor.start_monitoring(os.path.join(project_config.get("location"), project_config.get("name"), self.session_id, "utilization_logs"))
+        self.mindmap_component = MindmapComponent(
+                self.session_id,
+                provider=config.models.summarizer.provider,
+                model_name=config.models.summarizer.name, 
+                device=config.models.summarizer.device,
+                temperature=config.models.summarizer.temperature,
+            )
+        
+        self.mindmap_component.model = self.summarizer_pipeline[0].summarizer
 
-        input_gen = ({"audio_path": audio_path} for _ in range(1))
+    def run_transcription(self, input):
+        project_config = RuntimeConfig.get_section("Project")
+        input_gen = ({"input": input} for _ in range(1))
 
         for component in self.transcription_pipeline:
             input_gen = component.process(input_gen)
@@ -38,15 +48,13 @@ class Pipeline:
             for chunk_trancription in input_gen:
                 yield chunk_trancription
         finally:
-            monitor.stop_monitoring()
-            time.sleep(3) #time for socwatch to get clean-start
+            pass
             
     
     def run_summarizer(self):
 
         project_config = RuntimeConfig.get_section("Project")
         transcription_path = os.path.join(project_config.get("location"), project_config.get("name"), self.session_id, "transcription.txt")
-        monitor.start_monitoring(os.path.join(project_config.get("location"), project_config.get("name"), self.session_id, "utilization_logs"))
 
         try:
             input = StorageManager.read_text_file(transcription_path)
@@ -66,6 +74,67 @@ class Pipeline:
         try:
             for token in input:
                 yield token
+        finally: 
+            pass 
+
+    def run_mindmap(self):
+        project_config = RuntimeConfig.get_section("Project")
+        session_dir = os.path.join(
+            project_config.get("location"),
+            project_config.get("name"),
+            self.session_id
+        )
+        summary_path = os.path.join(session_dir, "summary.md")
+        min_tokens = config.mindmap.min_token
+
+        try:
+            summary_md = StorageManager.read_text_file(summary_path)
+
+            if not summary_md:
+                logger.error("Summary is empty. Cannot generate mindmap.")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Summary is empty. Cannot generate mindmap."
+                )
+
+        except FileNotFoundError:
+            logger.error(f"Invalid Session ID: {self.session_id}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid session id: {self.session_id}, summary not found."
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error while accessing summary: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred while accessing the summary."
+            )
+        summary_plain = markdown_to_plain(summary_md)
+
+        token_count = len(summary_plain.split())
+        logger.info(f"Summary token count: {token_count}, Minimum required: {min_tokens}")
+
+        if token_count < min_tokens:
+            logger.warning("Insufficient information to generate mindmap.")
+            insufficient_mindmap = (
+                "mindmap\n"
+                "  root((Insufficient Input))\n"
+                "    The summary is too short to generate a meaningful mindmap."
+            )
+            mindmap_path = os.path.join(session_dir, "mindmap.mmd")
+            StorageManager.save(mindmap_path, insufficient_mindmap, append=False)
+            return insufficient_mindmap
+
+        try:
+            full_mindmap = self.mindmap_component.generate_mindmap(summary_plain)
+            logger.info("Mindmap generation successful.")
+            return full_mindmap
+
+        except Exception as e:
+            logger.error(f"Error during mindmap generation: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error during mindmap generation: {e}"
+            )
         finally:
-            monitor.stop_monitoring()            
-            
+            pass

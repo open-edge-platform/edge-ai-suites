@@ -1,13 +1,17 @@
 namespace:
 replicaCount: 1
-http_proxy: 
-https_proxy: 
-no_proxy: 
+http_proxy:
+https_proxy:
+no_proxy:
+supass:
+pgpass:
+
+kubernetesAPIEndpoint: https://kubernetes.default.svc.cluster.local
 
 # Global configuration
 global:
   # External IP address for certificate generation
-  externalIP: 
+  externalIP:
 
 # Global image pull policy for all containers
 imagePullPolicy: IfNotPresent
@@ -99,16 +103,16 @@ grafana:
     size: 1Gi
 
 scene:
-  repository: docker.io/intel/scenescape-controller
-  tag: v1.4.0
+  repository: intel/scenescape-controller
+  tag: v2025.2-rc3
 
   service:
     type: ClusterIP
     port: 80
 
 pgserver:
-  repository: docker.io/intel/scenescape-manager
-  tag: v1.4.0
+  repository: postgres
+  tag: 17.6
 
   storageClassName: "hostpath"
   storage:
@@ -119,8 +123,8 @@ pgserver:
 web:
   replicas: 1
   image:
-    repository: docker.io/intel/scenescape-manager
-    tag: v1.4.0
+    repository: intel/scenescape-manager
+    tag: v2025.2-rc3
   dbhost: pgserver
   broker: broker.scenescape.intel.com
   service:
@@ -128,7 +132,7 @@ web:
 
 dlstreamerPipelineServer:
   repository: docker.io/intel/dlstreamer-pipeline-server
-  tag: 2025.2-ubuntu24-rc1
+  tag: 2025.2-ubuntu24-rc2
   # Overrides the storage class name
   storageClassName: "standard"
   gpuWorkload: false

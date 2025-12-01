@@ -75,7 +75,7 @@ So the effective expiration time is **1 hour RP + 1 hour shard duration
 
 ---
 
-## 3. Time Series Analytics Microservice (Docker/Helm) -- Takes Time to Start or Shows Python Packages Installing
+## 3. Time Series Analytics Microservice (Docker) -- Takes Time to Start or Shows Python Packages Installing
 
 ### Issue
 

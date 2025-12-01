@@ -10,17 +10,41 @@
       "copyright": "© 2025 Smart Classroom Sample App"
     },
     "notifications": {
-      "start": "Upload an audio file to begin a new session",
+      "start": "Upload the files or Start recording to begin a new session",
       "stop": "Stop recording to get AI summary",
       "recording": "Recording…",
       "uploading": "Uploading transcript…",
       "generatingSummary": "Generating summary…",
+      "generatingMindmap": "Generating MindMap",
       "streamingSummary": "Streaming summary…",
       "loadingTranscript": "Loading transcript…",
       "analyzingAudio": "Analyzing audio…",
       "summaryReady": "Summary ready",
+      "mindmapReady": "MindMap Ready",
       "uploadSuccess": "File uploaded successfully!",
-      "uploadFailed": "Failed to upload file."
+      "uploadFailed": "Failed to upload file.",
+      "mindmapError": "MindMap generation failed due to invalid format.",
+      "analyzingVideo": "Streaming video…",
+      "noAudioDevices": "No audio devices",
+      "stoppingVideoAnalytics": "Stopping video analytics",
+      "startingVideoAnalytics": "Starting video analytics",
+      "checkingAudioDevices": "Checking audio devices...",
+      "audioReady": "Audio ready",
+      "audioProcessingComplete": "Audio processing complete",
+      "audioProcessingError": "Audio processing error",
+      "videoStreamingStopped": "Video streaming stopped",
+      "noVideoConfigured": "No video configured",
+      "videoReady": "Video ready",
+      "videoAnalyticsFailed": "Video analytics failed",
+      "videoProcessingComplete": "Video processing complete",
+      "audio": "Audio",
+      "video": "Video"
+    },
+    "tooltips": {
+      "checkingAudioDevices": "Checking audio devices...",
+      "startRecording": "Start recording",
+      "stopRecording": "Stop recording",
+      "recordingDisabled": "Recording disabled - another operation in progress"
     },
     "settings": {
       "title": "Settings",
@@ -30,8 +54,29 @@
       "ok": "OK",
       "projectNamePlaceholder": "Enter project name",
       "projectLocationPlaceholder": "Select project folder",
-      "ipMicrophone": "IP Microphone"
+      "ipMicrophone": "IP Microphone",
+      "frontCamera": "Front Camera",
+      "backCamera": "Back Camera",
+      "boardCamera": "Board Camera",
+      "defaultFrontCamera": "Default Front Camera",
+      "defaultBackCamera": "Default Back Camera",
+      "defaultBoardCamera": "Default Board Camera",
+      "frontCamera1": "Front Camera 1",
+      "frontCamera2": "Front Camera 2",
+      "backCamera1": "Back Camera 1",
+      "backCamera2": "Back Camera 2",
+      "boardCamera1": "Board Camera 1",
+      "boardCamera2": "Board Camera 2",
+      "frontCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/front",
+      "backCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/back",
+      "boardCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/content"
     },
+    "uploadFiles": {
+    "title": "Upload Files",
+    "audioPath": "Audio Path",
+    "videoPath": "Video Path",                             
+    "applyAndStart": "Apply and Start Processing"
+  },
     "menu": {
       "settings": "Settings",
       "help": "Help",
@@ -39,7 +84,8 @@
     },
     "tabs": {
       "transcripts": "Transcripts",
-      "summary": "AI Summary"
+      "summary": "AI Summary",
+      "mindmap":"Mind Map"
     },
   
   "accordion": {
@@ -83,9 +129,37 @@
       "model2": "Model 2",
       "gpt-4": "Qwen/Qwen2.5-7B-Instruct",
       "model3": "Model 3",
-      "model4": "Model 4"
+      "model4": "Model 4",
+      "classStatistics": "Class Statistics",
+      "roomView": "Room View",
+      "frontCamera": "Front",
+      "backCamera": "Back",
+      "boardCamera": "Board",
+      "allCameras": "All"
     },
     "errors": {
-      "projectNameRequired": "Project name is required"
-    }
+      "projectNameRequired": "Project name is required",
+      "failedToStartRecording": "Failed to start recording",
+      "failedToStopRecording": "Failed to stop recording",
+      "failedToCopyPath": "Failed to copy path",
+      "anErrorOccurred": "An error occurred"
+    },
+    "videoStream": {
+    "configureCameras": "Configure cameras in settings to enable video analytics",
+    "uploadFilesToStart": "Or upload audio/video files to get started",
+    "uploadFileButton": "Upload File",
+    "noStreamsAvailable": "Video analytics attempted but no streams available",
+    "checkCameraConfigurations": "Check camera configurations or backend video service",
+    "audioRecordingContinues": "Audio recording continues normally",
+    "streamingIconAlt": "Streaming Icon"
+  },
+  "classStatistics": {
+    "studentCount": "Student Count",
+    "standCount": "Stand Count",
+    "raiseUpCount": "Raise Up Count",
+    "standReIdData": "Stand Re-ID Data",
+    "studentId": "Student ID",
+    "count": "Count"
   }
+}
+ 

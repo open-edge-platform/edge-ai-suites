@@ -132,7 +132,7 @@ services:
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
       NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
-      GF_SERVER_ROOT_URL: http://localhost/grafana/
+      GF_SERVER_ROOT_URL: https://localhost/grafana/
       GF_SERVER_SERVE_FROM_SUB_PATH: true
       GF_PANELS_DISABLE_SANITIZE_HTML: true
       GF_SECURITY_ALLOW_EMBEDDING: true
@@ -167,9 +167,9 @@ services:
     devices:
       - "/dev/dri:/dev/dri"
     device_cgroup_rules:
-      - 'c 189:* rmw'
-      - 'c 209:* rmw'
-      - 'a 189:* rwm'
+      - "c 189:* rmw"
+      - "c 209:* rmw"
+      - "a 189:* rwm"
     group_add:
       - "109"
       - "110"
@@ -208,67 +208,45 @@ services:
     restart: on-failure:5
 
   pgserver:
-    image: docker.io/intel/scenescape-manager:v1.4.0
-    init: true
+    image: postgres:17.6
+    env_file:
+      - ./${SAMPLE_APP}/src/secrets/pgserver/pgserver.env
     networks:
       - scenescape
     environment:
-      - "DBROOT=/workspace"
-      - "EXAMPLEDB=smart-intersection-ri.tar.bz2"
-      - http_proxy=${http_proxy}
-      - https_proxy=${https_proxy}
-      - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
-      - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
-      - HTTP_PROXY=${http_proxy}
-      - HTTPS_PROXY=${https_proxy}
-    entrypoint: [
-        "/bin/bash",
-        "-e",
-        "-c",
-        "cp /tmp/user_access_config.json /home/scenescape/SceneScape/user_access_config.json && \
-        cp /tmp/smart-intersection-ri.tar.bz2 /home/scenescape/SceneScape/smart-intersection-ri.tar.bz2 && \
-        chown -R scenescape:scenescape /workspace && \
-        SUPASS=$(cat /run/secrets/supass) /usr/local/bin/scenescape-init database --preloadexample",
-      ]
-    cap_add:
-      - SYS_ADMIN
-    devices:
-      - /dev/fuse
-    security_opt:
-      - apparmor:unconfined
+      POSTGRES_USER: scenescape
+      POSTGRES_DB: scenescape
     volumes:
-      - pgserver-db:/workspace/db
-      - pgserver-migrations:/workspace/migrations
-      - pgserver-media:/workspace/media
-      - ./${SAMPLE_APP}/src/webserver/user_access_config.json:/tmp/user_access_config.json
-      - ./${SAMPLE_APP}/src/webserver/smart-intersection-ri.tar.bz2:/tmp/smart-intersection-ri.tar.bz2
-    secrets:
-      - django
-      - browser.auth
-      - controller.auth
-      - supass
-    restart: on-failure:5
+      - pgserver-db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
   web:
-    image: docker.io/intel/scenescape-manager:v1.4.0
+    image: intel/scenescape-manager:v2025.2-rc3
     init: true
     networks:
       scenescape:
         aliases:
           - web.scenescape.intel.com
     depends_on:
-      - pgserver
+      pgserver:
+        condition: service_started
+      broker:
+        condition: service_started
     environment:
-      - "DBROOT=/workspace"
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
       - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
+      - SUPASS=${SUPASS}
+      - EXAMPLEDB=/home/scenescape/SceneScape/smart-intersection-ri.tar.bz2
     command: >
       webserver
       --dbhost pgserver
+      --dbtype postgres
+      --dbport 5432
       --broker broker.scenescape.intel.com
       --brokerauth /run/secrets/browser.auth
       --brokerrootcert /run/secrets/certs/scenescape-ca.pem
@@ -286,6 +264,9 @@ services:
       - apparmor:unconfined
     volumes:
       - pgserver-media:/workspace/media
+      - pgserver-migrations:/workspace/migrations
+      - ./${SAMPLE_APP}/src/webserver/user_access_config.json:/home/scenescape/SceneScape/user_access_config.json
+      - ./${SAMPLE_APP}/src/webserver/smart-intersection-ri.tar.bz2:/home/scenescape/SceneScape/smart-intersection-ri.tar.bz2
     secrets:
       - source: root-cert
         target: certs/scenescape-ca.pem
@@ -299,7 +280,7 @@ services:
     restart: on-failure:5
 
   scene:
-    image: docker.io/intel/scenescape-controller:v1.4.0
+    image: intel/scenescape-controller:v2025.2-rc3
     init: true
     environment:
       - http_proxy=${http_proxy}
@@ -308,8 +289,17 @@ services:
       - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
+      - CONTROLLER_ENABLE_METRICS
+      - CONTROLLER_METRICS_ENDPOINT
+      - CONTROLLER_METRICS_EXPORT_INTERVAL_S
+      - CONTROLLER_ENABLE_TRACING
+      - CONTROLLER_TRACING_ENDPOINT
+      - CONTROLLER_TRACING_SAMPLE_RATIO
     networks:
       scenescape:
+    configs:
+      - source: tracker-config
+        target: /home/scenescape/SceneScape/tracker-config.json
     depends_on:
       web:
         condition: service_healthy
@@ -317,10 +307,13 @@ services:
         condition: service_started
       ntpserver:
         condition: service_started
-    command: controller --broker broker.scenescape.intel.com --ntp ntpserv
+    command: >
+      --restauth /run/secrets/controller.auth
+      --brokerauth /run/secrets/controller.auth
+      --broker broker.scenescape.intel.com
+      --ntp ntpserv
     volumes:
       - pgserver-media:/home/scenescape/SceneScape/media
-      - ./${SAMPLE_APP}/src/controller/tracker-config.json:/home/scenescape/SceneScape/tracker-config.json
     secrets:
       - source: root-cert
         target: certs/scenescape-ca.pem
@@ -378,8 +371,14 @@ secrets:
     file: ./${SAMPLE_APP}/src/secrets/browser.auth
   controller.auth:
     file: ./${SAMPLE_APP}/src/secrets/controller.auth
-  supass:
-    file: ./${SAMPLE_APP}/src/secrets/supass
+
+configs:
+  mosquitto-secure:
+    file: ./${SAMPLE_APP}/src/mosquitto/mosquitto-secure.conf
+  tracker-config:
+    # Use this configuration file to run tracking with time-chunking enabled
+    # file: ./controller/config/tracker-config-time-chunking.json
+    file: ./${SAMPLE_APP}/src/controller/tracker-config.json
 
 volumes:
   dlstreamer-pipeline-server-pipeline-root:
@@ -398,3 +397,4 @@ volumes:
   pgserver-db:
   pgserver-migrations:
   pgserver-media:
+  sample-data:

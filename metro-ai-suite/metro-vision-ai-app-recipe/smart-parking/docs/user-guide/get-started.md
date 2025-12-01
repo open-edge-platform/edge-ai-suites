@@ -39,20 +39,7 @@ By following this guide, you will learn how to:
      ```bash
      ./install.sh smart-parking
      ```
-
-    <details>
-    <summary>
-    Specify Custom Host IP Address (Advanced Configuration)
-    </summary>
-
-    For environments requiring a specific host IP address (such as when using Edge Manageability Toolkit or deploying across different network interfaces), you can explicitly specify the IP address:
-
-    ```bash
-    ./install.sh smart-parking <HOST_IP>
-    ```
-    Replace `<HOST_IP>` with your target IP address.
-
-    </details>
+     Note: For environments requiring a specific host IP address (such as when using Edge Manageability Toolkit or deploying across different network interfaces), you can explicitly specify the IP address (Replace `<HOST_IP>` with your target IP address.): `./install.sh smart-parking <HOST_IP>`
 
 ## Run the Application
 
@@ -88,18 +75,17 @@ By following this guide, you will learn how to:
      ```bash
      ./sample_start.sh
      ```
-
+   - To check the status of the pipelines:
+      ```bash
+      ./sample_status.sh
+      ```
      <details>
      <summary>
-     Check Status and Stop pipelines
+     Stop pipelines
      </summary>
 
-     - To check the status:
-       ```bash
-       ./sample_status.sh
-       ```
-
      - To stop the pipelines without waiting for video streams to finish replay:
+     > NOTE: This will stop all the pipelines and the streams. DO NOT run this if you want to see smart parking detection
        ```bash
        ./sample_stop.sh
        ```

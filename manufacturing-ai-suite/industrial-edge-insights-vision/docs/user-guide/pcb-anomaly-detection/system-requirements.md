@@ -24,7 +24,7 @@ This page provides detailed hardware, software, and platform requirements to hel
 **Required Software**:
 - Docker 27.3.1 or higher
 - Python 3.10+
-
+- Git, jq, unzip
 
 ## Validation
 - Ensure all required software are installed and configured before proceeding to [Get Started](./get-started.md).

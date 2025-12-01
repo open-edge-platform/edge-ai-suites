@@ -3,7 +3,9 @@
 This section shows how to deploy the Video Search and Summary Sample Application using Helm chart.
 
 ## Prerequisites
+
 Before you begin, ensure that you have the following:
+
 - Kubernetes\* cluster set up and running.
 - The cluster must support **dynamic provisioning of Persistent Volumes (PV)**. Refer to the [Kubernetes Dynamic Provisioning Guide](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) for more details.
 - Install `kubectl` on your system. See the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster.
@@ -12,20 +14,23 @@ Before you begin, ensure that you have the following:
 
 Before setting up Smart NVR, ensure these services are running on their respective devices:
 
-## 1. VSS (Video Search and Summarization) Services
+### 1. VSS (Video Search and Summarization) Services
+
 Deploy these on separate devices:
+
 - **VSS Search**: Handles video search functionality
 - **VSS Summary**: Provides video summarization capabilities
 
 📖 [VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
 
-## 2. VLM Microservice (Optional)
+### 2. VLM Microservice (Optional)
+
 Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
+
 - Runs the VLM model defined in the frigate [config file](../../resources/frigate-config/config.yml)
 - Use `VLM_MAX_COMPLETION_TOKENS` to limit response length during deployment
 
 📖 [VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
-
 
 ## Helm Chart Installation
 
@@ -40,8 +45,9 @@ There are 2 options to get the charts in your workspace:
 ##### Step 1: Pull the Specific Chart
 
 Use the following command to pull the Helm chart from Docker Hub:
+
 ```bash
-helm pull oci://registry-1.docker.io/intel/smart-nvr --version 1.2.1
+helm pull oci://registry-1.docker.io/intel/smart-nvr --version 1.2.3
 ```
 
 Refer to the release notes for details on the latest version number to use for the sample application.
@@ -49,8 +55,9 @@ Refer to the release notes for details on the latest version number to use for t
 ##### Step 2: Extract the `.tgz` File
 
 After pulling the chart, extract the `.tgz` file:
+
 ```bash
-tar -xvf smart-nvr-1.2.1.tgz
+tar -xvf smart-nvr-1.2.3.tgz
 ```
 
 This will create a directory named `smart-nvr` containing the chart files. Navigate to the extracted directory to access the charts.
@@ -64,6 +71,7 @@ cd smart-nvr
 ##### Step 1: Clone the Repository
 
 Clone the repository containing the Helm chart:
+
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
 ```
@@ -75,7 +83,6 @@ Navigate to the chart directory:
 ```bash
 cd edge-ai-suites/metro-ai-suite/smart-nvr
 ```
-
 
 ### 2. Configure Required Values
 
@@ -97,8 +104,8 @@ Update or edit the values in YAML file as follows:
 | `frigate.env.FRIGATE_MQTT_PASSWORD` | Password for mqtt | `<your-mqtt-password>` |
 | `frigate.env.OPENAI_BASE_URL` | Needed when NVR_GENAI flag is set to true | `<your-open-ai-base-url>` |
 | `frigate.env.OPENAI_API_KEY` | Needed when NVR_GENAI flag is set to true | `<your-open-ai-api-key>` |
-| `nvr-event-router.env.VSS_SEARCH_IP` | VSS Search IP | `<your-vss-search-ip>` |
-| `nvr-event-router.env.VSS_SEARCH_PORT` | VSS Search port | `<your-vss-search-port>` |
+| `nvr-event-router.env.VSS_SEARCH_IP` | VSS Search IP | `http://<your-vss-search-ip>` |
+| `nvr-event-router.env.VSS_SEARCH_PORT` | VSS Search port | `http://<your-vss-search-port>` |
 | `nvr-event-router.env.VSS_SUMMARY_IP` | VSS summary IP | `<your-vss-summary-ip>` |
 | `nvr-event-router.env.VSS_SUMMARY_PORT` | VSS summary port | `<your-vss-summary-port>` |
 | `nvr-event-router-ui.NVR_GENAI` | Flag to enable GENAI on Frigate NVR  | `true/false` |
@@ -129,9 +136,7 @@ We will install the helm chart in a new namespace. Create a shell variable to re
 
 > **_NOTE :_** All subsequent steps assume that you have `my_namespace` variable set and accessible on your shell with the desired namespace as its value.
 
-
 ### 5. Deploy the Helm Chart
-
 
 Deploy the Smart NVR Application:
 
@@ -139,7 +144,7 @@ Deploy the Smart NVR Application:
 helm install smart-nvr . -f user_value_override.yaml -n $my_namespace
 ```
 
-### Step 6: Verify the Deployment
+### 6: Verify the Deployment
 
 Check the status of the deployed resources to ensure everything is running correctly:
 
@@ -222,5 +227,7 @@ helm uninstall smart-nvr -n $my_namespace
     ```bash
     kubectl delete pvc <pvc-name> -n $my_namespace
     ```
+
 ## Related links
+
 - [How to Build from Source](./how-to-build-from-source.md)

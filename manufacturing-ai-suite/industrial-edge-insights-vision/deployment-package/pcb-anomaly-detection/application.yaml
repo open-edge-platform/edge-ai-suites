@@ -11,7 +11,7 @@ description: "PCB Anomaly Detection Sample Application"
 
 helmRegistry: "docker-hub"
 chartName: "intel/pcb-anomaly-detection"
-chartVersion: "1.1.0-rc1"
+chartVersion: "1.1.0-rc2"
 
 profiles:
   - name: "default"

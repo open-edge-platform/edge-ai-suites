@@ -12,6 +12,13 @@
   font-family: var(--font-text);
   color: var(--color-dark);
   background-color: #f5f7fa;
+ 
+  --z-index-main-content: 1;
+  --z-index-header: 50;
+  --z-index-toast: 1100;
+  --z-index-video-stream: 1000;
+  --z-index-modal: 9999;
+  
 }
 
 body {
