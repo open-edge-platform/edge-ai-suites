@@ -112,7 +112,7 @@ To prepare the development system follow the instructions to
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 # When using different machines, set the same ROS_DOMAIN_ID as on the robot
@@ -123,7 +123,7 @@ rviz2
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 # When using different machines, set the same ROS_DOMAIN_ID as on the robot

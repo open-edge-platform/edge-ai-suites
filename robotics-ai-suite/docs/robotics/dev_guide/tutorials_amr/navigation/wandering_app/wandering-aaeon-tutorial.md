@@ -16,7 +16,7 @@ Intel® Autonomous Mobile Robot APT repository.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt update
@@ -25,7 +25,7 @@ sudo apt install ros-jazzy-wandering-aaeon-tutorial
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt update
@@ -42,7 +42,7 @@ Application tutorial on the Aaeon robot.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -51,7 +51,7 @@ ros2 launch wandering_aaeon_tutorial wandering_aaeon.launch.py
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash

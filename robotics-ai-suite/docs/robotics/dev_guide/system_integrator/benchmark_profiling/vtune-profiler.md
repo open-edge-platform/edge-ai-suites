@@ -84,7 +84,7 @@ to install VTune™ Profiler by choosing one of the following two options:
 The example application from Autonomous Mobile Robot considered for the
 CPU and GPU profiling is the "Collaborative visual slam with
 fastmapping enabled" application from the
-[Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.rst)
+[Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.md)
 tutorial. The two CPU analyses types considered in this
 example are `CPU Hotspots` analysis and
 `CPU Microarchitecture Exploration` analysis. Furthermore, the GPU
@@ -109,14 +109,14 @@ The CPU Hotspots Analysis is carried out with the following parameters:
 
 1. Install the "Collaborative visual slam with fastmapping enabled"
    application from the
-   [Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.rst)
+   [Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.md)
    tutorial.
 
 2. Run the below command to source the ROS 2 setup files.
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    source /opt/ros/jazzy/setup.bash
@@ -124,7 +124,7 @@ The CPU Hotspots Analysis is carried out with the following parameters:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    source /opt/ros/humble/setup.bash
@@ -148,12 +148,12 @@ The CPU Hotspots Analysis is carried out with the following parameters:
 5. Run the below command on the terminal to start the CPU Hotspots
    Analysis of the "Collaborative visual slam with fastmapping
    enabled" application from the
-   [Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.rst)
+   [Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.md)
    tutorial.
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    vtune -collect hotspots -knob sampling-mode=hw -knob sampling-interval=5 -knob enable-stack-collection=true -knob stack-size=2048 -duration=30 -result-dir ./vtune_results_hotspots /opt/ros/jazzy/share/collab-slam/tutorial-fastmapping/cslam-fastmapping.sh
@@ -161,7 +161,7 @@ The CPU Hotspots Analysis is carried out with the following parameters:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    vtune -collect hotspots -knob sampling-mode=hw -knob sampling-interval=5 -knob enable-stack-collection=true -knob stack-size=2048 -duration=30 -result-dir ./vtune_results_hotspots /opt/ros/humble/share/collab-slam/tutorial-fastmapping/cslam-fastmapping.sh
@@ -192,7 +192,7 @@ browse to the directory `vtune_results_hotspots`, select the
 `vtune_results_hotspots.vtune` file and click on `open`. This will open
 the CPU Hotspots Analysis results for the "Collaborative visual slam
 with fastmapping enabled" application from the
-[Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.rst)
+[Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.md)
 tutorial which ran for 30 seconds.
 
 From the summary page, some of the CPU Hotspots Analysis details that
@@ -206,7 +206,7 @@ The below picture showcases the most active functions in the
 application, the total CPU time it has run and the % of CPU time it has
 utilized. For example, here, it can be observed that from the
 "Collaborative visual slam with fastmapping enabled" application from
-the [Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.rst)
+the [Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.md)
 tutorial, the function
 `fast_mapping::fast_mapping_module::octree_integrate` is the second most
 active function consuming 7.8% of CPU time. Also the top running task is
@@ -257,14 +257,14 @@ parameters:
 
 1. Install the "Collaborative visual slam with fastmapping enabled"
    application from the
-   [Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.rst)
+   [Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.md)
    tutorial.
 
 2. Run the below command to source the ROS 2 setup files.
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    source /opt/ros/jazzy/setup.bash
@@ -272,7 +272,7 @@ parameters:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    source /opt/ros/humble/setup.bash
@@ -296,12 +296,12 @@ parameters:
 5. Run the below command on the terminal to start the CPU
    Microarchitecture Exploration of the "Collaborative visual slam
    with fastmapping enabled" application from the
-   [Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.rst)
+   [Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.md)
    tutorial.
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    vtune -collect uarch-exploration -knob sampling-interval=5 -duration=30 -result-dir=./vtune_results_uarch /opt/ros/jazzy/share/collab-slam/tutorial-fastmapping/cslam-fastmapping.sh
@@ -309,7 +309,7 @@ parameters:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    vtune -collect uarch-exploration -knob sampling-interval=5 -duration=30 -result-dir=./vtune_results_uarch /opt/ros/humble/share/collab-slam/tutorial-fastmapping/cslam-fastmapping.sh
@@ -340,7 +340,7 @@ browse to the directory `vtune_results_uarch`, select the
 `vtune_results_uarch.vtune` file and click on `open`. This will open the
 CPU Microarchitecture Exploration results for the "Collaborative visual
 slam with fastmapping enabled" application from the
-[Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.rst)
+[Collaborative Visual SLAM](../../tutorials_amr/navigation/collaborative-slam.md)
 tutorial which ran for 30 seconds.
 
 From the summary page, some of the CPU Microarchitecture Exploration
