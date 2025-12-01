@@ -19,7 +19,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
    <!--hide_directive::::{tab-set}hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt update
@@ -28,7 +28,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
    <!--hide_directive:::hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt update
@@ -57,7 +57,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
      <!--hide_directive::::{tab-set}hide_directive-->
      <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-     <!--hide_directive:sync: tab1hide_directive-->
+     <!--hide_directive:sync: jazzyhide_directive-->
 
      ```bash
      vi /opt/ros/jazzy/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -65,7 +65,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
      <!--hide_directive:::hide_directive-->
      <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-     <!--hide_directive:sync: tab2hide_directive-->
+     <!--hide_directive:sync: humblehide_directive-->
 
      ```bash
      vi /opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -78,7 +78,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
      <!--hide_directive::::{tab-set}hide_directive-->
      <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-     <!--hide_directive:sync: tab1hide_directive-->
+     <!--hide_directive:sync: jazzyhide_directive-->
 
      ```bash
      AAEON_NODE_CONFIG_FILE=/opt/ros/jazzy/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -92,7 +92,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
      <!--hide_directive:::hide_directive-->
      <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-     <!--hide_directive:sync: tab2hide_directive-->
+     <!--hide_directive:sync: humblehide_directive-->
 
      ```bash
      AAEON_NODE_CONFIG_FILE=/opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml

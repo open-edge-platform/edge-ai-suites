@@ -184,7 +184,7 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
 
          <!--hide_directive::::{tab-set}hide_directive-->
          <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-         <!--hide_directive:sync: tab1hide_directive-->
+         <!--hide_directive:sync: jazzyhide_directive-->
 
          **ros-jazzy-aaeon-adbscan-tutorial**
             AAEON Robot ADBSCAN mapping with FastMapping algorithm using Intel® RealSense™ camera.
@@ -239,7 +239,7 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
 
          <!--hide_directive:::hide_directive-->
          <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-         <!--hide_directive:sync: tab2hide_directive-->
+         <!--hide_directive:sync: humblehide_directive-->
 
          **ros-humble-aaeon-adbscan-tutorial**
             AAEON Robot ADBSCAN mapping with FastMapping algorithm using Intel® RealSense™ camera.

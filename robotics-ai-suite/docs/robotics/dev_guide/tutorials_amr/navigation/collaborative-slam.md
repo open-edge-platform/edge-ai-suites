@@ -104,7 +104,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt-get install ros-jazzy-cslam-tutorial-two-robot
@@ -112,7 +112,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt-get install ros-humble-cslam-tutorial-two-robot
@@ -129,7 +129,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-two-robot/cslam-two-robot.sh
@@ -137,7 +137,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    /opt/ros/humble/share/collab-slam/tutorial-two-robot/cslam-two-robot.sh
@@ -171,7 +171,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt-get install ros-jazzy-cslam-tutorial-fastmapping
@@ -179,7 +179,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt-get install ros-humble-cslam-tutorial-fastmapping
@@ -195,7 +195,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-fastmapping/cslam-fastmapping.sh
@@ -203,7 +203,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    /opt/ros/humble/share/collab-slam/tutorial-fastmapping/cslam-fastmapping.sh
@@ -263,7 +263,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt-get install ros-jazzy-cslam-tutorial-multi-camera
@@ -271,7 +271,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt-get install ros-humble-cslam-tutorial-multi-camera
@@ -288,7 +288,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-multi-camera/cslam-multi-camera.sh
@@ -296,7 +296,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    /opt/ros/humble/share/collab-slam/tutorial-multi-camera/cslam-multi-camera.sh
@@ -323,7 +323,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    cd /tmp/
@@ -332,7 +332,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    cd /tmp/
@@ -362,7 +362,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt-get install ros-jazzy-cslam-tutorial-2d-lidar
@@ -370,7 +370,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt-get install ros-humble-cslam-tutorial-2d-lidar
@@ -386,7 +386,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-2d-lidar/cslam-2d-lidar.sh
@@ -394,7 +394,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    /opt/ros/humble/share/collab-slam/tutorial-2d-lidar/cslam-2d-lidar.sh
@@ -445,7 +445,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt-get install ros-jazzy-cslam-tutorial-region-remap
@@ -453,7 +453,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt-get install ros-humble-cslam-tutorial-region-remap
@@ -470,7 +470,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-region-remap/cslam-region-map.sh
@@ -478,7 +478,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    /opt/ros/humble/share/collab-slam/tutorial-region-remap/cslam-region-map.sh
@@ -512,7 +512,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-region-remap/cslam-region-remap.sh
@@ -520,7 +520,7 @@ Use the instructions above to switch between version to experiment with differen
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    /opt/ros/humble/share/collab-slam/tutorial-region-remap/cslam-region-remap.sh

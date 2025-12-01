@@ -13,8 +13,8 @@ Complete the [GSG Robot](../../../../gsg_robot/index.rst) guide before continuin
 ## Installation and Execution
 
 Make sure that you have set up your Jackal robot as described on the
-[Jackal Intel Robotics SDK](./jackal-intel-robotics-sdk.rst) page. In addition, you can run the
-steps on page [Jackal Keyboard Teleop](./jackal-keyboard-teleop.rst)` in order to verify that
+[Jackal Intel Robotics SDK](./jackal-intel-robotics-sdk.md) page. In addition, you can run the
+steps on page [Jackal Keyboard Teleop](./jackal-keyboard-teleop.md)` in order to verify that
 your ROS 2 installation can communicate with the Motor Control Unit (MCU).
 
 To install the Deb package of the Wandering tutorial on Jackal robots,
@@ -22,7 +22,7 @@ run the following command:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt update
@@ -31,7 +31,7 @@ sudo apt install ros-jazzy-wandering-jackal-tutorial
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt update
@@ -48,7 +48,7 @@ RTAB-Map SLAM application will create the map.
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 /opt/ros/jazzy/share/wandering_jackal_tutorial/scripts/wandering_jackal.sh
@@ -56,7 +56,7 @@ RTAB-Map SLAM application will create the map.
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 /opt/ros/humble/share/wandering_jackal_tutorial/scripts/wandering_jackal.sh
@@ -84,14 +84,14 @@ you want to adapt the tutorial to a robot with a different ecosystem.
 
 ### Adaptation of the Camera Namespace
 
-As mentioned on the [Jackal Intel Robotics SDK](./jackal-intel-robotics-sdk.rst)` page, the names
+As mentioned on the [Jackal Intel Robotics SDK](./jackal-intel-robotics-sdk.md)` page, the names
 of the camera-related topics depend on the version of the installed
 `realsense2-camera` package.
 The camera-related topics start with:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 - ``/sensors/camera_0/camera/`` if the ``ros-jazzy-realsense2-camera`` package is version 4.55
 - ``/sensors/camera_0/`` if the ``ros-jazzy-realsense2-camera`` package is version 4.54
@@ -104,7 +104,7 @@ checks the name of the camera-related topics and assigns the variable
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 - ``/sensors/camera_0/camera/`` if the ``ros-humble-realsense2-camera`` package is version 4.55
 - ``/sensors/camera_0/`` if the ``ros-humble-realsense2-camera`` package is version 4.54
@@ -128,7 +128,7 @@ published by the ``camera`` node of the Jackal robot:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 - if ``ros-jazzy-realsense2-camera`` version is 4.55:
 
@@ -158,7 +158,7 @@ ros2 run depthimage_to_laserscan depthimage_to_laserscan_node --ros-args \
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 - if ``ros-humble-realsense2-camera`` version is 4.55:
 
@@ -194,7 +194,7 @@ subscribed by several other nodes. The laser scan messages, which are broadcast
 via this topic, must include a frame id. This frame id, whose default value is
 ``camera_depth_frame``, must be adapted to the actual link name on the robot.
 According to the TF2 tree of the Jackal robot, which is shown on the
-[Jackal Intel Robotics SDK](./jackal-intel-robotics-sdk.rst)` page, the actual link name is
+[Jackal Intel Robotics SDK](./jackal-intel-robotics-sdk.md)` page, the actual link name is
 ``camera_0_depth_frame``.
 
 The above ``ros2 run`` command specifies the appropriate output frame id
@@ -216,7 +216,7 @@ the ``jackal_mcu`` node of the Jackal robot:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 The script
 ``/opt/ros/jazzy/share/wandering_jackal_tutorial/scripts/wandering_jackal.sh``
@@ -230,7 +230,7 @@ ros2 run imu_filter_madgwick imu_filter_madgwick_node --ros-args \
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 The script
 ``/opt/ros/humble/share/wandering_jackal_tutorial/scripts/wandering_jackal.sh``
@@ -255,7 +255,7 @@ published by the ``camera`` node of the Jackal robot:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 - if ``ros-jazzy-realsense2-camera`` version is 4.55:
 
@@ -285,7 +285,7 @@ Both launch files can be found in the folder
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 - if ``ros-humble-realsense2-camera`` version is 4.55:
 
@@ -324,7 +324,7 @@ The topic ``rgbd_image`` is a remapped representation of the topic
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 - ``/sensors/camera_0/camera/rgbd_image`` if the ``ros-jazzy-realsense2-camera`` package is version 4.55,
 - ``/sensors/camera_0/rgbd_image`` if the ``ros-jazzy-realsense2-camera`` package is version 4.54,
@@ -338,7 +338,7 @@ Both launch files can be found in the folder
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 - ``/sensors/camera_0/camera/rgbd_image`` if the ``ros-humble-realsense2-camera`` package is version 4.55,
 - ``/sensors/camera_0/rgbd_image`` if the ``ros-humble-realsense2-camera`` package is version 4.54,

@@ -12,7 +12,7 @@ Complete the [get started guide](../../../../gsg_robot/index.rst) before continu
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install ros-jazzy-segmentation-realsense-tutorial
@@ -20,7 +20,7 @@ sudo apt install ros-jazzy-segmentation-realsense-tutorial
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install ros-humble-segmentation-realsense-tutorial

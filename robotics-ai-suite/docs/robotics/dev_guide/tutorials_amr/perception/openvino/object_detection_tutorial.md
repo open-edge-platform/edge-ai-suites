@@ -18,7 +18,7 @@ Complete the [GSG robot guide](../../../../gsg_robot/index.rst) before continuin
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install ros-jazzy-object-detection-tutorial
@@ -26,7 +26,7 @@ sudo apt install ros-jazzy-object-detection-tutorial
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install ros-humble-object-detection-tutorial

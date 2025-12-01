@@ -33,7 +33,7 @@ which will install all of the dependencies in the backend.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt update
@@ -42,7 +42,7 @@ sudo apt install ros-jazzy-followme-turtlebot3-gazebo ros-jazzy-text-to-speech-p
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt update
@@ -58,7 +58,7 @@ Install the pre-requisite modules for running the framework:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -67,7 +67,7 @@ pip install -r /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/requireme
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -92,7 +92,7 @@ Run the following commands one by one in five separate terminals:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    rviz2 -d /opt/ros/jazzy/share/followme_turtlebot3_gazebo/rviz/followme_lidar.rviz
@@ -100,7 +100,7 @@ Run the following commands one by one in five separate terminals:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    rviz2 -d /opt/ros/humble/share/followme_turtlebot3_gazebo/rviz/followme_lidar.rviz
@@ -118,7 +118,7 @@ Run the following commands one by one in five separate terminals:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    ros2 run text_to_speech_pkg text_to_speech_node.py --ros-args --params-file /opt/ros/jazzy/share/text_to_speech_pkg/config/text_to_speech_config.yaml
@@ -126,7 +126,7 @@ Run the following commands one by one in five separate terminals:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    ros2 run text_to_speech_pkg text_to_speech_node.py --ros-args --params-file /opt/ros/humble/share/text_to_speech_pkg/config/text_to_speech_config.yaml
@@ -170,7 +170,7 @@ Run the following commands one by one in five separate terminals:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    ros2 run adbscan_ros2_follow_me adbscan_sub_w_gesture_audio --ros-args --params-file /opt/ros/jazzy/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml -r cmd_vel:=tb3/cmd_vel -p use_sim_time:=true
@@ -178,7 +178,7 @@ Run the following commands one by one in five separate terminals:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    ros2 run adbscan_ros2_follow_me adbscan_sub_w_gesture_audio --ros-args --params-file /opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml -r cmd_vel:=tb3/cmd_vel -p use_sim_time:=true
@@ -262,7 +262,7 @@ Execute the following commands one by one in three separate terminals:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    rviz2 -d /opt/ros/jazzy/share/followme_turtlebot3_gazebo/rviz/followme_lidar.rviz
@@ -270,7 +270,7 @@ Execute the following commands one by one in three separate terminals:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    rviz2 -d /opt/ros/humble/share/followme_turtlebot3_gazebo/rviz/followme_lidar.rviz
@@ -288,7 +288,7 @@ Execute the following commands one by one in three separate terminals:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    ros2 run text_to_speech_pkg text_to_speech_node.py --ros-args --params-file /opt/ros/jazzy/share/text_to_speech_pkg/config/text_to_speech_config.yaml
@@ -296,7 +296,7 @@ Execute the following commands one by one in three separate terminals:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    ros2 run text_to_speech_pkg text_to_speech_node.py --ros-args --params-file /opt/ros/humble/share/text_to_speech_pkg/config/text_to_speech_config.yaml
@@ -322,7 +322,7 @@ Execute the following commands one by one in three separate terminals:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    ros2 run adbscan_ros2_follow_me adbscan_sub_w_gesture_audio --ros-args --params-file /opt/ros/jazzy/share/adbscan_ros2_follow_me/config/adbscan_sub_RS.yaml -r cmd_vel:=tb3/cmd_vel -p use_sim_time:=true
@@ -330,7 +330,7 @@ Execute the following commands one by one in three separate terminals:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    ros2 run adbscan_ros2_follow_me adbscan_sub_w_gesture_audio --ros-args --params-file /opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_RS.yaml -r cmd_vel:=tb3/cmd_vel -p use_sim_time:=true
