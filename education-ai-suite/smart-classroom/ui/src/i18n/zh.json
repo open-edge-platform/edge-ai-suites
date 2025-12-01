@@ -23,7 +23,28 @@
     "mindmapReady": "思维导图准备就绪",
     "uploadSuccess": "文件上传成功！",
     "uploadFailed": "文件上传失败。",
-    "mindmapError": "思维导图生成失败：格式无效"
+    "mindmapError": "思维导图生成失败：格式无效",
+    "analyzingVideo": "正在流式视频…",
+    "noAudioDevices": "没有音频设备",
+    "stoppingVideoAnalytics": "正在停止视频分析",
+    "startingVideoAnalytics": "正在启动视频分析",
+    "checkingAudioDevices": "正在检查音频设备...",
+    "audioReady": "音频准备就绪",
+    "audioProcessingComplete": "音频处理完成",
+    "audioProcessingError": "音频处理错误",
+    "videoStreamingStopped": "视频流已停止",
+    "noVideoConfigured": "未配置视频",
+    "videoReady": "视频准备就绪",
+    "videoAnalyticsFailed": "视频分析失败",
+    "videoProcessingComplete": "视频处理完成",
+    "audio": "音频",
+    "video": "视频"
+  },
+  "tooltips": {
+    "checkingAudioDevices": "正在检查音频设备...",
+    "startRecording": "开始录音",
+    "stopRecording": "停止录音",
+    "recordingDisabled": "录音已禁用 - 另一个操作正在进行中"
   },
   "settings": {
     "title": "设置",
@@ -33,7 +54,28 @@
     "ok": "确定",
     "projectNamePlaceholder": "请输入项目名称",
     "projectLocationPlaceholder": "选择项目文件夹",
-    "ipMicrophone": "网络麦克风"
+    "ipMicrophone": "网络麦克风",
+    "frontCamera": "前置摄像头",
+    "backCamera": "后置摄像头",
+    "boardCamera": "黑板摄像头",
+    "defaultFrontCamera": "默认前置摄像头",
+    "defaultBackCamera": "默认后置摄像头",
+    "defaultBoardCamera": "默认黑板摄像头",
+    "frontCamera1": "前置摄像头1",
+    "frontCamera2": "前置摄像头2",
+    "backCamera1": "后置摄像头1",
+    "backCamera2": "后置摄像头2",
+    "boardCamera1": "黑板摄像头1",
+    "boardCamera2": "黑板摄像头2",
+    "frontCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/front",
+    "backCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/back",
+    "boardCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/content"
+  },
+  "uploadFiles": {
+    "title": "上传文件",
+    "audioPath": "音频路径",
+    "videoPath": "视频路径",
+    "applyAndStart": "应用并开始处理"
   },
   "menu": {
     "settings": "设置",
@@ -88,10 +130,18 @@
     "model3": "模型3",
     "model4": "模型4",
     "classStatistics": "课堂统计",
-    "roomView": "房间视图"
+    "roomView": "房间视图",
+    "frontCamera": "前置摄像头",
+    "backCamera": "后置摄像头",
+    "boardCamera": "黑板摄像头",
+    "allCameras": "所有摄像头"
   },
   "errors": {
-    "projectNameRequired": "项目名称为必填项"
+    "projectNameRequired": "项目名称为必填项",
+    "failedToStartRecording": "启动录音失败",
+    "failedToStopRecording": "停止录音失败",
+    "failedToCopyPath": "复制路径失败",
+    "anErrorOccurred": "发生错误"
   },
     "videoStream": {
     "configureCameras": "在设置中配置摄像头以启用视频分析",
