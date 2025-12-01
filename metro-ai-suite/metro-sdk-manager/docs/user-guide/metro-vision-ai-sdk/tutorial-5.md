@@ -198,7 +198,7 @@ Vippet (Visual Pipeline and Platform Evaluation Tool) is an interactive web-base
 
 To learn more and get started with Vippet, visit the official documentation:
 
-**📚 [Vippet Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)**
+**📚 [Vippet Documentation](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)**
 
 The documentation includes:
 - Installation instructions

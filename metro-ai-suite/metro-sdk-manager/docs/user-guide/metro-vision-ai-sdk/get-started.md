@@ -150,23 +150,23 @@ Create sophisticated video analytics using Intel® DL Streamer framework, includ
 
 ### [Tutorial 5: Profiling](./tutorial-5.md)
 
-Profiling and monitoring performance of Metro Vision AI workloads using command-line tools. 
+Profiling and monitoring performance of Metro Vision AI workloads using command-line tools.
 
 ## Additional Resources
 
 ### Technical Documentation
 
-- [DLStreamer](http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html)
+- [DLStreamer](http://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/dl-streamer/index.html)
   \- Comprehensive documentation for Intel's GStreamer-based video analytics framework
-- [DLStreamer Pipeline Server](https://docs.openedgeplatform.intel.com/edge-ai-libraries/dlstreamer-pipeline-server/main/user-guide/Overview.html)
+- [DLStreamer Pipeline Server](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   \- RESTful microservice architecture documentation for scalable video analytics deployment
 - [OpenVINO](https://docs.openvino.ai/2025/get-started.html)
   \- Complete reference for Intel's cross-platform inference optimization toolkit
 - [OpenVINO Model Server](https://docs.openvino.ai/2025/model-server/ovms_what_is_openvino_model_server.html)
   \- Model serving infrastructure documentation for production deployments
-- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/dev/ai-libraries.html)
+- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/2025.2/ai-libraries.html)
   \- Comprehensive development toolkit documentation and API references
-- [Edge AI Suites](https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html)
+- [Edge AI Suites](https://docs.openedgeplatform.intel.com/2025.2/ai-suite-metro.html)
   \- Complete application suite documentation with implementation examples
 
 ### Support Channels
