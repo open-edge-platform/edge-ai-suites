@@ -19,7 +19,7 @@ TurtleBot3 Waffle, see
 ## Run the Sample Application
 
 1. If your system has an Intel® GPU, follow the steps in the
-    `/robotics/gsg_robot/index`{.interpreted-text role="doc"} to enable
+    [get started guide](/robotics/gsg_robot/index.rst] to enable
     the GPU for simulation. This step improves Gazebo\* simulation
     performance.
 

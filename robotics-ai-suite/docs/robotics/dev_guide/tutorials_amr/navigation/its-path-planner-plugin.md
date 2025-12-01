@@ -192,4 +192,4 @@ hide_directive-->
 ## Troubleshooting
 
 For general robot issues, refer to
-[Troubleshooting](../robot-tutorials-troubleshooting.rst).
+[Troubleshooting](../robot-tutorials-troubleshooting.md).

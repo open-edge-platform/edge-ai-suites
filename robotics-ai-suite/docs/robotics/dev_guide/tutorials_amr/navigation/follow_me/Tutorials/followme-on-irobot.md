@@ -194,5 +194,5 @@ Find a brief description of the parameters in the following list.
 - If the robot rotates more than intended at each step, try reducing the
   parameter `max_angular` in the parameter file.
 - For general robot issues, refer to
-  [Troubleshooting](../../../robot-tutorials-troubleshooting.rst).
+  [Troubleshooting](../../../robot-tutorials-troubleshooting.md).
 - If the motor controller board does not start, restart the robot.
