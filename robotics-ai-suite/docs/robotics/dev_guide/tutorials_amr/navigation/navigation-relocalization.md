@@ -125,4 +125,4 @@ ros2 launch relocalization_bringup relocalization_demo.launch.xml mode:=demo
 ## Troubleshooting
 
 For general robot issues, refer to
-[Troubleshooting](../robot-tutorials-troubleshooting.rst).
+[Troubleshooting](../robot-tutorials-troubleshooting.md).

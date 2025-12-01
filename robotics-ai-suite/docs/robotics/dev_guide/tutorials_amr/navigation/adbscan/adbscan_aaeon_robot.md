@@ -197,4 +197,4 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
 ## Troubleshooting
 
-For general robot issues, refer to [Troubleshooting](../robot-tutorials-troubleshooting.rst).
+For general robot issues, refer to [Troubleshooting](../robot-tutorials-troubleshooting.md).

@@ -327,6 +327,6 @@ To achieve optimal output quality, it is essential to fulfill following requirem
 - Failed to install Deb package: Please make sure to run ``sudo apt update`` before installing the necessary Deb packages.
 - You can stop the demo anytime by pressing ``ctrl-C``.
 - For general robot issues, refer to
-  [Troubleshooting](../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst).
+  [Troubleshooting](../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.md).
 - The quality of the segmentation and labeling depends on the quality of the input data. Noisy data, especially major outliers
   could result in wrong labels. If this is the case, the input data should be pre-processed to reduce noise.

@@ -84,7 +84,7 @@ If you are under a proxy network, please make sure to use
 
 Please make sure to source the `/opt/ros/jazzy/setup.bash` file at first before
 executing any command in a new terminal. You can get more details in
-[Prepare the Target System](../../../../../gsg_robot/prepare-system.rst) page.
+[Prepare the Target System](../../../../../gsg_robot/prepare-system.md) page.
 
 Run the following commands one by one in five separate terminals:
 
@@ -254,7 +254,7 @@ the `start` and `stop` activity of the TurtleBot3 robot.
 
 Please make sure to source the `/opt/ros/jazzy/setup.bash` file (or `/opt/ros/humble/setup.bash`)
 at first before executing any command in a new terminal.
-You can get more details in [Prepare the Target System](../../../../../gsg_robot/prepare-system.rst) page.
+You can get more details in [Prepare the Target System](../../../../../gsg_robot/prepare-system.md) page.
 
 Execute the following commands one by one in three separate terminals:
 
@@ -461,7 +461,7 @@ Find a brief description of the parameters in the following list:
 
 - Please make sure to prepare your environment before executing ROS 2 commands in
   a new terminal. You can find the instructions in the
-  [Prepare the Target System](../../../../../gsg_robot/prepare-system.rst) page.
+  [Prepare the Target System](../../../../../gsg_robot/prepare-system.md) page.
 
 - You can stop the demo anytime by pressing `ctrl-C`. If the `Gazebo` simulator
   freezes or does not stop, please use the following command in a terminal:

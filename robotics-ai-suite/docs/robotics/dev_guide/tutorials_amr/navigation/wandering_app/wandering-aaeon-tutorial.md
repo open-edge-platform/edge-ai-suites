@@ -70,4 +70,4 @@ RTAB-Map Application.
 
 - You can stop the demo anytime by pressing `ctrl-C`.
 - For general robot issues, refer to
-  [Troubleshooting](../../robot-tutorials-troubleshooting.rst).
+  [Troubleshooting](../../robot-tutorials-troubleshooting.md).
