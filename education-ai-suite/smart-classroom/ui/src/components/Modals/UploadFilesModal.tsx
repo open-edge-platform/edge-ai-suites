@@ -65,24 +65,40 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     return `${normalizedBaseDirectory}${fileName}`;
   };
  
-  const handleFileSelect = (setter: React.Dispatch<React.SetStateAction<File | null>>, accept: string) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = accept;
-    input.onchange = (e: Event) => {
-      const target = e.target as HTMLInputElement;
-      if (target.files && target.files[0]) {
-        const file = target.files[0];
+const handleFileSelect = (setter: React.Dispatch<React.SetStateAction<File | null>>, accept: string) => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = accept;
+  input.onchange = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    if (target.files && target.files[0]) {
+      const file = target.files[0];
+      const fileName = file.name.toLowerCase();
+      let isValidFile = false;
+      if (accept === '.wav,.mp3') {
+        isValidFile = fileName.endsWith('.wav') || fileName.endsWith('.mp3');
+      } else if (accept === '.mp4') {
+        isValidFile = fileName.endsWith('.mp4');
+      } else {
+        isValidFile = true;
+      }
+      
+      if (isValidFile) {
         setter(file);
         console.log('Selected file:', file);
         setError(null);
       } else {
         setter(null);
-        console.log('No file selected');
+        const expectedTypes = accept.replace(/\./g, '').replace(/,/g, ', ');
+        setError(`Please select only ${expectedTypes} files.`);
       }
-    };
-    input.click();
+    } else {
+      setter(null);
+      console.log('No file selected');
+    }
   };
+  input.click();
+};
  
   const startStreamTranscriptAndVideoAnalytics = (audioPath: string, sessionId: string, pipelines: any[]) => {
     const aborter = new AbortController();
@@ -279,7 +295,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
  
       let audioPath = '';
       if (hasAudioFile) {
-        setNotification('Uploading audio...');
+        setNotification('Uploading...');
         const audioResponse = await uploadAudio(audioFile);
         dispatch(setUploadedAudioPath(audioResponse.path));
         dispatch(setAudioStatus('processing'));
@@ -431,7 +447,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
                 src={folderIcon}
                 alt="Choose File"
                 className="folder-icon"
-                onClick={() => handleFileSelect(setAudioFile, 'audio/*')}
+                onClick={() => handleFileSelect(setAudioFile, '.wav,.mp3')}
               />
             </div>
           </div>
@@ -448,10 +464,11 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
                 src={folderIcon}
                 alt="Choose File"
                 className="folder-icon"
-                onClick={() => handleFileSelect(setFrontCameraPath, 'video/*')}
+                onClick={() => handleFileSelect(setFrontCameraPath, '.mp4')}
               />
             </div>
           </div>
+
           <div className="modal-input-group">
             <label>Rear Camera File</label>
             <div className="file-input-wrapper">
@@ -465,10 +482,11 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
                 src={folderIcon}
                 alt="Choose File"
                 className="folder-icon"
-                onClick={() => handleFileSelect(setRearCameraPath, 'video/*')}
+                onClick={() => handleFileSelect(setRearCameraPath, '.mp4')}
               />
             </div>
           </div>
+
           <div className="modal-input-group">
             <label>Board Camera File</label>
             <div className="file-input-wrapper">
@@ -482,7 +500,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
                 src={folderIcon}
                 alt="Choose File"
                 className="folder-icon"
-                onClick={() => handleFileSelect(setBoardCameraPath, 'video/*')}
+                onClick={() => handleFileSelect(setBoardCameraPath, '.mp4')}
               />
             </div>
           </div>

@@ -70,4 +70,4 @@ To close this application, type ``Ctrl-c`` in the terminal where you ran the lau
 ### Troubleshooting
 
 For general robot issues, refer to
-[Troubleshooting](../../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst).
+[Troubleshooting](../../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.md).

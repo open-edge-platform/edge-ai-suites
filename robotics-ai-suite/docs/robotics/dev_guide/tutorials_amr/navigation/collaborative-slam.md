@@ -586,4 +586,4 @@ it is possible to check GPU usage while a tutorial is actively executing.
   errors.
 
 - For general robot issues, refer to
-  [Troubleshooting](../robot-tutorials-troubleshooting.rst).
+  [Troubleshooting](../robot-tutorials-troubleshooting.md).

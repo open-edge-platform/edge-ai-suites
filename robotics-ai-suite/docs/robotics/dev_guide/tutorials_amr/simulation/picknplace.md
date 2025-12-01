@@ -221,4 +221,4 @@ resource for anyone interested in robotic simulations.
 ## Troubleshooting
 
 For general robot issues, refer to
-[Troubleshooting](../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst).
+[Troubleshooting](../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.md).

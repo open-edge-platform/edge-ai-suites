@@ -12,7 +12,7 @@ Complete the [get started guide](../../../../gsg_robot/index.rst) before continu
 
 ### Install OpenVINO™ package
 
-Follow the [Install Openvino](../../../../gsg_robot/install-openvino.rst) instructions to install OpenVINO™.
+Follow the [Install Openvino](../../../../gsg_robot/install-openvino.md) instructions to install OpenVINO™.
 
 ### Install Python packages (optional)
 
