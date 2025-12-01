@@ -1,7 +1,5 @@
 # Prepare the Target System
 
-![target](../images/system/target.png)
-
 ## Install Canonical Ubuntu 22.04 LTS (Jammy Jellyfish)
 
 Intel recommends a fresh installation of the Ubuntu distribution of the Linux OS
@@ -12,8 +10,7 @@ Depending on your processor type, select one of the following Canonical Ubuntu
 
 |Processor type|Canonical Ubuntu 22.04 LTS variant|
 |-|-|
-|Intel® Core™ Ultra Processors|
-[Ubuntu OS version 22.04 LTS (Jammy Jellyfish)](https://releases.ubuntu.com/22.04) Desktop image|
+|Intel® Core™ Ultra Processors|[Ubuntu OS version 22.04 LTS (Jammy Jellyfish)](https://releases.ubuntu.com/22.04) Desktop image|
 |Other Intel® processors, including:<br>11th/12th/13th Generation Intel® Core™ Processors,<br>Intel® Processor N-series (products formerly Alder Lake-N)|22.04 LTS image for Intel IoT platforms, available at [Download Ubuntu image for Intel® IoT platforms](https://ubuntu.com/download/iot/intel-iot)|
 
 Visit the Canonical Ubuntu website to see the detailed installation instructions: [Install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
@@ -49,8 +46,6 @@ Depending on the processor type, the expected result is as follows:
 |Intel® Core™ Ultra Processors|``6.5.0-44-generic``|
 |Other Intel® processors|``5.15.0-1060-intel-iotg``|
 
-.. _install-ros-ros-version:
-
 ## Install ROS 2 Distribution
 
 To install ROS 2 on your system, follow the **ROS 2 setup guide**:
@@ -79,7 +74,7 @@ includes the following steps:
 2. Install ROS packages using APT
 3. Environment setup
 
-You will find the respective setup guides for suuported distributions here:
+You will find the respective setup guides for supported distributions here:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
@@ -98,7 +93,9 @@ You will find the respective setup guides for suuported distributions here:
 
 ### Prepare your ROS 2 Environment
 
-In order to execute any ROS 2 command in a new shell, you first have to source the ROS 2 ``setup.bash`` and set the individual ``ROS_DOMAIN_ID`` for your ROS 2 communication graph.
+In order to execute any ROS 2 command in a new shell, you first have to source
+the ROS 2 ``setup.bash`` and set the individual ``ROS_DOMAIN_ID`` for your
+ROS 2 communication graph.
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
@@ -122,29 +119,31 @@ export ROS_DOMAIN_ID=42
 <!--hide_directive::::hide_directive-->
 
 > **Note:** The value 42 serves just as an example. Use an individual ID for every ROS 2
-  node that is expected to participate in a given ROS 2 graph in order to avoid conflicts
-  in handling messages.
+> node that is expected to participate in a given ROS 2 graph in order to avoid conflicts
+> in handling messages.
 
-Get more information about this topic in the **The ROS_DOMAIN_ID** documentation:
+Get more information about **The ROS_DOMAIN_ID** in:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
 <!--hide_directive:sync: jazzyhide_directive-->
 
-[https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Domain-ID.html](https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Domain-ID.html)
+[documentation](https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Domain-ID.html)
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
 <!--hide_directive:sync: humblehide_directive-->
 
-[https://docs.ros.org/en/humble/Concepts/Intermediate/About-Domain-ID.html](https://docs.ros.org/en/humble/Concepts/Intermediate/About-Domain-ID.html)
+[documentation](https://docs.ros.org/en/humble/Concepts/Intermediate/About-Domain-ID.html)
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive::::hide_directive-->
 
 #### Set up a permanent ROS 2 environment
 
-To simplify the handling of your system, you may add these lines to ``~/.bashrc`` file. In this way, the required settings are executed automatically if a new shell is launched.
+To simplify the handling of your system, you may add these lines to ``~/.bashrc``
+file. In this way, the required settings are executed automatically
+if a new shell is launched.
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
@@ -169,13 +168,14 @@ echo "export ROS_DOMAIN_ID=42" >> ~/.bashrc
 
 #### Important Notes
 
-> **Note:** If you miss to source the ROS 2 setup bash script, you will not be able
+- If you miss to source the ROS 2 setup bash script, you will not be able
   to execute any ROS 2 command.
 
-> **Note:** If you forget to set a dedicated ``ROS_DOMAIN_ID``, the ROS 2 command will
+- If you forget to set a dedicated ``ROS_DOMAIN_ID``, the ROS 2 command will
   be executed and may partially behave as expected. But you have to expect a diversity of
   unexpected behaviors too.
 
-  Ensure you use the same ``ROS_DOMAIN_ID`` for every ROS 2 node that is expected to participate in a given ROS 2 graph.
-
-  Ensure you use an individual ``ROS_DOMAIN_ID`` for every ROS 2 communication graph, in order to avoid conflicts in message handling.
+  - Ensure you use the same ``ROS_DOMAIN_ID`` for every ROS 2 node that is
+    expected to participate in a given ROS 2 graph.
+  - Ensure you use an individual ``ROS_DOMAIN_ID`` for every ROS 2 communication
+    graph, in order to avoid conflicts in message handling.

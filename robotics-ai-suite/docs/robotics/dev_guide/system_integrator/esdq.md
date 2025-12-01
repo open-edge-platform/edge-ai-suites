@@ -202,7 +202,7 @@ prerequisites by:
 - Installing the OpenVINO™ Runtime by executing these steps:
 
   1. Add the OpenVINO™ APT package sources as described in the
-     ["OpenVINO™ Installation Steps"](../../gsg_robot/install-openvino.rst)
+     ["OpenVINO™ Installation Steps"](../../gsg_robot/install-openvino.md)
      section.
 
   2. Make sure that your file `/etc/apt/preferences.d/intel-openvino`
@@ -384,7 +384,7 @@ target device follow the steps below:
    ```
 
 4. If your system uses a Linux Kernel 6.7.5 or later, read the
-   [GPU device is not detected with Linux Kernel 6.7.5 or later](../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst).
+   [GPU device is not detected with Linux Kernel 6.7.5 or later](../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.md).
    If your system is impacted by this issue, export the following debug
    variables as a workaround:
 
@@ -557,7 +557,7 @@ generated in the `$ROBOTICS_SDK/reports/` directory: `report.html` and
 
 ## Troubleshooting
 
-For issues, refer to [Troubleshooting](../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst).
+For issues, refer to [Troubleshooting](../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.md).
 
 ## Support Forum
 
