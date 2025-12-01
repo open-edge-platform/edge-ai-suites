@@ -287,7 +287,7 @@ Device Used: CPU
 For systems with Intel integrated graphics, run detection with GPU acceleration:
 
 ```bash
-# Run object detection with CPU inference
+# Run object detection with GPU inference
 docker run -it --rm \
   --volume ${PWD}:/home/openvino \
   --volume $HOME/.Xauthority:/root/.Xauthority:rw \
@@ -308,28 +308,6 @@ pip install opencv-python "numpy<2"
 ```bash
 python3 /home/openvino/inference.py 
 ```
-
-### Step 7: Advanced Usage and Features
-
-**Save Detection Results:**
-
-```bash
-# Save output video with detections
-docker run -it --rm \
-  --volume ${PWD}:/home/openvino \
-  --volume /tmp/.X11-unix:/tmp/.X11-unix:rw \
-  --env DISPLAY=$DISPLAY \
-  openvino/ubuntu24_dev:2025.3.0 \
-  python3 /home/openvino/inference.py \
-    --video /home/openvino/intersection.mp4 \
-    --save /home/openvino/output_detections.mp4
-```
-
-**Interactive Controls:**
-
-- **'q'**: Quit application
-- **'s'**: Save current frame as image
-- **'p'**: Pause/resume playback
 
 **Custom Thresholds:**
 
