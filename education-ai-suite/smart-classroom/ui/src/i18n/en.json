@@ -132,9 +132,9 @@
       "model4": "Model 4",
       "classStatistics": "Class Statistics",
       "roomView": "Room View",
-      "frontCamera": "Front Camera",
-      "backCamera": "Back Camera",
-      "boardCamera": "Board Camera",
+      "frontCamera": "Front",
+      "backCamera": "Back",
+      "boardCamera": "Board",
       "allCameras": "All"
     },
     "errors": {
