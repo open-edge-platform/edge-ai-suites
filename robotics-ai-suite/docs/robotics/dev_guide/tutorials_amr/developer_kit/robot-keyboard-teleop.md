@@ -13,7 +13,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 1. Connect to your robot via SSH/VNC or direct access. If you choose direct
    access, insert a monitor and a keyboard into the robot's compute system.
 
-2. Set up your system by following the steps in the [Prepare System](../../../gsg_robot/prepare-system.rst) guide.
+2. Set up your system by following the steps in the [Prepare System](../../../gsg_robot/prepare-system.md) guide.
 
 3. Ensure the `ros2-amr-interface` Deb package is installed:
 
@@ -120,4 +120,4 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
 You can stop the demo anytime by pressing ``ctrl-C``.
 
-For general robot issues, go to: [Troubleshooting Guide](../robot-tutorials-troubleshooting.rst).
+For general robot issues, go to: [Troubleshooting Guide](../robot-tutorials-troubleshooting.md).
