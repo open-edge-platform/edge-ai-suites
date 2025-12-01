@@ -1,2 +1,16 @@
+# Python folders
 /scripts/__pycache__/
 /scripts/templates/__pycache__/
+
+# Ignore Level Zero build artifacts except the exe
+/monitoring/tools/level-zero/build/CMakeFiles/
+/monitoring/tools/level-zero/build/CMakeCache.txt
+/monitoring/tools/level-zero/build/Testing/
+# Ignore all obj, pdb, log, cmake files recursively
+/monitoring/tools/level-zero/build/**/*.obj
+/monitoring/tools/level-zero/build/**/*.pdb
+/monitoring/tools/level-zero/build/**/*.log
+/monitoring/tools/level-zero/build/**/*.cmake
+
+# Keep the exe
+!/monitoring/tools/level-zero/build/bin/Release/npu_utilization.exe
