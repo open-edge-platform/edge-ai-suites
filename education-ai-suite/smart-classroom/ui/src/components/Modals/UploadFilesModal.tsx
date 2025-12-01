@@ -65,40 +65,40 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     return `${normalizedBaseDirectory}${fileName}`;
   };
  
-const handleFileSelect = (setter: React.Dispatch<React.SetStateAction<File | null>>, accept: string) => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = accept;
-  input.onchange = (e: Event) => {
-    const target = e.target as HTMLInputElement;
-    if (target.files && target.files[0]) {
-      const file = target.files[0];
-      const fileName = file.name.toLowerCase();
-      let isValidFile = false;
-      if (accept === '.wav,.mp3') {
-        isValidFile = fileName.endsWith('.wav') || fileName.endsWith('.mp3');
-      } else if (accept === '.mp4') {
-        isValidFile = fileName.endsWith('.mp4');
-      } else {
-        isValidFile = true;
-      }
-      
-      if (isValidFile) {
-        setter(file);
-        console.log('Selected file:', file);
-        setError(null);
+  const handleFileSelect = (setter: React.Dispatch<React.SetStateAction<File | null>>, accept: string) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = accept;
+    input.onchange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      if (target.files && target.files[0]) {
+        const file = target.files[0];
+        const fileName = file.name.toLowerCase();
+        let isValidFile = false;
+        if (accept === '.wav,.mp3') {
+          isValidFile = fileName.endsWith('.wav') || fileName.endsWith('.mp3');
+        } else if (accept === '.mp4') {
+          isValidFile = fileName.endsWith('.mp4');
+        } else {
+          isValidFile = true;
+        }
+        
+        if (isValidFile) {
+          setter(file);
+          console.log('Selected file:', file);
+          setError(null);
+        } else {
+          setter(null);
+          const expectedTypes = accept.replace(/\./g, '').replace(/,/g, ', ');
+          setError(`Please select only ${expectedTypes} files.`);
+        }
       } else {
         setter(null);
-        const expectedTypes = accept.replace(/\./g, '').replace(/,/g, ', ');
-        setError(`Please select only ${expectedTypes} files.`);
+        console.log('No file selected');
       }
-    } else {
-      setter(null);
-      console.log('No file selected');
-    }
+    };
+    input.click();
   };
-  input.click();
-};
  
   const startStreamTranscriptAndVideoAnalytics = (audioPath: string, sessionId: string, pipelines: any[]) => {
     const aborter = new AbortController();
@@ -263,59 +263,81 @@ const handleFileSelect = (setter: React.Dispatch<React.SetStateAction<File | nul
   const handleApply = async () => {
     const hasAudioFile = audioFile !== null;
     const hasVideoFiles = frontCameraPath !== null || rearCameraPath !== null || boardCameraPath !== null;
-   
+  
     if (!hasAudioFile && !hasVideoFiles) {
       setError('At least one file (audio or video) is required.');
       return;
     }
- 
+
     setNotification('Starting processing...');
     dispatch(resetFlow());
     dispatch(resetTranscript());
     dispatch(resetSummary());
     dispatch(clearMindmap());
     dispatch(startProcessing());
- 
+
+    if (hasAudioFile) {
+      dispatch(setAudioStatus('processing'));
+      console.log('🎯 Audio status set to processing - will show "Analyzing audio..."');
+    } else {
+      dispatch(setAudioStatus('no-devices'));
+      console.log('🎯 Audio status set to no-devices - will show "No audio devices"');
+    }
+
     setLoading(true);
     setError(null);
- 
+
     try {
       setNotification('Creating session...');
       const sessionResponse = await createSession();
       const sessionId = sessionResponse.sessionId;
       console.log('✅ Session created:', sessionId);
       dispatch(setSessionId(sessionId));
+      
       try {
         console.log('📊 Starting monitoring for session:', sessionId);
         const monitoringResult = await startMonitoring(sessionId);
+        const timer = setTimeout(async () => {
+          try {
+            console.log('⏰ 45 minutes elapsed - stopping monitoring');
+            const stopResult = await stopMonitoring();
+            console.log('✅ Monitoring stopped after 45 minutes:', stopResult.message);
+          } catch (error) {
+            console.error('❌ Failed to stop monitoring after 45 minutes:', error);
+          }
+        }, 45 * 60 * 1000);
 
+        setMonitoringTimer(timer);
+        console.log('⏰ Monitoring timer set for 45 minutes');
       } catch (monitoringError) {
         console.error('❌ Failed to start monitoring (non-critical):', monitoringError);
       }
- 
+
       let audioPath = '';
       if (hasAudioFile) {
         setNotification('Uploading...');
         const audioResponse = await uploadAudio(audioFile);
         dispatch(setUploadedAudioPath(audioResponse.path));
-        dispatch(setAudioStatus('processing'));
+        // Audio status already set to 'processing' above
         audioPath = audioResponse.path;
         console.log('✅ Audio uploaded successfully:', audioResponse);
-        console.log('🎯 Audio status set to processing - will show "Analyzing audio..."');
         dispatch(setProcessingMode('audio'));
       } else {
         console.log('📝 No audio file provided, skipping audio upload');
         dispatch(setProcessingMode('video-only'));
+        // Audio status already set to 'no-devices' above
       }
+
       const frontFullPath = frontCameraPath ? constructFilePath(frontCameraPath.name) : "";
       const rearFullPath = rearCameraPath ? constructFilePath(rearCameraPath.name) : "";
       const boardFullPath = boardCameraPath ? constructFilePath(boardCameraPath.name) : "";
- 
+
       console.log('📹 Video file paths:', {
         front: frontFullPath,
         rear: rearFullPath,
         board: boardFullPath,
       });
+
       const allPipelines = [
         {
           pipeline_name: 'front',
@@ -330,17 +352,18 @@ const handleFileSelect = (setter: React.Dispatch<React.SetStateAction<File | nul
           source: boardFullPath
         },
       ];
- 
+
       const validPipelines = allPipelines.filter(pipeline =>
         pipeline.source && pipeline.source.trim() !== ''
       );
- 
+
       console.log('📹 All pipelines:', allPipelines);
       console.log('📹 Valid pipelines to send:', validPipelines);
- 
+
       const hasValidVideo = validPipelines.length > 0;
+      console.log('🎯 Has valid video:', hasAudioFile);
       setNotification(getProcessingNotification(hasAudioFile, hasValidVideo));
-     
+    
       let videoAnalyticsStarted = false;
       if (hasValidVideo) {
         videoAnalyticsStarted = await startVideoAnalyticsWithSession(sessionId, validPipelines);
@@ -357,7 +380,7 @@ const handleFileSelect = (setter: React.Dispatch<React.SetStateAction<File | nul
           dispatch(setVideoStatus('no-config'));
         }
       }
-     
+    
       if (hasAudioFile && audioPath) {
         console.log('🎯 Starting transcript stream - audio status will change from processing to transcribing');
         startStreamTranscriptAndVideoAnalytics(audioPath, sessionId, validPipelines);
@@ -365,21 +388,23 @@ const handleFileSelect = (setter: React.Dispatch<React.SetStateAction<File | nul
       } else {
         console.log('📝 No audio file provided, skipping transcription');
       }
-
+      console.log(hasAudioFile.valueOf());
       const finalNotification = getSuccessNotification(hasAudioFile, hasValidVideo, videoAnalyticsStarted);
+  
+      console.log(finalNotification)
       setNotification(finalNotification);
-     
+    
       console.log('✅ Processing summary:', {
         audioFile: hasAudioFile,
         videoFiles: hasValidVideo,
         videoAnalyticsStarted,
         finalMessage: finalNotification
       });
-     
+    
       shouldAbortRef.current = false;
       setLoading(false);
       onClose();
- 
+
     } catch (err) {
       console.error('❌ Failed during processing:', err);
       setError('Failed during processing. Please try again.');

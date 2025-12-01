@@ -79,24 +79,24 @@ const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    startProcessing(state) {
-      state.aiProcessing = true;
-      state.summaryEnabled = false;
-      state.summaryLoading = false;
-      state.mindmapEnabled = false;
-      state.mindmapLoading = false;
-      state.activeTab = 'transcripts';
-      state.autoSwitched = false;
-      state.autoSwitchedToMindmap = false;
-      state.sessionId = null;
-      state.uploadedAudioPath = null;
-      state.shouldStartSummary = false;
-      state.shouldStartMindmap = false;
-      state.videoAnalyticsLoading = false;
-      state.videoAnalyticsActive = false;
-      state.audioStatus = 'processing';
-      // Don't reset processingMode here as it's set by the caller
-    },
+  startProcessing(state) {
+    state.aiProcessing = true;
+    state.summaryEnabled = false;
+    state.summaryLoading = false;
+    state.mindmapEnabled = false;
+    state.mindmapLoading = false;
+    state.activeTab = 'transcripts';
+    state.autoSwitched = false;
+    state.autoSwitchedToMindmap = false;
+    state.sessionId = null;
+    state.uploadedAudioPath = null;
+    state.shouldStartSummary = false;
+    state.shouldStartMindmap = false;
+    state.videoAnalyticsLoading = false;
+    state.videoAnalyticsActive = false;
+    // state.audioStatus = 'processing';
+    // Don't reset processingMode here as it's set by the caller
+  },
  
     processingFailed(state) {
       state.aiProcessing = false;
