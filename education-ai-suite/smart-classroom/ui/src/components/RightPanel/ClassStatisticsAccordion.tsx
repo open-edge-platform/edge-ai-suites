@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { setClassStatistics } from '../../redux/slices/fetchClassStatistics';
 import { getClassStatistics } from '../../services/api';
 import Accordion from '../common/Accordion';
-
+import { useTranslation } from 'react-i18next';
 const ClassStatisticsAccordion: React.FC = () => {
   const dispatch = useAppDispatch();
   const sessionId = useAppSelector((state) => state.ui.sessionId);
@@ -24,23 +24,25 @@ const ClassStatisticsAccordion: React.FC = () => {
     fetchData();
   }, [sessionId, dispatch]);
 
-  return (
-    <Accordion title="Class Statistics">
+  const { t } = useTranslation();
+
+return (
+    <Accordion title={t('accordion.classStatistics')}>
       <div className="accordion-content">
         <p>
-          <strong>Student Count:</strong> {classStatistics.student_count}
+          <strong>{t('classStatistics.studentCount')}:</strong> {classStatistics.student_count}
         </p>
         <p>
-          <strong>Stand Count:</strong> {classStatistics.stand_count}
+          <strong>{t('classStatistics.standCount')}:</strong> {classStatistics.stand_count}
         </p>
         <p>
-          <strong>Raise Up Count:</strong> {classStatistics.raise_up_count}
+          <strong>{t('classStatistics.raiseUpCount')}:</strong> {classStatistics.raise_up_count}
         </p>
-        <h4>Stand Re-ID Data:</h4>
+        <h4>{t('classStatistics.standReIdData')}:</h4>
         <ul>
           {classStatistics.stand_reid.map((entry) => (
             <li key={entry.student_id}>
-              Student ID: {entry.student_id}, Count: {entry.count}
+              {t('classStatistics.studentId')}: {entry.student_id}, {t('classStatistics.count')}: {entry.count}
             </li>
           ))}
         </ul>

@@ -4,6 +4,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 interface ResourceMetrics {
   cpu_utilization: any[];
   gpu_utilization: any[];
+  npu_utilization: any[]; 
   memory: any[];
   power: any[];
 }
@@ -17,6 +18,7 @@ const initialState: ResourceState = {
   metrics: {
     cpu_utilization: [],
     gpu_utilization: [],
+    npu_utilization: [], 
     memory: [],
     power: []
   },

@@ -3,11 +3,6 @@ kind: PersistentVolume
 metadata:
   name: {{ .Release.Name }}-grafana-pv
   namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/managed-by: "Helm"  # Required by Helm
-  annotations:
-    meta.helm.sh/release-name: "smart-intersection"  # Required by Helm
-    meta.helm.sh/release-namespace: "smart-intersection"  # Required by Helm
 spec:
   capacity:
     storage: 1Gi

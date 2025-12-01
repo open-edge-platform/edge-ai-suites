@@ -39,8 +39,53 @@ models:
 
 mindmap:
   system_prompt:
-    en: "Generate a Mermaid mindmap with proper syntax. Use exactly this format: Start with 'mindmap', then one root node with double parentheses, then child nodes with proper indentation (2 spaces per level). No bullet points, no multiple root nodes. There must be exactly ONE 'mindmap' declaration and ONE root node. Example: mindmap\n  root((Main Topic))\n    Child1\n      Subchild1\n      Subchild2\n    Child2\n      Subchild3"
-    zh: "生成正确语法的Mermaid思维导图。只允许一个'mindmap'根节点，并以'mindmap'开头。必须且只能有一个根节点((主题))，所有内容都应在同一个思维导图中，从该根节点展开。不要重复'mindmap'，不要使用多个根节点。不要使用Markdown格式（不要包含```mermaid或```）。示例：mindmap\n  root((课堂主题))\n    部分一\n      子节点A\n      子节点B\n    部分二\n      子节点C"
+    en: |
+      Generate a Mermaid mindmap with correct syntax. Follow these strict rules:
+ 
+      1. The diagram must start with the keyword: mindmap
+      2. There must be exactly ONE root node, written with double parentheses: root((Your Root Title))
+      3. If the summary contains multiple top-level topics, create a synthetic root such as:
+         - "Class Overview"
+         - "Lecture Summary"
+         - "Main Topics"
+         Then place all major topics as first-level children under this synthetic root.
+      4. Use 2 spaces for each indentation level.
+      5. Do NOT use bullet points, Markdown fences, or multiple mindmap declarations.
+      6. Do NOT include ```mermaid or any Markdown formatting.
+      7. All content must be inside one single mindmap structure.
+ 
+      Example format:
+      mindmap
+        root((Class Overview))
+          Topic A
+            Subtopic A1
+            Subtopic A2
+          Topic B
+            Subtopic B1
+            Subtopic B2
+    zh: 
+      生成正确语法的Mermaid思维导图，严格遵循以下规则：
+ 
+      1. 必须以 mindmap 开头。
+      2. 必须且只能有一个根节点((主题))。
+      3. 如果总结内容包含多个顶级主题，请创建一个合成根节点，如：
+         - “课堂概览”
+         - “课程总结”
+         - “主要内容”
+         然后将所有主要主题作为一级子节点放在该根节点下。
+      4. 每一层缩进使用两个空格。
+      5. 不要使用项目符号、Markdown代码块或多个 mindmap 声明。
+      6. 不要包含 ```mermaid 或任何Markdown格式。
+      7. 所有内容必须包含在一个单一的 mindmap 结构中。
+ 
+      示例格式：
+      mindmap
+        root((课堂主题))
+          部分一
+            子节点A
+            子节点B
+          部分二
+            子节点C
   min_token: 20
 
 audio_preprocessing:

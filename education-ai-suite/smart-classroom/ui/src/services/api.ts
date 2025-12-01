@@ -66,9 +66,9 @@ export async function getSettings(): Promise<Settings> {
       projectName: cfg.name ?? '',
       projectLocation: cfg.location ?? '',
       microphone: cfg.microphone ?? '',
-      frontCamera: cfg.frontCamera || '', // Empty string as default
-      backCamera: cfg.backCamera || '',   // Empty string as default
-      boardCamera: cfg.boardCamera || ''  // Empty string as default
+      frontCamera: cfg.frontCamera || '', 
+      backCamera: cfg.backCamera || '',   
+      boardCamera: cfg.boardCamera || ''  
     };
   });
 }
@@ -132,8 +132,10 @@ return res.json();
 });
 }
 
+// Updated to use session ID in header instead of generating it
 export async function* streamTranscript(
   audioPath: string,
+  sessionId: string, // Now required parameter
   opts: StreamOptions = {}
 ): AsyncGenerator<StreamEvent> {
  
@@ -150,10 +152,15 @@ export async function* streamTranscript(
         };
  
   console.log("Sending transcription request:", requestBody);
+  console.log("Using session ID:", sessionId);
  
   const res = await fetch(`${BASE_URL}/transcribe`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers: { 
+      "Content-Type": "application/json", 
+      "Accept": "application/json",
+      "x-session-id": sessionId // Pass session ID in header
+    },
     body: JSON.stringify(requestBody),
     signal: opts.signal,
     cache: "no-store",
@@ -165,9 +172,11 @@ export async function* streamTranscript(
     console.error("Transcription request failed:", errorText);
     throw new Error(`Failed to start transcription: ${res.status} - ${errorText}`);
   }
-  const sessionId = res.headers.get("x-session-id");
-  console.log("Received sessionId from header:", sessionId);
+
+  // Session ID is already known, no need to extract from header
+  console.log("Using existing sessionId:", sessionId);
   if (opts.onSessionId) opts.onSessionId(sessionId);
+
   const reader = res.body?.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
@@ -441,12 +450,13 @@ export async function stopMicrophone(sessionId: string): Promise<{ status: strin
   });
 }
 
-export async function startMicrophone(): Promise<{ status: string; message: string; sessionId?: string }> {
+export async function startMicrophone(sessionId: string): Promise<{ status: string; message: string }> {
   const res = await fetch(`${BASE_URL}/transcribe`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
+      "x-session-id": sessionId, // Use provided session ID
       "x-source-type": "microphone"
     },
     body: JSON.stringify({
@@ -463,12 +473,7 @@ export async function startMicrophone(): Promise<{ status: string; message: stri
     throw new Error(`Failed to start microphone: ${res.status}`);
   }
 
-  // ✅ Extract X-Session-ID from headers
-  const sessionId = res.headers.get("x-session-id") || undefined;
-  if (sessionId) {
-    localStorage.setItem("sessionId", sessionId);
-    console.log("🟢 Session ID saved:", sessionId);
-  }
+  console.log("🎙️ Microphone started with session ID:", sessionId);
 
   // ✅ Stream-safe handling: just confirm first chunk
   const reader = res.body?.getReader();
@@ -488,7 +493,62 @@ export async function startMicrophone(): Promise<{ status: string; message: stri
 
   return {
     status: "recording",
-    message: "Microphone streaming started successfully.",
-    sessionId
+    message: "Microphone streaming started successfully."
   };
+}
+
+export async function createSession(): Promise<{ sessionId: string }> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/create-session`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+ 
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('❌ Failed to create session:', errorText);
+      throw new Error(`Failed to create session: ${res.status}`);
+    }
+ 
+    const data = await res.json();
+    const sessionId = data['session-id'];
+    console.log('🟢 Session ID created:', sessionId);
+ 
+    return { sessionId };
+  });
+}
+
+export async function startMonitoring(sessionId: string): Promise<{ status: string; message: string }> {
+  return safeApiCall(async () => {
+    console.log('📊 Starting monitoring for session:', sessionId);
+    const res = await fetch(`${BASE_URL}/start-monitoring`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-session-id': sessionId  // Pass session ID in header like transcription
+      },
+    });
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Failed to start monitoring: ${res.status} - ${errorText}`);
+    }
+    return await res.json();
+  });
+}
+
+export async function stopMonitoring(): Promise<{ status: string; message: string }> {
+  return safeApiCall(async () => {
+    console.log('🛑 Stopping monitoring');
+    const res = await fetch(`${BASE_URL}/stop-monitoring`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json'
+      },
+    });
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Failed to stop monitoring: ${res.status} - ${errorText}`);
+    }
+    return await res.json();
+  });
 }

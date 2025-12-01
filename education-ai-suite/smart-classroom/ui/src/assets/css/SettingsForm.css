@@ -12,6 +12,10 @@
   max-width: 100%;
   box-sizing: border-box;
 }
+.settings-form {
+  position: relative;
+  z-index: 99999;
+}
 
 h2 {
   font-family: "IntelOne Display", system-ui, sans-serif;

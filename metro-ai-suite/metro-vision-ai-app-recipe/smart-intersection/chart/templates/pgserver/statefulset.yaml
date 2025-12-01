@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-pgserver
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-pgserver
+spec:
+  serviceName: {{ .Release.Name }}-pgserver
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-pgserver
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-pgserver
+    spec:
+      containers:
+      - name: pgserver
+        image: {{ .Values.pgserver.repository }}:{{ .Values.pgserver.tag }}
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: http_proxy
+          value: {{ .Values.http_proxy | quote }}
+        - name: https_proxy
+          value: {{ .Values.https_proxy | quote }}
+        - name: no_proxy
+          value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
+        - name: POSTGRES_USER
+          value: "scenescape"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-dbpass
+              key: DATABASE_PASSWORD
+        - name: POSTGRES_DB
+          value: "scenescape"
+        - name: PGDATA
+          value: "/workspace/db"
+        volumeMounts:
+        - name: pgserver-db
+          mountPath: /workspace/db
+        - name: pgserver-media
+          mountPath: /workspace/media
+        - name: smart-intersection-ri-data
+          mountPath: /data
+        securityContext:
+          allowPrivilegeEscalation: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: dev-fuse
+        hostPath:
+          path: /dev/fuse
+      - name: pgserver-media
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-pgserver-media
+      - name: smart-intersection-ri-data
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-ri-pvc
+  volumeClaimTemplates:
+  - metadata:
+      name: pgserver-db
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 2Gi
