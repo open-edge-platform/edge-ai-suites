@@ -36,7 +36,9 @@
     "noVideoConfigured": "未配置视频",
     "videoReady": "视频准备就绪",
     "videoAnalyticsFailed": "视频分析失败",
-    "videoProcessingComplete": "视频处理完成"
+    "videoProcessingComplete": "视频处理完成",
+    "audio": "音频",
+    "video": "视频"
   },
   "tooltips": {
     "checkingAudioDevices": "正在检查音频设备…",
@@ -129,7 +131,11 @@
     "model3": "模型3",
     "model4": "模型4",
     "classStatistics": "课堂统计",
-    "roomView": "教室视图"
+    "roomView": "教室视图",
+    "frontCamera": "前置摄像头",
+    "backCamera": "后置摄像头",
+    "boardCamera": "黑板摄像头",
+    "allCameras": "所有摄像头"
   },
   "errors": {
     "projectNameRequired": "项目名称为必填项",
