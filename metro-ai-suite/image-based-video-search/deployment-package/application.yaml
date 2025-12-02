@@ -11,7 +11,7 @@ description: "Image-Based Video Search Sample Application"
 
 helmRegistry: "docker-hub"
 chartName: "intel/image-based-video-search"
-chartVersion: "1.1.0-RC1"
+chartVersion: "1.1.0-RC2"
 
 profiles:
   - name: "default"

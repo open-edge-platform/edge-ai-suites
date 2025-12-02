@@ -1,5 +1,5 @@
-host_ip=$(hostname -I | awk '{print $1}')
-HOST_IP=$(hostname -I | awk '{print $1}')
+host_ip=$(ip route get 1 | awk '{print $7}'|head -1)
+HOST_IP=$(ip route get 1 | awk '{print $7}'|head -1)
 USER_GROUP_ID=$(id -g)
 VIDEO_GROUP_ID=$(getent group video | awk -F: '{printf "%s\n", $3}')
 RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')

@@ -19,3 +19,6 @@ Make sure docker is corrently installed and configured.
 ## Run docker compose
 1. Run `sudo init 3` switch to non-GUI mode
 2. Run `bash ./startup.sh`
+
+## Caution
+This container image is intended for demo purposes only and not intended for production use. To receive expanded security maintenance from Canonical on the Ubuntu base layer, you may follow the [how-to guide to enable Ubuntu Pro in a Dockerfile](https://documentation.ubuntu.com/pro-client/en/docs/howtoguides/enable_in_dockerfile) which will require the image to be rebuilt.
