@@ -1,3 +1,7 @@
+
+Packages
+########
+
       .. list-table::
          :widths: 20 40 50
          :header-rows: 1
@@ -5,13 +9,13 @@
          * - Component Group
            - Package
            - Description
-         * - :ref:`LinuxBSP <linuxbsp>`
+         * - :ref:`Linux Board Support Package (BSP) <linuxbsp>`
            - | linux-intel-rt-experimental
              | linux-intel-experimental
-           - Intel's Linux LTS real-time kernel (preempt-rt) and generic kernel, kernel version is 6.12.8
+           - Linux LTS real-time kernel (preempt-rt) optimized for Intel® platforms, version 6.12 and generic kernel, version 6.12.8
          * - `Linux Runtime Optimization <https://eci.intel.com/docs/3.3/appendix.html#eci-kernel-boot-optimizations>`__
            - customizations-grub
-           - Linux ECI and Intel's GRUB Customization
+           - Linux environment for Edge Controls for Industrial (ECI) and Intel-customized GRUB
          * - `Linux firmware <https://eci.intel.com/docs/3.3/development/tutorials/enable-graphics.html>`__
            - linux-firmware
            - Linux firmware with Ultra iGPU firmware
@@ -23,7 +27,7 @@
              | ighethercat-dpdk-examples
              | ecat-enablekit
              | ecat-enablekit-dpdk
-           - Optimized open source IgH EtherCAT Master Stack, it supports on kernel space and user space
+           - Optimized open-source IgH EtherCAT Master Stack for kernel space or user space
          * - `Motion Control Gateway <https://eci.intel.com/docs/3.3/development/tutorials/enable-ros2-motion-ctrl-gw.html>`__
            - | rt-data-agent
              | ros-humble-agvm
@@ -51,13 +55,13 @@
              | ros-humble-jaka-moveit-py
              | ros-humble-run-jaka-moveit
              | ros-humble-run-jaka-plc
-           - The Industrial Motion-Control ROS2 Gateway is the communication bridge between DDS/RSTP wire-protocol ROS2 implementation and Motion Control (MC) IEC-61131-3 standard Intel implementation
+           - The Industrial Motion-Control ROS2 Gateway is the communication bridge between the DDS and RSTP wire-protocol ROS2 implementation, and the Motion Control (MC) IEC-61131-3 standard Intel implementation.
          * - :doc:`VSLAM: ORB-SLAM3 <sample_pipelines/ORB_VSLAM>`
            - | libpangolin
              | liborb-slam3
              | liborb-slam3-dev
              | orb-slam3
-           - Visual SLAM demo pipeline based on ORB-SLAM3. Refer to :doc:`VSLAM: ORB-SLAM3 <sample_pipelines/ORB_VSLAM>` for installation and launching tutorials.
+           - Visual SLAM demo pipeline based on ORB-SLAM3. See :doc:`VSLAM: ORB-SLAM3 <sample_pipelines/ORB_VSLAM>` for installation and launch tutorials.
          * - `RealSense Camera <https://wiki.ros.org/RealSense>`__
            - | librealsense2
              | librealsense2-dev
@@ -69,7 +73,7 @@
              | ros-humble-realsense2-camera
              | ros-humble-realsense2-camera-msgs
              | ros-humble-realsense2-description
-           - RealSense Camera driver and tools.
+           - RealSense camera's driver and tools.
          * - :doc:`Imitation Learning - ACT <sample_pipelines/imitation_learning_act>`
            - | act-ov
            - Action Chunking with Transformers (ACT), a method that trains a generative model to understand and predict action sequences.
@@ -83,10 +87,3 @@
          * - :doc:`Robotics Diffusion Transformer (RDT) <sample_pipelines/robotics_diffusion_transformer>`
            - | rdt-ov
            - Robotics Diffusion Transformer (RDT), the largest bimanual manipulation foundation model with strong generalizability.
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   packages/linuxbsp
-   packages/mc_gateway

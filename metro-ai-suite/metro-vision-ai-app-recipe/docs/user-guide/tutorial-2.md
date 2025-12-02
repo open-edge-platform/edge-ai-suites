@@ -162,35 +162,53 @@ Add a function node to enhance the AI inference data with custom metadata:
 ```javascript
 // Extract license, color, and type from msg.payload
 // Skip frames that don't have all required attributes
+// Uses payload.metadata.objects and parses JSON
 
-// Check if payload exists and has objects array
-if (!msg.payload || !msg.payload.objects || !Array.isArray(msg.payload.objects)) {
-    return null; // Ignore this data frame
+// Parse JSON if payload is a string
+if (typeof msg.payload === "string") {
+    try {
+        msg.payload = JSON.parse(msg.payload);
+    } catch (e) {
+        node.error("Failed to parse JSON: " + e);
+        return null;
+    }
+}
+
+// Validate that metadata.objects exists
+if (
+    !msg.payload ||
+    !msg.payload.metadata ||
+    !msg.payload.metadata.objects ||
+    !Array.isArray(msg.payload.metadata.objects)
+) {
+    return null; // Ignore this frame
 }
 
 let extractedData = [];
 
-// Process each object in the objects array
-for (let obj of msg.payload.objects) {
-    // Check if object has all required attributes
+// Process each object in metadata.objects
+for (let obj of msg.payload.metadata.objects) {
+
+    // All attributes must exist
     if (!obj.license_plate || !obj.color || !obj.type) {
         continue; // Skip this object if missing any attribute
     }
-    
-    // Extract the data
+
     let extractedObj = {
         license: obj.license_plate.label || null,
         color: obj.color.label || null,
         type: obj.type.label || null,
-        // Optional: include confidence scores
+
+        // Confidence fields
+        license_confidence: obj.license_plate.confidence || null,
         color_confidence: obj.color.confidence || null,
         type_confidence: obj.type.confidence || null
     };
-    
+
     extractedData.push(extractedObj);
 }
 
-// If no valid objects found, ignore this data frame
+// If no valid objects found, ignore this frame
 if (extractedData.length === 0) {
     return null;
 }

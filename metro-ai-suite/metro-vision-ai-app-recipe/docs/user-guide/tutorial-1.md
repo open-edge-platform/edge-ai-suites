@@ -271,15 +271,7 @@ Expected output should show containers for:
 - `grafana`
 - `mosquitto` (MQTT broker)
 
-### 2. **Access the Application Interface**
-
-Open your web browser and navigate to:
-- **Main Dashboard**: `https://<HOST_IP>/grafana` (Grafana)
-    - Username: admin
-    - Password: admin
-- **Node-RED Flow Editor**: `https://<HOST_IP>/nodered/`
-
-### 3. **Test Video Processing**
+### 2. **Test Video Processing**
 
 Start the AI pipeline and process the sample video:
 
@@ -308,7 +300,7 @@ curl -k -s https://localhost/api/pipelines/user_defined_pipelines/car_plate_reco
 }'
 ```
 
-### 4. **View Live Video Stream**
+### 3. **View Live Video Stream**
 
 Access the processed video stream with AI annotations through WebRTC:
 

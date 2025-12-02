@@ -42,8 +42,8 @@ This page provides comprehensive support and troubleshooting information for the
 
 ### 5. Object not getting detected
 
-- Check the label in frigate config.yaml for the specific camera
-- Check the top_score parameter
+- Check the label in frigate config.yaml for the specific camera.
+- Check the top_score parameter .
 
 ### 6. "No video footage available" warning during Summarize/Search Clip
 
@@ -52,27 +52,27 @@ This page provides comprehensive support and troubleshooting information for the
 
 ## Troubleshooting Docker Containers
 
-### 1. Containers Failing:
+### 1. Containers Failing
 
 - Check the Docker logs for errors:
 
-  ```bash
-  docker ps
-  docker logs <container-id>
-  ```
+   ```bash
+   docker ps
+   docker logs <container-id>
+   ```
 
-### 2. Port Conflicts:
+### 2. Port Conflicts in Docker
 
 - Update the `ports` section in the Compose file to resolve conflicts.
 
-### 3. Reset Application:
+### 3. Reset Application
 
 - Follow these steps to reset the application to the initial state
 
-  ```bash
-  ./setup.sh stop
-  docker volume rm docker_mosquitto_data docker_mosquitto_log docker_redis_data
-  ```
+   ```bash
+   ./setup.sh stop
+   docker volume rm docker_mosquitto_data docker_mosquitto_log docker_redis_data
+   ```
 
 <!--
 ## Support

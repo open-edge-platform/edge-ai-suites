@@ -33,6 +33,9 @@ Read DL Streamer [docs](https://dlstreamer.github.io/dev_guide/gpu_device_select
 ### GPU specific element properties
 DL Streamer inference elements also provides property such as `device=GPU` and `pre-process-backend=va-surface-sharing` to infer and pre-process on GPU. Read DL Streamer [docs](https://dlstreamer.github.io/dev_guide/model_preparation.html#model-pre-and-post-processing) for more.
 
+### Selecting the GPU render device of your choice if there is more than one GPU device on the system
+If you have multiple GPUs (integrated/discrete), please follow [this](https://dlstreamer.github.io/dev_guide/gpu_device_selection.html) DL Streamer document for selecting the GPU render device of your choice for VA codecs plugins.
+
 ## Tutorial on how to use GPU specific pipelines
 
 > Note - This sample application already provides a default `compose-without-scenescape.yml` file that includes the necessary GPU access to the containers.

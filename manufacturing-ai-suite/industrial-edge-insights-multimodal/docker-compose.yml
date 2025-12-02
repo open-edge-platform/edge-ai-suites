@@ -114,17 +114,19 @@ services:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
-    - ./configs/time-series-analytics-microservice/udfs/:/tmp/weld_anomaly_detector/udfs/
-    - ./configs/time-series-analytics-microservice/tick_scripts/:/tmp/weld_anomaly_detector/tick_scripts/
-    - ./configs/time-series-analytics-microservice/config.json:/app/config.json
-    - ./configs/time-series-analytics-microservice/models/:/tmp/weld_anomaly_detector/models/
-    - /dev/dri:/dev/dri
+    - ./configs/time-series-analytics-microservice/udfs/:/tmp/weld_anomaly_detector/udfs/:ro
+    - ./configs/time-series-analytics-microservice/tick_scripts/:/tmp/weld_anomaly_detector/tick_scripts/:ro
+    - ./configs/time-series-analytics-microservice/config.json:/app/config.json:ro
+    - ./configs/time-series-analytics-microservice/models/:/tmp/weld_anomaly_detector/models/:ro
+    - /dev/dri:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:
     # render group ID for ubuntu 20.04 host OS
     - "109"
     # render group ID for ubuntu 22.04 host OS
     - "110"
+    # render group ID for ubuntu 24.04 host OS
+    - "992"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
@@ -300,7 +302,7 @@ services:
     networks:
       - timeseries_network
   dlstreamer-pipeline-server:
-    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
+    image: ${DOCKER_REGISTRY}${DLSTREAMER_PIPELINE_SERVER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
     container_name: dlstreamer-pipeline-server
     hostname: dlstreamer-pipeline-server
     read_only: true
@@ -309,9 +311,6 @@ services:
     restart: unless-stopped
     security_opt:
     - no-new-privileges
-    ports:
-    - '8080:8080'
-    - '8554:8554'
     depends_on:
       - ia-weld-data-simulator
     environment:

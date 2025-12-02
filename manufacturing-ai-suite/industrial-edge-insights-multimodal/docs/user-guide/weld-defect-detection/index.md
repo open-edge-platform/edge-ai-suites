@@ -6,35 +6,25 @@
 
 ## Data flow explanation
 
-As seen in the architecture diagram above, the sample app at a high-level comprises of data simulators
-Let's discuss how this architecture translates to data flow in the weld defect detection use case, by ingesting the data using the
-RTSP stream and csv data over mqtt using simulator and publishing the anomaly results to MQTT broker for fusion analytics to process it.
+As seen in the architecture diagram above, the sample app at a high-level comprises of data simulator, analytics and visualization components.
+Let's discuss how this architecture translates to data flow in the weld defect detection use case.
 
-### **Data Sources**
+### 1. **Weld Data Simulator**
 
-Using the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator/simulation-data/` which is a normalized version of open source data welding dataset from
-[Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset).
+The Weld Data Simulator uses the sets of time synchronized .avi and .csv files from the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator/simulation-data/`, subset of test dataset coming from [Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset).
+It ingests the .avi files as RTSP streams via the **mediamtx** server. This enables real-time video ingestion, simulating camera feeds for weld defect detection.
+Similarly, it ingests the .csv files as data points into **Telegraf** using the **MQTT** protocol.
 
-The simulator reads `.avi` video files from the dataset and streams them as RTSP for vision data using the **mediamtx** server. This enables real-time video ingestion, simulating camera feeds for weld defect detection. The **dlstreamer-pipeline-server** connects to the RTSP stream and processes the video frames using a Geti model for automated defect analysis.
+---
 
-Timeseries data is being ingested into **Telegraf** using the **MQTT** protocol using the **weld-data-simulator** data simulator
-Vision data is being ingested into **dlstreamer-pipeline-server** using the **RTSP** protocol using the **weld-data-simulator** data simulator
+### 2. **Analytics Modules**
 
-### **Data Ingestion**
+#### 2.1 **DL Streamer Pipeline Server**
 
-Vision Data: **dlstreamer-pipeline-server** gathers the data through RTSP Stream using **mediamtx** as the **RTSP Server**.
+The `DL Streamer Pipeline Server` microservice reads the frames/images from the MediaMTX server over RTSP protocol, runs the configured DL weld
+defect classification model, publishes the frame metadata results over MQTT and generates the WebRTC stream with bounded boxes for visualization in **Grafana**.
 
-Time-series Data: **Telegraf** through its input plugins (**MQTT**) gathers the data and sends this input data to both **InfluxDB** and **Time Series Analytics Microservice**.
-
-### **Data Storage**
-
-**InfluxDB** stores the incoming data coming from **Telegraf**, **Time Series Analytics Microservice** and **Fusion Analytics** .
-
-### **Data Processing**
-
-**DL Streamer Pipeline Server** sends the images with overlaid bounding boxes through webrtc protocol to webrtc browser client. This is done via the MediaMTX server used for signaling. Coturn server is used to facilitate NAT traversal and ensure that the webrtc stream is accessible on a non-native browser client and helps in cases where firewall is enabled.
-
-#### **`DL Streamer Pipeline Server config.json`**
+##### **`DL Streamer Pipeline Server config.json`**
 
 **Pipeline Configuration**:
 
@@ -66,10 +56,15 @@ Time-series Data: **Telegraf** through its input plugins (**MQTT**) gathers the 
 
 ---
 
-**Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) which is already built-in to the container image. The UDF deployment package is available
+#### 2.2 **Time Series Analytics Microservice**
+
+**Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points point by point coming from **Telegraf**, runs the ML CatBoost model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. Also, publishes all the processed weld sensor data points over MQTT.
+
+The UDF deployment package used for
+weld data is available
 at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/config/time-series-analytics-microservice`. Directory details is as below:
 
-#### **`config.json`**
+##### **`config.json`**
 
 **UDFs Configuration**:
 
@@ -81,6 +76,7 @@ The `udfs` section specifies the details of the UDFs used in the task.
 | `models`| The name of the model file used by the UDF.                                 | `"weld_anomaly_detector.cb"`   |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
+
 ---
 
 **Alerts Configuration**:
@@ -97,45 +93,26 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 | `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
 | `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
 
-#### **`config/`**
 
-`kapacitor_devmode.conf` would be updated as per the `config.json` at runtime for usage.
-
-#### **`udfs/`**
+##### **`udfs/`**
 
 Contains the python script to process the incoming data.
-Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with Intel® Extension for Scikit-learn*
-to run on CPU to detect the anomalous welding using sensor.
+Uses CatBoostClassifier machine learning algorithm from the CatBoost library to run on CPU to
+detect anomalous weld data points using sensor data.
 
-#### **`tick_scripts/`**
+**Note**: Please note, CatBoost models doesn't run on Intel GPUs.
+
+
+##### **`tick_scripts/`**
 
 The TICKScript `weld_anomaly_detector.tick` determines processing of the input data coming in.
 Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts.
 By default, it is configured to publish the alerts to **MQTT**.
 
-#### **`models/`**
+##### **`models/`**
 
-The `weld_anomaly_detector.cb` is a model built using the Catboost machine learning library.
-
-### 1. **Weld Data Simulator**
-
-The Weld Data Simulator simulates the ingestion of weld image and sensor data by reading through the set of time synchronized video and weld csv files. The ingested frames/images are published to MediaMTX RTSP server. Similarly, the ingested weld sensor data are published to Telegraf.
-
----
-
-### 2. **Analytics Modules**
-
-#### 2.1 **DL Streamer Pipeline Server**
-
-The `DL Streamer Pipeline Server` microservice reads the frames/images from the MediaMTX server, runs the configured DL weld
-defect classification model, publishes the frame metadata results over MQTT and generates the webRTC stream with bounded boxes for visualization in **Grafana**.
-
----
-
-#### 2.2. **Time Series Analytics Microservice**
-
-**Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points point by point coming from **Telegraf**, runs the ML CatBoost model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT.
-Also, publishes all the processed weld sensor data points over MQTT.
+The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier Algo of CatBoost ML
+library.
 
 ---
 
@@ -143,9 +120,13 @@ Also, publishes all the processed weld sensor data points over MQTT.
 
 **Fusion Analytics** subscribes to the MQTT topics coming out of `DL Streamer Pipeline Server` and `Time Series Analytics Microservice`, applies `AND`/`OR` logic to determine the anomalies during weld process, publishes the results over MQTT and writes the results as a measurement/table in **InfluxDB**
 
-#### 3. **Data Visualization**
+### 3. **Data Storage**
 
-**Grafana** provides an intuitive user interface for visualizing time series data stored in **InfluxDB** and also rendering the output of `DL Streamer Pipeline Server` coming as webRTC stream. Additionally, it visualizes the fusion analytics results stored in **InfluxDB**.
+**InfluxDB** stores the incoming data coming from **Telegraf**, **Time Series Analytics Microservice** and **Fusion Analytics** .
+
+### 4. **Data Visualization**
+
+**Grafana** provides an intuitive user interface for visualizing time series data stored in **InfluxDB** and also rendering the output of `DL Streamer Pipeline Server` coming as WebRTC stream. Additionally, it visualizes the fusion analytics results stored in **InfluxDB**.
 
 ---
 
