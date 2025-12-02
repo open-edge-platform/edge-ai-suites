@@ -281,7 +281,6 @@ def start_video_analytics_pipeline(
             output_dir = os.path.join(location, name, x_session_id, "va")
 
             options = PipelineOptions(
-                device=config.models.va.device,
                 output_dir=output_dir,
                 output_rtsp=config.va_pipeline.output_rtsp_url,
                 threshold=config.models.va.threshold,
