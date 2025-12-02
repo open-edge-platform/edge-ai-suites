@@ -100,6 +100,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const isRecording = useAppSelector((s) => s.ui.isRecording);
   const justStoppedRecording = useAppSelector((s) => s.ui.justStoppedRecording);
   const videoAnalyticsStopping = useAppSelector((s) => s.ui.videoAnalyticsStopping);
+  const hasUploadedVideoFiles = useAppSelector((s) => s.ui.hasUploadedVideoFiles);
 
   useEffect(() => {
     dispatch(loadCameraSettingsFromStorage());
@@ -171,21 +172,26 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
 
   useEffect(() => {
     let interval: number | undefined;
-    if (isRecording) {
+    const recordingAllowed = hasAudioDevices;
+
+    if (isRecording && recordingAllowed)   {
       interval = window.setInterval(() => setTimer((t) => t + 1), 1000);
     } else {
       if (interval) clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [isRecording]);
+  }, [isRecording, hasAudioDevices]);
 
   const hasVideoCapability = useMemo(() => {
-    return Boolean(
+    const hasCameraSettings = Boolean(
       frontCamera?.trim() || 
       backCamera?.trim() || 
       boardCamera?.trim()
     );
-  }, [frontCamera, backCamera, boardCamera]);
+    
+    // Video capability exists if either camera settings OR uploaded files exist
+    return hasCameraSettings || hasUploadedVideoFiles;
+  }, [frontCamera, backCamera, boardCamera, hasUploadedVideoFiles]);
 
   useEffect(() => {
     if (hasVideoCapability && videoStatus === 'no-config') {
@@ -253,11 +259,12 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     }
 
     switch (videoStatus) {
-      case 'no-config':
-        setVideoNotification(t('notifications.noVideoConfigured'));
-        break;
+      case 'idle':
       case 'ready':
         setVideoNotification(t('notifications.videoReady'));
+        break;
+      case 'no-config':
+        setVideoNotification(t('notifications.noVideoConfigured'));
         break;
       case 'starting':
         setVideoNotification(t('notifications.startingVideoAnalytics'));
@@ -294,8 +301,12 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
+  // Check if there's nothing to record (no audio devices AND no video capability)
+  const hasNothingToRecord = !hasAudioDevices && !hasVideoCapability;
+
   const isRecordingDisabled = isRecording ? false : (
     audioDevicesLoading ||
+    hasNothingToRecord ||  // ✅ NEW: Disable if nothing to record
     isBusy ||
     transcriptStatus === 'streaming' ||     
     summaryLoading ||                         
@@ -618,6 +629,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
 
   const getRecordingTooltip = () => {
     if (audioDevicesLoading) return t('tooltips.checkingAudioDevices');
+    if (hasNothingToRecord) return t('tooltips.noDevicesOrStreams'); // ✅ NEW: Specific tooltip for no devices/streams
     if (isRecordingDisabled) return t('tooltips.recordingDisabled');
     return isRecording ? t('tooltips.stopRecording') : t('tooltips.startRecording');
   };

@@ -32,7 +32,8 @@ import {
   setProcessingMode,
   setAudioStatus,
   setVideoStatus,
-  startTranscription
+  startTranscription,
+  setHasUploadedVideoFiles
 } from '../../redux/slices/uiSlice';
 import { resetTranscript, appendTranscript, finishTranscript, startTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
@@ -281,7 +282,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       console.log('🎯 Audio status set to processing - will show "Analyzing audio..."');
     } else {
       dispatch(setAudioStatus('no-devices'));
-      console.log('🎯 Audio status set to no-devices - will show "No audio devices"');
+      console.log('🎯 Audio status set to ready - no audio file selected');
     }
 
     setLoading(true);
@@ -325,7 +326,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       } else {
         console.log('📝 No audio file provided, skipping audio upload');
         dispatch(setProcessingMode('video-only'));
-        // Audio status already set to 'no-devices' above
+        // Audio status already set to 'ready' above
       }
 
       const frontFullPath = frontCameraPath ? constructFilePath(frontCameraPath.name) : "";
@@ -361,24 +362,34 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       console.log('📹 Valid pipelines to send:', validPipelines);
 
       const hasValidVideo = validPipelines.length > 0;
-      console.log('🎯 Has valid video:', hasAudioFile);
+      console.log('🎯 Has valid video:', hasValidVideo);
+      
+      // Set the uploaded video files flag
+      dispatch(setHasUploadedVideoFiles(hasValidVideo));
+      
       setNotification(getProcessingNotification(hasAudioFile, hasValidVideo));
     
+      if (hasValidVideo) {
+        dispatch(setVideoStatus('starting'));
+        console.log('📹 Setting video status to starting - valid files found');
+      } else {
+        dispatch(setVideoStatus('no-config'));
+        console.log('📹 Setting video status to no-config - no valid files');
+      }
+
       let videoAnalyticsStarted = false;
       if (hasValidVideo) {
         videoAnalyticsStarted = await startVideoAnalyticsWithSession(sessionId, validPipelines);
         if (videoAnalyticsStarted) {
           console.log('✅ Video analytics started successfully');
+          // Status will be updated by startVideoAnalyticsWithSession to 'streaming'
         } else {
           console.warn('⚠️ Video analytics failed to start');
+          dispatch(setVideoStatus('failed'));
         }
       } else {
         console.log('📹 No valid video files provided, skipping video analytics');
-        if (hasVideoFiles) {
-          dispatch(setVideoStatus('failed'));
-        } else {
-          dispatch(setVideoStatus('no-config'));
-        }
+        // Status already set to 'no-config' above
       }
     
       if (hasAudioFile && audioPath) {
@@ -388,7 +399,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       } else {
         console.log('📝 No audio file provided, skipping transcription');
       }
-      console.log(hasAudioFile.valueOf());
+      
       const finalNotification = getSuccessNotification(hasAudioFile, hasValidVideo, videoAnalyticsStarted);
   
       console.log(finalNotification)
@@ -411,18 +422,6 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       setNotification('');
       dispatch(processingFailed());
       setLoading(false);
-
-      if (monitoringTimer) {
-        clearTimeout(monitoringTimer);
-        setMonitoringTimer(null);
-
-        try {
-          await stopMonitoring();
-          console.log('🧹 Monitoring stopped due to error cleanup');
-        } catch (stopError) {
-          console.error('❌ Failed to stop monitoring during error cleanup:', stopError);
-        }
-      }
     }
   };
 
@@ -430,9 +429,6 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     return () => {
       if (monitoringTimer) {
         clearTimeout(monitoringTimer);
-        stopMonitoring().catch(error => {
-          console.error('❌ Failed to stop monitoring during cleanup:', error);
-        });
       }
       
       if (abortRef.current && shouldAbortRef.current) {
