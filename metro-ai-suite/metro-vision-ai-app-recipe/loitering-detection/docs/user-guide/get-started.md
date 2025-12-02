@@ -188,5 +188,5 @@ Choose one of the following methods to deploy the Loitering Detection Sample App
 
 ## Supporting Resources
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [DL Streamer Pipeline Server](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/Overview.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 
