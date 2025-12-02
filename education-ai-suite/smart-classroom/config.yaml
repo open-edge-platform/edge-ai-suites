@@ -34,7 +34,6 @@ models:
 
   va:
     models_base_path: "models"
-    device: NPU # NPU or GPU
     threshold: 0.5 # confidence threshold for YOLO detections
 
 mindmap:
