@@ -18,8 +18,8 @@ Figure 1: Architecture diagram
 
 This sample application is built with the following Intel Edge AI Stack Microservices:
 
--   <a href="https://docs.openedgeplatform.intel.com/edge-ai-libraries/dlstreamer-pipeline-server/main/user-guide/Overview.html">**DL Streamer Pipeline Server**</a> is an interoperable containerized microservice based on Python for video ingestion and deep learning inferencing functions.
--   <a href="https://docs.openedgeplatform.intel.com/edge-ai-libraries/model-registry/main/user-guide/Overview.html">**Model Registry Microservice**</a> provides a centralized repository that facilitates the management of AI models
+-   <a href="https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html">**DL Streamer Pipeline Server**</a> is an interoperable containerized microservice based on Python for video ingestion and deep learning inferencing functions.
+-   <a href="https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-registry/index.html">**Model Registry Microservice**</a> provides a centralized repository that facilitates the management of AI models
 
 It also consists of the below Third-party microservices:
 

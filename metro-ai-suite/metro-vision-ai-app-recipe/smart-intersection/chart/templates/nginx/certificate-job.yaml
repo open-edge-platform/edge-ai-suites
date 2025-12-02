@@ -33,49 +33,49 @@ spec:
           set -e
           echo "Installing required packages..."
           apk add --no-cache openssl curl
-          
+
           echo "Generating CA certificate..."
-          
+
           # Create certificate directory
           mkdir -p /tmp/certs
-          
+
           # Generate CA private key and certificate
           openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
             -keyout /tmp/certs/ca.key \
             -out /tmp/certs/ca.crt \
             -subj "/CN=smart-intersection-ca/O=smart-intersection"
-          
+
           echo "Generating certificate for nginx reverse proxy..."
-          
+
           # Generate nginx private key and certificate request
           openssl req -nodes -newkey rsa:2048 \
             -keyout /tmp/certs/nginx-tls.key \
             -out /tmp/certs/nginx.csr \
             -subj "/CN=smart-intersection-nginx/O=nginx-reverse-proxy"
-          
+
           # Create nginx extensions file
           echo "subjectAltName=DNS:smart-intersection-nginx,DNS:web.scenescape.intel.com,DNS:localhost,IP:{{ .Values.global.externalIP | default "127.0.0.1" }}" > /tmp/certs/nginx.ext
-          
+
           # Sign nginx certificate with CA
           openssl x509 -req -in /tmp/certs/nginx.csr -CA /tmp/certs/ca.crt -CAkey /tmp/certs/ca.key -CAcreateserial -out /tmp/certs/nginx-tls.crt -days 365 -extfile /tmp/certs/nginx.ext
-          
+
           echo "Generating certificate for broker..."
-          
+
           # Generate broker private key and certificate request
           openssl req -nodes -newkey rsa:2048 \
             -keyout /tmp/certs/broker-tls.key \
             -out /tmp/certs/broker.csr \
             -subj "/CN=smart-intersection-broker/O=mqtt-broker"
-          
+
           # Create broker extensions file
           echo "subjectAltName=DNS:smart-intersection-broker,DNS:broker.scenescape.intel.com,DNS:localhost,IP:{{ .Values.global.externalIP | default "127.0.0.1" }}" > /tmp/certs/broker.ext
-          
+
           # Sign broker certificate with CA
           openssl x509 -req -in /tmp/certs/broker.csr -CA /tmp/certs/ca.crt -CAkey /tmp/certs/ca.key -CAcreateserial -out /tmp/certs/broker-tls.crt -days 365 -extfile /tmp/certs/broker.ext
-          
+
           echo "Certificates generated successfully"
           ls -la /tmp/certs/
-          
+
           # Base64 encode the certificates
           NGINX_TLS_CRT=$(base64 -w 0 /tmp/certs/nginx-tls.crt)
           NGINX_TLS_KEY=$(base64 -w 0 /tmp/certs/nginx-tls.key)
@@ -83,10 +83,10 @@ spec:
           BROKER_TLS_KEY=$(base64 -w 0 /tmp/certs/broker-tls.key)
           CA_CRT=$(base64 -w 0 /tmp/certs/ca.crt)
           CA_KEY=$(base64 -w 0 /tmp/certs/ca.key)
-          
+
           # Get the service account token
           TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-          
+
           # Create TLS secret for nginx using Kubernetes API
           echo "Creating nginx TLS secret using Kubernetes API..."
           curl -k -X POST \
@@ -105,8 +105,8 @@ spec:
                 \"tls.key\": \"$NGINX_TLS_KEY\"
               }
             }" \
-            "https://kubernetes.default.svc.cluster.local/api/v1/namespaces/{{ .Release.Namespace }}/secrets"
-          
+            "{{ .Values.kubernetesAPIEndpoint }}/api/v1/namespaces/{{ .Release.Namespace }}/secrets"
+
           echo ""
           echo "Creating broker TLS secret..."
           curl -k -X POST \
@@ -127,8 +127,8 @@ spec:
                 \"tls.key\": \"$BROKER_TLS_KEY\"
               }
             }" \
-            "https://kubernetes.default.svc.cluster.local/api/v1/namespaces/{{ .Release.Namespace }}/secrets"
-          
+            "{{ .Values.kubernetesAPIEndpoint }}/api/v1/namespaces/{{ .Release.Namespace }}/secrets"
+
           echo ""
           echo "Creating CA secret..."
           curl -k -X POST \
@@ -149,25 +149,25 @@ spec:
                 \"tls.key\": \"$CA_KEY\"
               }
             }" \
-            "https://kubernetes.default.svc.cluster.local/api/v1/namespaces/{{ .Release.Namespace }}/secrets"
-          
+            "{{ .Values.kubernetesAPIEndpoint }}/api/v1/namespaces/{{ .Release.Namespace }}/secrets"
+
           echo "Generating certificate for web service..."
-          
+
           # Generate web private key and certificate request
           openssl req -nodes -newkey rsa:2048 \
             -keyout /tmp/certs/web-tls.key \
             -out /tmp/certs/web.csr \
             -subj "/CN=smart-intersection-web/O=web-service"
-          
+
           # Create web extensions file
           echo "subjectAltName=DNS:smart-intersection-web,DNS:web.scenescape.intel.com,DNS:localhost,IP:{{ .Values.global.externalIP | default "127.0.0.1" }}" > /tmp/certs/web.ext
-          
+
           # Sign web certificate with CA
           openssl x509 -req -in /tmp/certs/web.csr -CA /tmp/certs/ca.crt -CAkey /tmp/certs/ca.key -CAcreateserial -out /tmp/certs/web-tls.crt -days 365 -extfile /tmp/certs/web.ext
-          
+
           echo "Certificates generated successfully"
           ls -la /tmp/certs/
-          
+
           # Base64 encode the certificates
           NGINX_TLS_CRT=$(base64 -w 0 /tmp/certs/nginx-tls.crt)
           NGINX_TLS_KEY=$(base64 -w 0 /tmp/certs/nginx-tls.key)
@@ -177,7 +177,7 @@ spec:
           WEB_TLS_KEY=$(base64 -w 0 /tmp/certs/web-tls.key)
           CA_CRT=$(base64 -w 0 /tmp/certs/ca.crt)
           CA_KEY=$(base64 -w 0 /tmp/certs/ca.key)
-          
+
           echo ""
           echo "Creating web TLS secret..."
           curl -k -X POST \
@@ -196,8 +196,8 @@ spec:
                 \"tls.key\": \"$WEB_TLS_KEY\"
               }
             }" \
-            "https://kubernetes.default.svc.cluster.local/api/v1/namespaces/{{ .Release.Namespace }}/secrets"
-          
+            "{{ .Values.kubernetesAPIEndpoint }}/api/v1/namespaces/{{ .Release.Namespace }}/secrets"
+
           echo "All TLS secrets created successfully"
         volumeMounts:
         - name: service-account-token

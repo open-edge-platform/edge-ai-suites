@@ -1,3 +1,4 @@
+/* Container layout */
 .container {
   display: flex;
   flex: 1 1 auto;
@@ -6,32 +7,79 @@
   height: 100%;
   background: #f5f7fa;
   gap: 12px;
+  z-index: 1000;
 }
 
-.left-panel, .right-panel {
+/* Fullscreen state (video floated over panels) */
+.container.fullscreen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  z-index: 1000;
+}
+
+/* Panels */
+.left-panel,
+.right-panel {
   overflow-y: auto;
   height: calc(100vh - 64px - 56px - 48px);
   box-sizing: border-box;
   padding: 12px 8px;
 }
 
-
 .left-panel {
   flex: 1;
   background-color: #f8f8f8;
 }
 
+/* When video is fullscreen, push panels below it */
+.container.fullscreen .left-panel,
+.container.fullscreen .right-panel {
+  margin-top: calc(70vh - 64px - 56px);
+  position: relative;
+  /* //z-index: 10000; */
+}
+
+/* Wrapper holding panels */
+.panels-wrapper {
+  display: flex;
+  flex: 1;
+  width: 100%;
+}
+
+.container.fullscreen .panels-wrapper {
+  margin-top: calc(70vh - 64px - 56px);
+  align-items: stretch;
+}
+
+/* Video */
+.video-wrapper {
+  width: 100%;
+}
+
+.video-wrapper.fullscreen {
+  position: fixed;
+  top: calc(64px + 56px); /* Header + top bar */
+  left: 0;
+  right: 0;
+  height: 70vh;
+  /* z-index: 100; */
+  background: #000;
+}
+
+/* Divider (hidden by design) */
 .divider {
   display: none;
 }
 
+/* Collapse arrow */
 .arrow {
   position: absolute;
   top: 50%;
-  left: calc(50% - 14px); /* Center between panels */
+  left: calc(50% - 14px);
   transform: translateY(-50%);
   cursor: pointer;
-  z-index: 100;
+  z-index: 20;
   color: #0071c5;
   background: #fff;
   border-radius: 50%;
@@ -46,9 +94,15 @@
 }
 
 .arrow.collapsed {
-  left: calc(100% - 38px); /* When collapsed, keep it visible at right edge */
+  left: calc(100% - 38px);
 }
 
 .arrow.hidden {
   display: none;
+}
+
+.arrow.below-video {
+  position: fixed;
+  right: 50%;
+  z-index: 120;
 }

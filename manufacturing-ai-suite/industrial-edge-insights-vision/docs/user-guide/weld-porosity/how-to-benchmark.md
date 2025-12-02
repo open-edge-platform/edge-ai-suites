@@ -4,10 +4,10 @@ This guide demonstrates how to benchmark the weld porosity classification pipeli
 ## Contents
 
 ### Prerequisites
-> Ensure the application is set up and running. Refer to the [Setup Guide](../setup-guide.md) for complete installation and configuration steps.
+> Ensure the application is set up and running. Refer to the [Get Started Guide](./get-started.md) for complete installation and configuration steps.
 
 - DL Streamer Pipeline Server (DLSPS) running and accessible
-- `curl`, `jq`, `gawk` and `bc` utilities installed
+- `curl`, `jq`, `gawk`, `ffmpeg`, and `bc` utilities installed
 
 ### Benchmark Script Usage
 

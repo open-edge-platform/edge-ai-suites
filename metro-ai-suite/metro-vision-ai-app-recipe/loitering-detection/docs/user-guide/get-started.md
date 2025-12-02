@@ -79,18 +79,17 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      ```bash
      ./sample_start.sh
      ```
-
+   - To check the status of the pipelines:
+      ```bash
+      ./sample_status.sh
+      ```
      <details>
      <summary>
-     Check Status and Stop pipelines
+     Stop pipelines
      </summary>
 
-     - To check the status:
-       ```bash
-       ./sample_status.sh
-       ```
-
      - To stop the pipelines without waiting for video streams to finish replay:
+     > NOTE: This will stop all the pipelines and the streams. DO NOT run this if you want to see loitering detection
        ```bash
        ./sample_stop.sh
        ```
@@ -189,5 +188,5 @@ Choose one of the following methods to deploy the Loitering Detection Sample App
 
 ## Supporting Resources
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [DL Streamer Pipeline Server](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/Overview.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 

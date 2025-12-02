@@ -12,6 +12,44 @@ spec:
       labels:
         app: mqtt-broker
     spec:
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        {{- with .Values.podSecurityContext.fsGroup }}
+        fsGroup: {{ . }}
+        {{- end }}
+        {{- with .Values.podSecurityContext.runAsUser }}
+        runAsUser: {{ . }}
+        {{- end }}
+        {{- with .Values.podSecurityContext.runAsGroup }}
+        runAsGroup: {{ . }}
+        {{- end }}
+        {{- with .Values.podSecurityContext.runAsNonRoot }}
+        runAsNonRoot: {{ . }}
+        {{- end }}
+      {{- end }}
+
+      {{- $runUser := default 1883 (get (default dict .Values.containerSecurityContext) "runAsUser") }}
+      {{- $runGroup := default 1883 (get (default dict .Values.containerSecurityContext) "runAsGroup") }}
+
+      initContainers:
+        - name: prepare-auth-volume
+          image: busybox:1.36
+          securityContext:
+            allowPrivilegeEscalation: {{ .Values.initContainerSecurityContext.allowPrivilegeEscalation }}
+            readOnlyRootFilesystem: {{ .Values.initContainerSecurityContext.readOnlyRootFilesystem }}
+            runAsNonRoot: {{ .Values.initContainerSecurityContext.runAsNonRoot }}
+            runAsUser: {{ .Values.initContainerSecurityContext.runAsUser }}
+            runAsGroup: {{ .Values.initContainerSecurityContext.runAsGroup }}
+          command:
+            - sh
+            - -c
+            - >-
+              mkdir -p {{ .Values.auth.mountPath }} &&
+              chown {{ $runUser }}:{{ $runGroup }} {{ .Values.auth.mountPath }}
+          volumeMounts:
+            - name: auth
+              mountPath: {{ .Values.auth.mountPath }}
+
       containers:
         - name: mqtt-broker
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -29,14 +67,34 @@ spec:
               subPath: mosquitto.conf
             - name: data
               mountPath: /mosquitto/data
+            - name: auth
+              mountPath: {{ .Values.auth.mountPath }}
+          {{- if .Values.containerSecurityContext }}
+          securityContext:
+            {{- if hasKey .Values.containerSecurityContext "allowPrivilegeEscalation" }}
+            allowPrivilegeEscalation: {{ .Values.containerSecurityContext.allowPrivilegeEscalation }}
+            {{- end }}
+            {{- if hasKey .Values.containerSecurityContext "readOnlyRootFilesystem" }}
+            readOnlyRootFilesystem: {{ .Values.containerSecurityContext.readOnlyRootFilesystem }}
+            {{- end }}
+            {{- if hasKey .Values.containerSecurityContext "runAsNonRoot" }}
+            runAsNonRoot: {{ .Values.containerSecurityContext.runAsNonRoot }}
+            {{- end }}
+            {{- if hasKey .Values.containerSecurityContext "runAsUser" }}
+            runAsUser: {{ .Values.containerSecurityContext.runAsUser }}
+            {{- end }}
+            {{- if hasKey .Values.containerSecurityContext "runAsGroup" }}
+            runAsGroup: {{ .Values.containerSecurityContext.runAsGroup }}
+            {{- end }}
+          {{- end }}
           command:
             - sh
             - -c
             - |
-              touch /mosquitto/config/pwfile && \
-              mosquitto_passwd -c -b /mosquitto/config/pwfile $${MQTT_USER} $${MQTT_PASSWORD} && \
-              chmod 0700 /mosquitto/config/pwfile && \
-              chown mosquitto:mosquitto /mosquitto/config/pwfile && \
+              touch {{ .Values.auth.passwordFilePath }} && \
+              mosquitto_passwd -c -b {{ .Values.auth.passwordFilePath }} $${MQTT_USER} $${MQTT_PASSWORD} && \
+              chmod 0700 {{ .Values.auth.passwordFilePath }} && \
+              chown {{ $runUser }}:{{ $runGroup }} {{ .Values.auth.passwordFilePath }} && \
               mosquitto -c /mosquitto/config/mosquitto.conf
 
       volumes:
@@ -44,4 +102,6 @@ spec:
           configMap:
             name: mqtt-config
         - name: data
-          emptyDir: {}  # or use a PVC for persistence
+          emptyDir: {}
+        - name: auth
+          emptyDir: {}
