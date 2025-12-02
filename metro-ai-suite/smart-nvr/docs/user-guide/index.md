@@ -43,8 +43,8 @@ The diagram shows the key components of the Smart NVR application. The descripti
 - **NVR Event Router**:
 
   NVR Event Router is the glue layer between the (Frigate) NVR and the video analytics pipeline. This component serves two primary objectives.
-    - It helps track the events raised by the NVR and connect the events of interest to the Video analytics pipeline like [Video search and summary](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization) application. The events of interest are determined by the query raised by the user. Video associated with the event can be further processed by the video analytics pipelines.
-    - It provides mechanism to configure the applications available under video analytics category as appropriate to the target use cases. [Video search and summary](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization) sample application and [Image based Video Search](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search) sample application are two example pipelines. The latter is not integrated yet as part of Smart NVR offering.
+    - It helps track the events raised by the NVR and connect the events of interest to the Video analytics pipeline like [Video search and summary](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2025.2.0/sample-applications/video-search-and-summarization) application. The events of interest are determined by the query raised by the user. Video associated with the event can be further processed by the video analytics pipelines.
+    - It provides mechanism to configure the applications available under video analytics category as appropriate to the target use cases. [Video search and summary](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2025.2.0/sample-applications/video-search-and-summarization) sample application and [Image based Video Search](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2025.2.0/metro-ai-suite/image-based-video-search) sample application are two example pipelines. The latter is not integrated yet as part of Smart NVR offering.
 
 - **Reference UI**
 
@@ -53,7 +53,7 @@ The diagram shows the key components of the Smart NVR application. The descripti
 ### Key Features
 
 - **Feature 1**: Architecture based on modular microservices enables composability and reconfiguration.
-- **Feature 2**: Connects to available video analytics pipeline applications like [Video search and summary](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization) sample application and [Image based Video Search](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search) sample application.
+- **Feature 2**: Connects to available video analytics pipeline applications like [Video search and summary](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2025.2.0/sample-applications/video-search-and-summarization) sample application and [Image based Video Search](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2025.2.0/metro-ai-suite/image-based-video-search) sample application.
 - **Feature 3**: Independent Gradio based UI allows extending the capability of Smart NVR sample application independent of the integrated video analytics sample applications.
 - **Feature 4**: **[Experimental] AI-Powered Event Descriptions**: Optional integration with OEP VLM Microservice to generate intelligent, context-aware descriptions of detected events using vision-language models.
 

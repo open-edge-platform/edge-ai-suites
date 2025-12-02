@@ -92,7 +92,7 @@ The shell scripts starting with `sample_*.sh` eases interaction with DLStreamer 
 
 ## Prerequisites
 
-Please ensure that you have the correct version of the DL Streamer Pipeline Server image as specified in the [compose](./docker-compose.yml) and [helm](./helm/templates/dlstreamer-pipeline-server.yaml) deployment files. Instructions to build DL Streamer Pipeline Server can be found [here](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/dlstreamer-pipeline-server#build-from-source)
+Please ensure that you have the correct version of the DL Streamer Pipeline Server image as specified in the [compose](./docker-compose.yml) and [helm](./helm/templates/dlstreamer-pipeline-server.yaml) deployment files. Instructions to build DL Streamer Pipeline Server can be found [here](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2025.2.0/microservices/dlstreamer-pipeline-server#build-from-source)
 
 ## Getting Started
 

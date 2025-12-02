@@ -11,7 +11,7 @@ by a Type-2 hypervisor such as
 `EMT <https://github.com/open-edge-platform/edge-microvisor-toolkit>`__.
 The Retrieval-Augmented Generation (RAG) pipeline and supporting AI services are deployed
 natively on a host system, which is EMT in this implementation.
-`Chat Question-and-Answer Core <https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/chat-question-and-answer-core>`__
+`Chat Question-and-Answer Core <https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2025.2.0/sample-applications/chat-question-and-answer-core>`__
 provides the RAG capability.
 This separation ensures robust isolation between the HMI and AI components, enabling
 independent scaling, maintenance, and updates. The setup leverages the strengths of both
@@ -65,7 +65,7 @@ It is designed for minimal memory usage, being developed as a single, monolithic
 with the complete RAG pipeline integrated into one microservice.
 
 The 'ChatQnA Core` application should be setup on the host system. For further details,
-visit `Chat Question-and-Answer Core Sample Application Overview <https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/overview.md>`__.
+visit `Chat Question-and-Answer Core Sample Application Overview <https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/sample-applications/chat-question-and-answer-core/docs/user-guide/overview.md>`__.
 The application is used as is without any changes.
 The configurable parameters like the LLM model, Embedding model, Reranker model, or
 Retriever model are setup based on the HMI application requirement.
@@ -109,4 +109,4 @@ For more comprehensive guidance on beginning, see the
    get-started
    release-notes
    how-to-build-from-source
-   Source Code <https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/hmi-augmented-worker>
+   Source Code <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2025.2.0/manufacturing-ai-suite/hmi-augmented-worker>

@@ -303,10 +303,10 @@ const CONFIG = {
           },
           links: [
             { text: "Audio Analyzer", url: "https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/audio-analyzer/index.html" },
-            { text: "Document Ingestion - pgvector", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/get-started.md" },
-            { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md" },
-            { text: "Visual Data Preparation For Retrieval", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md" },
-            { text: "VLM OpenVINO Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md" },
+            { text: "Document Ingestion - pgvector", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/document-ingestion/pgvector/docs/get-started.md" },
+            { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md" },
+            { text: "Visual Data Preparation For Retrieval", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md" },
+            { text: "VLM OpenVINO Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md" },
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/2025.2/ai-libraries.html"},
             { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/2025.2/ai-suite-metro.html"}
           ]
@@ -347,10 +347,10 @@ const CONFIG = {
           },
           links: [
             { text: "Audio Analyzer", url: "https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/audio-analyzer/index.html" },
-            { text: "Document Ingestion - pgvector", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/get-started.md" },
-            { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md" },
-            { text: "Visual Data Preparation For Retrieval", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md" },
-            { text: "VLM OpenVINO Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md" },
+            { text: "Document Ingestion - pgvector", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/document-ingestion/pgvector/docs/get-started.md" },
+            { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md" },
+            { text: "Visual Data Preparation For Retrieval", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md" },
+            { text: "VLM OpenVINO Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md" },
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/2025.2/ai-libraries.html"},
             { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/2025.2/ai-suite-metro.html"}
           ]

@@ -85,7 +85,7 @@ Model Serving
 +++++++++++++
 
 Check the
-`model serving doc <https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices>`__
+`model serving doc <https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2025.2.0/microservices>`__
 for more details.
 
 Web UI

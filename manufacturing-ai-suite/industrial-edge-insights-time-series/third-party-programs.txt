@@ -39,7 +39,7 @@ License-Identifier: 2-clause BSD-like
 ia-time-series-analytics-microservice:
 =============================
 
-Info available at [third-party-programs.txt](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/time-series-analytics/third-party-programs.txt)
+Info available at [third-party-programs.txt](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/time-series-analytics/third-party-programs.txt)
 
 ----------------------------------------------------------------------
 

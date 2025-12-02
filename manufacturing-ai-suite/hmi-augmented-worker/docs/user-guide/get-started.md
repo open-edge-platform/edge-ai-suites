@@ -6,7 +6,7 @@ The `Get Started` guide explains how the HMI Augmented Worker application can be
 
 The sample application has mandatory prerequisites that are covered in other documentation. The user is required to refer to the respective documentation for the details. The prerequisites listed below cover such dependencies.
 
-- Set up EMT based Type-2 Hypervisor host on target hardware. EMT is a reference hypervisor which has been used for validation. Other Type-2 hypervisors can also be used as per user preference. Reference documentation link for EMT as VM host is provided in [Other Documentation](#other-documentation) section. The reader is advised to contact Intel representatives for further details on configuring EMT host VM and instructions on hosting the Windows® Guest OS. 
+- Set up EMT based Type-2 Hypervisor host on target hardware. EMT is a reference hypervisor which has been used for validation. Other Type-2 hypervisors can also be used as per user preference. Reference documentation link for EMT as VM host is provided in [Other Documentation](#other-documentation) section. The reader is advised to contact Intel representatives for further details on configuring EMT host VM and instructions on hosting the Windows® Guest OS.
 
 - The `HMI Augmented Worker` sample application utilizes `Chat Question and Answer Core` for the RAG pipeline. The [documentation](#other-documentation) available with `Chat Question-and-Answer Core` covers the details of how to set up the RAG pipeline, deploy it, and consume the application. Follow the instructions provided and set up the RAG pipeline.
 
@@ -71,4 +71,4 @@ To use the application effectively, make sure that all the steps mentioned in th
 - [Create EMT bootable USB drive using source code](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/get-started-guide.md#create-a-bootable-usb-drive-using-source-code)
 - [Desktop Virtualization on EMT](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/desktop-virtualization-image-guide.md)
 - [EMT Documentation](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/3.0/docs/developer-guide)
-- [Chat Question and Answer Core Main Page](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/chat-question-and-answer-core)
+- [Chat Question and Answer Core Main Page](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2025.2.0/sample-applications/chat-question-and-answer-core)

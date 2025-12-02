@@ -33,8 +33,8 @@ The below aspects need to be updated accordingly, in order to leverage an existi
 
 Note: The underlying application architecture remains the same.
 
-## Build a new application: 'AI Crowd Analytics' 
- 
+## Build a new application: 'AI Crowd Analytics'
+
  Now let us get started with building a new 'AI Crowd Analytics' application that automatically detects vehicles and identifies whether they form a "crowd" (closely grouped vehicles) or are scattered individually. The system leverages Intel's DLStreamer framework with pre-trained AI models to process video streams and analyze vehicle clustering patterns in real-time.
 
 We will leverage the 'Smart Parking' application as the existing 'Metro Vision AI App Recipe powered application' and turn it into a 'AI Crowd Analytics' application.
@@ -136,7 +136,7 @@ Pipeline Configuration Explanation
 The GStreamer pipeline configuration defines the crowd analytics AI processing workflow:
 
 - **Source**: Accepts video input from parking lot video file
-- **Decode**: Converts video format to raw frames for processing  
+- **Decode**: Converts video format to raw frames for processing
 - **gvaattachroi**: Defines a region of interest (ROI) with coordinates thus improving performance by processing only the relevant portion of the frame
 - **gvadetect**: Runs the YOLO11s object detection model (FP16 optimized) on CPU to identify and locate vehicles in each frame
 - **gvatrack**: Tracks detected vehicles across frames using imageless tracking, assigning persistent IDs to each vehicle without storing frame images
@@ -769,7 +769,7 @@ Create debug nodes to monitor the hotspot analytics pipeline:
 
 1. **Add Debug Nodes**:
    - Add debug nodes after each function node
-   - **Names**: 
+   - **Names**:
      - `Vehicle Positions Debug`
      - `Hotspot Detection Debug`
      - `Analytics Output Debug`
@@ -810,9 +810,9 @@ The hotspot analytics data that would be published to `hotspot_analytics` can be
    - In the below "Content", update <HOST_IP> to your host IP address. If you are testing on localhost, update it to localhost.
 
    ```html
-   <iframe 
-     src="https://<HOST_IP>/mediamtx/object_detection_1/" 
-     style="width:100%;height:500px;" 
+   <iframe
+     src="https://<HOST_IP>/mediamtx/object_detection_1/"
+     style="width:100%;height:500px;"
      allow="autoplay; encrypted-media"
      frameborder="0">
    </iframe>
@@ -834,7 +834,7 @@ The hotspot analytics data that would be published to `hotspot_analytics` can be
 
 2. **Run the pipeline**:
    - Use the curl command to start the crowd analytics pipeline
-   
+
         ```bash
         curl -k -s https://localhost/api/pipelines/user_defined_pipelines/yolov11s_crowd_analytics -X POST -H 'Content-Type: application/json' -d '
         {
@@ -860,14 +860,14 @@ The hotspot analytics data that would be published to `hotspot_analytics` can be
         ```
     **Note: It is essential for the pipeline to remain running while applying the transformations in the next step**
 
-3. **Add Transformations** (Transform tab at bottom):   
+3. **Add Transformations** (Transform tab at bottom):
    - **Sort by**:
       - Click **"+ Add transformation"** → Select **"Sort by"**
       - **Field**: Select **"Time"**
       - **Reverse**: Toggle to **On** (newest first)
-      
+
       **Purpose**: Ensures the most recent data for each hotspot appears first
-   
+
    - **Group by**:
       - Click **"+ Add transformation"** → Select **"Group by"**
       - Under **Group by** panel:
@@ -898,7 +898,7 @@ The hotspot analytics data that would be published to `hotspot_analytics` can be
 
 6. **Run the pipeline** (if not already running):
    - Use the curl command to start the crowd analytics pipeline to see the expected results:
-   
+
         ```bash
         curl -k -s https://localhost/api/pipelines/user_defined_pipelines/yolov11s_crowd_analytics -X POST -H 'Content-Type: application/json' -d '
         {
@@ -974,7 +974,7 @@ As per the business logic mentioned in previous steps, you would see that when a
     - Check that msg.payload.metadata.objects exists
 
 7. **Vehicles are present but no hotspots detected**
-    
+
     In node red:
     - Verify bounding box coordinates are valid (x, y, w, h format)
     - Check centroid calculations in vehicle position extractor
@@ -995,7 +995,7 @@ As per the business logic mentioned in previous steps, you would see that when a
 ## Supporting Resources
 
 - [DLStreamer Documentation](https://dlstreamer.github.io/)
-- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)
+- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2025.2.0/metro-ai-suite)
 - [Node-RED Official Documentation](https://nodered.org/docs/)
 - [MQTT Protocol Specification](https://mqtt.org/)
 - [Euclidean Distance Algorithms](https://en.wikipedia.org/wiki/Euclidean_distance)

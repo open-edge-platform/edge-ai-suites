@@ -1,7 +1,7 @@
 # Security Enablement
 
 In today's rapidly evolving transportation landscape, Edge AI is transforming how we manage traffic and enhance road safety. However, these advancements come with significant AI cybersecurity with AI systems managing critical transportation infrastructure and acting on a vast amount of cities data. There is increased focus on cybersecurity regulations to protect against potential vulnerabilities and attacks, especially with Agentic AI making lot of autonomous decision. Intel platforms, equipped with built-in security features, offer robust solutions to address these concerns, ensuring data privacy, infrastructure protection, and secure AI processing.
- 
+
 This tutorial provides steps and guidance to enable Intel buildt-in security features with the smart intersection application to ensure
 - Comprehensive Data Privacy: Protect sensitive personal data with strong encryption protocols and blockchain technology, ensuring secure transactions and compliance with regulations.
 - Infrastructure Protection: Safeguard your critical infrastructure with regular firmware updates and advanced threat detection systems, mitigating vulnerabilities in distributed edge devices.
@@ -9,7 +9,7 @@ This tutorial provides steps and guidance to enable Intel buildt-in security fea
 
 This guide covers security enablement for the Smart Intersection application, including:
 - dTPM (Discrete Trusted Platform Module)
-- FDE (Full Disk Encryption) 
+- FDE (Full Disk Encryption)
 - UEFI Secure Boot
 - TME (Total Memory Encryption)
 - Trusted Compute deployment for isolated video analytics
@@ -18,7 +18,7 @@ These security features protect the Smart Intersection system from unauthorized 
 
 ## 1. Enabling dTPM for Smart Intersection Security
 
-**Prerequisites**: 
+**Prerequisites**:
 - dTPM module must be physically connected to the PTL Board
 - Recommended: Infineon TPM (Xenon_4.1.0) for optimal Smart Intersection compatibility
 
@@ -44,7 +44,7 @@ These security features protect the Smart Intersection system from unauthorized 
 
 1. **Launch MFIT Tool**: Execute `mfit.exe` and wait for the application to fully load.
 
-2. **Decompose Original IFWI**: 
+2. **Decompose Original IFWI**:
    - Click the **"Decompose Image"** button
    - Select the downloaded IFWI file from the extracted directory
    - Wait for the decomposition process to complete
@@ -157,7 +157,7 @@ mokutil --sb-state
 TPM clear removes all stored keys, certificates, and ownership data from the Trusted Platform Module, resetting it to factory defaults. This is useful when setting up security for a new Smart Intersection deployment.
 
 1. Enter the boot manager menu
-2. Choose the TCG2 configuration 
+2. Choose the TCG2 configuration
 3. Clear the TPM
 
 ![TPM Clear Configuration Menu](./_images/security_tpm_clear_configuration_menu.png)
@@ -211,7 +211,7 @@ There are two FDE methods available. Choose based on your Smart Intersection sec
 - This encrypts your entire drive using LVM
 - Requires a strong passphrase that you'll enter at boot time to decrypt and access your system
 
-**Method 2: Hardware-backed Full Disk Encryption** 
+**Method 2: Hardware-backed Full Disk Encryption**
 - Uses dedicated security chips (TPM or Secure Enclave) to store encryption keys
 - Provides stronger protection than software-only encryption
 - **Note**: To enable this option, you must first enable Secure Boot in BIOS/UEFI settings and clear/reset the TPM module
@@ -357,7 +357,7 @@ cd smart-intersection/chart/templates/dlstreamer-pipeline-server/
 
 # Update the WEBRTC_SIGNALING_SERVER configuration
 # In configmap.yaml, change:
-# WEBRTC_SIGNALING_SERVER: "ws://localhost:8443" 
+# WEBRTC_SIGNALING_SERVER: "ws://localhost:8443"
 # to:
 # WEBRTC_SIGNALING_SERVER: "ws://<Host_IP>:8443"
 # Where <Host_IP> is the Host IP of the machine where the application is running
@@ -371,7 +371,7 @@ Configure resource allocation to allocate CPU cores and memory. You can adjust t
 
 Follow the steps mentioned in the official documentation to run the Helm chart:
 
-[Steps to Deploy the Helm Chart](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/how-to-deploy-helm.md)
+[Steps to Deploy the Helm Chart](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2025.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/how-to-deploy-helm.md)
 
 ### Step 6: Verify DL Streamer Launch
 
@@ -405,7 +405,7 @@ By leveraging Intel's cutting-edge security solutions, transportation systems ca
 With these security features enabled, your Smart Intersection application will benefit from:
 
 - **dTPM**: Hardware-based cryptographic operations and secure key storage
-- **UEFI Secure Boot**: Verified boot chain ensuring system integrity 
+- **UEFI Secure Boot**: Verified boot chain ensuring system integrity
 - **Full Disk Encryption**: Protection of traffic analysis data and system configurations
 - **Total Memory Encryption**: Runtime protection of sensitive algorithms and detection models
 - **Trusted Compute**: Isolated execution environment for video analytics pipelines with enhanced security

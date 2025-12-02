@@ -403,4 +403,4 @@ After successfully setting up the AI Tolling system, consider these enhancements
 ## Supporting Resources
 
 - [DLStreamer Documentation](https://dlstreamer.github.io/)
-- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)
+- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2025.2.0/metro-ai-suite)
