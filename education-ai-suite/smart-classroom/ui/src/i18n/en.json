@@ -44,7 +44,8 @@
       "checkingAudioDevices": "Checking audio devices...",
       "startRecording": "Start recording",
       "stopRecording": "Stop recording",
-      "recordingDisabled": "Recording disabled - another operation in progress"
+      "recordingDisabled": "Recording disabled - another operation in progress",
+      "noDevicesOrStreams": "No audio devices or video streams are configured for streaming"
     },
     "settings": {
       "title": "Settings",

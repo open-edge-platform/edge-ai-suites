@@ -24,7 +24,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
   const isRecording = useAppSelector((state) => state.ui.aiProcessing);
   const uploadedAudioPath = useAppSelector((state) => state.ui.uploadedAudioPath);
   const transcriptStatus = useAppSelector((state) => state.transcript.status);
-  
+  const videoStatus = useAppSelector((state) => state.ui.videoStatus);
   const streams = useAppSelector((state) => ({
     front: state.ui.frontCameraStream,
     back: state.ui.backCameraStream,
@@ -70,24 +70,24 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScr
     if (videoAnalyticsLoading) {
       return "loading";
     }
+    
     if (videoAnalyticsActive && hasValidStreams()) {
       return "active";
     }
+    
     const currentlyRecording = isCurrentlyRecording();
-    
-    if (currentlyRecording && !videoAnalyticsActive && !videoAnalyticsLoading) {
-      return "audio_only"; 
+    if (videoStatus === 'starting' || videoStatus === 'streaming') {
+      return "loading";
     }
-    if (!currentlyRecording && !videoAnalyticsActive && !videoAnalyticsLoading) {
-      return "inactive";
+    if (videoStatus === 'failed' && currentlyRecording) {
+      return "video_failed";
     }
-    if (currentlyRecording && !videoAnalyticsActive && !videoAnalyticsLoading) {
-      const hasEmptyStreams = streams.front === '' && streams.back === '' && streams.content === '';
-      if (hasEmptyStreams) {
-        return "video_failed";
-      }
+    if (currentlyRecording && hasValidStreams() && !videoAnalyticsActive && !videoAnalyticsLoading) {
+      return "video_failed";
+    } 
+    if (currentlyRecording && !hasValidStreams() && !videoAnalyticsActive && !videoAnalyticsLoading) {
+      return "audio_only";
     }
-    
     return "inactive";
   };
 
