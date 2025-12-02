@@ -31,8 +31,6 @@ This section provides a high-level view of how the application integrates with a
 
 ![High-Level System Diagram](./_images/smart-intersection-architecture.drawio.svg)
 
-The sample application is built with
-
 ### Example Content for Diagram Description
 - **Inputs**:
   - **Video Files** - Four traffic intersection cameras that capture videos simultaneously.
