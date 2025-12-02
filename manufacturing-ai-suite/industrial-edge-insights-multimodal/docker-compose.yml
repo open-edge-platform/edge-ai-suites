@@ -243,7 +243,7 @@ services:
     environment:
       no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP}"
       NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP}"
-      HOST_IP: ${HOST_IP}
+      MEDIAMTX_SERVER: mediamtx
       WHIP_SERVER_PORT: ${WHIP_SERVER_PORT}
     ports:
       - "${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API
@@ -388,11 +388,6 @@ services:
     security_opt:
     - no-new-privileges
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
-    ports:
-      - ${WHIP_SERVER_PORT}:8889   # WebRTC
-      - 9554:8554   # RTSP
-      # - "8888:8888"   # HTTP API / Web UI
-      # - "8890:8890"   # RTMP
     environment:
       - MTX_LOGLEVEL=info
       - MTX_RTSP=yes

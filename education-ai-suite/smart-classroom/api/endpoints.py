@@ -283,6 +283,7 @@ def start_video_analytics_pipeline(
             options = PipelineOptions(
                 output_dir=output_dir,
                 output_rtsp=config.va_pipeline.output_rtsp_url,
+                threshold=config.models.va.threshold,
             )
 
             # Launch each pipeline

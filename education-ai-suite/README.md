@@ -17,4 +17,3 @@ The main features are as follows:
 - Board Camera Pipeline: **Board content classification**
 
 For full setup, usage, and contribution guide, see [**Read the Detailed Documentation**](smart-classroom/README.md)
-

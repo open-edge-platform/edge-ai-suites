@@ -51,6 +51,11 @@ By following this guide, you will learn how to:
 ## Run the Application
 
 1. **Start the Application**:
+   - Export admin password as environment variable:
+     ```bash
+     export SUPASS=$(cat ./smart-intersection/src/secrets/supass)
+     ```
+
    - Download container images with Application microservices and run with Docker Compose:
      ```bash
      docker compose up -d

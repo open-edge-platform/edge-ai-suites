@@ -7,7 +7,7 @@ Jackal robot's onboard computer can communicate with the Motor
 Control Unit (MCU).
 
 Ensure that you have set up your Jackal robot as described on the
-[Jackal Intel Robotics](./jackal-intel-robotics-sdk.rst) page.
+[Jackal Intel Robotics](./jackal-intel-robotics-sdk.md) page.
 
 Log in as the ``administrator`` to run the following steps:
 
@@ -52,7 +52,7 @@ Log in as the ``administrator`` to run the following steps:
 
    <!--hide_directive::::{tab-set}hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt-get update
@@ -61,7 +61,7 @@ Log in as the ``administrator`` to run the following steps:
 
    <!--hide_directive:::hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt-get update

@@ -202,7 +202,7 @@ prerequisites by:
 - Installing the OpenVINO™ Runtime by executing these steps:
 
   1. Add the OpenVINO™ APT package sources as described in the
-     ["OpenVINO™ Installation Steps"](../../gsg_robot/install-openvino.rst)
+     ["OpenVINO™ Installation Steps"](../../gsg_robot/install-openvino.md)
      section.
 
   2. Make sure that your file `/etc/apt/preferences.d/intel-openvino`
@@ -288,7 +288,7 @@ target device follow the steps below:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt update
@@ -297,7 +297,7 @@ target device follow the steps below:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt update
@@ -313,7 +313,7 @@ target device follow the steps below:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    cp -r /opt/ros/jazzy/share/amr-esdq/AMR_Test_Module/ $ROBOTICS_SDK/modules/
@@ -321,7 +321,7 @@ target device follow the steps below:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    cp -r /opt/ros/humble/share/amr-esdq/AMR_Test_Module/ $ROBOTICS_SDK/modules/
@@ -384,7 +384,7 @@ target device follow the steps below:
    ```
 
 4. If your system uses a Linux Kernel 6.7.5 or later, read the
-   [GPU device is not detected with Linux Kernel 6.7.5 or later](../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst).
+   [GPU device is not detected with Linux Kernel 6.7.5 or later](../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.md).
    If your system is impacted by this issue, export the following debug
    variables as a workaround:
 
@@ -443,7 +443,7 @@ You can check your current configuration by:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    source /opt/ros/jazzy/setup.bash
@@ -454,7 +454,7 @@ You can check your current configuration by:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    source /opt/ros/humble/setup.bash
@@ -501,7 +501,7 @@ You can check your current configuration by:
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    source /opt/ros/jazzy/setup.bash
@@ -512,7 +512,7 @@ You can check your current configuration by:
 
    <!--hide_directive:::
    :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    source /opt/ros/humble/setup.bash
@@ -557,7 +557,7 @@ generated in the `$ROBOTICS_SDK/reports/` directory: `report.html` and
 
 ## Troubleshooting
 
-For issues, refer to [Troubleshooting](../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst).
+For issues, refer to [Troubleshooting](../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.md).
 
 ## Support Forum
 

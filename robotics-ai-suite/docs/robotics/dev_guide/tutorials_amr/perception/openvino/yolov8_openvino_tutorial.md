@@ -12,7 +12,7 @@ Complete the [get started guide](../../../../gsg_robot/index.rst) before continu
 
 ### Install OpenVINO™ package
 
-Follow the [Install Openvino](../../../../gsg_robot/install-openvino.rst) instructions to install OpenVINO™.
+Follow the [Install Openvino](../../../../gsg_robot/install-openvino.md) instructions to install OpenVINO™.
 
 ### Install Python packages (optional)
 
@@ -27,7 +27,7 @@ pip3 install numpy pandas openvino-dev ultralytics nncf onnx
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install ros-jazzy-openvino-yolov8 ros-jazzy-openvino-yolov8-msgs
@@ -35,7 +35,7 @@ sudo apt install ros-jazzy-openvino-yolov8 ros-jazzy-openvino-yolov8-msgs
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install ros-humble-openvino-yolov8 ros-humble-openvino-yolov8-msgs

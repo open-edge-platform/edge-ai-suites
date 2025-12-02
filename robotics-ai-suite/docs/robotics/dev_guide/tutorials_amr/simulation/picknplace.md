@@ -21,7 +21,7 @@ Install `picknplace-simulation` Debian package from Intel® Autonomous Mobile Ro
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt update
@@ -30,7 +30,7 @@ sudo apt install ros-jazzy-picknplace-simulation
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt update
@@ -44,7 +44,7 @@ sudo apt install ros-humble-picknplace-simulation
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -53,7 +53,7 @@ ros2 launch picknplace warehouse.launch.py
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -134,7 +134,7 @@ install command issued earlier will ensure Cyclone DDS is installed.
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt-get install ros-jazzy-rmw-cyclonedds-cpp
@@ -143,7 +143,7 @@ export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt-get install ros-humble-rmw-cyclonedds-cpp
@@ -221,4 +221,4 @@ resource for anyone interested in robotic simulations.
 ## Troubleshooting
 
 For general robot issues, refer to
-[Troubleshooting](../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.rst).
+[Troubleshooting](../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.md).

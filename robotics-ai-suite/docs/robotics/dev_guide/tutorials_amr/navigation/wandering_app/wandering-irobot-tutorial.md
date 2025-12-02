@@ -20,7 +20,7 @@ in a testing playground:
 
 ### Prerequisites
 
-- Assemble your robotic kit following the instructions for [irobot-create3](../../developer_kit/irobot-create3-robot.rst)
+- Assemble your robotic kit following the instructions for [irobot-create3](../../developer_kit/irobot-create3-robot.md)
 - Complete the [get started guide](../../../../gsg_robot/index.rst) before continuing.
 
 ### Intel® board connected to iRobot Create 3
@@ -52,7 +52,7 @@ Intel® board connected to the robot.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 apt install ros-jazzy-wandering-irobot-tutorial
@@ -60,7 +60,7 @@ apt install ros-jazzy-wandering-irobot-tutorial
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 apt install ros-humble-wandering-irobot-tutorial
