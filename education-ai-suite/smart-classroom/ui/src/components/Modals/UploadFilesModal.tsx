@@ -2,9 +2,39 @@ import React, { useState, useRef } from 'react';
 import Modal from './Modal';
 import '../../assets/css/UploadFilesModal.css';
 import folderIcon from '../../assets/images/folder.svg';
-import { startVideoAnalyticsPipeline, uploadAudio, getClassStatistics, streamTranscript } from '../../services/api';
+import { 
+  startVideoAnalyticsPipeline, 
+  uploadAudio, 
+  getClassStatistics, 
+  streamTranscript, 
+  createSession,
+  startMonitoring,  
+  stopMonitoring    
+} from '../../services/api';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { setFrontCamera, setBackCamera, setBoardCamera, setUploadedAudioPath, startProcessing, processingFailed, resetFlow, setSessionId, setActiveStream, startStream, transcriptionComplete, setFrontCameraStream, setBackCameraStream, setBoardCameraStream, setVideoAnalyticsLoading, setVideoAnalyticsActive } from '../../redux/slices/uiSlice';
+import { 
+  setFrontCamera, 
+  setBackCamera, 
+  setBoardCamera, 
+  setUploadedAudioPath, 
+  startProcessing, 
+  processingFailed, 
+  resetFlow, 
+  setSessionId, 
+  setActiveStream, 
+  startStream, 
+  transcriptionComplete, 
+  setFrontCameraStream, 
+  setBackCameraStream, 
+  setBoardCameraStream, 
+  setVideoAnalyticsLoading, 
+  setVideoAnalyticsActive, 
+  setProcessingMode,
+  setAudioStatus,
+  setVideoStatus,
+  startTranscription,
+  setHasUploadedVideoFiles
+} from '../../redux/slices/uiSlice';
 import { resetTranscript, appendTranscript, finishTranscript, startTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
 import { clearMindmap } from '../../redux/slices/mindmapSlice';
@@ -25,6 +55,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(constants.START_NOTIFICATION);
+  const [monitoringTimer, setMonitoringTimer] = useState<number | null>(null);
  
   const dispatch = useAppDispatch();
   const abortRef = useRef<AbortController | null>(null);
@@ -43,11 +74,26 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       const target = e.target as HTMLInputElement;
       if (target.files && target.files[0]) {
         const file = target.files[0];
-        setter(file);
-        console.log('Selected file:', file);
-        setError(null);
+        const fileName = file.name.toLowerCase();
+        let isValidFile = false;
+        if (accept === '.wav,.mp3') {
+          isValidFile = fileName.endsWith('.wav') || fileName.endsWith('.mp3');
+        } else if (accept === '.mp4') {
+          isValidFile = fileName.endsWith('.mp4');
+        } else {
+          isValidFile = true;
+        }
+        
+        if (isValidFile) {
+          setter(file);
+          console.log('Selected file:', file);
+          setError(null);
+        } else {
+          setter(null);
+          const expectedTypes = accept.replace(/\./g, '').replace(/,/g, ', ');
+          setError(`Please select only ${expectedTypes} files.`);
+        }
       } else {
-        // Explicitly set the state to null if no file is selected
         setter(null);
         console.log('No file selected');
       }
@@ -55,99 +101,18 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     input.click();
   };
  
-  const startStreamTranscriptAndVideoAnalytics = (audioPath: string, pipelines: any[]) => {
+  const startStreamTranscriptAndVideoAnalytics = (audioPath: string, sessionId: string, pipelines: any[]) => {
     const aborter = new AbortController();
     abortRef.current = aborter;
  
     const run = async () => {
       try {
         console.log('🎯 Starting transcript stream for:', audioPath);
+        console.log('🆔 Using session ID:', sessionId);
        
-        const stream = streamTranscript(audioPath, {
+        const stream = streamTranscript(audioPath, sessionId, {
           signal: aborter.signal,
           tokenDelayMs: 120,
-          onSessionId: async (id) => {
-            console.log('🆔 UploadFilesModal received sessionId:', id);
-           
-            if (!id) {
-              console.error('❌ Session ID is null');
-              return;
-            }
-           
-            console.log('✅ UploadFilesModal dispatching setSessionId:', id);
-            dispatch(setSessionId(id));
-           
-            // Check if we have any valid video pipelines
-            if (pipelines.length > 0) {
-              // Start video analytics immediately when we get session ID
-              try {
-                console.log('🎬 Starting video analytics with session ID:', id);
-                console.log('🎬 Pipelines to send:', pipelines);
-                dispatch(startStream());
-                dispatch(setVideoAnalyticsLoading(true));
-               
-                const videoResponse = await startVideoAnalyticsPipeline(pipelines, id);
-                console.log('✅ Video analytics pipeline started successfully:', videoResponse);
-
-                let hasSuccessfulStreams = false;
-   
-                // Update Redux state with the results
-                videoResponse.results.forEach((result: any) => {
-                  console.log('Processing result:', result);
-                  if (result.status === "success" && result.hls_stream) {
-                    hasSuccessfulStreams = true;
-                    switch (result.pipeline_name) {
-                      case 'front':
-                        console.log('Setting front camera stream:', result.hls_stream);
-                        dispatch(setFrontCameraStream(result.hls_stream));
-                        break;
-                      case 'back':
-                        console.log('Setting back camera stream:', result.hls_stream);
-                        dispatch(setBackCameraStream(result.hls_stream));
-                        break;
-                      case 'content':
-                        console.log('Setting content camera stream:', result.hls_stream);
-                        dispatch(setBoardCameraStream(result.hls_stream));
-                        break;
-                    }
-                  } else if (result.status === "error") {
-                    console.error(`❌ Error with ${result.pipeline_name}:`, result.error);
-                  }
-                });
-
-                if (hasSuccessfulStreams) {
-                  // Set active stream to 'all' to show all cameras
-                  console.log('Setting active stream to all');
-                  dispatch(setActiveStream('all'));
-                  dispatch(setVideoAnalyticsActive(true)); // Set video analytics as active
-                }
-   
-                dispatch(setVideoAnalyticsLoading(false));
-   
-                // Fetch Class Statistics after video analytics starts
-                setTimeout(async () => {
-                  try {
-                    console.log('📊 Fetching class statistics for session:', id);
-                    const classStatistics = await getClassStatistics(id);
-                    console.log('✅ Class Statistics:', classStatistics);
-                    dispatch(setClassStatistics(classStatistics));
-                  } catch (err) {
-                    console.error('❌ Failed to fetch class statistics:', err);
-                  }
-                }, 10000);
-   
-              } catch (videoError) {
-                console.error('❌ Failed to start video analytics:', videoError);
-                dispatch(setVideoAnalyticsLoading(false));
-                dispatch(setVideoAnalyticsActive(false));
-              }
-            } else {
-              console.log('📹 No valid video pipelines found, skipping video analytics');
-              // Still set video analytics as inactive but not loading
-              dispatch(setVideoAnalyticsLoading(false));
-              dispatch(setVideoAnalyticsActive(false));
-            }
-          },
         });
  
         let sentFirst = false;
@@ -159,14 +124,16 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
          
           if (ev.type === "transcript") {
             if (!sentFirst) {
-              console.log('🎤 Starting transcript display');
               dispatch(startTranscript());
+              dispatch(startTranscription());
+              console.log('🎯 Audio status updated to transcribing - will show "Loading transcript..."');
               sentFirst = true;
             }
             dispatch(appendTranscript(ev.token));
           } else if (ev.type === 'error') {
             console.error('❌ Transcription error:', ev.message);
             dispatch(finishTranscript());
+            dispatch(setAudioStatus('error'));
             break;
           } else if (ev.type === 'done') {
             console.log('✅ Transcription completed');
@@ -175,15 +142,13 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
             break;
           }
         }
-       
-        console.log(`🏁 Stream processing completed. Total events: ${eventCount}`);
-       
       } catch (error) {
         const isAbortError = error instanceof Error && error.name === 'AbortError';
         if (isAbortError) {
           console.log('🛑 Stream was aborted');
         } else {
           console.error('❌ Stream transcript error:', error);
+          dispatch(setAudioStatus('error'));
         }
       }
     };
@@ -191,93 +156,281 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     run();
   };
  
-  const handleApply = async () => {
-    if (!audioFile) {
-      setError('Audio file is required.');
-      return;
+  const startVideoAnalyticsWithSession = async (sessionId: string, pipelines: any[]) => {
+    if (pipelines.length === 0) {
+      console.log('📹 No valid video pipelines found, skipping video analytics');
+      dispatch(setVideoAnalyticsLoading(false));
+      dispatch(setVideoAnalyticsActive(false));
+      dispatch(setVideoStatus('no-config'));
+      return false;
     }
  
-    console.log('🚀 Starting processing...');
+    try {
+      console.log('🎬 Starting video analytics with session ID:', sessionId);
+      console.log('🎬 Pipelines to send:', pipelines);
+      dispatch(startStream());
+      dispatch(setVideoAnalyticsLoading(true));
+      dispatch(setVideoStatus('starting'));
+     
+      const videoResponse = await startVideoAnalyticsPipeline(pipelines, sessionId);
+ 
+      let hasSuccessfulStreams = false;
+ 
+      videoResponse.results.forEach((result: any) => {
+        console.log('Processing result:', result);
+        if (result.status === "success" && result.hls_stream) {
+          hasSuccessfulStreams = true;
+          switch (result.pipeline_name) {
+            case 'front':
+              dispatch(setFrontCameraStream(result.hls_stream));
+              break;
+            case 'back':
+              dispatch(setBackCameraStream(result.hls_stream));
+              break;
+            case 'content':
+              dispatch(setBoardCameraStream(result.hls_stream));
+              break;
+          }
+        } else if (result.status === "error") {
+          console.error(`❌ Error with ${result.pipeline_name}:`, result.error);
+        }
+      });
+ 
+      if (hasSuccessfulStreams) {
+        dispatch(setActiveStream('all'));
+        dispatch(setVideoAnalyticsActive(true));
+        dispatch(setVideoStatus('streaming'));
+      } else {
+        dispatch(setVideoStatus('failed'));
+      }
+ 
+      dispatch(setVideoAnalyticsLoading(false));
+ 
+      if (hasSuccessfulStreams) {
+        setTimeout(async () => {
+          try {
+            console.log('📊 Fetching class statistics for session:', sessionId);
+            const classStatistics = await getClassStatistics(sessionId);
+            console.log('✅ Class Statistics:', classStatistics);
+            dispatch(setClassStatistics(classStatistics));
+          } catch (err) {
+            console.error('❌ Failed to fetch class statistics:', err);
+          }
+        }, 10000);
+      }
+ 
+      return hasSuccessfulStreams;
+ 
+    } catch (videoError) {
+      console.error('❌ Failed to start video analytics:', videoError);
+      dispatch(setVideoAnalyticsLoading(false));
+      dispatch(setVideoAnalyticsActive(false));
+      dispatch(setVideoStatus('failed'));
+      return false;
+    }
+  };
+ 
+  const getProcessingNotification = (hasAudio: boolean, hasVideo: boolean) => {
+    if (hasAudio && hasVideo) {
+      return 'Starting video analytics and transcription...';
+    } else if (hasAudio && !hasVideo) {
+      return 'Starting transcription...';
+    } else if (!hasAudio && hasVideo) {
+      return 'Starting video analytics...';
+    } else {
+      return 'Starting processing...';
+    }
+  };
+ 
+  const getSuccessNotification = (hasAudio: boolean, hasVideo: boolean, videoStarted: boolean) => {
+    const audioSuccess = hasAudio;
+    const videoSuccess = hasVideo && videoStarted;
+ 
+    if (audioSuccess && videoSuccess) {
+      return 'Transcription and video analytics started successfully.';
+    } else if (audioSuccess && !videoSuccess && hasVideo) {
+      return 'Transcription started successfully. Video analytics failed to start.';
+    } else if (audioSuccess && !hasVideo) {
+      return 'Transcription started successfully.';
+    } else if (!audioSuccess && videoSuccess) {
+      return 'Video analytics started successfully.';
+    } else if (!audioSuccess && !videoSuccess && hasVideo) {
+      return 'Failed to start video analytics.';
+    } else {
+      return 'No valid processing started.';
+    }
+  };
+ 
+  const handleApply = async () => {
+    const hasAudioFile = audioFile !== null;
+    const hasVideoFiles = frontCameraPath !== null || rearCameraPath !== null || boardCameraPath !== null;
+  
+    if (!hasAudioFile && !hasVideoFiles) {
+      setError('At least one file (audio or video) is required.');
+      return;
+    }
+
     setNotification('Starting processing...');
     dispatch(resetFlow());
     dispatch(resetTranscript());
     dispatch(resetSummary());
     dispatch(clearMindmap());
     dispatch(startProcessing());
- 
+
+    if (hasAudioFile) {
+      dispatch(setAudioStatus('processing'));
+      console.log('🎯 Audio status set to processing - will show "Analyzing audio..."');
+    } else {
+      dispatch(setAudioStatus('no-devices'));
+      console.log('🎯 Audio status set to ready - no audio file selected');
+    }
+
     setLoading(true);
     setError(null);
- 
+
     try {
-      setNotification('Uploading audio...');
-      const audioResponse = await uploadAudio(audioFile);
-      dispatch(setUploadedAudioPath(audioResponse.path));
-      console.log('✅ Audio uploaded successfully:', audioResponse);
- 
-      // Construct video file paths
+      setNotification('Creating session...');
+      const sessionResponse = await createSession();
+      const sessionId = sessionResponse.sessionId;
+      console.log('✅ Session created:', sessionId);
+      dispatch(setSessionId(sessionId));
+      
+      try {
+        console.log('📊 Starting monitoring for session:', sessionId);
+        const monitoringResult = await startMonitoring(sessionId);
+        const timer = setTimeout(async () => {
+          try {
+            console.log('⏰ 45 minutes elapsed - stopping monitoring');
+            const stopResult = await stopMonitoring();
+            console.log('✅ Monitoring stopped after 45 minutes:', stopResult.message);
+          } catch (error) {
+            console.error('❌ Failed to stop monitoring after 45 minutes:', error);
+          }
+        }, 45 * 60 * 1000);
+
+        setMonitoringTimer(timer);
+        console.log('⏰ Monitoring timer set for 45 minutes');
+      } catch (monitoringError) {
+        console.error('❌ Failed to start monitoring (non-critical):', monitoringError);
+      }
+
+      let audioPath = '';
+      if (hasAudioFile) {
+        setNotification('Uploading...');
+        const audioResponse = await uploadAudio(audioFile);
+        dispatch(setUploadedAudioPath(audioResponse.path));
+        // Audio status already set to 'processing' above
+        audioPath = audioResponse.path;
+        console.log('✅ Audio uploaded successfully:', audioResponse);
+        dispatch(setProcessingMode('audio'));
+      } else {
+        console.log('📝 No audio file provided, skipping audio upload');
+        dispatch(setProcessingMode('video-only'));
+        // Audio status already set to 'ready' above
+      }
+
       const frontFullPath = frontCameraPath ? constructFilePath(frontCameraPath.name) : "";
       const rearFullPath = rearCameraPath ? constructFilePath(rearCameraPath.name) : "";
       const boardFullPath = boardCameraPath ? constructFilePath(boardCameraPath.name) : "";
- 
+
       console.log('📹 Video file paths:', {
         front: frontFullPath,
         rear: rearFullPath,
         board: boardFullPath,
       });
- 
-      // Construct pipelines - only include pipelines with valid sources
+
       const allPipelines = [
-        { 
-          pipeline_name: 'front', 
-          source: frontFullPath 
+        {
+          pipeline_name: 'front',
+          source: frontFullPath
         },
-        { 
-          pipeline_name: 'back', 
-          source: rearFullPath 
+        {
+          pipeline_name: 'back',
+          source: rearFullPath
         },
-        { 
-          pipeline_name: 'content', 
-          source: boardFullPath 
+        {
+          pipeline_name: 'content',
+          source: boardFullPath
         },
       ];
 
-      // Filter out pipelines with empty sources
-      const validPipelines = allPipelines.filter(pipeline => 
+      const validPipelines = allPipelines.filter(pipeline =>
         pipeline.source && pipeline.source.trim() !== ''
       );
 
       console.log('📹 All pipelines:', allPipelines);
       console.log('📹 Valid pipelines to send:', validPipelines);
- 
-      setNotification('Starting transcription and video analytics...');
-     
-      // Start both transcript and video analytics (video analytics will start when session ID is received)
-      startStreamTranscriptAndVideoAnalytics(audioResponse.path, validPipelines);
-     
-      console.log('✅ Transcript and video analytics processes started');
-      setNotification('Processing started successfully.');
-     
-      // Mark that we shouldn't abort the stream when modal closes
+
+      const hasValidVideo = validPipelines.length > 0;
+      console.log('🎯 Has valid video:', hasValidVideo);
+      
+      // Set the uploaded video files flag
+      dispatch(setHasUploadedVideoFiles(hasValidVideo));
+      
+      setNotification(getProcessingNotification(hasAudioFile, hasValidVideo));
+    
+      if (hasValidVideo) {
+        dispatch(setVideoStatus('starting'));
+        console.log('📹 Setting video status to starting - valid files found');
+      } else {
+        dispatch(setVideoStatus('no-config'));
+        console.log('📹 Setting video status to no-config - no valid files');
+      }
+
+      let videoAnalyticsStarted = false;
+      if (hasValidVideo) {
+        videoAnalyticsStarted = await startVideoAnalyticsWithSession(sessionId, validPipelines);
+        if (videoAnalyticsStarted) {
+          console.log('✅ Video analytics started successfully');
+          // Status will be updated by startVideoAnalyticsWithSession to 'streaming'
+        } else {
+          console.warn('⚠️ Video analytics failed to start');
+          dispatch(setVideoStatus('failed'));
+        }
+      } else {
+        console.log('📹 No valid video files provided, skipping video analytics');
+        // Status already set to 'no-config' above
+      }
+    
+      if (hasAudioFile && audioPath) {
+        console.log('🎯 Starting transcript stream - audio status will change from processing to transcribing');
+        startStreamTranscriptAndVideoAnalytics(audioPath, sessionId, validPipelines);
+        console.log('✅ Transcript stream started');
+      } else {
+        console.log('📝 No audio file provided, skipping transcription');
+      }
+      
+      const finalNotification = getSuccessNotification(hasAudioFile, hasValidVideo, videoAnalyticsStarted);
+  
+      console.log(finalNotification)
+      setNotification(finalNotification);
+    
+      console.log('✅ Processing summary:', {
+        audioFile: hasAudioFile,
+        videoFiles: hasValidVideo,
+        videoAnalyticsStarted,
+        finalMessage: finalNotification
+      });
+    
       shouldAbortRef.current = false;
-     
       setLoading(false);
-     
-      // Close modal immediately after starting processes
       onClose();
- 
+
     } catch (err) {
       console.error('❌ Failed during processing:', err);
       setError('Failed during processing. Please try again.');
       setNotification('');
       dispatch(processingFailed());
       setLoading(false);
-      // Keep shouldAbortRef.current = true so stream gets aborted on error
     }
   };
- 
+
   React.useEffect(() => {
     return () => {
-      // Only abort if we should abort (i.e., there was an error or unexpected unmount)
+      if (monitoringTimer) {
+        clearTimeout(monitoringTimer);
+      }
+      
       if (abortRef.current && shouldAbortRef.current) {
         console.log('🛑 Aborting stream due to component unmount or error');
         abortRef.current.abort();
@@ -285,7 +438,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         console.log('✅ Modal closed normally - stream continues running');
       }
     };
-  }, []);
+  }, [monitoringTimer]);
  
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -315,7 +468,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
                 src={folderIcon}
                 alt="Choose File"
                 className="folder-icon"
-                onClick={() => handleFileSelect(setAudioFile, 'audio/*')}
+                onClick={() => handleFileSelect(setAudioFile, '.wav,.mp3')}
               />
             </div>
           </div>
@@ -332,10 +485,11 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
                 src={folderIcon}
                 alt="Choose File"
                 className="folder-icon"
-                onClick={() => handleFileSelect(setFrontCameraPath, 'video/*')}
+                onClick={() => handleFileSelect(setFrontCameraPath, '.mp4')}
               />
             </div>
           </div>
+
           <div className="modal-input-group">
             <label>Rear Camera File</label>
             <div className="file-input-wrapper">
@@ -349,10 +503,11 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
                 src={folderIcon}
                 alt="Choose File"
                 className="folder-icon"
-                onClick={() => handleFileSelect(setRearCameraPath, 'video/*')}
+                onClick={() => handleFileSelect(setRearCameraPath, '.mp4')}
               />
             </div>
           </div>
+
           <div className="modal-input-group">
             <label>Board Camera File</label>
             <div className="file-input-wrapper">
@@ -366,7 +521,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
                 src={folderIcon}
                 alt="Choose File"
                 className="folder-icon"
-                onClick={() => handleFileSelect(setBoardCameraPath, 'video/*')}
+                onClick={() => handleFileSelect(setBoardCameraPath, '.mp4')}
               />
             </div>
           </div>
@@ -374,7 +529,11 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
           {notification && <div className="notification-message">{notification}</div>}
         </div>
         <div className="modal-actions">
-          <button onClick={handleApply} className="apply-button" disabled={!audioFile || loading}>
+          <button
+            onClick={handleApply}
+            className="apply-button"
+            disabled={(!audioFile && !frontCameraPath && !rearCameraPath && !boardCameraPath) || loading}
+          >
             {loading ? 'Processing...' : 'Apply & Start Processing'}
           </button>
         </div>

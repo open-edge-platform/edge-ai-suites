@@ -13,13 +13,13 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 1. Connect to your robot via SSH/VNC or direct access. If you choose direct
    access, insert a monitor and a keyboard into the robot's compute system.
 
-2. Set up your system by following the steps in the [Prepare System](../../../gsg_robot/prepare-system.rst) guide.
+2. Set up your system by following the steps in the [Prepare System](../../../gsg_robot/prepare-system.md) guide.
 
 3. Ensure the `ros2-amr-interface` Deb package is installed:
 
    <!--hide_directive::::{tab-set}hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt update
@@ -28,7 +28,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
    <!--hide_directive:::hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt update
@@ -57,7 +57,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
      <!--hide_directive::::{tab-set}hide_directive-->
      <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-     <!--hide_directive:sync: tab1hide_directive-->
+     <!--hide_directive:sync: jazzyhide_directive-->
 
      ```bash
      vi /opt/ros/jazzy/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -65,7 +65,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
      <!--hide_directive:::hide_directive-->
      <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-     <!--hide_directive:sync: tab2hide_directive-->
+     <!--hide_directive:sync: humblehide_directive-->
 
      ```bash
      vi /opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -78,7 +78,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
      <!--hide_directive::::{tab-set}hide_directive-->
      <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-     <!--hide_directive:sync: tab1hide_directive-->
+     <!--hide_directive:sync: jazzyhide_directive-->
 
      ```bash
      AAEON_NODE_CONFIG_FILE=/opt/ros/jazzy/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -92,7 +92,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
      <!--hide_directive:::hide_directive-->
      <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-     <!--hide_directive:sync: tab2hide_directive-->
+     <!--hide_directive:sync: humblehide_directive-->
 
      ```bash
      AAEON_NODE_CONFIG_FILE=/opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -120,4 +120,4 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
 You can stop the demo anytime by pressing ``ctrl-C``.
 
-For general robot issues, go to: [Troubleshooting Guide](../robot-tutorials-troubleshooting.rst).
+For general robot issues, go to: [Troubleshooting Guide](../robot-tutorials-troubleshooting.md).

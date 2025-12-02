@@ -43,9 +43,9 @@ else
 
     docker run -it \
         --name "${CONTAINER_NAME}" \
-	    --volume=/dev:/dev \
-	    --volume=/tmp/.X11-unix:/tmp/.X11-unix \
-    	--ipc=host \
+	      --volume=/dev:/dev \
+	      --volume=/tmp/.X11-unix:/tmp/.X11-unix \
+    	  --ipc=host \
         --network=host \
         --privileged \
         --device /dev/dri \

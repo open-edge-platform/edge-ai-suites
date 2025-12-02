@@ -34,7 +34,7 @@ Figure 2. High-level Architecture of svet_app
 Install Ubuntu* 24.04 and set up the network correctly and run the sudo apt update.  
 
 ### 2 Install Software Dependencies
-The SVET2 sample application depends on Intel VPP SDK for video decode, encoding, and post-processing functionalities. It also depends on the live555 library for RTSP streaming.  
+The svet_app sample application depends on Intel VPP SDK for video decode, encoding, and post-processing functionalities. It also depends on the live555 library for RTSP streaming.  
 
 #### 2.1 Install Intel VPP SDK
 Install VPP SDK first. 
@@ -101,7 +101,7 @@ It will start to run a decode and display pipeline. You will see below message i
 ```
   
 #### 2.2	Install the live555 library
-There is a `live555_install.sh` under the root directory of SVET2 source code package. Make sure the network connection is good on your system, then run this script, and it will download, build, and install live555 libraries. The libraries will be installed to /usr/local/lib/.  
+There is a `live555_install.sh` under the root directory of svet_app source code package. Make sure the network connection is good on your system, then run this script, and it will download, build, and install live555 libraries. The libraries will be installed to /usr/local/lib/.  
   
 ### 3	Build sample application svet_app
 If you have not run the commands below in the current terminal, run them first to set up the correct environment variables:  
@@ -220,11 +220,12 @@ ctrl --cmd=stop  --time=0
 
 ## Uninstall 
 
-### Uninstall SVET
+### Uninstall svet_app
 `sudo rm -rf build`
 
 ### Uninstall live555
 `xargs sudo rm < live555-master/build/install_manifest.txt`
+`sudo rm -rf live555-master`
 
 ### Uninstall VPP SDK
 `sudo rm -rf /opt/intel/vppsdk`  

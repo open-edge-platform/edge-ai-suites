@@ -16,7 +16,7 @@ by a robot-driver.
 ### Prerequisites
 
 - Assemble your robotic kit following the instructions for
-  [irobot-create3](../../../developer_kit/irobot-create3-robot.rst).
+  [irobot-create3](../../../developer_kit/irobot-create3-robot.md).
 - Complete the [get started guide](../../../../../gsg_robot/index.rst) before continuing.
 
 ### Intel® board connected to iRobot Create 3
@@ -50,7 +50,7 @@ Autonomous Mobile Robot APT repository.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt update
@@ -59,7 +59,7 @@ sudo apt install ros-jazzy-follow-me-tutorial
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt update
@@ -76,7 +76,7 @@ the following ROS 2 launch file.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -85,7 +85,7 @@ ros2 launch tutorial_follow_me irobot_followme_launch.py
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -194,5 +194,5 @@ Find a brief description of the parameters in the following list.
 - If the robot rotates more than intended at each step, try reducing the
   parameter `max_angular` in the parameter file.
 - For general robot issues, refer to
-  [Troubleshooting](../../../robot-tutorials-troubleshooting.rst).
+  [Troubleshooting](../../../robot-tutorials-troubleshooting.md).
 - If the motor controller board does not start, restart the robot.

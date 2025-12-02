@@ -49,7 +49,7 @@ Autonomous Mobile Robot APT repository.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt update
@@ -58,7 +58,7 @@ sudo apt install ros-jazzy-follow-me-tutorial-w-gesture
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt update
@@ -105,7 +105,7 @@ Please perform IMU calibration of the robot, launch script below:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -114,7 +114,7 @@ source /opt/ros/jazzy/setup.bash
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -131,7 +131,7 @@ use the following ROS 2 launch file.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -140,7 +140,7 @@ ros2 launch tutorial_follow_me_w_gesture aaeon_gesture_launch.py <Camera1 Serial
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -269,6 +269,6 @@ Find a brief description of the parameters in the following list:
   parameter `max_angular` in the parameter file.
 
 - For general robot issues, refer to
-  [Troubleshooting](../../../robot-tutorials-troubleshooting.rst).
+  [Troubleshooting](../../../robot-tutorials-troubleshooting.md).
 
 - If the motor controller board does not start, restart the robot.

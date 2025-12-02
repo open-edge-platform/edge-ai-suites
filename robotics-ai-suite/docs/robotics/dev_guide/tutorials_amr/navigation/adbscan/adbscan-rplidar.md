@@ -13,7 +13,7 @@ Install `ros-jazzy-adbscan-ros2` Deb package from Intel® Autonomous Mobile Robo
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt update
@@ -22,7 +22,7 @@ sudo apt install ros-jazzy-adbscan-ros2
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt update
@@ -37,7 +37,7 @@ cloud data from 2D LIDAR or Intel® RealSense™ camera
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install ros-jazzy-bagfile-laser-pointcloud
@@ -45,7 +45,7 @@ sudo apt install ros-jazzy-bagfile-laser-pointcloud
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install ros-humble-bagfile-laser-pointcloud

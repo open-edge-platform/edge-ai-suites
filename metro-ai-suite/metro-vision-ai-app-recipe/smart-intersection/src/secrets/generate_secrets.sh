@@ -14,7 +14,7 @@
 AUTHFILES=$(echo $MQTTUSERS | sed -e 's/=[^ ]*//g')
 CERTDOMAIN="scenescape.intel.com"
 CERTPASS=$(openssl rand -base64 33)
-DBPASS=${DBPASS:-"'$(openssl rand -base64 12)'"}
+DBPASS=${DBPASS:-"$(openssl rand -base64 12)"}
 EXEC_PATH="$(dirname "$(readlink -f "$0")")"
 MQTTUSERS="controller.auth=scenectrl browser.auth=webuser"
 SECRETSDIR="$EXEC_PATH/../secrets"
@@ -72,7 +72,9 @@ mkdir -p $SECRETSDIR/django
 echo -n SECRET_KEY= > $SECRETSDIR/django/secrets.py
 python3 -c 'import secrets; print("\x27" + "".join([secrets.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") \
     for i in range(50)]) + "\x27")' >> $SECRETSDIR/django/secrets.py
-echo "DATABASE_PASSWORD=$DBPASS" >> $SECRETSDIR/django/secrets.py
+echo "DATABASE_PASSWORD='$DBPASS'" >> $SECRETSDIR/django/secrets.py
+mkdir -p $SECRETSDIR/pgserver
+echo "POSTGRES_PASSWORD=\"$DBPASS\"" > $SECRETSDIR/pgserver/pgserver.env
 
 # Generate auth files
 echo Generating auth files

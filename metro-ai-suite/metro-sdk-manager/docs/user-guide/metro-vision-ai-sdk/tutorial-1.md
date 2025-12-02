@@ -111,6 +111,7 @@ docker run -it --rm \
   --env http_proxy=$http_proxy \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
+  --user=root \
   openvino/ubuntu24_dev:2025.3.0 \
   /opt/intel/openvino_2025.3.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
   -m /home/openvino/public/yolov10s/FP16/yolov10s.xml \
@@ -129,6 +130,7 @@ docker run -it --rm \
   --env http_proxy=$http_proxy \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
+  --user=root \
   openvino/ubuntu24_dev:2025.3.0 \
   /opt/intel/openvino_2025.3.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
   -m /home/openvino/public/yolov10s/FP16/yolov10s.xml \
