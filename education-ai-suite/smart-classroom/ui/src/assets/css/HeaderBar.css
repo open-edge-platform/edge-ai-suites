@@ -3,36 +3,42 @@
   top: 64px;
   left: 0;
   right: 0;
-  z-index: 29;
+  z-index: 50;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 2rem;
   height: 56px;
-  width:100%;
+  width: 100%;
   background-color: #fff;
   font-family: "IntelOne Display", var(--font-display), system-ui, sans-serif;
   border-bottom: 1px solid #e6e7e8;
 }
 
-.text-button {
+button.text-button {
   font-family: "IntelOne Text", var(--font-text), system-ui, sans-serif;
   font-size: 14px;
   font-weight: 500;
   color: #0071c5;
   background: none;
-  border: 3px solid #e6e7e8;
+  border: 2px solid #82b6df; 
   border-radius: 4px;
   padding: 8px 16px;
   margin-right: 12px;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
 }
+
 .navbar-left {
   display: flex;
   align-items: center; 
   gap: 12px; 
+  flex-shrink: 0;
 }
+
 .record-icon,
 .side-record-icon {
   width: 24px;
@@ -41,12 +47,15 @@
   vertical-align: middle;
   margin: 0;
   padding: 0;
+  flex-shrink: 0;
 }
-.text-button:hover {
-  background: #e6e7e8;
-  color: #0054AE;
-  vertical-align: middle;
+
+button.text-button:hover {
+  background: #0071c5;
+  color: #fff;
+  border-color: #6da5e0;
 }
+
 .error-banner {
   background-color: #f8d7da;
   color: #721c24;
@@ -72,15 +81,14 @@
   transition: background 0.2s, color 0.2s, border-color 0.2s;
   display: inline-block;
   text-align: center;
+  white-space: nowrap;
 }
-
 
 .upload-button:hover {
   background: #0071c5;
   color: #fff;
   border-color: #6da5e0;
 }
-
 
 .upload-button:disabled,
 .upload-button[disabled] {
@@ -90,11 +98,11 @@
   cursor: not-allowed;
 }
 
-
-.text-button:disabled {
+button.text-button:disabled,
+button.text-button[disabled] {
   color: #bbbaba;
   background: #f9f6f6;
-  border: 3px solid #e6e7e8;
+  border: 2px solid #e6e7e8;
   cursor: not-allowed;
 }
 
@@ -104,6 +112,7 @@
   color: #2B2C30;
   margin-right: 12px;
   vertical-align: middle;
+  flex-shrink: 0;
 }
 
 .notifications-display {
@@ -116,6 +125,9 @@
   gap: 8px;
   display: flex;
   align-items: center;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .project-name-display {
@@ -126,4 +138,389 @@
   line-height: 20px;
   background: none;
   margin-left: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+/* Large Desktop (1200px and up) */
+@media (min-width: 1200px) {
+  .header-bar {
+    padding: 0 3rem;
+    height: 64px;
+  }
+  
+  button.text-button,
+  .upload-button {
+    font-size: 16px;
+    padding: 10px 20px;
+  }
+  
+  .timer {
+    font-size: 16px;
+  }
+  
+  .notifications-display {
+    font-size: 14px;
+  }
+  
+  .project-name-display {
+    font-size: 16px;
+    margin-left: 24px;
+  }
+}
+
+/* Desktop (992px to 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .header-bar {
+    padding: 0 1.5rem;
+  }
+  
+  .navbar-left {
+    gap: 10px;
+  }
+  
+  .project-name-display {
+    margin-left: 12px;
+  }
+}
+
+/* Tablet (768px to 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .header-bar {
+    padding: 0 1rem;
+    height: 52px;
+  }
+  
+  .navbar-left {
+    gap: 8px;
+  }
+  
+  button.text-button,
+  .upload-button {
+    font-size: 13px;
+    padding: 6px 12px;
+    margin-right: 8px;
+  }
+  
+  .timer {
+    font-size: 13px;
+    margin-right: 8px;
+  }
+  
+  .notifications-display {
+    font-size: 11px;
+  }
+  
+  .project-name-display {
+    font-size: 13px;
+    margin-left: 8px;
+  }
+  
+  .record-icon,
+  .side-record-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Mobile Large (576px to 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .header-bar {
+    flex-wrap: wrap;
+    min-height: auto;
+    padding: 8px 12px;
+    height: auto;
+  }
+  
+  .navbar-left {
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .navbar-center {
+    order: 3;
+    width: 100%;
+    margin-top: 8px;
+    justify-content: flex-start;
+  }
+  
+  .navbar-right {
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 40%;
+  }
+  
+  button.text-button,
+  .upload-button {
+    font-size: 12px;
+    padding: 6px 10px;
+    margin-right: 6px;
+  }
+  
+  .timer {
+    font-size: 12px;
+    margin-right: 6px;
+  }
+  
+  .notifications-display {
+    font-size: 10px;
+    gap: 4px;
+  }
+  
+  .project-name-display {
+    font-size: 12px;
+    margin-left: 6px;
+    max-width: 150px;
+  }
+  
+  .record-icon,
+  .side-record-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Mobile Medium (480px to 575px) */
+@media (min-width: 480px) and (max-width: 575px) {
+  .header-bar {
+    flex-wrap: wrap;
+    padding: 6px 10px;
+    height: auto;
+  }
+  
+  .navbar-left {
+    gap: 4px;
+    flex: 1;
+  }
+  
+  .navbar-center {
+    order: 3;
+    width: 100%;
+    margin-top: 6px;
+    justify-content: flex-start;
+  }
+  
+  .navbar-right {
+    max-width: 35%;
+  }
+  
+  button.text-button,
+  .upload-button {
+    font-size: 11px;
+    padding: 5px 8px;
+    margin-right: 4px;
+  }
+  
+  .timer {
+    font-size: 11px;
+    margin-right: 4px;
+  }
+  
+  .notifications-display {
+    font-size: 9px;
+    gap: 2px;
+  }
+  
+  .project-name-display {
+    font-size: 11px;
+    margin-left: 4px;
+    max-width: 120px;
+  }
+  
+  .record-icon,
+  .side-record-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Mobile Small (320px to 479px) */
+@media (max-width: 479px) {
+  .header-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px;
+    height: auto;
+    gap: 8px;
+  }
+  
+  .navbar-left {
+    justify-content: space-between;
+    gap: 4px;
+    width: 100%;
+  }
+  
+  .navbar-center {
+    order: 2;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .navbar-right {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  button.text-button,
+  .upload-button {
+    font-size: 10px;
+    padding: 4px 6px;
+    margin-right: 2px;
+    flex: 1;
+    max-width: 80px;
+  }
+  
+  .timer {
+    font-size: 10px;
+    margin-right: 2px;
+  }
+  
+  .notifications-display {
+    font-size: 8px;
+    gap: 2px;
+    text-align: center;
+  }
+  
+  .project-name-display {
+    font-size: 10px;
+    margin-left: 0;
+    text-align: center;
+    max-width: 100%;
+  }
+  
+  .record-icon,
+  .side-record-icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Extra Small Mobile (below 320px) */
+@media (max-width: 319px) {
+  .header-bar {
+    padding: 4px;
+    gap: 4px;
+  }
+  
+  button.text-button,
+  .upload-button {
+    font-size: 9px;
+    padding: 3px 4px;
+    max-width: 70px;
+  }
+  
+  .timer {
+    font-size: 9px;
+  }
+  
+  .notifications-display {
+    font-size: 7px;
+  }
+  
+  .project-name-display {
+    font-size: 9px;
+  }
+  
+  .record-icon,
+  .side-record-icon {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* Landscape orientation adjustments for mobile */
+@media (max-width: 767px) and (orientation: landscape) {
+  .header-bar {
+    height: 48px;
+    flex-wrap: nowrap;
+  }
+  
+  .navbar-center {
+    order: 2;
+    width: auto;
+    margin-top: 0;
+    flex: 1;
+  }
+  
+  .navbar-left,
+  .navbar-right {
+    flex-shrink: 1;
+  }
+  
+  button.text-button,
+  .upload-button {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .record-icon,
+  .side-record-icon {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  button.text-button,
+  .upload-button {
+    transition: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .header-bar {
+    background-color: #1a1a1a;
+    border-bottom-color: #333;
+  }
+  
+  .timer,
+  .notifications-display,
+  .project-name-display {
+    color: #e0e0e0;
+  }
+  
+  button.text-button,
+  .upload-button {
+    color: #4da6ff;
+    border-color: #4da6ff;
+  }
+  
+  button.text-button:hover,
+  .upload-button:hover {
+    background: #4da6ff;
+    color: #1a1a1a;
+  }
+  
+  button.text-button:disabled,
+  button.text-button[disabled],
+  .upload-button:disabled,
+  .upload-button[disabled] {
+    color: #666;
+    background: #2a2a2a;
+    border-color: #444;
+  }
 }

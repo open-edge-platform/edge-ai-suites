@@ -31,6 +31,8 @@ This section provides a high-level view of how the application integrates with a
 
 ![High-Level System Diagram](./_images/smart-intersection-architecture.drawio.svg)
 
+The sample application is built with
+
 ### Example Content for Diagram Description
 - **Inputs**:
   - **Video Files** - Four traffic intersection cameras that capture videos simultaneously.
@@ -55,5 +57,7 @@ This section provides a high-level view of how the application integrates with a
 - [System Requirements](system-requirements.md): Check the hardware and software requirements for deploying the application.
 - [Get Started](get-started.md): Follow step-by-step instructions to set up the application.
 - [How to Deploy with Helm](how-to-deploy-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
+- [SceneScape Overview](https://docs.openedgeplatform.intel.com/2025.2/scenescape/index.html): Refer to Intel SceneScape overview and architecture to learn more about Scene Analytics services
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
 - [Support and Troubleshooting](support.md): Find solutions to common issues and troubleshooting steps.
 

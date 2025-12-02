@@ -8,6 +8,10 @@ metadata:
 spec:
   type: {{ .Values.web.service.type }}
   ports:
+  - name: "80"
+    protocol: TCP
+    port: 80
+    targetPort: 80
   - port: 443
     targetPort: 443
     protocol: TCP

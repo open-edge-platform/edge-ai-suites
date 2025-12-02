@@ -75,6 +75,38 @@ def check_nodejs_version() -> bool:
         return False
 
 
+def check_dlstreamer_installation() -> bool:
+    """
+    Checks if DL Streamer is installed by inspecting the gvadetect plugin.
+    Returns True if DL Streamer is properly installed.
+    """
+    try:
+        gst_inspect_path = shutil.which("gst-inspect-1.0")
+        if gst_inspect_path is None:
+            logger.error("❌ gst-inspect-1.0 is not installed or not found in PATH.")
+            return False
+
+        result = subprocess.run(
+            ["gst-inspect-1.0.exe", "gvadetect"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+
+        if result.returncode == 0 and "gvadetect" in result.stdout.lower():
+            version_match = re.search(r"Version\s+(\S+)", result.stdout)
+            if version_match:
+                version = version_match.group(1)
+                logger.info(f"✅ DL Streamer found and working (version {version}).")
+                return True
+        else:
+            logger.error("❌ DL Streamer not found or not working properly.")
+            return False
+    except Exception as e:
+        logger.error(f"⚠️ DL Streamer check failed: {e}")
+        return False
+
+
 def check_system_requirements() -> bool:
     """
     Checks the overall system environment for compatibility.
@@ -93,6 +125,8 @@ def check_system_requirements() -> bool:
         if not check_python_version():
             return False
         if not check_nodejs_version():
+            return False
+        if not check_dlstreamer_installation():
             return False
         return True
     except Exception:
@@ -117,6 +151,7 @@ def show_warning_and_prompt_user_to_continue():
 - \033[1mGPU/Accelerator:\033[0m Intel® iGPU (Intel® Core Ultra Series 1, Arc GPU, or higher) for summarization acceleration
 - \033[1mPython:\033[0m 3.12
 - \033[1mNode.js:\033[0m v18+ (for frontend)
+- \033[1mDL Streamer:\033[0m 2025.2.0 (for video analytics pipelines)
 
 \033[90m------------------------------------------------------------\033[0m
 """)

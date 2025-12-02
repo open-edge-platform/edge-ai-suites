@@ -11,7 +11,7 @@ description: "weld Porosity Sample Application"
 
 helmRegistry: "docker-hub"
 chartName: "intel/weld-porosity-sample-application"
-chartVersion: "1.3.0-rc1"
+chartVersion: "1.3.0-rc2"
 
 profiles:
   - name: "default"
