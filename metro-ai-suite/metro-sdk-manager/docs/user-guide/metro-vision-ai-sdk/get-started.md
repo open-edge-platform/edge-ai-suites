@@ -150,7 +150,7 @@ Create sophisticated video analytics using Intel® DL Streamer framework, includ
 
 ### [Tutorial 5: Profiling](./tutorial-5.md)
 
-Profiling and monitoring performance of Metro Vision AI workloads using command-line tools. 
+Profiling and monitoring performance of Metro Vision AI workloads using command-line tools.
 
 ## Additional Resources
 
@@ -158,7 +158,7 @@ Profiling and monitoring performance of Metro Vision AI workloads using command-
 
 - [DLStreamer](http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html)
   \- Comprehensive documentation for Intel's GStreamer-based video analytics framework
-- [DLStreamer Pipeline Server](https://docs.openedgeplatform.intel.com/edge-ai-libraries/dlstreamer-pipeline-server/main/user-guide/Overview.html)
+- [DLStreamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   \- RESTful microservice architecture documentation for scalable video analytics deployment
 - [OpenVINO](https://docs.openvino.ai/2025/get-started.html)
   \- Complete reference for Intel's cross-platform inference optimization toolkit
