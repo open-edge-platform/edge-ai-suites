@@ -6,12 +6,12 @@ This section shows how to deploy the Visual Search and QA Application using Helm
 Before you begin, ensure that you have the following:
 - Kubernetes\* cluster set up and running.
 - The cluster must support **dynamic provisioning of Persistent Volumes (PV)**. Refer to the [Kubernetes Dynamic Provisioning Guide](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) for more details.
-- Install `kubectl` on your system. See the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster. 
+- Install `kubectl` on your system. See the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster.
 - Helm chart installed on your system. See the [Installation Guide](https://helm.sh/docs/intro/install/).
 
 
 ## Steps to deploy with Helm
-Do the following to deploy VSQA using Helm chart. 
+Do the following to deploy VSQA using Helm chart.
 
 ### Step 1: Acquire the helm chart
 
@@ -28,7 +28,7 @@ You may add `--version <version-no>` to specify a version number. Refer to the r
 After pulling the chart, extract the `.tgz` file
 
 ```bash
-tar -xvf metro-ai-suite-vsqa-chart-<version-no>.tgz 
+tar -xvf metro-ai-suite-vsqa-chart-<version-no>.tgz
 ```
 
 This will create a directory named `metro-ai-suite-vsqa-chart` containing the chart files. Navigate to the extracted directory with to access the charts.
@@ -55,7 +55,8 @@ cd edge-ai-suites/metro-ai-suite/visual-search-question-and-answering/deployment
 
 Edit the `values.yaml` file to set the necessary environment variables. At minimum, ensure you set the models, and proxy settings as required.
 
-##### Settings that must be configured
+#### Settings that must be configured
+
 | Key | Description | Example Value |
 | --- | ----------- | ------------- |
 | `global.proxy.http_proxy` | HTTP proxy if required | `http://proxy-example.com:000` |
@@ -80,7 +81,7 @@ Create a namespace for Milvus
 
 ```bash
 kubectl create namespace milvus
-``` 
+```
 
 Install Milvus latest helm chart
 
@@ -115,13 +116,13 @@ Create a namespace for VSQA app
 
 ```bash
 kubectl create namespace vsqa
-``` 
+```
 
-Install 
+Install
 
 ```bash
 helm install vsqa . --values values.yaml -n vsqa
-``` 
+```
 
 
 ### Step 7: Verify the Deployment
