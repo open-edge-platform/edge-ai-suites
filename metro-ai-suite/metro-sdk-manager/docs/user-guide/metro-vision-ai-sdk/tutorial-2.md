@@ -45,12 +45,20 @@ Before starting this tutorial, ensure you have:
 - **Graphics:** Intel integrated graphics with VAAPI support
 
 **Important Display Requirements**
-This tutorial requires **Ubuntu Desktop** with a physical display and active graphical session. It will **not work** with:
+This tutorial requires **Ubuntu Desktop** with a **local physical display** and active graphical session. It will **not work properly** with:
 - Ubuntu Server (no GUI)
-- Remote SSH sessions without X11 forwarding
+- Remote SSH sessions (even with X11 forwarding)
+- Remote Desktop/VNC connections
 - Headless systems
  
-You must be logged in to a local desktop session with a connected monitor or Remote Desktop/VNC connection for the video output to display correctly.
+**Why Remote Connections Don't Work:**
+Streaming 16 simultaneous 4K video streams requires extremely high bandwidth (~150-200 Mbps) and low latency. Remote desktop protocols (SSH/X11, VNC, RDP) compress video heavily and introduce significant latency, resulting in:
+- Severe frame drops and stuttering
+- Poor visual quality due to compression artifacts
+- Inability to accurately measure hardware acceleration performance
+- Network congestion and timeouts
+
+**You must be physically logged into a local desktop session with a directly connected monitor** to experience proper performance and validate hardware acceleration capabilities.
 
 ## Tutorial Steps
 
@@ -142,7 +150,7 @@ gst-launch-1.0 \
         sink_14::xpos=960  sink_14::ypos=1620 sink_14::alpha=1 \
         sink_15::xpos=1920 sink_15::ypos=1620 sink_15::alpha=1 \
         sink_16::xpos=2880 sink_16::ypos=1620 sink_16::alpha=1 \
-    ! vapostproc ! xvimagesink display=:0 sync=false \
+    ! vapostproc ! xvimagesink display=$DISPLAY sync=false \
 \
     filesrc location=${VIDEO_IN} ! qtdemux ! vah264dec ! gvafpscounter ! vapostproc scale-method=fast ! video/x-raw,width=960,height=540 ! comp0.sink_1 \
     filesrc location=${VIDEO_IN} ! qtdemux ! vah264dec ! gvafpscounter ! vapostproc scale-method=fast ! video/x-raw,width=960,height=540 ! comp0.sink_2 \
@@ -236,7 +244,7 @@ docker run -it --rm --net=host \
   -e http_proxy=$http_proxy \
   -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
   --device /dev/dri --group-add ${DEVICE_GRP} \
-  -e DISPLAY=$DISPLAY \
+  -e DISPLAY=$DISPLAY --ipc=host \
   -v $HOME/.Xauthority:/home/dlstreamer/.Xauthority:ro \
   -v $PWD/videos:/home/dlstreamer/videos:ro \
   -v $PWD/decode.sh:/home/dlstreamer/decode.sh:ro \
