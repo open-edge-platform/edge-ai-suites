@@ -39,9 +39,16 @@ spec:
             - name: {{ .Values.volume.name }}
               mountPath: {{ .Values.volume.mountPath }}
               readOnly: {{ .Values.volume.readOnly }}
+            - name: host-timezone-info
+              mountPath: /etc/timezone
+              readOnly: true
 
       volumes:
         - name: {{ .Values.volume.name }}
           hostPath:
             path: {{ .Values.volume.hostPath }}
+        - name: host-timezone-info
+          hostPath:
+            path: /etc/timezone
+            type: FileOrCreate
 
