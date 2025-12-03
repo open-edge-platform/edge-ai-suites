@@ -1,4 +1,4 @@
-DOCKER_IMAGE=${1-vppsample:v2025.2.0-rc2}
+DOCKER_IMAGE=${1-intel/vppsample:2025.2.0}
 NPU_ON=${2-false}
 
 EXTRA_PARAMS=""

@@ -1,6 +1,6 @@
 set -e
 
-IMAGE_TAG=${1-vppsample:v2025.2.0-rc2}
+IMAGE_TAG=${1-intel/vppsample:2025.2.0}
 DOCKERFILE=${2-Dockerfile.sample}
 
 docker build \

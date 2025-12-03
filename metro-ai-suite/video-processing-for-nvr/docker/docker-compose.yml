@@ -8,7 +8,7 @@ services:
     #   args:
     #     http_proxy: ${http_proxy}
     #     https_proxy: ${https_proxy}
-    image: vppsample:v2025.2.0-rc2
+    image: intel/vppsample:2025.2.0
     network_mode: host
     environment:
       no_proxy: "localhost,127.0.0.1"
