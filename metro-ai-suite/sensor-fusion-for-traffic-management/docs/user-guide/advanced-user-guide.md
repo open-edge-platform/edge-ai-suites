@@ -919,7 +919,15 @@ bash install_driver_related_libs.sh
 
 **If driver are already installed on the machine, you don't need to do this step.**
 
+### Pull docker image through docker hub
 
+You can pull latest tfcc docker image through [intel/tfcc - Docker Image](https://hub.docker.com/r/intel/tfcc/).
+
+For example:
+
+```bash
+docker pull intel/tfcc:latest
+```
 
 ### Build and run docker image through scripts
 
