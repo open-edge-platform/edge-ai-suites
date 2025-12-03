@@ -7,21 +7,21 @@ Preliminary System Configuration
 
 Before running RVC for the first time, ensure proper configuration has occurred:
 
-- RVC must know the exact pose (i.e.: position and orientation) of the Intel® RealSense™ camera as explained in :ref:`Camera pose calibration<camera_pose_calibration>`
+- RVC must know the exact pose (i.e.: position and orientation) of the Intel® RealSense™ camera as explained in :ref:`camera integration<camera_integration>`
 - Prepare the robot for communication with the Intel® platform as in :ref:`Universal Robots configuration<universal_robot_configuration>`
 - The robot calibration parameters from the real robot must be extracted, as explained further in :ref:`Universal Robots Calibration Procedure<robot_calibration_procedure>`
 
-- Camera 
-    - :ref:`Integration<camera_integration>`: These demonstrations support all |Realsense| |D4xx| cameras, though were designed with the D415. 
-- Universal Robots 
-    - :ref:`Communication<universal_robot_configuration>`: The robot must be properly configured to interface with the |Intel| platform 
+- Camera
+    - :ref:`Integration<camera_integration>`: These demonstrations support all |Realsense| |D4xx| cameras, though were designed with the D415.
+- Universal Robots
+    - :ref:`Communication<universal_robot_configuration>`: The robot must be properly configured to interface with the |Intel| platform
     - :ref:`Calibration Procedure<robot_calibration_procedure>`: Extract the robot's calibration parameters from the physical robot to ensure accurate operation.
     - :ref:`Home Pose<robots_home_pose>`: Verify and set the robot's default home pose according to its real-world configuration.
 
-Camera 
+Camera
 --------------------------------------
-The RVC demonstrations assume use of the Intel® RealSense™ D415 camera. If you plan on exploring these exercises with a different 
-model from (e.g., D435, D455), the below modifications are required. 
+The RVC demonstrations assume use of the Intel® RealSense™ D415 camera. If you plan on exploring these exercises with a different
+model from (e.g., D435, D455), the below modifications are required.
 
 Before starting the Vision component, verify that the camera location matches the position
 and orientation specified in the file
@@ -30,8 +30,8 @@ and orientation specified in the file
 
 Integration
 ^^^^^^^^^^^
-A .xacro file is an XML-based macro language that lets one define reusable components and parameters. With xacro, one 
-can construct shorter and more readable XML files by using macros that expand to larger XML expressions. This is used 
+A .xacro file is an XML-based macro language that lets one define reusable components and parameters. With xacro, one
+can construct shorter and more readable XML files by using macros that expand to larger XML expressions. This is used
 to avoid repetition, improve readability, and make robot models configurable (e.g., by passing arguments).
 
     Location might change according to installation procedure and the suffix `ipc` depends on the
@@ -70,9 +70,9 @@ coincide with the center of the base of the robot, if not modified.
 | Dynamic       | rvc_static_motion_controller_use_case arm  | /rvc/src/rvc_static_motion_controller_use_case/cameraurdf     |  d415cameraipc.xacro   |
 +---------------+--------------------------------------------+---------------------------------------------------------------+------------------------+
 
-.. note:: 
+.. note::
 
-    Every component has an option to change the default namespace: ``namespace:=<namspace>`` which by default is "ipc". When specified, the components 
+    Every component has an option to change the default namespace: ``namespace:=<namspace>`` which by default is "ipc". When specified, the components
     will only see other components if they have same namespaces and the associated .xacro files must be named as seen in the above table (e.g. ``d415camera<namespace>.xacro``)
 
 .. _universal_robot_configuration:
@@ -210,9 +210,9 @@ To use the new URCaps, enabling the communication with the Intel® architecture 
 Robot Home Pose
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We strongly recommend positioning the physical robot, as seen below, prior to executing any of the provided use cases. 
-This ensures that the robot begins from a well-defined and safe reference configuration, allowing the calibration parameters 
-and motion sequences to align precisely with the expectations of the RVC framework. Always verify that the robot is 
+We strongly recommend positioning the physical robot, as seen below, prior to executing any of the provided use cases.
+This ensures that the robot begins from a well-defined and safe reference configuration, allowing the calibration parameters
+and motion sequences to align precisely with the expectations of the RVC framework. Always verify that the robot is
 correctly homed before initiating any automated behavior.
 
 +----------+---------------+
