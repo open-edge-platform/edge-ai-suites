@@ -56,5 +56,6 @@ Humanoid - Imitation Learning Resources
    developer_tools_tutorials
    packages_list
    sample_pipelines
+   openvino_optimization
    troubleshooting
    release_note
