@@ -499,7 +499,7 @@ docker pull intel/tfcc:latest
 
 ### Run TFCC docker image on EMT systems
 
-To run Sensor Fusion for Traffic Management through docker image on EMT systems, you can following the guides [Build and run docker image](./advanced-user-guide.md#build-and-run-docker-image) at [Advanced-User-Guide.md](./advanced-user-guide.md)
+To run Sensor Fusion for Traffic Management through docker image on EMT systems, you can following the guides [run docker image](./advanced-user-guide.md#build-and-run-docker-image) at [Advanced-User-Guide.md](./advanced-user-guide.md)
 
 
 
