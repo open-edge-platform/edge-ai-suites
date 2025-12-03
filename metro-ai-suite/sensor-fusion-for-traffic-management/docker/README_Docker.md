@@ -105,13 +105,24 @@ docker pull intel/tfcc:latest
 
 > **Note that the default username is `tfcc` and password is `intel` in docker image.**
 
-#### Build and run docker image
+#### Build docker image
 
 Usage:
 
 ```bash
 bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04> 
 ```
+
+Example:
+
+```bash
+cd $PROJ_DIR/docker
+bash build_docker.sh tfcc:latest Dockerfile_TFCC.dockerfile
+```
+
+#### Run docker image
+
+Usage:
 
 ```
 bash run_docker.sh <DOCKER_IMAGE, default tfcc:latest> <NPU_ON, default false>
@@ -121,7 +132,6 @@ Example:
 
 ```bash
 cd $PROJ_DIR/docker
-bash build_docker.sh tfcc:latest Dockerfile_TFCC.dockerfile
 bash run_docker.sh tfcc:latest false
 # After the run is complete, the container ID will be output, or you can view it through docker ps 
 ```

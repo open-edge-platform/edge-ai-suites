@@ -451,6 +451,8 @@ This section explains how to run Sensor Fusion for Traffic Management on EMT sys
 
 For prerequisites and system requirements, please prepare a machine with the EMT system installed.
 
+**For EMT systems, Sensor Fusion for Traffic Management is only available in containerized format. To deploy and run the application on EMT, please follow the guidance bellow for pulling the docker image from DockerHub and running the containerized application.**
+
 ### Install X11
 
 ```bash
@@ -499,7 +501,7 @@ docker pull intel/tfcc:latest
 
 ### Run TFCC docker image on EMT systems
 
-To run Sensor Fusion for Traffic Management through docker image on EMT systems, you can following the guides [run docker image](./advanced-user-guide.md#build-and-run-docker-image) at [Advanced-User-Guide.md](./advanced-user-guide.md)
+For EMT systems, Sensor Fusion for Traffic Management is only available in containerized format. To deploy and run the application on EMT, please pulling the docker image from DockerHub and follow the guidance in the [run docker image](./advanced-user-guide.md#run-docker-image) section and [Running inside docker](./advanced-user-guide.md#running-inside-docker) section of [Advanced-User-Guide.md](./advanced-user-guide.md).
 
 
 
