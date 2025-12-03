@@ -1,4 +1,4 @@
-# Troubleshoot Guide
+# Troubleshooting Guide
 
 ## 1. Seeing "No Data" in Grafana
 
