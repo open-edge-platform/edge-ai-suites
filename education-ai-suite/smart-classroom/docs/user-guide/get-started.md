@@ -39,7 +39,7 @@ pip install --upgrade -r requirements.txt
 ```
 
 
-**d. [Optional] Create Python Venv for Ipex Based Summarizer**  
+**d. [Optional] Create Python Venv for Ipex Based Summarizer**
 If you plan to use IPEX, create a separate virtual environment.
 
 
@@ -67,8 +67,8 @@ For details, refer to [Install Guide](https://docs.openedgeplatform.intel.com/de
 
 ## Step 2: Configuration
 
-### a. Default Configuration  
-  
+### a. Default Configuration
+
 By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
 
 ```bash
@@ -85,7 +85,7 @@ summarizer:
   weight_format: int8         # Supported: fp16, fp32, int4, int8
   max_new_tokens: 1024        # Maximum tokens to generate in summaries
 ```
-### b. Chinese Audio Transcription  
+### b. Chinese Audio Transcription
 
 For Chinese audio transcription, switch to funASR with Paraformer in your config (`smart-classroom/config.yaml`):
 ```bash
@@ -127,7 +127,7 @@ npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
->  Open a second (new) Command Prompt / terminal window for the frontend. The backend terminal stays busy serving requests.
+> Open a second (new) Command Prompt / terminal window for the frontend. The backend terminal stays busy serving requests.
 
 💡 Tips: You should see backend logs similar to this:
 
@@ -182,7 +182,7 @@ If you changed the port, adjust the URL accordingly.
   ``` bash
   Either openvino_tokenizer.xml was not provided or it was not loaded correctly. Tokenizer::encode is not available
   ```
-  
+
   Delete the models folder from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
 
 ## Uninstall the Application
@@ -193,4 +193,3 @@ To uninstall the application, follow these steps:
    Navigate to the directory and remove *education-ai-suite/smartclassroom*
 2. **Remove the models directory:**
    Remove the models folder located under *education-ai-suite/smart-classroom*.
-

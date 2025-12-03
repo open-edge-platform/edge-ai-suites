@@ -54,7 +54,7 @@ docker build -t visual-search-qa-app:latest --build-arg https_proxy=$https_proxy
 Set a remote registry by exporting environment variables:
 
 ```bash
-export REGISTRY="intel/"  
+export REGISTRY="intel/"
 export TAG="latest"
 ```
 
@@ -86,10 +86,10 @@ Note: supported media types: jpg, png, mp4
     ``` bash
     export EMBEDDING_MODEL_NAME="CLIP/clip-vit-h-14" # Replace with other models if needed
     export VLM_MODEL_NAME="Qwen/Qwen2.5-VL-7B-Instruct" # Replace with other models if needed
-    source env.sh 
+    source env.sh
     ```
 
-    **Important**: You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See [multimodal-embedding-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/supported_models.md) for available embedding models, and [vlm-openvino-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for available vlm models.
+    **Important**: You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See [multimodal-embedding-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/supported-models.md) for available embedding models, and [vlm-openvino-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for available vlm models.
 
 
    You might want to pay some attention to `DEVICE`, `VLM_DEVICE` and `EMBEDDING_DEVICE` in `env.sh`. By default, they are `GPU.1`, which applies to a standard hardware platform with an integrated GPU as `GPU.0` and a discrete GPU as `GPU.1`. You can refer to [OpenVINO's query device sample](https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html) to learn more about how to identify which GPU index should be set.
@@ -107,14 +107,14 @@ It might take a while to start the services for the first time, as there are som
 
 Check if all microservices are up and runnning with `docker compose -f compose_milvus.yaml ps`
 
-Output 
+Output
 ```
 NAME                         COMMAND                  SERVICE                      STATUS              PORTS
 dataprep-visualdata-milvus   "uvicorn dataprep_vi…"   dataprep-visualdata-milvus   running (healthy)   0.0.0.0:9990->9990/tcp, :::9990->9990/tcp
 milvus-etcd                  "etcd -advertise-cli…"   milvus-etcd                  running (healthy)   2379-2380/tcp
 milvus-minio                 "/usr/bin/docker-ent…"   milvus-minio                 running (healthy)   0.0.0.0:9000-9001->9000-9001/tcp, :::9000-9001->9000-9001/tcp
 milvus-standalone            "/tini -- milvus run…"   milvus-standalone            running (healthy)   0.0.0.0:9091->9091/tcp, 0.0.0.0:19530->19530/tcp, :::9091->9091/tcp, :::19530->19530/tcp
-multimodal-embedding         gunicorn -b 0.0.0.0:8000 - ...   Up (unhealthy)   0.0.0.0:9777->8000/tcp,:::9777->8000/tcp                                              
+multimodal-embedding         gunicorn -b 0.0.0.0:8000 - ...   Up (unhealthy)   0.0.0.0:9777->8000/tcp,:::9777->8000/tcp
 retriever-milvus             "uvicorn retriever_s…"   retriever-milvus             running (healthy)   0.0.0.0:7770->7770/tcp, :::7770->7770/tcp
 visual-search-qa-app         "streamlit run app.p…"   visual-search-qa-app         running (healthy)   0.0.0.0:17580->17580/tcp, :::17580->17580/tcp
 vlm-openvino-serving         "/bin/bash -c '/app/…"   vlm-openvino-serving         running (healthy)   0.0.0.0:9764->8000/tcp, :::9764->8000/tcp
@@ -174,23 +174,24 @@ You can check the end-to-end response time for each round of question-and-answer
 
 ## Summary
 
-In this get started guide, you learned how to: 
--    Build the microservice images 
--    Deploy the application with the microservices
--    Try the application with a demo dataset
+In this get started guide, you learned how to:
+
+- Build the microservice images
+- Deploy the application with the microservices
+- Try the application with a demo dataset
 
 ## Learn More
 
--    Check the [System requirements](./system-requirements.md)
--    Explore more functionalities in [Tutorials](./tutorials.md).
--    Understand the components, services, architecture, and data flow, in the [Overview](./Overview.md).
+- Check the [System requirements](./system-requirements.md)
+- Explore more functionalities in [Tutorials](./tutorials.md).
+- Understand the components, services, architecture, and data flow, in the [Overview](./Overview.md).
 
 
 ## Troubleshooting
 
 ### Error Logs
 
--   Check the container log if a microservice shows mal-functional behaviours 
+-   Check the container log if a microservice shows mal-functional behaviours
 ```bash
 docker logs <container_id>
 ```
