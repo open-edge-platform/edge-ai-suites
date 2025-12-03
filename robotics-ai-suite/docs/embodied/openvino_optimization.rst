@@ -101,6 +101,8 @@ Environment and Model Setup
           time = time * 0.999 + 0.001        
           return time.to(dtype=torch.float32, device=device)
 
+.. _pi05_model_conversion:
+
 Model Conversion and OpenVINO™ Optimization 
 ===========================================
 
@@ -153,7 +155,7 @@ Benchmarking
 
 To benchmark the model using the OpenVINO ``benchmark_tool`` application on CPU:
 
-#. Convert the Pi0.5 model to OpenVINO as described in section :ref:`Model Conversion and OpenVINO™ Optimization`.
+#. Convert the Pi0.5 model to OpenVINO as described in section :ref:`pi05_model_conversion`.
 
 #. Run the following command to utilize OpenVINO command line ``benchmark_tool`` with the compressed Pi0.5 model:
 
@@ -166,7 +168,7 @@ Validation (Optional)
 
 To validate the outputs of the model ensuring that model predictions are the same before and after OpenVINO optimization:
 
-#. Ensure you have ran :file:`convert_pytorch_onnx.py` script (see :ref:`Model Conversion and OpenVINO™ Optimization`). This will generate a random input tensor and pass it through the original HuggingFace Pi0.5 model and save both the model input and output in the validation folder.
+#. Ensure you have ran :file:`convert_pytorch_onnx.py` script (see :ref:`pi05_model_conversion`). This will generate a random input tensor and pass it through the original HuggingFace Pi0.5 model and save both the model input and output in the validation folder.
 
 #. Run the :file:`validation/lerobot_ov_inferencing.py` file on the randomly generated input tensor from step 1. This will generate the model output for that tensor.
 
