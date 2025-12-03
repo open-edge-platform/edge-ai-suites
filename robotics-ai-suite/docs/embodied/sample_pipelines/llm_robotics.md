@@ -191,6 +191,7 @@ This section shows how to set up a virtual Python environment to run the LLM dem
    cd /opt/llm-robotics/LLM/
    python3 -m venv venv-llm
    source venv-llm/bin/activate
+   python -m pip install --upgrade pip
    pip install -r requirement.txt
    ```
 
