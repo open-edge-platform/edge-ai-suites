@@ -40,6 +40,8 @@ Humanoid - Imitation Learning Resources
 - :doc:`Packages List <packages_list>`
 
 - :doc:`Sample Pipelines <sample_pipelines>`
+  
+- :doc:`OpenVINO Model Optimization <openvino_optimization>`
 
 - :doc:`Troubleshooting <troubleshooting>`
 
