@@ -1,4 +1,4 @@
-DOCKER_IMAGE=${1-vppsample:v2025.2.0-rc2}
+DOCKER_IMAGE=${1-intel/vppsample:2025.2.0}
 NPU_ON=${2-false}
 
 EXTRA_PARAMS=""
@@ -17,6 +17,7 @@ USER_GROUP_ID=$(id -g)
 echo $EXTRA_PARAMS
 
 
+# -e DISPLAY_NEW_PLATFORM=1 \
 if [[ "$NPU_ON" == "true" ]]; then
     echo "Running with NPU support"
     docker run -it --net=host \
@@ -48,8 +49,6 @@ else
         --user root \
         --entrypoint /home/vpp/vppsample/docker/svet.sh \
         -e DISPLAY=$DISPLAY \
-        -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v $HOME/.Xauthority:/root/.Xauthority:rw \
         -w /home/vpp \
         $DOCKER_IMAGE
 fi

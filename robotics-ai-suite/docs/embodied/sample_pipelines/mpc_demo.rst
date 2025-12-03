@@ -19,28 +19,39 @@ Prerequisites
 
 Please make sure you have finished setup steps in :doc:`../installation_setup`.
 
-ACT setup
-=========
-
-First, please follow the ACT installation guide in :doc:`./imitation_learning_act`. Then, after installing and validating ACT, you need to install rclpy in act virtual environment additionally.
-
-   .. code-block:: bash
-
-      $ source [your path to act venv]/bin/activate
-      $ pip install rclpy
-
-
-OCS2 setup
-==========
-
-Here, we adopted and modified the `open-source project OCS2 <https://github.com/leggedrobotics/ocs2>`_ as the MPC module. OCS2 is a C++ toolbox tailored for Optimal Control for Switched Systems (OCS2). It provides an efficient implementation of Continuous-time domain constrained DDP (SLQ) and many other helpful algorithms. To facilitate the application of OCS2 in robotic tasks, it provides the user with additional tools to set up the system dynamics (such as kinematic or dynamic models) and cost/constraints (such as self-collision avoidance and end-effector tracking) from a URDF model. Your can go to `OCS2 official web <https://leggedrobotics.github.io/ocs2/overview.html>`_ for more details.
-
-It should be noted that the original OCS2 project is based on ROS1 Noetic, while we migrate it to ROS2 humble and enable it on ACT Aloha.
-
-Install ROS2 Humble
-:::::::::::::::::::
+ROS2 Humble Setup
+=================
 
 Please refer to the `official ROS2 Humble installation <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html>`_.
+
+ACT Setup
+=========
+
+First, please follow the ACT installation guide in :doc:`./imitation_learning_act` except ``Install ACT package``. Here, we need to install ACT source code by downloading `act-sample <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/act-sample>`_,  and initialize submodules and apply patches:
+   
+   .. code-block:: bash
+
+      $ cd act-sample
+
+      # initialize submodules
+      $ git submodule init
+      $ git submodule update
+
+      # apply all patches
+      $ git apply ../patches/ov/0001-enable-openvino-inference-for-eval.patch
+      $ git apply ../patches/ov/0002-add-model-conversion-script.patch
+      $ git apply ../patches/ov/0003-changes-for-real-robot.patch
+      $ git apply ../patches/ov/0004-Modify-the-camera-mode-to-fixed.patch
+      $ git apply ../patches/ov/0005-Modify-the-default-cameras-config.patch
+      $ git apply ../patches/ov/0006-add-ros2-node-and-use-fixed-cube-pose.patch
+
+
+OCS2 Setup
+==========
+
+Here, we adopted and modified the `open-source project OCS2 <https://github.com/leggedrobotics/ocs2>`_ as the MPC module. OCS2 is a C++ toolbox tailored for Optimal Control for Switched Systems (OCS2). It provides an efficient implementation of Continuous-time domain constrained DDP (SLQ) and many other helpful algorithms. To facilitate the application of OCS2 in robotic tasks, it provides the user with additional tools to set up the system dynamics (such as kinematic or dynamic models) and cost/constraints (such as self-collision avoidance and end-effector tracking) from a URDF model. You can go to `OCS2 official web <https://leggedrobotics.github.io/ocs2/overview.html>`_ for more details.
+
+It should be noted that the original OCS2 project is based on ROS1 Noetic, while we migrate it to ROS2 humble and enable it on ACT Aloha.
 
 Install OCS2
 :::::::::::::::::::::::::
@@ -78,7 +89,7 @@ Install OCS2
 
 3. Download ocs2 and ocs2_robotic_assets
 
-Download `ocs2 <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc_demo/ocs2>`_ and `ocs2_robotic_assets <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc_demo/ocs2_robotic_assets>`_ with ``git clone --recursive``. Then, initialize submodules and apply patches:
+Download `ocs2 <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc-demo/ocs2>`_ and `ocs2_robotic_assets <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc-demo/ocs2_robotic_assets>`_ with ``git clone --recursive``. Then, initialize submodules and apply patches:
 
    .. code-block:: bash
 
@@ -95,6 +106,7 @@ Download `ocs2 <https://github.com/open-edge-platform/edge-ai-suites/tree/main/r
 
    .. code-block:: bash
         
+        cd ~/ocs2_ws
         # rosdep
         $ rosdep update --rosdistro humble
         $ rosdep install --from-paths src --ignore-src -r -y
@@ -104,7 +116,7 @@ Download `ocs2 <https://github.com/open-edge-platform/edge-ai-suites/tree/main/r
         $ colcon build --packages-skip mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=Release 
 
 
-MUJOCO setup
+MUJOCO Setup
 ============
 
 Here, we adopted and modified the open-source Mujoco Plugin project `MujocoRosUtils <https://github.com/isri-aist/MujocoRosUtils/tree/main>`_ to visualize and simulate the ACT cube transmitting task in Mujoco 2.3.7. Installation is as follows:
@@ -120,7 +132,7 @@ Here, we adopted and modified the open-source Mujoco Plugin project `MujocoRosUt
 
 2. Download MujocoRosUtils:
 
-Download `mujoco_ros_utils <https://github.com/AnnikaWU/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc_demo/mujoco_ros_utils>`_ with ``git clone --recursive``. Then, initialize submodules and apply patches:
+Download `mujoco_ros_utils <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc-demo/mujoco_ros_utils>`_ with ``git clone --recursive``. Then, initialize submodules and apply patches:
 
    .. code-block:: bash
       
@@ -134,7 +146,7 @@ Download `mujoco_ros_utils <https://github.com/AnnikaWU/edge-ai-suites/tree/main
        $ source /opt/ros/humble/setup.bash
        $ source ~/ocs2_ws/install/setup.bash
        $ cd ~/ocs2_ws
-       $ colcon build --packages-select mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMUJOCO_ROOT_DIR=~/.mujoco/mujoco-2.3.7
+       $ colcon build --packages-select mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMUJOCO_ROOT_DIR=$HOME/.mujoco/mujoco-2.3.7
 
 Run pipeline
 ============
@@ -146,11 +158,23 @@ Run pipeline
         $ source /opt/ros/humble/setup.bash
         $ source ~/ocs2_ws/install/setup.bash
         $ cd ~/.mujoco/mujoco-2.3.7/bin
-        $ ./simulate ~/ocs2_ws/src/MujocoRosUtils/xml/bimanual_viperx_transfer_cube_dual_arm.xml
+        $ ./simulate [path to your MujocoRosUtils]/xml/bimanual_viperx_transfer_cube_dual_arm.xml
 
    .. note::
       
       If running successfully, the mujoco UI will display two opposing ALOHA robotic arms. Collision in this stage is acceptable.
+   
+   .. note::
+
+      If mujoco fails with unknown plugin, please check ``ldd`` and add lib path manually:
+   
+      .. code-block:: bash
+         
+         # ldd check
+         $ ldd ~/.mujoco/mujoco-2.3.7/bin/mujoco_plugin/libMujocoRosUtils*.so
+         # add path
+         $ export LD_LIBRARY_PATH=~/ocs2_ws/install/ocs2_msgs/lib:$LD_LIBRARY_PATH
+         $ export LD_LIBRARY_PATH=~/.mujoco/mujoco-2.3.7/bin/mujoco_plugin:$LD_LIBRARY_PATH
 
 2. Open new terminal and run OCS2:
 
@@ -174,7 +198,7 @@ If launching successfully, the OCS2 terminal will print out information indicati
    
    .. note::
 
-      You need to download our pre-trained ACT weights of transmiting cube task and set the argument ``--ckpt_dir`` to the path of the pre-trained weights.
+      You need to download our pre-trained ACT weights of transmitting cube task and set the argument ``--ckpt_dir`` to the path of the pre-trained weights.
 
    .. code-block:: bash
       

@@ -230,3 +230,6 @@ ctrl --cmd=stop  --time=0
 ### Uninstall VPP SDK
 `sudo rm -rf /opt/intel/vppsdk`  
 `sudo rm -rf /opt/intel/media`
+
+## Run Sample Application svet_app in docker
+Build docker image and Run in docker container, [guide](../../docker/README.md)

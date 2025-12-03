@@ -1,64 +1,7 @@
-From b1f980346bc4951964f7f4adc8360275fef8f3e4 Mon Sep 17 00:00:00 2001
-From: "pre-commit-ci[bot]"
- <66853113+pre-commit-ci[bot]@users.noreply.github.com>
-Date: Mon, 6 Oct 2025 20:04:49 +0000
-Subject: [PATCH 1/7] [pre-commit.ci] pre-commit autoupdate
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-updates:
-- [github.com/pre-commit/mirrors-clang-format: v20.1.7 → v21.1.2](https://github.com/pre-commit/mirrors-clang-format/compare/v20.1.7...v21.1.2)
-- [github.com/pre-commit/pre-commit-hooks: v5.0.0 → v6.0.0](https://github.com/pre-commit/pre-commit-hooks/compare/v5.0.0...v6.0.0)
-- https://github.com/psf/black → https://github.com/psf/black-pre-commit-mirror
-- [github.com/psf/black-pre-commit-mirror: 25.1.0 → 25.9.0](https://github.com/psf/black-pre-commit-mirror/compare/25.1.0...25.9.0)
-- [github.com/MarcoGorelli/cython-lint: v0.16.7 → v0.17.0](https://github.com/MarcoGorelli/cython-lint/compare/v0.16.7...v0.17.0)
----
- .pre-commit-config.yaml | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/.pre-commit-config.yaml b/.pre-commit-config.yaml
-index e3e9357..851329e 100644
---- a/.pre-commit-config.yaml
-+++ b/.pre-commit-config.yaml
-@@ -6,11 +6,11 @@ repos:
- #   - id: check-useless-excludes
- #   - id: check-hooks-apply
- - repo: https://github.com/pre-commit/mirrors-clang-format
--  rev: v20.1.7
-+  rev: v21.1.2
-   hooks:
-   - id: clang-format
- - repo: https://github.com/pre-commit/pre-commit-hooks
--  rev: v5.0.0
-+  rev: v6.0.0
-   hooks:
-   - id: check-added-large-files
-   - id: check-ast
-@@ -24,12 +24,12 @@ repos:
-   - id: fix-byte-order-marker
-   - id: mixed-line-ending
-   - id: trailing-whitespace
--- repo: https://github.com/psf/black
--  rev: 25.1.0
-+- repo: https://github.com/psf/black-pre-commit-mirror
-+  rev: 25.9.0
-   hooks:
-   - id: black
- - repo: https://github.com/MarcoGorelli/cython-lint
--  rev: v0.16.7
-+  rev: v0.17.0
-   hooks:
-   - id: cython-lint
-   - id: double-quote-cython-strings
--- 
-2.34.1
-
-
 From 18a38af26beaf9176bb849fa0cca87ae9f075dbf Mon Sep 17 00:00:00 2001
 From: AnnikaWU <xian.wu@intel.com>
 Date: Mon, 3 Nov 2025 08:30:09 -0500
-Subject: [PATCH 2/7] modify for act+ocs2+mujoco pipeline
+Subject: [PATCH 1/5] modify for act+ocs2+mujoco pipeline
 
 ---
  CMakeLists.txt                                |  75 ++++++++++++++-
@@ -10465,7 +10408,7 @@ index 0000000..2c6f007
 From 8117665572174d7a8e4734d979f3b548e4093c23 Mon Sep 17 00:00:00 2001
 From: AnnikaWU <xian.wu@intel.com>
 Date: Fri, 7 Nov 2025 15:32:48 -0500
-Subject: [PATCH 3/7] support both single-arm and dual-arm ocs2
+Subject: [PATCH 2/5] support both single-arm and dual-arm ocs2
 
 ---
  plugin/ActuatorCommand.cpp                    | 170 ++++++++++++++++--
@@ -10999,7 +10942,7 @@ index 2c6f007..1e47303 100755
 From d8379e5b94291786f0db5c2832bb13e6aaddf809 Mon Sep 17 00:00:00 2001
 From: AnnikaWU <109574074+AnnikaWU@users.noreply.github.com>
 Date: Fri, 14 Nov 2025 10:09:41 +0800
-Subject: [PATCH 4/7] Update node name in ActuatorCommand.cpp
+Subject: [PATCH 3/5] Update node name in ActuatorCommand.cpp
 
 change from actuator_command_* to mujoco_actuator
 ---
@@ -11026,7 +10969,7 @@ index 14cc83f..c45abea 100644
 From e9252b41305f2d2246f8d22f74bfbeba7072cd5b Mon Sep 17 00:00:00 2001
 From: AnnikaWU <109574074+AnnikaWU@users.noreply.github.com>
 Date: Fri, 14 Nov 2025 10:11:49 +0800
-Subject: [PATCH 5/7] Update node name in PosePublisher.cpp
+Subject: [PATCH 4/5] Update node name in PosePublisher.cpp
 
 Change from mujoco_ros_* to mujoco_feedback_*
 ---
@@ -11053,7 +10996,7 @@ index fc67177..fa81d44 100644
 From 96cce968a534450d39992c8b36e73772a1e63bf1 Mon Sep 17 00:00:00 2001
 From: AnnikaWU <109574074+AnnikaWU@users.noreply.github.com>
 Date: Thu, 20 Nov 2025 15:36:46 +0800
-Subject: [PATCH 6/7] Remove unnecessary comments
+Subject: [PATCH 5/5] Remove unnecessary comments
 
 ---
  CMakeLists.txt | 2 +-
@@ -11072,48 +11015,6 @@ index 504920d..9d53f98 100644
      /usr/include/eigen3
  )
  # if(EXISTS ${OCS2_MSGS_INCLUDE_PATH})
--- 
-2.34.1
-
-
-From 0bd68aa28c76f5523d5cc4a0054ff9d84e0128db Mon Sep 17 00:00:00 2001
-From: AnnikaWU <xian.wu@intel.com>
-Date: Fri, 21 Nov 2025 05:20:34 -0500
-Subject: [PATCH 7/7] remove unnecessary comments
-
----
- CMakeLists.txt | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 504920d..a315c02 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -101,9 +101,10 @@ include_directories(
-     ${OCS2_MPC_INCLUDE_PATH}
-     ${OCS2_CORE_INCLUDE_PATH}
-     ${OCS2_ROS_INTERFACES_INCLUDE_PATH}
--    ${OCS2_OC_INCLUDE_PATH}  # 【添加】
-+    ${OCS2_OC_INCLUDE_PATH} 
-     /usr/include/eigen3
- )
-+
- # if(EXISTS ${OCS2_MSGS_INCLUDE_PATH})
- #     message(STATUS "Found ocs2_msgs include path: ${OCS2_MSGS_INCLUDE_PATH}")
- #     include_directories(${OCS2_MSGS_INCLUDE_PATH})
-@@ -158,10 +159,11 @@ ament_export_dependencies(
-   ocs2_oc
- )
- 
--ament_package()
- add_subdirectory(plugin)
- add_subdirectory(xml)
- 
- if(INSTALL_DOCUMENTATION)
-   add_subdirectory(doc)
- endif()
-+
-+ament_package()
 -- 
 2.34.1
 

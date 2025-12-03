@@ -38,12 +38,20 @@ Before starting this tutorial, ensure you have:
 
 ## System Requirements
 
-- **Operating System:** Ubuntu 22.04 LTS or Ubuntu 24.04 LTS
+- **Operating System:** Ubuntu 22.04 LTS or Ubuntu 24.04 LTS (Desktop edition required)
 - **Processor:** Intel® Core™, Intel® Core™ Ultra, or Intel® Xeon® processors
 - **Memory:** Minimum 8GB RAM (16GB recommended for complex pipelines)
 - **Storage:** 4GB free disk space for models, videos, and intermediate files
 - **Graphics:** Intel integrated graphics or discrete GPU (recommended for acceleration)
 - **Display:** Monitor capable of displaying real-time video output
+
+**Important Display Requirements**
+This tutorial requires **Ubuntu Desktop** with a physical display and active graphical session. It will **not work** with:
+- Ubuntu Server (no GUI)
+- Remote SSH sessions without X11 forwarding
+- Headless systems
+ 
+You must be logged in to a local desktop session with a connected monitor or Remote Desktop/VNC connection for the video output to display correctly.
 
 ## Tutorial Steps
 

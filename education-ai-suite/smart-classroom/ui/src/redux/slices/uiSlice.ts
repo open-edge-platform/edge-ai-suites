@@ -38,6 +38,8 @@ export interface UIState {
   isRecording: boolean;
   justStoppedRecording: boolean;
   videoAnalyticsStopping: boolean;
+  // New state for uploaded video files
+  hasUploadedVideoFiles: boolean;
 }
  
 const initialState: UIState = {
@@ -73,6 +75,7 @@ const initialState: UIState = {
   isRecording: false,
   justStoppedRecording: false,
   videoAnalyticsStopping: false,
+  hasUploadedVideoFiles: false,
 };
  
 const uiSlice = createSlice({
@@ -324,6 +327,15 @@ const uiSlice = createSlice({
       state.audioStatus = 'transcribing';
     },
 
+    // New action for uploaded video files
+    setHasUploadedVideoFiles(state, action: PayloadAction<boolean>) {
+      state.hasUploadedVideoFiles = action.payload;
+      // Update video status based on uploaded files
+      if (action.payload && state.videoStatus === 'no-config') {
+        state.videoStatus = 'ready';
+      }
+    },
+
     // Enhanced reset that preserves device states
     resetFlow(state) {
       const preservedAudioDevices = state.hasAudioDevices;
@@ -392,6 +404,7 @@ export const {
   setJustStoppedRecording,
   setVideoAnalyticsStopping,
   startTranscription,
+  setHasUploadedVideoFiles,
 } = uiSlice.actions;
  
 export default uiSlice.reducer;
