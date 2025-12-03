@@ -195,7 +195,7 @@ If launching successfully, the OCS2 terminal will print out information indicati
 
 3. Run ACT:
 
-You can download our pre-trained weights from transmitting cube task and set the argument ``--ckpt_dir`` to the path of the pre-trained weights. Then, open new terminal and run the following commands:
+You can download our pre-trained weights for [transferring cube task](https://eci.intel.com/embodied-sdk-docs/_downloads/sim_transfer_cube_scripted.zip) and set the argument ``--ckpt_dir`` to the path of the pre-trained weights. Then, open new terminal and run the following commands:
 
 ```
 # env
