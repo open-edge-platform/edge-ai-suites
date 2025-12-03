@@ -11,7 +11,7 @@ description: "Pallet Defect Detection Sample Application"
 
 helmRegistry: "docker-hub"
 chartName: "intel/pallet-defect-detection-reference-implementation"
-chartVersion: "2.5.0-rc2"
+chartVersion: "2.5.0"
 
 profiles:
   - name: "default"
