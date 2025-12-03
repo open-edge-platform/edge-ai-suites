@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
 import openvino.runtime as ov
 from nncf import compress_weights
 from nncf import CompressWeightsMode

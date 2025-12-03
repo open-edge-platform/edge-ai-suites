@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
 import torch
 from lerobot.policies.pi05.modeling_pi05 import PI05Policy
 import os

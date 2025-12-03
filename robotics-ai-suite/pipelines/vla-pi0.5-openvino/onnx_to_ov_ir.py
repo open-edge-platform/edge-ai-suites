@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
 import openvino as ov
 
 # 1. Load and convert the ONNX file to an OpenVINO Model object
