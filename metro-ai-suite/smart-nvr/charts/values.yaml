@@ -89,4 +89,9 @@ ingress:
   annotations: {}
   tls: false
   tlsSecret: ""
+  service:
+    type: NodePort
+    port: 80
+    targetPort: 80
+    nodePort: 30860
 
