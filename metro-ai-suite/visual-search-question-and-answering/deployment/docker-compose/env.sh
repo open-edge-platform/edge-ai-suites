@@ -18,6 +18,7 @@ export no_proxy_env=${no_proxy}
 
 export MILVUS_HOST=${host_ip}
 export MILVUS_PORT=19530
+export DOCKER_VOLUME_DIRECTORY="/opt"
 
 export DATA_INGEST_WITH_DETECT=true
 
