@@ -27,5 +27,5 @@ Troubleshootings
 
 #. Robot arm does not go accurately pick up the object?
 
-    Check :ref:`Camera pose calibration<camera_pose_calibration>`
+    Check :ref:`Camera pose calibration<camera_integration>`
 

@@ -21,20 +21,46 @@
 set -e
 
 # Run the Docker container
-docker run -it \
-	--volume=/dev:/dev \
-	--volume=/tmp/.X11-unix:/tmp/.X11-unix \
-	--ipc=host \
-    --network=host \
-    --privileged \
-    --env="DISPLAY" \
-    --env="WAYLAND_DISPLAY" \
-    --env="XDG_RUNTIME_DIR" \
-    --env="PULSE_SERVER" \
-    rvc-humble-exec:latest \
-    /bin/bash
+CONTAINER_NAME="rvc-intel-dev"
+IMAGE_NAME="rvc-humble-exec:latest"
 
-if [[ $? -ne 0 ]]; then
-    echo "Docker run failed."
-    exit 1
-fi 
+# Check if the container already exists
+if [ "$(docker ps -aq -f name=^${CONTAINER_NAME}$)" ]; then
+    echo "Container '${CONTAINER_NAME}' already exists."
+
+    # If it's not running, start it
+    if [ "$(docker ps -q -f name=^${CONTAINER_NAME}$)" ]; then
+        echo "Container '${CONTAINER_NAME}' is already running. Attaching..."
+    else
+        echo "Starting container '${CONTAINER_NAME}'..."
+        docker start "${CONTAINER_NAME}"
+    fi
+
+    # Attach to the container in interactive bash mode
+    docker exec -it "${CONTAINER_NAME}" /bin/bash
+else
+    echo "Creating and running new container '${CONTAINER_NAME}'..."
+
+    docker run -it \
+        --name "${CONTAINER_NAME}" \
+        --volume=/dev:/dev \
+        --volume=/tmp/.X11-unix:/tmp/.X11-unix \
+        --ipc=host \
+        --network=host \
+        --privileged \
+        --device /dev/dri \
+        --device /dev/accel \
+        --group-add=$(stat -c "%g" /dev/dri/render* | head -n 1) -u $(id -u):$(id -g) \
+        --env="DISPLAY" \
+        --env="WAYLAND_DISPLAY" \
+        --env="XDG_RUNTIME_DIR" \
+        --env="PULSE_SERVER" \
+        --device-cgroup-rule='c 189:* rmw' \
+        "${IMAGE_NAME}" \
+        /bin/bash
+
+    if [[ $? -ne 0 ]]; then
+        echo "Docker run failed."
+        exit 1
+    fi 
+fi

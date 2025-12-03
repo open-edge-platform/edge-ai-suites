@@ -274,7 +274,7 @@
         "type": "influxdb",
         "uid": "xU6Z19aVk"
       },
-      "description": "SBWBLTLANE - count",
+      "description": "SBEBLTLANE - count",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -335,11 +335,11 @@
             "type": "influxdb",
             "uid": "xU6Z19aVk"
           },
-          "query": "from(bucket: \"SS-Anthem\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"region_obj_count_2\")\r\n  |> filter(fn: (r) => r[\"location\"] == \"Anthem\")\r\n  |> filter(fn: (r) => r[\"object\"] == \"vehicle\")\r\n  |> filter(fn: (r) => r[\"region\"] == \"SBWBLTLANE\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"count\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
+          "query": "from(bucket: \"SS-Anthem\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"region_obj_count_2\")\r\n  |> filter(fn: (r) => r[\"location\"] == \"Anthem\")\r\n  |> filter(fn: (r) => r[\"object\"] == \"vehicle\")\r\n  |> filter(fn: (r) => r[\"region\"] == \"SBEBLTLANE\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"count\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
-      "title": "SBWBLTLANE- Vehicle Count",
+      "title": "SBEBLTLANE- Vehicle Count",
       "type": "bargauge"
     },
     {
@@ -347,7 +347,7 @@
         "type": "influxdb",
         "uid": "xU6Z19aVk"
       },
-      "description": "SBWBLTLANE - dwell time",
+      "description": "SBEBLTLANE - dwell time",
       "fieldConfig": {
         "defaults": {
           "mappings": [],
@@ -403,11 +403,11 @@
             "type": "influxdb",
             "uid": "xU6Z19aVk"
           },
-          "query": "from(bucket: \"SS-Anthem\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"region_obj_dwell_2\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"dwell_time\")\r\n  |> filter(fn: (r) => r[\"location\"] == \"Anthem\")\r\n  |> filter(fn: (r) => r[\"object\"] == \"vehicle\")\r\n  |> filter(fn: (r) => r[\"region\"] == \"SBWBLTLANE\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
+          "query": "from(bucket: \"SS-Anthem\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"region_obj_dwell_2\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"dwell_time\")\r\n  |> filter(fn: (r) => r[\"location\"] == \"Anthem\")\r\n  |> filter(fn: (r) => r[\"object\"] == \"vehicle\")\r\n  |> filter(fn: (r) => r[\"region\"] == \"SBEBLTLANE\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
-      "title": "SBWBLTLANE - dwell time",
+      "title": "SBEBLTLANE - dwell time",
       "type": "gauge"
     },
     {

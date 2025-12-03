@@ -76,6 +76,21 @@ RUN bash -c 'wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INT
   libnlopt-cxx-dev \
   && rm -rf /var/lib/apt/lists/*
 
+# Add Intel GPU repo key / Add Intel GPU repo / Install GPU runtime packages
+RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | gpg --yes --dearmor --output /usr/share/keyrings/intel-graphics.gpg \
+  && echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy unified" | tee /etc/apt/sources.list.d/intel-gpu-jammy.list \
+  && apt update \
+  && apt-get install -y libze-intel-gpu1=24.52.32224.14-1077~22.04 libze1=1.19.2.0-1077~22.04 intel-opencl-icd=24.52.32224.14-1077~22.04 clinfo xpu-smi
+
+# Add Intel ECI repo key / Pinning preferences
+RUN wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null \
+  && echo "deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/jammy isar main" | tee /etc/apt/sources.list.d/eci.list \
+  && echo "deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/jammy isar main" | tee -a /etc/apt/sources.list.d/eci.list \
+  && echo "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/isar 
+RUN cat /etc/apt/preferences.d/isar 
+
+# Install the NPU Libraries
+RUN apt-get update && apt-get install -y level-zero* intel-driver-compiler-npu intel-fw-npu intel-level-zero-npu
 
 ENV ROS_DISTRO=humble
 ENV AMENT_PREFIX_PATH=/opt/ros/humble
