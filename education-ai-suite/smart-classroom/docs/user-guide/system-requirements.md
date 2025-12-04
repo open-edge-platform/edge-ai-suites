@@ -22,7 +22,7 @@ This page provides detailed hardware, software, platform requirements, and suppo
   - Runs on **CPU** (Whisper is CPU-centric)  
 - **FunASR (Paraformer)**  
   - Recommended for **Chinese transcription** (`paraformer-zh`)
--  Supports transcription of audio files up to 45 minutes
+-  Supports transcription of .mp3/.wav audio files up to 45 minutes long.
 
 ###  Summarization (LLMs)  
 - **Qwen Models (OpenVINO / IPEX)**  
