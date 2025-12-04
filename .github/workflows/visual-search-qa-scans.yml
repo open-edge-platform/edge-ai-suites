@@ -79,7 +79,7 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         with:
           scan_type: "config"
-          scan_target: "metro-ai-suite/visual-search-question-and-answering/docker/"
+          scan_target: "metro-ai-suite/visual-search-question-and-answering/src/"
           severity: "HIGH,CRITICAL"
           format: "json"
           misconfig_scanners: "dockerfile"
