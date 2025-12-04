@@ -1,6 +1,6 @@
 .. _static_use_case:
 
-Exemplary Static Use case
+Static Vision Use Case
 ##############################
 
 This exemplary use case shows how the robot detecting an instance of an object pose, i.e.: position

@@ -44,7 +44,8 @@
     "checkingAudioDevices": "正在检查音频设备…",
     "startRecording": "开始录音",
     "stopRecording": "停止录音",
-    "recordingDisabled": "录音已禁用 - 正在进行其他操作"
+    "recordingDisabled": "录音已禁用 - 正在进行其他操作",
+    "noDevicesOrStreams": "未找到音频设备，或没有配置可用于串流的视频流。"
   },
   "settings": {
     "title": "设置",

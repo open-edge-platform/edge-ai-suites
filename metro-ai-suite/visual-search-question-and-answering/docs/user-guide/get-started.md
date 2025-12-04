@@ -95,7 +95,7 @@ Note: supported media types: jpg, png, mp4
    You might want to pay some attention to `DEVICE`, `VLM_DEVICE` and `EMBEDDING_DEVICE` in `env.sh`. By default, they are `GPU.1`, which applies to a standard hardware platform with an integrated GPU as `GPU.0` and a discrete GPU as `GPU.1`. You can refer to [OpenVINO's query device sample](https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html) to learn more about how to identify which GPU index should be set.
 
 
-   **Note**: The default volume directory for Milvus (the vector DB) data is under `/volumes`. If this directory is under constraint or you simply would like to store the data in a diffrent location, please set the environment variable via `export DOCKER_VOLUME_DIRECTORY=<your_data_directory>`. The Milvus data will be stored at `${DOCKER_VOLUME_DIRECTORY}/volumes` in such case.
+   **Note**: The default volume directory for Milvus (the vector DB) data is under `/opt/volumes`. If this directory is under constraint or you simply would like to store the data in a diffrent location, please set the environment variable via `export DOCKER_VOLUME_DIRECTORY=<your_data_directory>`. The Milvus data will be stored at `${DOCKER_VOLUME_DIRECTORY}/volumes` in such case.
 
 3.  Deploy with docker compose
 

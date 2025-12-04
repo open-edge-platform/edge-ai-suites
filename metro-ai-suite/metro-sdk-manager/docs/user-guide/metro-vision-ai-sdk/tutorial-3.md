@@ -37,12 +37,20 @@ Before starting this tutorial, ensure you have:
 
 ## System Requirements
 
-- **Operating System:** Ubuntu 22.04 LTS or Ubuntu 24.04 LTS
+- **Operating System:** Ubuntu 22.04 LTS or Ubuntu 24.04 LTS (Desktop edition required)
 - **Processor:** Intel® Core™, Intel® Core™ Ultra, or Intel® Xeon® processors
 - **Memory:** Minimum 8GB RAM (16GB recommended for optimal performance)
 - **Storage:** 3GB free disk space for models and video files
 - **Graphics:** Intel integrated graphics or discrete GPU (optional for acceleration)
 - **Display:** Monitor capable of displaying video output
+
+**Important Display Requirements**
+This tutorial requires **Ubuntu Desktop** with a physical display and active graphical session. It will **not work** with:
+- Ubuntu Server (no GUI)
+- Remote SSH sessions without X11 forwarding
+- Headless systems
+ 
+You must be logged in to a local desktop session with a connected monitor or Remote Desktop/VNC connection for the video output to display correctly.
 
 ## Tutorial Steps
 
@@ -256,31 +264,7 @@ python3 /home/openvino/inference.py
 
 **Expected Console Output:**
 
-```
-[INFO] Initializing OpenVINO Runtime...
-[INFO] Loading model: /home/openvino/public/yolov10s/FP16/yolov10s.xml
-[INFO] Model loaded successfully on CPU
-[INFO] Input shape: [1, 3, 640, 640]
-[INFO] Expected input size: 640x640
-[INFO] Video properties: 1280x720 @ 30FPS, 900 frames
-[INFO] Starting object detection inference...
-[INFO] Device: CPU
-[INFO] Press 'q' to quit, 's' to save frame, 'p' to pause
-[INFO] End of video reached
-
-============================================================
-PERFORMANCE STATISTICS
-============================================================
-Total Frames Processed: 900
-Total Inference Time: 45.23s
-Average FPS: 19.9
-Min FPS: 16.2
-Max FPS: 23.1
-FPS Std Dev: 1.8
-Average Inference Time: 50.26ms
-Device Used: CPU
-============================================================
-```
+![Tutorial 3 Output](images/tutorial-3-output.png)
 
 ### Step 6: Run Object Detection on GPU (Optional)
 
