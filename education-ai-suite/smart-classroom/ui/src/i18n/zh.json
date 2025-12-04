@@ -76,7 +76,13 @@
     "title": "上传文件",
     "audioPath": "音频路径",
     "videoPath": "视频路径",
-    "applyAndStart": "应用并开始处理"
+    "applyAndStart": "应用并开始处理",
+    "processing": "处理中...",
+    "baseDirectoryLabel": "视频文件的基础目录",
+    "audioFileLabel": "音频文件",
+    "frontCameraFile": "前置摄像头文件",
+    "backCameraFile": "后置摄像头文件",
+    "boardCameraFile": "黑板摄像头文件"
   },
   "menu": {
     "settings": "设置",
@@ -91,7 +97,7 @@
 
   "accordion": {
     "noData": "暂无数据",
-    "noSessionActive": "无活动会话。请上传音频文件并开始转录以开始监控。",
+    "noSessionActive": "无活动会话。请上传文件或开始录音以开始监控。",
     "lastUpdated": "最后更新",
     "resourceUtilization": "资源利用率",
     "configuration": "配置与指标",

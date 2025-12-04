@@ -17,6 +17,7 @@ To see the system requirements and other installations, see the following guides
 
 - [System Requirements](./docs/user-guide/system-requirements.md): Check the hardware and software requirements for deploying the application.
 - [Get Started](./docs/user-guide/get-started.md): Follow step-by-step instructions to set up the application.
+- [Application Flow](./docs/user-guide/application-flow.md): Check the flow of application.
 
 ## How It Works
 

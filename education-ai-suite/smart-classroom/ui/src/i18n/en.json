@@ -76,7 +76,13 @@
     "title": "Upload Files",
     "audioPath": "Audio Path",
     "videoPath": "Video Path",                             
-    "applyAndStart": "Apply and Start Processing"
+    "applyAndStart": "Apply and Start Processing",
+    "processing": "Processing...",
+    "baseDirectoryLabel": "Base Directory for Video Files",
+    "audioFileLabel": "Audio File",
+    "frontCameraFile": "Front Camera File",
+    "backCameraFile": "Back Camera File",
+    "boardCameraFile": "Board Camera File"
   },
     "menu": {
       "settings": "Settings",
@@ -91,7 +97,7 @@
   
   "accordion": {
       "noData": "No data available",
-      "noSessionActive": "No active session. Upload an audio file and start transcription to begin monitoring.",
+      "noSessionActive": "No active session. Upload file or Start Recording to begin monitoring.",
       "lastUpdated": "Last updated",
       "resourceUtilization": "Resource Utilization",
       "configuration": "Configuration & Metrics",
