@@ -12,15 +12,20 @@
 > **Note**: The following instructions assume Kubernetes is already running in the host system with helm package manager installed.
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
+
     ```sh
-    git clone https://github.com/open-edge-platform/edge-ai-suites.git
+    git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
     ```
+
 2. Set app specific values.yaml file.
+
     ```sh
     cp helm/values_pallet_defect_detection.yaml helm/values.yaml
     ```
+
 3.  Edit the HOST_IP, proxy and other environment variables in `helm/values.yaml` as follows
+
     ```yaml
     env:
         HOST_IP: <HOST_IP>   # host IP address

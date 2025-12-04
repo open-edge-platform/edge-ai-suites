@@ -51,7 +51,7 @@ To configure Docker:
 ## Clone source code
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 ```
 
@@ -76,7 +76,7 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    > - The sample app is deployed by pulling the pre-built container images of the sample app
    >   from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY`
    >   env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal`)
-   > - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) is set to `true` by default, 
+   > - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) is set to `true` by default,
    >   enabling continuous looping of simulator data. To ingest the simulator data only once (without looping),
    >   set this variable to `false`.
    > - The update rate of the graph and table may lag by a few seconds and might not perfectly align with the video stream, since

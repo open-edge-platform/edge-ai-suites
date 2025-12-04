@@ -338,7 +338,7 @@ Clone and navigate to the Smart Intersection Helm repository:
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/

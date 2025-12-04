@@ -12,7 +12,7 @@ Here are the instructions on how to enable Collaborative Visual SLAM Framework o
 
 1. Get the Collaborative Visual SLAM code
 
-    `git clone --recursive https://github.com/open-edge-platform/edge-ai-suites`
+    `git clone --recursive https://github.com/open-edge-platform/edge-ai-suites -b release-2025.2.0`
 
 2. Build the collaborative VSLAM, nav2_bringup and the ITS planner
 

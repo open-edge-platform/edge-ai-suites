@@ -14,9 +14,9 @@ ROS2: Tested on Humble (but Should work with Foxy too)
 ### Running via local cloning
 
 **Clone picknplace and depending repos**
-   
+
 ```
-git clone --recursive https://github.com/open-edge-platform/edge-ai-suites
+git clone --recursive https://github.com/open-edge-platform/edge-ai-suites -b release-2025.2.0
 # If you have cloned the repo without the --recursive flag, run the following command to remedy:
 #git submodule update --init --recursive
 
@@ -66,7 +66,7 @@ The demonstration workflow is as follows:
 **Note**: This demo prioritizes the representation of combined stack usage over intricate details. Some assumptions have been made for simplicity. For instance, the item's location on the conveyor belt is sourced directly from Gazebo without integrating perception systems. Additionally, while ARM1 is present in the simulation, it remains static and does not perform any actions at this time.
 
 ## Other Details
-**State Machine Implementation**: The demo employ the Smach library for designing the state machine that serves as the arm1 controller in Python. SMACH is a valuable tool for creating, managing, and examining hierarchical state machines for robotic operations. 
+**State Machine Implementation**: The demo employ the Smach library for designing the state machine that serves as the arm1 controller in Python. SMACH is a valuable tool for creating, managing, and examining hierarchical state machines for robotic operations.
 
 **Moveit wrapper**: The moveit commands are send using a modified version of pymoveit2, courtesy of Andrej Orsula. This version introduces several enhancements and rectifies existing bugs. However, with the recent availability of Python bindings in the latest Moveit2 stack, it's advisable to use that instead.
 

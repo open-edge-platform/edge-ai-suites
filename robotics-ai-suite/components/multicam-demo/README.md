@@ -148,7 +148,7 @@ Add the $USER to the video and render group using the following command.
 2. Clone the repository - [edge-ai-suites](https://github.com/open-edge-platform/edge-ai-suites)
 
    ```bash
-     git clone --recursive https://github.com/open-edge-platform/edge-ai-suites
+     git clone --recursive https://github.com/open-edge-platform/edge-ai-suites -b release-2025.2.0
    ```
 
 3. Update the dependencies.

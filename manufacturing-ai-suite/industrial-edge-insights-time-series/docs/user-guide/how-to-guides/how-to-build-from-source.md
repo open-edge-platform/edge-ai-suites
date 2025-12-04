@@ -28,7 +28,7 @@ of the selected app before proceeding with the below steps.
 2. **Clone the source and build the sample app**:
 
     ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-suites.git
+    git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
 
     # build
