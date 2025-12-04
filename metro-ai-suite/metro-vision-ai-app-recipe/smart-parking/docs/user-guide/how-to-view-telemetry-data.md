@@ -14,7 +14,7 @@ Open [`https://<HOST_IP>/prometheus/`](https://<HOST_IP>/prometheus/) in your br
 
 ### For Helm
 
-Open [`http://<HOST_IP>:30443/prometheus/`](https://<HOST_IP>:30443/prometheus/) in your browser to view the prometheus console
+Open [`https://<HOST_IP>:30443/prometheus/`](https://<HOST_IP>:30443/prometheus/) in your browser to view the prometheus console
 
 
 ### Try Out the Following Queries
