@@ -104,7 +104,7 @@ grafana:
 
 scene:
   repository: intel/scenescape-controller
-  tag: v2025.2-rc3
+  tag: v2025.2
 
   service:
     type: ClusterIP
@@ -124,7 +124,7 @@ web:
   replicas: 1
   image:
     repository: intel/scenescape-manager
-    tag: v2025.2-rc3
+    tag: v2025.2
   dbhost: pgserver
   broker: broker.scenescape.intel.com
   service:
