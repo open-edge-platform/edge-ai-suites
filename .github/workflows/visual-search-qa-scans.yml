@@ -157,12 +157,12 @@ jobs:
           COV_PATH="$(pwd)/cov-analysis/bin"
           export PATH="$COV_PATH:$PATH"
           ls
-          cd metro-ai-suite/visual-search-question-and-answering
+          cd metro-ai-suite/visual-search-question-and-answering/src
           coverity capture --dir cov-int --project-dir ./
           
       - name: Create tarball for upload
         run: |
-          cd metro-ai-suite/visual-search-question-and-answering
+          cd metro-ai-suite/visual-search-question-and-answering/src
           tar -czvf coverity_output.tgz -C . cov-int
           # Verify tarball contents
           echo "=== Tarball Contents ==="
@@ -172,7 +172,7 @@ jobs:
           
       - name: Upload to Coverity Scan
         run: |
-          cd metro-ai-suite/visual-search-question-and-answering
+          cd metro-ai-suite/visual-search-question-and-answering/src
           curl --form token=${{ secrets.VQA_COVERITY_TOKEN }} \
                --form email=${{ secrets.VQA_COVERITY_EMAIL }} \
                --form file=@coverity_output.tgz \
