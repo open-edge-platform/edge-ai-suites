@@ -1,84 +1,102 @@
 
 .. _preliminary_system_configuration:
 
-Preliminary system configuration
+Preliminary System Configuration
 ================================
 
-Camera pose and robot calibration
----------------------------------
 
-Before first RVC Execution, we have to ensure a few parameters that has to match the physical setup:
-
-- RVC must known the exact pose (i.e.: position and orientation) of the Intel® RealSense™ camera as explained in :ref:`Camera pose calibration<camera_pose_calibration>`
-- Prepare the robot for communication with the Intel® platform as in :ref:`Universal Robots configuration<universal_robot_configuration>`
-- The robot calibration parameters from the real robot must be extracted, as explained further in :ref:`Universal Robots Calibration Procedure<robot_calibration_procedure>`
-
-.. _camera_pose_calibration:
-
-Camera pose calibration
-^^^^^^^^^^^^^^^^^^^^^^^
+Before running RVC for the first time, ensure proper configuration has occurred:
 
 
-Before starting the Vision component, verify that the camera location matches the position
-and orientation specified in the file
+- Camera
+    - :ref:`Integration<camera_integration>`: These demonstrations support all |Realsense| |D4xx| cameras, though were designed with the D415.
+- Universal Robots
+    - :ref:`Communication<universal_robot_configuration>`: The robot must be properly configured to interface with the |Intel| platform
+    - :ref:`Calibration Procedure<robot_calibration_procedure>`: Extract the robot's calibration parameters from the physical robot to ensure accurate operation.
+    - :ref:`Home Pose<robots_home_pose>`: Verify and set the robot's default home pose according to its real-world configuration.
 
-.. code-block:: bash
+Camera
+--------------------------------------
+The RVC demonstrations assume use of the Intel® RealSense™ D415 camera. If you plan on exploring these exercises with a different
+model from (e.g., D435, D455), the below modifications are required.
 
-    rvc_dynamic_motion_controller_use_case/cameraurdf/d415<namespace>.xacro
 
-.. note::
+.. _camera_integration:
 
-    Location might change according to installation procedure and the suffix `ipc` depends on the
-    ``namespace:=`` option, by default `ipc` in this case
+Integration
+^^^^^^^^^^^
+A .xacro file is an XML-based macro language that lets one define reusable components and parameters. With xacro, one
+can construct shorter and more readable XML files by using macros that expand to larger XML expressions. This is used
+to avoid repetition, improve readability, and make robot models configurable (e.g., by passing arguments).
 
-The default content of this file is:
+In the case of the |Realsense| |D4xx| cameras, the .xacro file for each device are stored in the realsense2_description package.
+Each examplary use case requires one to extend these files and provide the cameras origin within the physical world. Below is an example
+of an .xacro extension for the D455f to be used in the `Dynamic Use Case <../use_cases/dynamic_use_case.html>`_`. Note that the origin is placing
+the camera within the world frame at a specific location while refernecing the Intel-provided xacro file found in the **realsense2_description**
+package.
 
 .. code-block:: xml
 
-    <?xml version="1.0"?>
-
-    <robot name="d415_camera" xmlns:xacro="http://ros.org/wiki/xacro">
-    <xacro:arg name="use_nominal_extrinsics" default="false"/>
-    <xacro:arg name="name" default="camera<namespace>"/>
-    <xacro:arg name="use_mesh" default="true"/>
-    <xacro:arg name="use_plug" default="true"/>
-    <xacro:include filename="$(find realsense2_description)/urdf/_d415.urdf.xacro" />
-    <link name="world" />
-    <xacro:sensor_d415 parent="world" name="$(arg name)" use_mesh="$(arg use_mesh)" add_plug="$(arg use_plug)" use_nominal_extrinsics="$(arg use_nominal_extrinsics)" >
+    <robot name="d455_camera" xmlns:xacro="http://ros.org/wiki/xacro">
+        <xacro:arg name="use_nominal_extrinsics" default="false"/>
+        <xacro:arg name="name" default="cameraipc0"/>
+        <xacro:include filename="$(find realsense2_description)/urdf/_d455.urdf.xacro" />
+        <link name="world" />
+        <xacro:sensor_d455 parent="world" name="$(arg name)"  use_nominal_extrinsics="$(arg use_nominal_extrinsics)" >
             <origin xyz="0.36 0.66 0.755" rpy="-3.141592654 1.570796327 -1.570796327"/>
-    </xacro:sensor_d415>
+        </xacro:sensor_d455>
     </robot>
 
 
-The important part is
+The important part is the origin:
 
 .. code-block:: xml
 
     <origin xyz="0.36 0.66 0.755" rpy="-3.141592654 1.570796327 -1.570796327"/>
 
-where the ``xyz`` triplet is expressed in meters, and the ``rpy`` is in radians and they express respectively
+
+The ``xyz`` triplet is expressed in meters, and the ``rpy`` is in radians, both express respectively
 the cartesian coordinates of the base of the camera in reference to the ``world`` frame_id, which should
-coincide with the center of the base of the robot, if not modified.
+coincide with the center of the base of the robot, if not modified. These numbers are important because
+if not accurate, the robot will not go to the proper location when picking the objects, as the detection
+is in reference system of the camera, and the system has to transform it to robot reference system,
+and these numbers give the relation between the two systems.
 
-These numbers are important because if not accurate, the robot will not go to the proper location when
-picking the objects, as the detection is in reference system of the camera, and the system has to
-transform it to robot reference system, and these numbers give the relation between the two systems
+Each demonstration utilizes these files, if you have selected a camera other than the D415, you will need to create an .xacro extension and store it
+in the correct location. Again, if doing so please note that the camera location wihtin the physical world must match
+the original configuration or you will need to retrain the neural network processing the streams.
 
++---------------+--------------------------------------------+---------------------------------------------------------------+------------------------+
+| Use Case      | Package                                    | Location                                                      | File Name              |
++===============+============================================+===============================================================+========================+
+| Static        | rvc_static_motion_controller_use_case      | /rvc/src/rvc_static_motion_controller_use_case/cameraurdf     |  d415cameraipc.xacro   |
++---------------+--------------------------------------------+---------------------------------------------------------------+------------------------+
+| Dynamic       | rvc_static_motion_controller_use_case arm  | /rvc/src/rvc_static_motion_controller_use_case/cameraurdf     |  d415cameraipc.xacro   |
++---------------+--------------------------------------------+---------------------------------------------------------------+------------------------+
+
+.. note::
+
+    Every component has an option to change the default namespace: ``namespace:=<namspace>`` which by default is "ipc". When specified, the components
+    will only see other components if they have same namespaces and the associated .xacro files must be named as seen in the above table (e.g. ``d415camera<namespace>.xacro``)
 
 .. _universal_robot_configuration:
 
 Universal Robots Configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The real robot or the simulator has to be configured to accept
-connection from RVC and configure the RVC system for real time capabilities
-
-
-Set up Universal Robots UR5e Robot
 --------------------------------------
 
 
-This section discusses, in brief, the steps to set up Universal Robots UR5e robot.
+The real robot or the simulator must be configured to accept
+connection from RVC and configure the RVC system for real time capabilities.
+
+
+Set up Universal Robots UR5e Robot
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+
+
+This section briefly discusses the steps to set up the Universal Robots UR5e robot.
 
 .. note::
     For more details, refer to the
@@ -87,12 +105,14 @@ This section discusses, in brief, the steps to set up Universal Robots UR5e robo
 
 
 Set up Private Local Network
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-One of the key considerations coming from Universal Robots robots is that the network connection from the controlling AI running RVC and the robot must be on a direct Ethernet connection. In this demonstration, a private local network with a dedicated switch was set up with no other traffic on this network, which worked well.
+
+One of the key considerations with Universal Robots is that the network connection between the controlling AI running RVC and the robot must be a direct Ethernet connection.
 
 Install external_control.urcap
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 Configure the URCaps for the robot and the Robotiq 2F-85 URCap. For details, refer to
 `Connect to External Control via URCap <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver#connect-to-external-control-via-urcap>`_.
@@ -104,20 +124,21 @@ After installing `external_control.urcap`, the screen, shown in the following fi
 
 .. note::
 
-    Replace the IP in, the figure, with your Intel target private network connected to the robot.
+    Replace the IP in the figure with your Intel target private network IP connected to the robot.
 
 .. note::
 
-    Before starting the demonstration, make sure that the **Speed** slider, shown in the figure, is set around 70%. Even if the speed is set to above 70%, the robot will follow, however higher speed might damage the bolts that connect the base of the robot to the table. Do the same for the Rviz2 speed slider also.
+    Before starting the demonstration, make sure that the **Speed** slider, shown in the figure, is set around 70%. Even if the speed is set above 70%, the robot will operate; however, higher speeds might damage the bolts that connect the base of the robot to the table. Do the same for the Rviz2 speed slider as well.
 
 Install Gripper URCaps
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 The URCaps are available on the `Robotiq <https://robotiq.com/products/2f85-140-adaptive-robot-gripper?ref=nav_product_new_button>`_ website.
 
 To download the latest Gripper URCaps, click **Download files**. From the left panel, click **Universal Robots**. Then, click **Software** > **Gripper Software**. Click **DOWNLOAD ZIP**.
 
-Install these URCaps on the UR5e robot teach pendant using an USB key.
+Install these URCaps on the UR5e robot teach pendant using a USB drive.
 
 Restart the robot. Select **Program Robot** on the Welcome screen. Go to the **Installation** tab. Select **Gripper** listed under **URCaps**.
 
@@ -130,7 +151,7 @@ Restart the robot. Select **Program Robot** on the Welcome screen. Go to the **I
 Overwrite Model-specific Kinematics Parameters (Calibration)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There might be slight differences (variance) in the physical attributes of various robots. To address this issue, the robot is calibrated at the factory and the variance in these parameters are saved on the robot controller file system. Extract the kinematics parameters specific to your robot and overwrite the distributed parameters file to avoid the robot being sent elsewhere for accumulating errors on inverse kinematics computation due to this parameter variance.
+There might be slight differences (variance) in the physical attributes of various robots. To address this issue, the robot is calibrated at the factory and the variance in these parameters is saved on the robot controller file system. Extract the kinematics parameters specific to your robot and overwrite the distributed parameters file. This avoids the robot accumulating errors in inverse kinematics computation due to parameter variance.
 
 For information on the Universal Robots robot calibration, refer to
 `README.md <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/foxy/ur_calibration/README.md>`_
@@ -145,7 +166,8 @@ For information on the Universal Robots robot calibration, refer to
     [ros2_control_node-1] [ERROR] [1665059044.504667587] [URPositionHardwareInterface]: The calibration parameters of the connected robot don't match the ones from the given kinematics config file. Be aware that this can lead to critical inaccuracies of tcp positions. Use the ur_calibration tool to extract the correct calibration from the robot and pass that into the description. See [https://github.com/UniversalRobots/Universal_Robots_ROS_Driver#extract-calibration-information] for details.
 
 Calibration Example
-"""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 
 Execute:
@@ -163,7 +185,7 @@ For example, in this demonstration, the result file is in:
 
 `<urdescriptioninstallpath>/ur_description/config/ur5e/default_kinematics.yaml`
 
-If everything is correct, you will see an information message instead of the error message.
+If everything is correct, you will see an informational message instead of the error message.
 
 ::
 
@@ -183,3 +205,37 @@ To use the new URCaps, enabling the communication with the Intel® architecture 
 .. note::
 
     Make sure that you have replaced Host IP with your IA RVC controller private network IP connected to the robot.
+
+
+
+
+
+
+.. _robots_home_pose:
+
+Robot Home Pose
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We strongly recommend positioning the physical robot, as seen below, prior to executing any of the provided use cases.
+This ensures that the robot begins from a well-defined and safe reference configuration, allowing the calibration parameters
+and motion sequences to align precisely with the expectations of the RVC framework. Always verify that the robot is
+correctly homed before initiating any automated behavior.
+
++----------+---------------+
+| Joint    | Degrees       |
++==========+===============+
+| Base     | 122°          |
++----------+---------------+
+| Shoulder | -100°         |
++----------+---------------+
+| Elbow    | 104°          |
++----------+---------------+
+| Wrist 1  | 0°            |
++----------+---------------+
+| Wrist 2  | 80°           |
++----------+---------------+
+| Wrist 3  | 0°            |
++----------+---------------+
+
+.. image:: images/html/sethomeposition.png
+   :alt: setting home position
