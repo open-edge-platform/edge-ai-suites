@@ -307,6 +307,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const isRecordingDisabled = isRecording ? false : (
     audioDevicesLoading ||
     hasNothingToRecord ||  // ✅ NEW: Disable if nothing to record
+    videoAnalyticsActive ||
     isBusy ||
     transcriptStatus === 'streaming' ||     
     summaryLoading ||                         
@@ -321,6 +322,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
 
   const isUploadDisabled =
     isRecording ||
+    videoAnalyticsActive ||
     transcriptStatus === 'streaming' ||      
     isBusy ||                                
     summaryLoading ||                         

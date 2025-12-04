@@ -182,13 +182,6 @@ const uiSlice = createSlice({
       state.mindmapLoading = false;
       state.shouldStartMindmap = false;
       state.audioStatus = 'complete';
-      state.hasUploadedVideoFiles = false;
-      const hasVideoConfig = Boolean(
-          state.frontCamera?.trim() || 
-          state.backCamera?.trim() || 
-          state.boardCamera?.trim()
-        );
-      state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
     },
  
     mindmapFailed(state) {
@@ -370,16 +363,6 @@ const uiSlice = createSlice({
       const hasVideoConfig = Boolean(preservedCameras.frontCamera?.trim() || preservedCameras.backCamera?.trim() || preservedCameras.boardCamera?.trim() || preservedHasUploadedVideoFiles);
       state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
     },
-
-    clearUploadedFiles(state) {
-    state.hasUploadedVideoFiles = false;
-    const hasVideoConfig = Boolean(
-      state.frontCamera?.trim() || 
-      state.backCamera?.trim() || 
-      state.boardCamera?.trim()
-    );
-    state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
-  }
   },
 });
  
