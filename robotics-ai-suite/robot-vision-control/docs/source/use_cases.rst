@@ -16,6 +16,6 @@ Two exemplary use cases are provided within the RVC framework, each designed to 
 .. toctree::
    :maxdepth: 1
    :hidden:
-   
+
    use_cases/dynamic_use_case
    use_cases/static_use_case
