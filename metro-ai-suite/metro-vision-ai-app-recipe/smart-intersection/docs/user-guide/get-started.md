@@ -11,7 +11,7 @@ The Smart Intersection Sample Application is a modular sample application design
 By following this guide, you will learn how to:
 - **Set up the sample application**: Use Docker Compose to quickly deploy the application in your environment.
 - **Run a predefined pipeline**: Execute a sample pipeline to see real-time transportation monitoring and object detection in action.
-- **Access the application's features and user interfaces**: Explore the Scenescape Web UI, Grafana dashboard, Node-RED interface, and DL Streamer Pipeline Server to monitor, analyze and customize workflows.
+- **Access the application's features and user interfaces**: Explore the SceneScape Web UI, Grafana dashboard, Node-RED interface, and DL Streamer Pipeline Server to monitor, analyze and customize workflows.
 
 ## Prerequisites
 - Verify that your system meets the [minimum requirements](./system-requirements.md).
@@ -76,8 +76,8 @@ By following this guide, you will learn how to:
      - Grafana Dashboard
      - DL Streamer Pipeline Server
      - MQTT Broker
-     - Node-RED (for applications without Scenescape)
-     - Scenescape services (for Smart Intersection only)
+     - Node-RED (for applications without SceneScape)
+     - SceneScape services (for Smart Intersection only)
 
      </details>
 
@@ -156,3 +156,4 @@ Choose one of the following methods to deploy the Smart Intersection Sample Appl
 
 - [Troubleshooting Guide](./support.md): Find detailed steps to resolve common issues during deployments.
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
+- [SceneScape](https://docs.openedgeplatform.intel.com/2025.2/scenescape/index.html): Intel Scene-based AI software framework.

@@ -9,6 +9,7 @@ This page provides detailed hardware, software, platform requirements, and suppo
 - **Memory**: 32 GB RAM (minimum recommended)
 - **Storage**: At least 50 GB free (for models and logs)
 - **GPU/Accelerator**: Intel® iGPU (Core Ultra Series 1, Arc GPU, or higher) for summarization acceleration
+- **NPU**: Intel® NPU (Core Ultra Series 1 or higher) for Video pipelines
 - **Python**: 3.12
 - **Node.js**: v18+ (for frontend)
 
@@ -33,5 +34,9 @@ This page provides detailed hardware, software, platform requirements, and suppo
 - **int8** → Recommended for lower-end CPUs (fast + efficient)  
 - **fp16** → Recommended for higher-end systems (better accuracy, GPU acceleration)  
 - **int4** → Supported, but may reduce accuracy (use only if memory-constrained)  
+
+## Video Pipeline
+- Supports 3 Video pipelines (front, back and board) up to 45 minutes
+- Supports .mp4 format
 
  Run summarization on **GPU** (Intel® iGPU / Arc GPU) for faster performance.  

@@ -40,7 +40,8 @@ import { resetSummary } from '../../redux/slices/summarySlice';
 import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { setClassStatistics } from '../../redux/slices/fetchClassStatistics';
 import { constants } from '../../constants';
- 
+import { useTranslation } from 'react-i18next';
+
 interface UploadFilesModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -56,7 +57,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(constants.START_NOTIFICATION);
   const [monitoringTimer, setMonitoringTimer] = useState<number | null>(null);
- 
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const abortRef = useRef<AbortController | null>(null);
   const shouldAbortRef = useRef<boolean>(true);
@@ -443,11 +444,11 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="upload-files-modal">
-        <h2>Upload Files</h2>
+        <h2>{t('uploadFiles.title')}</h2>
         <hr className="modal-title-line" />
         <div className="modal-body">
           <div className="modal-input-group">
-            <label>Base Directory for Video Files</label>
+            <label>{t('uploadFiles.baseDirectoryLabel')}</label>
             <input
               type="text"
               value={baseDirectory}
@@ -456,7 +457,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
             />
           </div>
           <div className="modal-input-group">
-            <label>Audio File</label>
+            <label>{t('uploadFiles.audioFileLabel')}</label>
             <div className="file-input-wrapper">
               <input
                 type="text"
@@ -473,7 +474,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
             </div>
           </div>
           <div className="modal-input-group">
-            <label>Front Camera File</label>
+            <label>{t('uploadFiles.frontCameraFile')}</label>
             <div className="file-input-wrapper">
               <input
                 type="text"
@@ -491,13 +492,13 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
           </div>
 
           <div className="modal-input-group">
-            <label>Rear Camera File</label>
+            <label>{t('uploadFiles.backCameraFile')}</label>
             <div className="file-input-wrapper">
               <input
                 type="text"
                 value={rearCameraPath?.name || ''}
                 readOnly
-                placeholder="Select a rear camera file"
+                placeholder="Select a back camera file"
               />
               <img
                 src={folderIcon}
@@ -509,7 +510,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
           </div>
 
           <div className="modal-input-group">
-            <label>Board Camera File</label>
+            <label>{t('uploadFiles.boardCameraFile')}</label>
             <div className="file-input-wrapper">
               <input
                 type="text"
@@ -534,7 +535,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
             className="apply-button"
             disabled={(!audioFile && !frontCameraPath && !rearCameraPath && !boardCameraPath) || loading}
           >
-            {loading ? 'Processing...' : 'Apply & Start Processing'}
+            {loading ? t('uploadFiles.processing') : t('uploadFiles.applyAndStart')}
           </button>
         </div>
       </div>

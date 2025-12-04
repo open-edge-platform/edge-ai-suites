@@ -182,6 +182,13 @@ const uiSlice = createSlice({
       state.mindmapLoading = false;
       state.shouldStartMindmap = false;
       state.audioStatus = 'complete';
+      state.hasUploadedVideoFiles = false;
+      const hasVideoConfig = Boolean(
+          state.frontCamera?.trim() || 
+          state.backCamera?.trim() || 
+          state.boardCamera?.trim()
+        );
+      state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
     },
  
     mindmapFailed(state) {
@@ -335,11 +342,12 @@ const uiSlice = createSlice({
         state.videoStatus = 'ready';
       }
     },
-
+    
     // Enhanced reset that preserves device states
     resetFlow(state) {
       const preservedAudioDevices = state.hasAudioDevices;
       const preservedAudioDevicesLoading = state.audioDevicesLoading;
+      const preservedHasUploadedVideoFiles = state.hasUploadedVideoFiles;
       const preservedCameras = {
         frontCamera: state.frontCamera,
         backCamera: state.backCamera,
@@ -352,15 +360,26 @@ const uiSlice = createSlice({
       // Restore preserved states
       state.hasAudioDevices = preservedAudioDevices;
       state.audioDevicesLoading = preservedAudioDevicesLoading;
+      state.hasUploadedVideoFiles = preservedHasUploadedVideoFiles;
       state.frontCamera = preservedCameras.frontCamera;
       state.backCamera = preservedCameras.backCamera;
       state.boardCamera = preservedCameras.boardCamera;
       
       // Set appropriate initial statuses
       state.audioStatus = preservedAudioDevicesLoading ? 'checking' : (preservedAudioDevices ? 'ready' : 'no-devices');
-      const hasVideoConfig = Boolean(preservedCameras.frontCamera?.trim() || preservedCameras.backCamera?.trim() || preservedCameras.boardCamera?.trim());
+      const hasVideoConfig = Boolean(preservedCameras.frontCamera?.trim() || preservedCameras.backCamera?.trim() || preservedCameras.boardCamera?.trim() || preservedHasUploadedVideoFiles);
       state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
     },
+
+    clearUploadedFiles(state) {
+    state.hasUploadedVideoFiles = false;
+    const hasVideoConfig = Boolean(
+      state.frontCamera?.trim() || 
+      state.backCamera?.trim() || 
+      state.boardCamera?.trim()
+    );
+    state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
+  }
   },
 });
  
