@@ -184,6 +184,13 @@ To start the node on the AAEON UP Xtreme i11 Robotic Development Kit, you can re
   <!--hide_directive:::hide_directive-->
   <!--hide_directive::::hide_directive-->
 
+- Modify permissions to grant access for a user to USB device and run ROS2 commands without sudo privileges. Make sure to use proper ``ttyUSB`` device.
+
+  ```bash
+  sudo chown $(whoami):$(id -gn) /dev/<ttyUSB> # e.g., /dev/ttyUSB0
+  sudo chmod a+rw /dev/<ttyUSB>
+  ```
+
 - Start the motor control node.
 
   <!--hide_directive::::{tab-set}hide_directive-->
