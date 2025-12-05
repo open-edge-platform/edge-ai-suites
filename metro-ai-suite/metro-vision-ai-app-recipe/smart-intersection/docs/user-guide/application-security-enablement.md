@@ -34,10 +34,10 @@ This comprehensive security implementation ensures that your Smart Intersection 
 :::{toctree}
 :hidden:
 
-   security_features/enable_dtpm
-   security_features/enable_full_disk_install
-   security_features/enable_uefi
-   security_features/enable_tme
-   security_features/enable_trusted_compute
+security_features/enable_dtpm
+security_features/enable_full_disk_install
+security_features/enable_uefi
+security_features/enable_tme
+security_features/enable_trusted_compute
 :::
 hide_directive-->
