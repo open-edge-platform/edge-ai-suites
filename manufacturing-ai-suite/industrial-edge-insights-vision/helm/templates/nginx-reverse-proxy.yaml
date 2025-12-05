@@ -7,18 +7,23 @@ metadata:
 data:
   nginx.conf: |-
 {{ (.Files.Get (printf "apps/%s/configs/nginx/nginx.conf" .Values.env.SAMPLE_APP)) | indent 4 }}
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: nginx-ssl-certs
-  namespace: {{ .Values.namespace }}
-type: Opaque
-data:
-{{- $sslPath := printf "apps/%s/configs/nginx/ssl/*" .Values.env.SAMPLE_APP }}
-{{- range $path, $file := .Files.Glob $sslPath }}
-  {{ base $path }}: {{ $file | toString | b64enc }}
-{{- end }}
+  generate_certs.sh: |
+    #!/bin/sh
+    set -e
+    SSL_DIR="/etc/nginx/ssl"
+    mkdir -p "$SSL_DIR"
+    if ! command -v openssl >/dev/null 2>&1; then
+        echo "Installing openssl..."
+        apk add --no-cache openssl
+    fi
+    if [ ! -f "$SSL_DIR/server.crt" ] || [ ! -f "$SSL_DIR/server.key" ]; then
+      echo "🔐 Generating self-signed SSL certificate..."
+      openssl req -x509 -nodes -days 365 \
+        -newkey rsa:2048 \
+        -keyout "$SSL_DIR/server.key" \
+        -out "$SSL_DIR/server.crt" \
+        -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"
+    fi
 ---
 apiVersion: v1
 kind: Service
@@ -56,6 +61,17 @@ spec:
       labels:
         app: nginx-reverse-proxy
     spec:
+      initContainers:
+      - name: generate-certs
+        image: alpine/openssl:3.5.4
+        command: 
+        - /bin/sh
+        - /scripts/generate_certs.sh
+        volumeMounts:
+        - name: nginx-ssl
+          mountPath: /etc/nginx/ssl
+        - name: nginx-scripts
+          mountPath: /scripts
       containers:
       - name: nginx-reverse-proxy
         image: {{ $.Values.images.nginx }}
@@ -82,6 +98,15 @@ spec:
       - name: nginx-conf
         configMap:
           name: nginx-conf
+          items:
+          - key: nginx.conf
+            path: nginx.conf
+      - name: nginx-scripts
+        configMap:
+          name: nginx-conf
+          items:
+          - key: generate_certs.sh
+            path: generate_certs.sh
+            mode: 0755
       - name: nginx-ssl
-        secret:
-          secretName: nginx-ssl-certs
+        emptyDir: {}
