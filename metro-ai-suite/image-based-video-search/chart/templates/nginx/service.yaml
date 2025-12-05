@@ -11,12 +11,12 @@ spec:
   - name: nginx-reverse-proxy-80
     port: 80
     protocol: TCP
-    targetPort: 80
+    targetPort: 8080
     nodePort: 30080 
   - name: nginx-reverse-proxy-443
     port: 443
     protocol: TCP
-    targetPort: 443
+    targetPort: 8443
     nodePort: 30443
   - name: nginx-reverse-proxy-8554
     port: 8554

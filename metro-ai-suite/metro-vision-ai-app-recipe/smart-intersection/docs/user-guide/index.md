@@ -34,6 +34,7 @@ This guide is designed to help developers understand the architecture, setup, an
 
 <!--hide_directive
 :::{toctree}
+:hidden:
 
 Overview
 how-it-works
@@ -44,5 +45,7 @@ how-to-use-gpu-for-inference
 application-security-enablement
 release-notes
 support
+
 :::
 hide_directive-->
+
