@@ -15,7 +15,28 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
    [get started guide](../../../gsg_robot/index.rst) to enable the GPU for
    simulation. This step improves Gazebo simulation performance.
 
-2. Install the Wandering Gazebo tutorial:
+2. Install dependencies:
+
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
+
+   ```bash
+   sudo apt-get install ros-jazzy-rtabmap-ros
+   ```
+
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
+
+   ```bash
+   sudo apt-get install ros-humble-rtabmap-ros
+   ```
+
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
+
+3. Install the Wandering Gazebo tutorial:
 
    <!--hide_directive::::{tab-set}hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
@@ -36,7 +57,7 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
    <!--hide_directive:::hide_directive-->
    <!--hide_directive::::hide_directive-->
 
-3. Execute the command below to start the tutorial:
+4. Execute the command below to start the tutorial:
 
    ```bash
    ros2 launch wandering_gazebo_tutorial wandering_gazebo.launch.py
@@ -61,7 +82,7 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
       **Physics**.
    2. Change the real time update rate to 0.
 
-4. To conclude, use ``Ctrl-c`` in the terminal where you are executing
+5. To conclude, use ``Ctrl-c`` in the terminal where you are executing
    the command.
 
 ## Troubleshooting

@@ -14,7 +14,28 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
 
 ## Run the FastMapping Standalone Application
 
-1. To download and install the FastMapping standalone sample application run
+1. Install dependencies:
+
+   <!--hide_directive::::{tab-set}
+   :::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
+
+   ```bash
+   sudo apt-get install ros-jazzy-rtabmap-ros
+   ```
+
+   <!--hide_directive:::
+   :::{tab-item}hide_directive-->  **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
+
+   ```bash
+   sudo apt-get install ros-humble-rtabmap-ros
+   ```
+
+   <!--hide_directive:::
+   ::::hide_directive-->
+
+2. To download and install the FastMapping standalone sample application run
    the command below:
 
    <!--hide_directive::::{tab-set}
@@ -42,7 +63,7 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
    > After the installation, the ROS 2 bag can be found at `/opt/ros/jazzy/share/bagfiles/spinning/`.
    > `ros-humble-fast-mapping` can be found at similar directory path.
 
-2. Set up your ROS 2 environment
+3. Set up your ROS 2 environment
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **Jazzy**
@@ -63,7 +84,7 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
    <!--hide_directive:::
    ::::hide_directive-->
 
-3. Run the FastMapping sample application using a ROS 2 bag of a robot spinning:
+4. Run the FastMapping sample application using a ROS 2 bag of a robot spinning:
 
    ```bash
    ros2 launch fast_mapping fast_mapping.launch.py
@@ -73,7 +94,7 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
 
    <https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/robotics/videos/fast_mapping.mp4>
 
-4. Run the FastMapping sample application using Intel® RealSense™ camera
+5. Run the FastMapping sample application using Intel® RealSense™ camera
    input with RTAB-Map:
 
    ```bash

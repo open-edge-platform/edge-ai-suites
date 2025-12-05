@@ -20,7 +20,6 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
    <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
-   sudo apt-get install ros-jazzy-aaeon-adbscan-tutorial-common
    sudo apt-get install ros-jazzy-aaeon-adbscan-tutorial
    ```
 
@@ -29,7 +28,6 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
    <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
-   sudo apt-get install ros-humble-aaeon-adbscan-tutorial-common
    sudo apt-get install ros-humble-aaeon-adbscan-tutorial
    ```
 
