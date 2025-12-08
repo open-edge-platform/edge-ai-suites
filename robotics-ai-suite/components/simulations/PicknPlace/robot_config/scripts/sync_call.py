@@ -18,17 +18,18 @@
 # Desc:  Wrapper script to perform synchronization from within launch.py.
 
 import sys
-import time
 import robot_config.utils as utils
+
 
 def main(args=None):
     if len(sys.argv) < 3:
-        print("Please provide the event name and mode as a command-line argument.")
+        print('Please provide the event name and mode as a command-line argument.')
         sys.exit(1)
     if sys.argv[1] == 'set':
         utils.wait_for_event(sys.argv[2])
     else:
         utils.set_event(sys.argv[2])
+
 
 if __name__ == '__main__':
     main()

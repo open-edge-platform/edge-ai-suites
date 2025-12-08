@@ -42,7 +42,6 @@ from launch.actions import (
     OpaqueFunction,
     RegisterEventHandler,
 )
-from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_context import LaunchContext
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -54,23 +53,27 @@ import robot_config.utils as util
 
 LOG_LEVEL = 'info'
 
-def generate_launch_description():
 
-    return LaunchDescription([
-        OpaqueFunction(function = launch_setup),
-        ])
+def generate_launch_description():
+    return LaunchDescription(
+        [
+            OpaqueFunction(function=launch_setup),
+        ]
+    )
+
 
 def launch_setup(context: LaunchContext):
-
     TURTLEBOT3_MODEL = 'waffle'
 
     ros_distro = os.environ.get('ROS_DISTRO')
-    
+
     package_path = get_package_share_directory('robot_config')
-    nav_launch_dir = os.path.join(package_path, 'launch', 'nav2_bringup', ros_distro)
+    nav_launch_dir = os.path.join(
+        package_path, 'launch', 'nav2_bringup', ros_distro
+    )
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    
+
     amr_name = context.launch_configurations['amr_name']
     x_pos = context.launch_configurations['x_pos']
     y_pos = context.launch_configurations['y_pos']
@@ -87,17 +90,16 @@ def launch_setup(context: LaunchContext):
 
     remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
     actions = []
-    
+
     # If launch request with Full or Gazebo only mode.
-    if mode == 'full' or mode == 'gazebo' :
+    if mode == 'full' or mode == 'gazebo':
         # Create state publisher node for that instance
         turtlebot_state_publisher = Node(
             package='robot_state_publisher',
             namespace=['/', amr_name],
             executable='robot_state_publisher',
             output='screen',
-            parameters=[{'use_sim_time': use_sim_time,
-                        'publish_frequency': 10.0}],
+            parameters=[{'use_sim_time': use_sim_time, 'publish_frequency': 10.0}],
             remappings=remappings,
             arguments=[urdf],
         )
@@ -106,11 +108,14 @@ def launch_setup(context: LaunchContext):
 
         # Create spawn call
         spawn_turtlebot3 = Node(
-            package='gazebo_ros',
-            executable='spawn_entity.py',
+            package='ros_gz_sim',
+            executable='create',
             arguments=[
-                '-file', os.path.join(package_path,'models', 'turtlebot3_' + TURTLEBOT3_MODEL, 'model_tray_camera.sdf'),
-                '-entity', amr_name,
+                '-file', os.path.join(
+                    package_path, 'models',
+                    'turtlebot3_' + TURTLEBOT3_MODEL, 'model_tray_camera.sdf'
+                ),
+                '-name', amr_name,
                 '-robot_namespace', ['/', amr_name],
                 '-x', x_pos, '-y', y_pos,
                 '-z', '0.05', '-Y', yaw,
@@ -121,50 +126,74 @@ def launch_setup(context: LaunchContext):
         actions.append(spawn_turtlebot3)
 
     # Create stack nodes for Full or stack only mode.
-    if  mode == 'full' or mode == 'stack':
-        params_file = LaunchConfiguration('nav_params_file',  default=os.path.join(package_path, 'params', 'nav2_params_' + ros_distro + '.yaml'))
+    if mode == 'full' or mode == 'stack':
+        params_file = LaunchConfiguration(
+            'nav_params_file',
+            default=os.path.join(
+                package_path, 'params', 'nav2_params_' + ros_distro + '.yaml'
+            ),
+        )
         bringup_cmd = IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                os.path.join(nav_launch_dir, 'bringup_launch.py')),
-                launch_arguments={
-                                'slam': 'False',
-                                'namespace': ['/', amr_name],
-                                'use_namespace': 'True',
-                                'map': '',
-                                'map_server': 'False',
-                                'params_file': params_file,
-                                'default_bt_xml_filename': os.path.join(
-                                    get_package_share_directory('nav2_bt_navigator'),
-                                    'behavior_trees', 'navigate_w_replanning_and_recovery.xml'),
-                                'autostart': 'true',
-                                'use_composition': 'False',
-                                'use_sim_time': use_sim_time, 'log_level': LOG_LEVEL}.items(),
-                )
-        
+                os.path.join(nav_launch_dir, 'bringup_launch.py')
+            ),
+            launch_arguments={
+                'slam': 'False',
+                'namespace': ['/', amr_name],
+                'use_namespace': 'True',
+                'map': '',
+                'map_server': 'False',
+                'params_file': params_file,
+                'default_bt_xml_filename': os.path.join(
+                    get_package_share_directory('nav2_bt_navigator'),
+                    'behavior_trees',
+                    'navigate_w_replanning_and_recovery.xml',
+                ),
+                'autostart': 'true',
+                'use_composition': 'False',
+                'use_sim_time': use_sim_time,
+                'log_level': LOG_LEVEL,
+            }.items(),
+        )
+
         qx, qy, qz, qw = util.quaternion_from_euler(0.0, 0.0, float(yaw))
 
         # Wait for initialpose before setting initial pose.
         wait_for_initialpose = ExecuteProcess(
-                cmd=[
-                    'ros2', 'run', 'robot_config', 'wait_for_interface.py', 'topic',
-                    '/' + amr_name + '/initialpose',
-                ], output='screen',
-            )
+            cmd=[
+                'ros2',
+                'run',
+                'robot_config',
+                'wait_for_interface.py',
+                'topic',
+                '/' + amr_name + '/initialpose',
+            ],
+            output='screen',
+        )
 
-        message = f"{{header: {{frame_id: map}}, pose: {{pose: {{position: \
-                    {{x: {context.launch_configurations['x_pos']}, y: {context.launch_configurations['y_pos']}, \
-                    z: {0.05} }}, orientation: {{x: {qx}, y: {qy}, z: {qz}, w: {qw} }} }}, }} }}"
+        message = f'{{header: {{frame_id: map}}, pose: {{pose: {{position: \
+                    {{x: {context.launch_configurations["x_pos"]}, \
+                    y: {context.launch_configurations["y_pos"]}, \
+                    z: {0.05} }}, orientation: {{x: {qx}, y: {qy}, z: {qz}, w: {qw} }} }}, }} }}'
 
         initial_pose_cmd = ExecuteProcess(
-            cmd=['ros2', 'topic', 'pub', '-1', '--qos-reliability', 'reliable', '/' + amr_name + '/initialpose',
-                'geometry_msgs/PoseWithCovarianceStamped', message],
-            output='screen'
+            cmd=[
+                'ros2',
+                'topic',
+                'pub',
+                '-1',
+                '--qos-reliability',
+                'reliable',
+                '/' + amr_name + '/initialpose',
+                'geometry_msgs/PoseWithCovarianceStamped',
+                message,
+            ],
+            output='screen',
         )
 
         set_pose_event = RegisterEventHandler(
             event_handler=OnProcessExit(
-                target_action=wait_for_initialpose,
-                on_exit=[initial_pose_cmd]
+                target_action=wait_for_initialpose, on_exit=[initial_pose_cmd]
             )
         )
 
@@ -173,13 +202,14 @@ def launch_setup(context: LaunchContext):
         actions.append(set_pose_event)
 
     # Check if wait_on is provided.  If exist then create a dependency action on it
-    if "wait_on" in context.launch_configurations:
+    if 'wait_on' in context.launch_configurations:
         wait_on = context.launch_configurations['wait_on'].split(' ')
         wait_for_action_server = ExecuteProcess(
             cmd=[
-                'ros2', 'run', 'robot_config', 'wait_for_interface.py', wait_on[0],
-                wait_on[1]
-            ], output='screen',
+                'ros2', 'run', 'robot_config', 'wait_for_interface.py',
+                wait_on[0], wait_on[1]
+            ],
+            output='screen',
         )
         # Create a dependency action for spawn turtlebot3
         action = RegisterEventHandler(
@@ -190,6 +220,96 @@ def launch_setup(context: LaunchContext):
         )
 
         actions = [wait_for_action_server, action]
-   
-    return actions
 
+    # Add Gazebo Bridge nodes for AMR
+    if mode == 'full' or mode == 'gazebo':
+        amr_namespace = '/' + amr_name
+
+        # Clock bridge
+        gz_ros_bridge_clock = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock]'],
+            output='screen',
+        )
+
+        # Joint states bridge for AMR
+        gz_ros_bridge_joint_states = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                (f'{amr_namespace}/joint_states@sensor_msgs/msg/JointState'
+                 '[gz.msgs.Model]'),
+            ],
+            output='screen',
+        )
+
+        # Odometry bridge
+        gz_ros_bridge_odom = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                (f'{amr_namespace}/odom@nav_msgs/msg/Odometry'
+                 '[gz.msgs.Odometry]'),
+            ],
+            output='screen',
+        )
+
+        # Velocity commands bridge
+        gz_ros_bridge_cmd_vel = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                (f'{amr_namespace}/cmd_vel@geometry_msgs/msg/Twist'
+                 '[gz.msgs.Twist]'),
+            ],
+            output='screen',
+        )
+
+        # Laser scan bridge
+        gz_ros_bridge_scan = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                (f'{amr_namespace}/scan@sensor_msgs/msg/LaserScan'
+                 '[gz.msgs.LaserScan]'),
+            ],
+            output='screen',
+        )
+
+        # Camera bridge
+        gz_ros_bridge_camera = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                (f'{amr_namespace}/camera/image_raw@sensor_msgs/msg/Image'
+                 '[gz.msgs.Image]'),
+                (f'{amr_namespace}/camera/camera_info@sensor_msgs/msg/CameraInfo'
+                 '[gz.msgs.CameraInfo]'),
+            ],
+            output='screen',
+        )
+
+        # IMU bridge
+        gz_ros_bridge_imu = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                (f'{amr_namespace}/imu@sensor_msgs/msg/Imu'
+                 '[gz.msgs.IMU]'),
+            ],
+            output='screen',
+        )
+
+        # Add bridge nodes to actions
+        actions.extend([
+            gz_ros_bridge_clock,
+            gz_ros_bridge_joint_states,
+            gz_ros_bridge_odom,
+            gz_ros_bridge_cmd_vel,
+            gz_ros_bridge_scan,
+            gz_ros_bridge_camera,
+            gz_ros_bridge_imu
+        ])
+
+    return actions

@@ -17,24 +17,22 @@
 
 # Desc:  Wrapper script to call set initial pose service from launch.py
 
-import sys
 import rclpy
 from rclpy.node import Node
 import robot_config.utils as utils
-import time
+
 
 class SetPose(Node):
     def __init__(self):
         super().__init__('initial_pose')
 
     def entity_location(self):
-        pose = utils.entity_location(self, "amr1")
-        
+        pose = utils.entity_location(self, 'amr1')
 
-    
+
 def main(args=None):
     rclpy.init(args=args)
-   
+
     node = SetPose()
     node.destroy_node()
     rclpy.shutdown()
@@ -42,4 +40,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-

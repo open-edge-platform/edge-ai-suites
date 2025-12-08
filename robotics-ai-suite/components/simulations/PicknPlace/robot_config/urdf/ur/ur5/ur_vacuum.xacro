@@ -1,10 +1,5 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
-  <!--
-    NOTE the macro defined in this file is NOT part of the public API of this
-          package. Users CANNOT rely on this file being available, or stored in
-          this location. Nor can they rely on the existence of the macro.
-  -->
 
  <xacro:macro name="ur_vacuum_gripper" params="
     prefix
@@ -36,6 +31,7 @@
         <inertia ixx="0.049443313556" ixy="0" ixz="0" iyy="0.049443313556" iyz="0" izz="0.049443313556"/> 
       </inertial>
     </link>
+    
     <joint name="${prefix}gripper_joint${index}" type="revolute">
       <axis xyz="1 0 0" />
       <parent link="${base_link}" />
@@ -45,6 +41,7 @@
       <dynamics damping="0.0" friction="10"/>
     </joint>
 
+    <!-- Contact sensors dla ARIAC plugin -->
     <gazebo reference="${prefix}vacuum_gripper${index}">
       <mu1>1.0</mu1>
       <mu2>1.0</mu2>
@@ -53,58 +50,122 @@
       <kp>1e+13</kp>
       <kd>1.0</kd>
       <material>Gazebo/Grey</material>
+      
+      <!-- Contact sensor 1 -->
+      <sensor name="vacuum_contact_sensor_1_${index}" type="contact">
+        <contact>
+          <collision>vacuum_collision_${index}</collision>
+        </contact>
+        <update_rate>100</update_rate>
+        <plugin name="contact_sensor_1_plugin_${index}" filename="libgz_ros_contact.so">
+          <ros>
+            <namespace>${namespace}</namespace>
+            <remapping>~/contacts:=vacuum_gripper${index}/contact_sensor_1</remapping>
+          </ros>
+        </plugin>
+      </sensor>
+      
+      <!-- Contact sensor 2 -->
+      <sensor name="vacuum_contact_sensor_2_${index}" type="contact">
+        <contact>
+          <collision>vacuum_collision_${index}</collision>
+        </contact>
+        <update_rate>100</update_rate>
+        <plugin name="contact_sensor_2_plugin_${index}" filename="libgz_ros_contact.so">
+          <ros>
+            <namespace>${namespace}</namespace>
+            <remapping>~/contacts:=vacuum_gripper${index}/contact_sensor_2</remapping>
+          </ros>
+        </plugin>
+      </sensor>
     </gazebo>
   
+    <!-- ARIAC Vacuum Tool Plugin -->
     <gazebo>
-    <plugin name="${prefix}gazebo_ros_vacuum_gripper${index}" filename="libgazebo_ros_vacuum_gripper.so">
-      <ros>
+      <plugin name="${prefix}vacuum_tool_plugin_${index}" filename="libariac_vacuum_tool_plugin.so">
+        <ros>
           <namespace>${namespace}</namespace>
-      </ros>
-      <link_name>${prefix}vacuum_gripper${index}</link_name>
-      <topicName>grasping</topicName>
-      <maxForce>10</maxForce>
-      <max_distance>0.08</max_distance>
-      <minDistance>0.01</minDistance>
-      <fixed>ground_plane</fixed>
-      <fixed>belt_visual</fixed>
-      <fixed>belt_moving</fixed>
-    </plugin>
+        </ros>
+        
+        <!-- Basic parameters -->
+        <tool_type>2</tool_type> <!-- VacuumTools::VG_2 -->
+        <gripper_base_link>${prefix}vacuum_gripper${index}</gripper_base_link>
+        
+        <!-- Contact sensor topics -->
+        <contact_sensor_1_topic>/${namespace}/vacuum_gripper${index}/contact_sensor_1</contact_sensor_1_topic>
+        <contact_sensor_2_topic>/${namespace}/vacuum_gripper${index}/contact_sensor_2</contact_sensor_2_topic>
+        
+        <!-- Serwisy ROS -->
+        <attach_service>attach_${index}</attach_service>
+        <detach_service>detach_${index}</detach_service>
+        
+        <!-- Parameters malfunctions (optional) -->
+        <malfunction_occurrence>0</malfunction_occurrence>
+        <grasp_occurrence>1</grasp_occurrence>
+        
+        <!-- Joint for lock/unlock -->
+        <lock_joint>${prefix}gripper_joint${index}</lock_joint>
+        
+        <!-- Physical parameters -->
+        <max_force>50.0</max_force>
+        <max_distance>0.1</max_distance>
+        <min_distance>0.01</min_distance>
+      </plugin>
     </gazebo>
-   
 
-  </xacro:macro>
+</xacro:macro>
   
-   <link name="vacuum_gripper_base">
-      <gravity>0</gravity>
-      <visual name="vacuum_visual_base">
-        <origin rpy="0 0 0" xyz="0 0 0.00" />
-        <geometry>
-          <cylinder radius="0.03" length="0.005"/>
-        </geometry>
-      </visual>
-      <inertial name="vacuum_inertial_base">
-        <origin rpy="0 0 0" xyz="0.0 0.0 0.00"/>
-        <mass value="0.005"/>
-        <inertia ixx="0.049443313556" ixy="0" ixz="0" iyy="0.049443313556" iyz="0" izz="0.049443313556"/>
-      </inertial>
-      <collision name="vacuum_collision_base">
-        <origin rpy="0 0 0" xyz="0 0 0.00"/>
-        <geometry>
-          <cylinder radius="0.03" length="0.005"/>
-        </geometry>
-      </collision>
-    </link>
+<!-- Base link dla vacuum gripper -->
+<link name="vacuum_gripper_base">
+  <gravity>0</gravity>
+  <visual name="vacuum_visual_base">
+    <origin rpy="0 0 0" xyz="0 0 0.00" />
+    <geometry>
+      <cylinder radius="0.03" length="0.005"/>
+    </geometry>
+    <material name="VacuumBase">
+      <color rgba="0.2 0.2 0.2 1.0"/>
+    </material>
+  </visual>
+  <inertial name="vacuum_inertial_base">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.00"/>
+    <mass value="0.005"/>
+    <inertia ixx="0.049443313556" ixy="0" ixz="0" iyy="0.049443313556" iyz="0" izz="0.049443313556"/>
+  </inertial>
+  <collision name="vacuum_collision_base">
+    <origin rpy="0 0 0" xyz="0 0 0.00"/>
+    <geometry>
+      <cylinder radius="0.03" length="0.005"/>
+    </geometry>
+  </collision>
+</link>
 
-    <joint name="vacuum_gripper_base_joint" type="fixed">
-      <parent link="ee_link" />
-      <child link="vacuum_gripper_base" />
-      <origin rpy="0.0 0.0 0.0" xyz="0.0025 0.0 0.0"/>
-      <limit effort="0.0" velocity="0.0" lower="0" upper="0" />
-      <dynamics damping="0.0" friction="10"/>
-    </joint>
+<joint name="vacuum_gripper_base_joint" type="fixed">
+  <parent link="ee_link" />
+  <child link="vacuum_gripper_base" />
+  <origin rpy="0.0 0.0 0.0" xyz="0.0025 0.0 0.0"/>
+  <limit effort="0.0" velocity="0.0" lower="0" upper="0" />
+  <dynamics damping="0.0" friction="10"/>
+</joint>
+
+<!-- Gazebo properties dla base -->
+<gazebo reference="vacuum_gripper_base">
+  <material>Gazebo/DarkGrey</material>
+</gazebo>
  
-  <xacro:ur_vacuum_gripper prefix="$(arg prefix)" namespace="$(arg namespace)" index="1" base_link="vacuum_gripper_base" xyz="0.0 0.0125 0.002"/>
+<!-- Instancje vacuum gripper -->
+<xacro:ur_vacuum_gripper 
+  prefix="$(arg prefix)" 
+  namespace="$(arg namespace)" 
+  index="1" 
+  base_link="vacuum_gripper_base" 
+  xyz="0.0 0.0125 0.002"/>
  
-  <xacro:ur_vacuum_gripper prefix="$(arg prefix)" namespace="$(arg namespace)" index="2" base_link="vacuum_gripper_base" xyz="0.0 -0.0125 0.002"/>
+<xacro:ur_vacuum_gripper 
+  prefix="$(arg prefix)" 
+  namespace="$(arg namespace)" 
+  index="2" 
+  base_link="vacuum_gripper_base" 
+  xyz="0.0 -0.0125 0.002"/>
 
 </robot>

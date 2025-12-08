@@ -21,13 +21,15 @@ package_name = 'realsense2_tutorial'
 
 setup(
     name=package_name,
-    version='2.2.0',
+    version='2.3.0',
     packages=find_packages(exclude=['test']),
     data_files=[
-        ('share/ament_index/resource_index/packages',
-            ['resource/' + package_name]),
+        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', [package_name + '/launch/realsense2_tutorial.launch.py']),
+        (
+            'share/' + package_name + '/launch',
+            [package_name + '/launch/realsense2_tutorial.launch.py'],
+        ),
         ('share/' + package_name + '/config', glob(package_name + '/config/*.rviz')),
     ],
     install_requires=['setuptools'],
@@ -38,7 +40,6 @@ setup(
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
-        ],
+        'console_scripts': [],
     },
 )

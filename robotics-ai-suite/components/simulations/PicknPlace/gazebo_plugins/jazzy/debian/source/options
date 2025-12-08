@@ -1,0 +1,13 @@
+# Automatically add upstream changes to the quilt overlay.
+# http://manpages.ubuntu.com/manpages/trusty/man1/dpkg-source.1.html
+# This supports reusing the orig.tar.gz for debian increments.
+tar-ignore=.git
+tar-ignore=.gitignore
+tar-ignore=.ci
+tar-ignore=ci
+tar-ignore=debian/*.tmpl
+tar-ignore=.pc
+tar-ignore=*.deb
+tar-ignore=*.changes
+tar-ignore=*.buildinfo
+
