@@ -43,8 +43,6 @@ jobs:
               - 'robotics-ai-suite/components/collaborative-slam/**'
             fast-mapping-location:
               - 'robotics-ai-suite/components/fast-mapping/**'
-            fast-mapping-location:
-              - 'robotics-ai-suite/components/fast-mapping/**'
             groundfloor-location:
               - 'robotics-ai-suite/components/groundfloor/**'
             its-planner-location:
