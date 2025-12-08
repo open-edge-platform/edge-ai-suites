@@ -44,8 +44,7 @@ spec:
             - sh
             - -c
             - >-
-              mkdir -p {{ .Values.auth.mountPath }} &&
-              chown {{ $runUser }}:{{ $runGroup }} {{ .Values.auth.mountPath }}
+              umask 007 && mkdir -p {{ .Values.auth.mountPath }}
           volumeMounts:
             - name: auth
               mountPath: {{ .Values.auth.mountPath }}

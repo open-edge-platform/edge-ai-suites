@@ -86,11 +86,7 @@ cd edge-ai-suites/metro-ai-suite/smart-nvr
 
 ### 2. Configure Required Values
 
-The application requires several values to be set by user in order to work. To make it easier, we have included a `user_value_override.yaml` file, which contains only the values that user needs to tweak. Open the file in your favorite editor or use nano:
-
-```bash
-nano user_value_override.yaml
-```
+The application requires several values to be set by user in order to work. To make it easier, we have included a `user_value_override.yaml` file, which contains only the values that user needs to tweak. Open the file in your favorite editor or use nano.
 
 Update or edit the values in YAML file as follows:
 
@@ -105,8 +101,8 @@ Update or edit the values in YAML file as follows:
 | `frigate.env.OPENAI_BASE_URL` | Needed when NVR_GENAI flag is set to true | `<your-open-ai-base-url>` |
 | `frigate.env.OPENAI_API_KEY` | Needed when NVR_GENAI flag is set to true | `<your-open-ai-api-key>` |
 | `nvr-event-router.env.VSS_SEARCH_IP` | VSS Search IP | `http://<your-vss-search-ip>` |
-| `nvr-event-router.env.VSS_SEARCH_PORT` | VSS Search port | `http://<your-vss-search-port>` |
-| `nvr-event-router.env.VSS_SUMMARY_IP` | VSS summary IP | `<your-vss-summary-ip>` |
+| `nvr-event-router.env.VSS_SEARCH_PORT` | VSS Search port | `<your-vss-search-port>` |
+| `nvr-event-router.env.VSS_SUMMARY_IP` | VSS summary IP | `http://<your-vss-summary-ip>` |
 | `nvr-event-router.env.VSS_SUMMARY_PORT` | VSS summary port | `<your-vss-summary-port>` |
 | `nvr-event-router-ui.NVR_GENAI` | Flag to enable GENAI on Frigate NVR  | `true/false` |
 
