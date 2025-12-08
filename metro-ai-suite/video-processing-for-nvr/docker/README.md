@@ -23,5 +23,9 @@ Make sure docker is corrently installed and configured.
 ## Uninstall docker image
 1. Run `docker rmi -f $(docker images --format "{{.Repository}}:{{.Tag}}" | grep 'vppsample')` remove all vppsample docker images
 
+## Old platform compatible
+The configuration in docker script support MTL/ARL platform by default.  
+To run on old platform like ADL/RPL, please remove environment variable `-e DISPLAY_NEW_PLATFORM=1` in `run.sh` and `DISPLAY_NEW_PLATFORM: "1"` in `docker-compose.yml`.
+
 ## Caution
 This container image is intended for demo purposes only and not intended for production use. To receive expanded security maintenance from Canonical on the Ubuntu base layer, you may follow the [how-to guide to enable Ubuntu Pro in a Dockerfile](https://documentation.ubuntu.com/pro-client/en/docs/howtoguides/enable_in_dockerfile) which will require the image to be rebuilt.
