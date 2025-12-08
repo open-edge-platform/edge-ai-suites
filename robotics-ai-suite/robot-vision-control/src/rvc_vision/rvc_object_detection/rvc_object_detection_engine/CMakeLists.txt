@@ -42,8 +42,15 @@ message("Openvino version is " ${InferenceEngine_VERSION})
 #include_directories(include ${OpenCV_INCLUDE_DIRS} )
 include_directories(include  )
 
+# Determine ROS distro-specific source directory
+if(DEFINED ENV{ROS_DISTRO})
+  set(ROS_DISTRO $ENV{ROS_DISTRO})
+else()
+  set(ROS_DISTRO "humble")
+endif()
+
 add_library(rvc_object_detection_composable_plugin SHARED
-    src/rvc_object_detection.cpp
+    ${ROS_DISTRO}/src/rvc_object_detection.cpp
 )
 
 ament_target_dependencies(rvc_object_detection_composable_plugin

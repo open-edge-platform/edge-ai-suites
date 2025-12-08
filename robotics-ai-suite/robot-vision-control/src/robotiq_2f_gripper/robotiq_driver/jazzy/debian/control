@@ -1,0 +1,22 @@
+Source: ros-jazzy-robotiq-driver-plugin
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+    ros-jazzy-ament-cmake,
+    ros-jazzy-hardware-interface,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-std-srvs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-robotiq-driver-plugin
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+    ros-jazzy-controller-manager,
+    ros-jazzy-hardware-interface,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-std-srvs
+Description: robotiq 2f driver

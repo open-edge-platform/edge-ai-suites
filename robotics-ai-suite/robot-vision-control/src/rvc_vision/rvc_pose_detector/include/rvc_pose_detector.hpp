@@ -37,6 +37,12 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <tf2_eigen/tf2_eigen.hpp>
+
+#include <sensor_msgs/msg/camera_info.hpp>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_sensor_msgs/tf2_sensor_msgs.hpp>  // for doTransform(sensor_msgs::PointCloud2)
+
 #include "matcher.hpp"
 
 namespace RVC

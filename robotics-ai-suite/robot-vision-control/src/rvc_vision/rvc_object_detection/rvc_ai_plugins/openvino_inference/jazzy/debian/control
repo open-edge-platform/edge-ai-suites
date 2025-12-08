@@ -1,0 +1,29 @@
+Source: ros-jazzy-openvino-inference-plugin
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+    libopencv-dev,
+    openvino-libraries-dev,
+    ros-jazzy-ament-cmake-ros,
+    ros-jazzy-ament-lint-auto <!nocheck>,
+    ros-jazzy-ament-lint-common <!nocheck>,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclcpp-components,
+    ros-jazzy-rvc-ai-interface,
+    ros-jazzy-rvc-vision-messages,
+    ros-jazzy-std-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-openvino-inference-plugin
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+    libopencv-dev,
+    openvino-libraries-dev,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rvc-ai-interface,
+    ros-jazzy-rvc-vision-messages,
+    ros-jazzy-std-msgs
+Description: RVC AI interface-based Plugin implementing yolo V5, v6 and V8 using openvino inferencing

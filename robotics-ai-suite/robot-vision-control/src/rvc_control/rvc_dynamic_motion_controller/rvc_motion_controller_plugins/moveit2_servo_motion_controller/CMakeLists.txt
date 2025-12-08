@@ -17,9 +17,16 @@ find_package(moveit_core REQUIRED)
 find_package(moveit_servo REQUIRED)
 find_package(tf2_ros REQUIRED)
 
+# Determine ROS distro-specific source directory
+if(DEFINED ENV{ROS_DISTRO})
+  set(ROS_DISTRO $ENV{ROS_DISTRO})
+else()
+  set(ROS_DISTRO "humble")
+endif()
+
 add_library(${PROJECT_NAME} SHARED
-    src/moveit2_pose_tracking.cpp  
-    src/moveit2_servo_motion_controller.cpp
+    ${ROS_DISTRO}/src/moveit2_pose_tracking.cpp
+    ${ROS_DISTRO}/src/moveit2_servo_motion_controller.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME}
@@ -36,7 +43,7 @@ ament_target_dependencies(${PROJECT_NAME}
 
 target_compile_features(${PROJECT_NAME} PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 target_include_directories(${PROJECT_NAME} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${ROS_DISTRO}/include>
   $<INSTALL_INTERFACE:include>
 )
 
@@ -50,7 +57,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNC
 pluginlib_export_plugin_description_file(rvc_motion_controller_interface moveit2_servo_motion_controller.xml)
 
 install(
-  DIRECTORY include/
+  DIRECTORY ${ROS_DISTRO}/include/
   DESTINATION include
 )
 install(

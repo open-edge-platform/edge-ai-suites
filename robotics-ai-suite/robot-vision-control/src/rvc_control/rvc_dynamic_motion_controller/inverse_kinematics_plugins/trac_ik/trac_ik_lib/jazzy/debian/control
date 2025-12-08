@@ -1,0 +1,27 @@
+Source: ros-jazzy-trac-ik-lib
+Section: misc
+Priority: optional
+Maintainer: Abrar Rahman Protyasha <aprotyas@u.rochester.edu>
+Build-Depends: debhelper (>= 9.0.0),
+    libeigen3-dev,
+    libnlopt-cxx-dev,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-auto <!nocheck>,
+    ros-jazzy-ament-lint-common <!nocheck>,
+    ros-jazzy-eigen3-cmake-module,
+    ros-jazzy-kdl-parser,
+    ros-jazzy-rclcpp,
+    ros-jazzy-urdf
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-trac-ik-lib
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+    libnlopt-cxx-dev,
+    libnlopt0,
+    ros-jazzy-kdl-parser,
+    ros-jazzy-rclcpp,
+    ros-jazzy-urdf
+Description: TRAC-IK is a faster, significantly more reliable drop-in replacement for KDL's pseudoinverse Jacobian solver.
+ The TRAC-IK library has a very similar API to KDL's IK solver calls, except that the user passes a maximum time instead of a maximum number of search iterations. Additionally, TRAC-IK allows for error tolerances to be set independently for each Cartesian dimension (x,y,z,roll,pitch.yaw).

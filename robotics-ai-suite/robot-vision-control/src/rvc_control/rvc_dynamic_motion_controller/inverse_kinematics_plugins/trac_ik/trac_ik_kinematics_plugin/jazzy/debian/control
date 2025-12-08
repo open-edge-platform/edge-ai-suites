@@ -1,0 +1,35 @@
+Source: ros-jazzy-trac-ik-kinematics-plugin
+Section: misc
+Priority: optional
+Maintainer: Abrar Rahman Protyasha <aprotyas@u.rochester.edu>
+Build-Depends: debhelper (>= 9.0.0),
+    libnlopt-dev,
+    ros-jazzy-ament-cmake-ros,
+    ros-jazzy-moveit-core,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclcpp-components,
+    ros-jazzy-tf2,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-kdl,
+    ros-jazzy-trac-ik-lib,
+    ros-jazzy-visualization-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-trac-ik-kinematics-plugin
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+    libnlopt-dev,
+    libnlopt0,
+    ros-jazzy-moveit-core,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-tf2,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-kdl,
+    ros-jazzy-trac-ik-lib,
+    ros-jazzy-visualization-msgs
+Description: A MoveIt! Kinematics plugin using TRAC-IK

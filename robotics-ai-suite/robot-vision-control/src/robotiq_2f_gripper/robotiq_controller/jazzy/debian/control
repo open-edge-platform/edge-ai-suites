@@ -1,0 +1,37 @@
+Source: ros-jazzy-robotiq-controllers
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0), 
+    ros-jazzy-ament-cmake,
+    ros-jazzy-control-msgs,
+    ros-jazzy-controller-interface,
+    ros-jazzy-forward-command-controller,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-joint-trajectory-controller,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp-lifecycle,
+    ros-jazzy-rcutils,
+    ros-jazzy-realtime-tools,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-std-srvs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-robotiq-controllers
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, 
+    ros-jazzy-control-msgs,
+    ros-jazzy-controller-interface,
+    ros-jazzy-forward-command-controller,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-joint-trajectory-controller,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp-lifecycle,
+    ros-jazzy-rcutils, 
+    ros-jazzy-realtime-tools,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-std-srvs
+Description: Provides controllers for robotiq 2f gripper.
