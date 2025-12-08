@@ -1,34 +1,41 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025 Intel Corporation
+/*
+ * Copyright (C) 2025 Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef OPENVSLAM_MODULE_TRACKER_LOOP_BUNDLE_ADJUSTER_H
 #define OPENVSLAM_MODULE_TRACKER_LOOP_BUNDLE_ADJUSTER_H
 
-namespace openvslam {
+namespace openvslam
+{
 
 class mapping_module;
 
-namespace data {
+namespace data
+{
 class map_database;
 }  // namespace data
 
-namespace module {
+namespace module
+{
 
-class tracker_loop_bundle_adjuster: public loop_bundle_adjuster {
+class tracker_loop_bundle_adjuster : public loop_bundle_adjuster
+{
 public:
-    /**
-     * Set the mapping module
-     */
-    void set_mapping_module(mapping_module* mapper);
+  /**
+   * Set the mapping module
+   */
+  void set_mapping_module(mapping_module * mapper);
 
-    /**
-     * Run loop BA
-     */
-    void optimize(const KeyframeID identifier);
+  /**
+   * Run loop BA
+   */
+  void optimize(const KeyframeID identifier);
 
 private:
-
-    //! mapping module
-    mapping_module* mapper_ = nullptr;
+  //! mapping module
+  mapping_module * mapper_ = nullptr;
 };
 
 }  // namespace module

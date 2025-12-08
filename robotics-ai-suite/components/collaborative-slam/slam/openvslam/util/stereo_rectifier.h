@@ -1,5 +1,9 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025 Intel Corporation
+/*
+ * Copyright (C) 2025 Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef OPENVSLAM_UTIL_STEREO_RECTIFIER_H
 #define OPENVSLAM_UTIL_STEREO_RECTIFIER_H
 
@@ -7,49 +11,55 @@
 
 #include <memory>
 
-namespace openvslam {
-namespace util {
+namespace openvslam
+{
+namespace util
+{
 
-class stereo_rectifier {
+class stereo_rectifier
+{
 public:
-    //! Constructor
-    explicit stereo_rectifier(camera::base* camera, const cv::Mat& K_l, const cv::Mat& D_l, const cv::Mat& R_l,
-                              const cv::Mat& K_r, const cv::Mat& D_r, const cv::Mat& R_r);
+  //! constructor
+  explicit stereo_rectifier(
+    camera::base * camera, const cv::Mat & K_l, const cv::Mat & D_l, const cv::Mat & R_l,
+    const cv::Mat & K_r, const cv::Mat & D_r, const cv::Mat & R_r);
 
-    //! Constructor
-    stereo_rectifier(camera::base* camera, const YAML::Node& yaml_node);
+  //! constructor
+  stereo_rectifier(camera::base * camera, const YAML::Node & yaml_node);
 
-    //! Destructor
-    virtual ~stereo_rectifier();
+  //! destructor
+  virtual ~stereo_rectifier();
 
-    //! Apply stereo-rectification
-    void rectify(const cv::Mat& in_img_l, const cv::Mat& in_img_r,
-                 cv::Mat& out_img_l, cv::Mat& out_img_r) const;
+  //! apply stereo-rectification
+  void rectify(
+    const cv::Mat & in_img_l, const cv::Mat & in_img_r, cv::Mat & out_img_l,
+    cv::Mat & out_img_r) const;
 
 private:
-    void init_undist_map(camera::base* camera, const cv::Mat& K_l, const cv::Mat& D_l, const cv::Mat& R_l,
-                         const cv::Mat& K_r, const cv::Mat& D_r, const cv::Mat& R_r);
+  void init_undist_map(
+    camera::base * camera, const cv::Mat & K_l, const cv::Mat & D_l, const cv::Mat & R_l,
+    const cv::Mat & K_r, const cv::Mat & D_r, const cv::Mat & R_r);
 
-    //! Parse std::vector as cv::Mat
-    static cv::Mat parse_vector_as_mat(const cv::Size& shape, const std::vector<double>& vec);
+  //! parse std::vector as cv::Mat
+  static cv::Mat parse_vector_as_mat(const cv::Size & shape, const std::vector<double> & vec);
 
-    //! Load model type before rectification from YAML
-    static camera::model_type_t load_model_type(const YAML::Node& yaml_node);
+  //! load model type before rectification from yaml
+  static camera::model_type_t load_model_type(const YAML::Node & yaml_node);
 
-    //! camera model type before rectification
-    const camera::model_type_t model_type_;
+  //! camera model type before rectification
+  const camera::model_type_t model_type_;
 
-    //! undistortion map for x-axis in left image
-    cv::Mat undist_map_x_l_;
-    //! undistortion map for y-axis in left image
-    cv::Mat undist_map_y_l_;
-    //! undistortion map for x-axis in right image
-    cv::Mat undist_map_x_r_;
-    //! undistortion map for y-axis in right image
-    cv::Mat undist_map_y_r_;
+  //! undistortion map for x-axis in left image
+  cv::Mat undist_map_x_l_;
+  //! undistortion map for y-axis in left image
+  cv::Mat undist_map_y_l_;
+  //! undistortion map for x-axis in right image
+  cv::Mat undist_map_x_r_;
+  //! undistortion map for y-axis in right image
+  cv::Mat undist_map_y_r_;
 };
 
-} // namespace util
-} // namespace openvslam
+}  // namespace util
+}  // namespace openvslam
 
-#endif // OPENVSLAM_UTIL_STEREO_RECTIFIER_H
+#endif  // OPENVSLAM_UTIL_STEREO_RECTIFIER_H

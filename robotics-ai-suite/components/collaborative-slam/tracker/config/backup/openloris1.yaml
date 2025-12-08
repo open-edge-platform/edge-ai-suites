@@ -1,7 +1,9 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
-%YAML:1.0
+#
+# SPDX-License-Identifier: Apache-2.0
 
+%YAML:1.0
+---
 #--------------------------------------------------------------------------------------------
 # Camera Parameters. Adjust them!
 # Below values are for the d400 color sensor of the office/cafe/home/corridor data in the
@@ -41,7 +43,7 @@ Camera.RGB: 1
 # Close/Far threshold. Baseline times.
 ThDepth: 60.0
 
-# Deptmap values factor 
+# Deptmap values factor
 DepthMapFactor: 1000.0
 
 #--------------------------------------------------------------------------------------------
@@ -51,16 +53,16 @@ DepthMapFactor: 1000.0
 # ORB Extractor: Number of features per image
 ORBextractor.nFeatures: 1000
 
-# ORB Extractor: Scale factor between levels in the scale pyramid 	
+# ORB Extractor: Scale factor between levels in the scale pyramid
 ORBextractor.scaleFactor: 1.2
 
-# ORB Extractor: Number of levels in the scale pyramid	
+# ORB Extractor: Number of levels in the scale pyramid
 ORBextractor.nLevels: 8
 
 # ORB Extractor: Fast threshold
 # Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
 # Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
-# You can lower these values if your images have low contrast			
+# You can lower these values if your images have low contrast
 ORBextractor.iniThFAST: 20
 ORBextractor.minThFAST: 7
 
@@ -77,4 +79,3 @@ Viewer.ViewpointX: 0
 Viewer.ViewpointY: -0.7
 Viewer.ViewpointZ: -1.8
 Viewer.ViewpointF: 500
-

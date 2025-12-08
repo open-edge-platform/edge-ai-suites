@@ -1,5 +1,9 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025 Intel Corporation
+/*
+ * Copyright (C) 2025 Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef OPENVSLAM_OPTIMIZER_G2O_SE3_PERSPECTIVE_POSE_OPT_EDGE_H
 #define OPENVSLAM_OPTIMIZER_G2O_SE3_PERSPECTIVE_POSE_OPT_EDGE_H
 
@@ -10,78 +14,87 @@
 #include <g2o/core/base_binary_edge.h>
 #include <g2o/core/base_unary_edge.h>
 
-namespace openvslam {
-namespace optimize {
-namespace g2o {
-namespace se3 {
+namespace openvslam
+{
+namespace optimize
+{
+namespace g2o
+{
+namespace se3
+{
 
-class mono_perspective_pose_opt_edge final : public ::g2o::BaseUnaryEdge<2, Vec2_t, shot_vertex> {
+class mono_perspective_pose_opt_edge final : public ::g2o::BaseUnaryEdge<2, Vec2_t, shot_vertex>
+{
 public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    mono_perspective_pose_opt_edge();
+  mono_perspective_pose_opt_edge();
 
-    bool read(std::istream& is) override;
+  bool read(std::istream & is) override;
 
-    bool write(std::ostream& os) const override;
+  bool write(std::ostream & os) const override;
 
-    void computeError() override
-    {
-        const auto v1 = static_cast<const shot_vertex*>(_vertices.at(0));
-        const Vec2_t obs(_measurement);
-        _error = obs - cam_project(v1->estimate().map(pos_w_));
-    }
+  void computeError() override
+  {
+    const auto v1 = static_cast<const shot_vertex *>(_vertices.at(0));
+    const Vec2_t obs(_measurement);
+    _error = obs - cam_project(v1->estimate().map(pos_w_));
+  }
 
-    void linearizeOplus() override;
+  void linearizeOplus() override;
 
-    bool depth_is_positive() const
-    {
-        const auto v1 = static_cast<const shot_vertex*>(_vertices.at(0));
-        return 0 < (v1->estimate().map(pos_w_))(2);
-    }
+  bool depth_is_positive() const
+  {
+    const auto v1 = static_cast<const shot_vertex *>(_vertices.at(0));
 
-    inline Vec2_t cam_project(const Vec3_t& pos_c) const
-    {
-        return {fx_ * pos_c(0) / pos_c(2) + cx_, fy_ * pos_c(1) / pos_c(2) + cy_};
-    }
+    return 0 < (v1->estimate().map(pos_w_))(2);
+  }
 
-    Vec3_t pos_w_;
-    double fx_ = 0.0, fy_ = 0.0, cx_ = 0.0, cy_ = 0.0;
+  inline Vec2_t cam_project(const Vec3_t & pos_c) const
+  {
+    return {fx_ * pos_c(0) / pos_c(2) + cx_, fy_ * pos_c(1) / pos_c(2) + cy_};
+  }
+
+  Vec3_t pos_w_;
+  double fx_ = 0.0, fy_ = 0.0, cx_ = 0.0, cy_ = 0.0;
 };
 
-class stereo_perspective_pose_opt_edge : public ::g2o::BaseUnaryEdge<3, Vec3_t, shot_vertex> {
+class stereo_perspective_pose_opt_edge : public ::g2o::BaseUnaryEdge<3, Vec3_t, shot_vertex>
+{
 public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    stereo_perspective_pose_opt_edge();
+  stereo_perspective_pose_opt_edge();
 
-    bool read(std::istream& is) override;
+  bool read(std::istream & is) override;
 
-    bool write(std::ostream& os) const override;
+  bool write(std::ostream & os) const override;
 
-    void computeError() override
-    {
-        const auto v1 = static_cast<const shot_vertex*>(_vertices.at(0));
-        const Vec3_t obs(_measurement);
-        _error = obs - cam_project(v1->estimate().map(pos_w_));
-    }
+  void computeError() override
+  {
+    const auto v1 = static_cast<const shot_vertex *>(_vertices.at(0));
+    const Vec3_t obs(_measurement);
+    _error = obs - cam_project(v1->estimate().map(pos_w_));
+  }
 
-    void linearizeOplus() override;
+  void linearizeOplus() override;
 
-    bool depth_is_positive() const
-    {
-        const auto v1 = static_cast<const shot_vertex*>(_vertices.at(0));
-        return 0 < (v1->estimate().map(pos_w_))(2);
-    }
+  bool depth_is_positive() const
+  {
+    const auto v1 = static_cast<const shot_vertex *>(_vertices.at(0));
 
-    inline Vec3_t cam_project(const Vec3_t& pos_c) const
-    {
-        const double reproj_x = fx_ * pos_c(0) / pos_c(2) + cx_;
-        return {reproj_x, fy_ * pos_c(1) / pos_c(2) + cy_, reproj_x - focal_x_baseline_ / pos_c(2)};
-    }
+    return 0 < (v1->estimate().map(pos_w_))(2);
+  }
 
-    Vec3_t pos_w_;
-    double fx_ = 0.0, fy_ = 0.0, cx_ = 0.0, cy_ = 0.0, focal_x_baseline_ = 0.0;
+  inline Vec3_t cam_project(const Vec3_t & pos_c) const
+  {
+    const double reproj_x = fx_ * pos_c(0) / pos_c(2) + cx_;
+
+    return {reproj_x, fy_ * pos_c(1) / pos_c(2) + cy_, reproj_x - focal_x_baseline_ / pos_c(2)};
+  }
+
+  Vec3_t pos_w_;
+  double fx_ = 0.0, fy_ = 0.0, cx_ = 0.0, cy_ = 0.0, focal_x_baseline_ = 0.0;
 };
 
 }  // namespace se3

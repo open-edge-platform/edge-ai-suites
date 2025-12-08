@@ -1,0 +1,37 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Collaborative SLAM
+
+on:
+  workflow_call:
+    inputs:
+      # workaround until unified workflow is implemented
+      component-name:
+        default: collaborative-slam
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: robotics-ai-suite/components/collaborative-slam
+
+jobs:
+  license-check:
+    name: '[${{ inputs.component-name }}] License Check'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        with:
+          sparse-checkout: robotics-ai-suite/components/collaborative-slam
+          persist-credentials: false
+
+      - name: Run REUSE
+        shell: bash
+        run: |
+          make license-check

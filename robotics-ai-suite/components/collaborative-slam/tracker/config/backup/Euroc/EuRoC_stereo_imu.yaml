@@ -1,6 +1,9 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 %YAML:1.0
+---
 # EuRoC stereo model
 
 #==============#
@@ -101,7 +104,7 @@ Tic: !!opencv-matrix
 # IMU noise (Use those from VINS-mono)
 IMU.NoiseGyro: 1.7e-04 # 1.6968e-04 
 IMU.NoiseAcc: 2.0e-03 # 2.0000e-3
-IMU.GyroWalk: 1.9393e-05 
+IMU.GyroWalk: 1.9393e-05
 IMU.AccWalk: 3.e-03 # 3.0000e-3
 IMU.Frequency: 200
 thFarPoints: 20.0

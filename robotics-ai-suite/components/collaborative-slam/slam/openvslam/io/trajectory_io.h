@@ -1,46 +1,54 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025 Intel Corporation
+/*
+ * Copyright (C) 2025 Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef OPENVSLAM_IO_TRAJECTORY_IO_H
 #define OPENVSLAM_IO_TRAJECTORY_IO_H
 
 #include <string>
 
-namespace openvslam {
+namespace openvslam
+{
 
-namespace data {
+namespace data
+{
 class map_database;
-} // namespace data
+}  // namespace data
 
-namespace io {
+namespace io
+{
 
-class trajectory_io {
+class trajectory_io
+{
 public:
-    /**
-     * Constructor
-     */
-    explicit trajectory_io(data::map_database* map_db);
+  /**
+   * Constructor
+   */
+  explicit trajectory_io(data::map_database * map_db);
 
-    /**
-     * Destructor
-     */
-    ~trajectory_io() = default;
+  /**
+   * Destructor
+   */
+  ~trajectory_io() = default;
 
-    /**
-     * Save the frame trajectory in the specified format
-     */
-    void save_frame_trajectory(const std::string& path, const std::string& format) const;
+  /**
+   * Save the frame trajectory in the specified format
+   */
+  void save_frame_trajectory(const std::string & path, const std::string & format) const;
 
-    /**
-     * Save the keyframe trajectory in the specified format
-     */
-    void save_keyframe_trajectory(const std::string& path, const std::string& format) const;
+  /**
+   * Save the keyframe trajectory in the specified format
+   */
+  void save_keyframe_trajectory(const std::string & path, const std::string & format) const;
 
 private:
-    //! map_database
-    data::map_database* const map_db_ = nullptr;
+  //! map_database
+  data::map_database * const map_db_ = nullptr;
 };
 
-} // namespace io
-} // namespace openvslam
+}  // namespace io
+}  // namespace openvslam
 
-#endif // OPENVSLAM_IO_TRAJECTORY_IO_H
+#endif  // OPENVSLAM_IO_TRAJECTORY_IO_H

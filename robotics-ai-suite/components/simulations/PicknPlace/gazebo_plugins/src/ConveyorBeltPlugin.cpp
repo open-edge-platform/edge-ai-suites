@@ -120,7 +120,7 @@ void ConveyorBeltPlugin::Configure(const gazebo::Entity &_entity,
   }
   catch (const std::exception& e)
   {
-    std::cerr << "Exception occured :" <<  e.what() << std::endl;
+    std::cerr << "Exception occurred :" <<  e.what() << std::endl;
     return;
   }
 

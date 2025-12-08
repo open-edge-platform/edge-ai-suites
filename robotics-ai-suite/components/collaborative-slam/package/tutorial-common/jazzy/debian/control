@@ -1,0 +1,12 @@
+Source: ros-jazzy-cslam-tutorial-common
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-jazzy-cslam-tutorial-common
+Architecture: any
+Depends:
+    ros-jazzy-collab-slam,
+    ros-jazzy-rviz2
+Description: Intel Collaborative SLAM tutorial common files

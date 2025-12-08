@@ -1,5 +1,4 @@
 /*
-
 Copyright 2016 Emanuele Vespa, Imperial College London
 
 Redistribution and use in source and binary forms, with or without
@@ -26,9 +25,7 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 */
-
 #ifndef MEM_POOL_H
 #define MEM_POOL_H
 
@@ -37,88 +34,110 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <atomic>
 #include <mutex>
 
-namespace se {
+namespace se
+{
 template <typename BlockType>
-  class MemoryPool {
-    public:
-      MemoryPool(){
-        current_block_ = 0;
-        num_pages_ = 0;
-        reserved_ = 0;
-      }
+class MemoryPool
+{
+public:
+  MemoryPool()
+  {
+    current_block_ = 0;
+    num_pages_ = 0;
+    reserved_ = 0;
+  }
 
-      ~MemoryPool(){
-        for(auto&& i : pages_){
-          delete [] i;
-        }
-      }
+  ~MemoryPool()
+  {
+    for (auto && i : pages_) {
+      delete[] i;
+    }
+  }
 
-      MemoryPool& operator=(const MemoryPool& m) {
-        current_block_ = m.size();
-        num_pages_ = m.num_pages_;
-        reserved_ = m.reserved_;
+  MemoryPool & operator=(const MemoryPool & m)
+  {
+    current_block_ = m.size();
+    num_pages_ = m.num_pages_;
+    reserved_ = m.reserved_;
 
-        for (int p = 0; p <= num_pages_; p++) {
-          pages_.push_back(new BlockType[pagesize_]);
-        }
-
-        for (int p = 0; p < num_pages_; p++) {
-          std::memcpy((void*)pages_[p], (void*)m.pages_[p], pagesize_ * sizeof(BlockType));
-        }
-        return *this;
-      }
-
-      size_t size() const { return current_block_; };
-
-      BlockType* operator[](const size_t i) const {
-        const int page_idx = i / pagesize_;
-        const int ptr_idx = i % pagesize_;
-        return pages_[page_idx] + (ptr_idx);
-      }
-
-      void reserve(const size_t n){
-        bool requires_realloc = (current_block_ + n) > reserved_;
-        if(requires_realloc) expand(n);
-      }
-
-      BlockType * acquire_block(){
-        // Fetch-add returns the value before increment
-        int current = current_block_.fetch_add(1);
-        const int page_idx = current / pagesize_;
-        const int ptr_idx = current % pagesize_;
-        BlockType * ptr = pages_[page_idx] + (ptr_idx);
-        return ptr;
-      }
-
-      void release_all(bool reset_reserved_elements) {
-        current_block_ = 0;
-        if (!reset_reserved_elements || num_pages_ == 0) return;
-        BlockType val;
-        // cannot use std::fill/fill_n because we only have raw pointers here
-        for (int i = 0; i < pagesize_; ++i) pages_[0][i] = val;
-        for (int p = 1; p < num_pages_; ++p) {
-          std::memcpy((void*)pages_[p], (void*)pages_[0], pagesize_ * sizeof(BlockType));
-      }
+    for (int p = 0; p <= num_pages_; p++) {
+      pages_.push_back(new BlockType[pagesize_]);
     }
 
-    private:
-      size_t reserved_;
-      std::atomic<unsigned int> current_block_;
-      const int pagesize_ = 1024; // # of blocks per page
-      int num_pages_;
-      std::vector<BlockType *> pages_;
+    for (int p = 0; p < num_pages_; p++) {
+      std::memcpy((void *)pages_[p], (void *)m.pages_[p], pagesize_ * sizeof(BlockType));
+    }
 
-      void expand(const size_t n){
-        const int new_pages = std::ceil(n/pagesize_);
-        for(int p = 0; p <= new_pages; ++p){
-          pages_.push_back(new BlockType[pagesize_]);
-          ++num_pages_;
-          reserved_ += pagesize_;
-        }
-      }
+    return *this;
+  }
 
-      // Disabling copy-constructor
-      MemoryPool(const MemoryPool& m);
-  };
-}
-#endif
+  size_t size() const { return current_block_; }
+
+  BlockType * operator[](const size_t i) const
+  {
+    const int page_idx = i / pagesize_;
+    const int ptr_idx = i % pagesize_;
+
+    return pages_[page_idx] + (ptr_idx);
+  }
+
+  void reserve(const size_t n)
+  {
+    bool requires_realloc = (current_block_ + n) > reserved_;
+    if (requires_realloc) {
+      expand(n);
+    }
+  }
+
+  BlockType * acquire_block()
+  {
+    // Fetch-add returns the value before increment
+    int current = current_block_.fetch_add(1);
+    const int page_idx = current / pagesize_;
+    const int ptr_idx = current % pagesize_;
+    BlockType * ptr = pages_[page_idx] + (ptr_idx);
+
+    return ptr;
+  }
+
+  void release_all(bool reset_reserved_elements)
+  {
+    current_block_ = 0;
+    if (!reset_reserved_elements || num_pages_ == 0) {
+      return;
+    }
+
+    BlockType val;
+    // cannot use std::fill/fill_n because we only have raw pointers here
+    for (int i = 0; i < pagesize_; ++i) {
+      pages_[0][i] = val;
+    }
+    for (int p = 1; p < num_pages_; ++p) {
+      std::memcpy((void *)pages_[p], (void *)pages_[0], pagesize_ * sizeof(BlockType));
+    }
+  }
+
+private:
+  size_t reserved_;
+  std::atomic<unsigned int> current_block_;
+  const int pagesize_ = 1024;  // # of blocks per page
+  int num_pages_;
+  std::vector<BlockType *> pages_;
+
+  void expand(const size_t n)
+  {
+    const int new_pages = std::ceil(n / pagesize_);
+    for (int p = 0; p <= new_pages; ++p) {
+      pages_.push_back(new BlockType[pagesize_]);
+      ++num_pages_;
+      reserved_ += pagesize_;
+    }
+  }
+
+  // Disabling copy-constructor
+  MemoryPool(const MemoryPool & m);
+};
+
+}  // namespace se
+
+#endif  // MEM_POOL_H

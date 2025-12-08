@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Description
 
 The benchmark is used to test the robustness and the accuracy of the Collaborative SLAM system on ROS2. Currently, it contains five test scripts which support the following tests:
@@ -10,7 +16,10 @@ The benchmark is used to test the robustness and the accuracy of the Collaborati
 (5) Stereo with IMU input for EuRoC dataset
    ```
 
-The benchmark scripts will launch two ROS node: univloc_tracker and univloc_server together with another process to play the .bag/.orig.bag file as the input. We prefer the .bag file since they are already decompressed and don't need to consume resource for decompression while playing. For each sequence in the dataset, the benchmark will test it and calculate the RMSE of the pose trajectory by the "evo_ape" and "evo_rpe" tools. For EuRoC dataset, we wil also calculate the scale percentage error when using IMU as auxiliary sensor input.
+The benchmark scripts will launch two ROS node: univloc_tracker and univloc_server together with another process to play the .bag/.orig.bag file as the input.
+We prefer the .bag file since they are already decompressed and don't need to consume resource for decompression while playing.
+For each sequence in the dataset, the benchmark will test it and calculate the RMSE of the pose trajectory by the "evo_ape" and "evo_rpe" tools.
+For EuRoC dataset, we will also calculate the scale percentage error when using IMU as auxiliary sensor input.
 
 ---
 
@@ -38,7 +47,7 @@ The benchmark scripts will launch two ROS node: univloc_tracker and univloc_serv
 
 ```sh
 - positional arguments:
-  {tum, euroc, kitti}              the dataset to be tested. 
+  {tum, euroc, kitti}              the dataset to be tested.
                                    for `rgbd_benchmark.py`, option: tum
                                    for `mono_benchmark.py`, option: tum/euroc/kitti
                                    for `mono_imu_benchmark.py`, option: euroc
@@ -52,7 +61,7 @@ The benchmark scripts will launch two ROS node: univloc_tracker and univloc_serv
   -f RESULTFILE_DIR, --resultfile_dir RESULTFILE_DIR
                                    the directory of the result file which stores the trajectory data
   -r REPEAT_NUM, --repeat REPEAT_NUM
-                                   the number to repeat for each test 
+                                   the number to repeat for each test
   -g GROUNDTRUTH_DIR, --groudtruth GROUNDTRUTH_DIR
                                    the directory of the groudtruth files
   -w WAIT, --wait WAIT             the delay to exit nodes after playback of .bag file
@@ -81,7 +90,8 @@ The benchmark scripts will launch two ROS node: univloc_tracker and univloc_serv
 
 ```sh
 - command format: bash benchmark/auto_test_filter.sh arg1 arg2
-(1) If the first argument "arg1" is 'yes' or 'y', it will run all the benchmark scripts on all datasets from scratch and output the results in the result sheet of result.xlsx. Then run the filter.py to filter the invalid results and calculate the mean values. The output is stored in the mean sheet and filtered sheet in result.xlsx. Otherwise, the process will not go through these scripts and will directly go to the next part.
+(1) If the first argument "arg1" is 'yes' or 'y', it will run all the benchmark scripts on all datasets from scratch and output the results in the result sheet of result.xlsx.
+Then run the filter.py to filter the invalid results and calculate the mean values. The output is stored in the mean sheet and filtered sheet in result.xlsx. Otherwise, the process will not go through these scripts and will directly go to the next part.
 (2) The second argument "arg2" is a integer number, it will loop such times as following: It will run all the benchmark scripts on the datasets which are stored in the filtered sheet of result.xlsx. Then run the filter.py to update the mean sheet and filter the datasets which may need to be tested again.
 ```
 
@@ -91,6 +101,7 @@ The benchmark scripts will launch two ROS node: univloc_tracker and univloc_serv
 
 1. Since the TUM, EuRoc and KITTI datasets are all packaged as the ROS1 format, so you also need to install a ROS1 version on your environment. Currently, we are using ROS Noetic on our development environment. For installation you can refer to [http://wiki.ros.org/noetic/Installation](http://wiki.ros.org/noetic/Installation).
 
-2. The script matches the groundtruth file with the .bag/.orig.bag file by their name format. In the TUM dataset, the gorundtruth files are always named as `{test_case_name}-groundtruth.txt` and the .bag files are always named as `{test_case_name}.bag` or `{test_case_name}.orig.bag`. But in the EuRoC dataset, the user should first manually transform the .csv gorundtruth files to tum format and rename them to `{test_case_name}-groundtruth.tum`. The transform command is `evo_traj euroc data.csv --save_as_tum` and you can refer to [Formats](https://github.com/MichaelGrupp/evo/wiki/Formats) for more information.
+2. The script matches the groundtruth file with the .bag/.orig.bag file by their name format. In the TUM dataset, the groundtruth files are always named as `{test_case_name}-groundtruth.txt` and the .bag files are always named as `{test_case_name}.bag` or `{test_case_name}.orig.bag`.
+But in the EuRoC dataset, the user should first manually transform the .csv groundtruth files to tum format and rename them to `{test_case_name}-groundtruth.tum`. The transform command is `evo_traj euroc data.csv --save_as_tum` and you can refer to [Formats](https://github.com/MichaelGrupp/evo/wiki/Formats) for more information.
 
 3. The benchmark scripts are based on ROS2 launch module.
