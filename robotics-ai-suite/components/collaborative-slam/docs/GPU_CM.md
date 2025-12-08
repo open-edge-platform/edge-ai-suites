@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # GPU offload with C-for-Metal via OneAPI Level Zero
 
 Some feature extraction operations can be offloaded to Intel GPU to free up CPU and improve overall SLAM performance. GPU kernels can be written using OpenCL, C-for-Metal and DPC++.
@@ -40,7 +46,10 @@ Number of devices                                 1
   Device Vendor ID                                0x8086
 ```
 
-Third, you need to download the [C-for-Metal](https://www.intel.com/content/www/us/en/developer/tools/open/c-for-metal-sdk/overview.html) package and the latest orb-extractor library. In most of the cases, orb-extractor package is enough for Collaborative SLAM to run. But if you want to compile orb-extractor library from source, please follow instructions provided in the [orb-extractor repo](https://github.com/open-edge-platform/edge-ai-libraries/libraries/orb-extractor). You can specify custom install directory by using `CMAKE_INSTALL_PREFIX`.
+Third, you need to download the [C-for-Metal](https://www.intel.com/content/www/us/en/developer/tools/open/c-for-metal-sdk/overview.html) package and the latest orb-extractor library.
+In most of the cases, orb-extractor package is enough for Collaborative SLAM to run.
+But if you want to compile orb-extractor library from source, please follow instructions provided in the [orb-extractor repo](https://github.com/open-edge-platform/edge-ai-libraries/libraries/orb-extractor).
+You can specify custom install directory by using `CMAKE_INSTALL_PREFIX`.
 
 ### Troubleshooting
 

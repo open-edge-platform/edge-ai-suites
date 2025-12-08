@@ -1,0 +1,33 @@
+Source: ros-jazzy-collab-slam
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-jazzy-collab-slam
+Architecture: any
+Depends:
+    ros-jazzy-univloc-server-sse | ros-jazzy-univloc-server-avx2 | ros-jazzy-univloc-server-lze,
+    ros-jazzy-univloc-tracker-sse | ros-jazzy-univloc-tracker-avx2 | ros-jazzy-univloc-tracker-lze
+Description: Intel package for Collaborative SLAM
+
+Package: ros-jazzy-collab-slam-sse
+Architecture: any
+Depends:
+    ros-jazzy-univloc-server-sse,
+    ros-jazzy-univloc-tracker-sse
+Description: Intel SSE-only CPU instruction accelerated package for Collaborative SLAM
+
+Package: ros-jazzy-collab-slam-lze
+Architecture: any
+Depends:
+    ros-jazzy-univloc-server-lze,
+    ros-jazzy-univloc-tracker-lze
+Description: Intel GPU Level-Zero accelerated package for Collaborative SLAM
+
+Package: ros-jazzy-collab-slam-avx2
+Architecture: any
+Depends:
+    ros-jazzy-univloc-server-avx2,
+    ros-jazzy-univloc-tracker-avx2
+Description: Intel AVX2 CPU instruction accelerated package for Collaborative SLAM

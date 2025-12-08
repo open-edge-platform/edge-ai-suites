@@ -1,3 +1,7 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 uint64 mn_id # unique KF id
 uint8 mn_client_id # client id
 uint32 mn_localize_map_id

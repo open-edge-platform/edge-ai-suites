@@ -21,6 +21,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     outputs:
+      collaborative-slam-changed: ${{ steps.filter.outputs.collaborative-slam-location || inputs.rebuild-all }}
       fast-mapping-changed: ${{ steps.filter.outputs.fast-mapping-location || inputs.rebuild-all }}
       groundfloor-changed: ${{ steps.filter.outputs.groundfloor-location || inputs.rebuild-all }}
       its-planner-changed: ${{ steps.filter.outputs.its-planner-location || inputs.rebuild-all }}
@@ -38,6 +39,8 @@ jobs:
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3.0.2
         with:
           filters: |
+            collaborative-slam-location:
+              - 'robotics-ai-suite/components/collaborative-slam/**'
             fast-mapping-location:
               - 'robotics-ai-suite/components/fast-mapping/**'
             groundfloor-location:
@@ -52,6 +55,12 @@ jobs:
               - 'robotics-ai-suite/components/simulations/**'
             wandering-location:
               - 'robotics-ai-suite/components/wandering/**'
+
+  collaborative-slam:
+    name: "Collaborative SLAM"
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.collaborative-slam-changed == 'true' }}
+    uses: "./.github/workflows/robotics-components-collaborative-slam.yaml"
 
   fast-mapping:
     name: "Fast Mapping"

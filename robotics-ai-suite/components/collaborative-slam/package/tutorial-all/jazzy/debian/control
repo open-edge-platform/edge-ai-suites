@@ -1,0 +1,15 @@
+Source: ros-jazzy-cslam-tutorial-all
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-jazzy-cslam-tutorial-all
+Architecture: any
+Depends:
+    ros-jazzy-cslam-tutorial-2d-lidar,
+    ros-jazzy-cslam-tutorial-fastmapping,
+    ros-jazzy-cslam-tutorial-multi-camera,
+    ros-jazzy-cslam-tutorial-region-remap,
+    ros-jazzy-cslam-tutorial-two-robot
+Description: Intel Collaborative SLAM all tutorials

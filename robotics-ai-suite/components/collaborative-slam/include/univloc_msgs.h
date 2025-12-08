@@ -1,7 +1,10 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025 Intel Corporation
-// Helper header to include messages defined by univloc_msgs in a ROS1/ROS2 compatible way
+/*
+ * Copyright (C) 2025 Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
+// Helper header to include messages defined by univloc_msgs in a ROS1/ROS2 compatible way
 #pragma once
 
 // ROS2
@@ -21,15 +24,19 @@
 #include "univloc_msgs/msg/octree_param.hpp"
 #include "univloc_msgs/srv/map_based_comm.hpp"
 
-#define DECLARE_MSG_TYPES(Name) typedef msg::Name Name; \
-                            typedef msg::Name::ConstSharedPtr Name##ConstPtr; \
-                            typedef msg::Name::SharedPtr Name##Ptr;
+#define DECLARE_MSG_TYPES(Name)                     \
+  typedef msg::Name Name;                           \
+  typedef msg::Name::ConstSharedPtr Name##ConstPtr; \
+  typedef msg::Name::SharedPtr Name##Ptr;
 
-#define DECLARE_SRV_TYPES(Name) typedef srv::Name Name; \
-                            typedef srv::Name::Request Name##Request; \
-                            typedef srv::Name::Response Name##Response;
+#define DECLARE_SRV_TYPES(Name)             \
+  typedef srv::Name Name;                   \
+  typedef srv::Name::Request Name##Request; \
+  typedef srv::Name::Response Name##Response;
 
-namespace univloc_msgs{
+namespace univloc_msgs
+{
+
 DECLARE_MSG_TYPES(CvKeypoint)
 DECLARE_MSG_TYPES(Descriptor)
 DECLARE_MSG_TYPES(ImuStatus)
@@ -45,4 +52,5 @@ DECLARE_MSG_TYPES(Ofusion)
 DECLARE_MSG_TYPES(VoxelBlock)
 DECLARE_MSG_TYPES(OctreeParam)
 DECLARE_SRV_TYPES(MapBasedComm)
-}
+
+}  // namespace univloc_msgs

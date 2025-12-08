@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Coordinate Definition in Collaborative SLAM
 
 ## Example TF Tree
@@ -6,7 +12,9 @@ There are several assumptions:
 
 1) **odom_frame** will only appear on the tf tree when we set ```use_odom``` as true;
 2) The system expects provided transform between 1) **base_link** and **camera_link**; 2) **base_link** and **imu_link**.
-3) Before running the Collaborative SLAM, the **map_frame** should not appear on the tf tree. After running the SLAM system, we can get the transform between **map_frame** and **image_frame** (camera pose), and since we already know the transform between **odom_frame** (```use_odom``` as true) or **baselink_frame** (```use_odom``` as false) and **image_frame**, we can obtain the transform between **map_frame** and **odom_frame** or **baselink_frame**, which makes it possible to add **map_frame** onto the tf tree.
+3) Before running the Collaborative SLAM, the **map_frame** should not appear on the tf tree.
+   After running the SLAM system, we can get the transform between **map_frame** and **image_frame** (camera pose), and since we already know the transform between **odom_frame** (```use_odom``` as true) or **baselink_frame** (```use_odom``` as false) and **image_frame**,
+   we can obtain the transform between **map_frame** and **odom_frame** or **baselink_frame**, which makes it possible to add **map_frame** onto the tf tree.
 
 ![complete-tf-tree](complete-tf-tree.png)
 

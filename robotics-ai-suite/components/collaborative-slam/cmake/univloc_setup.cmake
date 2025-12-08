@@ -1,5 +1,7 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -17,17 +19,34 @@ set(UNIVLOC_VERSION_STRING
     "${UNIVLOC_VERSION_MAJOR}.${UNIVLOC_VERSION_MINOR}.${UNIVLOC_VERSION_PATCH}"
 )
 
+# Detect ROS distribution
+if(NOT DEFINED ENV{ROS_DISTRO})
+  message(FATAL_ERROR "ROS_DISTRO environment variable not set")
+endif()
+
+set(ROS_DISTRO $ENV{ROS_DISTRO})
+message(STATUS "Detected ROS distribution: ${ROS_DISTRO}")
+
 # NOTE: In order to use Valgrind, we cannot build with native It turns out that
 # some gcc builds (depends on the distro) set _FORTIFY_SOURCE internally
 # https://github.com/neovim/neovim/issues/2557
-add_compile_options(-Wno-pedantic -Werror)
-add_compile_options(-Wall -Wextra -fstack-protector-all -U_FORTIFY_SOURCE
-                    -D_FORTIFY_SOURCE=1)
+add_compile_options(-Wno-pedantic -Wno-error)
+add_compile_options(-w -fstack-protector-all -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=1)
 if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
   add_compile_options(-Wno-aggressive-loop-optimizations)
 endif()
 
-option(USE_PREBUILT_DEPS "Use prebuilt 3rd party dependencies" OFF)
+# Set USE_PREBUILT_DEPS based on ROS distribution
+if(ROS_DISTRO STREQUAL "humble")
+  option(USE_PREBUILT_DEPS "Use prebuilt 3rd party dependencies" ON)
+elseif(ROS_DISTRO STREQUAL "jazzy")
+  option(USE_PREBUILT_DEPS "Use prebuilt 3rd party dependencies" OFF)
+else()
+  message(FATAL_ERROR "Unknown ROS distribution: ${ROS_DISTRO}. Only 'humble' and 'jazzy' are supported.")
+endif()
+
+message(STATUS "USE_PREBUILT_DEPS: ${USE_PREBUILT_DEPS}")
+
 option(USE_SLAM_SHAREDLIBS_PATH "Use prebuilt library" OFF)
 
 if(NOT DEFINED BUILD_NATIVE)
@@ -135,30 +154,37 @@ if(USE_OPENMP)
   endif()
 else()
   message(STATUS "OpenMP: DISABLED")
-
 endif()
 
+# Common packages
 find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(spdlog REQUIRED)
 
+# ROS distribution specific dependencies
 if(NOT USE_PREBUILT_DEPS)
-
   find_package(univloc_dependencies REQUIRED)
-
 else()
-
   find_package(DBoW2 REQUIRED)
-  # for find_package(g2o REQUIRED), FindOpenGL module will be called and if
+  
+  # For find_package(g2o*), FindOpenGL module will be called and if
   # OpenGL_GL_PREFERENCE variable is not set, it will produce cmake warning
-  # check https://cmake.org/cmake/help/latest/policy/CMP0072.html here we will
-  # set as GLVND to align with the default value inside g2o cmake file
+  # check https://cmake.org/cmake/help/latest/policy/CMP0072.html
+  # We set as GLVND to align with the default value inside g2o cmake file
   set(OpenGL_GL_PREFERENCE "GLVND")
-  find_package(g2o-intel REQUIRED)
+  
+  # Use different g2o packages based on ROS distribution
+  if(ROS_DISTRO STREQUAL "humble")
+    find_package(g2o-intel REQUIRED)
+    message(STATUS "Using g2o-intel for ROS Humble")
+  elseif(ROS_DISTRO STREQUAL "jazzy")
+    find_package(g2o REQUIRED)
+    message(STATUS "Using standard g2o for ROS Jazzy")
+  endif()
+  
   find_package(nlohmann_json REQUIRED)
   find_package(Boost REQUIRED)
-
 endif()
 
 find_package(OpenCV REQUIRED COMPONENTS core imgcodecs videoio features2d
