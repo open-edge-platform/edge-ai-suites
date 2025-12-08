@@ -121,7 +121,7 @@ clean: clean-debian clean-colcon
 source-package:
 	@# Help: Create source package tarball
 	git archive --format=zip -o collaborative-slam-$(VERSION).zip HEAD \
-		.gitattributes .gitignore Makefile README.md RELEASENOTES.md REUSE.toml \
+		.gitattributes .gitignore Makefile README.md REUSE.toml \
 		.github/linters 3rd benchmark cmake docs include LICENSES msgs package scripts server slam tracker
 
 help:
