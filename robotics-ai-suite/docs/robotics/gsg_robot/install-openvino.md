@@ -10,7 +10,7 @@ The following steps will add the OpenVINO™ APT repository to your package mana
    wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | sudo tee /usr/share/keyrings/openvino-archive-keyring.gpg
    ```
 
-2. Add the Deb package sources for OpenVINO™ 2023, OpenVINO™ 2024 and OpenVINO™ 2025.
+2. Add the Deb package sources for OpenVINO™ 2025.
    This will allow you to choose your preferred OpenVINO™ version to be installed.
 
    <!--hide_directive::::{tab-set}
@@ -18,8 +18,6 @@ The following steps will add the OpenVINO™ APT repository to your package mana
    <!--hide_directive:sync: jazzyhide_directive-->
 
     ```bash
-   echo "deb [signed-by=/usr/share/keyrings/openvino-archive-keyring.gpg] https://apt.repos.intel.com/openvino/2023 ubuntu24 main" | sudo tee /etc/apt/sources.list.d/intel-openvino-2023.list
-   echo "deb [signed-by=/usr/share/keyrings/openvino-archive-keyring.gpg] https://apt.repos.intel.com/openvino/2024 ubuntu24 main" | sudo tee /etc/apt/sources.list.d/intel-openvino-2024.list
    echo "deb [signed-by=/usr/share/keyrings/openvino-archive-keyring.gpg] https://apt.repos.intel.com/openvino/2025 ubuntu24 main" | sudo tee /etc/apt/sources.list.d/intel-openvino-2025.list
    ```
 
@@ -28,8 +26,6 @@ The following steps will add the OpenVINO™ APT repository to your package mana
    <!--hide_directive:sync: humblehide_directive-->
 
     ```bash
-   echo "deb [signed-by=/usr/share/keyrings/openvino-archive-keyring.gpg] https://apt.repos.intel.com/openvino/2023 ubuntu22 main" | sudo tee /etc/apt/sources.list.d/intel-openvino-2023.list
-   echo "deb [signed-by=/usr/share/keyrings/openvino-archive-keyring.gpg] https://apt.repos.intel.com/openvino/2024 ubuntu22 main" | sudo tee /etc/apt/sources.list.d/intel-openvino-2024.list
    echo "deb [signed-by=/usr/share/keyrings/openvino-archive-keyring.gpg] https://apt.repos.intel.com/openvino/2025 ubuntu22 main" | sudo tee /etc/apt/sources.list.d/intel-openvino-2025.list
    ```
 
