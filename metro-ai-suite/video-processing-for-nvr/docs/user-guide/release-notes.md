@@ -1,6 +1,6 @@
 # Release Notes
 
-Current Version: 2025.1
+Current Version: 2025.2
 
 Core Library support: 
 - Functions: Decode, Postprocessing, Display, Encode, HDMI-in, Audio-in, Audio-out

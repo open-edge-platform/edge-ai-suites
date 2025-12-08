@@ -15,6 +15,7 @@ Make sure docker is corrently installed and configured.
 ## Run docker container  
 1. Run `sudo init 3` switch to non-GUI mode
 2. Run a sample test in docker container : `bash run.sh`  
+Note: Make sure there is at least one 1080p/4K display connected to the device and switch to root and `init 3` before running the command. You can follow [get-started-guide](../docs/user-guide/get-started-guide.md) and run `svet_app load  sample_config/basic/show_displays.txt` to check how many displays are connected and the display resolution
 
 ## Run docker compose
 1. Run `sudo init 3` switch to non-GUI mode
