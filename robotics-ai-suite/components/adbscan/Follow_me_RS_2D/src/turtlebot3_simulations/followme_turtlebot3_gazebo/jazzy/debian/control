@@ -1,0 +1,34 @@
+Source: ros-jazzy-followme-turtlebot3-gazebo
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    python3-ament-package,
+    ros-jazzy-adbscan-ros2-follow-me,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-gesture-recognition-pkg,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-rclcpp,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-speech-recognition-pkg,
+    ros-jazzy-tf2,
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-followme-turtlebot3-gazebo
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    psmisc,
+    ros-jazzy-adbscan-ros2-follow-me,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-gesture-recognition-pkg,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rviz2,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-speech-recognition-pkg,
+    ros-jazzy-tf2,
+    ros-jazzy-xacro,
+Description: An adaptation of turtlebot3 simulation by Intel to include a multi robot environment to demo the follow me algorithm

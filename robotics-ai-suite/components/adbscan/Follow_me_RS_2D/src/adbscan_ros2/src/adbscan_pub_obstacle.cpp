@@ -14,41 +14,40 @@
 // and limitations under the License.
 
 #include <string>
-#include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
+
 #include "nav2_dynamic_msgs/msg/obstacle.hpp"
 #include "nav2_dynamic_msgs/msg/obstacle_array.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
 
 using namespace std::chrono_literals;
 
 class MinimalPublisher : public rclcpp::Node
 {
-  public:
-    MinimalPublisher()
-    : Node("adbscan_pub_node")
-    {
-      publisher_ = this->create_publisher<nav2_dynamic_msgs::msg::Obstacle>("Obstacle_Array", 10);
-      timer_ = this->create_wall_timer( 1000ms, std::bind(&MinimalPublisher::publish_message, this));
-    }
+public:
+  MinimalPublisher() : Node("adbscan_pub_node")
+  {
+    publisher_ = this->create_publisher<nav2_dynamic_msgs::msg::Obstacle>("Obstacle_Array", 10);
+    timer_ = this->create_wall_timer(1000ms, std::bind(&MinimalPublisher::publish_message, this));
+  }
 
-  private:
-    void publish_message()
-    {
-      auto message = nav2_dynamic_msgs::msg::Obstacle();
-      message.position.x = 1.1;
-      message.position.y = 1.2;
-      message.position.z = 1.3;
-      message.size.x = 2.1;
-      message.size.y = 2.1;
-      message.size.z = 2.1;
-      
-      RCLCPP_INFO(this->get_logger(), "Publishing: '%f'", (message.size.z));
-      publisher_->publish(message);
+private:
+  void publish_message()
+  {
+    auto message = nav2_dynamic_msgs::msg::Obstacle();
+    message.position.x = 1.1;
+    message.position.y = 1.2;
+    message.position.z = 1.3;
+    message.size.x = 2.1;
+    message.size.y = 2.1;
+    message.size.z = 2.1;
 
-    }
-    rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<nav2_dynamic_msgs::msg::Obstacle>::SharedPtr publisher_;
-    size_t count_;
+    RCLCPP_INFO(this->get_logger(), "Publishing: '%f'", (message.size.z));
+    publisher_->publish(message);
+  }
+  rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::Publisher<nav2_dynamic_msgs::msg::Obstacle>::SharedPtr publisher_;
+  size_t count_;
 };
 
 int main(int argc, char * argv[])
@@ -58,4 +57,3 @@ int main(int argc, char * argv[])
   rclcpp::shutdown();
   return 0;
 }
-

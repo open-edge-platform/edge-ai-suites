@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+---
 teleop_twist_joy_node:
   ros__parameters:
     axis_linear:
@@ -16,6 +17,6 @@ teleop_twist_joy_node:
       yaw: 2
     scale_angular:
       yaw: 1.5
-    
+
     enable_button: 5
     enable_turbo_button: 7

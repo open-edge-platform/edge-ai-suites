@@ -1,0 +1,26 @@
+Source: ros-jazzy-speech-recognition-pkg
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    python3-ament-package,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-follow-me-interfaces,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclpy,
+    ros-jazzy-std-msgs,
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-speech-recognition-pkg
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    libasound2-dev,
+    python3-dev,
+    python3-pip,
+    ros-jazzy-follow-me-interfaces,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclpy,
+    ros-jazzy-std-msgs,
+Description: This package contains nodes for audio to text conversion using pre-trained speech Recognition model QuartzNet and publishing recorded audio files with audio commands for robot motion

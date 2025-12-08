@@ -1,3 +1,7 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 3.8)
 project(tutorial_aaeon_adbscan)
 
@@ -9,18 +13,18 @@ endif()
 find_package(ament_cmake REQUIRED)
 
 # Install launch files.
-install(DIRECTORY
-  config
-  params
-  launch
+install(
+  DIRECTORY config params launch
   DESTINATION share/${PROJECT_NAME}/
-  USE_SOURCE_PERMISSIONS
-)
+  USE_SOURCE_PERMISSIONS)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_copyright_FOUND TRUE)
   set(ament_cmake_cpplint_FOUND TRUE)
+  set(ament_cmake_cppcheck_FOUND TRUE)
+  set(ament_cmake_uncrustify_FOUND TRUE)
+  set(ament_cmake_lint_cmake_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 

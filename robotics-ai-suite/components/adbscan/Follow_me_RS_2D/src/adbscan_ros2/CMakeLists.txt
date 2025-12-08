@@ -1,5 +1,7 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 3.5)
 project(adbscan_ros2_follow_me)
 
@@ -21,11 +23,13 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+add_compile_options(-std=c++17)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(nav2_dynamic_msgs REQUIRED)
+set(PCL_DIR /usr/lib/x86_64-linux-gnu/cmake/pcl-1.12)
 find_package(pcl_conversions REQUIRED)
 find_package(PCL 1.12 REQUIRED COMPONENTS common io kdtree)
 find_package(follow_me_interfaces REQUIRED)
@@ -36,7 +40,16 @@ include_directories(include)
 set(HEADER_FILES src/ADBScan.h src/dbscan_adaptiveK.h src/doDBSCAN.hpp src/print_info.h src/Util.hpp)
 add_library(adbscan_lib src/dbscan_adaptiveK.cpp src/doDBSCAN.cpp src/print_info.cpp src/Util.cpp ${HEADER_FILES})
 
-set(dependencies "geometry_msgs" "rclcpp" "nav2_dynamic_msgs" "PCL" "pcl_conversions" "sensor_msgs" "visualization_msgs" "follow_me_interfaces")
+set(dependencies
+  "follow_me_interfaces"
+  "geometry_msgs"
+  "nav2_dynamic_msgs"
+  "pcl_conversions"
+  "PCL"
+  "rclcpp"
+  "sensor_msgs"
+  "visualization_msgs"
+)
 add_executable(adbscan_pub src/adbscan_pub.cpp)
 ament_target_dependencies(adbscan_pub ${dependencies})
 
@@ -45,17 +58,35 @@ include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-add_executable(adbscan_sub src/adbscan_sub.cpp src/print_info.cpp src/doDBSCAN.cpp src/Util.cpp src/dbscan_adaptiveK.cpp)
+add_executable(adbscan_sub
+  src/adbscan_sub.cpp
+  src/dbscan_adaptiveK.cpp
+  src/doDBSCAN.cpp
+  src/print_info.cpp
+  src/Util.cpp
+)
 ament_target_dependencies(adbscan_sub ${dependencies})
-target_link_libraries (adbscan_sub ${PCL_LIBRARIES})
+target_link_libraries(adbscan_sub ${PCL_LIBRARIES})
 
-add_executable(adbscan_sub_w_gesture src/adbscan_sub_w_gesture.cpp src/print_info.cpp src/doDBSCAN.cpp src/Util.cpp src/dbscan_adaptiveK.cpp)
+add_executable(adbscan_sub_w_gesture
+  src/adbscan_sub_w_gesture.cpp
+  src/dbscan_adaptiveK.cpp
+  src/doDBSCAN.cpp
+  src/print_info.cpp
+  src/Util.cpp
+)
 ament_target_dependencies(adbscan_sub_w_gesture ${dependencies})
-target_link_libraries (adbscan_sub_w_gesture ${PCL_LIBRARIES})
+target_link_libraries(adbscan_sub_w_gesture ${PCL_LIBRARIES})
 
-add_executable(adbscan_sub_w_gesture_audio src/adbscan_sub_w_gesture_audio.cpp src/print_info.cpp src/doDBSCAN.cpp src/Util.cpp src/dbscan_adaptiveK.cpp)
+add_executable(adbscan_sub_w_gesture_audio
+  src/adbscan_sub_w_gesture_audio.cpp
+  src/dbscan_adaptiveK.cpp
+  src/doDBSCAN.cpp
+  src/print_info.cpp
+  src/Util.cpp
+)
 ament_target_dependencies(adbscan_sub_w_gesture_audio ${dependencies})
-target_link_libraries (adbscan_sub_w_gesture_audio ${PCL_LIBRARIES})
+target_link_libraries(adbscan_sub_w_gesture_audio ${PCL_LIBRARIES})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
