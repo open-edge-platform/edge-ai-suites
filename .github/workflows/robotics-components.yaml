@@ -21,6 +21,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     outputs:
+      adbscan-changed: ${{ steps.filter.outputs.adbscan-location || inputs.rebuild-all }}
       collaborative-slam-changed: ${{ steps.filter.outputs.collaborative-slam-location || inputs.rebuild-all }}
       fast-mapping-changed: ${{ steps.filter.outputs.fast-mapping-location || inputs.rebuild-all }}
       groundfloor-changed: ${{ steps.filter.outputs.groundfloor-location || inputs.rebuild-all }}
@@ -39,6 +40,8 @@ jobs:
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3.0.2
         with:
           filters: |
+            adbscan-location:
+              - 'robotics-ai-suite/components/adbscan/**'
             collaborative-slam-location:
               - 'robotics-ai-suite/components/collaborative-slam/**'
             fast-mapping-location:
@@ -55,6 +58,12 @@ jobs:
               - 'robotics-ai-suite/components/simulations/**'
             wandering-location:
               - 'robotics-ai-suite/components/wandering/**'
+
+  adbscan:
+    name: "ADBSCAN"
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.adbscan-changed == 'true' }}
+    uses: "./.github/workflows/robotics-components-adbscan.yaml"
 
   collaborative-slam:
     name: "Collaborative SLAM"
