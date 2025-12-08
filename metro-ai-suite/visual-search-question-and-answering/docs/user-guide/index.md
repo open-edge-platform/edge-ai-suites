@@ -115,13 +115,13 @@ The UI, built with `streamlit`, allows users to:
 
 <!--hide_directive
 :::{toctree}
-   :hidden:
-   :maxdepth: 2
+:hidden:
+:maxdepth: 2
 
-   system-requirements
-   get-started
-   deploy-with-helm
-   tutorials
-   release-notes
+system-requirements
+get-started
+deploy-with-helm
+tutorials
+release-notes
 :::
 hide_directive-->

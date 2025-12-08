@@ -77,29 +77,29 @@ This sample application offers the following features:
 
 <!--hide_directive
 :::{toctree}
-   :hidden:
+:hidden:
 
-   overview-architecture
-   system-requirements
-   get-started
-   troubleshooting-guide
-   how-to-change-input-video-source
-   how-to-deploy-using-helm-charts
-   how-to-deploy-with-edge-orchestrator
-   how-to-enable-mlops
-   how-to-manage-pipelines
-   how-to-run-multiple-ai-pipelines
-   how-to-scale-video-resolution
-   how-to-use-an-ai-model-and-video-file-of-your-own
-   how-to-use-opcua-publisher
-   how-to-run-store-frames-in-s3
-   how-to-view-telemetry-data
-   how-to-use-gpu-for-inference
-   how-to-start-mqtt-publisher
-   how-to-benchmark
-   api-reference
-   environment-variables
-   release_notes/Overview
+overview-architecture
+system-requirements
+get-started
+troubleshooting-guide
+how-to-change-input-video-source
+how-to-deploy-using-helm-charts
+how-to-deploy-with-edge-orchestrator
+how-to-enable-mlops
+how-to-manage-pipelines
+how-to-run-multiple-ai-pipelines
+how-to-scale-video-resolution
+how-to-use-an-ai-model-and-video-file-of-your-own
+how-to-use-opcua-publisher
+how-to-run-store-frames-in-s3
+how-to-view-telemetry-data
+how-to-use-gpu-for-inference
+how-to-start-mqtt-publisher
+how-to-benchmark
+api-reference
+environment-variables
+release_notes/Overview
 
 :::
 hide_directive-->

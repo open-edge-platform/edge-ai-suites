@@ -25,9 +25,9 @@ The main features are as follows:
 :::{toctree}
 :hidden:
 
-   system-requirements
-   get-started
-   release-
+system-requirements
+get-started
+release-
 
 :::
 hide_directive-->
