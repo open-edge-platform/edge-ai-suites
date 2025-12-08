@@ -1,0 +1,12 @@
+Source: ros-jazzy-cslam-tutorial-2d-lidar
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-jazzy-cslam-tutorial-2d-lidar
+Architecture: any
+Depends:
+    ros-jazzy-cslam-tutorial-common,
+    ros-jazzy-bagfile-2d-lidar
+Description: Intel Collaborative SLAM tutorial for 2D LIDAR

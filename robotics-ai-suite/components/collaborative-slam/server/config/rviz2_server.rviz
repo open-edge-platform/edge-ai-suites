@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: Apache-2.0
-# Copyright (C) 2025 Intel Corporation
 Panels:
   - Class: rviz_common/Displays
     Help Height: 138

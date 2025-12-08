@@ -1,0 +1,134 @@
+Source: ros-humble-univloc-server
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    libboost-dev,
+    libeigen3-dev,
+    libgtest-dev,
+    liblapack-dev,
+    libopencv-dev,
+    liborb-lze-dev,
+    libspdlog-dev,
+    libva-dev,
+    libze-dev,
+    libze1,
+    nlohmann-json3-dev,
+    python3-ament-package,
+    ros-humble-ament-cmake-gtest,
+    ros-humble-ament-cmake,
+    ros-humble-ament-lint-auto,
+    ros-humble-ament-lint-common,
+    ros-humble-cv-bridge,
+    ros-humble-dbow2,
+    ros-humble-geometry-msgs,
+    ros-humble-image-transport,
+    ros-humble-libg2o-intel-sse,
+    ros-humble-message-filters,
+    ros-humble-nav-msgs,
+    ros-humble-rclcpp,
+    ros-humble-rosbag2-cpp,
+    ros-humble-rosbag2-transport,
+    ros-humble-rosidl-default-generators,
+    ros-humble-sensor-msgs,
+    ros-humble-statistics-msgs,
+    ros-humble-std-msgs,
+    ros-humble-tf2-eigen,
+    ros-humble-tf2-geometry-msgs,
+    ros-humble-tf2-ros,
+    ros-humble-univloc-msgs,
+    ros-humble-univloc-slam-dev,
+    ros-humble-visualization-msgs,
+Standards-Version: 4.1.4
+
+Package: ros-humble-univloc-server-lze
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-humble-cv-bridge,
+    ros-humble-dbow2,
+    ros-humble-geometry-msgs,
+    ros-humble-image-transport,
+    ros-humble-libg2o-intel-avx2,
+    ros-humble-message-filters,
+    ros-humble-nav-msgs,
+    ros-humble-rclcpp,
+    ros-humble-rosidl-default-runtime,
+    ros-humble-sensor-msgs,
+    ros-humble-statistics-msgs,
+    ros-humble-std-msgs,
+    ros-humble-tf2-eigen,
+    ros-humble-tf2-geometry-msgs,
+    ros-humble-tf2-ros,
+    ros-humble-univloc-msgs,
+    ros-humble-univloc-slam-lze,
+    ros-humble-visualization-msgs,
+Description: Intel GPU Level-Zero accelerated package for Collaborative SLAM server node
+Provides: ros-humble-univloc-server
+Conflicts: ros-humble-univloc-server
+Replaces: ros-humble-univloc-server
+
+Package: ros-humble-univloc-server-sse
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-humble-cv-bridge,
+    ros-humble-dbow2,
+    ros-humble-geometry-msgs,
+    ros-humble-image-transport,
+    ros-humble-libg2o-intel-sse,
+    ros-humble-message-filters,
+    ros-humble-nav-msgs,
+    ros-humble-rclcpp,
+    ros-humble-rosidl-default-runtime,
+    ros-humble-sensor-msgs,
+    ros-humble-statistics-msgs,
+    ros-humble-std-msgs,
+    ros-humble-tf2-eigen,
+    ros-humble-tf2-geometry-msgs,
+    ros-humble-tf2-ros,
+    ros-humble-univloc-msgs,
+    ros-humble-univloc-slam-sse,
+    ros-humble-visualization-msgs,
+Description: Intel SSE-only CPU instruction accelerated package for Collaborative SLAM server node
+Provides: ros-humble-univloc-server
+Conflicts: ros-humble-univloc-server
+Replaces: ros-humble-univloc-server
+
+Package: ros-humble-univloc-server-avx2
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-humble-cv-bridge,
+    ros-humble-dbow2,
+    ros-humble-geometry-msgs,
+    ros-humble-image-transport,
+    ros-humble-libg2o-intel-avx2,
+    ros-humble-message-filters,
+    ros-humble-nav-msgs,
+    ros-humble-rclcpp,
+    ros-humble-rosidl-default-runtime,
+    ros-humble-sensor-msgs,
+    ros-humble-statistics-msgs,
+    ros-humble-std-msgs,
+    ros-humble-tf2-eigen,
+    ros-humble-tf2-geometry-msgs,
+    ros-humble-tf2-ros,
+    ros-humble-univloc-msgs,
+    ros-humble-univloc-slam-avx2,
+    ros-humble-visualization-msgs,
+Description: Intel AVX/AVX2 CPU instruction accelerated package for Collaborative SLAM server node
+Provides: ros-humble-univloc-server
+Conflicts: ros-humble-univloc-server
+Replaces: ros-humble-univloc-server
+
+Package: ros-humble-univloc-server-testsuite
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-humble-bagfile-extra-features,
+    ros-humble-bagfile-robot1,
+    ros-humble-bagfile-robot2,
+    ros-humble-cslam-unit-test-bagfiles,
+    ros-humble-univloc-server-sse (= ${binary:Version}) | ros-humble-univloc-server-avx2 (= ${binary:Version}) | ros-humble-univloc-server-lze (= ${binary:Version}),
+Description: [internal] test suite for Collaborative SLAM server node

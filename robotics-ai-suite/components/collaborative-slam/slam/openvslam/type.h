@@ -1,5 +1,9 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025 Intel Corporation
+/*
+ * Copyright (C) 2025 Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef OPENVSLAM_TYPE_H
 #define OPENVSLAM_TYPE_H
 
@@ -18,10 +22,11 @@ typedef uint8_t ClientID;
 typedef uint64_t KeyframeID;
 typedef uint64_t LandmarkID;
 
-#define likely(x)      __builtin_expect(!!(x), 1)
-#define unlikely(x)    __builtin_expect(!!(x), 0)
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
 
-namespace openvslam {
+namespace openvslam
+{
 
 // floating point type
 
@@ -87,42 +92,44 @@ template <typename T>
 using eigen_alloc_vector = std::vector<T, Eigen::aligned_allocator<T>>;
 
 template <typename T, typename U>
-using eigen_alloc_map = std::map<T, U, std::less<T>, Eigen::aligned_allocator<std::pair<const T, U>>>;
+using eigen_alloc_map =
+  std::map<T, U, std::less<T>, Eigen::aligned_allocator<std::pair<const T, U>>>;
 
 template <typename T>
 using eigen_alloc_set = std::set<T, std::less<T>, Eigen::aligned_allocator<const T>>;
 
 template <typename T, typename U>
-using eigen_alloc_unord_map =
-    std::unordered_map<T, U, std::hash<T>, std::equal_to<T>, Eigen::aligned_allocator<std::pair<const T, U>>>;
+using eigen_alloc_unord_map = std::unordered_map<
+  T, U, std::hash<T>, std::equal_to<T>, Eigen::aligned_allocator<std::pair<const T, U>>>;
 
 template <typename T>
-using eigen_alloc_unord_set = std::unordered_set<T, std::hash<T>, std::equal_to<T>, Eigen::aligned_allocator<const T>>;
+using eigen_alloc_unord_set =
+  std::unordered_set<T, std::hash<T>, std::equal_to<T>, Eigen::aligned_allocator<const T>>;
 
 // vector operators
 
 template <typename T>
-inline Vec2_t operator+(const Vec2_t& v1, const cv::Point_<T>& v2)
+inline Vec2_t operator+(const Vec2_t & v1, const cv::Point_<T> & v2)
 {
-    return {v1(0) + v2.x, v1(1) + v2.y};
+  return {v1(0) + v2.x, v1(1) + v2.y};
 }
 
 template <typename T>
-inline Vec2_t operator+(const cv::Point_<T>& v1, const Vec2_t& v2)
+inline Vec2_t operator+(const cv::Point_<T> & v1, const Vec2_t & v2)
 {
-    return v2 + v1;
+  return v2 + v1;
 }
 
 template <typename T>
-inline Vec2_t operator-(const Vec2_t& v1, const cv::Point_<T>& v2)
+inline Vec2_t operator-(const Vec2_t & v1, const cv::Point_<T> & v2)
 {
-    return v1 + (-v2);
+  return v1 + (-v2);
 }
 
 template <typename T>
-inline Vec2_t operator-(const cv::Point_<T>& v1, const Vec2_t& v2)
+inline Vec2_t operator-(const cv::Point_<T> & v1, const Vec2_t & v2)
 {
-    return v1 + (-v2);
+  return v1 + (-v2);
 }
 
 }  // namespace openvslam

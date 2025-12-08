@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Collaborative SLAM
 
 ## Component Documentation
@@ -64,7 +70,7 @@ To leverage GPU, check this [guide](docs/GPU_CM.md) for environment setup.
 
 The tracker and server are ROS programs. All the configurations are passed with ROS parameters. Check [tracker.launch.py](tracker/launch/tracker.launch.py)
 and [server.launch.py](server/launch/server.launch.py) for all available parameters and comments.
-For ROS2, parameters and launch file are separated and parameters are stored in [tracker.yaml](tracker/config/tracker.yaml).  
+For ROS2, parameters and launch file are separated and parameters are stored in [tracker.yaml](tracker/config/tracker.yaml).
 There are ready-to-use configurations for RealSense D400-Series RGBD camera or the OpenLORIS-Scene dataset (`tracker.launch.py`), the TUM RGBD dataset (`tum_rgbd.launch.py`), the EuRoC dataset (`euroc_mono.launch.py` or `euroc_stereo.launch.py`), the KITTI dataset (`kitti_mono.launch.py` or `kitti_stereo.launch.py`).
 
 Collaborative SLAM currently supports total 4 operating modes, including mapping, localization, remapping and re-localization modes. We provide `slam_mode` option for the tracker and `server_mode` option for the server to configure.

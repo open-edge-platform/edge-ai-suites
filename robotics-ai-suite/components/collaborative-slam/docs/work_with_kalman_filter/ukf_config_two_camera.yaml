@@ -1,6 +1,8 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
-### ukf config file ###
+#
+# SPDX-License-Identifier: Apache-2.0
+
+---
 ukf_filter_node:
     ros__parameters:
         # use_sim_time: true
@@ -44,18 +46,18 @@ ukf_filter_node:
         #               false,  false,  false,
         #               false, false, false,
         #               false,  false,  true,
-        #               false,  false,  false]        
+        #               false,  false,  false]
 
         # imu0_differential: true
         # imu0_relative: false
 
         pose0: univloc_tracker_0/kf_pose
         pose0_config: [true, true, false,
-                      false,  false, true,
-                      false, false, false,
-                      false,  false,  false,
-                      false,  false,  false]
-        
+                       false,  false, true,
+                       false, false, false,
+                       false,  false,  false,
+                       false,  false,  false]
+
         pose0_differential: false
         pose0_relative: false
 
@@ -66,18 +68,18 @@ ukf_filter_node:
         #               false, false, false,
         #               false,  false,  false,
         #               false,  false,  false]
-        
+
         # pose1_differential: false
         # pose1_relative: false
 
         # front + rear
         pose1: univloc_tracker_2/kf_pose
         pose1_config: [true, true, false,
-                      false,  false, true,
-                      false, false, false,
-                      false,  false,  false,
-                      false,  false,  false]
-        
+                       false,  false, true,
+                       false, false, false,
+                       false,  false,  false,
+                       false,  false,  false]
+
         pose1_differential: false
         pose1_relative: false
 
@@ -88,7 +90,7 @@ ukf_filter_node:
         #               false, false, false,
         #               false,  false,  false,
         #               false,  false,  false]
-        
+
         # pose1_differential: false
         # pose1_relative: false
 

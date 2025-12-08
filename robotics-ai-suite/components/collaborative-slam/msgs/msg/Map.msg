@@ -1,3 +1,7 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 std_msgs/Header header
 uint8 mn_client_id
 uint32 msg_id

@@ -1,5 +1,9 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025 Intel Corporation
+/*
+ * Copyright (C) 2025 Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef OPENVSLAM_OPTIMIZER_G2O_SCALE_VERTEX_H
 #define OPENVSLAM_OPTIMIZER_G2O_SCALE_VERTEX_H
 
@@ -7,23 +11,27 @@
 #include <math.h>
 #include <g2o/core/base_vertex.h>
 
-namespace openvslam {
-namespace optimize {
-namespace g2o {
+namespace openvslam
+{
+namespace optimize
+{
+namespace g2o
+{
 
-class scale_vertex final : public ::g2o::BaseVertex<1, double> {
+class scale_vertex final : public ::g2o::BaseVertex<1, double>
+{
 public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    scale_vertex();
+  scale_vertex();
 
-    bool read(std::istream& is) override;
+  bool read(std::istream & is) override;
 
-    bool write(std::ostream& os) const override;
+  bool write(std::ostream & os) const override;
 
-    void setToOriginImpl() override { _estimate = 1.0; }
+  void setToOriginImpl() override { _estimate = 1.0; }
 
-    void oplusImpl(const double* update) override { _estimate *= std::exp(*update); }
+  void oplusImpl(const double * update) override { _estimate *= std::exp(*update); }
 };
 
 }  // namespace g2o
