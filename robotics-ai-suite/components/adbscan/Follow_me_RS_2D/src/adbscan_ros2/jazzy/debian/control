@@ -1,0 +1,31 @@
+Source: ros-jazzy-adbscan-ros2-follow-me
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    python3-ament-package,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-builtin-interfaces,
+    ros-jazzy-follow-me-interfaces,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-nav2-dynamic-msgs,
+    ros-jazzy-pcl-conversions,
+    ros-jazzy-rclcpp,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-visualization-msgs,
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-adbscan-ros2-follow-me
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-builtin-interfaces,
+    ros-jazzy-follow-me-interfaces,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-nav2-dynamic-msgs,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rviz2,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-visualization-msgs,
+Description: An AMR application developed by Intel to enable a robot to follow a specific person or target based on Adaptive DBScan clustering, gesture and audio command based motion control

@@ -19,13 +19,27 @@ import os.path as osp
 import numpy as np
 
 from utils.wav_processing import (
-    fold_with_overlap, infer_from_discretized_mix_logistic, pad_tensor, xfade_and_unfold,
+    fold_with_overlap,
+    infer_from_discretized_mix_logistic,
+    pad_tensor,
+    xfade_and_unfold,
 )
 
 
 class WaveRNNIE:
-    def __init__(self, model_upsample, model_rnn, ie, target=11000, overlap=550, hop_length=275, bits=9, device='CPU',
-                 verbose=False, upsampler_width=-1):
+    def __init__(
+        self,
+        model_upsample,
+        model_rnn,
+        ie,
+        target=11000,
+        overlap=550,
+        hop_length=275,
+        bits=9,
+        device='CPU',
+        verbose=False,
+        upsampler_width=-1,
+    ):
         """
         return class provided WaveRNN inference.
 
@@ -33,7 +47,8 @@ class WaveRNNIE:
         :param model_rnn: path to xml with rnn parameters of WaveRNN model
         :param target: length of the processed fragments
         :param overlap: overlap of the processed frames
-        :param hop_length: The number of samples between successive frames, e.g., the columns of a spectrogram.
+        :param hop_length: The number of samples between successive frames,
+                           e.g., the columns of a spectrogram.
         :return:
         """
         self.verbose = verbose
@@ -51,7 +66,7 @@ class WaveRNNIE:
         self.upsample_net = self.load_network(model_upsample)
         if upsampler_width > 0:
             orig_shape = self.upsample_net.input_info['mels'].input_data.shape
-            self.upsample_net.reshape({"mels": (orig_shape[0], upsampler_width, orig_shape[2])})
+            self.upsample_net.reshape({'mels': (orig_shape[0], upsampler_width, orig_shape[2])})
 
         self.upsample_exec = self.create_exec_network(self.upsample_net)
 
@@ -63,9 +78,9 @@ class WaveRNNIE:
         self.rnn_width = self.rnn_net.input_info['x'].input_data.shape[1]
 
     def load_network(self, model_xml):
-        model_bin_name = ".".join(osp.basename(model_xml).split('.')[:-1]) + ".bin"
+        model_bin_name = '.'.join(osp.basename(model_xml).split('.')[:-1]) + '.bin'
         model_bin = osp.join(osp.dirname(model_xml), model_bin_name)
-        print("Loading network files:\n\t{}\n\t{}".format(model_xml, model_bin))
+        print('Loading network files:\n\t{}\n\t{}'.format(model_xml, model_bin))
         net = self.ie.read_network(model=model_xml, weights=model_bin)
         return net
 
@@ -92,8 +107,11 @@ class WaveRNNIE:
         mels = np.transpose(mels)
         mels = np.expand_dims(mels, axis=0)
 
-        n_parts = mels.shape[1] // self.mel_len + 1 if mels.shape[1] % self.mel_len > 0 else mels.shape[
-                                                                                                 1] // self.mel_len
+        n_parts = (
+            mels.shape[1] // self.mel_len + 1
+            if mels.shape[1] % self.mel_len > 0
+            else mels.shape[1] // self.mel_len
+        )
         upsampled_mels = []
         aux = []
         last_padding = 0
@@ -102,8 +120,12 @@ class WaveRNNIE:
             i_end = i_start + self.mel_len
             if i_end > mels.shape[1]:
                 last_padding = i_end - mels.shape[1]
-                mel = np.pad(mels[:, i_start:mels.shape[1], :], ((0, 0), (0, last_padding), (0, 0)), 'constant',
-                             constant_values=0)
+                mel = np.pad(
+                    mels[:, i_start: mels.shape[1], :],  # fmt: skip
+                    ((0, 0), (0, last_padding), (0, 0)),
+                    'constant',
+                    constant_values=0,
+                )
             else:
                 mel = mels[:, i_start:i_end, :]
 
@@ -117,35 +139,39 @@ class WaveRNNIE:
             upsampled_mels = upsampled_mels[0]
             aux = aux[0]
         if last_padding > 0:
-            upsampled_mels = upsampled_mels[:, :-last_padding * self.hop_length, :]
-            aux = aux[:, :-last_padding * self.hop_length, :]
+            upsampled_mels = upsampled_mels[:, : -last_padding * self.hop_length, :]
+            aux = aux[:, : -last_padding * self.hop_length, :]
 
-        upsampled_mels, (_, self.dynamic_overlap) = fold_with_overlap(upsampled_mels, self.target, self.overlap)
+        upsampled_mels, (_, self.dynamic_overlap) = fold_with_overlap(
+            upsampled_mels, self.target, self.overlap
+        )
         aux, _ = fold_with_overlap(aux, self.target, self.overlap)
 
         audio = self.forward_rnn(mels, upsampled_mels, aux)
-        audio = (audio * (2 ** 15 - 1)).astype("<h")
+        audio = (audio * (2**15 - 1)).astype('<h')
 
         return audio
 
     def forward_upsample(self, mels):
         mels = pad_tensor(mels, pad=self.pad)
 
-        out = self.upsample_exec.infer(inputs={"mels": mels})
-        upsample_mels, aux = out["upsample_mels"][:, self.indent:-self.indent, :], out["aux"]
+        out = self.upsample_exec.infer(inputs={'mels': mels})
+        upsample_mels, aux = out['upsample_mels'][:, self.indent: -self.indent, :], out['aux']  # noqa: E501 # fmt: skip
         return upsample_mels, aux
 
     def forward_rnn(self, mels, upsampled_mels, aux):
         wave_len = (mels.shape[1] - 1) * self.hop_length
 
         d = aux.shape[2] // 4
-        aux_split = [aux[:, :, d * i:d * (i + 1)] for i in range(4)]
+        aux_split = [aux[:, :, d * i: d * (i + 1)] for i in range(4)]  # fmt: skip
 
         b_size, seq_len, _ = upsampled_mels.shape
         seq_len = min(seq_len, aux_split[0].shape[1])
 
         if b_size not in self.batch_sizes:
-            raise Exception('Incorrect batch size {0}. Correct should be 2 ** something'.format(b_size))
+            raise Exception(
+                'Incorrect batch size {0}. Correct should be 2 ** something'.format(b_size)
+            )
 
         active_network = self.batch_sizes.index(b_size)
 
@@ -156,15 +182,24 @@ class WaveRNNIE:
         for i in range(seq_len):
             m_t = upsampled_mels[:, i, :]
 
-            a1_t, a2_t, a3_t, a4_t = \
-                (a[:, i, :] for a in aux_split)
+            a1_t, a2_t, a3_t, a4_t = (a[:, i, :] for a in aux_split)
 
-            out = self.rnn_exec[active_network].infer(inputs={"m_t": m_t, "a1_t": a1_t, "a2_t": a2_t, "a3_t": a3_t,
-                                                              "a4_t": a4_t, "h1.1": h1, "h2.1": h2, "x": x})
+            out = self.rnn_exec[active_network].infer(
+                inputs={
+                    'm_t': m_t,
+                    'a1_t': a1_t,
+                    'a2_t': a2_t,
+                    'a3_t': a3_t,
+                    'a4_t': a4_t,
+                    'h1.1': h1,
+                    'h2.1': h2,
+                    'x': x,
+                }
+            )
 
-            logits = out["logits"]
-            h1 = out["h1"]
-            h2 = out["h2"]
+            logits = out['logits']
+            h1 = out['h1']
+            h2 = out['h2']
 
             sample = infer_from_discretized_mix_logistic(logits)
 
@@ -182,7 +217,7 @@ class WaveRNNIE:
 
         fade_out = np.linspace(1, 0, 20 * self.hop_length)
         output = output[:wave_len]
-        output[-20 * self.hop_length:] *= fade_out
+        output[-20 * self.hop_length:] *= fade_out  # fmt: skip
         return output
 
 
@@ -206,7 +241,7 @@ class MelGANIE:
         if self.net.input_info['mel'].input_data.shape[2] != default_width:
             orig_shape = self.net.input_info['mel'].input_data.shape
             new_shape = (orig_shape[0], orig_shape[1], default_width)
-            self.net.reshape({"mel": new_shape})
+            self.net.reshape({'mel': new_shape})
 
         self.exec_net = self.create_exec_network(self.net, self.scales)
 
@@ -215,9 +250,9 @@ class MelGANIE:
         self.widths = [self.mel_len * (i + 1) for i in range(self.scales)]
 
     def load_network(self, model_xml):
-        model_bin_name = ".".join(osp.basename(model_xml).split('.')[:-1]) + ".bin"
+        model_bin_name = '.'.join(osp.basename(model_xml).split('.')[:-1]) + '.bin'
         model_bin = osp.join(osp.dirname(model_xml), model_bin_name)
-        print("Loading network files:\n\t{}\n\t{}".format(model_xml, model_bin))
+        print('Loading network files:\n\t{}\n\t{}'.format(model_xml, model_bin))
         net = self.ie.read_network(model=model_xml, weights=model_bin)
         return net
 
@@ -227,9 +262,9 @@ class MelGANIE:
             exec_net = []
             for i in range(scales):
                 new_shape = (orig_shape[0], orig_shape[1], orig_shape[2] * (i + 1))
-                net.reshape({"mel": new_shape})
+                net.reshape({'mel': new_shape})
                 exec_net.append(self.ie.load_network(network=net, device_name=self.device))
-                net.reshape({"mel": orig_shape})
+                net.reshape({'mel': orig_shape})
         else:
             exec_net = self.ie.load_network(network=net, device_name=self.device)
         return exec_net
@@ -241,7 +276,9 @@ class MelGANIE:
         if mel.shape[2] % self.mel_len:
             last_padding = self.mel_len - mel.shape[2] % self.mel_len
 
-        mel = np.pad(mel, ((0, 0), (0, 0), (0, last_padding)), 'constant', constant_values=-11.5129)
+        mel = np.pad(
+            mel, ((0, 0), (0, 0), (0, last_padding)), 'constant', constant_values=-11.5129
+        )
 
         active_net = -1
         cur_w = -1
@@ -258,7 +295,9 @@ class MelGANIE:
         c_begin = 0
         c_end = cur_w
         while c_begin < cols:
-            audio = self.exec_net[active_net].infer(inputs={"mel": mel[:, :, c_begin:c_end]})["audio"]
+            audio = self.exec_net[active_net].infer(inputs={'mel': mel[:, :, c_begin:c_end]})[
+                'audio'
+            ]
             res_audio.extend(audio)
 
             c_begin = c_end
@@ -272,7 +311,7 @@ class MelGANIE:
 
             c_end += cur_w
         if last_padding:
-            audio = res_audio[:-self.hop_length * last_padding]
+            audio = res_audio[: -self.hop_length * last_padding]
         else:
             audio = res_audio
 

@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Installed packages
 
 sudo apt install python3-colcon-common-extensions

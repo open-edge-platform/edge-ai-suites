@@ -1,0 +1,17 @@
+ros-humble-followme-turtlebot3-gazebo (2.3-1) UNRELEASED; urgency=low
+
+  * Refactoring of the code and general optimizations
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 29 Sep 2025 00:00:00 +0000
+
+ros-humble-followme-turtlebot3-gazebo (2.1-1) UNRELEASED; urgency=low
+
+  * Added demo for combined gesture and audio controlled follow-me
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 26 Jan 2024 12:46:42 -0800
+
+ros-humble-followme-turtlebot3-gazebo (2.0-1) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 27 Sep 2023 00:00:42 +0000

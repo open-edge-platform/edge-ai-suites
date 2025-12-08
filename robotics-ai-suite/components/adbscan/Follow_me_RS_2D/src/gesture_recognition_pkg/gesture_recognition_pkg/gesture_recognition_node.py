@@ -28,34 +28,45 @@ import os
 from ament_index_python.packages import get_package_share_directory
 import time
 
+
 class gesture_recognizer(Node):
     def __init__(self):
-        super().__init__("gesture_recognizer_node")
+        super().__init__('gesture_recognizer_node')
         self.count_ = 0
-        self.get_logger().info("gesture_recognizer_node has been started")
+        self.get_logger().info('gesture_recognizer_node has been started')
         # declare parameters
-        self.declare_parameter("Camera_topic", "/camera/color/image_raw")
-        self.declare_parameter("simulated_camera_topic", "/sim_camera")
+        self.declare_parameter('Camera_topic', '/camera/color/image_raw')
+        self.declare_parameter('simulated_camera_topic', '/sim_camera')
         self.simulation_mode_ = self.get_parameter('use_sim_time').value
         if self.simulation_mode_:
-            self.camera_topic_name_ = self.get_parameter("simulated_camera_topic").value
+            self.camera_topic_name_ = self.get_parameter('simulated_camera_topic').value
         else:
-            self.camera_topic_name_ = self.get_parameter("Camera_topic").value
+            self.camera_topic_name_ = self.get_parameter('Camera_topic').value
         # self.model_file_ = self.get_parameter("model_file_location").value
-        self.model_file_ = os.path.join(get_package_share_directory('gesture_recognition_pkg'), 'config','gesture_recognizer.task')
+        self.model_file_ = os.path.join(
+            get_package_share_directory('gesture_recognition_pkg'),
+            'config',
+            'gesture_recognizer.task',
+        )
         if not os.path.isfile(self.model_file_):
-            self.get_logger().error("The model file does not exist. Please provide a valid filename as model_file_location parameter")
-        self.image_subscriber_ = self.create_subscription(Image, self.camera_topic_name_, self.camera_topic_callback, 10)
-        self.gesture_publisher_ = self.create_publisher(GestureCategory, "gesture", 10)
-        
+            self.get_logger().error(
+                'The model file does not exist. '
+                + 'Please provide a valid filename as model_file_location parameter'
+            )
+        self.image_subscriber_ = self.create_subscription(
+            Image, self.camera_topic_name_, self.camera_topic_callback, 10
+        )
+        self.gesture_publisher_ = self.create_publisher(GestureCategory, 'gesture', 10)
 
     def camera_topic_callback(self, msg):
-        self.get_logger().info("Subscribed to camera topic")
+        self.get_logger().info('Subscribed to camera topic')
         start = time.time()
         # Create an GestureRecognizer object.
         VisionRunningMode = mp.tasks.vision.RunningMode
         base_options = python.BaseOptions(model_asset_path=self.model_file_)
-        options = vision.GestureRecognizerOptions(base_options=base_options, running_mode=VisionRunningMode.IMAGE)
+        options = vision.GestureRecognizerOptions(
+            base_options=base_options, running_mode=VisionRunningMode.IMAGE
+        )
         recognizer = vision.GestureRecognizer.create_from_options(options)
         # Load the input image.
         bridge = CvBridge()
@@ -73,29 +84,28 @@ class gesture_recognizer(Node):
         # The gesture recognizer must be created with the image mode.
         recognition_result = recognizer.recognize(mp_image)
         if len(recognition_result.gestures) == 0:
-            category_name = "No_Action"
+            category_name = 'No_Action'
         else:
             top_gesture = recognition_result.gestures[0][0]
             category_name = top_gesture.category_name
 
         self.publish_gesture(category_name)
-        gesture_pub_time = (time.time() - start)*1000
-        self.get_logger().info("Gesture publishing time = {} ms".format(str(gesture_pub_time)))
-
+        gesture_pub_time = (time.time() - start) * 1000
+        self.get_logger().info('Gesture publishing time = {} ms'.format(str(gesture_pub_time)))
 
     def publish_gesture(self, gesture_category):
         gesture_msg = GestureCategory()
         gesture_msg.gesture_category = gesture_category
         self.gesture_publisher_.publish(gesture_msg)
-        self.get_logger().info("Publishing gesture msg: {}".format(gesture_category))
+        self.get_logger().info('Publishing gesture msg: {}'.format(gesture_category))
+
 
 def main(args=None):
-    rclpy.init(args= args)
+    rclpy.init(args=args)
     node = gesture_recognizer()
     rclpy.spin(node)
     rclpy.shutdown()
 
-if __name__ == "__main__":
-    main()
 
-    
+if __name__ == '__main__':
+    main()
