@@ -2498,7 +2498,7 @@ void Server::octree_sync_callback(const std_msgs::msg::String::SharedPtr msg)
   if (msg->data == "octree_sync") {
     std::vector<ClientID> ids;
     bool map_merge_happen = false;
-    // If map merge occured, then two clients will have the same map ID
+    // If map merge occurred, then two clients will have the same map ID
     for (auto & id_client : handlers_) {
       ids.push_back(id_client.first);
     }

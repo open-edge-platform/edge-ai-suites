@@ -57,7 +57,7 @@ ros2 launch univloc_tracker tracker.launch.py camera:=<if_specific> publish_tf:=
 
 If the server is on another machine, choose a domain ID between 0 and 101 (inclusive) and set `ROS_DOMAIN_ID` for both machines;
 remember to source environment setup file afterwards.
-See [ros2 offical doc](https://docs.ros.org/en/foxy/Concepts/About-Domain-ID.html) for a reference.
+See [ros2 official doc](https://docs.ros.org/en/foxy/Concepts/About-Domain-ID.html) for a reference.
 The server will publish map elements on the topics of /univloc_server/{keypoints,keyframes}, which can be visualized in RViz.
 
 ## **Tracker example with a RealSense D400-Series RGBD camera**

@@ -19,7 +19,7 @@ The benchmark is used to test the robustness and the accuracy of the Collaborati
 The benchmark scripts will launch two ROS node: univloc_tracker and univloc_server together with another process to play the .bag/.orig.bag file as the input.
 We prefer the .bag file since they are already decompressed and don't need to consume resource for decompression while playing.
 For each sequence in the dataset, the benchmark will test it and calculate the RMSE of the pose trajectory by the "evo_ape" and "evo_rpe" tools.
-For EuRoC dataset, we wil also calculate the scale percentage error when using IMU as auxiliary sensor input.
+For EuRoC dataset, we will also calculate the scale percentage error when using IMU as auxiliary sensor input.
 
 ---
 
@@ -101,7 +101,7 @@ Then run the filter.py to filter the invalid results and calculate the mean valu
 
 1. Since the TUM, EuRoc and KITTI datasets are all packaged as the ROS1 format, so you also need to install a ROS1 version on your environment. Currently, we are using ROS Noetic on our development environment. For installation you can refer to [http://wiki.ros.org/noetic/Installation](http://wiki.ros.org/noetic/Installation).
 
-2. The script matches the groundtruth file with the .bag/.orig.bag file by their name format. In the TUM dataset, the gorundtruth files are always named as `{test_case_name}-groundtruth.txt` and the .bag files are always named as `{test_case_name}.bag` or `{test_case_name}.orig.bag`.
-But in the EuRoC dataset, the user should first manually transform the .csv gorundtruth files to tum format and rename them to `{test_case_name}-groundtruth.tum`. The transform command is `evo_traj euroc data.csv --save_as_tum` and you can refer to [Formats](https://github.com/MichaelGrupp/evo/wiki/Formats) for more information.
+2. The script matches the groundtruth file with the .bag/.orig.bag file by their name format. In the TUM dataset, the groundtruth files are always named as `{test_case_name}-groundtruth.txt` and the .bag files are always named as `{test_case_name}.bag` or `{test_case_name}.orig.bag`.
+But in the EuRoC dataset, the user should first manually transform the .csv groundtruth files to tum format and rename them to `{test_case_name}-groundtruth.tum`. The transform command is `evo_traj euroc data.csv --save_as_tum` and you can refer to [Formats](https://github.com/MichaelGrupp/evo/wiki/Formats) for more information.
 
 3. The benchmark scripts are based on ROS2 launch module.

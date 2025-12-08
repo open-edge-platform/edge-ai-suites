@@ -824,7 +824,7 @@ void map_database::save_map_to_jsonfile(
   std::ofstream map_landmark_file(landmark_jsonfile_name);
   map_landmark_file << std::setw(8) << json_landmarks << std::endl;
   map_landmark_file.close();
-  spdlog::info("Sucessfully save map to json file and exit!");
+  spdlog::info("Successfully save map to json file and exit!");
 }
 
 void map_database::load_map_from_jsonfile(
@@ -838,7 +838,7 @@ void map_database::load_map_from_jsonfile(
     map_keyframe_file >> json_keyframes;
     map_landmark_file >> json_landmarks;
     from_json(cam_db, bow_vocab, bow_db, json_keyframes, json_landmarks);
-    spdlog::info("Sucessfully load map from json file!");
+    spdlog::info("Successfully load map from json file!");
   } else {
     spdlog::info("No map to be loaded!");
   }
