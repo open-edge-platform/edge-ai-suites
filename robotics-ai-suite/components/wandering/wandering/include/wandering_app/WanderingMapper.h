@@ -14,26 +14,25 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions
 and limitations under the License.
 */
-
-#include <memory>
-#include <functional>
-#include <future>
-
-#include "ament_index_cpp/get_package_share_directory.hpp"
-
-#include "rclcpp/rclcpp.hpp"
-#include "nav_msgs/msg/occupancy_grid.hpp"
-
-#include <nav2_msgs/action/navigate_to_pose.hpp>
+#ifndef WANDERING_APP__WANDERINGMAPPER_H_
+#define WANDERING_APP__WANDERINGMAPPER_H_
 
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
-#include <std_msgs/msg/bool.hpp>
-#include "geometry_msgs/msg/twist.hpp"
+#include <functional>
+#include <future>
+#include <memory>
+#include <string>
 
-#include "MapEngine.h"
+#include <nav2_msgs/action/navigate_to_pose.hpp>
+#include <std_msgs/msg/bool.hpp>
 #include "GoalCatcher.h"
+#include "MapEngine.h"
+#include "ament_index_cpp/get_package_share_directory.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+#include "nav_msgs/msg/occupancy_grid.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 class WanderingMapper : public rclcpp::Node
 {
@@ -51,7 +50,7 @@ protected:
   std::shared_ptr<GoalCatcher> goalCatcher_;
 
 private:
-  bool getRobotPosition(geometry_msgs::msg::PoseStamped &pose);
+  bool getRobotPosition(geometry_msgs::msg::PoseStamped & pose);
   void goToLocation(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
   void pauseWanderingCallback(const std_msgs::msg::Bool::ConstPtr msg);
   void resetMapHistory();
@@ -75,3 +74,5 @@ private:
   std::string costMapTopic_;
   bool shouldStop_, initRotate_, shouldResetAll_, shouldPauseWandering_;
 };
+
+#endif  // WANDERING_APP__WANDERINGMAPPER_H_

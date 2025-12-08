@@ -14,27 +14,27 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions
 and limitations under the License.
 */
+#ifndef WANDERING_APP__GOALCATCHER_H_
+#define WANDERING_APP__GOALCATCHER_H_
 
-#ifndef GoalCatcher_H
-#define GoalCatcher_H
 #include <functional>
 #include <future>
 #include <memory>
+#include <string>
 #include <thread>
 #include <vector>
 
+#include <nav2_msgs/action/navigate_to_pose.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
-
-#include "visualization_msgs/msg/marker_array.hpp"
-
-#include <nav2_msgs/action/navigate_to_pose.hpp>
 #include "nav2_util/robot_utils.hpp"
+#include "visualization_msgs/msg/marker_array.hpp"
 
 class GoalCatcher
 {
 public:
-  GoalCatcher(rclcpp::Node *node, std::string globalFrame, std::string robotFrame, double robotRadius);
+  GoalCatcher(
+    rclcpp::Node * node, std::string globalFrame, std::string robotFrame, double robotRadius);
 
   bool init();
   void send_goal(nav2_msgs::action::NavigateToPose::Goal::SharedPtr goal, rclcpp::Time timestamp);
@@ -47,11 +47,17 @@ public:
   std::vector<nav2_msgs::action::NavigateToPose::Goal> getBlockedGoals() const;
 
 private:
-    void goal_response_callback(const rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateToPose>::SharedPtr &goal_handle);
-    void feedback_callback(rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateToPose>::SharedPtr, const std::shared_ptr<const nav2_msgs::action::NavigateToPose::Feedback> feedback);
-    void result_callback(const rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateToPose>::WrappedResult &result);
-    bool isActionServerUp() const;
-  
+  void goal_response_callback(
+    const rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateToPose>::SharedPtr &
+      goal_handle);
+  void feedback_callback(
+    rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateToPose>::SharedPtr,
+    const std::shared_ptr<const nav2_msgs::action::NavigateToPose::Feedback> feedback);
+  void result_callback(
+    const rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateToPose>::WrappedResult &
+      result);
+  bool isActionServerUp() const;
+
   rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SharedPtr client_ptr_;
   nav2_msgs::action::NavigateToPose::Goal navGoal_;
   std::vector<nav2_msgs::action::NavigateToPose::Goal> blockedGoals_;
@@ -65,7 +71,7 @@ private:
   int32_t navigationTime_;
   visualization_msgs::msg::MarkerArray markersMsg_;
   double robotRadius_;
-  rclcpp::Node *node_;
+  rclcpp::Node * node_;
 };
 
-#endif
+#endif  // WANDERING_APP__GOALCATCHER_H_

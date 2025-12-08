@@ -15,95 +15,110 @@
 # See the License for the specific language governing permissions
 # and limitations under the License.
 
+import os
+
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import Command, LaunchConfiguration
 from launch.conditions import IfCondition, UnlessCondition
+from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
-import os
+
 
 def generate_launch_description():
-
     localization = LaunchConfiguration('localization')
     params_file = LaunchConfiguration('params_file')
     urdf_file = LaunchConfiguration('urdf_file')
     robot_type = LaunchConfiguration('robot_type')
 
-    remappings=[
-          ('rgbd_image','/camera/rgbd_image')]
+    remappings = [('rgbd_image', '/camera/rgbd_image')]
 
-    remapping_rs=[
-          ('rgbd_image','/camera/rgbd_image'),
-          ('rgb/image', '/camera/color/image_raw'),
-          ('rgb/camera_info', '/camera/color/camera_info'),
-          ('depth/image', '/camera/aligned_depth_to_color/image_raw')]
+    remapping_rs = [
+        ('rgbd_image', '/camera/rgbd_image'),
+        ('rgb/image', '/camera/color/image_raw'),
+        ('rgb/camera_info', '/camera/color/camera_info'),
+        ('depth/image', '/camera/aligned_depth_to_color/image_raw'),
+    ]
 
-    robot_desc = ParameterValue(Command(['xacro ', urdf_file, ' robot_type:=', robot_type]), value_type=str)
+    robot_desc = ParameterValue(
+        Command(['xacro ', urdf_file, ' robot_type:=', robot_type]), value_type=str
+    )
     rsp_params = {'robot_description': robot_desc}
 
-    return LaunchDescription([
-
-        DeclareLaunchArgument(
-            'qos', default_value='2',
-            description='QoS used for input sensor topics'),
-
-        DeclareLaunchArgument(
-            'localization', default_value='false',
-            description='Launch in localization mode.'),
-
-        DeclareLaunchArgument(
-            'params_file',
-            default_value=os.path.join(get_package_share_directory('wandering_aaeon_tutorial'), 'params', 'aaeon_nav.param.yaml'),
-            description='Full path to the ROS2 parameters file to use for all launched nodes'),
-
-        DeclareLaunchArgument(
-            'urdf_file',
-            default_value=os.path.join(get_package_share_directory('wandering_aaeon_tutorial'), 'urdf', 'aaeon.urdf.xacro'),
-            description='Full path to the robot URDF file'),
-
-        DeclareLaunchArgument(
-            'robot_type',
-            default_value='original',
-            description='Robot type from Xacro URDF file, original (default) or extended'),
-
-        # Nodes to launch
-        Node(
-            package='robot_state_publisher',
-            executable='robot_state_publisher',
-            name='robot_state_publisher',
-            output='screen',
-            parameters=[rsp_params, {'use_sim_time':False}, params_file],
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                'qos', default_value='2', description='QoS used for input sensor topics'
             ),
-
-        Node(
-            package='joint_state_publisher',
-            executable='joint_state_publisher',
-            name='joint_state_publisher',
-            output='screen',
-            parameters=[rsp_params, {'use_sim_time':False}, params_file],
+            DeclareLaunchArgument(
+                'localization', default_value='false', description='Launch in localization mode.'
             ),
-
-        # SLAM mode:
-        Node(
-            package='rtabmap_sync', executable='rgbd_sync', remappings=remapping_rs,
-            parameters=[{'approx_sync' : False }]
+            DeclareLaunchArgument(
+                'params_file',
+                default_value=os.path.join(
+                    get_package_share_directory('wandering_aaeon_tutorial'),
+                    'params',
+                    'aaeon_nav.param.yaml',
+                ),
+                description='Full path to the ROS2 parameters file to use for all launched nodes',
             ),
-
-        Node(
-            condition=UnlessCondition(localization),
-            package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=[params_file],
-            remappings=remappings,
-            arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
-
-        # Localization mode:
-        Node(
-            condition=IfCondition(localization),
-            package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=[params_file,
-              {'Mem/IncrementalMemory':'False',
-               'Mem/InitWMWithAllNodes':'True'}],
-            remappings=remappings),
-   ])
+            DeclareLaunchArgument(
+                'urdf_file',
+                default_value=os.path.join(
+                    get_package_share_directory('wandering_aaeon_tutorial'),
+                    'urdf',
+                    'aaeon.urdf.xacro',
+                ),
+                description='Full path to the robot URDF file',
+            ),
+            DeclareLaunchArgument(
+                'robot_type',
+                default_value='original',
+                description='Robot type from Xacro URDF file, original (default) or extended',
+            ),
+            # Nodes to launch
+            Node(
+                package='robot_state_publisher',
+                executable='robot_state_publisher',
+                name='robot_state_publisher',
+                output='screen',
+                parameters=[rsp_params, {'use_sim_time': False}, params_file],
+            ),
+            Node(
+                package='joint_state_publisher',
+                executable='joint_state_publisher',
+                name='joint_state_publisher',
+                output='screen',
+                parameters=[rsp_params, {'use_sim_time': False}, params_file],
+            ),
+            # SLAM mode:
+            Node(
+                package='rtabmap_sync',
+                executable='rgbd_sync',
+                remappings=remapping_rs,
+                parameters=[{'approx_sync': False}],
+            ),
+            Node(
+                condition=UnlessCondition(localization),
+                package='rtabmap_slam',
+                executable='rtabmap',
+                output='screen',
+                parameters=[params_file],
+                remappings=remappings,
+                arguments=['-d'],
+            ),  # This will delete the previous database (~/.ros/rtabmap.db)
+            # Localization mode:
+            Node(
+                condition=IfCondition(localization),
+                package='rtabmap_slam',
+                executable='rtabmap',
+                output='screen',
+                parameters=[
+                    params_file,
+                    {'Mem/IncrementalMemory': 'False', 'Mem/InitWMWithAllNodes': 'True'},
+                ],
+                remappings=remappings,
+            ),
+        ]
+    )

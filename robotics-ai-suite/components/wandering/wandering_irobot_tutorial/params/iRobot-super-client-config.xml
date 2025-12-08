@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 <dds>
   <profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
     <participant profile_name="super_client_profile" is_default_profile="true">
