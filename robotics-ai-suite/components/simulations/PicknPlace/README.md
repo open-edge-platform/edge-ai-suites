@@ -74,9 +74,9 @@ The demonstration workflow is as follows:
 **Note**: This demo prioritizes the representation of combined stack usage over intricate details. Some assumptions have been made for simplicity. For instance, the item's location on the conveyor belt is sourced directly from Gazebo without integrating perception systems. Additionally, while ARM1 is present in the simulation, it remains static and does not perform any actions at this time.
 
 ## Other Details
-**State Machine Implementation**: The demo employ the Smach library for designing the state machine that serves as the arm1 controller in Python. SMACH is a valuable tool for creating, managing, and examining hierarchical state machines for robotic operations.
+**State Machine Implementation**: The demo employs the Smach library for designing the state machine that serves as the arm1 controller in Python. SMACH is a valuable tool for creating, managing, and examining hierarchical state machines for robotic operations.
 
-**Moveit wrapper**: The moveit commands are send using a modified version of pymoveit2, courtesy of Andrej Orsula. This version introduces several enhancements and rectifies existing bugs. However, with the recent availability of Python bindings in the latest Moveit2 stack, it's advisable to use that instead.
+**Moveit wrapper**: The moveit commands are sent using a modified version of pymoveit2, courtesy of Andrej Orsula. This version introduces several enhancements and rectifies existing bugs. However, with the recent availability of Python bindings in the latest Moveit2 stack, it's advisable to use that instead.
 
 **Object location**: This demonstration bypasses perception mechanisms. Instead, object locations are sourced from the get_entity_state service, courtesy of the Gazebo plugin. For prospective integrations, the objects on the conveyor are marked with Aruco markers, readying them for vision-based use cases.
 

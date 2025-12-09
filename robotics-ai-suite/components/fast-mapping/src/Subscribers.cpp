@@ -14,7 +14,7 @@
 CameraSubscribers::CameraSubscribers(
   std::shared_ptr<rclcpp::Node> node, FrameQueue & frame_queue,
   std::function<void(const sensor_msgs::msg::CameraInfo::ConstSharedPtr msg)> setIntrinsics)
-: setIntrinsicsCb_(setIntrinsics), frame_queue_(frame_queue)
+: setIntrinsicsCb_(std::move(setIntrinsics)), frame_queue_(frame_queue)
 {
   rclcpp::QoS qos(10);
   auto rmw_qos_profile = qos.get_rmw_qos_profile();
@@ -37,7 +37,7 @@ CameraSubscribers::CameraSubscribers(
   sub_depth_2_.subscribe(node, camera_2_topic, rmw_qos_profile);
   sub_depth_3_.subscribe(node, camera_3_topic, rmw_qos_profile);
   sub_depth_4_.subscribe(node, camera_4_topic, rmw_qos_profile);
-  sub_caminfo_.subscribe(node, camera_1_info_topic, rmw_qos_profile);
+  sub_caminfo_.subscribe(std::move(node), camera_1_info_topic, rmw_qos_profile);
 
   if (depthCameras_ == 4) {
     sync_4_.reset(new sync4(

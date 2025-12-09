@@ -2,26 +2,30 @@
 // Copyright (C) 2025 Intel Corporation
 #include "../include/send_localization.hpp"
 
-SendLocalization::SendLocalization(const rclcpp::NodeOptions & options)
-: Node("nav2_send_goal")
+SendLocalization::SendLocalization(const rclcpp::NodeOptions & options) : Node("nav2_send_goal")
 {
   last_known_pose_ = true;
   amcl_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    "amcl_pose",
-    rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable(),
+    "amcl_pose", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable(),
     std::bind(&SendLocalization::amcl_pose_callback, this, _1));
 
-  fast_global_loc_client_ = node->create_client<nav2_msgs::srv::GlobalLocalization>(
-    "fast_global_localization");
+  // Conditional client creation based on ROS2 distribution
+#ifdef ROS2_HUMBLE
+  fast_global_loc_client_ =
+    this->create_client<nav2_msgs::srv::GlobalLocalization>("fast_global_localization");
+#else  // ROS2_JAZZY or other
+  fast_global_loc_client_ =
+    this->create_client<std_srvs::srv::Empty>("reinitialize_global_localization");
+#endif
 
   global_loc_client_ =
-    node->create_client<std_srvs::srv::Empty>("reinitialize_global_localization");
+    this->create_client<std_srvs::srv::Empty>("reinitialize_global_localization");
 
-  clear_entire_costmap_ = node->create_client<nav2_msgs::srv::ClearEntireCostmap>(
+  clear_entire_costmap_ = this->create_client<nav2_msgs::srv::ClearEntireCostmap>(
     "global_costmap/clear_entirely_global_costmap");
 
-  marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
-    "localization_waypoints", 1);
+  marker_pub_ =
+    this->create_publisher<visualization_msgs::msg::MarkerArray>("localization_waypoints", 1);
 
   relocalization_request_srv_ = create_service<std_srvs::srv::Empty>(
     "request_relocalization",
@@ -34,8 +38,7 @@ void SendLocalization::ReinitializeGlobalLocalization()
   while (!global_loc_client_->wait_for_service(1s)) {
     if (!rclcpp::ok()) {
       RCLCPP_ERROR(
-        rclcpp::get_logger(
-          "rclcpp"), "Interrupted while waiting for the service. Exiting.");
+        rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
     }
     RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
   }
@@ -59,6 +62,7 @@ void SendLocalization::SendLocalizationCMDLastKNown()
   }
   reverse(last_known_poses_.begin(), last_known_poses_.end());
 }
+
 bool SendLocalization::SendLocalizationCMD()
 {
   vector<inav_util::Rank> ranks;
@@ -68,7 +72,6 @@ bool SendLocalization::SendLocalizationCMD()
   vector<double> weight;
 
   vector<double> file_weights;
-  auto request = std::make_shared<nav2_msgs::srv::GlobalLocalization::Request>();
 
   if (last_known_pose_) {
     SendLocalizationCMDLastKNown();
@@ -86,11 +89,8 @@ bool SendLocalization::SendLocalizationCMD()
       inav_util::Rank rank;
       rank.position.x = last_known_poses_[i][0];
       rank.position.y = last_known_poses_[i][1];
-
       rank.sigma = (2.0 * (last_known_poses_[i][2] / last_known_poses_weights_sum_));
-
       rank.weight = last_known_poses_[i][2] / last_known_poses_weights_sum_;
-
       ranks.push_back(rank);
     }
   } else {
@@ -112,40 +112,58 @@ bool SendLocalization::SendLocalizationCMD()
       sum_weight += std::stod(w_value);
       line = "";
     }
+    if (sum_weight == 0.0 || FP_ZERO == std::fpclassify(sum_weight) ||
+        FP_NAN == std::fpclassify(sum_weight) || FP_INFINITE == std::fpclassify(sum_weight)) {
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Sum of weights is zero!");
+    }
     for (int i = 0; i < weight.size(); i++) {
       sig.push_back(0.25);
       weight[i] = ((double)weight[i] / sum_weight);
     }
     rank_file.close();
   }
+  
   publishWaypointMarkers();
+
+  // Conditional request creation and service call based on ROS2 distribution
+#ifdef ROS2_HUMBLE
+  auto request = std::make_shared<nav2_msgs::srv::GlobalLocalization::Request>();
+  
+  // Set request parameters for Humble
   request->center_x = center_x;
   request->center_y = center_y;
   request->sigma = sig;
   request->weights = weight;
+  
   while (!fast_global_loc_client_->wait_for_service(1s)) {
     if (!rclcpp::ok()) {
-      RCLCPP_ERROR(
-        rclcpp::get_logger(
-          "rclcpp"), "Interrupted while waiting for the service. Exiting.");
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
     }
-    RCLCPP_INFO(
-      rclcpp::get_logger(
-        "rclcpp"), "fast global localization service not available, waiting again...");
+    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "fast global localization service not available, waiting again...");
   }
-
   auto result = fast_global_loc_client_->async_send_request(request);
+  
+#else  // ROS2_JAZZY or other
+  auto request = std::make_shared<std_srvs::srv::Empty::Request>();
+  
+  // For Jazzy, we can't pass parameters with Empty service
+  RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Using simplified localization for Jazzy - weighted parameters not supported");
+  
+  while (!fast_global_loc_client_->wait_for_service(1s)) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
+    }
+    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "reinitialize global localization service not available, waiting again...");
+  }
+  auto result = fast_global_loc_client_->async_send_request(request);
+#endif
 
   auto request_clear_costmap = std::make_shared<nav2_msgs::srv::ClearEntireCostmap::Request>();
   while (!clear_entire_costmap_->wait_for_service(1s)) {
     if (!rclcpp::ok()) {
-      RCLCPP_ERROR(
-        rclcpp::get_logger(
-          "rclcpp"), "Interrupted while waiting for the service. Exiting.");
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
     }
-    RCLCPP_INFO(
-      rclcpp::get_logger(
-        "rclcpp"), "clear entire costmap service not available, waiting again...");
+    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "clear entire costmap service not available, waiting again...");
   }
   auto result_clear_costmap = clear_entire_costmap_->async_send_request(request_clear_costmap);
   return center_x.size() > 0 ? true : false;
@@ -165,8 +183,7 @@ void SendLocalization::amcl_pose_callback(
       while (!clear_entire_costmap_->wait_for_service(1s)) {
         if (!rclcpp::ok()) {
           RCLCPP_ERROR(
-            rclcpp::get_logger(
-              "rclcpp"), "Interrupted while waiting for the service. Exiting.");
+            rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
         }
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
       }
@@ -180,10 +197,10 @@ void SendLocalization::amcl_pose_callback(
 
 bool SendLocalization::isLocalized()
 {
-  if (current_pose_->pose.covariance[cov_x_] < x_tol_ &&
+  if (
+    current_pose_->pose.covariance[cov_x_] < x_tol_ &&
     current_pose_->pose.covariance[cov_y_] < y_tol_ &&
-    current_pose_->pose.covariance[cov_a_] < rot_tol_)
-  {
+    current_pose_->pose.covariance[cov_a_] < rot_tol_) {
     return true;
   }
 
@@ -191,9 +208,9 @@ bool SendLocalization::isLocalized()
 }
 
 void SendLocalization::relocalizationCallback(
-  const std::shared_ptr<rmw_request_id_t>/*request_header*/,
-  const std::shared_ptr<std_srvs::srv::Empty::Request>/*req*/,
-  std::shared_ptr<std_srvs::srv::Empty::Response>/*res*/)
+  const std::shared_ptr<rmw_request_id_t> /*request_header*/,
+  const std::shared_ptr<std_srvs::srv::Empty::Request> /*req*/,
+  std::shared_ptr<std_srvs::srv::Empty::Response> /*res*/)
 {
   SendLocalizationCMD();
 }

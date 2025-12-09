@@ -1,6 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
+//
+// NOTE: This file contains functionality that downloads models from Ultralytics.
+// Commercial use requires a commercial license from Ultralytics.
+// See: https://ultralytics.com/license
 
 #pragma once
 

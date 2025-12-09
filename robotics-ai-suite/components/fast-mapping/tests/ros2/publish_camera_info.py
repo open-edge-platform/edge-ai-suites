@@ -33,10 +33,11 @@
 #
 # Revision $Id$
 
-# Publish uninitialized sensor_msgs.msg.Image messages
-# to the 'camera/aligned_depth_to_color/image_raw' topic
-# In case of an empty CameraInfo message, FastMapping should not crash and
-# an exception is to be caught by FastMapping.
+"""Publish uninitialized sensor_msgs.msg.Image messages
+to the 'camera/aligned_depth_to_color/image_raw' topic
+In case of an empty CameraInfo message, FastMapping should not crash and
+an exception is to be caught by FastMapping.
+"""
 
 import os
 import signal
@@ -47,29 +48,34 @@ import rclpy
 from sensor_msgs.msg import CameraInfo
 
 
-def help():
+def exit_with_tip():
+    """Prints helpfull message if FastMapping node is not running."""
     print("ERROR: FastMapping node must be running before starting this test...")
     print("ros2 run fast_mapping fast_mapping node")
-    exit(1)
+    sys.exit(1)
 
 
+# pylint: disable=duplicate-code,inconsistent-return-statements
 def get_pid(process_name="fast_mapping_node"):
+    """Get the PID of the FastMapping node process or exit if it not running"""
     try:
         pid = subprocess.check_output(["pidof", process_name])
         return int(pid)
     except subprocess.CalledProcessError:
-        help()
+        exit_with_tip()
 
 
+# pylint: disable=duplicate-code
 def pid_is_alive(pid):
+    """Checks if process with given PID is alive"""
     try:
         os.kill(pid, 0)
     except OSError:
         return False
-    else:
-        return True
+    return True
 
 
+# pylint: disable=duplicate-code
 if __name__ == "__main__":
     rclpy.init(args=sys.argv)
 
@@ -84,11 +90,11 @@ if __name__ == "__main__":
     pub.publish(cameraInfo)
 
     # Check if FastMapping has crashed
-    fm_pid = get_pid()
+    FM_PID = get_pid()
 
-    success = pid_is_alive(fm_pid)
-    if success:
+    SUCCESS = pid_is_alive(FM_PID)
+    if SUCCESS:
         print("Test passed")
-        os.kill(fm_pid, signal.SIGKILL)
+        os.kill(FM_PID, signal.SIGKILL)
     else:
         print("Test failed")

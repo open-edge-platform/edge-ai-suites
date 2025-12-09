@@ -9,6 +9,22 @@ project(send_localization)
 set(CMAKE_CXX_STANDARD 17)
 set(GCC_COVERAGE_COMPILE_FLAGS "-fno-strict-overflow -fno-delete-null-pointer-checks")
 
+# Detect ROS2 distribution
+if(DEFINED ENV{ROS_DISTRO})
+    set(ROS_DISTRO $ENV{ROS_DISTRO})
+else()
+    execute_process(COMMAND bash -c "source /opt/ros/*/setup.bash && echo $ROS_DISTRO" OUTPUT_VARIABLE ROS_DISTRO OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+
+message(STATUS "Building for ROS2 distribution: ${ROS_DISTRO}")
+
+# Set compile definitions based on ROS distribution
+if(ROS_DISTRO STREQUAL "jazzy")
+    add_compile_definitions(ROS2_JAZZY)
+elseif(ROS_DISTRO STREQUAL "humble")
+    add_compile_definitions(ROS2_HUMBLE)
+endif()
+
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(nav2_msgs REQUIRED)
@@ -51,8 +67,6 @@ target_link_libraries(${executable_name} ${library_name})
 ament_target_dependencies(${executable_name}
   ${dependencies}
 )
-
-# rclcpp_components_register_nodes(${library_name} "SendLocalization")
 
 install(TARGETS ${library_name}
   ARCHIVE DESTINATION lib

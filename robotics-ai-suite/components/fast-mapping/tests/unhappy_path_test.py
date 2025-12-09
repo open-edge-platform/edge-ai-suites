@@ -27,6 +27,7 @@ def verify_fast_mapping_node():
     yield
 
 
+# pylint: disable=duplicate-code
 def test_fast_mapping_handles_empty_image_messages():
     """Test that FastMapping handles uninitialized Image messages without crashing."""
     # Start fast_mapping_node in background
@@ -48,6 +49,7 @@ def test_fast_mapping_handles_empty_image_messages():
         )
 
         # Check that the image publisher script succeeded and printed "Test passed"
+        # pylint: disable=duplicate-code
         assert image_test_process.returncode == 0, (
             f"Image publisher script failed: {image_test_process.stderr}"
         )
