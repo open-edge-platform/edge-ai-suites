@@ -10,6 +10,7 @@ This page provides detailed hardware, software, platform requirements, and suppo
 - **Storage**: At least 50 GB free (for models and logs)
 - **GPU/Accelerator**: Intel® iGPU (Core Ultra Series 1, Arc GPU, or higher) for summarization acceleration
 - **NPU**: Intel® NPU (Core Ultra Series 1 or higher) for Video pipelines
+- **NPU Driver**: Please download and install the latest version from [Intel NPU Driver Download Page](https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html)
 - **Python**: 3.12
 - **Node.js**: v18+ (for frontend)
 
