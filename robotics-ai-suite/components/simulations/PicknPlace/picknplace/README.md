@@ -22,9 +22,9 @@ ROS2: Tested on Humble
 **Clone picknplace and depending repos**
 
 ```bash
-git clone --recursive https://github.com/open-edge-platform/edge-ai-suites
+git clone --recursive https://github.com/open-edge-platform/edge-ai-suites -b release-2025.2.0
 # If you have cloned the repo without the --recursive flag, run the following command to remedy:
-#git submodule update --init --recursive
+# git submodule update --init --recursive
 
 mkdir -p robot_ws/src
 cp -r edge-ai-suites/robotics-ai-suite/components/simulations robot_ws/src
