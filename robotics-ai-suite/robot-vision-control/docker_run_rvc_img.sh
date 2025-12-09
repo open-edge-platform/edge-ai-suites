@@ -64,7 +64,8 @@ else
         rvc-exec:${ROS_DISTRO} \
         /bin/bash
 
-if [[ $? -ne 0 ]]; then
-    echo "Docker run failed."
-    exit 1
+    if [[ $? -ne 0 ]]; then
+        echo "Docker run failed."
+        exit 1
+    fi 
 fi

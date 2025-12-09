@@ -5,11 +5,12 @@ project(rvc_use_case_binaries)
 
 find_package(ament_cmake REQUIRED)
 
-#install(FILES
-#  ai_model_file.bin
-#  DESTINATION
-#  share/${PROJECT_NAME}/ai_models
-#  )
+install(FILES
+  ai_models/yoloxorange.xml
+  ai_models/yoloxorange.bin
+  DESTINATION
+  share/${PROJECT_NAME}/ai_models
+  )
 
 install(FILES
   pcd_objects/cube.pcd
