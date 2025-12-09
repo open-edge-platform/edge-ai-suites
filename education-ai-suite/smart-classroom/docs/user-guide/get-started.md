@@ -58,12 +58,6 @@ pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download
 **e. Install DL Streamer**
 Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/edge-ai-libraries/releases) Extract to a new folder, for example `C:\\dlstreamer_dlls`.
 
-Step 2: Run setup script
-Open a PowerShell prompt as and administrator, run the following script and follow instructions:
-```
-cd C:\\dlstreamer_dlls
-.\setup_dls_env.ps1
-```
 For details, refer to [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/get_started/install/install_guide_windows.html).
 
 ## Step 2: Configuration
@@ -103,6 +97,9 @@ To use IPEX for summarization, ensure:
 - The configuration (`smart-classroom/config.yaml`) is updated as shown below:
 
 ```bash
+asr:
+  provider: funasr
+  name: paraformer-zh
 summarizer:
   provider: ipex
 ```
@@ -110,6 +107,13 @@ summarizer:
 **Important: After updating the configuration, reload the application for changes to take effect.**
 
 ## Step 3: Run the Application
+
+Run setup script
+Open a PowerShell prompt as and administrator, run the following script and follow instructions:
+```
+cd C:\\dlstreamer_dlls
+.\setup_dls_env.ps1
+```
 
 Activate the environment before running the application:
 
@@ -178,6 +182,16 @@ If you changed the port, adjust the URL accordingly.
   ```
 
   Delete the models folder from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
+- If you see below error while running dls setup script,
+  ``` bash
+ .\setup_dls_env.ps1
+    CategoryInfo          : SecurityError: (:) [], PSSecurityException
+    FullyQualifiedErrorId : UnauthorizedAccess
+  ```
+ Run below command,
+ ``` bash
+ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+ ```
 
 ### Known Issues
  
