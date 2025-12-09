@@ -8,7 +8,7 @@ Key use cases include:
 
 | Sample Application | Definitions | User Docs       |
 |:-------------------|:------------|:----------------|
-| **Automated Self-Checkout** ) | Product recognition (detection, classification, and tracking), full pipeline workflow (product, weight, text, and barcode), and age verification. | [Link](https://intel-retail.github.io/documentation/use-cases/automated-self-checkout/automated-self-checkout.html) |
+| **Automated Self-Checkout** | Product recognition (detection, classification, and tracking), full pipeline workflow (product, weight, text, and barcode), and age verification. | [Link](https://intel-retail.github.io/documentation/use-cases/automated-self-checkout/automated-self-checkout.html) |
 | **Loss Prevention** | Fake scans, items in basket, multi-product identification, product switching, shopper behavior (obscuring/hiding an item), and event video summation. | [Link](https://intel-retail.github.io/documentation/use-cases/loss-prevention/loss-prevention.html) |
 | **Order Accuracy** | An easily repeatable process for generating performance numbers across multi modalities on Intel’s heterogenous compute. The tool helps determine compute requirements for scaling retail edge AI workloads. |  [Link](https://intel-retail.github.io/documentation/use-cases/order-accuracy/order-accuracy.html) |
 
