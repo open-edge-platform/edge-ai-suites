@@ -4,7 +4,7 @@ This tutorial guides guides you through creating an autonomous mobile robot capa
 exploring and mapping an area. It involves adding an Intel® compute system, placing a
 Intel® RealSense™ camera on top of any robot base, and using the Autonomous Mobile Robot software.
 
-Use the [robot-keyboard-teleop](./robot-keyboard-teleop.rst) ROS 2 node to validate that the robot kit's hardware
+Use the [robot-keyboard-teleop](./robot-keyboard-teleop.md) ROS 2 node to validate that the robot kit's hardware
 setup has been done correctly.
 
 ## Requirements
@@ -100,7 +100,7 @@ The Autonomous Mobile Robot provides the following examples within Deb packages:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 In ``ros-jazzy-aaeon-ros2-amr-interface`` Deb package:
 
@@ -109,7 +109,7 @@ In ``ros-jazzy-aaeon-ros2-amr-interface`` Deb package:
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 In ``ros-humble-aaeon-ros2-amr-interface`` Deb package:
 
@@ -131,7 +131,7 @@ To start the node on the AAEON UP Xtreme i11 Robotic Development Kit, you can re
 
   <!--hide_directive::::{tab-set}hide_directive-->
   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-  <!--hide_directive:sync: tab1hide_directive-->
+  <!--hide_directive:sync: jazzyhide_directive-->
 
   ```bash
   sudo apt update
@@ -140,7 +140,7 @@ To start the node on the AAEON UP Xtreme i11 Robotic Development Kit, you can re
 
   <!--hide_directive:::hide_directive-->
   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-  <!--hide_directive:sync: tab2hide_directive-->
+  <!--hide_directive:sync: humblehide_directive-->
 
   ```bash
   sudo apt update
@@ -167,7 +167,7 @@ To start the node on the AAEON UP Xtreme i11 Robotic Development Kit, you can re
 
   <!--hide_directive::::{tab-set}hide_directive-->
   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-  <!--hide_directive:sync: tab1hide_directive-->
+  <!--hide_directive:sync: jazzyhide_directive-->
 
   ```bash
   vi /opt/ros/jazzy/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -175,7 +175,7 @@ To start the node on the AAEON UP Xtreme i11 Robotic Development Kit, you can re
 
   <!--hide_directive:::hide_directive-->
   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-  <!--hide_directive:sync: tab2hide_directive-->
+  <!--hide_directive:sync: humblehide_directive-->
 
   ```bash
   vi /opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -184,11 +184,18 @@ To start the node on the AAEON UP Xtreme i11 Robotic Development Kit, you can re
   <!--hide_directive:::hide_directive-->
   <!--hide_directive::::hide_directive-->
 
+- Modify permissions to grant access for a user to USB device and run ROS2 commands without sudo privileges. Make sure to use proper ``ttyUSB`` device.
+
+  ```bash
+  sudo chown $(whoami):$(id -gn) /dev/<ttyUSB> # e.g., /dev/ttyUSB0
+  sudo chmod a+rw /dev/<ttyUSB>
+  ```
+
 - Start the motor control node.
 
   <!--hide_directive::::{tab-set}hide_directive-->
   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-  <!--hide_directive:sync: tab1hide_directive-->
+  <!--hide_directive:sync: jazzyhide_directive-->
 
   ```bash
   AAEON_NODE_CONFIG_FILE=/opt/ros/jazzy/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -202,7 +209,7 @@ To start the node on the AAEON UP Xtreme i11 Robotic Development Kit, you can re
 
   <!--hide_directive:::hide_directive-->
   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-  <!--hide_directive:sync: tab2hide_directive-->
+  <!--hide_directive:sync: humblehide_directive-->
 
   ```bash
   AAEON_NODE_CONFIG_FILE=/opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -346,13 +353,13 @@ The Autonomous Mobile Robot navigation full stack contains numerous components d
 
 #### Create a Parameter File for Your Robotic Kit
 
-The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial.rst) tutorial provides a parameter file for the AAEON UP Xtreme i11 Robotic Development Kit, that file can be used as a template to create a parameter file for your robotic kit.
+The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial.md) tutorial provides a parameter file for the AAEON UP Xtreme i11 Robotic Development Kit, that file can be used as a template to create a parameter file for your robotic kit.
 
 - First install the tutorial.
 
   <!--hide_directive::::{tab-set}hide_directive-->
   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-  <!--hide_directive:sync: tab1hide_directive-->
+  <!--hide_directive:sync: jazzyhide_directive-->
 
   ```bash
   sudo apt update
@@ -361,7 +368,7 @@ The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wande
 
   <!--hide_directive:::hide_directive-->
   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-  <!--hide_directive:sync: tab2hide_directive-->
+  <!--hide_directive:sync: humblehide_directive-->
 
   ```bash
   sudo apt update
@@ -375,7 +382,7 @@ The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wande
 
   <!--hide_directive::::{tab-set}hide_directive-->
   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-  <!--hide_directive:sync: tab1hide_directive-->
+  <!--hide_directive:sync: jazzyhide_directive-->
 
   ```bash
   # Replace <your_robot>_robot_nav to a name that makes sense to your robotic kit.
@@ -384,7 +391,7 @@ The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wande
 
   <!--hide_directive:::hide_directive-->
   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-  <!--hide_directive:sync: tab2hide_directive-->
+  <!--hide_directive:sync: humblehide_directive-->
 
   ```bash
   # Replace <your_robot>_robot_nav to a name that makes sense to your robotic kit.
@@ -398,7 +405,7 @@ The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wande
 
   <!--hide_directive::::{tab-set}hide_directive-->
   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-  <!--hide_directive:sync: tab1hide_directive-->
+  <!--hide_directive:sync: jazzyhide_directive-->
 
   ```bash
   vi /opt/ros/jazzy/share/wandering_aaeon_tutorial/params/<your_robot>_nav.param.yaml
@@ -406,7 +413,7 @@ The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wande
 
   <!--hide_directive:::hide_directive-->
   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-  <!--hide_directive:sync: tab2hide_directive-->
+  <!--hide_directive:sync: humblehide_directive-->
 
   ```bash
   vi /opt/ros/humble/share/wandering_aaeon_tutorial/params/<your_robot>_nav.param.yaml
@@ -424,7 +431,7 @@ The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wande
 
    <!--hide_directive::::{tab-set}hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    from: ``params_file:=/opt/ros/jazzy/share/ros2_amr_interface/params/<your_robot>_node_params.yaml``
 
@@ -432,7 +439,7 @@ The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wande
 
    <!--hide_directive:::hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    from: ``params_file:=/opt/ros/humble/share/ros2_amr_interface/params/<your_robot>_node_params.yaml``
 
@@ -452,11 +459,11 @@ The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wande
 2. Check that Autonomous Mobile Robot environment is set:
 
    Run the following script to create a map by using the
-   [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial.rst).
+   [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial.md).
 
    <!--hide_directive::::{tab-set}hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: tab1hide_directive-->
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    source /opt/ros/jazzy/setup.bash
@@ -466,7 +473,7 @@ The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wande
 
    <!--hide_directive:::hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: tab2hide_directive-->
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    source /opt/ros/humble/setup.bash
@@ -477,7 +484,7 @@ The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wande
    <!--hide_directive:::hide_directive-->
    <!--hide_directive::::hide_directive-->
 
-3. Follow the [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial.rst).
+3. Follow the [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wandering_app/wandering-aaeon-tutorial.md).
 
 #### Troubleshooting
 

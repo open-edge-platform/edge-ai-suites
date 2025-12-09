@@ -1,0 +1,48 @@
+Source: ros-jazzy-rvc-panel-rviz2-plugin
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+    qtbase5-dev,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-auto <!nocheck>,
+    ros-jazzy-ament-lint-common <!nocheck>,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-gui-settings,
+    ros-jazzy-image-transport,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rvc-messages,
+    ros-jazzy-rviz-common,
+    ros-jazzy-rviz-default-plugins,
+    ros-jazzy-rviz-rendering,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-state-machine-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-std-srvs,
+    ros-jazzy-tf2,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-ros
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-rvc-panel-rviz2-plugin
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+    libqt5core5a,
+    libqt5gui5,
+    libqt5widgets5,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-gui-settings,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rviz-common,
+    ros-jazzy-rviz-default-plugins,
+    ros-jazzy-rviz-rendering,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-std-srvs,
+    ros-jazzy-tf2,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-ros
+Description: RVC controls for RViz.

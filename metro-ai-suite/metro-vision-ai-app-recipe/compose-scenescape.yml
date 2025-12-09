@@ -222,7 +222,7 @@ services:
       - "5432:5432"
 
   web:
-    image: intel/scenescape-manager:v2025.2-rc3
+    image: intel/scenescape-manager:v2025.2
     init: true
     networks:
       scenescape:
@@ -280,7 +280,7 @@ services:
     restart: on-failure:5
 
   scene:
-    image: intel/scenescape-controller:v2025.2-rc3
+    image: intel/scenescape-controller:v2025.2
     init: true
     environment:
       - http_proxy=${http_proxy}

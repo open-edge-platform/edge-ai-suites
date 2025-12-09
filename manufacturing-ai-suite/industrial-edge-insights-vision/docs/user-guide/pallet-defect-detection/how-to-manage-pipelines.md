@@ -31,8 +31,8 @@ The following is an example of the pallet defect detection pipeline, which is in
 ```
 
 Customize the pipeline according to your needs. For details, see the following DL Streamer Pipeline Server documentation:
-- [Launch configurable pipelines](https://docs.openedgeplatform.intel.com/edge-ai-libraries/dlstreamer-pipeline-server/main/user-guide/how-to-launch-configurable-pipelines.html)
-- [Autostart pipelines](https://docs.openedgeplatform.intel.com/edge-ai-libraries/dlstreamer-pipeline-server/main/user-guide/how-to-autostart-pipelines.html)
+- [Launch configurable pipelines](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/how-to-launch-configurable-pipelines.html)
+- [Autostart pipelines](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/how-to-autostart-pipelines.html)
 
 ## Start the Pipeline
 

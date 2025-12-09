@@ -1,9 +1,27 @@
 # Prepare the Target System
 
-## Install Canonical Ubuntu 22.04 LTS (Jammy Jellyfish)
+## Install Canonical Ubuntu OS
 
 Intel recommends a fresh installation of the Ubuntu distribution of the Linux OS
 for your target system, but this is not mandatory.
+
+Install Ubuntu 22.04 (Jammy Jellyfish) or Ubuntu 24.04 (Noble Numat). Your choice of OS version determines the compatible ROS distribution (Humble Hawksbill or Jazzy Jalisco, respectively).
+
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Ubuntu 24.04**
+<!--hide_directive:sync: jazzyhide_directive-->
+
+Depending on your processor type, select one of the following Canonical Ubuntu
+24.04 LTS variants:
+
+|Processor type|Canonical Ubuntu 24.04 LTS variant|
+|-|-|
+|Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numat)](https://releases.ubuntu.com/24.04) Desktop image|
+|Other Intel® processors, including:<br>11th/12th/13th Generation Intel® Core™ Processors,<br>Intel® Processor N-series (products formerly Alder Lake-N)|24.04 LTS image for Intel IoT platforms, available at [Download Ubuntu image for Intel® IoT platforms](https://ubuntu.com/download/iot/intel-iot)|
+
+<!--hide_directive:::
+:::{tab-item}hide_directive-->  **Ubuntu 22.04**
+<!--hide_directive:sync: humblehide_directive-->
 
 Depending on your processor type, select one of the following Canonical Ubuntu
 22.04 LTS variants:
@@ -12,6 +30,9 @@ Depending on your processor type, select one of the following Canonical Ubuntu
 |-|-|
 |Intel® Core™ Ultra Processors|[Ubuntu OS version 22.04 LTS (Jammy Jellyfish)](https://releases.ubuntu.com/22.04) Desktop image|
 |Other Intel® processors, including:<br>11th/12th/13th Generation Intel® Core™ Processors,<br>Intel® Processor N-series (products formerly Alder Lake-N)|22.04 LTS image for Intel IoT platforms, available at [Download Ubuntu image for Intel® IoT platforms](https://ubuntu.com/download/iot/intel-iot)|
+
+<!--hide_directive:::
+::::hide_directive-->
 
 Visit the Canonical Ubuntu website to see the detailed installation instructions: [Install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
 

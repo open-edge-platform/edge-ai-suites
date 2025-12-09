@@ -24,6 +24,7 @@ if [[ "$NPU_ON" == "true" ]]; then
         -e http_proxy=${http_proxy} \
         -e https_proxy=${https_proxy} \
         -e LD_LIBRARY_PATH=/usr/local/lib \
+        -e DISPLAY_NEW_PLATFORM=1 \
         --cap-add=SYS_ADMIN \
         --device /dev/dri \
         --group-add $VIDEO_GROUP_ID --group-add $RENDER_GROUP_ID \
@@ -42,14 +43,13 @@ else
         -e http_proxy=${http_proxy} \
         -e https_proxy=${https_proxy} \
         -e LD_LIBRARY_PATH=/usr/local/lib \
+        -e DISPLAY_NEW_PLATFORM=1 \
         --cap-add=SYS_ADMIN \
         --device /dev/dri \
         --group-add $VIDEO_GROUP_ID --group-add $RENDER_GROUP_ID \
         --user root \
         --entrypoint /home/vpp/vppsample/docker/svet.sh \
         -e DISPLAY=$DISPLAY \
-        -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v $HOME/.Xauthority:/root/.Xauthority:rw \
         -w /home/vpp \
         $DOCKER_IMAGE
 fi

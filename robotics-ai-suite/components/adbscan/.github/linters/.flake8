@@ -1,0 +1,8 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+[flake8]
+max-line-length = 99
+
+extend-ignore = E712, F403, F405, F821, F841

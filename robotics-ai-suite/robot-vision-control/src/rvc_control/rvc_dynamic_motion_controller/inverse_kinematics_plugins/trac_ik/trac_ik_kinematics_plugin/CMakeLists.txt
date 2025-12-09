@@ -30,6 +30,13 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     visualization_msgs
 )
 
+# Determine ROS distro-specific source directory
+if(DEFINED ENV{ROS_DISTRO})
+  set(ROS_DISTRO $ENV{ROS_DISTRO})
+else()
+  set(ROS_DISTRO "humble")
+endif()
+
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
@@ -44,10 +51,10 @@ include_directories(
 
 set(TRAC_IK_LIBRARY_NAME trac_ik_kinematics_plugin)
 
-add_library(${TRAC_IK_LIBRARY_NAME} SHARED src/trac_ik_kinematics_plugin.cpp)
+add_library(${TRAC_IK_LIBRARY_NAME} SHARED ${ROS_DISTRO}/src/trac_ik_kinematics_plugin.cpp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${ROS_DISTRO}/include>
   $<INSTALL_INTERFACE:include>
 )
 
@@ -65,7 +72,7 @@ target_link_libraries(
 target_compile_features(${PROJECT_NAME} PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
 install(
-  DIRECTORY include/
+  DIRECTORY ${ROS_DISTRO}/include/
   DESTINATION include
 )
 install(

@@ -1,26 +1,52 @@
 #!/bin/bash
-# SPDX-License-Identifier: Apache-2.0
+
 # Copyright (C) 2025 Intel Corporation
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions
-# and limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 cd "$( dirname "$0" )" || exit
 
-BAGS_DIR=/opt/ros/humble/share/bagfiles
-INSTALL_DIR=/opt/ros/humble/share/collab-slam
+# Detect ROS distro
+if [ -z "$ROS_DISTRO" ]; then
+    if [ -f "/opt/ros/jazzy/setup.bash" ]; then
+        export ROS_DISTRO="jazzy"
+    elif [ -f "/opt/ros/humble/setup.bash" ]; then
+        export ROS_DISTRO="humble"
+    else
+        echo "Error: No supported ROS distro found (humble/jazzy)"
+        exit 1
+    fi
+fi
+
+echo "Using ROS distro: $ROS_DISTRO"
+
+BAGS_DIR=/opt/ros/$ROS_DISTRO/share/bagfiles
+INSTALL_DIR=/opt/ros/$ROS_DISTRO/share/collab-slam
+
+# Check if directories exist
+if [ ! -d "$BAGS_DIR" ]; then
+    echo "Error: Bags directory not found: $BAGS_DIR"
+    exit 1
+fi
+
+if [ ! -d "$INSTALL_DIR" ]; then
+    echo "Error: Install directory not found: $INSTALL_DIR"
+    exit 1
+fi
 
 # Include pre-script which handles clean shutdown of all background processes
-. $INSTALL_DIR/pre.sh
+if [ -f "$INSTALL_DIR/pre.sh" ]; then
+    . $INSTALL_DIR/pre.sh
+else
+    echo "Warning: pre.sh not found in $INSTALL_DIR"
+fi
+
+# Source ROS setup
+echo "Sourcing ROS $ROS_DISTRO setup..."
+source /opt/ros/$ROS_DISTRO/setup.bash
+
+echo "Launch files with ROS $ROS_DISTRO..."
+
 
 # Launch the server
 ros2 launch univloc_server server.launch.py rviz:=true &

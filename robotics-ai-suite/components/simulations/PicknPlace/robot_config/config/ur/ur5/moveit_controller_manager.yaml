@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+---
 controller_names:
   - arm_controller
 
-  # - gripper_action_controller
 arm_controller:
   action_ns: follow_joint_trajectory
   type: FollowJointTrajectory
@@ -15,9 +15,3 @@ arm_controller:
     - wrist_1_joint
     - wrist_2_joint
     - wrist_3_joint
-
-gripper_controller1:
-  action_ns: follow_joint_trajectory
-  type: GripperActionController
-  default: true
-  joint: robotiq_85_left_knuckle_joint

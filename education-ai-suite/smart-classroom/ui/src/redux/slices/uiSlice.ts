@@ -38,6 +38,8 @@ export interface UIState {
   isRecording: boolean;
   justStoppedRecording: boolean;
   videoAnalyticsStopping: boolean;
+  // New state for uploaded video files
+  hasUploadedVideoFiles: boolean;
 }
  
 const initialState: UIState = {
@@ -73,30 +75,31 @@ const initialState: UIState = {
   isRecording: false,
   justStoppedRecording: false,
   videoAnalyticsStopping: false,
+  hasUploadedVideoFiles: false,
 };
  
 const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    startProcessing(state) {
-      state.aiProcessing = true;
-      state.summaryEnabled = false;
-      state.summaryLoading = false;
-      state.mindmapEnabled = false;
-      state.mindmapLoading = false;
-      state.activeTab = 'transcripts';
-      state.autoSwitched = false;
-      state.autoSwitchedToMindmap = false;
-      state.sessionId = null;
-      state.uploadedAudioPath = null;
-      state.shouldStartSummary = false;
-      state.shouldStartMindmap = false;
-      state.videoAnalyticsLoading = false;
-      state.videoAnalyticsActive = false;
-      state.audioStatus = 'processing';
-      // Don't reset processingMode here as it's set by the caller
-    },
+  startProcessing(state) {
+    state.aiProcessing = true;
+    state.summaryEnabled = false;
+    state.summaryLoading = false;
+    state.mindmapEnabled = false;
+    state.mindmapLoading = false;
+    state.activeTab = 'transcripts';
+    state.autoSwitched = false;
+    state.autoSwitchedToMindmap = false;
+    state.sessionId = null;
+    state.uploadedAudioPath = null;
+    state.shouldStartSummary = false;
+    state.shouldStartMindmap = false;
+    state.videoAnalyticsLoading = false;
+    state.videoAnalyticsActive = false;
+    // state.audioStatus = 'processing';
+    // Don't reset processingMode here as it's set by the caller
+  },
  
     processingFailed(state) {
       state.aiProcessing = false;
@@ -324,10 +327,20 @@ const uiSlice = createSlice({
       state.audioStatus = 'transcribing';
     },
 
+    // New action for uploaded video files
+    setHasUploadedVideoFiles(state, action: PayloadAction<boolean>) {
+      state.hasUploadedVideoFiles = action.payload;
+      // Update video status based on uploaded files
+      if (action.payload && state.videoStatus === 'no-config') {
+        state.videoStatus = 'ready';
+      }
+    },
+    
     // Enhanced reset that preserves device states
     resetFlow(state) {
       const preservedAudioDevices = state.hasAudioDevices;
       const preservedAudioDevicesLoading = state.audioDevicesLoading;
+      const preservedHasUploadedVideoFiles = state.hasUploadedVideoFiles;
       const preservedCameras = {
         frontCamera: state.frontCamera,
         backCamera: state.backCamera,
@@ -340,13 +353,14 @@ const uiSlice = createSlice({
       // Restore preserved states
       state.hasAudioDevices = preservedAudioDevices;
       state.audioDevicesLoading = preservedAudioDevicesLoading;
+      state.hasUploadedVideoFiles = preservedHasUploadedVideoFiles;
       state.frontCamera = preservedCameras.frontCamera;
       state.backCamera = preservedCameras.backCamera;
       state.boardCamera = preservedCameras.boardCamera;
       
       // Set appropriate initial statuses
       state.audioStatus = preservedAudioDevicesLoading ? 'checking' : (preservedAudioDevices ? 'ready' : 'no-devices');
-      const hasVideoConfig = Boolean(preservedCameras.frontCamera?.trim() || preservedCameras.backCamera?.trim() || preservedCameras.boardCamera?.trim());
+      const hasVideoConfig = Boolean(preservedCameras.frontCamera?.trim() || preservedCameras.backCamera?.trim() || preservedCameras.boardCamera?.trim() || preservedHasUploadedVideoFiles);
       state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
     },
   },
@@ -392,6 +406,7 @@ export const {
   setJustStoppedRecording,
   setVideoAnalyticsStopping,
   startTranscription,
+  setHasUploadedVideoFiles,
 } = uiSlice.actions;
  
 export default uiSlice.reducer;

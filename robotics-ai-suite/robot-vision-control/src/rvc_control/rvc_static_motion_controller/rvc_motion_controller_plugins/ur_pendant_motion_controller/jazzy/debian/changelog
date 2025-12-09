@@ -1,0 +1,5 @@
+ros-jazzy-ur-pendant-motion-controller (2.3-1) noble; urgency=low
+
+  * Refactoring of the code and general optimizations.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 19 Nov 2025 12:00:00 -0000

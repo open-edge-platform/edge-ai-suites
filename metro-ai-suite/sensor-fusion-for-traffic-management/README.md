@@ -6,3 +6,17 @@ Unlock the future of traffic management with the Intel® software reference impl
 - [Overview](./docs/user-guide/index.md)
 - [Get started guide](./docs/user-guide/get-started-guide.md)
 - [Advanced user guide](./docs/user-guide/advanced-user-guide.md)
+
+
+
+> **Notice for FFmpeg:**
+>
+> FFmpeg is an open source project licensed under LGPL and GPL. See [https://www.ffmpeg.org/legal.html](https://www.ffmpeg.org/legal.html).
+>
+> You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
+
+> **Notice for GStreamer:**
+>
+> GStreamer is an open source framework licensed under LGPL. See [https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html](https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html).
+>
+> You are solely responsible for determining if your use of GStreamer requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of GStreamer.

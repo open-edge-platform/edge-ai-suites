@@ -1,0 +1,36 @@
+Source: ros-jazzy-rvc-rotated-object-detection
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+    python3-opencv,
+    python3-pytest <!nocheck>,
+    python3-transforms3d,
+    ros-jazzy-ament-copyright <!nocheck>,
+    ros-jazzy-ament-flake8 <!nocheck>,
+    ros-jazzy-ament-pep257 <!nocheck>,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-generate-parameter-library,
+    ros-jazzy-generate-parameter-library-py,
+    ros-jazzy-image-geometry,
+    ros-jazzy-image-transport,
+    ros-jazzy-rclpy,
+    ros-jazzy-rvc-vision-messages,
+    ros-jazzy-tf2-ros,
+    python3-all,
+    python3-setuptools,
+    dh-python
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-rvc-rotated-object-detection
+Architecture: any
+Depends: ${python3:Depends}, ${misc:Depends},
+    python3-opencv, python3-transforms3d,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-image-geometry,
+    ros-jazzy-image-transport,
+    ros-jazzy-rclpy,
+    ros-jazzy-rvc-vision-messages,
+    ros-jazzy-tf2-ros
+Description: Rotated object detection using ORB features

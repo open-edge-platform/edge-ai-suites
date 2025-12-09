@@ -1,9 +1,12 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # TUM VI monocular model
 # https://vision.in.tum.de/data/datasets/visual-inertial-dataset#geometric_calibration
 # pinhole (512x512)
 
+---
 #==============#
 # Camera Model #
 #==============#

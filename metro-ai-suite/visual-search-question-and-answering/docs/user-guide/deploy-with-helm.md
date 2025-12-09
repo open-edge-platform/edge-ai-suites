@@ -6,54 +6,82 @@ This section shows how to deploy the Visual Search and QA Application using Helm
 Before you begin, ensure that you have the following:
 - Kubernetes\* cluster set up and running.
 - The cluster must support **dynamic provisioning of Persistent Volumes (PV)**. Refer to the [Kubernetes Dynamic Provisioning Guide](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) for more details.
-- Install `kubectl` on your system. See the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster. 
+- Install `kubectl` on your system. See the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster.
 - Helm chart installed on your system. See the [Installation Guide](https://helm.sh/docs/intro/install/).
 
 
 ## Steps to deploy with Helm
-Do the following to deploy VSQA using Helm chart. 
+Do the following to deploy VSQA using Helm chart.
 
-### Step 1: Clone the Repository
+### Step 1: Acquire the helm chart
+
+#### Option 1: Get the charts from Docker Hub
+
+Use the following command to pull the Helm chart from Docker Hub:
+
+```bash
+helm pull oci://registry-1.docker.io/intel/metro-ai-suite-vsqa-chart
+```
+
+You may add `--version <version-no>` to specify a version number. Refer to the release notes for details on the latest version number to use for the sample application.
+
+After pulling the chart, extract the `.tgz` file
+
+```bash
+tar -xvf metro-ai-suite-vsqa-chart-<version-no>.tgz
+```
+
+This will create a directory named `metro-ai-suite-vsqa-chart` containing the chart files. Navigate to the extracted directory with to access the charts.
+
+```bash
+cd metro-ai-suite-vsqa-chart
+```
+
+#### Option 2: Install from source
+
+Clone the source repository
 
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
 ```
 
-#### Step 2: Change to the Chart Directory
+Navigate to the chart directory
 
 ```bash
 cd edge-ai-suites/metro-ai-suite/visual-search-question-and-answering/deployment/helm-chart
 ```
 
-#### Step 3: Configure the `values.yaml` File
+### Step 2: Configure the `values.yaml` File
 
 Edit the `values.yaml` file to set the necessary environment variables. At minimum, ensure you set the models, and proxy settings as required.
 
-##### Settings that must be configured
+#### Settings that must be configured
+
 | Key | Description | Example Value |
 | --- | ----------- | ------------- |
 | `global.proxy.http_proxy` | HTTP proxy if required | `http://proxy-example.com:000` |
 | `global.proxy.https_proxy` | HTTPS proxy if required | `http://proxy-example.com:000` |
 | `global.VLM_MODEL_NAME` | VLM model to be used by vlm-openvino-serving | `Qwen/Qwen2.5-VL-7B-Instruct` |
 | `global.EMBEDDING_MODEL_NAME` | Embedding model to be used for feature extraction by multimodal-embedding-serving  | `CLIP/clip-vit-h-14` |
+| `global.registry` | Remote registry to pull images from. Default as blank | `intel/` |
 | `global.env.keeppvc` | Set to true to persist the storage. Default is false | false |
 
 
-### Step 4: Build Helm Dependencies
+### Step 3: Build Helm Dependencies
 
 Navigate to the chart directory and build the Helm dependencies using the following command:
 
 ```bash
-helm dependency build
+helm dependency update
 ```
 
-### Step 5: Deploy Milvus as the vector DB
+### Step 4: Deploy Milvus as the vector DB
 
 Create a namespace for Milvus
 
 ```bash
 kubectl create namespace milvus
-``` 
+```
 
 Install Milvus latest helm chart
 
@@ -72,7 +100,7 @@ helm install my-milvus milvus/milvus -n milvus --set image.all.tag=v2.6.0   --se
 
 Check the pods status with `kubectl get po -n milvus`. `RESTARTS` are possible, as long as the 3 pods are stablized after a while, the deployment is successful.
 
-### Step 6: Prepare host directories for models and data
+### Step 5: Prepare host directories for models and data
 
 ```
 mkdir -p $HOME/data
@@ -82,22 +110,22 @@ Make sure the host directories are available to the cluster nodes, and the host-
 
 Note: supported media types: jpg, png, mp4
 
-### Step 7: Deploy the Application
+### Step 6: Deploy the Application
 
 Create a namespace for VSQA app
 
 ```bash
 kubectl create namespace vsqa
-``` 
+```
 
-Install 
+Install
 
 ```bash
 helm install vsqa . --values values.yaml -n vsqa
-``` 
+```
 
 
-### Step 8: Verify the Deployment
+### Step 7: Verify the Deployment
 
 Check the status of the deployed resources to ensure everything is running correctly:
 
@@ -108,7 +136,7 @@ kubectl get services -n vsqa
 
 Ensure all pods are in the "Running" state before proceeding.
 
-### Step 9: Access the application
+### Step 8: Access the application
 
 For a simpler access, we can do a port forward
 
@@ -119,7 +147,7 @@ kubectl port-forward -n vsqa svc/visual-search-qa-app 17580:17580
 Leave the session alive, then access `http://localhost:17580` to view the application.
 
 
-### Step 10: Uninstall the Application
+### Step 9: Uninstall the Application
 
 To uninstall, use the following command:
 
@@ -138,6 +166,8 @@ helm uninstall my-milvus -n milvus
   ```bash
   kubectl logs <pod-name> -n <your-namespace>
   ```
+
+- If the data preparation pod shows error while loading a large dataset, it might be caused by too large of the dataset size. Try breaking the dataset into smaller subsets and ingest each of them instead.
 
 ## Related links
 - [Get started with docker-compose](./get-started.md)

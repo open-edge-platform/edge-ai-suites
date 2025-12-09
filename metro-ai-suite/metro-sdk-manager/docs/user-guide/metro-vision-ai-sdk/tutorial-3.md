@@ -37,12 +37,20 @@ Before starting this tutorial, ensure you have:
 
 ## System Requirements
 
-- **Operating System:** Ubuntu 22.04 LTS or Ubuntu 24.04 LTS
+- **Operating System:** Ubuntu 22.04 LTS or Ubuntu 24.04 LTS (Desktop edition required)
 - **Processor:** Intel® Core™, Intel® Core™ Ultra, or Intel® Xeon® processors
 - **Memory:** Minimum 8GB RAM (16GB recommended for optimal performance)
 - **Storage:** 3GB free disk space for models and video files
 - **Graphics:** Intel integrated graphics or discrete GPU (optional for acceleration)
 - **Display:** Monitor capable of displaying video output
+
+**Important Display Requirements**
+This tutorial requires **Ubuntu Desktop** with a physical display and active graphical session. It will **not work** with:
+- Ubuntu Server (no GUI)
+- Remote SSH sessions without X11 forwarding
+- Headless systems
+ 
+You must be logged in to a local desktop session with a connected monitor or Remote Desktop/VNC connection for the video output to display correctly.
 
 ## Tutorial Steps
 
@@ -187,7 +195,7 @@ def postprocess(frame, results):
 
 # --- Inference Loop ---
 frame_count = 0
-display_width, display_height = 1920, 1080  # Desired display size
+display_width, display_height = 960, 540  # Desired display size
 
 while True:
     ret, frame = cap.read()
@@ -251,37 +259,12 @@ pip install opencv-python "numpy<2"
 
 ```
 ```bash
-
 python3 /home/openvino/inference.py 
 ```
 
 **Expected Console Output:**
 
-```
-[INFO] Initializing OpenVINO Runtime...
-[INFO] Loading model: /home/openvino/public/yolov10s/FP16/yolov10s.xml
-[INFO] Model loaded successfully on CPU
-[INFO] Input shape: [1, 3, 640, 640]
-[INFO] Expected input size: 640x640
-[INFO] Video properties: 1280x720 @ 30FPS, 900 frames
-[INFO] Starting object detection inference...
-[INFO] Device: CPU
-[INFO] Press 'q' to quit, 's' to save frame, 'p' to pause
-[INFO] End of video reached
-
-============================================================
-PERFORMANCE STATISTICS
-============================================================
-Total Frames Processed: 900
-Total Inference Time: 45.23s
-Average FPS: 19.9
-Min FPS: 16.2
-Max FPS: 23.1
-FPS Std Dev: 1.8
-Average Inference Time: 50.26ms
-Device Used: CPU
-============================================================
-```
+![Tutorial 3 Output](images/tutorial-3-output.png)
 
 ### Step 6: Run Object Detection on GPU (Optional)
 
@@ -291,42 +274,24 @@ For systems with Intel integrated graphics, run detection with GPU acceleration:
 # Run object detection with GPU inference
 docker run -it --rm \
   --volume ${PWD}:/home/openvino \
+  --volume $HOME/.Xauthority:/root/.Xauthority:rw \
   --volume /tmp/.X11-unix:/tmp/.X11-unix:rw \
   --device /dev/dri \
-  --group-add=$(stat -c "%g" /dev/dri/renderD128) \
   --env DISPLAY=$DISPLAY \
   --env http_proxy=$http_proxy \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
-  openvino/ubuntu24_dev:2025.3.0 \
-  python3 /home/openvino/inference.py \
-    --model /home/openvino/public/yolov10s/FP16/yolov10s.xml \
-    --video /home/openvino/intersection.mp4 \
-    --device GPU \
-    --conf 0.4
+  --user root \
+  openvino/ubuntu24_dev:2025.3.0 
 ```
-
-### Step 7: Advanced Usage and Features
-
-**Save Detection Results:**
-
 ```bash
-# Save output video with detections
-docker run -it --rm \
-  --volume ${PWD}:/home/openvino \
-  --volume /tmp/.X11-unix:/tmp/.X11-unix:rw \
-  --env DISPLAY=$DISPLAY \
-  openvino/ubuntu24_dev:2025.3.0 \
-  python3 /home/openvino/inference.py \
-    --video /home/openvino/intersection.mp4 \
-    --save /home/openvino/output_detections.mp4
+apt update
+apt install -y libgtk2.0-dev pkg-config libcanberra-gtk-module libcanberra-gtk3-module build-essential cmake git pkg-config libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev libv4l-dev libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-dev ffmpeg
+pip install opencv-python "numpy<2"
 ```
-
-**Interactive Controls:**
-
-- **'q'**: Quit application
-- **'s'**: Save current frame as image
-- **'p'**: Pause/resume playback
+```bash
+python3 /home/openvino/inference.py 
+```
 
 **Custom Thresholds:**
 

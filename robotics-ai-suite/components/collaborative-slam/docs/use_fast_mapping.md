@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # How to enable map generation using the integrated Fast mapping module
 
 ## General description of Fast Mapping module

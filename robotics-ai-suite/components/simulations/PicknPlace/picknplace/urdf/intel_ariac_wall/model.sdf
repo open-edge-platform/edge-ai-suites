@@ -19,10 +19,11 @@
           </box>
         </geometry>
         <material>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/CeilingTiled</name>
-          </script>
+          <pbr>
+            <metal>
+              <albedo_map>ceiling_tiled.png</albedo_map>
+            </metal>
+          </pbr>
           <ambient>0.666667 0.666667 0.498039 1</ambient>
         </material>
         <meta>
@@ -48,10 +49,11 @@
           </box>
         </geometry>
         <material>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/CeilingTiled</name>
-          </script>
+          <pbr>
+            <metal>
+              <albedo_map>ceiling_tiled.png</albedo_map>
+            </metal>
+          </pbr>
           <ambient>0.666667 0.666667 0.498039 1</ambient>
         </material>
         <meta>
@@ -77,10 +79,11 @@
           </box>
         </geometry>
         <material>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/CeilingTiled</name>
-          </script>
+          <pbr>
+            <metal>
+              <albedo_map>ceiling_tiled.png</albedo_map>
+            </metal>
+          </pbr>
           <ambient>0.666667 0.666667 0.498039 1</ambient>
         </material>
         <meta>

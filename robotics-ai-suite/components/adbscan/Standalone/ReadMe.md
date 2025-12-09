@@ -1,3 +1,11 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
+# Standalone ADBScan code
+
 This directory contains the source code, executables, input directory and files, and output directory for standalone ADBScan code.
 1. If a change is made to the source code, use make to invoke Makefile to rebuild the app;
 2. To run the core ADBScan algorithm, use the following shell script: ./run_ADBScan.sh, where input/output files are specified:

@@ -3,9 +3,6 @@
 
 #include "print_info.h"
 
-//using namespace std;
+// using namespace std;
 
-void print_info()
-{
-    std::cout << ("Lidar Message Received by Subscriber") << std::endl;
-}
+void print_info() { std::cout << ("Lidar Message Received by Subscriber") << std::endl; }

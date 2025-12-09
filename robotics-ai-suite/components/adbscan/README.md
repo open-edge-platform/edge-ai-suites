@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # ADBSCAN
 
 ## Component Documentation
@@ -29,8 +35,9 @@ This directory contains necessary python scripts to visualize the bounding box o
 ### Follow_me_RS_2D
 
 This is a ROS2 package for an AMR algorithm where a robot follows a target person. It contains a ROS2 node which subscribes to pointcloud sensors (LIDAR/ Realsense camera),
-uses the ADBSCAN algorithm to cluster the data and detect the location of the target person and subsequently, publishes the velocity commands for a differential drive robot. This package contains another version of the follow-me application: gesture-based follow-me. This version integrates a gesture recognition model to the existing implementation to control the movement of robot with hand gestures of the target person.
-Find instructions for this package [readme here](Follow_me_RS_2D/Readme.md)
+uses the ADBSCAN algorithm to cluster the data and detect the location of the target person and subsequently, publishes the velocity commands for a differential drive robot.
+This package contains another version of the follow-me application: gesture-based follow-me. This version integrates a gesture recognition model to the existing implementation to control the movement of robot with hand gestures of the target person.
+Find instructions for this package [here](Follow_me_RS_2D/Readme.md)
 
 ### package/tutorial_follow_me
 
@@ -38,7 +45,7 @@ This package contains a ROS2 tutorial to run the follow-me application on a cust
 
 ### nav2_dynamic_msgs
 
-This is an associate ROS2 package consisting of custom msgs for obstacle and obstactle arrays. Adbscan and follow-me depend on this package for publishing the obstactle locations. It has been sourced from [this repo](https://github.com/ros-planning/navigation2_dynamic).
+This is an associate ROS2 package consisting of custom msgs for obstacle and obstacle arrays. Adbscan and follow-me depend on this package for publishing the obstacle locations. It has been sourced from [this repo](https://github.com/ros-planning/navigation2_dynamic).
 
 All of these ROS2 packages are supported by the following platforms:
 

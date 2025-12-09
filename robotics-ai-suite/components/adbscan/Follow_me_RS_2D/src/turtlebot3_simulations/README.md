@@ -1,22 +1,24 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # TurtleBot3
-<img src="https://github.com/ROBOTIS-GIT/emanual/blob/master/assets/images/platform/turtlebot3/logo_turtlebot3.png" width="300">
+<img src="https://github.com/ROBOTIS-GIT/emanual/blob/master/assets/images/platform/turtlebot3/logo/logo_turtlebot3.png?raw=true" width="300" alt="Turtlebot3 Logo">
 
-[![kinetic-devel Status](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/workflows/kinetic-devel/badge.svg)](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/tree/kinetic-devel)
-[![melodic-devel Status](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/workflows/melodic-devel/badge.svg)](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/tree/melodic-devel)
-[![noetic-devel Status](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/workflows/noetic-devel/badge.svg)](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/tree/noetic-devel)
-
-[![dashing-devel Status](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/workflows/dashing-devel/badge.svg)](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/tree/dashing-devel)
-[![foxy-devel Status](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/workflows/foxy-devel/badge.svg)](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/tree/foxy-devel)
-[![galactic-devel Status](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/workflows/galactic-devel/badge.svg)](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/tree/galactic-devel)
-[![humble-devel Status](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/workflows/humble-devel/badge.svg)](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/tree/humble-devel)
+| ROS Distro | Build Status |
+|------------|:------------:|
+| humble     | [![humble Status](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/actions/workflows/ros-ci.yml/badge.svg?branch=humble)](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/actions/workflows/ros-ci.yml) |
+| jazzy      | [![jazzy Status](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/actions/workflows/ros-ci.yml/badge.svg?branch=jazzy)](https://github.com/ROBOTIS-GIT/turtlebot3_simulations/actions/workflows/ros-ci.yml) |
 
 ## ROBOTIS e-Manual for TurtleBot3
 - [ROBOTIS e-Manual for TurtleBot3](http://turtlebot3.robotis.com/)
 
 ## Wiki for turtlebot3_simulations Packages
-- http://wiki.ros.org/turtlebot3_simulations (metapackage)
-- http://wiki.ros.org/turtlebot3_fake
-- http://wiki.ros.org/turtlebot3_gazebo
+- [turtlebot3_simulations (metapackage)](http://wiki.ros.org/turtlebot3_simulations)
+- [turtlebot3_fake](http://wiki.ros.org/turtlebot3_fake)
+- [turtlebot3_gazebo](http://wiki.ros.org/turtlebot3_gazebo)
 
 ## Open Source related to TurtleBot3
 - [turtlebot3](https://github.com/ROBOTIS-GIT/turtlebot3)
@@ -45,4 +47,4 @@
 - [ROBOTIS e-Manual for Dynamixel SDK](http://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/overview/)
 - [Website for TurtleBot Series](http://www.turtlebot.com/)
 - [e-Book for TurtleBot3](https://community.robotsource.org/t/download-the-ros-robot-programming-book-for-free/51/)
-- [Videos for TurtleBot3 ](https://www.youtube.com/playlist?list=PLRG6WP3c31_XI3wlvHlx2Mp8BYqgqDURU)
+- [Videos for TurtleBot3](https://www.youtube.com/playlist?list=PLRG6WP3c31_XI3wlvHlx2Mp8BYqgqDURU)

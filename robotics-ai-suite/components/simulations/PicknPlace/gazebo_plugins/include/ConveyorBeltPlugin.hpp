@@ -19,106 +19,34 @@
 #ifndef _GAZEBO_CONVEYOR_BELT_PLUGIN_HH_
 #define _GAZEBO_CONVEYOR_BELT_PLUGIN_HH_
 
-#include <gazebo/common/Event.hh>
-#include <gazebo/common/Plugin.hh>
-#include <gazebo/physics/Joint.hh>
-#include <gazebo/physics/Link.hh>
-#include <gazebo/physics/Model.hh>
-#include <gazebo/transport/transport.hh>
-#include <gazebo/util/system.hh>
-#include <ignition/math/Angle.hh>
+#include "gazebo_compat.hpp"
+#include <rclcpp/rclcpp.hpp>
 #include <sdf/sdf.hh>
-#include <gazebo_ros/node.hpp>
+#include <mutex>
+#include <chrono>
+#include <limits>
+
 #include "robot_config_plugins/msg/conveyor_belt_state.hpp"
 #include "robot_config_plugins/srv/conveyor_belt_control.hpp"
 
-namespace gazebo
+namespace gz
+{
+namespace sim
+{
+namespace systems
 {
   /// \brief A plugin for simulating a conveyor belt.
   /// The plugin accepts the following SDF parameters:
-
-  /// <power>: Sets the initial power of the belt as a percentage [0-100].
-  /// <joint>: Joint name used to control the belt.
-  /// <belt>: Belt's link name.
   ///
-  /// Here's an example of a valid SDF conveyor belt:
-  /// <model name="conveyor_belt">
-  ///
-  ///   <model name="conveyor_belt_1">
-  ///     <static>true</static>
-  ///     <pose>1.21 -2 0.8126 0 0 -1.57079</pose>
-  ///     <link name="belt">
-  ///       <pose>-5 0 0 0 0 0</pose>
-  ///     </link>
-  ///   </model>
-  ///
-  ///   <model name="conveyor_belt_2">
-  ///     <static>false</static>
-  ///     <pose>1.21 -2 0.8126 0 0 -1.57079</pose>
-  ///     <link name="belt">
-  ///       <pose>-5 0 0 0 0 0</pose>
-  ///       <inertial>
-  ///         <inertia>
-  ///           <ixx>3.8185</ixx>
-  ///           <ixy>0</ixy>
-  ///           <ixz>0</ixz>
-  ///           <iyy>1781.5</iyy>
-  ///           <iyz>0</iyz>
-  ///           <izz>1784.72</izz>
-  ///         </inertia>
-  ///         <mass>100</mass>
-  ///       </inertial>
-  ///       <!--Uncomment for debugging -->
-  ///       <!--
-  ///       <visual name="belt_visual">
-  ///         <geometry>
-  ///           <box>
-  ///             <size>14.62206 0.65461 0.18862</size>
-  ///           </box>
-  ///         </geometry>
-  ///       </visual>
-  ///       -->
-  ///       <collision name="belt_collision">
-  ///         <geometry>
-  ///           <box>
-  ///             <size>14.62206 0.65461 0.18862</size>
-  ///           </box>
-  ///         </geometry>
-  ///         <surface>
-  ///           <friction>
-  ///             <ode>
-  ///               <mu>1.0</mu>
-  ///               <mu2>1.0</mu2>
-  ///             </ode>
-  ///             <torsional>
-  ///               <coefficient>1000.0</coefficient>
-  ///               <patch_radius>0.1</patch_radius>
-  ///             </torsional>
-  ///           </friction>
-  ///         </surface>
-  ///       </collision>
-  ///     </link>
-  ///   </model>
-  ///
-  ///   <joint name="belt_joint" type="prismatic">
-  ///     <parent>conveyor_belt_1::belt</parent>
-  ///     <child>conveyor_belt_2::belt</child>
-  ///     <axis>
-  ///       <xyz>1 0 0</xyz>
-  ///       <limit>
-  ///         <lower>0</lower>
-  ///         <upper>1.0</upper>
-  ///       </limit>
-  ///     </axis>
-  ///   </joint>
-  ///
-  ///   <plugin name="conveyor_belt_plugin" filename="libROSConveyorBeltPlugin.so">
-  ///     <robot_namespace>/ariac</robot_namespace>
-  ///     <link>conveyor_belt::conveyor_belt_2::belt</link>
-  ///     <power>0</power>
-  ///   </plugin>
-  /// </model>
-  class GAZEBO_VISIBLE ConveyorBeltPlugin : public ModelPlugin
+  /// <max_velocity>: Maximum linear velocity of the belt (m/s).
+  /// <publish_rate>: Rate at which the conveyor belt state is published (Hz).
+  /// <joint_name>: Joint name used to control the belt.
+  /// <lower_limit>: Lower limit of the joint (meters).
+  /// <upper_limit>: Upper limit of the joint (meters).
+  class ConveyorBeltPlugin
+    : public gazebo::System,
+      public gazebo::ISystemConfigure,
+      public gazebo::ISystemPreUpdate
   {
     /// \brief Constructor.
     public: ConveyorBeltPlugin() = default;
@@ -126,29 +54,22 @@ namespace gazebo
     /// \brief Destructor.
     public: virtual ~ConveyorBeltPlugin();
 
-    /// \brief Load the model plugin.
-    /// \param[in] _model Pointer to the model that loaded this plugin.
-    /// \param[in] _sdf SDF element that describes the plugin.
-    public: virtual void Load(physics::ModelPtr _model,
-                              sdf::ElementPtr _sdf);
+    /// \brief Load the conveyor belt plugin.
+    public: void Configure(const gazebo::Entity &_entity,
+      const std::shared_ptr<const sdf::Element> &_sdf,
+      gazebo::EntityComponentManager &_ecm,
+      gazebo::EventManager &_eventMgr) override;
 
-    /// \brief Callback that receives the world update event
-    protected: void OnUpdate();
+    /// \brief Pre-update method invoked before every simulation update.
+    public: void PreUpdate(const gazebo::UpdateInfo &_info,
+      gazebo::EntityComponentManager &_ecm) override;
 
     ///  \brief Receives requests on the conveyor belt's topic.
     /// \param[in] _req The desired state of the conveyor belt.
     /// \param[in] _res If the service succeeded or not.
-    public: bool OnControlCommand(
+    public: void OnControlCommand(
       robot_config_plugins::srv::ConveyorBeltControl::Request::SharedPtr _req,
       robot_config_plugins::srv::ConveyorBeltControl::Response::SharedPtr _res);
-    
-    /// \brief Get if the belt is enabled.
-    /// \return True if enabled.
-    protected: bool IsEnabled() const;
-
-    /// \brief Get the power of the conveyor belt.
-    /// \return Power of the belt as a percentage (0-100).
-    protected: double Power() const;
 
     /// \brief Set the power of the conveyor belt.
     /// \param[in] _power Power of the belt as a percentage (0-100).
@@ -156,56 +77,56 @@ namespace gazebo
 
     /// \brief Overwrite this method for sending periodic updates with the
     /// conveyor state.
-    private: virtual void Publish() const;
+    private: virtual void publishStatus();
 
-    /// \brief Call back for enable/disable messaged.
-    protected: void OnEnabled(ConstGzStringPtr &_msg);
+    // ROS2 Components
+    private: rclcpp::Node::SharedPtr ros_node_;
+    private: rclcpp::Service<robot_config_plugins::srv::ConveyorBeltControl>::SharedPtr controlService_;
+    private: rclcpp::Publisher<robot_config_plugins::msg::ConveyorBeltState>::SharedPtr status_pub_;
 
-    /// Service for gripper switch
-    rclcpp::Service<robot_config_plugins::srv::ConveyorBeltControl>::SharedPtr controlService_;
+    // gz-transport node for subscriber and service
+    public: gz_transport::Node node;
 
-    /// \brief Publishes the state of the conveyor.
-    /// Publisher for gripper action status
-    rclcpp::Publisher<robot_config_plugins::msg::ConveyorBeltState>::SharedPtr pub_;
+    // Gazebo entities
+    private: gazebo::Entity entity{gazebo::kNullEntity};
+    private: gazebo::Model model{gazebo::kNullEntity};
+    private: gazebo::Entity joint{gazebo::kNullEntity};
+    private: gazebo::Entity linkEntity{gazebo::kNullEntity};
 
-    /// \brief ros node handle
-    /// A pointer to the GazeboROS node.
-    gazebo_ros::Node::SharedPtr ros_node_;
+    // Configuration parameters
+    private: std::string joint_name_{"belt_joint"};
+    private: double max_velocity_{1.0};     // m/s
+    private: double publish_rate_{1000.0};  // Hz
+    private: double lower_limit_{0.0};      // meters
+    private: double upper_limit_{0.01};     // meters (wrap distance target)
 
-    /// \brief Belt velocity (m/s).
-    protected: double beltVelocity = 0.0;
+    // State variables (protected by mutex)
+    private: std::mutex mtx_;
+    private: double power_{10.0};           // [0..100]
+    private: double belt_velocity_{1.0};    // m/s (derived)
 
-    /// \brief Belt power expressed as a percentage of the internal maximum
-    /// speed.
-    protected: double beltPower = 0.0;
+    // Legacy variables (for compatibility with SetPower method)
+    protected: double beltVelocity{0.0};    // Belt velocity (m/s)
+    protected: double beltPower{0.0};       // Belt power as percentage
+    protected: bool enabled{true};          // If true, power commands are processed
 
-    /// \brief If true, power commands are processed, otherwise the belt won't move.
-    protected: bool enabled = true;
+    // Wrap control
+    private: bool pending_reset_{false};
+    private: double travel_accum_{0.0};     // Distance integrator (meters since last wrap)
 
-    /// \brief Pointer to the update event connection.
-    private: event::ConnectionPtr updateConnection;
+    // Timing
+    private: std::chrono::nanoseconds last_time_{std::chrono::nanoseconds(0)};
+    private: std::chrono::nanoseconds publish_period_{std::chrono::nanoseconds(1'000'000)};
+    private: std::chrono::nanoseconds last_pub_sim_{std::chrono::nanoseconds(0)};
 
-    /// \brief The joint that controls the movement of the belt.
-    private: physics::JointPtr joint;
+    // Constants
+    private: const double kMaxBeltLinVel{0.2};  // Maximum linear velocity of the belt
 
-    /// \brief The belt's link.
-    private: physics::LinkPtr link;
-
-    /// \brief When the joint reaches this point, it will go back to its initial
-    /// position.
-    private: ignition::math::Angle limit;
-
-    /// \brief Maximum linear velocity of the belt.
-    private: const double kMaxBeltLinVel = 0.2;
-
-    /// \brief Gazebo node for communication.
-    protected: transport::NodePtr gzNode;
-
-    /// \brief Gazebo publisher for modifying the rate of populating the belt.
-    public: transport::PublisherPtr populationRateModifierPub;
-
-    /// \brief Gazebo subscriber for modifying the enabled state of the belt.
-    public: transport::SubscriberPtr enabledSub;
+    // Unused legacy variables (kept for compatibility)
+    private: gz_math::Angle limit;
   };
+
+}
+}
 }
 #endif

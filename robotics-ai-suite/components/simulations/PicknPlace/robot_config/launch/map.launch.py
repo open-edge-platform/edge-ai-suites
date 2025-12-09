@@ -24,36 +24,43 @@ from launch_ros.actions import Node
 
 LOG_LEVEL = 'warn'
 
+
 def generate_launch_description():
-
-    ld = LaunchDescription()   
+    ld = LaunchDescription()
     # ros support github link -> https://github.com/bponsler/ros2-support
-    package_path = get_package_share_directory("robot_config")
-    
-    use_sim_time = LaunchConfiguration("use_sim_time", default="true")
+    package_path = get_package_share_directory('robot_config')
 
-    map_file = LaunchConfiguration('map', default=os.path.join(package_path, 'maps', 'default.yaml'))
-    remappings = [('/tf', 'tf'),
-                  ('/tf_static', 'tf_static')]
-    
-    map_server=Node(package='nav2_map_server',
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+
+    map_file = LaunchConfiguration(
+        'map', default=os.path.join(package_path, 'maps', 'default.yaml')
+    )
+    remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
+
+    map_server = Node(
+        package='nav2_map_server',
         executable='map_server',
         name='map_server',
         output='screen',
-        parameters=[{'yaml_filename': map_file},],
-        remappings=remappings)
+        parameters=[
+            {'yaml_filename': map_file},
+        ],
+        remappings=remappings,
+    )
 
-    map_server_lifecyle=Node(package='nav2_lifecycle_manager',
-            executable='lifecycle_manager',
-            name='lifecycle_manager_map_server',
-            output='screen',
-            parameters=[{'use_sim_time': use_sim_time},
-                        {'autostart': True},
-                        {'node_names': ['map_server']}])
+    map_server_lifecyle = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_map_server',
+        output='screen',
+        parameters=[
+            {'use_sim_time': use_sim_time},
+            {'autostart': True},
+            {'node_names': ['map_server']},
+        ],
+    )
 
     ld.add_action(map_server)
     ld.add_action(map_server_lifecyle)
 
-
-   
     return ld

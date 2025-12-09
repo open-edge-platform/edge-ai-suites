@@ -1,6 +1,7 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
-# Add sources
+#
+# SPDX-License-Identifier: Apache-2.0
+
 target_sources(${PROJECT_NAME}
                PRIVATE
                ${CMAKE_CURRENT_SOURCE_DIR}/area.h

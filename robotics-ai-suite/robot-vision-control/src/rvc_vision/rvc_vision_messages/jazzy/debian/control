@@ -1,0 +1,18 @@
+Source: ros-jazzy-rvc-vision-messages
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-auto <!nocheck>,
+    ros-jazzy-ament-lint-common <!nocheck>,
+    ros-jazzy-rosidl-default-generators,
+    ros-jazzy-std-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-rvc-vision-messages
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+    ros-jazzy-rosidl-default-runtime
+Description: Custom message between AI and motion controller

@@ -1,0 +1,142 @@
+Source: ros-jazzy-univloc-tracker
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    libboost-dev,
+    libgtest-dev,
+    libeigen3-dev,
+    libopencv-dev,
+    liborb-lze-dev,
+    libspdlog-dev,
+    libze1,
+    libze-dev,
+    nlohmann-json3-dev,
+    python3-ament-package,
+    ros-jazzy-ament-cmake-gtest,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-auto,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-dbow2,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-image-transport-plugins,
+    ros-jazzy-image-transport,
+    ros-jazzy-libg2o,
+    ros-jazzy-message-filters,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rosbag2-cpp,
+    ros-jazzy-rosbag2-transport,
+    ros-jazzy-rosidl-default-generators,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-statistics-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-univloc-msgs,
+    ros-jazzy-univloc-slam-dev,
+    ros-jazzy-visualization-msgs
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-univloc-tracker-lze
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-cv-bridge,
+    ros-jazzy-dbow2,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-image-transport-plugins,
+    ros-jazzy-image-transport,
+    ros-jazzy-libg2o,
+    ros-jazzy-message-filters,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rosidl-default-runtime,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-statistics-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-univloc-msgs,
+    ros-jazzy-univloc-slam-lze,
+    ros-jazzy-visualization-msgs
+Description: Intel GPU Level-Zero accelerated package for Collaborative SLAM tracker node
+Provides: ros-jazzy-univloc-tracker
+Conflicts: ros-jazzy-univloc-tracker
+Replaces: ros-jazzy-univloc-tracker
+
+Package: ros-jazzy-univloc-tracker-sse
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-cv-bridge,
+    ros-jazzy-dbow2,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-image-transport-plugins,
+    ros-jazzy-image-transport,
+    ros-jazzy-libg2o,
+    ros-jazzy-message-filters,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rosidl-default-runtime,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-statistics-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-univloc-msgs,
+    ros-jazzy-univloc-slam-sse,
+    ros-jazzy-visualization-msgs
+Description: Intel SSE-only CPU instruction accelerated package for Collaborative SLAM tracker node
+Provides: ros-jazzy-univloc-tracker
+Conflicts: ros-jazzy-univloc-tracker
+Replaces: ros-jazzy-univloc-tracker
+
+Package: ros-jazzy-univloc-tracker-avx2
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-cv-bridge,
+    ros-jazzy-dbow2,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-image-transport-plugins,
+    ros-jazzy-image-transport,
+    ros-jazzy-libg2o,
+    ros-jazzy-message-filters,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rosidl-default-runtime,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-statistics-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-univloc-msgs,
+    ros-jazzy-univloc-slam-avx2,
+    ros-jazzy-visualization-msgs
+Description: Intel AVX/AVX2 CPU instruction accelerated package for Collaborative SLAM tracker node
+Provides: ros-jazzy-univloc-tracker
+Conflicts: ros-jazzy-univloc-tracker
+Replaces: ros-jazzy-univloc-tracker
+
+Package: ros-jazzy-univloc-tracker-smoke-test
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-bagfile-demo-mapping,
+    ros-jazzy-univloc-tracker-sse (= ${binary:Version}) | ros-jazzy-univloc-tracker-avx2 (= ${binary:Version}) | ros-jazzy-univloc-tracker-lze (= ${binary:Version})
+Description: [internal] smoke test for Collaborative SLAM tracker node
+
+Package: ros-jazzy-univloc-tracker-testsuite
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-bagfile-2d-lidar,
+    ros-jazzy-cslam-unit-test-bagfiles,
+    ros-jazzy-univloc-tracker-sse (= ${binary:Version}) | ros-jazzy-univloc-tracker-avx2 (= ${binary:Version}) | ros-jazzy-univloc-tracker-lze (= ${binary:Version})
+Description: [internal] test suite for Collaborative SLAM tracker node

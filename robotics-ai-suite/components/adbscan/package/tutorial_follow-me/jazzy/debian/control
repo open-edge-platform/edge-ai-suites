@@ -1,0 +1,14 @@
+Source: ros-jazzy-follow-me-tutorial
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-follow-me-tutorial
+Architecture: any
+Depends:
+    ros-jazzy-aaeon-ros2-amr-interface,
+    ros-jazzy-adbscan-ros2-follow-me,
+    ros-jazzy-realsense2-camera,
+    ros-jazzy-rviz2,
+Description: Follow-Me application with ADBSCAN using Realsense camera

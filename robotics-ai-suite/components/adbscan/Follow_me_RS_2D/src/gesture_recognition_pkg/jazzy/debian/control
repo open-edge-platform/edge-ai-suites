@@ -1,0 +1,26 @@
+Source: ros-jazzy-gesture-recognition-pkg
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    python3-ament-package,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-follow-me-interfaces,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclpy,
+    ros-jazzy-sensor-msgs,
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-gesture-recognition-pkg
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    python3-pip,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-follow-me-interfaces,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclpy,
+    ros-jazzy-sensor-msgs,
+Description: This package contains nodes for hand gesture (Thumbs up and Down) Recognition model adapted from Google's mediapipe pipeline and publishing simulated trajectory as well as gesture images for a robot

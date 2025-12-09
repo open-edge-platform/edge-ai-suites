@@ -1,5 +1,4 @@
 /*
-
 Copyright 2016 Emanuele Vespa, Imperial College London
 
 Redistribution and use in source and binary forms, with or without
@@ -26,9 +25,7 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 */
-
 #ifndef NODE_H
 #define NODE_H
 
@@ -40,10 +37,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "utils/memory_pool.hpp"
 #include "io/se_serialise.hpp"
 
-namespace se {
-template <typename T>
-class Node {
+namespace se
+{
 
+template <typename T>
+class Node
+{
 public:
   typedef voxel_traits<T> traits_type;
   typedef typename traits_type::value_type value_type;
@@ -59,7 +58,8 @@ public:
   uint64_t pose_id_;
   unsigned int free_voxel_cnt_;
 
-  Node(){
+  Node()
+  {
     code_ = 0;
     side_ = 0;
     pose_id_ = 0;
@@ -67,109 +67,105 @@ public:
     dir[0] = dir[1] = dir[2] = 0;
     children_mask_ = 0;
     extended = false;
-    for (unsigned int i = 0; i < 8; i++){
-      value_[i]     = init_val();
+    for (unsigned int i = 0; i < 8; i++) {
+      value_[i] = init_val();
       child_ptr_[i] = NULL;
     }
   }
 
-    virtual ~Node(){};
+  virtual ~Node() {}
 
-    Node *& child(const int x, const int y,
-        const int z) {
-      return child_ptr_[x + y*2 + z*4];
-    };
+  Node *& child(const int x, const int y, const int z) { return child_ptr_[x + y * 2 + z * 4]; }
 
-    Node *& child(const int offset ){
-      return child_ptr_[offset];
-    }
+  Node *& child(const int offset) { return child_ptr_[offset]; }
 
-    virtual bool isLeaf(){ return false; }
-
+  virtual bool isLeaf() { return false; }
 
 protected:
-    Node *child_ptr_[8];
+  Node * child_ptr_[8];
+
 private:
-    friend void internal::serialise <> (std::ofstream& out, Node& node);
-    friend void internal::deserialise <> (Node& node, std::ifstream& in);
+  friend void internal::serialise<>(std::ofstream & out, Node & node);
+  friend void internal::deserialise<>(Node & node, std::ifstream & in);
 };
 
 template <typename T>
-class VoxelBlock: public Node<T> {
+class VoxelBlock : public Node<T>
+{
+public:
+  typedef voxel_traits<T> traits_type;
+  typedef typename traits_type::value_type value_type;
+  static constexpr unsigned int side = BLOCK_SIDE;
+  static constexpr unsigned int sideSq = side * side;
 
-  public:
+  static constexpr value_type empty() { return traits_type::empty(); }
+  static constexpr value_type initValue() { return traits_type::initValue(); }
 
-    typedef voxel_traits<T> traits_type;
-    typedef typename traits_type::value_type value_type;
-    static constexpr unsigned int side = BLOCK_SIDE;
-    static constexpr unsigned int sideSq = side*side;
-
-    static constexpr value_type empty() {
-      return traits_type::empty();
+  VoxelBlock()
+  {
+    coordinates_ = Eigen::Vector3i::Constant(0);
+    for (unsigned int i = 0; i < side * sideSq; i++) {
+      voxel_block_[i] = initValue();
     }
-    static constexpr value_type initValue() {
-      return traits_type::initValue();
-    }
+  }
 
-    VoxelBlock(){
-      coordinates_ = Eigen::Vector3i::Constant(0);
-      for (unsigned int i = 0; i < side*sideSq; i++)
-        voxel_block_[i] = initValue();
-    }
+  bool isLeaf() { return true; }
 
-    bool isLeaf(){ return true; }
+  Eigen::Vector3i coordinates() const { return coordinates_; }
+  void coordinates(const Eigen::Vector3i & c) { coordinates_ = c; }
 
-    Eigen::Vector3i coordinates() const { return coordinates_; }
-    void coordinates(const Eigen::Vector3i& c){ coordinates_ = c; }
+  value_type data(const Eigen::Vector3i & pos) const;
+  void data(const Eigen::Vector3i & pos, const value_type & value);
 
-    value_type data(const Eigen::Vector3i& pos) const;
-    void data(const Eigen::Vector3i& pos, const value_type& value);
+  value_type data(const int i) const;
+  void data(const int i, const value_type & value);
 
-    value_type data(const int i) const;
-    void data(const int i, const value_type& value);
+  void active(const bool a) { active_ = a; }
+  bool active() const { return active_; }
 
-    void active(const bool a){ active_ = a; }
-    bool active() const { return active_; }
+  value_type * getBlockRawPtr() { return voxel_block_; }
+  size_t getBlockArraySize() { return sizeof(voxel_block_); }
+  static constexpr int size() { return sizeof(VoxelBlock<T>); }
 
-    value_type * getBlockRawPtr(){ return voxel_block_; }
-    size_t getBlockArraySize(){ return sizeof(voxel_block_); }
-    static constexpr int size(){ return sizeof(VoxelBlock<T>); }
-
-  private:
-    VoxelBlock(const VoxelBlock&) = delete;
-    Eigen::Vector3i coordinates_;
-    value_type voxel_block_[side*sideSq]; // Brick of data.
-    bool active_ = false;
-    friend void internal::serialise <> (std::ofstream& out, VoxelBlock& node);
-    friend void internal::deserialise <> (VoxelBlock& node, std::ifstream& in);
+private:
+  VoxelBlock(const VoxelBlock &) = delete;
+  Eigen::Vector3i coordinates_;
+  value_type voxel_block_[side * sideSq];  // Brick of data.
+  bool active_ = false;
+  friend void internal::serialise<>(std::ofstream & out, VoxelBlock & node);
+  friend void internal::deserialise<>(VoxelBlock & node, std::ifstream & in);
 };
 
 template <typename T>
-inline typename VoxelBlock<T>::value_type
-VoxelBlock<T>::data(const Eigen::Vector3i& pos) const {
+inline typename VoxelBlock<T>::value_type VoxelBlock<T>::data(const Eigen::Vector3i & pos) const
+{
   Eigen::Vector3i offset = pos - coordinates_;
-  const value_type& data = voxel_block_[offset(0) + offset(1)*side +
-                                         offset(2)*sideSq];
+  const value_type & data = voxel_block_[offset(0) + offset(1) * side + offset(2) * sideSq];
+
   return data;
 }
 
 template <typename T>
-inline void VoxelBlock<T>::data(const Eigen::Vector3i& pos,
-                                const value_type &value){
+inline void VoxelBlock<T>::data(const Eigen::Vector3i & pos, const value_type & value)
+{
   Eigen::Vector3i offset = pos - coordinates_;
-  voxel_block_[offset(0) + offset(1)*side + offset(2)*sideSq] = value;
+  voxel_block_[offset(0) + offset(1) * side + offset(2) * sideSq] = value;
 }
 
 template <typename T>
-inline typename VoxelBlock<T>::value_type
-VoxelBlock<T>::data(const int i) const {
-  const value_type& data = voxel_block_[i];
+inline typename VoxelBlock<T>::value_type VoxelBlock<T>::data(const int i) const
+{
+  const value_type & data = voxel_block_[i];
+
   return data;
 }
 
 template <typename T>
-inline void VoxelBlock<T>::data(const int i, const value_type &value){
+inline void VoxelBlock<T>::data(const int i, const value_type & value)
+{
   voxel_block_[i] = value;
 }
-}
-#endif
+
+}  // namespace se
+
+#endif  // NODE_H

@@ -1,0 +1,32 @@
+Source: ros-jazzy-rvc-object-detection-engine
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-index-cpp,
+    ros-jazzy-ament-lint-auto <!nocheck>,
+    ros-jazzy-ament-lint-common <!nocheck>,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-image-transport,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclcpp-components,
+    ros-jazzy-rvc-ai-interface,
+    ros-jazzy-rvc-vision-messages,
+    ros-jazzy-sensor-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-rvc-object-detection-engine
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+    ros-jazzy-cv-bridge,
+    ros-jazzy-image-transport,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclcpp-components,
+    ros-jazzy-rvc-ai-interface,
+    ros-jazzy-rvc-vision-messages,
+    ros-jazzy-sensor-msgs
+Description: AI inference pipeling Stage 1 object detection engine, plugin based to allow different AI models, and devices

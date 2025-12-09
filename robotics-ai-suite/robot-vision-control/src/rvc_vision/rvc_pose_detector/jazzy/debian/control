@@ -1,0 +1,36 @@
+Source: ros-jazzy-rvc-pose-detector
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-index-cpp,
+    ros-jazzy-ament-lint-auto <!nocheck>,
+    ros-jazzy-ament-lint-common <!nocheck>,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-message-filters,
+    ros-jazzy-pcl-conversions,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclcpp-components,
+    ros-jazzy-rvc-messages,
+    ros-jazzy-rvc-vision-messages,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-tf2-eigen
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-rvc-pose-detector
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-message-filters,
+    ros-jazzy-pcl-conversions,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclcpp-components,
+    ros-jazzy-rvc-messages,
+    ros-jazzy-rvc-vision-messages,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-tf2-eigen
+Description: AI pose alignment stage Package

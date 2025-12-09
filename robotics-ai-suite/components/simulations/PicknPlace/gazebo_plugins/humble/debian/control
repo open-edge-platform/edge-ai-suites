@@ -1,0 +1,32 @@
+Source: ros-humble-robot-config-plugins
+Section: misc
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: debhelper (>= 9.0.0), 
+ ros-humble-ament-cmake, 
+ libgz-sim7-dev, 
+ ros-humble-ros-gz, 
+ ros-humble-rclcpp, 
+ ros-humble-rosidl-default-generators, 
+ ros-humble-std-srvs,
+ ros-humble-gz-ros2-control,
+ ros-humble-ros2-control,
+ ros-humble-controller-manager
+Homepage:
+Standards-Version: 3.9.2
+
+Package: ros-humble-robot-config-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, 
+ libgz-sim7, 
+ ros-humble-ros-gz, 
+ ros-humble-rclcpp, 
+ ros-humble-rosidl-default-runtime, 
+ ros-humble-std-srvs,
+ ros-humble-gz-ros2-control,
+ ros-humble-ros2-control,
+ ros-humble-ros2-controllers,
+ ros-humble-controller-manager,
+ ros-humble-joint-state-publisher,
+ ros-humble-robot-state-publisher
+Description: Clear ROS2 Namespace from Gazebo process and Vacuum Gripper Plugin

@@ -9,6 +9,7 @@
 #  - Support > Articles > UR articles > Max. joint torques
 #    https://www.universal-robots.com/articles/ur-articles/max-joint-torques
 #    retrieved: 2020-06-16, last modified: 2020-06-09
+---
 joint_limits:
   shoulder_pan_joint:
     # acceleration limits are not publicly available

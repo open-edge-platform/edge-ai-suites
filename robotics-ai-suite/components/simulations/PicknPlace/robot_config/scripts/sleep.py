@@ -20,8 +20,10 @@
 import time
 import sys
 
+
 def main(args=None):
     time.sleep(float(sys.argv[1]))
+
 
 if __name__ == '__main__':
     main()

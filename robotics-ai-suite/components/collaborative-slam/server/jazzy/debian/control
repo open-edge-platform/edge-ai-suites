@@ -1,0 +1,134 @@
+Source: ros-jazzy-univloc-server
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    ros-jazzy-univloc-slam-dev,
+    liborb-lze-dev,
+    libze1,
+    libze-dev,
+    ros-jazzy-libg2o,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-ament-lint-auto,
+    ros-jazzy-ament-cmake-gtest,
+    ros-jazzy-univloc-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-visualization-msgs,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-statistics-msgs,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-rosbag2-cpp,
+    ros-jazzy-rosbag2-transport,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-message-filters,
+    ros-jazzy-image-transport,
+    ros-jazzy-image-transport-plugins,
+    ros-jazzy-dbow2,
+    libspdlog-dev,
+    nlohmann-json3-dev,
+    libboost-dev,
+    python3-ament-package,
+    libopencv-dev,
+    libeigen3-dev,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rosidl-default-generators,
+    libgtest-dev,
+    ros-jazzy-ament-cmake-gtest
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-univloc-server-lze
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-univloc-slam-lze,
+    ros-jazzy-libg2o,
+    ros-jazzy-univloc-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-visualization-msgs,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-statistics-msgs,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-message-filters,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-image-transport,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rosidl-default-runtime,
+    ros-jazzy-dbow2
+Description: Intel GPU Level-Zero accelerated package for Collaborative SLAM server node
+Provides: ros-jazzy-univloc-server
+Conflicts: ros-jazzy-univloc-server
+Replaces: ros-jazzy-univloc-server
+
+Package: ros-jazzy-univloc-server-sse
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-univloc-slam-sse,
+    ros-jazzy-libg2o,
+    ros-jazzy-univloc-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-visualization-msgs,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-statistics-msgs,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-message-filters,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-image-transport,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rosidl-default-runtime,
+    ros-jazzy-dbow2
+Description: Intel SSE-only CPU instruction accelerated package for Collaborative SLAM server node
+Provides: ros-jazzy-univloc-server
+Conflicts: ros-jazzy-univloc-server
+Replaces: ros-jazzy-univloc-server
+
+Package: ros-jazzy-univloc-server-avx2
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-univloc-slam-avx2,
+    ros-jazzy-libg2o,
+    ros-jazzy-univloc-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-visualization-msgs,
+    ros-jazzy-nav-msgs,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-statistics-msgs,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-message-filters,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-image-transport,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rosidl-default-runtime,
+    ros-jazzy-dbow2
+Description: Intel AVX/AVX2 CPU instruction accelerated package for Collaborative SLAM server node
+Provides: ros-jazzy-univloc-server
+Conflicts: ros-jazzy-univloc-server
+Replaces: ros-jazzy-univloc-server
+
+Package: ros-jazzy-univloc-server-testsuite
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-univloc-server-sse (= ${binary:Version}) | ros-jazzy-univloc-server-avx2 (= ${binary:Version}) | ros-jazzy-univloc-server-lze (= ${binary:Version}),
+    ros-jazzy-bagfile-robot1,
+    ros-jazzy-bagfile-robot2,
+    ros-jazzy-bagfile-extra-features,
+    ros-jazzy-cslam-unit-test-bagfiles
+Description: [internal] test suite for Collaborative SLAM server node

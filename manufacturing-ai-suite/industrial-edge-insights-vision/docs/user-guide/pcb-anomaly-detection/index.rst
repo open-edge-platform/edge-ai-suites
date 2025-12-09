@@ -38,10 +38,10 @@ pulled into DL Streamer Pipeline Server and used for inference in the sample app
 
 This sample application is built with the following Intel Edge AI Stack Microservices:
 
-- `DL Streamer Pipeline Server <https://docs.openedgeplatform.intel.com/edge-ai-libraries/dlstreamer-pipeline-server/main/user-guide/Overview.html>`__
+- `DL Streamer Pipeline Server <https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html>`__
   is an interoperable containerized microservice based on Python for video ingestion and
   deep learning inferencing functions.
-- `Model Registry Microservice <https://docs.openedgeplatform.intel.com/edge-ai-libraries/model-registry/main/user-guide/Overview.html>`__
+- `Model Registry Microservice <https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-registry/index.html>`__
   provides a centralized repository that facilitates the management of AI models
 
 It also consists of the below Third-party microservices:

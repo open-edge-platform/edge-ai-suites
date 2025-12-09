@@ -29,13 +29,6 @@ jobs:
 
       - name: Build Docker images
         run: |
-          # git clone https://github.com/open-edge-platform/edge-ai-libraries.git
-          # cd edge-ai-libraries/microservices
-          # docker build -t dataprep-visualdata-milvus:latest -f visual-data-preparation-for-retrieval/milvus/src/Dockerfile .
-          # docker build -t retriever-milvus:latest -f vector-retriever/milvus/src/Dockerfile .
-          # cd vlm-openvino-serving
-          # docker build -t vlm-openvino-serving:latest -f docker/Dockerfile .
-          # cd ../../..
           ls
           cd metro-ai-suite
           docker build -t visual-search-qa-app:latest -f visual-search-question-and-answering/src/Dockerfile .
@@ -55,23 +48,23 @@ jobs:
           severity: "HIGH,CRITICAL" 
           format: "json"
           scan_target: "metro-ai-suite/visual-search-question-and-answering/"
-          report_suffix: "-fs-vqa-CT7"
+          report_suffix: "-fs-vsqa-CT7"
 
-      - name: Run trivy Scan -vqa (HTML Report)
+      - name: Run trivy Scan -vsqa (HTML Report)
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: vqa-visual-html
+        id: vsqa-visual-html
         with:
           scan_type: "image"  
           scan-scope: "all"
           scan_target: "visual-search-qa-app:latest"  
           severity: "HIGH,CRITICAL"
           format: "table"
-          report_suffix: "-image-vqa-visual-html-CT248"
+          report_suffix: "-image-vsqa-visual-html-CT248"
           generate_sbom: "false"
           
-      - name: Run trivy Scan - vqa (SPDX SBOM)
+      - name: Run trivy Scan - vsqa (SPDX SBOM)
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: vqa-visual-spdx
+        id: vsqa-visual-spdx
         with:
           scan_type: "image"  
           scan-scope: "all"
@@ -79,23 +72,23 @@ jobs:
           severity: "HIGH,CRITICAL"  
           format: "spdx-json"
           scanners: "vuln"
-          report_suffix: "-image-vqa-visual-spdx-CT248"
+          report_suffix: "-image-vsqa-visual-spdx-CT248"
           generate_sbom: "false"
 
       - name: Scan Dockerfile with Trivy
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         with:
           scan_type: "config"
-          scan_target: "metro-ai-suite/visual-search-question-and-answering/docker/"
+          scan_target: "metro-ai-suite/visual-search-question-and-answering/src/"
           severity: "HIGH,CRITICAL"
           format: "json"
           misconfig_scanners: "dockerfile"
-          report_suffix: "-config-vqa-CT222"
+          report_suffix: "-config-vsqa-CT222"
 
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
-          name: trivy-report-vqa
+          name: trivy-report-vsqa
           path: security-results/trivy*
 
   bandit-scan:
@@ -109,7 +102,9 @@ jobs:
         with:
           scan-scope: "all"  
           output-format: "txt" 
-          fail-on-findings: "false" 
+          fail-on-findings: "false"
+          paths: "metro-ai-suite/visual-search-question-and-answering"
+          report_suffix: "-bandit-visual-search-qa-CT161"
           
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
@@ -129,7 +124,9 @@ jobs:
         with:
           scan-scope: "all"  
           output-format: "txt" 
-          fail-on-findings: "false" 
+          fail-on-findings: "false"
+          paths: "metro-ai-suite/visual-search-question-and-answering"
+          exclude_dirs: ".git,tests,docs,.pytest_cache,__pycache__,.venv"
           
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
@@ -157,12 +154,12 @@ jobs:
           COV_PATH="$(pwd)/cov-analysis/bin"
           export PATH="$COV_PATH:$PATH"
           ls
-          cd metro-ai-suite/visual-search-question-and-answering
+          cd metro-ai-suite/visual-search-question-and-answering/src
           coverity capture --dir cov-int --project-dir ./
           
       - name: Create tarball for upload
         run: |
-          cd metro-ai-suite/visual-search-question-and-answering
+          cd metro-ai-suite/visual-search-question-and-answering/src
           tar -czvf coverity_output.tgz -C . cov-int
           # Verify tarball contents
           echo "=== Tarball Contents ==="
@@ -172,7 +169,7 @@ jobs:
           
       - name: Upload to Coverity Scan
         run: |
-          cd metro-ai-suite/visual-search-question-and-answering
+          cd metro-ai-suite/visual-search-question-and-answering/src
           curl --form token=${{ secrets.VQA_COVERITY_TOKEN }} \
                --form email=${{ secrets.VQA_COVERITY_EMAIL }} \
                --form file=@coverity_output.tgz \

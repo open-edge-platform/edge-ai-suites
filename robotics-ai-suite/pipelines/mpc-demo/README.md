@@ -15,8 +15,11 @@ Here, we adopted an open-source MPC project named Optimal Control for Switched S
 
 ## Prerequisites
 
-Please make sure you have finished setup steps in [Installation & Setup](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/embodied/installation_setup.html).
+Please make sure you have finished setup steps in [Installation & Setup](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/embodied/installation_setup.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/embodied/developer_tools_tutorials/oneapi.html#oneapi-install-label) to setup Intel® oneAPI packages.
 
+## ROS2 Humble Setup
+
+Please refer to the [official ROS2 Humble installation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html).
 
 ## ACT Setup
 
@@ -27,16 +30,25 @@ The required ACT module is based on the open-source [ACT](https://github.com/ton
 | 001 - 005 | Intel® OpenVINO™             |
 |    006    | Add ROS2 node                |
 
-To set up the required ACT module, please follow the ACT installation guide in the [imitation learning ACT documentation](../act-sample/README.md). Then, after installing and validating ACT-OV, you need to install rclpy in your act virtual environment and apply [006 patch]([act-ov](../act-sample/patches/ov/0006-add-ros2-node-and-use-fixed-cube-pose.patch)).
+To set up the required ACT module, please follow the ACT installation guide in the [imitation learning ACT documentation](../act-sample/README.md) except `Install ACT package`. Here, we need to install ACT source code by downloading [act-sample](../act-sample), and initialize submodules and apply patches:
 
 ```
-source [your path to act venv]/bin/activate
-pip install rclpy
-git am 0006-add-ros2-node-and-use-fixed-cube-pose.patch
+cd act-sample
+
+# initialize submodules
+git submodule init
+git submodule update
+
+# apply patches
+git apply ../patches/ov/0001-enable-openvino-inference-for-eval.patch
+git apply ../patches/ov/0002-add-model-conversion-script.patch
+git apply ../patches/ov/0003-changes-for-real-robot.patch
+git apply ../patches/ov/0004-Modify-the-camera-mode-to-fixed.patch
+git apply ../patches/ov/0005-Modify-the-default-cameras-config.patch
+git apply ../patches/ov/0006-add-ros2-node-and-use-fixed-cube-pose.patch
 ```
 
-
-## OCS2 setup
+## OCS2 Setup
 
 The required MPC module is based on the open-source project [OCS2](https://github.com/leggedrobotics/ocs2). OCS2 is a C++ toolbox tailored for Optimal Control for Switched Systems (OCS2). It provides an efficient implementation of Continuous-time domain constrained DDP (SLQ) and many other helpful algorithms. To facilitate the application of OCS2 in robotic tasks, it provides the user with additional tools to set up the system dynamics (such as kinematic or dynamic models) and cost/constraints (such as self-collision avoidance and end-effector tracking) from a URDF model. Your can go to [OCS2 official web](https://leggedrobotics.github.io/ocs2/overview.html) for more details.
 
@@ -46,11 +58,6 @@ It should be noted that the original OCS2 project is based on ROS1 Noetic, so th
 | --------- | -------------------------------------------------------------------- |
 |    001    | Migrate mobile manipulation packages from ROS1 Noetic to ROS2 Humble |
 |    002    | Modify for ACT dual-arm Aloha                                        |
-
-
-### Install ROS2 Humble
-
-Please refer to the [official ROS2 Humble installation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html).
 
 ### Install OCS2
 
@@ -90,29 +97,33 @@ cd ~/ocs2_ws/src
 Download [ocs2](./ocs2/) and [ocs2_robotic_assets](./ocs2_robotic_assets/) with `git clone --recursive`. Then, initialize submodules and apply patches:
 
 ```
-cd ocs2
+cd ~/ocs2_ws/src/ocs2
 ./install_ocs2_patches.sh patches/ocs2.scc
 ```
 
 ```
-cd ocs2_robotic_assets
+cd ~/ocs2_ws/src/ocs2_robotic_assets
 ./install_ocs2_robotic_assets_patches.sh patches/ocs2_robotic_assets.scc
 ```
 
 4. Build ocs2 and ocs2_robotic_assets:
 
-```      
+```
+cd ~/ocs2_ws/
+
 # rosdep
+rosdep init
 rosdep update --rosdistro humble
 rosdep install --from-paths src --ignore-src -r -y
+
 # build
 source /opt/ros/humble/setup.bash
 colcon build --packages-skip mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=Release 
 ```
 
-## MUJOCO setup
+## MUJOCO Setup
 
-The required Mujoco module is based on the open-source Mujoco Plugin project [MujocoRosUtils ](https://github.com/isri-aist/MujocoRosUtils/tree/main) to visualize and simulate the ACT cube transmitting task in Mujoco 2.3.7. Installation guide is as follows:
+The required Mujoco module is based on the open-source Mujoco Plugin project [MujocoRosUtils](https://github.com/isri-aist/MujocoRosUtils/tree/main) to visualize and simulate the ACT cube transmitting task in Mujoco 2.3.7. Installation guide is as follows:
 
 1. Download Mujoco 2.3.7 library:
 ```
@@ -127,7 +138,7 @@ rm -fr mujoco-2.3.7-linux-x86_64.tar.gz
 Download [mujoco_ros_utils](./mujoco_ros_utils/) with `git clone --recursive`. Then, initialize submodules and apply patches:
 
 ```
-cd mujoco_ros_utils
+cd ~/ocs2_ws/src/mujoco_ros_utils
 ./install_mujoco_ros_utils_patches.sh patches/mujoco_ros_utils.scc
 ```
 
@@ -136,7 +147,7 @@ cd mujoco_ros_utils
 source /opt/ros/humble/setup.bash
 source ~/ocs2_ws/install/setup.bash
 cd ~/ocs2_ws
-colcon build --packages-select mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMUJOCO_ROOT_DIR=~/.mujoco/mujoco-2.3.7
+colcon build --packages-select mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMUJOCO_ROOT_DIR=$HOME/.mujoco/mujoco-2.3.7
 ```
 
 
@@ -148,11 +159,23 @@ Open new terminal and run the following commands:
 
 ```
 source /opt/ros/humble/setup.bash
+source ~/ocs2_ws/install/setup.bash
 cd ~/.mujoco/mujoco-2.3.7/bin
-./simulate ~/ocs2_ws/src/MujocoRosUtils/xml/bimanual_viperx_transfer_cube_dual_arm.xml
+./simulate [path to your MujocoRosUtils]/xml/bimanual_viperx_transfer_cube_dual_arm.xml
 ```
 
 If running successfully, the mujoco UI will display two opposing ALOHA robotic arms. If you observe collisions between the arms, don't worry; this is normal before initialization.
+
+`Notes:`If mujoco fails with unknown plugin, please check `ldd` and add lib path manually:
+
+```
+# ldd check
+ldd ~/.mujoco/mujoco-2.3.7/bin/mujoco_plugin/libMujocoRosUtils*.so
+# add path
+export LD_LIBRARY_PATH=~/ocs2_ws/install/ocs2_msgs/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=~/.mujoco/mujoco-2.3.7/bin/mujoco_plugin:$LD_LIBRARY_PATH
+```
+
 
 2. Run MPC:
 
@@ -172,7 +195,7 @@ If launching successfully, the OCS2 terminal will print out information indicati
 
 3. Run ACT:
 
-You can download our pre-trained weights from transmitting cube task and set the argument ``--ckpt_dir`` to the path of the pre-trained weights. Then, open new terminal and run the following commands:
+You can download our pre-trained weights for [transferring cube task](https://eci.intel.com/embodied-sdk-docs/_downloads/sim_transfer_cube_scripted.zip) and set the argument ``--ckpt_dir`` to the path of the pre-trained weights. Then, open new terminal and run the following commands:
 
 ```
 # env

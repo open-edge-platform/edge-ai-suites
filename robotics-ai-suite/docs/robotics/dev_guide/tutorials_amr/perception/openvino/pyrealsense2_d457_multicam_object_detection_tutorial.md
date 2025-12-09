@@ -88,7 +88,7 @@ Verify that the GPU driver is installed using the previous ``clinfo`` command.
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install -y ros-jazzy-librealsense2-tools
@@ -96,7 +96,7 @@ sudo apt install -y ros-jazzy-librealsense2-tools
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install -y ros-humble-librealsense2-tools
@@ -142,7 +142,7 @@ Install the multi-camera object detection tutorial by using the following comman
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install -y ros-jazzy-pyrealsense2-ai-demo
@@ -150,7 +150,7 @@ sudo apt install -y ros-jazzy-pyrealsense2-ai-demo
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install -y ros-humble-pyrealsense2-ai-demo
@@ -172,7 +172,7 @@ Run the below commands to start the tutorial.
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 # Activate the pyrealsense2-ai-demo python environment
@@ -187,7 +187,7 @@ python3 /opt/ros/jazzy/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/ja
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 # Activate the pyrealsense2-ai-demo python environment

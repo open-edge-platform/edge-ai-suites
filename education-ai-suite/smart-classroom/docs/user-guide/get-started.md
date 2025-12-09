@@ -39,7 +39,7 @@ pip install --upgrade -r requirements.txt
 ```
 
 
-**d. [Optional] Create Python Venv for Ipex Based Summarizer**  
+**d. [Optional] Create Python Venv for Ipex Based Summarizer**
 If you plan to use IPEX, create a separate virtual environment.
 
 
@@ -52,6 +52,7 @@ cd smart-classroom
 pip install --upgrade -r requirements.txt
 pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
 ```
+**Note: `smartclassroom_ipex` should only be used with FunAsr and Ipex related models (Specified in 2nd section). Don't configure Openvino related models in `smartclassroom_ipex`**
 > 💡 *Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.*
 
 **e. Install DL Streamer**
@@ -67,8 +68,8 @@ For details, refer to [Install Guide](https://docs.openedgeplatform.intel.com/de
 
 ## Step 2: Configuration
 
-### a. Default Configuration  
-  
+### a. Default Configuration
+
 By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
 
 ```bash
@@ -85,7 +86,7 @@ summarizer:
   weight_format: int8         # Supported: fp16, fp32, int4, int8
   max_new_tokens: 1024        # Maximum tokens to generate in summaries
 ```
-### b. Chinese Audio Transcription  
+### b. Chinese Audio Transcription
 
 For Chinese audio transcription, switch to funASR with Paraformer in your config (`smart-classroom/config.yaml`):
 ```bash
@@ -127,7 +128,7 @@ npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
->  Open a second (new) Command Prompt / terminal window for the frontend. The backend terminal stays busy serving requests.
+> Open a second (new) Command Prompt / terminal window for the frontend. The backend terminal stays busy serving requests.
 
 💡 Tips: You should see backend logs similar to this:
 
@@ -169,21 +170,22 @@ If you changed the port, adjust the URL accordingly.
 - Nothing at localhost:5173: Check that the frontend terminal shows Vite server running and no port conflict.
 - Firewall blocks access: Allow inbound on ports 5173 (frontend) and 8000 (backend) on Windows.
 - Auto reload not happening: Refresh manually if backend was restarted after initial UI load.
-- If you encounter the error “Port for tensor name cache_position was not found.” in the backend, it indicates the models were not configured as per the instructions in the README. To fix the issue, run:
-
-  ```bash
-  # Use Python 3.12.x before running pip.
-  pip install --upgrade -r requirements.txt
-  ```
-
-  Then delete the models directory from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
+- If you see the error “Port for tensor name cache_position was not found.” in the backend, it means the models weren’t configured correctly. To fix this, delete the models directory at edge-ai-suites/education-ai-suite/smart-classroom/models, then rerun only step 1’s option c (for OpenVINO) or d (for IPEX), whichever applies to your setup.
 - If you face a tokenizer load issue like this:
 
   ``` bash
   Either openvino_tokenizer.xml was not provided or it was not loaded correctly. Tokenizer::encode is not available
   ```
-  
+
   Delete the models folder from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
+
+### Known Issues
+ 
+- **Manual Video File Path Input**: Users are required to manually specify the path to video files from their local system in the base directory input. It is recommended to keep all video files in the same directory for seamless operation.
+- **Live Video Monitoring Timeout**: Live video monitoring sessions will automatically stop after 45 minutes if the user does not reload the page to start a new session.
+- **Stream End Notification**: Once the video streaming ends, the user will see a "Stream not found" message on the screen, indicating that the stream has concluded.
+- **Do Not Reload During Active Streaming**: Users should not reload the page while the stream is active. Reloading the page will terminate the session, and the user will lose the current stream. Wait until the "Stream not found" notification appears on the screen before reloading.
+- **Video Ready Notification**: If the URL is configured in the settings, the notification will display "Video Ready" unless the screen is reloaded. Reloading the screen will reset the session and the notification.
 
 ## Uninstall the Application
 
@@ -193,4 +195,3 @@ To uninstall the application, follow these steps:
    Navigate to the directory and remove *education-ai-suite/smartclassroom*
 2. **Remove the models directory:**
    Remove the models folder located under *education-ai-suite/smart-classroom*.
-

@@ -43,6 +43,13 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   std_srvs
 )
 
+# Determine ROS distro-specific include directory
+if(DEFINED ENV{ROS_DISTRO})
+  set(ROS_DISTRO $ENV{ROS_DISTRO})
+else()
+  set(ROS_DISTRO "humble")
+endif()
+
 add_library(${PROJECT_NAME} 
   SHARED
   src/robotiq_driver.cpp
@@ -53,7 +60,7 @@ target_link_libraries(
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${ROS_DISTRO}/include>
   $<INSTALL_INTERFACE:include>
 )
 ament_target_dependencies(
@@ -69,7 +76,7 @@ install(
   DESTINATION lib
 )
 install(
-  DIRECTORY include/
+  DIRECTORY ${ROS_DISTRO}/include/
   DESTINATION include
 )
 
@@ -80,11 +87,6 @@ ament_export_include_directories(
 )
 ament_export_libraries(
         robotiq_driver_plugin
-)
-
-
-install(DIRECTORY include/
-  DESTINATION include
 )
 
 ament_export_dependencies(

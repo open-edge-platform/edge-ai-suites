@@ -4,7 +4,7 @@ Click each tab to learn about the new and updated features in each release of Em
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> Embodied Intelligence SDK v25.36
-<!--hide_directive:sync: tab1hide_directive-->
+<!--hide_directive:sync: jazzyhide_directive-->
 
 Embodied Intelligence SDK v25.36 enhances model optimization capabilities with OpenVINO™ toolkit and provides typical workflows and examples, including Diffusion Policy (DP), Robotic Diffusion Transformer (RDT), Improved 3D Diffusion Policy (IDP3), Visual Servoing (CNS) and LLM Robotic Demo. This release has also updated the real-time optimized best-known configuration (BKC) on improving AI and control performance, and supporting the Intel® Arc™ B-series graphics card (B570).
 
@@ -53,7 +53,7 @@ Embodied Intelligence SDK v25.36 enhances model optimization capabilities with O
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> Embodied Intelligence SDK v25.15
-<!--hide_directive:sync: tab2hide_directive-->
+<!--hide_directive:sync: humblehide_directive-->
 
 Embodied Intelligence SDK v25.15 provides necessary software framework, libraries, tools, BKC, tutorials and example codes to facilitate embodied intelligence solution development on Intel® Core™ Ultra Series 2 processors (Arrow Lake-H), It provides Intel Linux LTS kernel v6.12.8 with Preempt-RT, and supports for Canonical Ubuntu OS 22.04, introduces initial support for ROS2 Humble software libraries and tools. It supports many models optimization with OpenVINO™ toolkit, and provides typical workflows and examples including ACT manipulation, ORB-SLAM3, etc.
 

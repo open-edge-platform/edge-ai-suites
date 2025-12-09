@@ -91,19 +91,38 @@ bash install_driver_related_libs.sh
 
 **If driver are already installed on the machine, you don't need to do this step.**
 
+### Pull docker image through docker hub
 
+You can pull latest tfcc docker image through [intel/tfcc - Docker Image](https://hub.docker.com/r/intel/tfcc/).
+
+For example:
+
+```bash
+docker pull intel/tfcc:latest
+```
 
 ### Build and run docker image through scripts
 
 > **Note that the default username is `tfcc` and password is `intel` in docker image.**
 
-#### Build and run docker image
+#### Build docker image
 
 Usage:
 
 ```bash
 bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04> 
 ```
+
+Example:
+
+```bash
+cd $PROJ_DIR/docker
+bash build_docker.sh tfcc:latest Dockerfile_TFCC.dockerfile
+```
+
+#### Run docker image
+
+Usage:
 
 ```
 bash run_docker.sh <DOCKER_IMAGE, default tfcc:latest> <NPU_ON, default false>
@@ -113,7 +132,6 @@ Example:
 
 ```bash
 cd $PROJ_DIR/docker
-bash build_docker.sh tfcc:latest Dockerfile_TFCC.dockerfile
 bash run_docker.sh tfcc:latest false
 # After the run is complete, the container ID will be output, or you can view it through docker ps 
 ```
@@ -226,3 +244,9 @@ copy dataset
 ```bash
 docker cp /path/to/dataset docker-tfcc-1:/path/to/dataset
 ```
+
+> **Caution:**
+>
+> This container image is intended for demo purposes only and not intended for production use.
+>
+> To receive expanded security maintenance from Canonical on the Ubuntu base layer, you may follow the [how-to guide to enable Ubuntu Pro in a Dockerfile](https://documentation.ubuntu.com/pro-client/en/docs/howtoguides/enable_in_dockerfile), which will require the image to be rebuilt.

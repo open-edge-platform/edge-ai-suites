@@ -1,8 +1,16 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Basic Logic using Lidar
 
 ## Lidar Pipeline
 
-The overall idea of incorporating lidar data into our system is to improve both the performance and functional safety and reliability with redundancy of additional data that the lidar provides in addition to visual information. Currently, we have implemented the Lidar support in the front-end (i.e. motion only bundle adjustment).  We plan to support lidar data in the back-end on the future releases to fully enable the lidar on the entire pipeline.
+The overall idea of incorporating lidar data into our system is to improve both the performance and functional safety and reliability with redundancy of additional data that the lidar provides in addition to visual information.
+Currently, we have implemented the Lidar support in the front-end (i.e. motion only bundle adjustment).
+We plan to support lidar data in the back-end on the future releases to fully enable the lidar on the entire pipeline.
 
 ## How to enable 2D lidar support
 

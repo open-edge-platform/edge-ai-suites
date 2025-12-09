@@ -3,7 +3,7 @@ This sample application allows users to evaluate and optimize video processing w
 
 # Overview
 This sample application is built on the VPP SDK and can serve as a reference for various video processing use cases.
-`SVET` is a subcomponent designed for the NVR scenario. With `SVET`, users can configure NVR workloads (such as decode, composition, and display) through a configuration file. The application reads this file and executes the user-defined workload accordingly.
+`SVET2` (Smart Video Evaluation Tool 2) is a subcomponent designed for the NVR scenario. With `SVET2`, users can configure NVR workloads (such as decode, composition, and display) through a configuration file. The application reads this file and executes the user-defined workload accordingly.
 Programming Language: C++  
 
 # How it works
