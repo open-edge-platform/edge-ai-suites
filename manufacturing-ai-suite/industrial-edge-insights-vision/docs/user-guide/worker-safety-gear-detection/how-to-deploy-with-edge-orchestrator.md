@@ -27,7 +27,7 @@ To deploy the **Worker Safety Gear Detection** Sample Application with the Edge 
 1. Clone the **edge-ai-suites** repository and change into Worker Safety Gear Detection directory:
 
     ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-suites
+    git clone https://github.com/open-edge-platform/edge-ai-suites -b release-2025.2.0
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps/worker-safety-gear-detection
     ```
 

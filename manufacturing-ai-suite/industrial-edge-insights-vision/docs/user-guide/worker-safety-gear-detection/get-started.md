@@ -15,7 +15,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
     ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-suites.git
+    git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
     ```
 

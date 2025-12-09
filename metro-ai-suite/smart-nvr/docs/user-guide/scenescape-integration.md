@@ -18,7 +18,7 @@ Smart NVR system integrates with Intel Scenescape to enable:
 
 ```bash
 # Clone smart intersection repository inside smart nvr directory if not already done
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b v1.2.0
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
 
 # From the Smart NVR directory, copy the DLStreamer configuration (enables RTSP streaming)
 cp ./resources/si-rtsp-config.json edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/config.json

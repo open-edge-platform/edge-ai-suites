@@ -27,7 +27,7 @@ To deploy the **Weld Porosity** Sample Application with the Edge Orchestrator, f
 1. Clone the **edge-ai-suites** repository and change into Weld Porosity directory:
 
     ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-suites
+    git clone https://github.com/open-edge-platform/edge-ai-suites -b release-2025.2.0
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity
     ```
 

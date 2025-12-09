@@ -19,7 +19,7 @@ To install dependencies, do the following:
   cd edge-ai-suites
   git sparse-checkout init --cone
   git sparse-checkout set education-ai-suite
-  git checkout
+  git checkout -b release-2025.2.0
   cd education-ai-suite
 ```
 
@@ -214,7 +214,7 @@ If you changed the port, adjust the URL accordingly.
   ```
 
 ### Known Issues
- 
+
 - **Manual Video File Path Input**: Users are required to manually specify the path to video files from their local system in the base directory input. It is recommended to keep all video files in the same directory for seamless operation.
 - **Live Video Monitoring Timeout**: Live video monitoring sessions will automatically stop after 45 minutes if the user does not reload the page to start a new session.
 - **Stream End Notification**: Once the video streaming ends, the user will see a "Stream not found" message on the screen, indicating that the stream has concluded.

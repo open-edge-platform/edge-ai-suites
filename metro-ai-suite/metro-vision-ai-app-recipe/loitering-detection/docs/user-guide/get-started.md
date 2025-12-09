@@ -33,16 +33,19 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 
 1. **Clone the Repository**:
    - Run:
+
      ```bash
-     git clone https://github.com/open-edge-platform/edge-ai-suites.git
+     git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
      cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
      ```
 
 2. **Setup Application and Download Assets**:
    - Use the installation script to configure the application and download required models:
+
      ```bash
      ./install.sh loitering-detection
      ```
+
      Note: For environments requiring a specific host IP address (such as when using Edge Manageability Toolkit or deploying across different network interfaces), you can explicitly specify the IP address (Replace `<HOST_IP>` with your target IP address.): `./install.sh loitering-detection <HOST_IP>`
 
 ## Run the application

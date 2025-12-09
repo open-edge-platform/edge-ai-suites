@@ -13,14 +13,18 @@
 > **Note**: The following instructions assume Kubernetes is already running in the host system with helm package manager installed.
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
+
     ```sh
-    git clone https://github.com/open-edge-platform/edge-ai-suites.git
+    git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
     ```
+
 2. Set app specific values.yaml file.
+
     ```sh
     cp helm/values_pallet_defect_detection.yaml helm/values.yaml
     ```
+
 3. Optional: Pull the helm chart and replace the existing helm folder with it
     - Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm`
 
@@ -35,7 +39,7 @@
         `rm -rf helm && mv pallet-defect-detection-reference-implementation helm`
 4.  Edit the HOST_IP, proxy and other environment variables in `helm/values.yaml` as follows
     ```yaml
-    env:        
+    env:
         HOST_IP: <HOST_IP>   # host IP address
         MINIO_ACCESS_KEY: <DATABASE USERNAME> #  example: minioadmin
         MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
@@ -72,7 +76,7 @@
 2.  Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
     ```sh
     # Below is an example for Pallet Defect Detection. Please adjust the source path of models and videos appropriately for other sample applications.
-    
+
     POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
     kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
@@ -84,7 +88,7 @@
     ./sample_list.sh helm
     ```
     This lists the pipeline loaded in DLStreamer Pipeline Server.
-    
+
     Output:
     ```sh
     # Example output for Pallet Defect Detection
@@ -119,8 +123,8 @@
     ```sh
     ./sample_start.sh helm -p pallet_defect_detection
     ```
-    This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available. 
-    
+    This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different options available.
+
     Output:
     ```sh
     # Example output for Pallet Defect Detection
@@ -145,7 +149,7 @@
     ./sample_status.sh helm
     ```
     This command lists status of pipeline instances launched during the lifetime of sample application.
-    
+
     Output:
     ```sh
     # Example output for Pallet Defect Detection
@@ -168,7 +172,7 @@
     ./sample_stop.sh helm
     ```
     This command will stop all instances that are currently in `RUNNING` state and respond with the last status.
-    
+
     Output:
     ```sh
     # Example output for Pallet Defect Detection
@@ -189,7 +193,7 @@
     "state": "RUNNING"
     }
     ```
-    If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.    
+    If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.
     For example, `./sample_stop.sh helm --id 99ac50d852b511f09f7c2242868ff651`
 
 7. Uninstall the helm chart.
@@ -202,7 +206,7 @@
 
 Applications can take advantage of S3 publish feature from DLStreamer Pipeline Server and use it to save frames to an S3 compatible storage.
 
-1. Run all the steps mentioned in above [section](./how-to-deploy-using-helm-charts.md#setup-the-application) to setup the application. 
+1. Run all the steps mentioned in above [section](./how-to-deploy-using-helm-charts.md#setup-the-application) to setup the application.
 
 2. Install the helm chart
     ```sh
@@ -212,7 +216,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 3. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
     ```sh
     # Below is an example for Pallet Defect Detection. Please adjust the source path of models and videos appropriately for other sample applications.
-    
+
     POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
     kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
@@ -221,14 +225,14 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     ```
 
 4. Install the package `boto3` in your python environment if not installed.
-    
+
     It is recommended to create a virtual environment and install it there. You can run the following commands to add the necessary dependencies as well as create and activate the environment.
-        
+
     ```sh
     sudo apt update && \
     sudo apt install -y python3 python3-pip python3-venv
     ```
-    ```sh 
+    ```sh
     python3 -m venv venv && \
     source venv/bin/activate
     ```
@@ -240,7 +244,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     ```
     > **Note** DLStreamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
 
-5. Create a S3 bucket using the following script. 
+5. Create a S3 bucket using the following script.
 
     Update the `HOST_IP` and credentials with that of the running MinIO server. Name the file as `create_bucket.py`.
 
@@ -301,7 +305,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 
 ## MLOps using Model Registry
 
-1. Run all the steps mentioned in above [section](./how-to-deploy-using-helm-charts.md#setup-the-application) to setup the application. 
+1. Run all the steps mentioned in above [section](./how-to-deploy-using-helm-charts.md#setup-the-application) to setup the application.
 
 2. Install the helm chart
     ```sh
@@ -311,7 +315,7 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 3. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
     ```sh
     # Below is an example for Pallet Defect Detection. Please adjust the source path of models and videos appropriately for other sample applications.
-    
+
     POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
     kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
@@ -354,11 +358,11 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
 6. Download and prepare the model.
     ```sh
     export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/INT8/pallet_defect_detection.zip'
-    
+
     curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
     ```
 
-7. Run the following curl command to upload the local model. 
+7. Run the following curl command to upload the local model.
     ```sh
     curl -k -L -X POST "https://<HOST_IP>:30443/registry/models" \
     -H 'Content-Type: multipart/form-data' \

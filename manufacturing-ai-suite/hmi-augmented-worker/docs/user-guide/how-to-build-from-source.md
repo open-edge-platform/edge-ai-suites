@@ -26,8 +26,9 @@ In the Windows® environment, the File Watcher Service works with the HMI applic
 To build the File Watcher executable binary, follow these steps:
 
 1. Clone and download the source code by either using Git clone or downloading the source code as a ZIP file directly from the [repository](https://github.com/open-edge-platform/edge-ai-suites).
+
    ```bash
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b release-2025.2.0
    ```
 
 2. Set up the Virtual Environment with Python venv.

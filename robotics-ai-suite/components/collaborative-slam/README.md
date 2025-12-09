@@ -38,7 +38,7 @@ We also depend on [DBoW2](https://github.com/shinsumicco/DBoW2), [g2o](https://g
 To setup, clone or download UnivLoc into a colcon workspace, and build with `colcon build`:
 
 ```bash
-git clone --recursive https://github.com/open-edge-platform/edge-ai-suites
+git clone --recursive https://github.com/open-edge-platform/edge-ai-suites -b release-2025.2.0
 # If you have cloned the repo without the --recursive flag, run the following command to remedy:
 #git submodule update --init --recursive
 

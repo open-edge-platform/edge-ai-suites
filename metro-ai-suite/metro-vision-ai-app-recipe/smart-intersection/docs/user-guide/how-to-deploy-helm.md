@@ -34,7 +34,7 @@ Before you can deploy with Helm, you must clone the repository:
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
@@ -64,10 +64,12 @@ cd ..
 #### Set Admin and Postgress Passwords
 
 These passwords need to be set before deployment. You can set them in the values.yaml file.
+
 ```bash
 # Edit the values.yaml file to set your external IP
 nano ./smart-intersection/chart/values.yaml
 ```
+
 Find the following sections and update them with your desired passwords:
 
 ```yaml
