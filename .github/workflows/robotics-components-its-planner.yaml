@@ -16,6 +16,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    working-directory: robotics-ai-suite/components/its-planner
+
 jobs:
   license-check:
     name: '[${{ inputs.component-name }}] License Check'
