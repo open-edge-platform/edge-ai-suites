@@ -7,9 +7,9 @@
  -  Real-time video processing for classroom monitoring.
  -  Bounding boxes and pose estimation for teachers and students.
 -   **Room View Tab**: Displays live classroom video with captions and engagement metrics. 
--  •  **Board Captures Tab**: Chronological snapshots of smart board content. 
--    **Mind Map Tab**: Keyword-indexed graph of class content for visual learning. 
--    **Class Engagement Panel**: Video-based engagement scoring for students
+-  **Board Captures Tab**: Chronological snapshots of smart board content. 
+-  **Mind Map Tab**: Keyword-indexed graph of class content for visual learning. 
+-  **Class Engagement Panel**: Video-based engagement scoring for students
 
 ## Release EAS-2025.2.0 
 
