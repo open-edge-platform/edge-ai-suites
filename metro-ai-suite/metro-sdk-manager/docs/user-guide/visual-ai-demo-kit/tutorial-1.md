@@ -19,7 +19,6 @@ By following this guide, you will learn how to:
 
 ## Prerequisites
 
-- Verify that your system meets the [minimum system requirements](./system-requirements.md) for running edge AI applications
 - Install Docker: [Docker Installation Guide](https://docs.docker.com/get-docker/)
 - Enable running Docker without "sudo": [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/)
 - Ensure you have at least 8GB of available disk space for AI models and video files
