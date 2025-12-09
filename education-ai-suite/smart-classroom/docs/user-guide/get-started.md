@@ -205,7 +205,9 @@ If you changed the port, adjust the URL accordingly.
 
 To uninstall the application, follow these steps:
 
-1. **Delete the Python virtual environment folder:**
-   Navigate to the directory and remove *education-ai-suite/smartclassroom*
+1. **Delete the Python virtual environment folder:** \
+   Navigate to the directory and remove \
+   For base environment : *education-ai-suite/smartclassroom*. \
+   For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*.
 2. **Remove the models directory:**
    Remove the models folder located under *education-ai-suite/smart-classroom*.
