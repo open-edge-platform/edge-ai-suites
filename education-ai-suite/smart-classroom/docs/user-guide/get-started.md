@@ -168,30 +168,50 @@ If you changed the port, adjust the URL accordingly.
 
 ## Troubleshooting
 
-- Frontend not opening: Ensure you ran npm run dev in a second terminal after starting python main.py.
-- Backend not ready: Wait until Uvicorn shows "Application startup complete" and listening on port 8000.
-- URL fails from another device: Confirm you used --host 0.0.0.0 and replace <HOST_IP> correctly.
-- Nothing at localhost:5173: Check that the frontend terminal shows Vite server running and no port conflict.
-- Firewall blocks access: Allow inbound on ports 5173 (frontend) and 8000 (backend) on Windows.
-- Auto reload not happening: Refresh manually if backend was restarted after initial UI load.
-- If you see the error “Port for tensor name cache_position was not found.” in the backend, it means the models weren’t configured correctly. To fix this, delete the models directory at edge-ai-suites/education-ai-suite/smart-classroom/models, then rerun only step 1’s option c (for OpenVINO) or d (for IPEX), whichever applies to your setup.
-- If you face a tokenizer load issue like this:
+- **Frontend not opening:**  
+  Ensure you ran `npm run dev` in a second terminal after starting `python main.py`.
 
-  ``` bash
-  Either openvino_tokenizer.xml was not provided or it was not loaded correctly. Tokenizer::encode is not available
-  ```
+- **Backend not ready:**  
+  Wait until Uvicorn shows **"Application startup complete"** and is listening on port **8000**.
 
+- **URL fails from another device:**  
+  Confirm you used `--host 0.0.0.0` and replaced `<HOST_IP>` correctly.
+
+- **Nothing at http://localhost:5173:**  
+  Check that the frontend terminal shows the Vite server running and no port conflict.
+
+- **Firewall blocks access:**  
+  Allow inbound traffic on ports **5173** (frontend) and **8000** (backend) on Windows.
+
+- **Auto reload not happening:**  
+  Refresh manually if the backend was restarted after initial UI load.
+
+- **Error: `Port for tensor name cache_position was not found.`**  
+  This means the models were not configured correctly.  
+  To fix this:
+  1. Delete the models directory:  
+     ```
+     edge-ai-suites/education-ai-suite/smart-classroom/models
+     ```
+  2. Rerun only Step 1’s option **c** (OpenVINO) or **d** (IPEX), whichever applies.
+
+- **Tokenizer load issue:**  
+  If you see this error:
+    ``` bash
+    Either openvino_tokenizer.xml was not provided or it was not loaded correctly. Tokenizer::encode is not available
+    ```
   Delete the models folder from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
+
 - If you see below error while running dls setup script,
+    ``` bash
+    .\setup_dls_env.ps1
+      CategoryInfo          : SecurityError: (:) [], PSSecurityException
+      FullyQualifiedErrorId : UnauthorizedAccess
+    ```
+  Run below command,
   ``` bash
- .\setup_dls_env.ps1
-    CategoryInfo          : SecurityError: (:) [], PSSecurityException
-    FullyQualifiedErrorId : UnauthorizedAccess
+  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
   ```
- Run below command,
- ``` bash
- Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
- ```
 
 ### Known Issues
  
