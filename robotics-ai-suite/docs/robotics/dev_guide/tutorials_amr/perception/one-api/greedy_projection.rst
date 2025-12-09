@@ -58,6 +58,26 @@ Additional parameters are defined to provide control segments and overlap.
       :linenos:
 
 
+#. This tutorial needs ``boost`` patching to be applied for C++17 as a workaround if the Boost version < 1.83. Refer to `Boost Patching for Compatibility <../installation.html#boost-patching-for-compatibility>`__ for required code changes.
+
+
+#. Except for the above code change, this tutorial requires the following code changes:
+
+   **File: tutorials/greedy_projection.cpp (copied from /opt/intel/pcl/oneapi/tutorials/)**
+
+   .. code-block:: diff
+
+      -#include <pcl/oneapi/surface_omp/gp3.h>
+      +#include <pcl/surface/gp3.h>
+
+      -pcl::GreedyProjectionTriangulationOMP<pcl::PointNormal> gp3;
+      +pcl::GreedyProjectionTriangulation<pcl::PointNormal> gp3;
+
+      -gp3.setNumberOfThreads(3);
+      -gp3.setBlockOverlapPercentage(0.04);
+      -gp3.setRemoveDuplicateMesh(true);
+
+
 #. Source the Intel® oneAPI Base Toolkit environment:
 
    .. code-block::
