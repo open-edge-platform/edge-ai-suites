@@ -69,12 +69,28 @@ std::string PoseDetector::mostFrequentClass(std::deque<std::string> dq)
     return res;
 }
 
+void PoseDetector::cameraInfoCallback(sensor_msgs::msg::CameraInfo::ConstSharedPtr msg)
+{
+    intrinsicsReceived = true;
+    fx_ = msg->k[0]; // Focal length x
+    fy_ = msg->k[4]; // Focal length y
+    cx_ = msg->k[2]; // Principal point x
+    cy_ = msg->k[5]; // Principal point y
+
+    RCLCPP_DEBUG(this->get_logger(), "received instrinsics %f %f %f %f", fx_, fy_, cx_, cy_);
+    // destroy this subscription...
+    camera_info_sub_.reset();
+}
+
 void PoseDetector::SynchronizedCallback(
     const sensor_msgs::msg::PointCloud2::ConstSharedPtr m_last_cloud,
     rvc_vision_messages::msg::RotatedBBList::ConstSharedPtr m_rotated_bb_msg)
 {
     rclcpp::Time t1 = this->get_clock()->now();
     rclcpp::Time messageTs = m_last_cloud->header.stamp;
+
+    if (intrinsicsReceived == false)
+        RCLCPP_INFO_STREAM(rclcpp::get_logger("FY"), "NO INTRINSICS YET!");
 
     rvc_messages::msg::PoseStampedList outMsg;
     rvc_messages::msg::PoseStamped poseStamped;
@@ -89,47 +105,56 @@ void PoseDetector::SynchronizedCallback(
         auto roi = m_rotated_bb_msg->rotated_bb_list.back();
         type = roi.object_id;
 
-        pcl::fromROSMsg(*m_last_cloud, *cloud);
-
-        // grown the BB a bit
-        if (roi.width < cloud->width - 2)
+        sensor_msgs::msg::PointCloud2 transformed_cloud_msg;
+        try
         {
-            roi.width += 2;
+            if (tfBuffer->canTransform("cameraipc_color_optical_frame",
+                 m_last_cloud->header.frame_id,
+                 m_last_cloud->header.stamp,
+                 rclcpp::Duration::from_seconds(0.2)))
+            {
+                 tfBuffer->transform(*m_last_cloud, transformed_cloud_msg,
+                 "cameraipc_color_optical_frame", tf2::durationFromSec(0.1));
+            }
+            else
+            {
+                 RCLCPP_WARN(this->get_logger(), "Transform not available, skipping cloud");
+                 return;
+            }
+        }
+        catch (tf2::TransformException &ex)
+        {
+            RCLCPP_WARN(this->get_logger(), "Transform failed: %s", ex.what());
+            return;
         }
 
-        if (roi.height < cloud->height - 2)
-        {
-            roi.height += 2;
-        }
+        pcl::fromROSMsg(transformed_cloud_msg, *cloud);
 
-        // SANITY CHECKS
-        if (roi.width > cloud->width)
-        {
-            roi.width = cloud->width;
-        }
-
-        if (roi.height > cloud->height)
-        {
-            roi.height = cloud->height;
-        }
-
-        //FIXME: handle the rotated rectangle!! THIS ASSUMES ANGLE == 0
-        roi.angle = 0.0;
-        // cropping by resizing in place without allocating new pointcloud
-        unsigned long counter = 0;
         unsigned x0 = roi.cx - roi.width / 2.0;
         unsigned y0 = roi.cy - roi.height / 2.0;
+        pcl::PointCloud<PointT>::Ptr croppedCloud(new pcl::PointCloud<PointT>());
+        int rect_x_min = x0;
+        int rect_x_max = x0+ roi.width;
+        int rect_y_min = y0;
+        int rect_y_max = y0 + roi.height;
+        for (const auto &point : cloud->points) {
+            // Skip invalid points
+            if (std::isnan(point.x) || std::isnan(point.y) || std::isnan(point.z)) continue;
 
-        for (unsigned i = x0; i < x0 + roi.width; i++)
-        {
-            for (unsigned j = y0; j < y0 + roi.height; j++)
-            {
-                cloud->points[counter] = (*cloud)(i, j);
-                counter++;
+            // Project 3D point back to 2D pixel
+            int pixel_x = static_cast<int>((fx_ * point.x / point.z) + cx_);
+            int pixel_y = static_cast<int>((fy_ * point.y / point.z) + cy_);
+
+            // Check if the pixel falls within the crop rectangle
+            if (pixel_x >= rect_x_min && pixel_x <= rect_x_max &&
+                pixel_y >= rect_y_min && pixel_y <= rect_y_max) {
+                croppedCloud->points.push_back(point);
             }
         }
 
-        cloud->resize((roi.width) * (roi.height));
+        croppedCloud->width = croppedCloud->points.size();
+        croppedCloud->height = 1;
+        croppedCloud->is_dense = true;
 
         rclcpp::Time t2 = get_clock()->now();
         auto it = m_matchers.find(type);
@@ -140,7 +165,7 @@ void PoseDetector::SynchronizedCallback(
             return;
         }
 
-        auto res = it->second.match(cloud);
+        auto res = it->second.match(croppedCloud);
 
         RCLCPP_DEBUG(
             this->get_logger(), "Matched type %s res=%d, %s:%d",
@@ -166,6 +191,8 @@ void PoseDetector::SynchronizedCallback(
             sensor_msgs::msg::PointCloud2 croppedCloudMsg;
             RCLCPP_DEBUG(this->get_logger(), "Publishing REGISTERED cloud on type %s", type.c_str());
             pcl::toROSMsg(*res.registered_cloud, croppedCloudMsg);
+            //pcl::toROSMsg(*croppedCloud, croppedCloudMsg);
+            
 
             croppedCloudMsg.header.stamp = now();
             croppedCloudMsg.header.frame_id = m_rotated_bb_msg->header.frame_id;
@@ -204,6 +231,8 @@ PoseDetector::PoseDetector(const rclcpp::NodeOptions & options)
     auto rmw_qos_profile = rmw_qos_profile_sensor_data;
 #endif
 
+    tfBuffer = std::make_unique<tf2_ros::Buffer> ( this->get_clock() );
+    tfListener = std::make_shared<tf2_ros::TransformListener> ( *tfBuffer );
 
     auto qos = rclcpp::QoS(
         rclcpp::QoSInitialization::from_rmw(rmw_qos_profile),
@@ -228,6 +257,9 @@ PoseDetector::PoseDetector(const rclcpp::NodeOptions & options)
         std::bind(
             &PoseDetector::SynchronizedCallback, this, std::placeholders::_1,
             std::placeholders::_2));
+    camera_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
+        topic_prefix + "color/camera_info", qos,
+        std::bind(&PoseDetector::cameraInfoCallback, this, std::placeholders::_1));
 
     m_pub_poses = this->create_publisher<rvc_messages::msg::PoseStampedList>("object_poses", qos);
 

@@ -1,25 +1,24 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>rvc_pose_detector</name>
+  <name>yolox_inference_plugin</name>
   <version>2.0.0</version>
-  <description>AI pose alignment stage Package</description>
+  <description>RVC AI plugin implementing YOLOX object detection using OpenVINO for industrial parts (cube, gear, nut, bolt) </description>
   <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
   <license>Apache-2.0</license>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
-  <build_depend>ament_index_cpp</build_depend>
+  <buildtool_depend>ament_cmake_ros</buildtool_depend>
 
-  <depend>rclcpp</depend>
-  <depend>rclcpp_components</depend>
+  <build_depend>rclcpp</build_depend>
+  <build_depend>rclcpp_components</build_depend>
+
   <depend>std_msgs</depend>
-  <depend>sensor_msgs</depend>
-  <depend>geometry_msgs</depend>
-  <depend>rvc_messages</depend>
+  <depend>rvc_ai_interface</depend>
+  <depend>pluginlib</depend>
   <depend>rvc_vision_messages</depend>
-  <depend>message_filters</depend>
-  <depend>pcl_conversions</depend>
-  <depend>tf2_eigen</depend>
+
+  <depend>libopencv-dev</depend>
+  <depend>openvino-libraries-dev</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
