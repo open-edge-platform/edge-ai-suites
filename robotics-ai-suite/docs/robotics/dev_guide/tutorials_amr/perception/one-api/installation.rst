@@ -147,7 +147,7 @@ library.
 Boost Patching for Compatibility
 --------------------------------
 
-The following changes to Boost are required to ensure compatibility with modern C++ standards (C++17 and later):
+The following changes to Boost are required to ensure compatibility with modern C++ standards (C++17 and later) if Boost version is less than 1.83:
 
 **File: /usr/include/boost/numeric/conversion/detail/int_float_mixture.hpp**
 

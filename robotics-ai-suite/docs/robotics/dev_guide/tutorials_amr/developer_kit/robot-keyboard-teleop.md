@@ -120,7 +120,7 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
    <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
-   TURTLEBOT3_MODEL=aaeon ros2 run teleop_twist_keyboard teleop_twist_keyboard
+   ros2 run teleop_twist_keyboard teleop_twist_keyboard
    ```
 
    <!--hide_directive:::hide_directive-->
