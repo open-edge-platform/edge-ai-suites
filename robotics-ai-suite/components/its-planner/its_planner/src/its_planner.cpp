@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (C) 2025 Intel Corporation
 
-
 #include <cmath>
 #include <string>
 #include <memory>
@@ -20,8 +19,10 @@
 
 using std::ifstream;
 using std::max;
+using std::vector;
+using std::string;
+using std::pair;
 using inav_util::Location;
-
 
 namespace its_planner
 {
@@ -163,7 +164,7 @@ nav_msgs::msg::Path ITSPlanner::createPlan(
       boost::archive::text_iarchive archive(infile);
       archive >> road_map;
     } catch (const boost::archive::archive_exception & e) {
-      RCLCPP_WARN(node_->get_logger(), "RoadMap is not valid, regenerating roadmap... %s");
+      RCLCPP_WARN(node_->get_logger(), "RoadMap is not valid, regenerating roadmap...");
       generateRoadMap(num_samples, costmap_2d, inflation_map, filename, road_map);
     }
   }
@@ -178,17 +179,17 @@ nav_msgs::msg::Path ITSPlanner::createPlan(
   unsigned int sx, gx;
   unsigned int sy, gy;
   if (!costmap_->worldToMap(start.pose.position.x, start.pose.position.y, sx, sy)) {
-    RCLCPP_WARN(node_->get_logger(), "The start pose sent to the planner is not valid %s");
+    RCLCPP_WARN(node_->get_logger(), "The start pose sent to the planner is not valid");
     return global_path;
   }
 
   if (!costmap_->worldToMap(goal.pose.position.x, goal.pose.position.y, gx, gy)) {
-    RCLCPP_WARN(node_->get_logger(), "The goal sent to the planner is not valid %s");
+    RCLCPP_WARN(node_->get_logger(), "The goal sent to the planner is not valid");
     return global_path;
   }
 
   if (costmap_2d[sx][sy] || costmap_2d[gx][gy]) {
-    RCLCPP_WARN(node_->get_logger(), "The start/goal pose is an obstacle %s");
+    RCLCPP_WARN(node_->get_logger(), "The start/goal pose is an obstacle");
     return global_path;
   }
 
@@ -198,7 +199,7 @@ nav_msgs::msg::Path ITSPlanner::createPlan(
   ITS its_plan(road_map);
 
   if (!its_plan.addStartGoalNode(costmap_2d, st, go)) {
-    RCLCPP_WARN(node_->get_logger(), "The start/goal pose is not valid %s");
+    RCLCPP_WARN(node_->get_logger(), "The start/goal pose is not valid");
     return global_path;
   }
 
@@ -232,7 +233,7 @@ nav_msgs::msg::Path ITSPlanner::createPlan(
   }
 
   if (path.empty() && dubinsPath.empty()) {
-    RCLCPP_WARN(node_->get_logger(), "Path is not found %s");
+    RCLCPP_WARN(node_->get_logger(), "Path is not found");
     return global_path;
   }
 
@@ -344,7 +345,7 @@ vector<pair<double, double>> ITSPlanner::linearInterpolate(
       x = pathi_m1_x;
       y = pathi_m1_y;
     }
-    for (int i = 0; i < total_number_of_loop; i++) {
+    for (int j = 0; j < total_number_of_loop; j++) {
       x += steps * cos(yaw);
       y += steps * sin(yaw);
       linear_interpolated_path.push_back({x, y});
@@ -369,10 +370,9 @@ vector<pair<double, double>> ITSPlanner::pathToWorldCoords(vector<pair<double, d
   auto toWorld = [&](pair<double, double> coord) {
       double wx = mx * coord.first + bx;
       double wy = my * coord.second + by;
-      pair<double, double> pair = {wx, wy};
-      return pair;
+      pair<double, double> result = {wx, wy};
+      return result;
     };
-
 
   vector<pair<double, double>> pathInWorldCoords(path.size());
   for (size_t i = 0; i < path.size(); i++) {
@@ -381,7 +381,7 @@ vector<pair<double, double>> ITSPlanner::pathToWorldCoords(vector<pair<double, d
   return pathInWorldCoords;
 }
 
-// Scales a value in World scale to an equialent value in Map scale
+// Scales a value in World scale to an equivalent value in Map scale
 double ITSPlanner::worldToMapScale(double num)
 {
   double wx1 = 0; double wy1 = 0; double wx2 = 1; double wy2 = 0;
@@ -421,13 +421,12 @@ vector<pair<double, double>> ITSPlanner::processDubinsPath(
   return worldPath;
 }
 
-
 void ITSPlanner::publishMilestoneMarkers(const vector<Pnode> & milestones)
 {
   visualization_msgs::msg::Marker m;
-  auto ma = std::make_unique<visualization_msgs::msg::MarkerArray>();  for (size_t i = 0;
-    i < milestones.size(); i++)
-  {
+  auto ma = std::make_unique<visualization_msgs::msg::MarkerArray>();
+  
+  for (size_t i = 0; i < milestones.size(); i++) {
     m.header.frame_id = "map";
     m.type = m.SPHERE;
     m.action = m.ADD;
@@ -458,8 +457,7 @@ void ITSPlanner::publishMilestoneMarkers(const vector<Pnode> & milestones)
 }
 
 vector<pair<double, double>> ITSPlanner::smoothingFilter(
-  const vector<pair<double, double>> &
-  linear_interpolated_path)
+  const vector<pair<double, double>> & linear_interpolated_path)
 {
   vector<pair<double, double>> smoothed_path;
   for (size_t i = smoothing_window_; i < linear_interpolated_path.size(); i++) {
@@ -577,20 +575,6 @@ vector<double> ITSPlanner::linspace(double a, double b, int steps)
   return v;
 }
 
-void ITSPlanner::generateRoadMap(
-  const int & num_samples,
-  const vector<vector<int>> costmap_2d,
-  const vector<vector<int>> inflation_map,
-  const string & filename,
-  PRM & road_map)
-{
-  RCLCPP_INFO(node_->get_logger(), "Building roadmap... %s");
-  road_map.buildRoadMap(costmap_2d, num_samples, roadmap_, inflation_map, buffer_size_);
-  std::ofstream outfile(filename);
-  boost::archive::text_oarchive archive(outfile);
-  archive << road_map;
-}
-
 vector<pair<double, double>> ITSPlanner::removeRedundantITSNodes(
   vector<std::array<double, 2>> & newPath,
   const vector<pair<double, double>> & originalPath,
@@ -676,8 +660,7 @@ vector<pair<double, double>> ITSPlanner::removeRedundantITSNodes(
   return path;
 }
 
-bool
-ITSPlanner::isITSCollision(
+bool ITSPlanner::isITSCollision(
   const vector<vector<int>> & costmap_2d, const MapLocation & p1,
   const MapLocation & p2, const double & step_size, vector<pair<double, double>> & checkedPath)
 {
@@ -717,7 +700,6 @@ vector<pair<double, double>> ITSPlanner::processITSPath(
 
   // Return processed path
   return worldPath;
-
 }
 
 void ITSPlanner::interpolateItsPathITS(
@@ -748,7 +730,6 @@ vector<std::array<double, 2>> ITSPlanner::getIntermediateNodesITS(
   if (path.size() == 0) {return interNodes;}
 
   double distCovered = 0;
-  double heading;
   int stoppingPt = nodeStepSize / pathStepSize;
   stoppingPt = (stoppingPt > path.size()) ? 0 : stoppingPt;
   for (size_t i = 0; i < path.size() - stoppingPt; i++) {
@@ -761,6 +742,21 @@ vector<std::array<double, 2>> ITSPlanner::getIntermediateNodesITS(
   }
   return interNodes;
 }
+
+void ITSPlanner::generateRoadMap(
+  const int & num_samples,
+  const vector<vector<int>> costmap_2d,
+  const vector<vector<int>> inflation_map,
+  const string & filename,
+  PRM & road_map)
+{
+  RCLCPP_INFO(node_->get_logger(), "Building roadmap...");
+  road_map.buildRoadMap(costmap_2d, num_samples, roadmap_, inflation_map, buffer_size_);
+  std::ofstream outfile(filename);
+  boost::archive::text_oarchive archive(outfile);
+  archive << road_map;
+}
+
 }  // namespace its_planner
 
 #include "pluginlib/class_list_macros.hpp"
