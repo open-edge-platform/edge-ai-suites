@@ -123,7 +123,7 @@ colcon build --packages-skip mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=Re
 
 ## MUJOCO Setup
 
-The required Mujoco module is based on the open-source Mujoco Plugin project [MujocoRosUtils ](https://github.com/isri-aist/MujocoRosUtils/tree/main) to visualize and simulate the ACT cube transmitting task in Mujoco 2.3.7. Installation guide is as follows:
+The required Mujoco module is based on the open-source Mujoco Plugin project [MujocoRosUtils](https://github.com/isri-aist/MujocoRosUtils/tree/main) to visualize and simulate the ACT cube transmitting task in Mujoco 2.3.7. Installation guide is as follows:
 
 1. Download Mujoco 2.3.7 library:
 ```
@@ -195,7 +195,7 @@ If launching successfully, the OCS2 terminal will print out information indicati
 
 3. Run ACT:
 
-You can download our pre-trained weights from transmitting cube task and set the argument ``--ckpt_dir`` to the path of the pre-trained weights. Then, open new terminal and run the following commands:
+You can download our pre-trained weights for [transferring cube task](https://eci.intel.com/embodied-sdk-docs/_downloads/sim_transfer_cube_scripted.zip) and set the argument ``--ckpt_dir`` to the path of the pre-trained weights. Then, open new terminal and run the following commands:
 
 ```
 # env

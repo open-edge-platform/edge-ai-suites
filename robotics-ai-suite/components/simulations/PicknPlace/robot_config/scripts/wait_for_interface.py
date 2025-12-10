@@ -15,17 +15,17 @@
 # See the License for the specific language governing permissions
 # and limitations under the License.
 
-# Desc:  Waits for specific interface (e.g topic, service and action) to be up and running.  
+# Desc:  Waits for specific interface (e.g topic, service and action) to be up and running.
 #        Used to achieve synchronization  and serialization in launch.py
 
 import rclpy
 import subprocess
 import sys
 import time
-import robot_config.utils as utils
+
 
 def check_interface(interface_mode, interface_name):
-    print(f"Waiting for interface {interface_mode} {interface_name}")
+    print(f'Waiting for interface {interface_mode} {interface_name}')
     if interface_name.startswith('//'):
         return
 
@@ -42,13 +42,15 @@ def check_interface(interface_mode, interface_name):
 
         time.sleep(1)
 
+
 def main(args=None):
     rclpy.init()
     if len(sys.argv) < 3:
-        print("Please provide the interface type and name as a command-line argument.")
+        print('Please provide the interface type and name as a command-line argument.')
         sys.exit(1)
 
     check_interface(sys.argv[1], sys.argv[2])
+
 
 if __name__ == '__main__':
     main()

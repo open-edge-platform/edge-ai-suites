@@ -20,7 +20,6 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
    <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
-   sudo apt-get install ros-jazzy-aaeon-adbscan-tutorial-common
    sudo apt-get install ros-jazzy-aaeon-adbscan-tutorial
    ```
 
@@ -29,7 +28,6 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
    <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
-   sudo apt-get install ros-humble-aaeon-adbscan-tutorial-common
    sudo apt-get install ros-humble-aaeon-adbscan-tutorial
    ```
 
@@ -66,7 +64,10 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
 ## Gamepad Robot Control Method
 
-1. Launch the ADBSCAN AAEON Robot gamepad control program:
+1. If you use joystick, remeber that joystick outputs to /joy_vel and you might have to remap it to cmd_vel.
+   You have to either remove ``remappings=[('cmd_vel', '/joy_vel')]`` from ``/opt/ros/$ROS_DISTRO/share/tutorial_aaeon_adbscan/launch/aaeon_adbscan_gamepad_launch.py`` or run ``ros2_interface`` with remap to `joy_vel`.
+
+2. Launch the ADBSCAN AAEON Robot gamepad control program:
 
    ```bash
    sudo chmod a+rw /dev/input/js0
@@ -94,7 +95,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
    <!--hide_directive:::
    ::::hide_directive-->
 
-2. Move the robot around using the gamepad:
+3. Move the robot around using the gamepad:
 
    ![gamepad_Logitech_F710_v2](../../../../images/gamepad_Logitech_F710_v2.png)
 

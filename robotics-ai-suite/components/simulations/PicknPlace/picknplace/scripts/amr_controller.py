@@ -23,29 +23,24 @@ from copy import deepcopy
 
 # Third-Party Library Imports
 import rclpy
-from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import PoseStamped
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.logging import LoggingSeverity
 from rclpy.node import Node
-from rclpy.qos import QoSDurabilityPolicy, QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
-from std_msgs.msg import Bool
-from std_srvs.srv import SetBool
-from tf2_ros.buffer import Buffer
-from tf2_ros.transform_listener import TransformListener
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from smach import State, StateMachine
 from rclpy.parameter import Parameter
 
 # Custom Module Imports
 from robot_config import utils
-from picknplace.msg import BoxState
-from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
+from nav2_simple_commander.robot_navigator import BasicNavigator
+
 
 class RobotController(Node):
     def __init__(self, args):
         super().__init__('AMRController')
-        
+
         self.declare_parameter('state', 'wait')
         self.declare_parameter('point_x', 0.0)
         self.declare_parameter('point_y', 0.0)
@@ -61,16 +56,13 @@ class RobotController(Node):
 
     def setup_qos_and_groups(self):
         self.qos_profile = QoSProfile(
-            reliability=QoSReliabilityPolicy.RELIABLE,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=1
+            reliability=QoSReliabilityPolicy.RELIABLE, history=QoSHistoryPolicy.KEEP_LAST, depth=1
         )
         self.callback_group0 = MutuallyExclusiveCallbackGroup()
         self.gripper_group0 = MutuallyExclusiveCallbackGroup()
         self.client_cb_group0 = MutuallyExclusiveCallbackGroup()
         self.moveit_callback_group0 = MutuallyExclusiveCallbackGroup()
         time.sleep(1)
-
 
     def setup_logging(self):
         self.logger = self.get_logger()
@@ -95,27 +87,30 @@ class RobotController(Node):
         goal_pose.pose.orientation.w = 1.0
         self.navigator.goToPose(goal_pose)
 
+
 class Setup(State):
     def __init__(self, robot_controller):
-        State.__init__(self, outcomes=['wait','failed'])
-        self.robot_controller=robot_controller
+        State.__init__(self, outcomes=['wait', 'failed'])
+        self.robot_controller = robot_controller
 
     def execute(self, userdata):
         return 'wait'
-      
+
+
 class Home(State):
     def __init__(self, robot_controller):
-        State.__init__(self, outcomes=['wait','failed'])
-        self.robot_controller=robot_controller
+        State.__init__(self, outcomes=['wait', 'failed'])
+        self.robot_controller = robot_controller
 
     def execute(self, userdata):
-        self.robot_controller.amr_goto_pose(-0.1, -.3, 0.004)
+        self.robot_controller.amr_goto_pose(-0.1, -0.3, 0.004)
         return 'wait'
-    
+
+
 class Wait(State):
     def __init__(self, robot_controller):
-        State.__init__(self, outcomes=['transfer','failed'])
-        self.robot_controller=robot_controller
+        State.__init__(self, outcomes=['transfer', 'failed'])
+        self.robot_controller = robot_controller
 
     def execute(self, userdata):
         self.robot_controller.last_pose = None
@@ -123,65 +118,86 @@ class Wait(State):
             time.sleep(0.5)
 
         return 'transfer'
-    
+
+
 class TransferObject(State):
     def __init__(self, robot_controller):
         State.__init__(self, outcomes=['transferred', 'failed'])
-        self.robot_controller=robot_controller
+        self.robot_controller = robot_controller
 
     def execute(self, userdata):
         x = float(self.robot_controller.get_parameter('point_x').value)
         y = float(self.robot_controller.get_parameter('point_y').value)
-        print(f"Going to {x}, {y}")
-        self.robot_controller.amr_goto_pose(x,y,0.004)
+        print(f'Going to {x}, {y}')
+        self.robot_controller.amr_goto_pose(x, y, 0.004)
         while not self.robot_controller.navigator.isTaskComplete():
-                time.sleep(0.5)
+            time.sleep(0.5)
 
         return 'transferred'
 
+
 class WaitForPickup(State):
     def __init__(self, robot_controller):
-        State.__init__(self, outcomes=['home','failed'])
-        self.robot_controller=robot_controller
+        State.__init__(self, outcomes=['home', 'failed'])
+        self.robot_controller = robot_controller
 
     def execute(self, userdata):
-        self.robot_controller.set_parameters([
-            Parameter('state', Parameter.Type.STRING, 'wait')            
-        ])
+        self.robot_controller.set_parameters([Parameter('state', Parameter.Type.STRING, 'wait')])
 
-        utils.call_set_parameters(self.robot_controller, "/ARM2Controller", Parameter('object_name', Parameter.Type.STRING, self.robot_controller.get_parameter('object_name').value))
+        utils.call_set_parameters(
+            self.robot_controller,
+            '/ARM2Controller',
+            Parameter(
+                'object_name',
+                Parameter.Type.STRING,
+                self.robot_controller.get_parameter('object_name').value,
+            ),
+        )
 
-        utils.call_set_parameters(self.robot_controller, "/ARM2Controller", Parameter('state', Parameter.Type.STRING, 'move'))
+        utils.call_set_parameters(
+            self.robot_controller,
+            '/ARM2Controller',
+            Parameter('state', Parameter.Type.STRING, 'move'),
+        )
 
         while self.robot_controller.get_parameter('state').value == 'wait':
             time.sleep(0.5)
 
         return 'home'
-    
+
+
 def run_smach(client):
     # Create the top level SMACH state machine
     sm = StateMachine(outcomes=['succeeded', 'aborted'])
     with sm:
-            StateMachine.add('SETUP', Setup(client), transitions={'wait':'WAIT', 'failed':'WAIT'})
-            StateMachine.add('HOME', Home(client), transitions={'wait':'WAIT', 'failed':'HOME'})
-            StateMachine.add('WAIT', Wait(client), transitions={'transfer':'TRANSFER', 'failed':'HOME'})
-            StateMachine.add('TRANSFER', TransferObject(client), transitions={'transferred':'WAITFORPICKUP', 'failed':'HOME'})
-            StateMachine.add('WAITFORPICKUP', WaitForPickup(client), transitions={'home':'HOME', 'failed':'HOME'})
+        StateMachine.add('SETUP', Setup(client), transitions={'wait': 'WAIT', 'failed': 'WAIT'})
+        StateMachine.add('HOME', Home(client), transitions={'wait': 'WAIT', 'failed': 'HOME'})
+        StateMachine.add(
+            'WAIT', Wait(client), transitions={'transfer': 'TRANSFER', 'failed': 'HOME'}
+        )
+        StateMachine.add(
+            'TRANSFER',
+            TransferObject(client),
+            transitions={'transferred': 'WAITFORPICKUP', 'failed': 'HOME'},
+        )
+        StateMachine.add(
+            'WAITFORPICKUP', WaitForPickup(client), transitions={'home': 'HOME', 'failed': 'HOME'}
+        )
 
     # Execute SMACH plan
     sm.execute()
 
+
 def main(args=None):
-   
     rclpy.init(args=args)
     args_without_ros = rclpy.utilities.remove_ros_args(args)
-   
+
     robot_controller = RobotController(args_without_ros)
     robot_controller.get_logger().info('Robot Controller started')
     # Create and start the thread for running the state machine
     smach_thread = threading.Thread(target=run_smach, args=(robot_controller,))
     smach_thread.start()
-  
+
     executor = MultiThreadedExecutor()
     executor.add_node(robot_controller)
     executor.spin()
@@ -189,6 +205,6 @@ def main(args=None):
     rclpy.shutdown()
     sys.exit(0)
 
+
 if __name__ == '__main__':
     main()
-

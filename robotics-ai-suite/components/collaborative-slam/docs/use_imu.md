@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # How to run the system with imu data
 
 ## EuRoC dataset
@@ -17,13 +23,13 @@ ros2 launch univloc_server server.launch.py fix_scale:=true correct_loop:=false
 ros2 bag play xxx
 ```
 
-#### Explanations for the flags
+### Explanations for the flags
 
 - `clean_keyframe`: whether to clean redundant keyframes in the map database. The performance may vary between sequences in EuRoC dataset when setting clean_keyframe as true or false.
 - `fix_scale`: whether to fix scale during server optimization. If imu data is used, then `fix_scale` is always true since absolute scale can be obtained either by imu (Monocular_Inertial), or by depth or stereo camera (RGBD_Inertial, Stereo_Inertial).
 - `correct_loop`: whether to enable loop correction in server. The performance may vary between sequences in EuRoC dataset when setting correct_loop as true or false.
 
-### OpenLORIS dataset (RGBD input)
+## OpenLORIS dataset (RGBD input)
 
 ```shell
 # Tracker
@@ -37,11 +43,11 @@ ros2 launch univloc_server server.launch.py fix_scale:=true correct_loop:=false
 ros2 bag play xxx
 ```
 
-#### Explanations for the flag
+### Explanations for the flag
 
 - `get_camera_extrin_from_tf`: whether to get camera extrinsic matrix from tf. Since OpenLORIS dataset cannot obtain extrinsic matrix, set to false to avoid unnecessary waiting.
 
-### Self-recorded Dataset
+## Self-recorded Dataset
 
 You need to provide the following imu-related parameters to the system:
 
@@ -55,6 +61,6 @@ You need to provide the following imu-related parameters to the system:
 - `imu_noise`
 - `imu_bias_walker`
 
-### Limitations
+## Limitations
 
 - RGBD_Inertial mode is not extensively tested yet, only verified on OpenLORIS market dataset.

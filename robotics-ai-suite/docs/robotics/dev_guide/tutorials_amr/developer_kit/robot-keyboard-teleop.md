@@ -107,11 +107,32 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
      <!--hide_directive:::hide_directive-->
      <!--hide_directive::::hide_directive-->
 
-5. On another terminal or new SSH connection, start the teleop keyboard:
+5. [Only for ROS Jazzy] Install required packages if not yet installed:
+
+   ```bash
+   sudo apt-get install ros-jazzy-teleop-twist-keyboard
+   ```
+
+6. On another terminal or new SSH connection, start the teleop keyboard:
+
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
+
+   ```bash
+   ros2 run teleop_twist_keyboard teleop_twist_keyboard
+   ```
+
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    TURTLEBOT3_MODEL=aaeon ros2 run turtlebot3_teleop teleop_keyboard
    ```
+
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
    When the node starts running, it will display a list of the available keyboard commands to control the robot.
    The available commands depend on the selected robot model.

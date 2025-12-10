@@ -1,0 +1,10 @@
+tar-ignore=.git
+tar-ignore=.gitignore
+tar-ignore=.ci
+tar-ignore=ci
+tar-ignore=debian/*.tmpl
+tar-ignore=debian/adbscan-rules
+tar-ignore=.pc
+tar-ignore=*.deb
+tar-ignore=*.changes
+tar-ignore=*.buildinfo

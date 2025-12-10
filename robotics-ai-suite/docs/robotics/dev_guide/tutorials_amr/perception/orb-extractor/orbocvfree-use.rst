@@ -43,8 +43,10 @@ The GPU orb-extractor feature OpenCV free library provides similar features exce
         --threads <integer>    :  Number of threads to run. Default value: 1
         --iterations <integer> :  Number of iterations to run. Default value: 10
 
-      The following command, it will run four threads, each thread is taking two cameras image input.
+   The following command, it will run four threads, each thread is taking two cameras image input.
 
+   .. code-block::
+      
       ./feature_extract --images=2 --threads=4
 
    After executing, the input image will display keypoints in blue color dots.

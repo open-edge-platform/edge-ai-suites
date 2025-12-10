@@ -1,72 +1,80 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025 Intel Corporation
+/*
+ * Copyright (C) 2025 Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef OPENVSLAM_MODULE_LOCAL_MAP_CLEANER_H
 #define OPENVSLAM_MODULE_LOCAL_MAP_CLEANER_H
 
 #include <list>
 #include "type.h"
 
-namespace openvslam {
+namespace openvslam
+{
 
-namespace data {
+namespace data
+{
 class keyframe;
 class landmark;
 }  // namespace data
 
-namespace module {
+namespace module
+{
 
-class local_map_cleaner {
+class local_map_cleaner
+{
 public:
-    /**
-     * Constructor
-     */
-    explicit local_map_cleaner(const bool is_monocular);
+  /**
+   * Constructor
+   */
+  explicit local_map_cleaner(const bool is_monocular);
 
-    /**
-     * Destructor
-     */
-    ~local_map_cleaner() = default;
+  /**
+   * Destructor
+   */
+  ~local_map_cleaner() = default;
 
-    /**
-     * Set the origin keyframe ID
-     */
-    void set_origin_keyframe_id(const KeyframeID id) { origin_keyfrm_id_ = id; }
+  /**
+   * Set the origin keyframe ID
+   */
+  void set_origin_keyframe_id(const KeyframeID id) { origin_keyfrm_id_ = id; }
 
-    /**
-     * Add fresh landmark to check their redundancy
-     */
-    void add_fresh_landmark(data::landmark* lm) { fresh_landmarks_.push_back(lm); }
+  /**
+   * Add fresh landmark to check their redundancy
+   */
+  void add_fresh_landmark(data::landmark * lm) { fresh_landmarks_.push_back(lm); }
 
-    /**
-     * Reset the buffer
-     */
-    void reset();
+  /**
+   * Reset the buffer
+   */
+  void reset();
 
-    /**
-     * Remove redundant landmarks
-     */
-    unsigned int remove_redundant_landmarks(const KeyframeID cur_keyfrm_id);
+  /**
+   * Remove redundant landmarks
+   */
+  unsigned int remove_redundant_landmarks(const KeyframeID cur_keyfrm_id);
 
-    /**
-     * Remove redundant keyframes
-     */
-    unsigned int remove_redundant_keyframes(data::keyframe* cur_keyfrm) const;
+  /**
+   * Remove redundant keyframes
+   */
+  unsigned int remove_redundant_keyframes(data::keyframe * cur_keyfrm) const;
 
-    /**
-     * Count the valid and the redundant observations in the specified keyframe
-     */
-    void count_redundant_observations(data::keyframe* keyfrm, unsigned int& num_valid_obs,
-                                      unsigned int& num_redundant_obs) const;
+  /**
+   * Count the valid and the redundant observations in the specified keyframe
+   */
+  void count_redundant_observations(
+    data::keyframe * keyfrm, unsigned int & num_valid_obs, unsigned int & num_redundant_obs) const;
 
 private:
-    //! origin keyframe ID
-    KeyframeID origin_keyfrm_id_ = 0;
+  //! origin keyframe ID
+  KeyframeID origin_keyfrm_id_ = 0;
 
-    //! flag which indicates the tracking camera is monocular or not
-    const bool is_monocular_;
+  //! flag which indicates the tracking camera is monocular or not
+  const bool is_monocular_;
 
-    //! fresh landmarks to check their redundancy
-    std::list<data::landmark*> fresh_landmarks_;
+  //! fresh landmarks to check their redundancy
+  std::list<data::landmark *> fresh_landmarks_;
 };
 
 }  // namespace module

@@ -53,6 +53,8 @@ docker compose down
 sed -i '/datasources\.yml.*datasources\.yml/a\      - "./src/grafana/plugins:/var/lib/grafana/plugins"' docker-compose.yml
 sed -i '/GF_INSTALL_PLUGINS=grafana-mqtt-datasource/d' docker-compose.yml
 sed -i 's#/data/install_package.sh#cp -r /data/node-modules/* /usr/src/node-red/node_modules/#' docker-compose.yml
+sed -i '/container_name: dlstreamer-pipeline-server/a\    extra_hosts:\n      - "stun.l.google.com:127.0.0.1"' docker-compose.yml
+
 
 # Create directory offline-package and copy all the files into it
 echo "Creating offline-package directory and copying files..."

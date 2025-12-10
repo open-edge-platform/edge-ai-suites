@@ -144,6 +144,68 @@ library.
 
      sudo apt install pcl-oneapi-tutorials
 
+Boost Patching for Compatibility
+--------------------------------
+
+The following changes to Boost are required to ensure compatibility with modern C++ standards (C++17 and later) if Boost version is less than 1.83:
+
+**File: /usr/include/boost/numeric/conversion/detail/int_float_mixture.hpp**
+
+.. code-block:: diff
+
+   -#include "boost/mpl/integral_c.hpp"
+   +#include "boost/type_traits/integral_constant.hpp"
+   
+   -typedef mpl::integral_c<int_float_mixture_enum, integral_to_integral> int2int_c ;
+   -typedef mpl::integral_c<int_float_mixture_enum, integral_to_float> int2float_c ;
+   -typedef mpl::integral_c<int_float_mixture_enum, float_to_integral> float2int_c ;
+   -typedef mpl::integral_c<int_float_mixture_enum, float_to_float> float2float_c ;
+   + typedef boost::integral_constant<int_float_mixture_enum, integral_to_integral> int2int_c ;
+   + typedef boost::integral_constant<int_float_mixture_enum, integral_to_float> int2float_c ;
+   + typedef boost::integral_constant<int_float_mixture_enum, float_to_integral> float2int_c ;
+   + typedef boost::integral_constant<int_float_mixture_enum, float_to_float> float2float_c ;
+
+**File: /usr/include/boost/numeric/conversion/detail/udt_builtin_mixture.hpp**
+
+.. code-block:: diff
+
+   -#include "boost/mpl/integral_c.hpp"
+   +#include "boost/type_traits/integral_constant.hpp"
+   
+   -typedef mpl::integral_c<udt_builtin_mixture_enum, builtin_to_builtin> builtin2builtin_c ;
+   -typedef mpl::integral_c<udt_builtin_mixture_enum, builtin_to_udt> builtin2udt_c ;
+   -typedef mpl::integral_c<udt_builtin_mixture_enum, udt_to_builtin> udt2builtin_c ;
+   -typedef mpl::integral_c<udt_builtin_mixture_enum, udt_to_udt> udt2udt_c ;
+   + typedef boost::integral_constant<udt_builtin_mixture_enum, builtin_to_builtin> builtin2builtin_c ;
+   + typedef boost::integral_constant<udt_builtin_mixture_enum, builtin_to_udt> builtin2udt_c ;
+   + typedef boost::integral_constant<udt_builtin_mixture_enum, udt_to_builtin> udt2builtin_c ;
+   + typedef boost::integral_constant<udt_builtin_mixture_enum, udt_to_udt> udt2udt_c ;
+
+**File: /usr/include/boost/numeric/conversion/detail/sign_mixture.hpp**
+
+.. code-block:: diff
+
+   -#include "boost/mpl/integral_c.hpp"
+   +#include "boost/type_traits/integral_constant.hpp"
+   
+   -typedef mpl::integral_c<sign_mixture_enum, unsigned_to_unsigned> unsig2unsig_c ;
+   -typedef mpl::integral_c<sign_mixture_enum, signed_to_signed> sig2sig_c ;
+   -typedef mpl::integral_c<sign_mixture_enum, signed_to_unsigned> sig2unsig_c ;
+   -typedef mpl::integral_c<sign_mixture_enum, unsigned_to_signed> unsig2sig_c ;
+   + typedef boost::integral_constant<sign_mixture_enum, unsigned_to_unsigned> unsig2unsig_c ;
+   + typedef boost::integral_constant<sign_mixture_enum, signed_to_signed> sig2sig_c ;
+   + typedef boost::integral_constant<sign_mixture_enum, signed_to_unsigned> sig2unsig_c ;
+   + typedef boost::integral_constant<sign_mixture_enum, unsigned_to_signed> unsig2sig_c ;
+
+**File: /usr/include/boost/mpl/aux_/integral_wrapper.hpp**
+
+.. code-block:: diff
+
+   - #if BOOST_WORKAROUND(__EDG_VERSION__, <= 243)
+   + #if BOOST_WORKAROUND(__EDG_VERSION__, <= 243) || __cplusplus >= 201703L
+
+These changes replace deprecated ``mpl::integral_c`` with ``boost::integral_constant`` and add C++17 compatibility to the integral wrapper workaround.
+
 
 Runtime Device Selection
 ------------------------

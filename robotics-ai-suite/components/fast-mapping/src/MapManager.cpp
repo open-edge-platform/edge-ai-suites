@@ -99,7 +99,8 @@ static void addColorToMarkerPoints(
       [get_value](const geometry_msgs::msg::Point & a, const geometry_msgs::msg::Point & b) {
         return get_value(a) < get_value(b);
       };
-    auto minmax = std::minmax_element(marker.points.begin(), marker.points.end(), compare_value);
+    auto minmax =
+      std::minmax_element(marker.points.begin(), marker.points.end(), std::move(compare_value));
     min = get_value(*minmax.first);
     range = get_value(*minmax.second) - min;
   }
@@ -125,7 +126,7 @@ void MapManager::clearMarkers()
 MapManager::MapManager(std::shared_ptr<OctoMap> octomap, struct NodeConfig & config)
 : Node("maps_publisher_node")
 {
-  octomap_ = octomap;
+  octomap_ = std::move(octomap);
   config_ = config;
 
   grid_template_ = std::make_shared<nav_msgs::msg::OccupancyGrid>();
@@ -572,6 +573,6 @@ void MapManager::publish_maps(std::shared_ptr<ImageFrame> currFrame)
   publish_volumetric_map();
   publish_occupancy_map();
   if (0) {
-    updateFreeOrUnknownSpace(currFrame);
+    updateFreeOrUnknownSpace(std::move(currFrame));
   }
 }

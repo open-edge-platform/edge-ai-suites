@@ -1,0 +1,6 @@
+ros-jazzy-turtlesim-tutorial-demo (2.3-1) noble; urgency=medium
+
+  * Updated to version 2.3
+  * Built for ROS 2 Jazzy
+
+ -- ECI Maintainer <eci.maintainer@intel.com> Thu, 11 Sep 2025 14:47:05 +0200

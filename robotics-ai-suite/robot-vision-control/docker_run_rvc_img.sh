@@ -17,12 +17,17 @@
 
 # This script starts a Docker container for the RVC project with the necessary configurations.
 
-# Usage: ./docker_run_rvc_img.sh
+# Usage: ./docker_run_rvc_img.sh [ROS_DISTRO]
+# Example: ./docker_run_rvc_img.sh humble
+# Example: ./docker_run_rvc_img.sh jazzy
+
 set -e
 
-# Run the Docker container
-CONTAINER_NAME="rvc-intel-dev"
-IMAGE_NAME="rvc-humble-exec:latest"
+# Parse arguments
+ROS_DISTRO=${1:-humble}
+CONTAINER_NAME="rvc-container-${ROS_DISTRO}"
+
+echo "Checking for existing container: ${CONTAINER_NAME}..."
 
 # Check if the container already exists
 if [ "$(docker ps -aq -f name=^${CONTAINER_NAME}$)" ]; then
@@ -56,7 +61,7 @@ else
         --env="XDG_RUNTIME_DIR" \
         --env="PULSE_SERVER" \
         --device-cgroup-rule='c 189:* rmw' \
-        "${IMAGE_NAME}" \
+        rvc-exec:${ROS_DISTRO} \
         /bin/bash
 
     if [[ $? -ne 0 ]]; then

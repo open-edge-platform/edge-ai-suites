@@ -280,6 +280,7 @@ export async function getResourceMetrics(sessionId: string): Promise<any> {
       return {
         cpu_utilization: [],
         gpu_utilization: [],
+        npu_utilization: [],
         memory: [],
         power: []
       };
@@ -289,6 +290,7 @@ export async function getResourceMetrics(sessionId: string): Promise<any> {
     return text ? JSON.parse(text) : {
       cpu_utilization: [],
       gpu_utilization: [],
+      npu_utilization: [],
       memory: [],
       power: []
     };

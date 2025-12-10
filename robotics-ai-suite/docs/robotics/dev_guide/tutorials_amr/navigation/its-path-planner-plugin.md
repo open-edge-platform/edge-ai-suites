@@ -56,7 +56,28 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
 
 ### Install Deb package
 
-Install the `ros-jazzy-its-planner` Deb package from the
+Install dependencies required to run simulations:
+
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
+
+```bash
+sudo apt install ros-jazzy-turtlesim ros-jazzy-turtlebot3-simulations ros-jazzy-turtlebot3-gazebo ros-jazzy-turtlebot3
+```
+
+<!--hide_directive:::
+:::{tab-item}hide_directive-->  **Humble**
+<!--hide_directive:sync: humblehide_directive-->
+
+```bash
+sudo apt install ros-humble-turtlesim ros-humble-turtlebot3-simulations ros-humble-turtlebot3-gazebo ros-humble-turtlebot3
+```
+
+<!--hide_directive:::
+::::hide_directive-->
+
+Install the ITS Path Planner Deb package from the
 Intel® Autonomous Mobile Robot APT repository
 
 <!--hide_directive::::{tab-set}

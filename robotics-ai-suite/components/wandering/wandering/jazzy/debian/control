@@ -1,0 +1,12 @@
+Source: ros-jazzy-wandering
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), ros-jazzy-ament-cmake, ros-jazzy-ament-lint-common, ros-jazzy-rclcpp, ros-jazzy-rclcpp-action, ros-jazzy-geometry-msgs, ros-jazzy-std-msgs, ros-jazzy-nav-msgs, ros-jazzy-nav2-msgs, ros-jazzy-nav2-util, ros-jazzy-nav2-costmap-2d, ros-jazzy-ament-lint-auto, ros-jazzy-ament-cmake-gtest,
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-wandering
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-jazzy-rclcpp, ros-jazzy-std-msgs, ros-jazzy-nav-msgs, ros-jazzy-nav2-msgs, ros-jazzy-nav2-util, ros-jazzy-nav2-costmap-2d,
+Description: Wandering application

@@ -11,7 +11,7 @@ description: "Smart Parking Sample Application"
 
 helmRegistry: "docker-hub"
 chartName: "intel/smart-parking"
-chartVersion: "1.3.0-rc2"
+chartVersion: "1.3.0"
 
 profiles:
   - name: "default"

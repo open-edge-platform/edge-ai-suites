@@ -14,6 +14,18 @@
 # in the License.
 
 cmake_minimum_required(VERSION 3.8)
+
+# Suppress CMake developer warnings from third-party dependencies (PCL/FLANN)
+set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE INTERNAL "No dev warnings")
+
+# Set CMake policies BEFORE project() to suppress warnings from dependencies
+if(POLICY CMP0074)
+  cmake_policy(SET CMP0074 NEW)  # Use <PackageName>_ROOT variables
+endif()
+if(POLICY CMP0144)
+  cmake_policy(SET CMP0144 NEW)  # Use upper-case <PACKAGENAME>_ROOT variables
+endif()
+
 project(rvc_pose_detector)
 set(PROJECT_NAME_PLUGIN ${PROJECT_NAME}_composable_plugin)
 

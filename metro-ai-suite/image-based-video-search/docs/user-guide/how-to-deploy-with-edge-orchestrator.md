@@ -18,8 +18,8 @@ To deploy the **Image-Based Video Search** application with Edge Orchestrator, f
 
 ### Prerequisites
 
-1. Access to the web interface of the Edge Orchestrator with one or more [Edge Nodes Onboarded](<https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/edge_node_onboard/index.html>) to the Edge Orchestrator.
-1. Clusters with a [privilege template](<https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/advanced_functionality/set_up_a_cluster_template.html>) have been created on the needed Edge Nodes following the procedures described in [Create Cluster](<https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/clusters/create_clusters.html#create-cluster>).
+1. Access to the web interface of the Edge Orchestrator with one or more [Edge Nodes Onboarded](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/edge_node_onboard/index.html) to the Edge Orchestrator.
+1. Clusters with a [privilege template](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/advanced_functionality/set_up_a_cluster_template.html) have been created on the needed Edge Nodes following the procedures described in [Create Cluster](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/clusters/create_clusters.html#create-cluster).
 
 ### Making the Deployment Package Available
 
@@ -30,13 +30,13 @@ To deploy the **Image-Based Video Search** application with Edge Orchestrator, f
     cd edge-ai-suites/metro-ai-suite/image-based-video-search
     ```
 
-1. From the web browser, open the URL of the Edge Orchestrator and import the Deployment Package present in the folder **deployment-package** following the steps described in [Import Deployment Package](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/import_deployment.html>).
+1. From the web browser, open the URL of the Edge Orchestrator and import the Deployment Package present in the folder **deployment-package** following the steps described in [Import Deployment Package](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/package_software/import_deployment.html).
 
 1. Once the deployment package has been imported into Edge Orchestrator, you can see it in the list of Web UI as shown here.
 
 **![Image](./_images/ibvs-dp.png)**
 
-See [Deployment Packages](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/deploy_packages.html#view-deployment-packages>) for more information on deployment packages.
+See [Deployment Packages](<https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/package_software/deploy_packages.html#view-deployment-packages>) for more information on deployment packages.
 
 ### Deploy the Application onto the Edge Nodes
 
@@ -64,7 +64,7 @@ To set up a deployment:
 
 After a few minutes, the deployment will start and will take about 5 minutes to complete.
 
-In the Edge Orchestrator Web UI, you can track the application installation through the [View Deployment Details](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/deployment_details.html#view-deployment-details>) view.
+In the Edge Orchestrator Web UI, you can track the application installation through the [View Deployment Details](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/package_software/deployment_details.html#view-deployment-details) view.
 
 The **Image-Based Video Search** Sample Application is fully deployed when the applications become green and the status is shown as _Running_.
 
@@ -72,12 +72,12 @@ You can view the deployment status on the Deployments page.
 
 > Note: If the deployment fails for any reason, the deployment status will display the “Error” or “Down” status.
 
-For more information on setting up a deployment, see [Set up a Deployment](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/setup_deploy.html#set-up-a-deployment>).
+For more information on setting up a deployment, see [Set up a Deployment](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/package_software/setup_deploy.html#set-up-a-deployment).
 
 ### Access the **Image-Based Video Search** Sample Application
 
-1. Download the kubeconfig of the cluster of the Edge Node on which the Application has been deployed. Refer [Kubeconfig Download](<https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/clusters/accessing_clusters.html>).
+1. Download the kubeconfig of the cluster of the Edge Node on which the Application has been deployed. Refer [Kubeconfig Download](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/clusters/accessing_clusters.html).
 
-1. Follow the steps described in the **Image-Based Video Search** [Documentation](<how-to-deploy-helm.md>) on usage of the application.
+1. Follow the steps described in the **Image-Based Video Search** [Documentation](how-to-deploy-helm.md) on usage of the application.
 
    > Note: Skip the install the helm chart step

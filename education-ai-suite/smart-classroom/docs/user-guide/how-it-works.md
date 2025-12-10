@@ -50,5 +50,5 @@ The uploaded audio is passed to the Backend API, which acts as the gateway to th
 
 - [System Requirements](system-requirements.md): Check the hardware and software requirements for deploying the application.
 - [Get Started](get-started.md): Follow step-by-step instructions to set up the application.
-
+- [Application Flow](application-flow.md): Check the flow of application.
 

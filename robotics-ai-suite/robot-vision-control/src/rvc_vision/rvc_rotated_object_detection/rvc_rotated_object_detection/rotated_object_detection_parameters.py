@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions
 # and limitations under the License.
 
+# flake8: noqa
+
 # auto-generated DO NOT EDIT
 
 from rcl_interfaces.msg import ParameterDescriptor
@@ -23,6 +25,7 @@ from rclpy.exceptions import InvalidParameterValueException
 from rclpy.time import Time
 import copy
 import rclpy
+import rclpy.parameter
 from generate_parameter_library_py.python_validators import ParameterValidators
 
 
@@ -69,6 +72,7 @@ class object_detection:
             def add_entry(self, name):
                 if not hasattr(self, name):
                     setattr(self, name, self.__map_type())
+                return getattr(self, name)
             def get_entry(self, name):
                 return getattr(self, name)
         object = __Object()
@@ -85,6 +89,7 @@ class object_detection:
             self.declare_params()
 
             self.node_.add_on_set_parameters_callback(self.update)
+            self.user_callback = None
             self.clock_ = Clock()
 
         def get_params(self):
@@ -98,15 +103,48 @@ class object_detection:
         def is_old(self, other_param):
             return self.params_.stamp_ != other_param.stamp_
 
+        def unpack_parameter_dict(self, namespace: str, parameter_dict: dict):
+            """
+            Flatten a parameter dictionary recursively.
+
+            :param namespace: The namespace to prepend to the parameter names.
+            :param parameter_dict: A dictionary of parameters keyed by the parameter names
+            :return: A list of rclpy Parameter objects
+            """
+            parameters = []
+            for param_name, param_value in parameter_dict.items():
+                full_param_name = namespace + param_name
+                # Unroll nested parameters
+                if isinstance(param_value, dict):
+                    nested_params = self.unpack_parameter_dict(
+                            namespace=full_param_name + rclpy.parameter.PARAMETER_SEPARATOR_STRING,
+                            parameter_dict=param_value)
+                    parameters.extend(nested_params)
+                else:
+                    parameters.append(rclpy.parameter.Parameter(full_param_name, value=param_value))
+            return parameters
+
+        def set_params_from_dict(self, param_dict):
+            params_to_set = self.unpack_parameter_dict('', param_dict)
+            self.update(params_to_set)
+
+        def set_user_callback(self, callback):
+            self.user_callback = callback
+
+        def clear_user_callback(self):
+            self.user_callback = None
+
         def refresh_dynamic_parameters(self):
             updated_params = self.get_params()
             # TODO remove any destroyed dynamic parameters
 
             # declare any new dynamic parameters
-            for value in updated_params.objects:
-                updated_params.object.add_entry(value)
-                entry = updated_params.object.get_entry(value)
-                param_name = f"{self.prefix_}object.{value}.image_path"
+
+            for value_1 in updated_params.objects:
+
+                updated_params.object.add_entry(value_1)
+                entry = updated_params.object.get_entry(value_1)
+                param_name = f"{self.prefix_}object.{value_1}.image_path"
                 if not self.node_.has_parameter(self.prefix_ + param_name):
                     descriptor = ParameterDescriptor(description="object image file path", read_only = True)
                     parameter = rclpy.Parameter.Type.STRING
@@ -114,10 +152,12 @@ class object_detection:
                 param = self.node_.get_parameter(param_name)
                 self.logger_.debug(param.name + ": " + param.type_.name + " = " + str(param.value))
                 entry.image_path = param.value
-            for value in updated_params.objects:
-                updated_params.object.add_entry(value)
-                entry = updated_params.object.get_entry(value)
-                param_name = f"{self.prefix_}object.{value}.nfeatures"
+
+            for value_1 in updated_params.objects:
+
+                updated_params.object.add_entry(value_1)
+                entry = updated_params.object.get_entry(value_1)
+                param_name = f"{self.prefix_}object.{value_1}.nfeatures"
                 if not self.node_.has_parameter(self.prefix_ + param_name):
                     descriptor = ParameterDescriptor(description="Maximum number of features", read_only = True)
                     parameter = entry.nfeatures
@@ -125,10 +165,12 @@ class object_detection:
                 param = self.node_.get_parameter(param_name)
                 self.logger_.debug(param.name + ": " + param.type_.name + " = " + str(param.value))
                 entry.nfeatures = param.value
-            for value in updated_params.objects:
-                updated_params.object.add_entry(value)
-                entry = updated_params.object.get_entry(value)
-                param_name = f"{self.prefix_}object.{value}.thickness"
+
+            for value_1 in updated_params.objects:
+
+                updated_params.object.add_entry(value_1)
+                entry = updated_params.object.get_entry(value_1)
+                param_name = f"{self.prefix_}object.{value_1}.thickness"
                 if not self.node_.has_parameter(self.prefix_ + param_name):
                     descriptor = ParameterDescriptor(description="object thickness / size parallel to optical axis", read_only = True)
                     parameter = entry.thickness
@@ -251,27 +293,38 @@ class object_detection:
 
             # update dynamic parameters
             for param in parameters:
-                for value in updated_params.objects:
-                    param_name = f"{self.prefix_}object.{value}.image_path"
-                    if param.name == param_name:
-                        updated_params.object.objects_map[value].image_path = param.value
-                        self.logger_.debug(param.name + ": " + param.type_.name + " = " + str(param.value))
 
-                for value in updated_params.objects:
-                    param_name = f"{self.prefix_}object.{value}.nfeatures"
-                    if param.name == param_name:
-                        updated_params.object.objects_map[value].nfeatures = param.value
-                        self.logger_.debug(param.name + ": " + param.type_.name + " = " + str(param.value))
+                    for value_1 in updated_params.objects:
 
-                for value in updated_params.objects:
-                    param_name = f"{self.prefix_}object.{value}.thickness"
-                    if param.name == param_name:
-                        updated_params.object.objects_map[value].thickness = param.value
-                        self.logger_.debug(param.name + ": " + param.type_.name + " = " + str(param.value))
+                        param_name = f"{self.prefix_}object.{value_1}.image_path"
+                        if param.name == param_name:
+
+                            updated_params.object.get_entry(value_1).image_path = param.value
+                            self.logger_.debug(param.name + ": " + param.type_.name + " = " + str(param.value))
+
+
+                    for value_1 in updated_params.objects:
+
+                        param_name = f"{self.prefix_}object.{value_1}.nfeatures"
+                        if param.name == param_name:
+
+                            updated_params.object.get_entry(value_1).nfeatures = param.value
+                            self.logger_.debug(param.name + ": " + param.type_.name + " = " + str(param.value))
+
+
+                    for value_1 in updated_params.objects:
+
+                        param_name = f"{self.prefix_}object.{value_1}.thickness"
+                        if param.name == param_name:
+
+                            updated_params.object.get_entry(value_1).thickness = param.value
+                            self.logger_.debug(param.name + ": " + param.type_.name + " = " + str(param.value))
 
 
             updated_params.stamp_ = self.clock_.now()
             self.update_internal_params(updated_params)
+            if self.user_callback:
+                self.user_callback(self.get_params())
             return SetParametersResult(successful=True)
 
         def update_internal_params(self, updated_params):
@@ -496,10 +549,12 @@ class object_detection:
 
 
             # declare and set all dynamic parameters
-            for value in updated_params.objects:
-                updated_params.object.add_entry(value)
-                entry = updated_params.object.get_entry(value)
-                param_name = f"{self.prefix_}object.{value}.image_path"
+
+            for value_1 in updated_params.objects:
+
+                updated_params.object.add_entry(value_1)
+                entry = updated_params.object.get_entry(value_1)
+                param_name = f"{self.prefix_}object.{value_1}.image_path"
                 if not self.node_.has_parameter(self.prefix_ + param_name):
                     descriptor = ParameterDescriptor(description="object image file path", read_only = True)
                     parameter = rclpy.Parameter.Type.STRING
@@ -507,10 +562,12 @@ class object_detection:
                 param = self.node_.get_parameter(param_name)
                 self.logger_.debug(param.name + ": " + param.type_.name + " = " + str(param.value))
                 entry.image_path = param.value
-            for value in updated_params.objects:
-                updated_params.object.add_entry(value)
-                entry = updated_params.object.get_entry(value)
-                param_name = f"{self.prefix_}object.{value}.nfeatures"
+
+            for value_1 in updated_params.objects:
+
+                updated_params.object.add_entry(value_1)
+                entry = updated_params.object.get_entry(value_1)
+                param_name = f"{self.prefix_}object.{value_1}.nfeatures"
                 if not self.node_.has_parameter(self.prefix_ + param_name):
                     descriptor = ParameterDescriptor(description="Maximum number of features", read_only = True)
                     parameter = entry.nfeatures
@@ -518,10 +575,12 @@ class object_detection:
                 param = self.node_.get_parameter(param_name)
                 self.logger_.debug(param.name + ": " + param.type_.name + " = " + str(param.value))
                 entry.nfeatures = param.value
-            for value in updated_params.objects:
-                updated_params.object.add_entry(value)
-                entry = updated_params.object.get_entry(value)
-                param_name = f"{self.prefix_}object.{value}.thickness"
+
+            for value_1 in updated_params.objects:
+
+                updated_params.object.add_entry(value_1)
+                entry = updated_params.object.get_entry(value_1)
+                param_name = f"{self.prefix_}object.{value_1}.thickness"
                 if not self.node_.has_parameter(self.prefix_ + param_name):
                     descriptor = ParameterDescriptor(description="object thickness / size parallel to optical axis", read_only = True)
                     parameter = entry.thickness

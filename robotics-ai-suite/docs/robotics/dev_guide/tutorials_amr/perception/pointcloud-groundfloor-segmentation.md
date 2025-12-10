@@ -201,6 +201,7 @@ This use case is intended for the teleop application running on the Aaeon robot,
 as described on the [Robot Keyboard Teleop](../developer_kit/robot-keyboard-teleop.md) page.
 It leverages the similar functionality of the default teleop application.
 Therefore, please prepare the robot accordingly and start all required applications.
+Follow [Create Your Own Robot Kit](../developer_kit/create-your-robot-kit.md) to prepare your robot.
 
 Afterwards open three terminal sessions:
 

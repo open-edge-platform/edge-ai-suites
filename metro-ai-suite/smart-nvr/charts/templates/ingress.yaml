@@ -48,16 +48,19 @@ spec:
           configMap:
             name: nvr-event-router-ui-nginx-config
 ---
+{{- $svc := default (dict) .Values.ingress.service }}
 apiVersion: v1
 kind: Service
 metadata:
   name: nvr-event-router-ui-nginx
 spec:
-  type: NodePort
+  type: {{ default "NodePort" $svc.type }}
   selector:
     app: nvr-event-router-ui-nginx
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 80
-      nodePort: 30860
+      port: {{ default 80 $svc.port }}
+      targetPort: {{ default 80 $svc.targetPort }}
+      {{- if and (eq (default "NodePort" $svc.type) "NodePort") $svc.nodePort }}
+      nodePort: {{ $svc.nodePort }}
+      {{- end }}

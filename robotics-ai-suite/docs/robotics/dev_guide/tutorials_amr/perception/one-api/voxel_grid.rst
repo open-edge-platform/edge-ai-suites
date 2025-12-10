@@ -26,6 +26,9 @@ This tutorial covers the process of downsampling / reducing the number of points
       :linenos:
 
 
+#. This tutorial needs ``boost`` patching to be applied for C++17 as a workaround if the Boost version < 1.83. Refer to `Boost Patching for Compatibility <../installation.html#boost-patching-for-compatibility>`__ for required code changes.
+
+
 #. Source the Intel® oneAPI Base Toolkit environment:
 
    .. code-block::

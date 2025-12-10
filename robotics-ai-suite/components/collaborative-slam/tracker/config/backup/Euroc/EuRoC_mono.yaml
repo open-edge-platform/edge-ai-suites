@@ -1,7 +1,8 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
-# EuRoC monocular model
+#
+# SPDX-License-Identifier: Apache-2.0
 
+---
 #==============#
 # Camera Model #
 #==============#

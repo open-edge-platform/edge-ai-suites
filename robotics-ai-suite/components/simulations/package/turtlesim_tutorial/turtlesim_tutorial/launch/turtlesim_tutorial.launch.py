@@ -21,25 +21,30 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    return LaunchDescription([
-        Node(
-            package='turtlesim',
-            executable='turtlesim_node',
-            name='turtlesim',
-            output='screen',
-        ),
-        TimerAction(period=5.0, actions=[
-            ExecuteProcess(
-                cmd=['ros2', 'topic', 'list'],
+    return LaunchDescription(
+        [
+            Node(
+                package='turtlesim',
+                executable='turtlesim_node',
+                name='turtlesim',
                 output='screen',
-            )
-        ]),
-        ExecuteProcess(
-            cmd=['rqt'],
-            output='log',
-        ),
-        ExecuteProcess(
-            cmd=['rviz2'],
-            output='log',
-        ),
-    ])
+            ),
+            TimerAction(
+                period=5.0,
+                actions=[
+                    ExecuteProcess(
+                        cmd=['ros2', 'topic', 'list'],
+                        output='screen',
+                    )
+                ],
+            ),
+            ExecuteProcess(
+                cmd=['rqt'],
+                output='log',
+            ),
+            ExecuteProcess(
+                cmd=['rviz2'],
+                output='log',
+            ),
+        ]
+    )

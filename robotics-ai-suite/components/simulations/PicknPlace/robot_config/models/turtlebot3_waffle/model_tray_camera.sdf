@@ -1,12 +1,11 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
-  <model name="turtlebot3_waffle">  
-  <pose>0.0 0.0 0.0 0.0 0.0 0.0</pose>
+  <model name="turtlebot3_waffle">
+    <pose>0.0 0.0 0.0 0.0 0.0 0.0</pose>
 
     <link name="base_footprint"/>
 
     <link name="base_link">
-
       <inertial>
         <pose>-0.064 0 0.048 0 0 0</pose>
         <inertia>
@@ -37,13 +36,20 @@
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
       </visual>
     </link>
 
     <link name="imu_link">
       <sensor name="tb3_imu" type="imu">
         <always_on>true</always_on>
-        <update_rate>50</update_rate>
+        <update_rate>200</update_rate>
+        <topic>imu</topic>
         <imu>
           <angular_velocity>
             <x>
@@ -86,16 +92,10 @@
             </z>
           </linear_acceleration>
         </imu>
-        <plugin name="turtlebot3_imu" filename="libgazebo_ros_imu_sensor.so">
-          <ros>
-            <!-- <namespace>/tb3</namespace> -->
-            <remapping>~/out:=imu</remapping>
-          </ros>
-        </plugin>
       </sensor>
     </link>
 
-    <link name="base_scan">    
+    <link name="base_scan">
       <inertial>
         <pose>-0.052 0 0.111 0 0 0</pose>
         <inertia>
@@ -114,7 +114,7 @@
         <geometry>
           <cylinder>
             <radius>0.0508</radius>
-            <length>0.04</length>
+            <length>0.055</length>
           </cylinder>
         </geometry>
       </collision>
@@ -127,14 +127,22 @@
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
       </visual>
 
-      <sensor name="hls_lfcd_lds" type="ray">
+      <sensor name="hls_lfcd_lds" type="gpu_lidar">
         <always_on>true</always_on>
         <visualize>false</visualize>
         <pose>-0.064 0 0.121 0 0 0</pose>
         <update_rate>5</update_rate>
-        <ray>
+        <topic>/amr1/scan</topic>
+        <gz_frame_id>base_scan</gz_frame_id>
+        <lidar>
           <scan>
             <horizontal>
               <samples>360</samples>
@@ -153,20 +161,11 @@
             <mean>0.0</mean>
             <stddev>0.01</stddev>
           </noise>
-        </ray>
-        <plugin name="turtlebot3_laserscan" filename="libgazebo_ros_ray_sensor.so">
-          <ros>
-            <!-- <namespace>/tb3</namespace> -->
-            <remapping>~/out:=scan</remapping>
-          </ros>
-          <output_type>sensor_msgs/LaserScan</output_type>
-          <frame_name>base_scan</frame_name>
-        </plugin>
+        </lidar>
       </sensor>
     </link>
 
     <link name="wheel_left_link">
-
       <inertial>
         <pose>0.0 0.144 0.023 -1.57 0 0</pose>
         <inertia>
@@ -220,11 +219,16 @@
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
       </visual>
     </link>
 
     <link name="wheel_right_link">
-
       <inertial>
         <pose>0.0 -0.144 0.023 -1.57 0 0</pose>
         <inertia>
@@ -237,7 +241,7 @@
         </inertia>
         <mass>0.1</mass>
       </inertial>
-    
+
       <collision name="wheel_right_collision">
         <pose>0.0 -0.144 0.023 -1.57 0 0</pose>
         <geometry>
@@ -278,6 +282,12 @@
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
       </visual>
     </link>
 
@@ -350,7 +360,7 @@
     </link>
 
     <link name="camera_link"/>
- 
+
     <link name="camera_rgb_frame">
       <inertial>
         <pose>0.069 -0.047 0.107 0 0 0</pose>
@@ -366,74 +376,68 @@
       </inertial>
 
       <pose>0.069 -0.047 0.107 0 0 0</pose>
-	<sensor name="camera" type="camera">
-       <pose> 0 0 0 0 0 0 </pose>
+      <sensor name="camera" type="camera">
         <always_on>true</always_on>
         <visualize>true</visualize>
-        <update_rate>1</update_rate>
+        <update_rate>30</update_rate>
+        <topic>camera/image_raw</topic>
+        <gz_frame_id>camera_rgb_frame</gz_frame_id>
         <camera name="intel_realsense_r200">
-           <horizontal_fov>1.02974</horizontal_fov>
+          <camera_info_topic>camera/camera_info</camera_info_topic>
+          <horizontal_fov>1.02974</horizontal_fov>
           <image>
-            <width>640</width>
-            <height>480</height>
-            <format>B8G8R8</format>
+            <width>1920</width>
+            <height>1080</height>
+            <format>R8G8B8</format>
           </image>
           <clip>
-               <near>0.05</near>
-               <far>8.0</far>
+            <near>0.02</near>
+            <far>300</far>
           </clip>
           <noise>
             <type>gaussian</type>
-
+            <!-- Noise is sampled independently per pixel on each frame.
+                  That pixel's noise value is added to each of its color
+                  channels, which at that point lie in the range [0,1]. -->
             <mean>0.0</mean>
             <stddev>0.007</stddev>
           </noise>
         </camera>
-          <plugin name="camera_driver" filename="libgazebo_ros_camera.so">
-            <ros>
-            </ros>
-          <frame_name>camera_rgb_frame</frame_name>
-          <min_depth>0.1</min_depth>
-          <max_depth>100</max_depth>
-
-          </plugin>
       </sensor>
-    </link>  
-    
+    </link>
     <gazebo reference="turtlebot3_tray"> 
     
-    </gazebo> 
+    </gazebo>
     <link name="turtlebot3_tray">
-      <visual name="turtlebot3_tray_base">>
+      <visual name="turtlebot3_tray_base">
         <pose>-0.06 0 .13 0 0 0</pose>
         <geometry>
-         <box>
+          <box>
             <size>0.25 0.25 0.005</size>
-         </box>
+          </box>
         </geometry>
-
-        <material>Gazebo/Red</material> 
+        <material>Gazebo/Red</material>
       </visual>
       <collision name="turtlebot3_tray_collision">
         <pose>-0.06 0 .13 0 0 0</pose>
         <geometry>
           <box>
             <size>0.25 0.25 0.005</size>
-         </box>
+          </box>
         </geometry>
       </collision>
     </link>
 
-  <joint name="turtlebot3_tray_joint" type="fixed">    
-    <parent>base_scan</parent>
+    <joint name="turtlebot3_tray_joint" type="fixed">
+      <parent>base_scan</parent>
       <child>turtlebot3_tray</child>
-    <pose>0.94 0.165 0.494 0 0 0</pose>       
-  </joint>
+      <pose>0.94 0.165 0.494 0 0 0</pose>
+    </joint>
 
     <joint name="base_joint" type="fixed">
       <parent>base_footprint</parent>
       <child>base_link</child>
-     
+      <pose>0.0 0.0 0.010 0 0 0</pose>
     </joint>
 
     <joint name="wheel_left_joint" type="revolute">
@@ -442,6 +446,9 @@
       <pose>0.0 0.144 0.023 -1.57 0 0</pose>
       <axis>
         <xyz>0 0 1</xyz>
+        <limit>
+          <effort>20</effort>
+        </limit>
       </axis>
     </joint>
 
@@ -451,6 +458,9 @@
       <pose>0.0 -0.144 0.023 -1.57 0 0</pose>
       <axis>
         <xyz>0 0 1</xyz>
+        <limit>
+          <effort>20</effort>
+        </limit>
       </axis>
     </joint>
 
@@ -471,7 +481,7 @@
       <axis>
         <xyz>0 0 1</xyz>
       </axis>
-    </joint>    
+    </joint>
 
     <joint name="lidar_joint" type="fixed">
       <parent>base_link</parent>
@@ -490,7 +500,7 @@
         <xyz>0 0 1</xyz>
       </axis>
     </joint>
-   
+
     <joint name="camera_rgb_joint" type="fixed">
       <parent>camera_link</parent>
       <child>camera_rgb_frame</child>
@@ -500,48 +510,34 @@
       </axis>
     </joint>
 
-    <plugin name="turtlebot3_diff_drive" filename="libgazebo_ros_diff_drive.so">
-
-      <ros>
-		      <remapping>/tf:=tf</remapping>
-      </ros>
-
-      <update_rate>10</update_rate>
-
+    <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
       <!-- wheels -->
       <left_joint>wheel_left_joint</left_joint>
       <right_joint>wheel_right_joint</right_joint>
 
       <!-- kinematics -->
       <wheel_separation>0.287</wheel_separation>
-      <wheel_diameter>0.066</wheel_diameter>
+      <wheel_radius>0.033</wheel_radius>
 
       <!-- limits -->
-      <max_wheel_torque>20</max_wheel_torque>
-      <max_wheel_acceleration>1.0</max_wheel_acceleration>
+      <max_linear_acceleration>1.0</max_linear_acceleration>
 
-      <command_topic>cmd_vel</command_topic>
+      <topic>/amr1/cmd_vel</topic>
 
-      <!-- output -->
-      <publish_odom>true</publish_odom>
-      <publish_odom_tf>true</publish_odom_tf>
-      <publish_wheel_tf>false</publish_wheel_tf>
-
-      <odometry_topic>odom</odometry_topic>
-      <odometry_frame>odom</odometry_frame>
-      <robot_base_frame>base_footprint</robot_base_frame>
-
+      <odom_topic>/amr1/odom</odom_topic>
+      <frame_id>odom</frame_id>
+      <tf_topic>/amr1/tf</tf_topic>
+      <odom_publisher_frequency>30</odom_publisher_frequency>
+      <child_frame_id>base_footprint</child_frame_id>
     </plugin>
 
-    <plugin name="turtlebot3_joint_state" filename="libgazebo_ros_joint_state_publisher.so">
-      <ros>
-        <!-- <namespace>/tb3</namespace> -->
-        <remapping>~/out:=joint_states</remapping>
-      </ros>
+    <plugin filename="gz-sim-joint-state-publisher-system"
+      name="gz::sim::systems::JointStatePublisher">
+      <topic>/amr1/joint_states</topic>
       <update_rate>10</update_rate>
       <joint_name>wheel_left_joint</joint_name>
       <joint_name>wheel_right_joint</joint_name>
-    </plugin>    
+    </plugin>
 
   </model>
 </sdf>

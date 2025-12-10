@@ -24,238 +24,269 @@ Modification:
 #include <functional>
 #include <string>
 #include <rclcpp/rclcpp.hpp>
-#include <gazebo/common/Events.hh>
-#include <gazebo/common/Plugin.hh>
-#include <gazebo/physics/PhysicsIface.hh>
-#include <gazebo/physics/Joint.hh>
-#include <gazebo/physics/Model.hh>
-#include <gazebo/physics/World.hh>
+
 #include "ConveyorBeltPlugin.hpp"
+#include "gazebo_compat.hpp"
 
-
-using namespace gazebo;
-
-GZ_REGISTER_MODEL_PLUGIN(ConveyorBeltPlugin)
+namespace gz{
+namespace sim{
+namespace systems{
 
 /////////////////////////////////////////////////
 ConveyorBeltPlugin::~ConveyorBeltPlugin()
 {
-  this->updateConnection.reset();
 }
 
 /////////////////////////////////////////////////
-void ConveyorBeltPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
+void ConveyorBeltPlugin::Configure(const gazebo::Entity &_entity,
+      const std::shared_ptr<const sdf::Element> &_sdf,
+      gazebo::EntityComponentManager &_ecm,
+      gazebo::EventManager &)
 {
-  
-   // Initialize ROS node
-  this->ros_node_ = gazebo_ros::Node::Get(_sdf);
- 
-  const gazebo_ros::QoS & qos = this->ros_node_->get_qos();
-  
-  std::string controlTopic = "conveyor/control";
-  if (_sdf->HasElement("control_topic"))
-    controlTopic = _sdf->Get<std::string>("control_topic");
+  this->entity = _entity;
+  this->model = gazebo::Model(_entity);
+
+  if (!this->model.Valid(_ecm))
+  {
+    std::cerr << "ConveyorBeltPlugin should be attached to a model entity." << std::endl;
+    return;
+  }
+
+    // Read SDF params
+  if (_sdf)
+  {
+    if (_sdf->HasElement("max_velocity"))
+      this->max_velocity_ = _sdf->Get<double>("max_velocity");
+    if (_sdf->HasElement("publish_rate"))
+      this->publish_rate_ = _sdf->Get<double>("publish_rate");
+    if (_sdf->HasElement("joint_name"))
+      this->joint_name_ = _sdf->Get<std::string>("joint_name");
+
+    // Fortress has no JointPositionLimits component; allow overrides here
+    if (_sdf->HasElement("lower_limit"))
+      this->lower_limit_ = _sdf->Get<double>("lower_limit");
+    if (_sdf->HasElement("upper_limit"))
+      this->upper_limit_ = _sdf->Get<double>("upper_limit");
+  }
+  if (this->publish_rate_ <= 0.0) this->publish_rate_ = 1000.0;
+
+  this->publish_period_ = std::chrono::nanoseconds(
+      static_cast<int64_t>((1.0 / this->publish_rate_) * 1e9));
+
+  // Resolve joint
+  this->joint = model.JointByName(_ecm, this->joint_name_);
+  if (this->joint == gazebo::kNullEntity)
+  {
+    RCLCPP_ERROR(this->ros_node_->get_logger(), "Joint [%s] not found.", this->joint_name_.c_str());
+    return;
+  }
+
+  // Ensure command component exists
+  if (!_ecm.Component<gazebo::components::JointVelocityCmd>(this->joint))
+    _ecm.CreateComponent(this->joint, gazebo::components::JointVelocityCmd({0.0}));
+
+  // Initialize ROS node if it hasn't been initialized yet
+  if (!rclcpp::ok())
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  // // Initialize ROS node
+  auto node_name = _sdf->Get<std::string>("node_name", "conveyor_belt_simplified").first;
+  this->ros_node_ = rclcpp::Node::make_shared(node_name);
+
 
   std::string stateTopic = "conveyor/state";
-  if (_sdf->HasElement("state_topic"))
-    stateTopic = _sdf->Get<std::string>("state_topic");
+  std::string controlTopic = "conveyor/control";
 
-  try 
+  try
   {
-   // Initialize publisher
-  this->pub_ = this->ros_node_->create_publisher<robot_config_plugins::msg::ConveyorBeltState>(
-    stateTopic, qos.get_publisher_qos(stateTopic, rclcpp::QoS(1)));
+  //  // Initialize publisher
+  this->status_pub_ = this->ros_node_->create_publisher<robot_config_plugins::msg::ConveyorBeltState>(
+    stateTopic, rclcpp::QoS(10));
 
-  // Create control service for conveyorbelt
+  // // Create control service for conveyorbelt
   this->controlService_ = this->ros_node_->create_service<robot_config_plugins::srv::ConveyorBeltControl>(
     controlTopic,
     std::bind(
       &ConveyorBeltPlugin::OnControlCommand, this,
       std::placeholders::_1, std::placeholders::_2));
-  
+
+  gzwarn << "[ROS2ConveyorBeltSystem] Loaded: joint=" << this->joint_name_
+          << " vmax=" << this->max_velocity_
+          << " pub_rate=" << this->publish_rate_
+          << " limits=[" << this->lower_limit_ << ", " << this->upper_limit_ << "]\n";
+
   }
   catch (const std::exception& e)
   {
-    RCLCPP_ERROR(
-        ros_node_->get_logger(), "Exception occured : %s", e.what());
-    return;
-  }
-  
-  // Read and set the joint that controls the belt.
-  std::string jointName = "belt_joint";
-  if (_sdf->HasElement("joint"))
-    jointName = _sdf->Get<std::string>("joint");
-
-  RCLCPP_INFO(this->ros_node_->get_logger(), "Using joint name of: [%s]" , jointName.c_str());
-  this->joint = _model->GetJoint(jointName);
-  if (!this->joint)
-  {
-    RCLCPP_ERROR(this->ros_node_->get_logger(), "Joint [%s] not found, belt disabled" , jointName.c_str());
+    std::cerr << "Exception occurred :" <<  e.what() << std::endl;
     return;
   }
 
-  // Read and set the belt's link.
-  std::string linkName = "belt_link";
-  if (_sdf->HasElement("link"))
-    linkName = _sdf->Get<std::string>("link");
-  
-  RCLCPP_INFO(this->ros_node_->get_logger(),  "Using link name of: [%s]" , linkName.c_str());
+  // set init joint position to zero
+  _ecm.SetComponentData<gazebo::components::JointPosition>(this->joint, {0, 0});
+}
 
-  auto worldPtr = gazebo::physics::get_world();
-  this->link = boost::static_pointer_cast<physics::Link>(
-    worldPtr->EntityByName(linkName));
-  if (!this->link)
+void ConveyorBeltPlugin::OnControlCommand(robot_config_plugins::srv::ConveyorBeltControl::Request::SharedPtr _req,
+      robot_config_plugins::srv::ConveyorBeltControl::Response::SharedPtr _res)
+{
+  RCLCPP_INFO(this->ros_node_->get_logger(),
+              "Received conveyor control command: power=%.3f",
+              _req->power);
+  std::scoped_lock lk(this->mtx_);
+  _res->success = false;
+
+  if (_req->power >= 0.0 && _req->power <= 100.0)
   {
-    RCLCPP_ERROR(this->ros_node_->get_logger(),  "Link not found");
+    this->power_ = _req->power;
+    this->belt_velocity_ = this->max_velocity_ * (this->power_ / 100.0);
+    _res->success = true;
+  }
+  else
+  {
+    RCLCPP_WARN(this->ros_node_->get_logger(),
+                "Conveyor power must be in [0,100], got %.3f", _req->power);
+  }
+}
+
+/////////////////////////////////////////////////
+void ConveyorBeltPlugin::PreUpdate(const gazebo::UpdateInfo &_info,
+      gazebo::EntityComponentManager &_ecm)
+{
+
+  // Spin ROS callbacks
+  if (this->ros_node_)
+  rclcpp::spin_some(this->ros_node_);
+
+  if (_info.paused || this->joint == gazebo::kNullEntity)
     return;
-  }
 
-  // Set the point where the link will be moved to its starting pose.
-  this->limit = this->joint->UpperLimit(0) - 0.4;
+  // --- Sim time + dt ---
+  const auto sim_ns =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(_info.simTime);
+  double dt = 0.0;
+  if (this->last_time_.count() > 0)
+    dt = (sim_ns - this->last_time_).count() * 1e-9;
+  this->last_time_ = sim_ns;
 
-  
-  // Initialize Gazebo transport
-  this->gzNode = transport::NodePtr(new transport::Node());
-  this->gzNode->Init();
-
-  // Publisher for modifying the rate at which the belt is populated.
-  // TODO(dhood): this should not be in this class.
-  std::string populationRateModifierTopic = "population_rate_modifier";
-  if (_sdf->HasElement("population_rate_modifier_topic"))
-    populationRateModifierTopic = _sdf->Get<std::string>("population_rate_modifier_topic");
-  this->populationRateModifierPub =
-    this->gzNode->Advertise<msgs::GzString>(populationRateModifierTopic);
-
-  // Read the power of the belt.
-  if (_sdf->HasElement("power"))
-    this->beltPower = _sdf->Get<double>("power");
-  
-  RCLCPP_INFO(this->ros_node_->get_logger(), "Power %f", this->beltPower );
-
-
-  this->SetPower(this->beltPower);
-  RCLCPP_INFO(this->ros_node_->get_logger(), "Using belt power of: %f", this->beltPower );
-
-  // Subscriber for the belt's activation topic.
-  if (_sdf->HasElement("enable_topic"))
+  // --- Read current joint position (if available) ---
+  double q = std::numeric_limits<double>::quiet_NaN();
+  if (auto pos = _ecm.Component<gazebo::components::JointPosition>(this->joint))
   {
-    std::string enableTopic = _sdf->Get<std::string>("enable_topic");
-    this->enabledSub =
-      this->gzNode->Subscribe(enableTopic, &ConveyorBeltPlugin::OnEnabled, this);
-    this->enabled = false;
+    if (!pos->Data().empty())
+      q = pos->Data()[0];
   }
 
-  // Listen to the update event that is broadcasted every simulation iteration.
-  this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-    std::bind(&ConveyorBeltPlugin::OnUpdate, this));
+  // --- Decide if we need to wrap (arm a one-tick reset) ---
+  const double eps = 1e-3;  // ~1 mm safety margin
 
-}
+  bool arm_by_q = false;
+  if (std::isfinite(q))
+    arm_by_q = (q >= (this->upper_limit_ - eps));
 
-bool ConveyorBeltPlugin::OnControlCommand(
-  robot_config_plugins::srv::ConveyorBeltControl::Request::SharedPtr _req,
-  robot_config_plugins::srv::ConveyorBeltControl::Response::SharedPtr _res)
-{
-  
-
-  RCLCPP_INFO(this->ros_node_->get_logger(),  "Conveyor control service called with: %f", _req->power );
-
-  if (!this->IsEnabled())
+  if (!this->pending_reset_)
   {
-    RCLCPP_ERROR(this->ros_node_->get_logger(), "Belt is not currently enabled so power cannot be set. It may be congested.");
-    _res->success = false;
-    return true;
+    // Integrate distance traveled by the belt since last frame (always available)
+    this->travel_accum_ += std::abs(this->belt_velocity_) * dt;
+
+    const bool arm_by_integrator = (this->travel_accum_ >= (this->upper_limit_ - eps));
+
+    if (arm_by_q || arm_by_integrator)
+    {
+      this->pending_reset_ = true;
+      this->travel_accum_  = 0.0;   // restart distance tally after each wrap
+    }
   }
 
-  this->SetPower(_req->power);
-  _res->success = true;
-  
-  return true;
-}
-
-/////////////////////////////////////////////////
-void ConveyorBeltPlugin::OnUpdate()
-{
-  this->joint->SetVelocity(0, this->beltVelocity);
-  
-
-  // Reset the belt.
-  if (ignition::math::Angle(this->joint->Position(0)) >= this->limit)
+  // --- Command joint velocity; pause for one tick if we're resetting ---
   {
-    // Warning: Megahack!!
-    // We should use "this->joint->SetPosition(0, 0)" here but I found that
-    // this line occasionally freezes the joint. I tracked the problem and
-    // found an incorrect value in childLinkPose within
-    // Joint::SetPositionMaximal(). This workaround makes sure that the right
-    // numbers are always used in our scenario.
-    //const ignition::math::Pose3d childLinkPose(1.20997, 2.5998, 0.8126, 0, 0, -1.57);
-    //const ignition::math::Pose3d newChildLinkPose(1.20997, 2.98, 0.8126, 0, 0, -1.57);
-    //this->link->MoveFrame(childLinkPose, newChildLinkPose);
-    this->joint->SetPosition(0,0);
-     
+    std::scoped_lock lk(this->mtx_);
+    auto *velCmd =
+        _ecm.Component<gazebo::components::JointVelocityCmd>(this->joint);
+    if (!velCmd)
+      velCmd = _ecm.CreateComponent(
+          this->joint, gazebo::components::JointVelocityCmd({0.0}));
+
+    if (this->pending_reset_)
+      velCmd->Data() = {0.0};                  // pause so reset can apply cleanly
+    else
+      velCmd->Data() = {this->belt_velocity_}; // normal conveyor motion
   }
 
-  this->Publish();
-}
+  // --- If armed, perform the reset this tick and disarm ---
+  if (this->pending_reset_)
+  {
+    auto *reset =
+        _ecm.Component<gazebo::components::JointPositionReset>(this->joint);
+    if (!reset)
+      reset = _ecm.CreateComponent(
+          this->joint, gazebo::components::JointPositionReset({0.0}));
+    else
+      reset->Data() = {0.0};
 
-/////////////////////////////////////////////////
-bool ConveyorBeltPlugin::IsEnabled() const
-{
-  return this->enabled;
-}
+    this->pending_reset_ = false;
+  }
 
-/////////////////////////////////////////////////
-double ConveyorBeltPlugin::Power() const
-{
-  if (!this->joint || !this->link)
-    return 0.0;
+  // --- Throttled publishes (by sim time) ---
+  if (sim_ns - this->last_pub_sim_ >= this->publish_period_)
+  {
+    this->publishStatus();
+    this->last_pub_sim_ = sim_ns;
+  }
 
-  return this->beltPower;
+  // // Optional debug:
+  static int k = 0;
+  if ((k++ % 200) == 0)
+    gzmsg << "[belt_joint] q=" << (std::isfinite(q) ? q : -1)
+           << " s_accum=" << this->travel_accum_
+           << " v_cmd=" << this->belt_velocity_
+           << " upper=" << this->upper_limit_
+           << " resetting=" << std::boolalpha << this->pending_reset_ << std::noboolalpha
+           << "\n";
 }
 
 /////////////////////////////////////////////////
 void ConveyorBeltPlugin::SetPower(const double _power)
 {
-  if (!this->joint || !this->link)
+  if (!this->joint || !this->linkEntity)
     return;
 
   if (_power < 0 || _power > 100)
   {
-    RCLCPP_ERROR(this->ros_node_->get_logger(), "Incorrect power value [ %f ]. \tAccepted values are in the [0-100] range", _power);
+    std::cerr << printf("Incorrect power value [ %f ]. \tAccepted values are in the [0-100] range", _power) << std::endl;
     return;
   }
 
   this->beltPower = _power;
 
-  // Publish a message on the rate modifier topic of the PopulationPlugin.
-  gazebo::msgs::GzString msg;
-  msg.set_data(std::to_string(_power / 100.0));
-  this->populationRateModifierPub->Publish(msg);
+  std::string msg;
+  msg = std::to_string(_power / 100.0);
 
   // Convert the power (percentage) to a velocity.
   this->beltVelocity = this->kMaxBeltLinVel * this->beltPower / 100.0;
-  RCLCPP_INFO(this->ros_node_->get_logger(), "Received power of: %f,  setting velocity to: %f", _power, this->beltVelocity);
+  printf("Received power of: %f,  setting velocity to: %f\n", _power, this->beltVelocity);
 }
 
 /////////////////////////////////////////////////
-void ConveyorBeltPlugin::OnEnabled(ConstGzStringPtr &_msg)
+void ConveyorBeltPlugin::publishStatus()
 {
-  gzdbg << "Received enable request: " << _msg->data() << std::endl;
-
-  if (_msg->data() == "enabled")
+  robot_config_plugins::msg::ConveyorBeltState msg;
   {
-    this->enabled = true;
-    this->SetPower(0);
-  } else if (_msg->data() == "disabled")
-  {
-    this->enabled = false;
-    this->SetPower(0);
-  } else
-  {
-    gzerr << "Unknown activation command [" << _msg->data() << "]" << std::endl;
+    std::scoped_lock lk(this->mtx_);
+    msg.power   = this->power_;
+    msg.enabled = (this->power_ > 0.0);
   }
+  this->status_pub_->publish(msg);
 }
 
-/////////////////////////////////////////////////
-void ConveyorBeltPlugin::Publish() const
-{
 }
+}
+}
+// Plugin registration - use the compatibility macro
+GAZEBO_ADD_PLUGIN(
+  gz::sim::systems::ConveyorBeltPlugin,
+  gz::sim::System,
+  gz::sim::systems::ConveyorBeltPlugin::ISystemConfigure,
+  gz::sim::systems::ConveyorBeltPlugin::ISystemPreUpdate
+)

@@ -227,7 +227,7 @@ class OrtInferSession():
         if device_id != "-1" and cuda_ep not in self.session.get_providers():
             warnings.warn(f'{cuda_ep} is not avaiable for current env, the inference part is automatically shifted to be executed under {cpu_ep}.\n'
                           'Please ensure the installed onnxruntime-gpu version matches your cuda and cudnn version, '
-                          'you can check their relations from the offical web site: '
+                          'you can check their relations from the official web site: '
                           'https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html',
                           RuntimeWarning)
 

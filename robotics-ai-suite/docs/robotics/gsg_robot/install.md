@@ -109,7 +109,7 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
 
       2. Install the chosen Autonomous Mobile Robot Deb package
 
-         > **Note:** Before you install ros-humble-robotics-sdk-complete (or any other
+         > **Note:** Before you install Robotics SDK (or any other
          > packages that depend on OpenVINO), please read the information in [OpenVINO installation instructions](./install-openvino.md).
 
          Install command example:
@@ -125,6 +125,15 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
          <!--hide_directive:::hide_directive-->
          <!--hide_directive:::{tab-item}hide_directive--> **Humble**
          <!--hide_directive:sync: humblehide_directive-->
+
+         To install Robotics SDK on ROS Humble, you have to install Gazebo 11 from OpenRobotics PPA first:
+
+         ```bash
+         sudo add-apt-repository ppa:openrobotics/gazebo11-gz-cli
+         sudo apt update
+         ```
+
+         Then, install Robotics SDK:
 
          ```bash
          sudo apt install ros-humble-robotics-sdk

@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Intel's Robotics AI Suite : Follow-me with gesture-control
 
 This release version contains `debian` package building rules. `dpkg-buildpackage` is automatically triggered in the CI/CD pipeline and the created debian packages are pushed to Intel's AMR repo.

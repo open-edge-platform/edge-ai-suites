@@ -58,6 +58,9 @@ from launch.actions import OpaqueFunction
 
 packageName = "rvc_dynamic_motion_controller_use_case"
 
+# Detect ROS distro for compatibility
+ros_distro = os.environ.get('ROS_DISTRO', 'humble')
+
 def load_yaml(package_path, file_path):
     absolute_file_path = os.path.join(package_path, file_path)
 
@@ -157,8 +160,10 @@ def launch_setup(context, *args, **kwargs):
     visual_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "visual_parameters.yaml"]
     )
+    # Use external_control.urscript for Jazzy, ros_control.urscript for Humble
     script_filename = PathJoinSubstitution(
-        [FindPackageShare("ur_robot_driver"), "resources", "ros_control.urscript"]
+        [FindPackageShare("ur_robot_driver"), "resources",
+         "external_control.urscript" if ros_distro == "jazzy" else "ros_control.urscript"]
     )
     input_recipe_filename = PathJoinSubstitution(
         [FindPackageShare("ur_robot_driver"), "resources", "rtde_input_recipe.txt"]
@@ -585,10 +590,11 @@ def generate_launch_description():
         )
     )
     # General arguments
+    # Use ur_robot_driver for Jazzy (ur_bringup merged into it), ur_bringup for Humble
     declared_arguments.append(
         DeclareLaunchArgument(
             "runtime_config_package",
-            default_value="ur_bringup",
+            default_value="ur_robot_driver" if ros_distro == "jazzy" else "ur_bringup",
             description='Package with the controller\'s configuration in "config" folder. \
         Usually the argument is not set, it enables use of a custom setup.',
         )

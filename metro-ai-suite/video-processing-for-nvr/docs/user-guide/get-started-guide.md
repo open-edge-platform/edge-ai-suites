@@ -224,9 +224,13 @@ ctrl --cmd=stop  --time=0
 `sudo rm -rf build`
 
 ### Uninstall live555
-`xargs sudo rm < live555-master/build/install_manifest.txt`
+`xargs sudo rm < live555-master/build/install_manifest.txt`  
 `sudo rm -rf live555-master`
 
 ### Uninstall VPP SDK
+`sudo apt remove intel-vppsdk`  
 `sudo rm -rf /opt/intel/vppsdk`  
 `sudo rm -rf /opt/intel/media`
+
+## Run Sample Application svet_app in docker
+Build docker image and Run in docker container, [guide](../../docker/README.md)

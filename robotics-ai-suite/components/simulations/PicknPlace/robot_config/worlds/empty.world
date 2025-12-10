@@ -1,8 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.4">
   <world name="default">
-  <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so"/>
-
    <gravity>0 0 -9.8</gravity>
     <physics default="0" name="default_physics" type="ode">
       <max_step_size>0.01</max_step_size>
@@ -29,16 +27,17 @@
             </plane>
           </geometry>
           <material>
-            <script>
-              <name>Gazebo/White</name>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-            </script>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
       </link>
     </model>
     <include>
-      <uri>model://sun</uri>
+      <uri>
+        https://fuel.gazebosim.org/1.0/OpenRobotics/models/Sun
+      </uri>
     </include>
   </world>
 </sdf>

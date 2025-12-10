@@ -1,0 +1,40 @@
+Source: ros-jazzy-rvc-dynamic-motion-controller-use-case
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-auto <!nocheck>,
+    ros-jazzy-ament-lint-common <!nocheck>,
+    ros-jazzy-gui-settings,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclcpp-components,
+    ros-jazzy-rvc-grasp-interface,
+    ros-jazzy-rvc-messages,
+    ros-jazzy-rvc-motion-controller-interface,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-state-machine-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-std-srvs,
+    ros-jazzy-tf2,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-ros
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-rvc-dynamic-motion-controller-use-case
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, 
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclcpp-components,
+    ros-jazzy-rvc-grasp-interface,
+    ros-jazzy-rvc-motion-controller-interface,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-tf2,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-ros
+Description: Main package for RVC motion controller

@@ -1,3 +1,8 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
 
 <!--
   This Behavior Tree replans the global path periodically at 1 Hz through an array of poses continuously

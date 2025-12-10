@@ -1,0 +1,5 @@
+ros-jazzy-robot-config-plugins (3.6-1) noble; urgency=high
+
+  * Initial release.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 24 Sep 2025 11:13:40 +0200

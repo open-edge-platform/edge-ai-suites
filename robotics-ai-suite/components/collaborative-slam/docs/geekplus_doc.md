@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Background & Settings
 
 Geekplus is a leading warehouse robotics company and we used to collaborate with them to improve localization accuracy and re-localization performance. During algorithm development, we are provided with ros bag files that captures the real-world warehouse environment. The bag files have two special settings of tf tree that are different from general datasets:

@@ -18,9 +18,9 @@ To deploy the **Smart Parking** Sample Application with the Edge Orchestrator, f
 
 ### Prerequisites
 
-1. Access to the web interface of the Edge Orchestrator with one or more [edge nodes onboarded](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/edge_node_onboard.html>) to the Edge Orchestrator.
+1. Access to the web interface of the Edge Orchestrator with one or more [edge nodes onboarded](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/edge_node_onboard/index.html) to the Edge Orchestrator.
 
-1. Clusters with a [privilege template](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/additional_howtos/set_up_a_cluster_template.html>) have been created on the needed edge nodes by following the steps in [Create Cluster](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/set_up_edge_infra/create_clusters.html#create-cluster>).
+1. Clusters with a [privilege template](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/advanced_functionality/set_up_a_cluster_template.html) have been created on the needed edge nodes by following the steps in [Create Cluster](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/clusters/create_clusters.html).
 
 ### Make the Deployment Package Available
 
@@ -31,13 +31,13 @@ To deploy the **Smart Parking** Sample Application with the Edge Orchestrator, f
     cd metro-ai-suite/metro-vision-ai-app-recipe/smart-parking
     ```
 
-1. From the web browser, open the URL of the Edge Orchestrator and import the deployment package present in the folder **deployment-package** following the steps described in [Import Deployment Package](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/import_deployment.html#import-deployment-package>).
+1. From the web browser, open the URL of the Edge Orchestrator and import the deployment package present in the folder **deployment-package** following the steps described in [Import Deployment Package](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/package_software/import_deployment.html#import-deployment-package).
 
 1. After you have imported the deployment package into Edge Orchestrator, you can see it in the list of deployment packages:
 
    **![Image](./_images/sp-dp.png)**
 
-See [Deployment Packages](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/deploy_packages.html#view-deployment-packages>) for more information on deployment packages.
+See [Deployment Packages](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/package_software/deploy_packages.html#view-deployment-packages) for more information on deployment packages.
 
 ### Deploy the Application onto the Edge Nodes
 
@@ -65,7 +65,7 @@ To set up a deployment:
 
 After a few minutes, the deployment will start and will take about 5 minutes to complete.
 
-In the Edge Orchestrator Web UI, you can track the application installation through the [View Deployment Details](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/deployment_details.html#view-deployment-details>) page.
+In the Edge Orchestrator Web UI, you can track the application installation through the [View Deployment Details](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/package_software/deployment_details.html#view-deployment-details) page.
 
 The **Smart Parking** Sample Application is fully deployed when the applications become green and the status is shown as _Running_.
 
@@ -73,13 +73,13 @@ You can view the deployment status on the Deployments page.
 
 > Note: If the deployment fails for any reason, the deployment status will display the “Error” or “Down” status.
 
-For more information on setting up a deployment, see [Set up a Deployment](<https://docs.openedgeplatform.intel.com/edge-manage-docs/main/user_guide/package_software/setup_deploy.html#set-up-a-deployment>).
+For more information on setting up a deployment, see [Set up a Deployment](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/package_software/setup_deploy.html#set-up-a-deployment).
 
 
 ### Access the **Smart Parking** Sample Application
 
-1. Download the kubeconfig file of the edge node cluster that contains the deployed application. See [Kubeconfig Download](<https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/clusters/accessing_clusters.html>).
+1. Download the kubeconfig file of the edge node cluster that contains the deployed application. See [Kubeconfig Download](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/clusters/accessing_clusters.html).
 
-1. Follow the steps in the **Smart Parking** [Documentation](<how-to-deploy-with-helm.md#step-3-deploy-the-application-and-run-multiple-ai-pipelines>) on the usage of the application.
+1. Follow the steps in the **Smart Parking** [Documentation](../user-guide/how-to-deploy-with-helm.md#step-3-deploy-the-application-and-run-multiple-ai-pipelines) on the usage of the application.
 
    > Note: Skip the Deploy Helm chart step.

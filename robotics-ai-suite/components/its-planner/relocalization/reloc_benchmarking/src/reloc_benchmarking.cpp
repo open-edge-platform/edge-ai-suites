@@ -15,6 +15,7 @@
 #include <thread>
 #include <mutex>
 #include <future>
+#include <cmath>
 
 using NavigateToPose = nav2_msgs::action::NavigateToPose;
 using GoalHandleNavigateToPose = rclcpp_action::ClientGoalHandle<NavigateToPose>;
@@ -35,7 +36,7 @@ bool demo = false;
 class Benchmark : public rclcpp::Node
 {
 private:
-  bool pose_received_ = false;
+  bool pose_recieved_ = false;
   rclcpp_action::Client<NavigateToPose>::SharedPtr send_goal_;
   rclcpp::Client<std_srvs::srv::Empty>::SharedPtr reset_world_;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr publish_initial_pose_;
@@ -99,6 +100,7 @@ public:
       "global_costmap/clear_entirely_global_costmap");
     reset_world_ = this->create_client<std_srvs::srv::Empty>("reset_simulation");
   }
+
   bool sendGoal(float x_goal, float y_goal)
   {
     while (!send_goal_->wait_for_action_server()) {
@@ -124,9 +126,6 @@ public:
     send_goal_options.result_callback = std::bind(&Benchmark::resultCallback, this, _1);
     auto goal_handle_future = send_goal_->async_send_goal(goal, send_goal_options);
 
-    // future = self.goal_handle.cancel_goal_async()
-
-
     if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), goal_handle_future) !=
       rclcpp::FutureReturnCode::SUCCESS)
     {
@@ -143,7 +142,6 @@ public:
       RCLCPP_INFO(get_logger(), "Wait for Goal complete Success!");
       return true;
     }
-    return false;
   }
 
   bool waitForGoalCompletion(const GoalHandleNavigateToPose::SharedPtr & goal_handle)
@@ -167,7 +165,6 @@ public:
       if (demo) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10000));
         disableSensor();
-        // resetWorld();
         std::this_thread::sleep_for(std::chrono::milliseconds(10000));
         enableSensor();
         clearCostmap();
@@ -253,9 +250,8 @@ public:
       resetWorld();
       sendinitialPose();
       clearCostmap();
-      // std::pair<double, double> goal;
       auto goal = getRandomGoalPose();
-      while (sqrt(
+      while (std::sqrt(
           (goal.first - (-2.0)) * (goal.first - (-2.0)) +
           (goal.second - (-0.5)) * (goal.second - (-0.5))) < 2.0)
       {
@@ -270,13 +266,14 @@ public:
       std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     }
     int sum = 0;
-    for (int i = 0; i < relocalization_time.size(); i++) {
+    for (size_t i = 0; i < relocalization_time.size(); i++) {
       sum += relocalization_time[i];
     }
     if (relocalization_time.size() > 0) {
+      // Fixed format specifier from %d to %zu for size_type
       RCLCPP_INFO(
-        get_logger(), "average time took for re-localization = %d",
-        sum / relocalization_time.size());
+        get_logger(), "average time took for re-localization = %zu",
+        static_cast<size_t>(sum) / relocalization_time.size());
     }
     RCLCPP_INFO(get_logger(), "fail_count = %d", fail_count);
     RCLCPP_INFO(get_logger(), "success_count = %d", success_count);
@@ -303,7 +300,7 @@ public:
   {
     reset_services();
     activate_services();
-    pose_received_ = false;
+    pose_recieved_ = false;
     auto request_reset = std::make_shared<std_srvs::srv::Empty::Request>();
     while (!reset_world_->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
@@ -316,14 +313,19 @@ public:
     auto reset_world = reset_world_->async_send_request(request_reset);
   }
 
-  std::pair<double, double>
-  getRandomGoalPose()
+  std::pair<double, double> getRandomGoalPose()
   {
     std::string line;
     int random = 0;
     int numOfLines = 0;
     std::pair<double, double> goal;
     std::ifstream saved_poses_file(saved_pose_dir_ + "/saved_poses.txt");
+    
+    if (!saved_poses_file.is_open()) {
+      RCLCPP_ERROR(get_logger(), "Failed to open saved poses file: %s", 
+                   (saved_pose_dir_ + "/saved_poses.txt").c_str());
+      return {0.0, 0.0};
+    }
     
     // Create a random device and use it to seed a mersenne twister engine
     std::random_device rd;
@@ -340,17 +342,24 @@ public:
         getline(inputString, x_value, ',');
         getline(inputString, y_value);
         line = "";
-        goal.first = std::stod(x_value);
-        goal.second = std::stod(y_value);
+        try {
+          goal.first = std::stod(x_value);
+          goal.second = std::stod(y_value);
+        } catch (const std::exception& e) {
+          RCLCPP_ERROR(get_logger(), "Failed to parse pose values: %s", e.what());
+          return {0.0, 0.0};
+        }
+        saved_poses_file.close();
         return goal;
       }
     }
+    saved_poses_file.close();
     return goal;
   }
 
   void testRelocalization(std::vector<int> & relocalization_time)
   {
-    pose_received_ = false;
+    pose_recieved_ = false;
     ReinitializeGlobalLocalization();
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     // send re-localization request
@@ -369,7 +378,7 @@ public:
     auto s_reloc_timer = std::chrono::steady_clock::now();
     std::chrono::milliseconds timeout(10000);
 
-    while (!isLocalized() ) {
+    while (!isLocalized()) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(get_logger(), "Interrupted while waiting relocaliztion. Exiting.");
         rclcpp::shutdown();
@@ -381,6 +390,7 @@ public:
         current_time - s_reloc_timer);
       if (elapsed_time >= timeout) {
         RCLCPP_INFO(get_logger(), "Re-localization failed...");
+        fail_count++;
         return;
       }
     }
@@ -389,12 +399,14 @@ public:
     auto elapsed_reloc_time = std::chrono::duration_cast<std::chrono::milliseconds>(
       e_reloc_timer - s_reloc_timer);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    if (abs(last_pose_.first - current_pose_->pose.pose.position.x) < eps_x &&
-      abs(last_pose_.second - current_pose_->pose.pose.position.y) < eps_y)
+    
+    if (std::abs(last_pose_.first - current_pose_->pose.pose.position.x) < eps_x &&
+      std::abs(last_pose_.second - current_pose_->pose.pose.position.y) < eps_y)
     {
       success_count++;
-      RCLCPP_INFO(get_logger(), "Time it took in (ms) = %d", elapsed_reloc_time.count());
-      relocalization_time.push_back(elapsed_reloc_time.count());
+      // Fixed format specifier from %d to %ld for long int
+      RCLCPP_INFO(get_logger(), "Time it took in (ms) = %ld", elapsed_reloc_time.count());
+      relocalization_time.push_back(static_cast<int>(elapsed_reloc_time.count()));
     } else { //  It localized to a wrong location
       fail_count++;
     }
@@ -402,7 +414,6 @@ public:
     RCLCPP_INFO(get_logger(), "success_count = %d", success_count);
     RCLCPP_INFO(get_logger(), "fail_count = %d", fail_count);
     RCLCPP_INFO(get_logger(), "success_rate = %f", success_rate);
-    // measure success
   }
 
   void ReinitializeGlobalLocalization()
@@ -421,33 +432,32 @@ public:
 
   void amcl_pose_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
   {
-    auto pose_ = msg->pose;
     current_pose_ = msg;
-    pose_received_ = true;
+    pose_recieved_ = true;
   }
+
   bool isLocalized()
   {
-    if (pose_received_ &&
+    if (pose_recieved_ &&
       current_pose_->pose.covariance[cov_x_] < 0.25 &&
       current_pose_->pose.covariance[cov_y_] < 0.25 &&
       current_pose_->pose.covariance[cov_a_] < 0.25)
     {
       return true;
     }
-
     return false;
   }
 
   void disableSensor()
   {
     auto request_reset = std::make_shared<std_srvs::srv::Empty::Request>();
-    while (!reset_world_->wait_for_service(1s)) {
+    while (!disable_sensor_->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
-        RCLCPP_ERROR(get_logger(), "Interrupted while waiting for the reset service. Exiting.");
+        RCLCPP_ERROR(get_logger(), "Interrupted while waiting for the disable sensor service. Exiting.");
         rclcpp::shutdown();
         return;
       }
-      RCLCPP_INFO(get_logger(), "reset service not available, waiting again...");
+      RCLCPP_INFO(get_logger(), "disable sensor service not available, waiting again...");
     }
     auto disable_sensor = disable_sensor_->async_send_request(request_reset);
   }
@@ -455,13 +465,13 @@ public:
   void enableSensor()
   {
     auto request_reset = std::make_shared<std_srvs::srv::Empty::Request>();
-    while (!reset_world_->wait_for_service(1s)) {
+    while (!enable_sensor_->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
-        RCLCPP_ERROR(get_logger(), "Interrupted while waiting for the reset service. Exiting.");
+        RCLCPP_ERROR(get_logger(), "Interrupted while waiting for the enable sensor service. Exiting.");
         rclcpp::shutdown();
         return;
       }
-      RCLCPP_INFO(get_logger(), "reset service not available, waiting again...");
+      RCLCPP_INFO(get_logger(), "enable sensor service not available, waiting again...");
     }
     auto enable_sensor = enable_sensor_->async_send_request(request_reset);
   }
@@ -477,7 +487,7 @@ public:
 
 int main(int argc, char ** argv)
 {
-  try{
+  try {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<Benchmark>();
     rclcpp::spin(node);
@@ -487,6 +497,10 @@ int main(int argc, char ** argv)
     RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Caught exception: %s", e.what());
     rclcpp::shutdown();
     return 1; // error 
+  } catch (const std::exception & e) {
+    RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Unexpected exception: %s", e.what());
+    rclcpp::shutdown();
+    return 1;
   }
   return 0;
 }

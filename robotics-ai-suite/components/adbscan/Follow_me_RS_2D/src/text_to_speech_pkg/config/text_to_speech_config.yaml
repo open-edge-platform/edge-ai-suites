@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+---
 text_to_speech_node:
   ros__parameters:
     tbot_odom_topic_name: /tb3/odom
@@ -12,4 +13,3 @@ text_to_speech_node:
     distance_calculation_frequency: 2
     declare_target_loc: True
     device_name: CPU
-

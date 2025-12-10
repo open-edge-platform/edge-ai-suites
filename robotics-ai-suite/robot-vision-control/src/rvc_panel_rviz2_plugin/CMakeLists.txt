@@ -44,10 +44,17 @@ find_package(state_machine_msgs REQUIRED)
 ## This setting causes Qt's "MOC" generation to happen automatically.
 set(CMAKE_AUTOMOC ON)
 
+# Determine ROS distro-specific source directory
+if(DEFINED ENV{ROS_DISTRO})
+  set(ROS_DISTRO $ENV{ROS_DISTRO})
+else()
+  set(ROS_DISTRO "humble")
+endif()
+
 ## Here we specify the list of source files.
 ## The generated MOC files are included automatically as headers.
 set(SRC_FILES
-  src/rvc_panel.cpp
+  ${ROS_DISTRO}/src/rvc_panel.cpp
 )
 
 ## An rviz plugin is just a shared library, so here we declare the
@@ -76,6 +83,7 @@ ament_target_dependencies(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
   $<INSTALL_INTERFACE:include>
   ${Qt5Widgets_INCLUDE_DIRS})
 
