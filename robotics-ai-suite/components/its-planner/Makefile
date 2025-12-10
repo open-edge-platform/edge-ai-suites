@@ -12,7 +12,7 @@ ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ROS_DISTRO?=humble
 
 .DEFAULT_GOAL := help
-.PHONY: license-check build-nav2-msgs build-nav2-amcl build help source-package
+.PHONY: license-check build-nav2-msgs build-nav2-amcl build help source-package lint lint-all
 
 license-check:
 	@# Help: Perform a REUSE license check using docker container https://hub.docker.com/r/fsfe/reuse
@@ -84,6 +84,35 @@ source-package:
 	git archive --format=zip -o its-planner-$(VERSION).zip HEAD \
 		.gitattributes .gitignore .gitmodules Makefile README.md REUSE.toml run_its.sh \
 		.github/linters 3rd_party collab_slam docs its_planner LICENSES relocalization send_localization
+
+lint:
+	@# Help: Run all sub-linters using super-linter (using linters defined for this repo only)
+	VALIDATE_GITHUB_ACTIONS=true \
+	VALIDATE_YAML=true \
+	VALIDATE_JSON=true \
+	VALIDATE_PYTHON_PYLINT=true \
+	VALIDATE_PYTHON_FLAKE8=true \
+	VALIDATE_BASH=true \
+	VALIDATE_MARKDOWN=true \
+	VALIDATE_CLANG_FORMAT=true \
+		make lint-all
+
+lint-all:
+	@# Help: Run super-linter over entire repository (auto-detects code to lint)
+	docker run --rm --platform linux/amd64 \
+		-e SHELL=/bin/bash \
+		-e RUN_LOCAL=true \
+		--env-file ".github/linters/super-linter.env" \
+		$(if $(VALIDATE_GITHUB_ACTIONS),-e VALIDATE_GITHUB_ACTIONS=$(VALIDATE_GITHUB_ACTIONS)) \
+		$(if $(VALIDATE_YAML),-e VALIDATE_YAML=$(VALIDATE_YAML)) \
+		$(if $(VALIDATE_JSON),-e VALIDATE_JSON=$(VALIDATE_JSON)) \
+		$(if $(VALIDATE_PYTHON_PYLINT),-e VALIDATE_PYTHON_PYLINT=$(VALIDATE_PYTHON_PYLINT)) \
+		$(if $(VALIDATE_PYTHON_FLAKE8),-e VALIDATE_PYTHON_FLAKE8=$(VALIDATE_PYTHON_FLAKE8)) \
+		$(if $(VALIDATE_BASH),-e VALIDATE_BASH=$(VALIDATE_BASH)) \
+		$(if $(VALIDATE_MARKDOWN),-e VALIDATE_MARKDOWN=$(VALIDATE_MARKDOWN)) \
+		$(if $(VALIDATE_CLANG_FORMAT),-e VALIDATE_CLANG_FORMAT=$(VALIDATE_CLANG_FORMAT)) \
+		-v $(ROOT_DIR):/tmp/lint \
+			ghcr.io/super-linter/super-linter:slim-v8.1.0
 
 help:
 	@printf "%-20s %s\n" "Target" "Description"

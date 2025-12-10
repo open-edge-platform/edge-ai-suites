@@ -1,9 +1,17 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 3.5)
 
 project(adbscan_ros2)
 
+# Generate compile_commands.json for tooling (clangd, static analysis, etc.)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+message(STATUS "➡ compile_commands.json will be generated in: ${CMAKE_BINARY_DIR}")
+
 option(WITH_ONEAPI "Build with parallelization using Intel OneAPI" FALSE)
-    
+
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
@@ -36,12 +44,12 @@ if(UNIX OR APPLE)
     # flag to enable NaN/INFINITY support in oneAPI
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fhonor-nans")
   endif()
-  
+
   # Compiler flags.
   if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     # GCC specific flags.
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9 OR
-	CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.9)
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9
+      OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.9)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIE -fstack-protector-strong")
     else()
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIE -fstack-protector")
@@ -55,7 +63,7 @@ if(UNIX OR APPLE)
     # shows that it generates correct PIE anyway if only -pie is provided.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector")
   endif()
-  
+
   # Generic flags.
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fno-operator-names -Wformat -Wformat-security \
     -Wall -fopenmp")
@@ -77,6 +85,7 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(TBB REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -96,7 +105,7 @@ set(HEADER_FILES src/ADBScan.h src/dbscan_adaptiveK.h src/doDBSCAN.hpp src/print
 add_library(adbscan_lib src/dbscan_adaptiveK.cpp src/doDBSCAN.cpp src/print_info.cpp src/Util.cpp ${HEADER_FILES})
 
 if(WITH_ONEAPI)
-target_link_libraries (adbscan_lib pcl_oneapi_kdtree pcl_kdtree  pcl_oneapi_octree pcl_octree pcl_io)
+  target_link_libraries(adbscan_lib pcl_oneapi_kdtree pcl_kdtree  pcl_oneapi_octree pcl_octree pcl_io)
 endif()
 
 set(dependencies "geometry_msgs" "rclcpp" "nav2_dynamic_msgs" "PCL" "pcl_conversions" "sensor_msgs" "visualization_msgs")
@@ -108,18 +117,26 @@ link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
 add_executable(adbscan_sub src/adbscan_sub.cpp src/print_info.cpp src/Util.cpp src/doDBSCAN.cpp src/Util.cpp src/dbscan_adaptiveK.cpp)
-ament_target_dependencies(adbscan_sub ${dependencies})  
-target_link_libraries (adbscan_sub ${PCL_LIBRARIES})
-
+ament_target_dependencies(adbscan_sub ${dependencies})
+target_link_libraries(adbscan_sub
+    ${PCL_LIBRARIES}
+    TBB::tbb
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_gtest REQUIRED)
+
   set(TESTFILES
     test/main.cpp
     test/test_adbscan_clusters.cpp)
   ament_add_gtest(${PROJECT_NAME}_test ${TESTFILES})
-  target_link_libraries(${PROJECT_NAME}_test adbscan_lib)
+  target_link_libraries(${PROJECT_NAME}_test 
+    adbscan_lib
+    ${PCL_LIBRARIES}
+    TBB::tbb
+  )
+  ament_target_dependencies(${PROJECT_NAME}_test ${dependencies})
 
   install(TARGETS
     ${PROJECT_NAME}_test
@@ -146,12 +163,12 @@ if(FUZZTEST_FUZZING_MODE)
   set(HEADERS src/ADBScan.h src/dbscan_adaptiveK.h src/doDBSCAN.hpp src/print_info.h src/Util.hpp)
   add_library(adbscan_fuzztest_lib src/dbscan_adaptiveK.cpp src/doDBSCAN.cpp src/print_info.cpp src/Util.cpp ${HEADERS})
   add_executable(
-     fuzz_clusters
-     test/fuzzing/fuzz_clusters.cpp
+    fuzz_clusters
+    test/fuzzing/fuzz_clusters.cpp
   )
   target_link_libraries(
-    fuzz_clusters 
-    PRIVATE 
+    fuzz_clusters
+    PRIVATE
     adbscan_fuzztest_lib
   )
   link_fuzztest(fuzz_clusters)

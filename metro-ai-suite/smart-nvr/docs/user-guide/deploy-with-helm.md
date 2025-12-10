@@ -21,7 +21,7 @@ Deploy these on separate devices:
 - **VSS Search**: Handles video search functionality
 - **VSS Summary**: Provides video summarization capabilities
 
-📖 [VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
+📖 [VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
 
 ### 2. VLM Microservice (Optional)
 
@@ -30,7 +30,7 @@ Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 - Runs the VLM model defined in the frigate [config file](../../resources/frigate-config/config.yml)
 - Use `VLM_MAX_COMPLETION_TOKENS` to limit response length during deployment
 
-📖 [VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
+📖 [VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
 
 ## Helm Chart Installation
 
@@ -73,7 +73,7 @@ cd smart-nvr
 Clone the repository containing the Helm chart:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
 ```
 
 ##### Step 2: Change to the Chart Directory
@@ -86,11 +86,7 @@ cd edge-ai-suites/metro-ai-suite/smart-nvr
 
 ### 2. Configure Required Values
 
-The application requires several values to be set by user in order to work. To make it easier, we have included a `user_values_override.yaml` file, which contains only the values that user needs to tweak. Open the file in your favorite editor or use nano:
-
-```bash
-nano user_values_override.yaml
-```
+The application requires several values to be set by user in order to work. To make it easier, we have included a `user_value_override.yaml` file, which contains only the values that user needs to tweak. Open the file in your favorite editor or use nano.
 
 Update or edit the values in YAML file as follows:
 
@@ -105,8 +101,8 @@ Update or edit the values in YAML file as follows:
 | `frigate.env.OPENAI_BASE_URL` | Needed when NVR_GENAI flag is set to true | `<your-open-ai-base-url>` |
 | `frigate.env.OPENAI_API_KEY` | Needed when NVR_GENAI flag is set to true | `<your-open-ai-api-key>` |
 | `nvr-event-router.env.VSS_SEARCH_IP` | VSS Search IP | `http://<your-vss-search-ip>` |
-| `nvr-event-router.env.VSS_SEARCH_PORT` | VSS Search port | `http://<your-vss-search-port>` |
-| `nvr-event-router.env.VSS_SUMMARY_IP` | VSS summary IP | `<your-vss-summary-ip>` |
+| `nvr-event-router.env.VSS_SEARCH_PORT` | VSS Search port | `<your-vss-search-port>` |
+| `nvr-event-router.env.VSS_SUMMARY_IP` | VSS summary IP | `http://<your-vss-summary-ip>` |
 | `nvr-event-router.env.VSS_SUMMARY_PORT` | VSS summary port | `<your-vss-summary-port>` |
 | `nvr-event-router-ui.NVR_GENAI` | Flag to enable GENAI on Frigate NVR  | `true/false` |
 
@@ -160,7 +156,7 @@ kubectl get pods -n $my_namespace
 
 > **_IMPORTANT NOTE :_** When deployed for first time, it may take up-to around 5 Mins to bring all the pods/containers in running and ready state, as several containers try to download models which can take a while. The time to bring up all the pods depends on several factors including but not limited to node availability, node load average, network speed, compute availability etc.
 
-> **_IMPORTANT NOTE :_** If you want to persist the downloaded models and avoid delays pertaining to model downloads when re-installing the charts, please set the `global.keepPvc` value to `true` in `user_values_override.yaml` file before installing the chart.
+> **_IMPORTANT NOTE :_** If you want to persist the downloaded models and avoid delays pertaining to model downloads when re-installing the charts, please set the `global.keepPvc` value to `true` in `user_value_override.yaml` file before installing the chart.
 
 ### Step 7: Accessing the application
 

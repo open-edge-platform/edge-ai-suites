@@ -25,11 +25,12 @@ By following this guide, you will learn how to:
 
 1. **Clone the Repository and update `.env` file**:
     - Create and navigate to directory:
+
       ```bash
-        git clone https://github.com/open-edge-platform/edge-ai-suites.git
+        git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
         cd edge-ai-suites/metro-ai-suite/image-based-video-search
       ```
-    
+
     > Note: The below step is required for deployment with certain pre-release images
     - Update `DOCKER_REGISTRY` variable in `.env` file present at `edge-ai-suites/metro-ai-suite/image-based-video-search/`. The recommended setting to use pre-release images is: `DOCKER_REGISTRY=docker.io/`
       Please remember to include `/` at the end.
@@ -133,7 +134,7 @@ a pre-step to prepare models may be needed
       - App UI: `https://<ip-addr>/`
       - Search UI: `https://<ip-addr>/docs`
       - MilvusDB UI: `https://<ip-addr>/ibvs-milvus-ui`
-      - Stream UI: You can access https stream at `https://<ip-addr>/stream` and RTSP stream at `rtsp://<ip-addr>:8554/stream`. 
+      - Stream UI: You can access https stream at `https://<ip-addr>/stream` and RTSP stream at `rtsp://<ip-addr>:8554/stream`.
     > Note: Replace `<ip-addr>` with your host IP address
 
 

@@ -1,4 +1,11 @@
 <?xml version="1.0" ?>
+
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 <net name="text-to-speech-en-0001-generation" version="10">
 	<layers>
 		<layer id="0" name="mel" type="Parameter" version="opset1">

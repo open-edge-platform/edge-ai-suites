@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: Apache-2.0
 // Copyright (C) 2025 Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #include "data/keyframe.h"
 #include "data/landmark.h"
 #include "optimize/transform_optimizer.h"
@@ -13,153 +15,152 @@
 #include <g2o/solvers/eigen/linear_solver_eigen.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
 
-namespace openvslam {
-namespace optimize {
+namespace openvslam
+{
+namespace optimize
+{
 
 transform_optimizer::transform_optimizer(const bool fix_scale, const unsigned int num_iter)
-    : fix_scale_(fix_scale), num_iter_(num_iter)
+: fix_scale_(fix_scale), num_iter_(num_iter)
 {
 }
 
-unsigned int transform_optimizer::optimize(data::keyframe* keyfrm_1, data::keyframe* keyfrm_2,
-                                           std::vector<data::landmark*>& matched_lms_in_keyfrm_2,
-                                           ::g2o::Sim3& g2o_Sim3_12, const float chi_sq) const
+unsigned int transform_optimizer::optimize(
+  data::keyframe * keyfrm_1, data::keyframe * keyfrm_2,
+  std::vector<data::landmark *> & matched_lms_in_keyfrm_2, ::g2o::Sim3 & g2o_Sim3_12,
+  const float chi_sq) const
 {
-    const float sqrt_chi_sq = std::sqrt(chi_sq);
+  const float sqrt_chi_sq = std::sqrt(chi_sq);
 
-    // 1. optimizerを構築
+  // 1. optimizer
 
-    auto linear_solver = ::std::make_unique<::g2o::LinearSolverEigen<::g2o::BlockSolverX::PoseMatrixType>>();
-    auto block_solver = ::std::make_unique<::g2o::BlockSolverX>(std::move(linear_solver));
-    auto algorithm = new ::g2o::OptimizationAlgorithmLevenberg(std::move(block_solver));
+  auto linear_solver =
+    ::std::make_unique<::g2o::LinearSolverEigen<::g2o::BlockSolverX::PoseMatrixType>>();
+  auto block_solver = ::std::make_unique<::g2o::BlockSolverX>(std::move(linear_solver));
+  auto algorithm = new ::g2o::OptimizationAlgorithmLevenberg(std::move(block_solver));
 
-    ::g2o::SparseOptimizer optimizer;
-    optimizer.setAlgorithm(algorithm);
+  ::g2o::SparseOptimizer optimizer;
+  optimizer.setAlgorithm(algorithm);
 
-    // 1. Sim3 transformのvertexを作成
+  // 1. Sim3 transform vertex
 
-    auto Sim3_12_vtx = new g2o::sim3::transform_vertex();
-    Sim3_12_vtx->setId(0);
-    Sim3_12_vtx->setEstimate(g2o_Sim3_12);
-    Sim3_12_vtx->setFixed(false);
-    Sim3_12_vtx->fix_scale_ = fix_scale_;
-    Sim3_12_vtx->rot_1w_ = keyfrm_1->get_rotation();
-    Sim3_12_vtx->trans_1w_ = keyfrm_1->get_translation();
-    Sim3_12_vtx->rot_2w_ = keyfrm_2->get_rotation();
-    Sim3_12_vtx->trans_2w_ = keyfrm_2->get_translation();
-    optimizer.addVertex(Sim3_12_vtx);
+  auto Sim3_12_vtx = new g2o::sim3::transform_vertex();
+  Sim3_12_vtx->setId(0);
+  Sim3_12_vtx->setEstimate(g2o_Sim3_12);
+  Sim3_12_vtx->setFixed(false);
+  Sim3_12_vtx->fix_scale_ = fix_scale_;
+  Sim3_12_vtx->rot_1w_ = keyfrm_1->get_rotation();
+  Sim3_12_vtx->trans_1w_ = keyfrm_1->get_translation();
+  Sim3_12_vtx->rot_2w_ = keyfrm_2->get_rotation();
+  Sim3_12_vtx->trans_2w_ = keyfrm_2->get_translation();
+  optimizer.addVertex(Sim3_12_vtx);
 
-    // 2. landmarkの拘束を追加
+  // 2. landmark
 
-    // 以下の2つのedgeを包含するwrapper
-    // - keyfrm_2で観測している3次元点をkeyfrm_1に再投影するconstraint edge(カメラモデルはkeyfrm_1のものに従う)
-    // - keyfrm_1で観測している3次元点をkeyfrm_2に再投影するconstraint edge(カメラモデルはkeyfrm_2のものに従う)
-    using reproj_edge_wrapper = g2o::sim3::mutual_reproj_edge_wapper<data::keyframe>;
-    std::vector<reproj_edge_wrapper> mutual_edges;
-    // 対応数
-    const unsigned int num_matches = matched_lms_in_keyfrm_2.size();
-    mutual_edges.reserve(num_matches);
+  using reproj_edge_wrapper = g2o::sim3::mutual_reproj_edge_wapper<data::keyframe>;
+  std::vector<reproj_edge_wrapper> mutual_edges;
+  const unsigned int num_matches = matched_lms_in_keyfrm_2.size();
+  mutual_edges.reserve(num_matches);
 
-    // keyfrm_1で観測している全3次元点
-    const auto lms_in_keyfrm_1 = keyfrm_1->get_landmarks();
+  // keyfrm_1
+  const auto lms_in_keyfrm_1 = keyfrm_1->get_landmarks();
 
-    // 有効な対応数
-    unsigned int num_valid_matches = 0;
+  unsigned int num_valid_matches = 0;
 
-    for (unsigned int idx1 = 0; idx1 < num_matches; ++idx1) {
-        // matching情報があるもののみを対象とする
-        if (!matched_lms_in_keyfrm_2.at(idx1)) {
-            continue;
-        }
-
-        auto lm_1 = lms_in_keyfrm_1.at(idx1);
-        auto lm_2 = matched_lms_in_keyfrm_2.at(idx1);
-
-        // 3次元点が両方存在するもののみを対象とする
-        if (!lm_1 || !lm_2) {
-            continue;
-        }
-        if (lm_1->will_be_erased() || lm_2->will_be_erased()) {
-            continue;
-        }
-
-        const auto idx2 = lm_2->get_index_in_keyframe(keyfrm_2);
-
-        if (idx2 < 0) {
-            continue;
-        }
-
-        // forward/backward edgesを作成してoptimizerにセット
-        reproj_edge_wrapper mutual_edge(keyfrm_1, idx1, lm_1, keyfrm_2, idx2, lm_2, Sim3_12_vtx, sqrt_chi_sq);
-        optimizer.addEdge(mutual_edge.edge_12_);
-        optimizer.addEdge(mutual_edge.edge_21_);
-
-        ++num_valid_matches;
-        mutual_edges.push_back(mutual_edge);
+  for (unsigned int idx1 = 0; idx1 < num_matches; ++idx1) {
+    // matching
+    if (!matched_lms_in_keyfrm_2.at(idx1)) {
+      continue;
     }
 
-    // 3. 最適化を実行
+    auto lm_1 = lms_in_keyfrm_1.at(idx1);
+    auto lm_2 = matched_lms_in_keyfrm_2.at(idx1);
 
-    optimizer.initializeOptimization();
-    optimizer.optimize(5);
-
-    // 4. outlierを外す処理
-
-    unsigned int num_outliers = 0;
-    for (unsigned int i = 0; i < num_valid_matches; ++i) {
-        auto edge_12 = mutual_edges.at(i).edge_12_;
-        auto edge_21 = mutual_edges.at(i).edge_21_;
-
-        // inlierチェック
-        if (edge_12->chi2() < chi_sq && edge_21->chi2() < chi_sq) {
-            continue;
-        }
-
-        // outlierにする処理
-        const auto idx1 = mutual_edges.at(i).idx1_;
-        matched_lms_in_keyfrm_2.at(idx1) = nullptr;
-
-        mutual_edges.at(i).set_as_outlier();
-        ++num_outliers;
+    if (!lm_1 || !lm_2) {
+      continue;
+    }
+    if (lm_1->will_be_erased() || lm_2->will_be_erased()) {
+      continue;
     }
 
-    if (num_valid_matches - num_outliers < 10) {
-        return 0;
+    const auto idx2 = lm_2->get_index_in_keyframe(keyfrm_2);
+
+    if (idx2 < 0) {
+      continue;
     }
 
-    // 5. もう一度最適化
+    // forward/backward edges
+    reproj_edge_wrapper mutual_edge(
+      keyfrm_1, idx1, lm_1, keyfrm_2, idx2, lm_2, Sim3_12_vtx, sqrt_chi_sq);
+    optimizer.addEdge(mutual_edge.edge_12_);
+    optimizer.addEdge(mutual_edge.edge_21_);
 
-    optimizer.initializeOptimization();
-    optimizer.optimize(num_iter_);
+    ++num_valid_matches;
+    mutual_edges.push_back(mutual_edge);
+  }
 
-    // 6. inlierを数える
+  // 3.
 
-    unsigned int num_inliers = 0;
-    for (unsigned int i = 0; i < num_valid_matches; ++i) {
-        auto edge_12 = mutual_edges.at(i).edge_12_;
-        auto edge_21 = mutual_edges.at(i).edge_21_;
+  optimizer.initializeOptimization();
+  optimizer.optimize(5);
 
-        // outlierチェック
-        if (mutual_edges.at(i).is_outlier()) {
-            continue;
-        }
+  // 4. outlier
 
-        // outlierチェック
-        if (chi_sq < edge_12->chi2() || chi_sq < edge_21->chi2()) {
-            // outlierにする処理
-            unsigned int idx1 = mutual_edges.at(i).idx1_;
-            matched_lms_in_keyfrm_2.at(idx1) = nullptr;
-            continue;
-        }
+  unsigned int num_outliers = 0;
+  for (unsigned int i = 0; i < num_valid_matches; ++i) {
+    auto edge_12 = mutual_edges.at(i).edge_12_;
+    auto edge_21 = mutual_edges.at(i).edge_21_;
 
-        ++num_inliers;
+    // inlier
+    if (edge_12->chi2() < chi_sq && edge_21->chi2() < chi_sq) {
+      continue;
     }
 
-    // 7. 結果を取り出す
+    // outlier
+    const auto idx1 = mutual_edges.at(i).idx1_;
+    matched_lms_in_keyfrm_2.at(idx1) = nullptr;
 
-    g2o_Sim3_12 = Sim3_12_vtx->estimate();
+    mutual_edges.at(i).set_as_outlier();
+    ++num_outliers;
+  }
 
-    return num_inliers;
+  if (num_valid_matches - num_outliers < 10) {
+    return 0;
+  }
+
+  // 5.
+
+  optimizer.initializeOptimization();
+  optimizer.optimize(num_iter_);
+
+  // 6. inlier
+
+  unsigned int num_inliers = 0;
+  for (unsigned int i = 0; i < num_valid_matches; ++i) {
+    auto edge_12 = mutual_edges.at(i).edge_12_;
+    auto edge_21 = mutual_edges.at(i).edge_21_;
+
+    // outlier
+    if (mutual_edges.at(i).is_outlier()) {
+      continue;
+    }
+
+    // outlier
+    if (chi_sq < edge_12->chi2() || chi_sq < edge_21->chi2()) {
+      // outlier
+      unsigned int idx1 = mutual_edges.at(i).idx1_;
+      matched_lms_in_keyfrm_2.at(idx1) = nullptr;
+      continue;
+    }
+
+    ++num_inliers;
+  }
+
+  // 7.
+
+  g2o_Sim3_12 = Sim3_12_vtx->estimate();
+
+  return num_inliers;
 }
 
 }  // namespace optimize

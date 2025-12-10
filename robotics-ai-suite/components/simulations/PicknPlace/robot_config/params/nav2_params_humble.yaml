@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+---
 amcl:
   ros__parameters:
     use_sim_time: True
@@ -61,7 +62,7 @@ bt_navigator:
     use_sim_time: True
     global_frame: map
     robot_base_frame: base_link
-    odom_topic: /odom
+    odom_topic: odom
     enable_groot_monitoring: False
     groot_zmq_publisher_port: 1666
     groot_zmq_server_port: 1667
@@ -214,7 +215,7 @@ local_costmap:
         mark_threshold: 0
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: scan
           max_obstacle_height: 2.0
           clearing: True
           marking: True
@@ -247,7 +248,7 @@ global_costmap:
         enabled: True
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /amr1/scan
           max_obstacle_height: 2.0
           clearing: True
           marking: True
@@ -289,7 +290,7 @@ planner_server:
       plugin: "nav2_navfn_planner/NavfnPlanner"
       tolerance: 0.5
       use_astar: false
-      allow_unknown: true    
+      allow_unknown: true
     GridBased2:
       plugin: "nav2_smac_planner/SmacPlanner2D"
       tolerance: 0.125                      # tolerance for planning if unable to reach exact pose, in meters

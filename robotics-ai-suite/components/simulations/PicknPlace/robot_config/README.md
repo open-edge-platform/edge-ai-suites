@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Multi-Robot Framework for Gazebo
 Welcome to the multi-robot launching framework for Gazebo. This framework facilitates the deployment of multiple robots within Gazebo, each encapsulated within its own unique namespace. At present, we provide support for two prominent robot types:
 
@@ -10,7 +16,7 @@ The launching mechanism for the robots is orchestrated through launch.py. This a
 ## Usage
 ### AMR (Turtlebot3) Launching
 To launch an AMR, the following code snippet can be used:
-```
+```python
 robot_config_path = get_package_share_directory('robot_config')
 amr_launch_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -30,7 +36,7 @@ ld.add_action(amr_launch_cmd)
 
 ### ARM (UR5) Launching
 For initiating an ARM, utilize the code below:
-```
+```python
 arm1_launch_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(robot_config_launch_dir, 'arm.launch.py')),
@@ -48,7 +54,7 @@ ld.add_action(arm1_launch_cmd)
 ```
 
 ## Synchronization
-The optional parameter, **wait_on**, facilitates the creation of a launch description that becomes active once a specific topic, action, or service is available. This feature is designed to ensure proper synchronization. To use it, provide the interface type followed by the interface name. 
+The optional parameter, **wait_on**, facilitates the creation of a launch description that becomes active once a specific topic, action, or service is available. This feature is designed to ensure proper synchronization. To use it, provide the interface type followed by the interface name.
 
 ## Gazebo Plugins
 Included are two Gazebo plugins. The first derives from OSRF's implementation of a Conveyor Belt, while the second offers a service for clearing namespaces. This namespace clearance ensures consistent namespace management across different models.

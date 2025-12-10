@@ -6,7 +6,7 @@ global:
   # keepPvc should be set to true to retain the PVC after uninstalling the chart.
   keepPvc: false
   storageClassName: ""
-
+ 
   proxy:
     no_proxy: ""
     http_proxy: ""
@@ -14,12 +14,12 @@ global:
   env:
     FRIGATE_MQTT_USER: ""
     FRIGATE_MQTT_PASSWORD: ""
-
+ 
 frigate:
   env:
     OPENAI_BASE_URL: ""
     OPENAI_API_KEY: ""
-
+ 
 nvr-event-router:
   env:
     VSS_SEARCH_IP: ""
@@ -31,3 +31,6 @@ nvr-event-router-ui:
   env:
     NVR_GENAI: ""
 
+ingress:
+  service:
+    nodePort: 30865

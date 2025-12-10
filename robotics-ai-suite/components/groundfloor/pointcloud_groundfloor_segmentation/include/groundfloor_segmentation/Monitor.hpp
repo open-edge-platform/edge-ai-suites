@@ -19,12 +19,15 @@
 
 #pragma once
 
-#include <cstdint>
-#include <memory>
 #include <pcl/common/transforms.h>
 
-namespace perception {
-namespace monitor {
+#include <cstdint>
+#include <memory>
+
+namespace perception
+{
+namespace monitor
+{
 
 struct ConfigParameters
 {
@@ -43,15 +46,14 @@ struct ConfigParameters
   bool useExtendedGroundPlane{false};
 };
 
-enum PointLabel : uint32_t
-{
-  UNKNOWN,   // default value
-  UNDEFINED, // NAN pixel
-  INVALID,   // measurement is discareded, i.e. outside of vertical FOV or too close
-  GROUND,    // ground floor pixel
-  ELEVATED,  // not on ground floor but not yet part of a true obstacle
-  OBSTACLE,  // obstacle, which the robot should not collide with
-  ABOVE,     // pixel above robot height
+enum PointLabel : uint32_t {
+  UNKNOWN,    // default value
+  UNDEFINED,  // NAN pixel
+  INVALID,    // measurement is discareded, i.e. outside of vertical FOV or too close
+  GROUND,     // ground floor pixel
+  ELEVATED,   // not on ground floor but not yet part of a true obstacle
+  OBSTACLE,   // obstacle, which the robot should not collide with
+  ABOVE,      // pixel above robot height
 };
 
 class Sensor
@@ -100,11 +102,12 @@ public:
 private:
   void calculateHeightProbability();
   void calculateInclineMatrix();
-  uint32_t getNumHighInlinePixels(const uint32_t rowIndex,
-                                  const uint32_t colIndex,
-                                  const uint32_t analysisSample,
-                                  const float maxInclineVal) const;
-  bool isCliff(const uint32_t rowIndex, const uint32_t colIndex, const float maxInclineVal, bool &runFirstCheck);
+  uint32_t getNumHighInlinePixels(
+    const uint32_t rowIndex, const uint32_t colIndex, const uint32_t analysisSample,
+    const float maxInclineVal) const;
+  bool isCliff(
+    const uint32_t rowIndex, const uint32_t colIndex, const float maxInclineVal,
+    bool & runFirstCheck);
 };
 
 class PerceptionMonitor
@@ -112,8 +115,8 @@ class PerceptionMonitor
 public:
   PerceptionMonitor() = default;
 
-  bool execute(Sensor &sensor);
+  bool execute(Sensor & sensor);
 };
 
-} // namespace monitor
-} // namespace perception
+}  // namespace monitor
+}  // namespace perception

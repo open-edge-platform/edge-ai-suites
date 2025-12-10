@@ -272,7 +272,7 @@ After successfully setting up the AI Tolling system with Node Red, consider thes
 
 ### **Node-RED Interface Not Accessible**
 - **Problem**: Cannot access Node-RED at the specified URL
-- **Solution**: 
+- **Solution**:
   ```bash
   # Check if Node-RED container is running
   docker ps | grep node-red
@@ -282,14 +282,14 @@ After successfully setting up the AI Tolling system with Node Red, consider thes
 
 ### **No Data in Debug Panel**
 - **Problem**: Debug nodes show no incoming data
-- **Solution**: 
+- **Solution**:
   - Verify the AI application is running and generating inference data
   - Check MQTT topic names match your application's output topics
   - Ensure proper JSON parsing in function nodes
 
 ### **Function Node Errors**
 - **Problem**: Function node shows errors in the debug panel
-- **Solution**: 
+- **Solution**:
   - Add try-catch blocks around JSON parsing
   - Use `node.warn()` or `node.error()` for debugging
   - Validate input data structure before processing
@@ -299,4 +299,4 @@ After successfully setting up the AI Tolling system with Node Red, consider thes
 - [Node-RED Official Documentation](https://nodered.org/docs/)
 - [MQTT Protocol Specification](https://mqtt.org/)
 - [Intel DLStreamer Documentation](https://dlstreamer.github.io/)
-- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)
+- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2025.2.0/metro-ai-suite)

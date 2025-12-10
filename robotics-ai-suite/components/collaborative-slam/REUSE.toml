@@ -1,0 +1,28 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+version = 1
+
+[[annotations]]
+path = [
+    "**/*.dbow2",
+    "**/*.jpg",
+    "**/*.pdf",
+    "**/*.png",
+    "**/*.rviz",
+    "**/*.json",
+    "**/debian/**",
+    "benchmark/groundtruth/**",
+    "COLCON_IGNORE",
+    "docs/work_with_kalman_filter/robot_localization.patch"
+]
+SPDX-FileCopyrightText = "2025 Intel Corporation"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = [
+    "slam/fast_mapping/se/**",
+]
+SPDX-FileCopyrightText = "Copyright 2016 Emanuele Vespa, Imperial College London"
+SPDX-License-Identifier = "BSD-3-Clause"

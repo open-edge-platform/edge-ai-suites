@@ -1,0 +1,35 @@
+Source: ros-jazzy-oriented-grasp
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-auto <!nocheck>,
+    ros-jazzy-ament-lint-common <!nocheck>,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclcpp-components,
+    ros-jazzy-rvc-grasp-interface,
+    ros-jazzy-rvc-vision-messages,
+    ros-jazzy-std-msgs,
+    ros-jazzy-tf2,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-visualization-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-oriented-grasp
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+    ros-jazzy-pluginlib,
+    ros-jazzy-rvc-grasp-interface,
+    ros-jazzy-rvc-vision-messages,
+    ros-jazzy-std-msgs,
+    ros-jazzy-tf2,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-tf2-geometry-msgs,
+    ros-jazzy-tf2-ros,
+    ros-jazzy-visualization-msgs
+Description: Non oriented grasp plugin

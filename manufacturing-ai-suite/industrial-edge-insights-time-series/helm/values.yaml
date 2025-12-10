@@ -53,7 +53,7 @@ env:
 
 images:
   # Please provide the suffix for the image version you want to use like rc1, rc2, git hash id etc.
-  image_suffix: "rc2"
+  image_suffix: ""
   time_series_analytics_image: intel/ia-time-series-analytics-microservice:1.1.0
   opcua_server_image: intel/ia-opcua-server:1.1.0
   mqtt_publisher_image: intel/ia-mqtt-publisher:1.1.0

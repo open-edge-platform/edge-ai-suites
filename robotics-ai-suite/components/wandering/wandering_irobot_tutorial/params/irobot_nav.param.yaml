@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+---
 bt_navigator:
   ros__parameters:
     use_sim_time: False
@@ -357,7 +358,7 @@ rtabmap:
 groundfloor_segmentation:
   ros__parameters:
     base_frame: base_link
-    use_best_effort_qos : False
+    use_best_effort_qos: False
     sensor:
       name: 'camera'
       max_surface_height: 0.05    # Maxium expected height of groundfloor [m]

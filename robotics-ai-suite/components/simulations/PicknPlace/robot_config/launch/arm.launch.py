@@ -39,7 +39,12 @@ import xacro
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, OpaqueFunction, RegisterEventHandler
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    OpaqueFunction,
+    RegisterEventHandler,
+)
 from launch.event_handlers import OnProcessExit
 from launch.launch_context import LaunchContext
 from launch.substitutions import LaunchConfiguration
@@ -48,39 +53,44 @@ from nav2_common.launch import RewrittenYaml
 
 LOG_LEVEL = 'info'
 
+
 def generate_launch_description():
+    declare_pedestal_height = DeclareLaunchArgument(
+        'pedestal_height', default_value='0.16', description='Default pedestal height'
+    )
 
-    declare_pedestal_height = DeclareLaunchArgument('pedestal_height', default_value='0.16',
-                                         description='Default pedestal height')
-    
     # Use OpaqueFunction to create actions during launch file parse time.
-    # Otherwise multiple call to this launch file will result in overriding previous launch configuration dictionary values.
+    # Otherwise multiple call to this launch file will result
+    # in overriding previous launch configuration dictionary values.
 
-    return LaunchDescription([
-        declare_pedestal_height,
-        OpaqueFunction(function = launch_setup),
-        ])
+    return LaunchDescription(
+        [
+            declare_pedestal_height,
+            OpaqueFunction(function=launch_setup),
+        ]
+    )
+
 
 def launch_setup(context: LaunchContext):
-
     arm_name = context.launch_configurations['arm_name']
     arm_namespace = '/' + arm_name
     robot_urdf = get_robot_urdf(arm_name, context.launch_configurations['pedestal_height'])
 
     remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
-    robot_params = {'robot_description': robot_urdf,
-                    'use_sim_time': bool(context.launch_configurations['use_sim_time'])}
-    
+    robot_params = {
+        'robot_description': robot_urdf,
+        'use_sim_time': bool(context.launch_configurations['use_sim_time']),
+    }
+
     if 'mode' in context.launch_configurations:
         mode = context.launch_configurations['mode']
     else:
         mode = 'full'
-    
-    actions=[]
-    clear_namespace_after = None
+
+    actions = []
 
     # If launch request with Full or Gazebo only mode.
-    if mode == 'full' or mode == 'gazebo' :
+    if mode == 'full' or mode == 'gazebo':
         robot_state_publisher = Node(
             package='robot_state_publisher',
             namespace=arm_namespace,
@@ -88,15 +98,15 @@ def launch_setup(context: LaunchContext):
             output='screen',
             remappings=remappings,
             parameters=[robot_params],
-            arguments=['--ros-args', '--log-level', 'warn']
+            arguments=['--ros-args', '--log-level', 'warn'],
         )
 
         robot_spawn_entity = Node(
-            package='gazebo_ros',
-            executable='spawn_entity.py',
+            package='ros_gz_sim',
+            executable='create',
             arguments=[
                 '-topic', arm_namespace + '/robot_description',
-                '-entity', arm_name,
+                '-name', arm_name,
                 '-robot_namespace', arm_namespace,
                 '-x', context.launch_configurations['x_pos'],
                 '-y', context.launch_configurations['y_pos'],
@@ -107,20 +117,11 @@ def launch_setup(context: LaunchContext):
             output='screen',
         )
 
-        clear_namespace_before = ExecuteProcess(
-            cmd=[
-                'ros2', 'service', 'call', '/clear_namespace', 'std_srvs/srv/Empty',
-            ], output='screen',
-        )
-        
         robot_spawn_entity_event = RegisterEventHandler(
             event_handler=OnProcessExit(
-                target_action=clear_namespace_before,
                 on_exit=[robot_state_publisher, robot_spawn_entity],
             )
         )
-
-        actions.append(clear_namespace_before)
         actions.append(robot_spawn_entity_event)
 
         message = """ {
@@ -160,34 +161,45 @@ def launch_setup(context: LaunchContext):
             controller_run_state = 'start'
 
             # Set initial joint position for robot.   This step is not needed for Humble
-            # Redundant for Humble since in Humble, initial positions are taken from initial_positions.yaml and set by ros2 control plugin
+            # Redundant for Humble since in Humble, initial positions are taken
+            # from initial_positions.yaml and set by ros2 control plugin
             set_initial_pose = ExecuteProcess(
                 cmd=[
-                    "ros2",
-                    "topic",
-                    "pub",
-                    "--once",
-                    [arm_namespace, "/arm_controller/joint_trajectory"],
-                    "trajectory_msgs/msg/JointTrajectory",
+                    'ros2',
+                    'topic',
+                    'pub',
+                    '--once',
+                    [arm_namespace, '/arm_controller/joint_trajectory'],
+                    'trajectory_msgs/msg/JointTrajectory',
                     message,
                 ],
-                output="screen",
+                output='screen',
             )
 
         load_joint_state_controller = ExecuteProcess(
             cmd=[
-                'ros2', 'control', 'load_controller', '--set-state',
-                controller_run_state, 'joint_state_broadcaster',
-                '-c', arm_namespace + '/controller_manager',
+                'ros2',
+                'control',
+                'load_controller',
+                '--set-state',
+                controller_run_state,
+                'joint_state_broadcaster',
+                '-c',
+                arm_namespace + '/controller_manager',
             ],
             output='screen',
         )
 
         load_arm_trajectory_controller = ExecuteProcess(
             cmd=[
-                'ros2', 'control', 'load_controller',
-                '--set-state', controller_run_state, 'arm_controller',
-                '-c', arm_namespace + '/controller_manager',
+                'ros2',
+                'control',
+                'load_controller',
+                '--set-state',
+                controller_run_state,
+                'arm_controller',
+                '-c',
+                arm_namespace + '/controller_manager',
             ],
             output='screen',
         )
@@ -209,32 +221,22 @@ def launch_setup(context: LaunchContext):
         )
         actions.append(arm_controller_event)
 
-        clear_namespace_after = ExecuteProcess(
-                cmd=[
-                    'ros2', 'service', 'call', '/clear_namespace', 'std_srvs/srv/Empty',
-                ], output='screen',
+        event_after = RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_arm_trajectory_controller,
+                on_exit=[set_initial_pose],
             )
-
-        clear_namespace_event_after = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=load_arm_trajectory_controller,
-            on_exit=[clear_namespace_after, set_initial_pose],
-            )
-        )        
-        actions.append(clear_namespace_event_after)
+        )
+        actions.append(event_after)
 
     else:
         # If stack launch mode, then create empty launch description for rest of actions.
         robot_state_publisher = LaunchDescription()
         robot_spawn_entity = LaunchDescription()
-        clear_namespace_before = LaunchDescription()
         robot_spawn_entity_event = LaunchDescription()
         state_controller_event = LaunchDescription()
         arm_controller_event = LaunchDescription()
-        clear_namespace_event_after = LaunchDescription()
-
-    # Initialize action with clear name space
-    clear_namespace_event_before = clear_namespace_before
+        event_after = LaunchDescription()
 
     # Create stack node
     if mode == 'full' or mode == 'stack':
@@ -242,23 +244,20 @@ def launch_setup(context: LaunchContext):
         move_group_node_event = move_group_node
         if mode == 'full':
             move_group_node_event = RegisterEventHandler(
-                    event_handler=OnProcessExit(
-                        target_action=clear_namespace_after,
-                        on_exit=[move_group_node],
-                    )
+                event_handler=OnProcessExit(
+                    on_exit=[move_group_node],
                 )
-        
+            )
+
         actions.append(move_group_node_event)
-    
+
     # Check if wait_on is provided.  If exist then create a dependency action on it
-    if "wait_on" in context.launch_configurations:
+    if 'wait_on' in context.launch_configurations:
         wait_on = context.launch_configurations['wait_on'].split(' ')
         wait_for_action_server = ExecuteProcess(
-                cmd=[
-                    'ros2', 'run', 'robot_config', 'wait_for_interface.py', wait_on[0],
-                    wait_on[1]
-                ], output='screen',
-            )
+            cmd=['ros2', 'run', 'robot_config', 'wait_for_interface.py', wait_on[0], wait_on[1]],
+            output='screen',
+        )
 
         action = RegisterEventHandler(
             event_handler=OnProcessExit(
@@ -273,93 +272,123 @@ def launch_setup(context: LaunchContext):
         # Empty action server
         wait_for_action_server = LaunchDescription()
 
+    # Add Gazebo Bridge nodes
+    if mode == 'full' or mode == 'gazebo':
+        # Clock bridge
+        gz_ros_bridge_clock = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
+            output='screen',
+        )
+
+        # Joint states bridge
+        gz_ros_bridge_joint_states = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                f'{arm_namespace}/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
+            ],
+            output='screen',
+        )
+
+        # Vacuum gripper bridge
+        gz_ros_bridge_vacuum = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                f'{arm_namespace}/vacuum_gripper/enable@std_msgs/msg/Bool[gz.msgs.Boolean',
+                f'{arm_namespace}/vacuum_gripper/grasping@std_msgs/msg/Bool[gz.msgs.Boolean',
+            ],
+            output='screen',
+        )
+
+        # Add bridge nodes to actions
+        actions.extend([
+            gz_ros_bridge_clock,
+            gz_ros_bridge_joint_states,
+            gz_ros_bridge_vacuum
+        ])
+
     return actions
 
-def prepare_stack_node(namespace, robot_urdf, robot_type='ur5', use_sim_time=True):
 
+def prepare_stack_node(namespace, robot_urdf, robot_type='ur5', use_sim_time=True):
     package_path = get_package_share_directory('robot_config')
     remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
-    robot_description = {"robot_description": robot_urdf}
+    robot_description = {'robot_description': robot_urdf}
 
-    kinematics_yaml = load_yaml(
-        package_path, "config/ur/" + robot_type + "/kinematics.yaml"
-    )
+    kinematics_yaml = load_yaml(package_path, 'config/ur/' + robot_type + '/kinematics.yaml')
 
     robot_description_semantic_config = load_file(
-        package_path, "config/ur/" + robot_type + "/robot.srdf"
+        package_path, 'config/ur/' + robot_type + '/robot.srdf'
     )
-    robot_description_semantic = {
-        "robot_description_semantic": robot_description_semantic_config
-    }
+    robot_description_semantic = {'robot_description_semantic': robot_description_semantic_config}
 
     # Planning Functionality
     ompl_planning_pipeline_config = {
-        "ompl": {
-            "planning_plugin": "ompl_interface/OMPLPlanner",
-            "request_adapters": "default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints",
-            "start_state_max_bounds_error": 0.1,
+        'ompl': {
+            'planning_plugin': 'ompl_interface/OMPLPlanner',
+            'request_adapters': 'default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints',  # noqa: E501
+            'start_state_max_bounds_error': 0.1,
         },
     }
 
-    ompl_planning_yaml = load_yaml(
-        package_path, "config/ur/" + robot_type + "/ompl_planning.yaml"
-    )
+    ompl_planning_yaml = load_yaml(package_path, 'config/ur/' + robot_type + '/ompl_planning.yaml')
 
-    ompl_planning_pipeline_config["ompl"].update(ompl_planning_yaml)
+    ompl_planning_pipeline_config['ompl'].update(ompl_planning_yaml)
 
     joint_limits_yaml = load_yaml(
-        package_path, "config/ur/" + robot_type + "/joint_limits_planning.yaml"
+        package_path, 'config/ur/' + robot_type + '/joint_limits_planning.yaml'
     )
 
-    joint_limits = {"robot_description_planning": joint_limits_yaml}
+    joint_limits = {'robot_description_planning': joint_limits_yaml}
 
     # Trajectory Execution Functionality
     moveit_simple_controllers_yaml = load_yaml(
-        package_path,
-        "config/ur/" + robot_type + "/moveit_controller_manager.yaml"
+        package_path, 'config/ur/' + robot_type + '/moveit_controller_manager.yaml'
     )
 
     moveit_controllers = {
-        "moveit_simple_controller_manager": moveit_simple_controllers_yaml,
-        "moveit_controller_manager":
-        "moveit_simple_controller_manager/MoveItSimpleControllerManager",
+        'moveit_simple_controller_manager': moveit_simple_controllers_yaml,
+        'moveit_controller_manager': 'moveit_simple_controller_manager/MoveItSimpleControllerManager',  # noqa: E501
     }
 
     trajectory_execution = {
-        "moveit_manage_controllers": True,
-        "trajectory_execution.allowed_execution_duration_scaling": 1.2,
-        "trajectory_execution.allowed_goal_duration_margin": 0.5,
-        "trajectory_execution.allowed_start_tolerance": 0.01,
-        "trajectory_execution.execution_duration_monitoring": True,
-        "trajectory_execution.controller_connection_timeout": 30.0,
+        'moveit_manage_controllers': True,
+        'trajectory_execution.allowed_execution_duration_scaling': 1.2,
+        'trajectory_execution.allowed_goal_duration_margin': 0.5,
+        'trajectory_execution.allowed_start_tolerance': 0.01,
+        'trajectory_execution.execution_duration_monitoring': True,
+        'trajectory_execution.controller_connection_timeout': 30.0,
     }
 
     planning_scene_monitor_parameters = {
-        "publish_planning_scene": True,
-        "publish_geometry_updates": True,
-        "publish_state_updates": True,
-        "publish_transforms_updates": True,
-        "publish_transforms_updates": True, 
-        "publish_robot_description": True, 
-        "publish_robot_description_semantic": True,
-        "default_planning_pipeline": "ESTkConfigDefault",
-        "use_sim_time": use_sim_time,
+        'publish_planning_scene': True,
+        'publish_geometry_updates': True,
+        'publish_state_updates': True,
+        'publish_transforms_updates': True,
+        'publish_transforms_updates': True,
+        'publish_robot_description': True,
+        'publish_robot_description_semantic': True,
+        'default_planning_pipeline': 'ESTkConfigDefault',
+        'use_sim_time': use_sim_time,
     }
 
-    pipeline_names = {"pipeline_names": ["ompl"]}
+    pipeline_names = {'pipeline_names': ['ompl']}
 
     planning_pipelines = {
-        "planning_pipelines": pipeline_names,
-        "default_planning_pipeline": "ompl",
+        'planning_pipelines': pipeline_names,
+        'default_planning_pipeline': 'ompl',
     }
 
     # https://industrial-training-master.readthedocs.io/en/foxy/_source/session3/ros2/3-Build-a-MoveIt-Package.html
     # Start the actual move_group node/action server
     robot_move_group_node = Node(
-        package="moveit_ros_move_group",
-        executable="move_group",
+        package='moveit_ros_move_group',
+        executable='move_group',
         namespace=namespace,
-        output="screen",
+        output='screen',
         parameters=[
             robot_description,
             robot_description_semantic,
@@ -370,16 +399,16 @@ def prepare_stack_node(namespace, robot_urdf, robot_type='ur5', use_sim_time=Tru
             planning_scene_monitor_parameters,
             joint_limits,
             planning_pipelines,
-            {"planning_plugin": "ompl", "use_sim_time": use_sim_time},
+            {'planning_plugin': 'ompl', 'use_sim_time': use_sim_time},
         ],
         remappings=remappings,
-        arguments=["--ros-args", "--log-level", LOG_LEVEL],
+        arguments=['--ros-args', '--log-level', LOG_LEVEL],
     )
 
     return robot_move_group_node
 
-def load_file(package_path, file_path):
 
+def load_file(package_path, file_path):
     absolute_file_path = os.path.join(package_path, file_path)
     try:
         with open(absolute_file_path, 'r') as file:
@@ -387,14 +416,15 @@ def load_file(package_path, file_path):
     except EnvironmentError:
         return None
 
-def load_yaml(package_path, file_path):
 
+def load_yaml(package_path, file_path):
     absolute_file_path = os.path.join(package_path, file_path)
     try:
         with open(absolute_file_path, 'r') as file:
             return yaml.safe_load(file)
     except EnvironmentError:
         return None
+
 
 def get_robot_urdf(arm_name, pedestal_height):
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')

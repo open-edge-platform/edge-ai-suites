@@ -1,3 +1,8 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
 
 # Wandering Application in a Waffle Gazebo\* Simulation
 
@@ -18,10 +23,9 @@ TurtleBot3 Waffle, see
 
 ## Run the Sample Application
 
-1. If your system has an Intel® GPU, follow the steps in the
-    [get started guide](/robotics/gsg_robot/index.rst] to enable
-    the GPU for simulation. This step improves Gazebo\* simulation
-    performance.
+1. If your system has an Intel® GPU, follow the steps in the [Getting Started Guide](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/index.html)
+    to enable the GPU for simulation.
+    This step improves Gazebo\* simulation performance.
 
 2. Install the Wandering Gazebo tutorial:
 

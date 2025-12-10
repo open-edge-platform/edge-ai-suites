@@ -34,6 +34,7 @@ This guide is designed to help developers understand the architecture, setup, an
 
 <!--hide_directive
 :::{toctree}
+:hidden:
 
 Overview
 how-it-works
@@ -41,9 +42,10 @@ system-requirements
 get-started
 how-to-deploy-helm
 how-to-use-gpu-for-inference
-how-to-deploy-with-edge-orchestrator
 application-security-enablement
 release-notes
 support
+
 :::
 hide_directive-->
+

@@ -1,5 +1,7 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 3.8)
 project(text_to_speech_pkg)
 
@@ -21,17 +23,10 @@ find_package(follow_me_interfaces REQUIRED)
 
 # Install Python modules
 ament_python_install_package(${PROJECT_NAME})
-install(DIRECTORY 
-  text_to_speech_pkg/models
-  text_to_speech_pkg/utils
-  DESTINATION lib/${PROJECT_NAME}
-)
+install(DIRECTORY text_to_speech_pkg/models text_to_speech_pkg/utils
+        DESTINATION lib/${PROJECT_NAME})
 # Install Python executables
-install(PROGRAMS
-  text_to_speech_pkg/text_to_speech_node.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-install(DIRECTORY config
-  DESTINATION share/${PROJECT_NAME}/
-)
+install(PROGRAMS text_to_speech_pkg/text_to_speech_node.py
+        DESTINATION lib/${PROJECT_NAME})
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME}/)
 ament_package()

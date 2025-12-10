@@ -198,7 +198,7 @@ If launching successfully, the OCS2 terminal will print out information indicati
    
    .. note::
 
-      You need to download our pre-trained ACT weights of transmitting cube task and set the argument ``--ckpt_dir`` to the path of the pre-trained weights.
+      You need to download our pre-trained ACT weights for `transferring cube task <https://eci.intel.com/embodied-sdk-docs/_downloads/sim_transfer_cube_scripted.zip>`_ and set the argument ``--ckpt_dir`` to the path of the pre-trained weights.
 
    .. code-block:: bash
       

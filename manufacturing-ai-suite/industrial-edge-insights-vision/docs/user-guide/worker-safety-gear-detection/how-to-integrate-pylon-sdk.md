@@ -93,7 +93,7 @@ Verify that the /tmp/gencam_basler_output.avi has the captured content
 
 ## Deploying the Worker Safety Gear Detection Application Using live camera
 
-This guide provides detailed, step-by-step instructions for setting up and deploying the **Worker Safety Gear Detection** pipeline to use the **Balluff** or **Basler** camera connected over USB or GigE.  
+This guide provides detailed, step-by-step instructions for setting up and deploying the **Worker Safety Gear Detection** pipeline to use the **Balluff** or **Basler** camera connected over USB or GigE.
 It covers environment setup, configuration updates, and validation steps to ensure a successful deployment.
 
 ---
@@ -101,7 +101,7 @@ It covers environment setup, configuration updates, and validation steps to ensu
 ### Step 1: Set Up the Environment
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision
 cp .env_worker_safety_gear_detection .env
 ```

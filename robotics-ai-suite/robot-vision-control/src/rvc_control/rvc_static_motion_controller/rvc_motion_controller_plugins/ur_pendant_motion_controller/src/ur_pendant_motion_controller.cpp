@@ -149,9 +149,9 @@ bool URPendantMotionController::init(rclcpp::Node::SharedPtr node)
             return fd;
         };
 
-
+    // length is not currently used
     std::function<void(const int, char *,
-        int)> receivedMessageLambda = [this](const int clientFd, char * msg, int length)
+        int)> receivedMessageLambda = [this](const int clientFd, char * msg, int /*length*/)
         {
             (void)clientFd;
 

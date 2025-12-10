@@ -14,19 +14,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions
 and limitations under the License.
 */
+#ifndef WANDERING_APP__MAPENGINE_H_
+#define WANDERING_APP__MAPENGINE_H_
 
-#ifndef MapEninge_H
-#define MapEninge_H
 #include <memory>
+#include <string>
 #include <vector>
 
-#include "nav_msgs/msg/occupancy_grid.hpp"
 #include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "nav2_costmap_2d/costmap_2d.hpp"
+#include "nav_msgs/msg/occupancy_grid.hpp"
 
-#define MOVEMENTS_COUNT      4
-#define GRID_DIRECTION_COUNT 2*MOVEMENTS_COUNT
+#define MOVEMENTS_COUNT 4
+#define GRID_DIRECTION_COUNT 2 * MOVEMENTS_COUNT
 
 class MapEngine
 {
@@ -38,17 +39,17 @@ public:
   bool setRobotPose(const geometry_msgs::msg::PoseStamped pose);
   double getUnexploredPrstg() const;
   void checkMapCoverage();
-  bool getNextGoalCoord(double &x, double &y);
+  bool getNextGoalCoord(double & x, double & y);
   void resetVisitedMap();
   bool shouldReset();
   bool isMapValid();
 
 private:
-  uint8_t moveToNearestUnknownCell(uint32_t &i, uint32_t &j, int thrI, int thrJ);
-  void moveToFarestFreeCell(uint32_t &i, uint32_t &j, int thrI, int thrJ);
-  bool exploreDirections(double &x, double &y, bool unknownArea);
+  uint8_t moveToNearestUnknownCell(uint32_t & i, uint32_t & j, int thrI, int thrJ);
+  void moveToFarestFreeCell(uint32_t & i, uint32_t & j, int thrI, int thrJ);
+  bool exploreDirections(double & x, double & y, bool unknownArea);
   bool shouldMove(uint32_t targetI, uint32_t targetJ);
-  bool getNextFreeCell(uint32_t &i, uint32_t &j);
+  bool getNextFreeCell(uint32_t & i, uint32_t & j);
   bool checkAreaForValue(uint32_t i, uint32_t j, uint32_t range, uint8_t value);
   bool isWithinCostmap(uint32_t i, uint32_t j, int thrI, int thrJ);
   void printMap();
@@ -69,8 +70,8 @@ private:
   uint16_t mapPrintCounter_;
   bool useCostMap_, resetDone_, storeMapToFile_;
   std::string movMethodNames_[MOVEMENTS_COUNT] = {"right", "up", "left", "down"};
-  /* (0, 1) -right, (0, -1) - left (-1, 0) - up (1, 0) - down*/
-  int directions_[GRID_DIRECTION_COUNT] = {0, 1, -1, 0, 0, -1, 1, 0}; 
+  // (0, 1) -right, (0, -1) - left (-1, 0) - up (1, 0) - down
+  int directions_[GRID_DIRECTION_COUNT] = {0, 1, -1, 0, 0, -1, 1, 0};
 };
 
-#endif
+#endif  // WANDERING_APP__MAPENGINE_H_

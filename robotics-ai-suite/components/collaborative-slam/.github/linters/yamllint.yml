@@ -1,0 +1,17 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+---
+extends: default
+
+rules:
+  truthy: disable
+  comments: disable
+  comments-indentation: disable
+  line-length: disable
+  commas:
+    max-spaces-after: -1  # disable limit on spaces after commas
+
+ignore: |
+  **/tracker/config/backup

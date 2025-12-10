@@ -17,3 +17,10 @@ ament_target_dependencies(test_send_localization
 target_link_libraries(test_send_localization
   ${library_name}
 )
+
+# Apply the same compile definitions to tests
+if(ROS_DISTRO STREQUAL "jazzy")
+    target_compile_definitions(test_send_localization PRIVATE ROS2_JAZZY)
+elseif(ROS_DISTRO STREQUAL "humble")
+    target_compile_definitions(test_send_localization PRIVATE ROS2_HUMBLE)
+endif()

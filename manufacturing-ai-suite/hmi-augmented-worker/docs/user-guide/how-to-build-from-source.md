@@ -4,11 +4,11 @@ This document provides step-by-step instructions for building the `ChatQnA Core`
 
 ## Build ChatQnA Core from Source
 
-For detailed instructions on building from source, visit the [Build from Source Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md).
+For detailed instructions on building from source, visit the [Build from Source Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md).
 
 ### ChatQnA Core Docker Compose Deployment
 
-For docker compose deployment instructions, visit the [Running Application Container Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md#running-the-application-container).
+For docker compose deployment instructions, visit the [Running Application Container Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md#running-the-application-container).
 
 
 ## Build File Watcher Service from Source
@@ -26,8 +26,9 @@ In the Windows® environment, the File Watcher Service works with the HMI applic
 To build the File Watcher executable binary, follow these steps:
 
 1. Clone and download the source code by either using Git clone or downloading the source code as a ZIP file directly from the [repository](https://github.com/open-edge-platform/edge-ai-suites).
+
    ```bash
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b release-2025.2.0
    ```
 
 2. Set up the Virtual Environment with Python venv.

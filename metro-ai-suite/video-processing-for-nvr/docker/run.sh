@@ -17,7 +17,6 @@ USER_GROUP_ID=$(id -g)
 echo $EXTRA_PARAMS
 
 
-# -e DISPLAY_NEW_PLATFORM=1 \
 if [[ "$NPU_ON" == "true" ]]; then
     echo "Running with NPU support"
     docker run -it --net=host \
@@ -25,6 +24,7 @@ if [[ "$NPU_ON" == "true" ]]; then
         -e http_proxy=${http_proxy} \
         -e https_proxy=${https_proxy} \
         -e LD_LIBRARY_PATH=/usr/local/lib \
+        -e DISPLAY_NEW_PLATFORM=1 \
         --cap-add=SYS_ADMIN \
         --device /dev/dri \
         --group-add $VIDEO_GROUP_ID --group-add $RENDER_GROUP_ID \
@@ -43,6 +43,7 @@ else
         -e http_proxy=${http_proxy} \
         -e https_proxy=${https_proxy} \
         -e LD_LIBRARY_PATH=/usr/local/lib \
+        -e DISPLAY_NEW_PLATFORM=1 \
         --cap-add=SYS_ADMIN \
         --device /dev/dri \
         --group-add $VIDEO_GROUP_ID --group-add $RENDER_GROUP_ID \

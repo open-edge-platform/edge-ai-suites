@@ -32,68 +32,82 @@
 #    ld.add_action(gazebo_launch_cmd)
 
 import os
-import yaml
-import xacro
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, RegisterEventHandler
-from launch.conditions import IfCondition
-from launch.event_handlers import OnProcessExit, OnExecutionComplete
-from launch.launch_context import LaunchContext
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription
+)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration
-from launch.substitutions.path_join_substitution import PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from nav2_common.launch import RewrittenYaml
 
-from robot_config import utils
-
-
-
-LOG_LEVEL = "info"
 
 def generate_launch_description():
-
     ld = LaunchDescription()
-   
-    # ros support github link -> https://github.com/bponsler/ros2-support
-    package_path = get_package_share_directory("robot_config")
-    
-    use_sim_time = LaunchConfiguration("use_sim_time", default="true")
 
-    world = LaunchConfiguration("world")
+    package_path = get_package_share_directory('robot_config')
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+    world = LaunchConfiguration('world')
 
     # Default world file
     declare_world_path = DeclareLaunchArgument(
-        "world",
+        'world',
         default_value=os.path.join(
             package_path,
-            "worlds",
-            "no_roof_small_warehouse",
-            "no_roof_small_warehouse.world",
+            'worlds',
+            'no_roof_small_warehouse',
+            'no_roof_small_warehouse.world',
         ),
-        description="Full path to world model file to load",
+        description='Full path to world model file to load',
     )
     ld.add_action(declare_world_path)
 
-    gazebo_server = ExecuteProcess(
-        cmd=[
-            "gzserver",
-            "--verbose",
-            "-u",
-            "-s", "libgazebo_ros_factory.so",
-            "-s", "libgazebo_ros_init.so",
-            "-s", "libgazebo_ros_namespace.so",
-            world,
-            "--ros-args", "--log-level", LOG_LEVEL,
-        ],
-        output="screen",
+    # Gazebo Harmonic server + client in one
+    ros_gz_sim = get_package_share_directory('ros_gz_sim')
+    gzserver_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(ros_gz_sim, 'launch', 'gz_sim.launch.py')
+        ),
+        launch_arguments={
+            'gz_args': [world, ' -v 4'],
+            'on_exit_shutdown': 'true'
+        }.items(),
     )
-    ld.add_action(gazebo_server)
+    ld.add_action(gzserver_cmd)
 
-    gazebo_client = ExecuteProcess(cmd=["gzclient"], output="screen")
-    ld.add_action(gazebo_client)
-   
+    # Clock Bridge (global)
+    gz_ros_bridge_clock = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
+        output='screen',
+    )
+    ld.add_action(gz_ros_bridge_clock)
+
+    # TF Bridge (global)
+    gz_ros_bridge_tf = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+            '/tf_static@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
+        ],
+        output='screen',
+    )
+    ld.add_action(gz_ros_bridge_tf)
+
+    # Entity State Bridge - for entity_location function (via services)
+    gz_ros_bridge_entity = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/world/default/get_entity_state@gazebo_msgs/srv/GetEntityState',
+            '/world/default/set_entity_state@gazebo_msgs/srv/SetEntityState',
+        ],
+        output='screen',
+    )
+    ld.add_action(gz_ros_bridge_entity)
+
     return ld
-

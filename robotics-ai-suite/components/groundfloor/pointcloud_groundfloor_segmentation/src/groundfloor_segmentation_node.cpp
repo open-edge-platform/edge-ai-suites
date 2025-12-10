@@ -17,18 +17,19 @@
 //
 // ----------------- END LICENSE BLOCK -----------------------------------
 
-#include <functional>
-#include <memory>
+#include "groundfloor_segmentation/groundfloor_segmentation_node.hpp"
+
 #include <pcl/common/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
+
+#include <functional>
+#include <memory>
 #include <sensor_msgs/image_encodings.hpp>
 #include <tf2_eigen/tf2_eigen.hpp>
 
 #include "groundfloor_segmentation/depth_conversions.hpp"
-#include "groundfloor_segmentation/groundfloor_segmentation_node.hpp"
 
-GroundfloorSegmentationNode::GroundfloorSegmentationNode()
-  : Node("groundfloor_segmentation")
+GroundfloorSegmentationNode::GroundfloorSegmentationNode() : Node("groundfloor_segmentation")
 {
   declare_parameter("base_frame", "base_link");
   mBaseFrame = get_parameter("base_frame").as_string();
@@ -61,8 +62,7 @@ GroundfloorSegmentationNode::GroundfloorSegmentationNode()
   mTfListener = std::make_unique<tf2_ros::TransformListener>(*mTfBuffer);
 
   rclcpp::QoS topicQoS = 10;
-  if (get_parameter("use_best_effort_qos").as_bool())
-  {
+  if (get_parameter("use_best_effort_qos").as_bool()) {
     topicQoS = rclcpp::SensorDataQoS();
   }
   topicQoS.keep_last(2);
@@ -70,47 +70,45 @@ GroundfloorSegmentationNode::GroundfloorSegmentationNode()
   mSensor = std::make_shared<CameraSensor>();
   mSensor->sensor.mParameters = sensorParameters;
 
-  std::function<void(std::shared_ptr<sensor_msgs::msg::CameraInfo>)> fnc
-    = std::bind(&GroundfloorSegmentationNode::onCameraInfo, this, std::placeholders::_1, mSensor);
-  mSensor->cameraInfoSub
-    = create_subscription<sensor_msgs::msg::CameraInfo>(sensorName + "/depth/camera_info", topicQoS, fnc);
+  std::function<void(std::shared_ptr<sensor_msgs::msg::CameraInfo>)> fnc =
+    std::bind(&GroundfloorSegmentationNode::onCameraInfo, this, std::placeholders::_1, mSensor);
+  mSensor->cameraInfoSub = create_subscription<sensor_msgs::msg::CameraInfo>(
+    sensorName + "/depth/camera_info", topicQoS, fnc);
 
   mSensor->cameraDataSub = create_subscription<sensor_msgs::msg::Image>(
-    sensorName + "/depth/image_rect_raw",
-    topicQoS,
+    sensorName + "/depth/image_rect_raw", topicQoS,
     std::bind(&GroundfloorSegmentationNode::onData, this, std::placeholders::_1));
 
-  mSensor->labeledPclPub = create_publisher<sensor_msgs::msg::PointCloud2>("segmentation/labeled_points", topicQoS);
-  mSensor->filteredPclPub = create_publisher<sensor_msgs::msg::PointCloud2>("segmentation/obstacle_points", topicQoS);
+  mSensor->labeledPclPub =
+    create_publisher<sensor_msgs::msg::PointCloud2>("segmentation/labeled_points", topicQoS);
+  mSensor->filteredPclPub =
+    create_publisher<sensor_msgs::msg::PointCloud2>("segmentation/obstacle_points", topicQoS);
 }
 
-void GroundfloorSegmentationNode::onCameraInfo(const sensor_msgs::msg::CameraInfo::SharedPtr msg,
-                                               std::shared_ptr<CameraSensor> sensor)
+void GroundfloorSegmentationNode::onCameraInfo(
+  const sensor_msgs::msg::CameraInfo::SharedPtr msg, std::shared_ptr<CameraSensor> sensor)
 {
-  RCLCPP_DEBUG(get_logger(),
-               "Received initial camera info: height='%d', width='%d' for %s",
-               msg->height,
-               msg->width,
-               sensor->name.c_str());
+  RCLCPP_DEBUG(
+    get_logger(), "Received initial camera info: height='%d', width='%d' for %s", msg->height,
+    msg->width, sensor->name.c_str());
 
   sensor->cameraInfo = msg;
   sensor->sensor.setResolution(msg->width, msg->height);
 
-  sensor->cameraInfoSub.reset(); // unsubscribe
+  sensor->cameraInfoSub.reset();  // unsubscribe
 }
 
-bool GroundfloorSegmentationNode::setStaticSensorTransforms(const sensor_msgs::msg::Image::ConstSharedPtr &camMsg)
+bool GroundfloorSegmentationNode::setStaticSensorTransforms(
+  const sensor_msgs::msg::Image::ConstSharedPtr & camMsg)
 {
-  if (!mSensor->cameraInfo)
-  {
+  if (!mSensor->cameraInfo) {
     return false;
   }
 
-  if (!mSensor->transform)
-  {
-    auto transform = mTfBuffer->canTransform(mBaseFrame, camMsg->header.frame_id, camMsg->header.stamp);
-    if (!transform)
-    {
+  if (!mSensor->transform) {
+    auto transform =
+      mTfBuffer->canTransform(mBaseFrame, camMsg->header.frame_id, camMsg->header.stamp);
+    if (!transform) {
       RCLCPP_WARN(get_logger(), "No transform to %s available. Skipping...", mBaseFrame.c_str());
       return false;
     }
@@ -129,32 +127,25 @@ bool GroundfloorSegmentationNode::setStaticSensorTransforms(const sensor_msgs::m
 void GroundfloorSegmentationNode::onData(const sensor_msgs::msg::Image::ConstSharedPtr camMsg)
 {
   auto const processing_start_time = rclcpp::Clock{RCL_SYSTEM_TIME}.now();
-  if (!setStaticSensorTransforms(camMsg))
-  {
+  if (!setStaticSensorTransforms(camMsg)) {
     return;
   }
 
-  if (!mSensor->cameraInfo)
-  {
+  if (!mSensor->cameraInfo) {
     return;
   }
 
   mSensor->imageMsg = std::const_pointer_cast<sensor_msgs::msg::Image>(camMsg);
 
-  bool success = convert(mSensor->imageMsg,
-                         mSensor->sensor.mPointCloud,
-                         mSensor->sensor.mDepthImage,
-                         mSensor->sensor.mHeightImage,
-                         *(mSensor->transform.get()),
-                         mSensor->cameraInfo);
-  if (!success)
-  {
+  bool success = convert(
+    mSensor->imageMsg, mSensor->sensor.mPointCloud, mSensor->sensor.mDepthImage,
+    mSensor->sensor.mHeightImage, *(mSensor->transform.get()), mSensor->cameraInfo);
+  if (!success) {
     RCLCPP_WARN(get_logger(), "Unknown depth image format - Skipping");
     return;
   }
 
-  if (!mPerceptionMonitor->execute(mSensor->sensor))
-  {
+  if (!mPerceptionMonitor->execute(mSensor->sensor)) {
     RCLCPP_WARN(get_logger(), "Segmentation not possible - Skipping");
     return;
   }
@@ -185,18 +176,18 @@ void GroundfloorSegmentationNode::publishData()
   mSensor->filteredPclPub->publish(outObstaclePclMsg);
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  try
-  {
+
+  try {
     auto node = std::make_shared<GroundfloorSegmentationNode>();
     rclcpp::spin(node);
-  }
-  catch (const std::exception &e)
-  {
+  } catch (const std::exception & e) {
     std::cout << e.what();
   }
+
   rclcpp::shutdown();
+
   return 0;
 }

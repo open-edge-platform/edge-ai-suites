@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
-  
+---
 aaeon_ros_node:
   ros__parameters:
     port_name: /dev/ttyUSB0

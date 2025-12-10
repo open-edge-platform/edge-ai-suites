@@ -1,0 +1,12 @@
+Source: ros-jazzy-cslam-tutorial-region-remap
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-jazzy-cslam-tutorial-region-remap
+Architecture: any
+Depends:
+    ros-jazzy-cslam-tutorial-common,
+    ros-jazzy-bagfile-extra-features
+Description: Intel Collaborative SLAM tutorial for Region ReMapping

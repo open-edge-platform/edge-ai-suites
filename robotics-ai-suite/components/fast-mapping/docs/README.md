@@ -24,24 +24,31 @@ The source code of this component can be found here:
 - [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
 
 ## Run the FastMapping Standalone Application
+1. If Ubuntu 22.04 with Humble is used, then run
 
-1. To download and install the FastMapping standalone sample
+```bash
+source /opt/ros/humble/setup.bash
+```
+
+If Ubuntu 24.04 with Jazzy is used, then run
+
+```bash
+source /opt/ros/jazzy/setup.bash
+```
+
+This command will set `ROS_DISTRO` env var that is used in following steps.
+
+2. To download and install the FastMapping standalone sample
     application run the command below:
 
     ``` bash
-    sudo apt-get install ros-humble-fast-mapping
+    sudo apt-get install ros-${ROS_DISTRO}-fast-mapping
     ```
 
     > [!NOTE]
-    > The `ros-humble-fast-mapping` package includes a ROS 2 bag, which
+    > The `ros-${ROS_DISTRO}-fast-mapping` package includes a ROS 2 bag, which
     > will be used for this tutorial. After the installation, the ROS 2
-    > bag can be found at `/opt/ros/humble/share/bagfiles/spinning/`
-
-2. Set up your ROS 2 environment
-
-    ``` bash
-    source /opt/ros/humble/setup.bash
-    ```
+    > bag can be found at `/opt/ros/${ROS_DISTRO}$/share/bagfiles/spinning/`
 
 3. Run the FastMapping sample application using a ROS 2 bag of a robot
     spinning:
@@ -54,6 +61,7 @@ The source code of this component can be found here:
     camera input with RTAB-Map:
 
     ```bash
+    sudo apt install ros-${ROS_DISTRO}-rtabmap-ros
     ros2 launch fast_mapping fast_mapping_rtabmap.launch.py
     ```
 

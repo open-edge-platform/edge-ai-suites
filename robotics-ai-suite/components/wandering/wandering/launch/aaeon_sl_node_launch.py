@@ -16,6 +16,7 @@
 import os
 
 import launch
+
 import launch_ros.actions
 
 import yaml
@@ -24,19 +25,16 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 def generate_launch_description():
-
     params_file = os.path.join(dir_path, '..', 'param', 'aaeon_node_params.yaml')
     with open(params_file, 'r') as f:
         params = yaml.safe_load(f)['aaeon_ros_node']['ros__parameters']
     aaeon_ros_node = launch_ros.actions.Node(
-                                             package='ros2_amr_interface',
-                                             executable='amr_interface_node',
-                                             name='amr',
-                                             output='both',
-                                             parameters=[params],
-                                             remappings=[
-                                                 ('/amr/cmd_vel', '/cmd_vel')
-                                             ]
+        package='ros2_amr_interface',
+        executable='amr_interface_node',
+        name='amr',
+        output='both',
+        parameters=[params],
+        remappings=[('/amr/cmd_vel', '/cmd_vel')],
     )
 
     return launch.LaunchDescription([aaeon_ros_node])

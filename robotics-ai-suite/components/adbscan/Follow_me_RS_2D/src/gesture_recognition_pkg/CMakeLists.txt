@@ -1,5 +1,7 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 3.5)
 project(gesture_recognition_pkg)
 # Default to C++17
@@ -18,27 +20,17 @@ find_package(follow_me_interfaces REQUIRED)
 # Install Python modules
 ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
-install(PROGRAMS
-  gesture_recognition_pkg/gesture_recognition_node.py
-  DESTINATION lib/${PROJECT_NAME}
-)
+install(PROGRAMS gesture_recognition_pkg/gesture_recognition_node.py
+        DESTINATION lib/${PROJECT_NAME})
 
-install(PROGRAMS
-  gesture_recognition_pkg/traj_and_img_publisher_node.py
-  DESTINATION lib/${PROJECT_NAME}
-)
+install(PROGRAMS gesture_recognition_pkg/traj_and_img_publisher_node.py
+        DESTINATION lib/${PROJECT_NAME})
 
-install(PROGRAMS
-  gesture_recognition_pkg/traj_and_img_publisher_node_v2.py
-  DESTINATION lib/${PROJECT_NAME}
-)
+install(PROGRAMS gesture_recognition_pkg/traj_and_img_publisher_node_v2.py
+        DESTINATION lib/${PROJECT_NAME})
 
-install(PROGRAMS
-  gesture_recognition_pkg/traj_and_img_publisher_node_v3.py
-  DESTINATION lib/${PROJECT_NAME}
-)
+install(PROGRAMS gesture_recognition_pkg/traj_and_img_publisher_node_v3.py
+        DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY config
-  DESTINATION share/${PROJECT_NAME}/
-)
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME}/)
 ament_package()

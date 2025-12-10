@@ -1,5 +1,7 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 3.8)
 project(
   univloc_server
@@ -11,6 +13,27 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/univloc_setup.cmake)
 # ----- Set compiler options -----
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -ffast-math")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ffast-math")
+
+# ----- Detect ROS distribution -----
+if(NOT DEFINED ENV{ROS_DISTRO})
+  # Try to detect from CMAKE_PREFIX_PATH or other means
+  if(EXISTS "/opt/ros/jazzy")
+    set(ROS_DISTRO "jazzy")
+  elseif(EXISTS "/opt/ros/humble")
+    set(ROS_DISTRO "humble")
+  else()
+    message(FATAL_ERROR "Could not detect ROS distribution. Please set ROS_DISTRO environment variable.")
+  endif()
+else()
+  set(ROS_DISTRO "$ENV{ROS_DISTRO}")
+endif()
+
+message(STATUS "Building for ROS ${ROS_DISTRO}")
+
+# Validate supported ROS distributions
+if(NOT ROS_DISTRO STREQUAL "humble" AND NOT ROS_DISTRO STREQUAL "jazzy")
+  message(WARNING "Unsupported ROS distribution: ${ROS_DISTRO}. Supported: humble, jazzy")
+endif()
 
 # ----- Build the ROS application -----
 
@@ -28,6 +51,12 @@ find_package(geometry_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(univloc_msgs REQUIRED)
+
+# ROS Jazzy specific packages
+if(ROS_DISTRO STREQUAL "jazzy")
+  find_package(ament_index_cpp REQUIRED)
+endif()
+
 ament_export_dependencies(rosidl_default_runtime)
 ament_export_dependencies(univloc_msgs)
 ament_export_dependencies(univloc_slam)
@@ -57,54 +86,103 @@ target_include_directories(
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include
          ${CMAKE_CURRENT_SOURCE_DIR}/../slam/openvslam
          ${CMAKE_CURRENT_SOURCE_DIR}/../slam/fast_mapping src)
-if(NOT USE_PREBUILT_DEPS)
 
-  set(dependencies
-      rclcpp
-      sensor_msgs
-      message_filters
-      cv_bridge
-      tf2
-      tf2_ros
-      tf2_geometry_msgs
-      tf2_eigen
-      nav_msgs
-      visualization_msgs
-      std_msgs
-      univloc_msgs
-      univloc_dependencies)
+if(NOT USE_PREBUILT_DEPS)
+  # Set dependencies based on ROS distribution
+  if(ROS_DISTRO STREQUAL "jazzy")
+    set(dependencies
+        rclcpp
+        sensor_msgs
+        message_filters
+        cv_bridge
+        tf2
+        tf2_ros
+        tf2_geometry_msgs
+        tf2_eigen
+        nav_msgs
+        visualization_msgs
+        std_msgs
+        univloc_msgs
+        ament_index_cpp
+        univloc_dependencies)
+  else()
+    # ROS Humble
+    set(dependencies
+        rclcpp
+        sensor_msgs
+        message_filters
+        cv_bridge
+        tf2
+        tf2_ros
+        tf2_geometry_msgs
+        tf2_eigen
+        nav_msgs
+        visualization_msgs
+        std_msgs
+        univloc_msgs
+        univloc_dependencies)
+  endif()
 
   target_link_libraries(${PROJECT_NAME}
                         univloc_dependencies::univloc_dependencies)
 
 else()
-
   target_compile_definitions(${PROJECT_NAME} PUBLIC USE_DBOW2)
-  # double confirm G2O_USE_VENDORED_CERES is defined to avoid compile error
   target_compile_definitions(${PROJECT_NAME} PUBLIC G2O_USE_VENDORED_CERES)
 
-  set(dependencies
-      rclcpp
-      sensor_msgs
-      message_filters
-      cv_bridge
-      tf2
-      tf2_ros
-      tf2_geometry_msgs
-      tf2_eigen
-      nav_msgs
-      visualization_msgs
-      std_msgs
-      univloc_msgs
-      DBoW2)
-
-  target_link_libraries(${PROJECT_NAME} spdlog::spdlog g2o-intel::core
-                        g2o-intel::types_slam3d g2o-intel::solver_csparse)
-
+  # Set dependencies based on ROS distribution
+  if(ROS_DISTRO STREQUAL "jazzy")
+    set(dependencies
+        rclcpp
+        sensor_msgs
+        message_filters
+        cv_bridge
+        tf2
+        tf2_ros
+        tf2_geometry_msgs
+        tf2_eigen
+        nav_msgs
+        visualization_msgs
+        std_msgs
+        univloc_msgs
+        ament_index_cpp
+        DBoW2)
+    # Use standard g2o for Jazzy
+    find_package(g2o REQUIRED)
+    target_link_libraries(${PROJECT_NAME} 
+                          spdlog::spdlog
+                          g2o::core
+                          g2o::types_slam3d 
+                          g2o::solver_csparse)
+  else()
+    # ROS Humble
+    set(dependencies
+        rclcpp
+        sensor_msgs
+        message_filters
+        cv_bridge
+        tf2
+        tf2_ros
+        tf2_geometry_msgs
+        tf2_eigen
+        nav_msgs
+        visualization_msgs
+        std_msgs
+        univloc_msgs
+        DBoW2)
+    # Use g2o-intel for Humble
+    target_link_libraries(${PROJECT_NAME} 
+                          spdlog::spdlog
+                          g2o-intel::core
+                          g2o-intel::types_slam3d 
+                          g2o-intel::solver_csparse)
+  endif()
 endif()
 
-if("$ENV{ROS_DISTRO}" STRLESS "humble")
+if(ROS_DISTRO STREQUAL "humble")
   target_compile_definitions(${PROJECT_NAME} PUBLIC PRE_ROS_HUMBLE)
+else()
+  target_compile_definitions(${PROJECT_NAME} PUBLIC)
 endif()
 
 ament_target_dependencies(${PROJECT_NAME} ${dependencies})
@@ -117,19 +195,14 @@ if(NOT USE_SLAM_SHAREDLIBS_PATH)
 else()
   find_library(USER_SLAM_LIBRARY univloc_slam PATHS ${USE_SLAM_SHAREDLIBS_PATH})
   message(STATUS "User linked against with :" ${USER_SLAM_LIBRARY})
-  if(NOT USE_GPU_CM)
-    if(USE_SSE_ORB)
-      target_compile_definitions(${PROJECT_NAME} PRIVATE USE_SSE_ORB)
-    endif()
-  else()
-    find_package(orblze REQUIRED)
-    if(NOT orblze_LIBS)
-      message(WARNING "GPU Level-Zero ORB library is not found.")
-    endif()
-    message(STATUS "GPU Level-Zero ORB library:" ${orblze_LIBS})
+  
+  if(USE_SSE_ORB)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_SSE_ORB)
   endif()
+  find_package(orblze REQUIRED)
   target_link_libraries(${PROJECT_NAME} ${USER_SLAM_LIBRARY} Threads::Threads
                         yaml-cpp ${orblze_LIBS})
+  
   target_include_directories(${PROJECT_NAME}
                              PUBLIC "${CMAKE_INSTALL_PREFIX}/include/openvslam")
 endif()

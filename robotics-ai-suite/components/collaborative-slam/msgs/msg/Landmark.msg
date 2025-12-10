@@ -1,3 +1,7 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 #bool bSentOnce
 
 uint64 mn_id # unique MP id

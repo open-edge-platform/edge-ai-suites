@@ -36,7 +36,7 @@ Deploy these on separate devices:
 - **VSS Search**: Handles video search functionality
 - **VSS Summary**: Provides video summarization capabilities
 
-📖 [VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
+📖 [VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
 
 #### 2. VLM Microservice (Optional)
 
@@ -45,7 +45,7 @@ Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 - Runs the VLM model defined in the frigate [config file](../../resources/frigate-config/config.yml)
 - Use `VLM_MAX_COMPLETION_TOKENS` to limit response length during deployment
 
-📖 [VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
+📖 [VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
 
 ## Quick Start
 
@@ -53,7 +53,7 @@ Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
 cd edge-ai-suites/metro-ai-suite/smart-nvr
 ```
 
@@ -69,7 +69,7 @@ export TAG="1.2.3"
 # VSS Service Endpoints
 export http_proxy=<http-proxy>
 export https_proxy=<https-proxy>
-export no_proxy=<no_proxy>
+export no_proxy=<no_proxy>            
 
 # VSS Service Endpoints
 export VSS_SUMMARY_IP=<vss-summary-device-ip>

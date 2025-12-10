@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+---
 gesture_recognizer_node:
   ros__parameters:
     Camera_topic: /camera/color/image_raw
@@ -15,6 +16,3 @@ traj_and_img_publisher_node:
     Verbose: True
     publish_frequency: 4
     Camera_topic: /sim_camera
-    
-   
-

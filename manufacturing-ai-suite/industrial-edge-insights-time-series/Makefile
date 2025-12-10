@@ -33,7 +33,7 @@ endif
 
 # Assign default value to version and appVersion if not provided for helm deployment
 ifeq ($(origin version), undefined)
-version := "1.1.0-weekly"
+version := "1.1.0"
 endif
 
 export SAMPLE_APP
@@ -263,7 +263,7 @@ help:
 	@echo "      Example: make push_images DOCKER_REGISTRY=myregistry"
 	@echo "  make gen_helm_charts              - Generate Helm packages for the selected sample app"
 	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Optional: version (default: 1.1.0-weekly)"
+	@echo "      Optional: version (default: 1.1.0)"
 	@echo "      Example: make gen_helm_charts app=weld-anomaly-detection version=1.2.0"
 	@echo "  make help                         - Display this help message"
 	@echo "      No parameters required."

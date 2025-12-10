@@ -144,7 +144,7 @@ To install Docker, refer to the
     file structure.
 
 2. Follow
-   ["SAiD on A770"](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/interactive-digital-avatar/said_docker/README.md)
+   ["SAiD on A770"](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2025.2.0/metro-ai-suite/interactive-digital-avatar/said_docker/README.md)
    to build and setup a server.
 
 ### Prepare RAG

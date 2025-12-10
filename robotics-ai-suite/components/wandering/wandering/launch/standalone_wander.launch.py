@@ -13,45 +13,48 @@
 # See the License for the specific language governing permissions
 # and limitations under the License.
 
+from ament_index_python.packages import get_package_share_directory
+
 import launch
 import launch.actions
-import launch.substitutions
+
 import launch_ros.actions
-from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
     # ================== Camera =========================
     tf_node = launch_ros.actions.Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='camera_tf',
-            arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'camera_link'],
-            parameters=[{'use_sim_time': False}]
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='camera_tf',
+        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'camera_link'],
+        parameters=[{'use_sim_time': False}],
     )
     realsense2_dir = get_package_share_directory('realsense2_camera')
     realsense_launch = launch.actions.IncludeLaunchDescription(
         launch.launch_description_sources.PythonLaunchDescriptionSource(
-                realsense2_dir + '/launch/rs_launch.py'),
-        launch_arguments={'align_depth.enable': 'true'}.items()
+            realsense2_dir + '/launch/rs_launch.py'
+        ),
+        launch_arguments={'align_depth.enable': 'true'}.items(),
     )
     # ================== Object detection ==================
     od_launch = launch_ros.actions.Node(
-            name='object_detection', package='object_detection',
-            executable='object_detection_node', output='screen')
+        name='object_detection',
+        package='object_detection',
+        executable='object_detection_node',
+        output='screen',
+    )
     # ================== RTABMAP ===========================
     rtabmap_dir = get_package_share_directory('rtabmap_ros')
     rtabmap_launch = launch.actions.IncludeLaunchDescription(
         launch.launch_description_sources.PythonLaunchDescriptionSource(
-                rtabmap_dir + '/launch/realsense_d400.launch.py')
+            rtabmap_dir + '/launch/realsense_d400.launch.py'
+        )
     )
 
     wandering_node = launch_ros.actions.Node(
-            package='wandering_app', executable='wandering', output='screen')
-    return launch.LaunchDescription([
-        tf_node,
-        realsense_launch,
-        od_launch,
-        rtabmap_launch,
-        wandering_node
-    ])
+        package='wandering_app', executable='wandering', output='screen'
+    )
+    return launch.LaunchDescription(
+        [tf_node, realsense_launch, od_launch, rtabmap_launch, wandering_node]
+    )

@@ -2,9 +2,9 @@
 
 Bring the services up.
 
-    ```sh
-    docker compose up -d
-    ```
+```sh
+docker compose up -d
+```
 
 The below CURL command publishes metadata to the MQTT broker and sends frames over WebRTC for streaming.
 

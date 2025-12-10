@@ -14,11 +14,13 @@ Comprehensive documentation on this component is available here: [dev guide](htt
 
 ## Verified Operating Systems
 
-- Ubuntu 22.04 LTS
+- Ubuntu 22.04 LTS with ROS2 Humble
+- Ubuntu 24.04 LTS with ROS2 Jazzy
 
 ## Verified ROS Version
 
 - ROS2 Humble - (debian based)
+- ROS2 Jazzy - (debian based)
 
 ## Dependencies
 
@@ -28,17 +30,27 @@ Comprehensive documentation on this component is available here: [dev guide](htt
 
 ### 1. [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
 
-### 2. Install the FastMapping debian package
+### 2. Source the ROS environment
 
-```bash
-sudo apt update
-sudo apt install ros-humble-fast-mapping
-```
-
-### 3. Source the ROS environment
+If Ubuntu 22.04 with Humble is used, then run
 
 ```bash
 source /opt/ros/humble/setup.bash
+```
+
+If Ubuntu 24.04 with Jazzy is used, then run
+
+```bash
+source /opt/ros/jazzy/setup.bash
+```
+
+This command will set `ROS_DISTRO` env var that is used in following steps.
+
+### 3. Install the FastMapping debian package
+
+```bash
+sudo apt update
+sudo apt install ros-${ROS_DISTRO}-fast-mapping
 ```
 
 ### 4. Run the FastMapping sample tutorial using ROSbags
@@ -50,6 +62,7 @@ ros2 launch fast_mapping fast_mapping.launch.py
 ### 5. Run the FastMapping application using Realsense camera input
 
 ```bash
+sudo apt install ros-${ROS_DISTRO}-rtabmap-ros
 ros2 launch fast_mapping fast_mapping_rtabmap.launch.py
 ```
 
@@ -83,7 +96,7 @@ ros2 run fast_mapping fast_mapping_node
 In parallel start the rosbag file.
 
 ```bash
-ros2 bag play -s rosbag_v2 <my_ROS1_bagfile.bag>
+ros2 bag play -s rosbag_v2 <my_ROS2_bagfile.bag>
 ```
 
 Start rviz2 for visualization.
@@ -92,9 +105,27 @@ Start rviz2 for visualization.
 rviz2
 ```
 
-## Running the units tests
+## Repository structure
 
-For running the unit tests one must navigate to the `build/fast_mapping` directory and execute `make test`.
+Repository and provided scripts are relying on installed [Docker](https://docs.docker.com/engine/install/ubuntu/) and Make to run lint, build and tests inside the isolated container. Makefile, that is located inside the root folder, uses `ROS_DISTRO` env variable to determine which ROS2 distro is used and uses corresponding ROS2 image to install tools and perform requested action.
+
+### Building the debian packages
+
+To build debian packages, export `ROS_DISTRO` env variable to desired platform and run `make package` command. After build process successfully finishes, built packages will be available in root folder.
+Following command is an example for `Jazzy` distribution.
+
+```bash
+   $ source /opt/ros/jazzy/setup.bash
+   $ make package && ls|grep -i .deb
+   ros-jazzy-fast-mapping_2.3-1_amd64.deb
+   ros-jazzy-fast-mapping-build-deps_2.3-1_amd64.deb
+```
+
+`*build-deps*.deb` package is generated during build process and installation of such packages could be skipped on target platform.
+
+### Running the units tests
+
+For running the unit tests one must navigate to the root folder directory and execute `make test`.
 
 ### 1. Run FastMapping with Intel RealSense cameras
 
@@ -106,8 +137,22 @@ For running the unit tests one must navigate to the `build/fast_mapping` directo
   to the number of required cameras. In addition to the number of cameras, FastMapping expects each depth topic of each camera to be specified
   as well as a topic providing the CameraInfo (intrinsics) as shown in the examples below.
 
+  If Ubuntu 22.04 with Humble is used, then run
+
 ```bash
    source /opt/ros/humble/setup.bash
+```
+
+  If Ubuntu 24.04 with Jazzy is used, then run
+
+```bash
+   source /opt/ros/jazzy/setup.bash
+```
+
+Then run
+
+```bash
+   sudo apt install ros-${ROS_DISTRO}-rtabmap-ros
    ros2 launch fast_mapping fast_mapping_rtabmap.launch.py
 ```
 
@@ -121,7 +166,26 @@ FastMapping running with two Realsense cameras named "camera_front" and "camera_
 
 > Make sure to have a ros2 bag file for this test
 
+  If Ubuntu 22.04 with Humble is used, then run
+
 ```bash
    source /opt/ros/humble/setup.bash
+```
+
+  If Ubuntu 24.04 with Jazzy is used, then run
+
+```bash
+   source /opt/ros/jazzy/setup.bash
+```
+
+To run FastMapping, run ROS2 with following command
+
+```bash
    ros2 launch fast_mapping fast_mapping.launch.py
+```
+
+In parallel start the rosbag file.
+
+```bash
+   ros2 bag play -s rosbag_v2 <my_ROS2_bagfile.bag>
 ```

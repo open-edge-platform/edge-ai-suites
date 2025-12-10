@@ -88,20 +88,20 @@ http://localhost:8101
 
 ### Technical Documentation
 
-- [Chat Q&A](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer/index.html)
-- [Audio Analyzer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html)
+- [Chat Q&A](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/chat-question-and-answer/index.html)
+- [Audio Analyzer](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/audio-analyzer/index.html)
   \- Comprehensive documentation for multimodal audio processing capabilities
-- [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/get-started.md)
+- [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/document-ingestion/pgvector/docs/get-started.md)
   \- Vector database integration and document processing workflows
-- [Multimodal Embedding Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md)
+- [Multimodal Embedding Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md)
   \- Embedding generation service architecture and API documentation
-- [Visual Data Preparation For Retrieval](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md)
+- [Visual Data Preparation For Retrieval](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md)
   \- VDMS integration and visual data management workflows
-- [VLM OpenVINO Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md)
+- [VLM OpenVINO Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md)
   \- Vision-language model deployment and optimization guidelines
-- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/dev/ai-libraries.html)
+- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/2025.2/ai-libraries.html)
   \- Complete development toolkit documentation and microservice API references
-- [Edge AI Suites](https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html)
+- [Edge AI Suites](https://docs.openedgeplatform.intel.com/2025.2/ai-suite-metro.html)
   \- Comprehensive application suite documentation with Gen AI implementation examples
 
 ### Support Channels

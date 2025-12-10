@@ -22,11 +22,11 @@ from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchD
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
+
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
-
     dir_path = os.path.dirname(os.path.realpath(__file__))
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup')
@@ -52,55 +52,56 @@ def generate_launch_description():
     # https://github.com/ros/robot_state_publisher/pull/30
     # TODO(orduno) Substitute with `PushNodeRemapping`
     #              https://github.com/ros2/launch_ros/issues/56
-    remappings = [('/tf', 'tf'),
-                  ('/tf_static', 'tf_static')]
+    remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
 
     # Declare the launch arguments
     declare_namespace_cmd = DeclareLaunchArgument(
-        'namespace',
-        default_value='',
-        description='Top-level namespace')
+        'namespace', default_value='', description='Top-level namespace'
+    )
 
     declare_use_namespace_cmd = DeclareLaunchArgument(
         'use_namespace',
         default_value='false',
-        description='Whether to apply a namespace to the navigation stack')
+        description='Whether to apply a namespace to the navigation stack',
+    )
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='true',
-        description='Use simulation (Gazebo) clock if true')
+        'use_sim_time', default_value='true', description='Use simulation (Gazebo) clock if true'
+    )
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
         default_value=os.path.join(bringup_dir, 'params', 'nav2_params.yaml'),
-        description='Full path to the ROS2 parameters file to use for all launched nodes')
+        description='Full path to the ROS2 parameters file to use for all launched nodes',
+    )
 
     declare_bt_xml_cmd = DeclareLaunchArgument(
         'default_bt_xml_filename',
         default_value=os.path.join(
             get_package_share_directory('nav2_bt_navigator'),
-            'behavior_trees', 'navigate_w_replanning_and_recovery.xml'),
-        description='Full path to the behavior tree xml file to use')
+            'behavior_trees',
+            'navigate_w_replanning_and_recovery.xml',
+        ),
+        description='Full path to the behavior tree xml file to use',
+    )
 
     declare_autostart_cmd = DeclareLaunchArgument(
-        'autostart', default_value='true',
-        description='Automatically startup the nav2 stack')
+        'autostart', default_value='true', description='Automatically startup the nav2 stack'
+    )
 
     declare_use_simulator_cmd = DeclareLaunchArgument(
-        'use_simulator',
-        default_value='True',
-        description='Whether to start the simulator')
+        'use_simulator', default_value='True', description='Whether to start the simulator'
+    )
 
     declare_use_robot_state_pub_cmd = DeclareLaunchArgument(
         'use_robot_state_pub',
         default_value='True',
-        description='Whether to start the robot state publisher')
+        description='Whether to start the robot state publisher',
+    )
 
     declare_simulator_cmd = DeclareLaunchArgument(
-        'headless',
-        default_value='False',
-        description='Whether to execute gzclient)')
+        'headless', default_value='False', description='Whether to execute gzclient)'
+    )
 
     declare_world_cmd = DeclareLaunchArgument(
         'world',
@@ -109,18 +110,23 @@ def generate_launch_description():
         # default_value=os.path.join(get_package_share_directory('turtlebot3_gazebo'),
         #                            'worlds/turtlebot3_worlds/waffle.model'),
         default_value=os.path.join(bringup_dir, 'worlds', 'waffle.model'),
-        description='Full path to world model file to load')
+        description='Full path to world model file to load',
+    )
 
     # Specify the actions
     start_gazebo_server_cmd = ExecuteProcess(
         condition=IfCondition(use_simulator),
         cmd=['gzserver', '-s', 'libgazebo_ros_init.so', world],
-        cwd=[launch_dir], output='screen')
+        cwd=[launch_dir],
+        output='screen',
+    )
 
     start_gazebo_client_cmd = ExecuteProcess(
         condition=IfCondition(PythonExpression([use_simulator, ' and not ', headless])),
         cmd=['gzclient'],
-        cwd=[launch_dir], output='screen')
+        cwd=[launch_dir],
+        output='screen',
+    )
 
     urdf = os.path.join(bringup_dir, 'urdf', 'turtlebot3_waffle.urdf')
 
@@ -133,24 +139,28 @@ def generate_launch_description():
         output='screen',
         parameters=[{'use_sim_time': use_sim_time}],
         remappings=remappings,
-        arguments=[urdf])
+        arguments=[urdf],
+    )
 
-    param_file_path = os.path.join(dir_path, "..", "param", "gazebo_nav.param.yaml")
+    param_file_path = os.path.join(dir_path, '..', 'param', 'gazebo_nav.param.yaml')
     nav_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch.py')),
-        launch_arguments={'namespace': namespace,
-                          'use_namespace': use_namespace,
-                          'use_sim_time': 'true',
-                          'params_file': param_file_path,
-                          'default_bt_xml_filename': default_bt_xml_filename,
-                          'autostart': autostart}.items())
+        launch_arguments={
+            'namespace': namespace,
+            'use_namespace': use_namespace,
+            'use_sim_time': 'true',
+            'params_file': param_file_path,
+            'default_bt_xml_filename': default_bt_xml_filename,
+            'autostart': autostart,
+        }.items(),
+    )
 
     rtabmap_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(dir_path, 'rtabmap_gazebo.launch.py')),
-        launch_arguments={'use_sim_time': 'true'}.items())
+        launch_arguments={'use_sim_time': 'true'}.items(),
+    )
 
-    wandering_node = Node(
-            package='wandering_app', executable='wandering', output='screen')
+    wandering_node = Node(package='wandering_app', executable='wandering', output='screen')
 
     # Create the launch description and populate
     ld = LaunchDescription()

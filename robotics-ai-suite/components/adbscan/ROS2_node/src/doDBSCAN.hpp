@@ -13,18 +13,31 @@
 // See the License for the specific language governing permissions
 // and limitations under the License.
 
-#include "ADBScan.h"
-#include <iostream>
-#include <fstream>
+#ifndef DODBSCAN_HPP_
+#define DODBSCAN_HPP_
+
 #include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
 #include <cstdlib>
+#include <fstream>
+#include <iostream>
 #include <vector>
+
+#define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
+#define BOOST_MPL_LIMIT_VECTOR_SIZE 50
+#include <boost/mpl/vector.hpp>
+
+#include "ADBScan.h"
 #include "Util.hpp"
 
-vector<Obstacle> doDBSCAN(void *p_Data, int LiDAR_data_size, int dimension, std::vector<double>* benchmark_time);
+vector<Obstacle> doDBSCAN(
+  void * p_Data, int LiDAR_data_size, int dimension, std::vector<double> * benchmark_time);
+
 double diff(timespec start, timespec end);
+
+#endif  // DODBSCAN_HPP_

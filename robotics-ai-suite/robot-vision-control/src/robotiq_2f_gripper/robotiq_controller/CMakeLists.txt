@@ -50,8 +50,15 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   std_srvs
 )
 
+# Determine ROS distro-specific source directory
+if(DEFINED ENV{ROS_DISTRO})
+  set(ROS_DISTRO $ENV{ROS_DISTRO})
+else()
+  set(ROS_DISTRO "humble")
+endif()
+
 add_library(${PROJECT_NAME} SHARED
-  src/robotiq_sensor_broadcaster.cpp
+  ${ROS_DISTRO}/src/robotiq_sensor_broadcaster.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

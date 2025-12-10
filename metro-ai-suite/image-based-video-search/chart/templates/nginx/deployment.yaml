@@ -54,8 +54,8 @@ spec:
               - ALL
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 80
-        - containerPort: 443
+        - containerPort: 8080
+        - containerPort: 8443
         volumeMounts:
         - name: nginx-conf
           mountPath: /etc/nginx/nginx.conf

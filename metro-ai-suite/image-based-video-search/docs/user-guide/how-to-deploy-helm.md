@@ -27,10 +27,10 @@ Before You Begin, ensure the following:
 
 - Download helm chart with the following command
 
-    `helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.1.0-RC2`
+    `helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.1.0`
 - unzip the package using the following command
 
-    `tar -xvf image-based-video-search-1.1.0-RC2.tgz`
+    `tar -xvf image-based-video-search-1.1.0.tgz`
 - Get into the helm directory
 
     `cd image-based-video-search`
@@ -38,14 +38,15 @@ Before You Begin, ensure the following:
 ## Steps to Deploy
 
 Clone the repo and go to helm directory
+
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2025.2.0
 cd edge-ai-suites/metro-ai-suite/image-based-video-search/chart
 ```
 
 ```bash
 # Install the Image-Based Video Search chart in the ibvs namespace
-helm install ibvs . --create-namespace -n ibvs 
+helm install ibvs . --create-namespace -n ibvs
 ```
 
 Some containers in the deployment requires network access. If you are in a proxy
@@ -62,7 +63,7 @@ helm install ibvs . --create-namespace -n ibvs \
 
 
 Now frontend should be accessible at `https://<ip-addr>:30443/`.
-> Note: To access the above url remotely, replace the `<ip-addr>` with your system IP address. 
+> Note: To access the above url remotely, replace the `<ip-addr>` with your system IP address.
 
 Finally, the app can be uninstalled using the following command:
 

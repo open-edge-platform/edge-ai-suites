@@ -3,18 +3,22 @@
 # Copyright (C) 2025 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
-
+"""Runs ROS2 bag file play and fast_mapping test that are needed
+   to ensure that only limited depth is supported to avoid DoS"""
 import os
 import sys
 
-from launch import LaunchDescription
-from launch import LaunchService
-from launch.actions import ExecuteProcess
 import launch_ros.actions
 from launch_testing.legacy import LaunchTestService
+from launch.actions import ExecuteProcess
+
+from launch import LaunchDescription
+from launch import LaunchService
 
 
+# pylint: disable=duplicate-code
 def main(argv=sys.argv[1:]):
+    """Main function to run the launch test for depth info topic handling."""
     base_path = os.path.abspath(
         os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'ros2')
     )
@@ -46,5 +50,6 @@ def main(argv=sys.argv[1:]):
     return lts.run(ls)
 
 
+# pylint: disable=duplicate-code
 if __name__ == '__main__':
     sys.exit(main())

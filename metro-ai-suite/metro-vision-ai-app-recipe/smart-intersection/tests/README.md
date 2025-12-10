@@ -21,7 +21,7 @@
   - `GRAFANA_REMOTE_URL`
   - `INFLUX_REMOTE_DB_URL`
   - `NODE_RED_REMOTE_URL`
-  
+
   These should contain the external IP address of the machine running the Docker containers and the corresponding service ports. For example:
   ```
   SCENESCAPE_REMOTE_URL="https://YOUR_MACHINE_IP"
@@ -29,10 +29,10 @@
   INFLUX_REMOTE_DB_URL="http://YOUR_MACHINE_IP:8086"
   NODE_RED_REMOTE_URL="https://YOUR_MACHINE_IP/nodered/"
   ```
-  
+
   Replace `YOUR_MACHINE_IP` with the actual IP address of your machine. If you do not set those URLs, remote endpoint tests will be skipped.
 
-**Note:** Some tests executed in the Kubernetes environment require privileged port forwarding using `kubectl port-forward` with `sudo`. In such cases (e.g., port 443), you need to set the `SUDO_PASSWORD` environment variable to your sudo password before running the tests, or they will fail.  
+**Note:** Some tests executed in the Kubernetes environment require privileged port forwarding using `kubectl port-forward` with `sudo`. In such cases (e.g., port 443), you need to set the `SUDO_PASSWORD` environment variable to your sudo password before running the tests, or they will fail.
 
 ```bash
 export SUDO_PASSWORD=your_sudo_password
@@ -41,8 +41,8 @@ export SUDO_PASSWORD=your_sudo_password
 ## Installation
 
 - Clone the repository and install prerequisites according to the following guides (for Kubernetes, also set up proxy settings if needed):
-  - [Docker Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md)
-  - [Kubernetes Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/how-to-deploy-helm.md)
+  - [Docker Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2025.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md)
+  - [Kubernetes Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2025.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/how-to-deploy-helm.md)
 
 1. **Navigate to the smart-intersection directory:**
 
@@ -68,7 +68,7 @@ export SUDO_PASSWORD=your_sudo_password
    python3 -m pip install -r requirements.txt
    ```
 
-Now you are ready to run tests on your system. 
+Now you are ready to run tests on your system.
 
 ## Running tests
 

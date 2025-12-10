@@ -1,18 +1,7 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions
-# and limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import os
 import cv2
@@ -27,7 +16,7 @@ def draw_perf(image:np.ndarray, model_name, device, fps, infer_fps, cpu_load, da
 	margin = 15
 	bcolor = (0,255,0)
 	fcolor = (0,0,255)
-	
+
 	def circle(text, radius, pos, left=True, bcolor = (0,255,0), fcolor = (0,0,255), legend=""):
 		textsize = cv2.getTextSize(text, fontFace, fontScale, thickness)[0]
 
@@ -61,7 +50,7 @@ def draw_perf(image:np.ndarray, model_name, device, fps, infer_fps, cpu_load, da
 		cpu_load = f"{int(cpu_load)}"
 		circle(cpu_load, 18, 0, False, legend="%cpu", fcolor=(255,0,0))
 
-	
+
 	# model name
 	info = f'{model_name} : {data_type} {" : Async" if async_mode else "" }'
 	textsize = cv2.getTextSize(info, fontFace, fontScale, thickness)[0]

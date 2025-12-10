@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Robot setup
 
 Use Segway Robot as an example:
@@ -61,7 +67,9 @@ In the second terminal, press ```c``` to clear emergency stop state, then press 
 Then, launch the full-stack launch file to start the system. Here are some explanations for the launch file:
 
 - generate_segway_description: **Remember to change this part according to your robot.**
-- static_tf: the origin and coordinate definition of the robot should be first determined. In our case, the origin of the robot is located at the center of the two wheels and the ground plane is where the value of z axis equals to 0. The x axis points to the front direction, the y axis points to the left direction and the z axis points to the up direction of the robot. **Remember to change the values according to your robot and the location of the camera.**
+- static_tf: the origin and coordinate definition of the robot should be first determined.
+    In our case, the origin of the robot is located at the center of the two wheels and the ground plane is where the value of z axis equals to 0.
+    The x axis points to the front direction, the y axis points to the left direction and the z axis points to the up direction of the robot. **Remember to change the values according to your robot and the location of the camera.**
 - device_type: set the type according to the camera you use (we use RealSense D435, so choose d435)
 - initial_reset: it is recommended to set to true, which will allow the RealSense to reset on every start.
 - fix_scale: it should set to true when using RGBD camera_setup and the scale will not be optimized during optimization.

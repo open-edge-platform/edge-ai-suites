@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+
 from launch import LaunchDescription
-from launch.actions import LogInfo, IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, LogInfo
 from launch.actions import RegisterEventHandler
 from launch.event_handlers import OnShutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -12,7 +13,8 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    ros_distro = 'humble'
+    # Get ROS distro from environment variable
+    ros_distro = os.environ.get('ROS_DISTRO', 'humble')
     install_dir = f'/opt/ros/{ros_distro}/share/tutorial_aaeon_adbscan'
     aaeon_node_config_file = (
         f'/opt/ros/{ros_distro}/share/ros2_amr_interface/params/aaeon_node_params.yaml'
