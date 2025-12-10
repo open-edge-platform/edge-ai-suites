@@ -150,7 +150,7 @@ services:
       - ov-models:/app/ov_models
 
   dataprep-visualdata-milvus:
-    image: intel/dataprep-visualdata-milvus:2025.2-rc2
+    image: ${REGISTRY:-}dataprep-visualdata-milvus:${TAG:-latest}
     container_name: dataprep-visualdata-milvus
     ports:
       - "${DATAPREP_SERVICE_PORT}:9990"
@@ -189,7 +189,7 @@ services:
       - ${HOST_DATA_PATH}:/home/user/data:rw
 
   retriever-milvus:
-    image: intel/retriever-milvus:2025.2-rc2
+    image: ${REGISTRY:-}retriever-milvus:${TAG:-latest}
     container_name: retriever-milvus
     ports:
       - "${RETRIEVER_SERVICE_PORT}:7770"
@@ -224,7 +224,7 @@ services:
       - dataprep-visualdata-milvus
 
   visual-search-qa-app:
-    image: intel/visual-search-qa-app:2025.2-rc2
+    image: ${REGISTRY:-}visual-search-qa-app:${TAG:-latest}
     container_name: visual-search-qa-app
     ports:
       - "${VISUAL_SEARCH_QA_UI_PORT}:17580"

@@ -55,7 +55,7 @@ Set a remote registry by exporting environment variables:
 
 ```bash
 export REGISTRY="intel/"
-export TAG="latest"
+export TAG="2025.2.0"
 ```
 
 ### Step 2: Prepare host directories for models and data
