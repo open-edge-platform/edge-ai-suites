@@ -38,9 +38,9 @@ ROS_DISTRO=humble make build
 
 This will build the following packages:
 - `ros-humble-its-planner`
-- `ros-humble-relocalization`
-- `ros-humble-send-localization`
-- `ros-humble-collab-slam`
+- `ros-humble-its-relocalization`
+- `ros-humble-its-send-localization`
+- `ros-humble-nav2-bringup-collab`
 
 The built packages will be available in the root directory.
 
