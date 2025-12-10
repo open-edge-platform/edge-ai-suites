@@ -157,7 +157,7 @@ To launch the default ITS planner which is based on differential drive robot, ru
 ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False params_file:=/opt/ros/humble/share/its_planner/nav2_params.yaml default_bt_xml_filename:=/opt/ros/humble/share/its_planner/navigate_w_recovery.xml
 ```
 
-ITS Planner also supports ackermann steering; to launch the ackermann ITS planner run:
+ITS Planner also supports Ackermann steering; to launch the Ackermann ITS planner run:
 
 ```bash
 ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False params_file:=/opt/ros/humble/share/its_planner/nav2_params_dubins.yaml default_bt_xml_filename:=/opt/ros/humble/share/its_planner/navigate_w_recovery.xml
