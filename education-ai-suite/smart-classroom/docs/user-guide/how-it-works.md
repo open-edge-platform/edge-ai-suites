@@ -38,6 +38,15 @@ The uploaded audio is passed to the Backend API, which acts as the gateway to th
     - xPU utilisation for hardware performance
     - LLM metrics for summarisation efficiency
 
+- **Pipeline Service**
+
+The Pipeline Service manages multiple DLStreamer-based pipelines:
+
+- Front Video Pipeline for front camera streams
+- Back Video Pipeline for back camera streams
+- IFPD Content Pipeline for interactive flat panel display content
+
+A Media Server (MediaMTX) supports streaming and distribution of processed video feeds.
 
 ## Outputs
 

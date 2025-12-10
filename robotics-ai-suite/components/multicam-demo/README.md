@@ -6,8 +6,6 @@ SPDX-License-Identifier: Apache-2.0
 
 # Multi-Camera Demo (RealSense D457 AI Demo)
 
-[![Build-Test-Scan](https://github.com/intel-innersource/applications.robotics.mobile.realsense-d457-ai-demo/actions/workflows/build-test-scan.yml/badge.svg)](https://github.com/intel-innersource/applications.robotics.mobile.realsense-d457-ai-demo/actions/workflows/build-test-scan.yml)
-
 ## Overview
 
 In this demo four instances of AI applications for object detection are run in parallel using four RealSense™ camera streams. The Ultralytics YOLOv8 model and mobilenet-ssd model are downloaded and used for object detection and segmentation.
