@@ -146,7 +146,6 @@ If Ubuntu 22.04 with Humble is used, then run
 
 ```bash
 source /opt/ros/humble/setup.bash
-source install/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py
 ```
 
@@ -154,7 +153,6 @@ If Ubuntu 24.04 with Jazzy is used, then run
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-source install/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py
 ```
 
