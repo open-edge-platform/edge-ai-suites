@@ -14,7 +14,7 @@ This repository contains multiple vision applications that leverage OpenVINO for
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html).
 
 ### Build
 
@@ -111,19 +111,19 @@ This repository contains three main applications:
 
 The Object Detection application provides real-time object detection capabilities using OpenVINO and Intel RealSense cameras. It supports various pre-trained models and can be customized for specific detection tasks.
 
-For detailed usage instructions, see the [Object Detection Tutorial documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/dev_guide/tutorials_amr/perception/openvino/object_detection_tutorial.html).
+For detailed usage instructions, see the [Object Detection Tutorial documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/openvino/object_detection_tutorial.html).
 
 ### Segmentation Realsense Tutorial
 
 The Segmentation application demonstrates semantic segmentation using OpenVINO with Intel RealSense depth cameras. It provides pixel-level classification for scene understanding.
 
-For detailed usage instructions, see the [Segmentation Realsense Tutorial documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/dev_guide/tutorials_amr/perception/openvino/segmentation_realsense_tutorial.html).
+For detailed usage instructions, see the [Segmentation Realsense Tutorial documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/openvino/segmentation_realsense_tutorial.html).
 
 ### YOLOv8
 
 The YOLOv8 application provides state-of-the-art object detection using the YOLOv8 model optimized with OpenVINO. It offers high-performance real-time detection for robotics applications.
 
-For detailed usage instructions, see the [YOLOv8 OpenVINO Tutorial documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/dev_guide/tutorials_amr/perception/openvino/yolov8_openvino_tutorial.html).
+For detailed usage instructions, see the [YOLOv8 OpenVINO Tutorial documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/openvino/yolov8_openvino_tutorial.html).
 
 ## License
 

@@ -17,7 +17,7 @@ ROS2: Tested on Humble (but Should work with Foxy too)
 
 ### Prerequisites
 
-- [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
+- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html)
 
 ### Running via local cloning
 
