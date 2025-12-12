@@ -26,8 +26,10 @@ The main features are as follows:
 :hidden:
 
 system-requirements
+how-it-works
 get-started
-release-
+application-flow
+release-notes
 
 :::
 hide_directive-->
