@@ -29,7 +29,7 @@ cd edge-ai-libraries/microservices/dlstreamer-pipeline-server
 Create a Docker file named `BalluffDockerfile` inside your `dlstreamer-pipeline-server` directory with the following content.
 
 ```dockerfile
-FROM intel/dlstreamer-pipeline-server:3.1.0-ubuntu24
+FROM intel/dlstreamer-pipeline-server:2025.2.0-ubuntu24
 
 USER root
 

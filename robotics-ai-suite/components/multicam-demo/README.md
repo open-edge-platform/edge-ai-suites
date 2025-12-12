@@ -4,11 +4,13 @@ Copyright (C) 2025 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Multi-Camera Demo
+# Multi-Camera Demo (RealSense D457 AI Demo)
 
-In this demo four instances of AI applications for object detection are run in parallel using four RealSense™ camera streams. In this demo, the Ultralytics YOLOv8 model and mobilenet-ssd model are downloaded and used for object detection and segmentation.
+## Overview
 
-Here, the multicamera usecase is demonstrated using an Axiomtek Robox500 Industrial PC and 4x Intel® RealSense™ GMSL/FAKRA Stereo Camera D457. The Axiomtek Robox500 industrial PC consists of an 12th Gen Intel® Core™ i7-1270PE, 28W Alderlake P Processor and an Intel® Iris® Xe Graphics iGPU. However, this demo can be run on any Intel® platform which has a GPU and also with 4x USB Intel® RealSense™ cameras.
+In this demo four instances of AI applications for object detection are run in parallel using four RealSense™ camera streams. The Ultralytics YOLOv8 model and mobilenet-ssd model are downloaded and used for object detection and segmentation.
+
+The multicamera usecase is demonstrated using an Axiomtek Robox500 Industrial PC and 4x Intel® RealSense™ GMSL/FAKRA Stereo Camera D457. The Axiomtek Robox500 industrial PC consists of an 12th Gen Intel® Core™ i7-1270PE, 28W Alderlake P Processor and an Intel® Iris® Xe Graphics iGPU. However, this demo can be run on any Intel® platform which has a GPU and also with 4x USB Intel® RealSense™ cameras.
 
 The setup looks like as described in the table below.
 <!-- markdownlint-disable MD033 -->
@@ -19,13 +21,141 @@ The setup looks like as described in the table below.
 |Camera-3|YOLOv8n:FP16      |Object detection                |GPU   |
 |Camera-4|mobilenet-ssd:FP16|Object detection                |GPU   |
 
-## Component Documentation
+## Get Started
 
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/dev_guide/tutorials_amr/perception/openvino/pyrealsense2_d457_multicam_object_detection_tutorial.html)
+### System Requirements
 
-## Dependencies
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html).
 
-### Axiomtek Robox500 platform setup
+### Build
+
+To build debian packages, export `ROS_DISTRO` env variable to desired platform and run `make package` command. After build process successfully finishes, built packages will be available in the root directory. The following command is an example for `Humble` distribution.
+
+```bash
+ROS_DISTRO=humble make package
+```
+
+You can list all built packages:
+
+```bash
+$ ls|grep -i .deb
+ros-humble-pyrealsense2-ai-demo_*_amd64.deb
+ros-humble-pyrealsense2-ai-demo-build-deps_*_amd64.deb
+```
+
+`*build-deps*.deb` package is generated during build process and installation of such packages could be skipped on target platform.
+
+To build Docker image:
+
+```bash
+make image
+```
+
+To clean all build artifacts:
+
+```bash
+make clean
+```
+
+### Install
+
+If Ubuntu 22.04 with Humble is used, then run
+
+```bash
+source /opt/ros/humble/setup.bash
+```
+
+If Ubuntu 24.04 with Jazzy is used, then run
+
+```bash
+source /opt/ros/jazzy/setup.bash
+```
+
+Finally, install the Debian package that was built via `make package`:
+
+```bash
+sudo apt update
+sudo apt install ./ros-${ROS_DISTRO}-pyrealsense2-ai-demo_*_amd64.deb
+```
+
+**Note:**
+
+The ros-humble-pyrealsense2-ai-demo installation will also do the following:
+
+* Installs all the python dependency packages needed for the demo to run.
+* Downloads the YOLOv8 model files from Ultralytics and generate the models.
+* Download and build the mobilenet-ssd model using the omz_downloader.
+
+The installation will run for 25-30 minutes and consumes approx 2GB of the disk space.
+
+### Test
+
+To run unit tests execute the below command:
+
+```bash
+make test
+```
+
+### Development
+
+There is a set of prepared Makefile targets to speed up the development.
+
+In particular, use the following Makefile target to run code linters.
+
+```bash
+make lint
+```
+
+Alternatively, you can run linters individually.
+
+```bash
+make lint-bash
+make lint-githubactions
+make lint-json
+make lint-markdown
+make lint-python
+make lint-yaml
+```
+
+To run license compliance validation:
+
+```bash
+make license-check
+```
+
+To see a full list of available Makefile targets:
+
+```bash
+$ make help
+Target               Description
+------               -----------
+default              Run demo
+license-check        Perform a REUSE license check using docker container
+lint                 Run all linters using super-linter
+lint-all             Run super-linter over entire repository
+lint-bash            Run Bash linter using super-linter
+lint-githubactions   Run GitHub Actions linter using super-linter
+lint-json            Run JSON linter using super-linter
+lint-markdown        Run Markdown linter using super-linter
+lint-python          Run Python linter using super-linter
+lint-yaml            Run YAML linter using super-linter
+image                Build Docker image
+test                 Run unit tests in container
+package              Build Debian packages in container
+source-package       Create source package tarball
+yolov8_models        Prepare the yolov8 models
+mobilenet_models     Prepare the mobilenet models
+models               Prepare all models (yolov8 and mobilenet)
+demo                 Run the RealSense AI Demo
+bash                 Open bash shell in container
+clean                Remove Docker image
+```
+
+## Usage
+
+### Platform-Specific Setup
+
+#### Axiomtek Robox500 Platform
 
 The following steps are required in order to enable Axiomtek Robox500 platform to support 4x Intel® RealSense™ GMSL/FAKRA Stereo Camera D457.
 
@@ -50,15 +180,15 @@ Press "Del" or "Esc" button at boot to go into the BIOS. Once in the BIOS, set t
 |Device1 I2C Address|42      |44      |62      |64      |
 |Device2 I2C Address|48      |4a      |68      |6C|
 
-#### Prerequisites
+##### Prerequisites
 
-* [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
-* [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/apt-setup.html)
-* [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-openvino.html)
-* [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install.html)
-* [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/install-npu-driver.html)
+* [Prepare the target system](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html)
+* [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/apt-setup.html)
+* [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/install-openvino.html)
+* [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/install.html)
+* [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/install-npu-driver.html)
 
-#### Install iGPU drivers on 12th Gen Intel® Core™ i7 processor
+##### Install iGPU drivers on 12th Gen Intel® Core™ i7 processor
 
 Run the below command to check for the iGPU driver on 12th Gen Intel® Core™ i7 processor.
 
@@ -84,7 +214,7 @@ Follow the below steps only in case the above iGPU driver is not installed.
 
 2. Reboot the target after installation.
 
-#### Install intel-ipu6 driver
+##### Install intel-ipu6 driver
 
 1. Create a /etc/modprobe.d/blacklist-ipu6.conf file and add the following. This will prevent the loading of the existing intel_ipu6_isys driver.
 
@@ -130,7 +260,7 @@ Follow the below steps only in case the above iGPU driver is not installed.
     license:        GPL
    ```
 
-#### Install librealsense2 and RealSense tools
+##### Install librealsense2 and RealSense tools
 
 Install the librealsense2 and the RealSense tools using the below commands.
 
@@ -138,7 +268,7 @@ Install the librealsense2 and the RealSense tools using the below commands.
 sudo apt install ros-humble-librealsense2-tools
 ```
 
-#### Add the USER to the video and render group
+##### Add the USER to the video and render group
 
 Add the $USER to the video and render group using the following command.
 
@@ -147,52 +277,40 @@ Add the $USER to the video and render group using the following command.
  sudo usermod -a -G render $USER
 ```
 
-## Build from sources
+### Running the Demo
 
-1. [Prepare the target system](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/gsg_robot/prepare-system.html)
+#### Using Docker Container
 
-2. Clone the repository - [edge-ai-suites](https://github.com/open-edge-platform/edge-ai-suites)
-
-   ```bash
-     git clone --recursive https://github.com/open-edge-platform/edge-ai-suites -b release-2025.2.0
-   ```
-
-3. Update the dependencies.
-
-   ```bash
-     sudo apt update
-   ```
-
-4. Build the package.
-
-   ```bash
-     cd edge-ai-suites/robotics-ai-suite/components/multicam-demo
-     mk-build-deps -i --host-arch amd64 --build-arch amd64 -t "apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades" debian/control
-     dpkg-buildpackage
-   ```
-
-## Install
-
-If the debian package is built from the sources then the .deb file is generated in the parent directory. Further, the debian package can also be downloaded and installed from Robotics SDK APT repo. Install the realsense-d457-ai-demo by using the following command.
+Run the demo using Docker:
 
 ```bash
-sudo apt install ros-humble-pyrealsense2-ai-demo
+make demo
 ```
 
----
-**Note:**
+This will:
+- Enable X11 forwarding (`xhost +`)
+- Start the Docker container with proper device access
+- Launch the AI demo with the default configuration
 
-The ros-humble-pyrealsense2-ai-demo installation will also do the following:
+To run with different camera configurations, use one of the following config files:
 
-* Installs all the python dependency packages needed for the demo to run.
-* Downloads the YOLOv8 model files from Ultralytics and generate the models.
-* Download and build the mobilenet-ssd model using the omz_downloader.
+* `config_ros2_v4l2_rs-color-0.js` - for 1x camera input stream
+* `config_ros2_v4l2_rs-color-0_1.js` - for 2x camera input streams
+* `config_ros2_v4l2_rs-color-0_2.js` - for 3x camera input streams
+* `config_ros2_v4l2_rs-color-0_3.js` - for 4x camera input streams (default)
 
-The installation will run for 25-30 minutes and consumes approx 2GB of the disk space.
+To use a different configuration, modify the demo target in the Makefile or run the container manually:
 
----
+```bash
+make bash
+# Inside the container:
+cd src
+source /opt/intel/oneapi/setvars.sh
+source /opt/intel/openvino/setupvars.sh
+python3 pyrealsense2_ai_demo_launcher.py --config=../config/<your-config-file>.js
+```
 
-## Running on Axiomtek Robox500 using 4x Intel® RealSense™ GMSL/FAKRA Stereo Camera D457
+#### Using Installed Package (Axiomtek Robox500 with 4x RealSense GMSL Cameras)
 
 Run the below command to start the application.
 
@@ -207,18 +325,7 @@ $ python3 /opt/ros/humble/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros
 All the four cameras are started, after approx 15-20sec, as shown in the below picture.
 ![4x_RSD457_Object_detection](images/4x_RSD457_Object_detection.png)
 
----
-**Note:**
-
-Use the config file
-
-* config_ros2_v4l2_rs-color-0.js to run the demo for 1x camera input stream.
-* config_ros2_v4l2_rs-color-0_1 to run the demo for 2x camera input streams.
-* config_ros2_v4l2_rs-color-0_2 to run the demo or 3x camera input streams.
-
----
-
-## Troubleshoot and workarounds
+### Troubleshooting
 
 1. ***iGPU driver not found even after installing the driver.***
 
@@ -266,3 +373,11 @@ Open the /etc/default/grub file. Add the following to the **GRUB_CMDLINE_LINUX**
    ```
 
 Reboot the system.
+
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/openvino/pyrealsense2_d457_multicam_object_detection_tutorial.html).
+
+## License
+
+`multicam-demo` is licensed under [Apache 2.0 License](./LICENSES/Apache-2.0.txt).

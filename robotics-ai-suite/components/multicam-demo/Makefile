@@ -194,6 +194,24 @@ clean:
 	@docker rmi ${DOCKER_IMAGE_NAME} 2> /dev/null || (echo "No such image: ${DOCKER_IMAGE_NAME}, exiting make clean command"; exit 1)
 	echo "${DOCKER_IMAGE_NAME} deleted"
 
+help:
+	@printf "%-20s %s\n" "Target" "Description"
+	@printf "%-20s %s\n" "------" "-----------"
+	@grep -E '^[a-zA-Z0-9_%-]+:|^[[:space:]]+@# Help:' Makefile | \
+	awk '\
+		/^[a-zA-Z0-9_%-]+:/ { \
+			target = $$1; \
+			sub(":", "", target); \
+		} \
+		/^[[:space:]]+@# Help:/ { \
+			if (target != "") { \
+				help_line = $$0; \
+				sub("^[[:space:]]+@# Help: ", "", help_line); \
+				printf "%-20s %s\n", target, help_line; \
+				target = ""; \
+			} \
+		}' | sort -k1,1
+
 #----------------------------------------------------------------------------------------------------------------------
 # helper functions
 #----------------------------------------------------------------------------------------------------------------------
