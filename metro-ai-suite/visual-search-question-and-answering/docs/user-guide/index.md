@@ -109,19 +109,19 @@ The UI, built with `streamlit`, allows users to:
 
 ## Learn More
 
-- Check the [System requirements](./system-requirements).
-- Start with the [Get Started](./get-started).
-- Deploy with [Helm chart](./deploy-with-helm).
+- Check the [System requirements](./system-requirements.md).
+- Start with the [Get Started](./get-started.md).
+- Deploy with [Helm chart](./deploy-with-helm.md).
 
 <!--hide_directive
 :::{toctree}
 :hidden:
-:maxdepth: 2
 
 system-requirements
 get-started
 deploy-with-helm
 tutorials
 release-notes
+
 :::
 hide_directive-->
