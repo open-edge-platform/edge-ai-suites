@@ -1,4 +1,4 @@
-# Troubleshoot Guide
+# Troubleshooting Guide
 
 ## 1. Seeing "No Data" in Grafana
 
@@ -112,5 +112,4 @@ fully ready.
 
 **Solution**
 
-No action required --- wait for the deployment to complete and for all
-pods to become ready.
+No action required --- wait for the deployment to complete and for all pods to become ready.

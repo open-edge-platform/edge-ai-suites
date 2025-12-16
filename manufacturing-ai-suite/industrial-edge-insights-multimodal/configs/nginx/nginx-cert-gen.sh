@@ -17,7 +17,7 @@ SHA_ALGO="sha384"
 echo "Generating SSL certificates for Nginx..."
 if [ -d $SSL_DIR ]; then rm -rf $SSL_DIR/*; fi
 
-envsubst '\$HOST_IP \$WHIP_SERVER_PORT\' < /tmp/default.conf.template > /etc/nginx/nginx.conf 
+envsubst '\$MEDIAMTX_SERVER \$WHIP_SERVER_PORT\' < /tmp/default.conf.template > /etc/nginx/nginx.conf 
 
 openssl req -x509 -nodes -days ${DAYS} -${SHA_ALGO} -newkey rsa:${KEY_LENGTH} -keyout $SSL_DIR/key.pem -out $SSL_DIR/cert.pem -subj "/CN=localhost"
 chmod 640 $SSL_DIR/key.pem $SSL_DIR/cert.pem
