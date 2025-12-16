@@ -1,5 +1,16 @@
 # Smart NVR Overview
 
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/smart-nvr">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-nvr/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
 The sample application showcases the use of GenAI-powered vision analytics to
 transform a traditional NVR into a Smart NVR, unlocking advanced insights and
 automation at the edge. It is designed to help developers understand the architecture, setup, and
@@ -65,7 +76,7 @@ The diagram shows the key components of the Smart NVR application. The descripti
 - [How to Use the Application](./how-to-use-application.md): Explore the application's features and verify its functionality.
 - [Support and Troubleshooting](./troubleshooting.md): Find solutions to common issues and troubleshooting steps.
 
-
+<!--hide_directive
 :::{toctree}
 :hidden:
 
@@ -78,4 +89,6 @@ scenescape-integration
 api-reference
 release-notes
 troubleshooting
+
 :::
+hide_directive-->

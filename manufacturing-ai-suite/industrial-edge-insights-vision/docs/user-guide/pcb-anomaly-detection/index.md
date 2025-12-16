@@ -1,10 +1,19 @@
-PCB Anomaly Detection
-==============================
+# PCB Anomaly Detection
+
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
 
 Automated quality control with AI-driven vision systems.
 
-Overview
-########
+## Overview
 
 This Sample Application enables real-time anomaly detection in printed circuit boards
 (PCB) by running inference workflows across multiple AI models. It connects multiple
@@ -12,8 +21,7 @@ video streams from different cameras to AI-powered pipelines, all operating effi
 on a single industrial PC. This solution improves PCB production and compliance by
 anomalies before they can impact operations.
 
-How It Works
-############
+## How It Works
 
 This sample application consists of the following microservices:
 DL Streamer Pipeline Server, Model Registry Microservice(MRaaS), MediaMTX server,
@@ -31,39 +39,35 @@ can be seen on Prometheus UI. Any desired AI model from the Model Registry Micro
 (which can interact with Postgres, Minio and Geti Server for getting the model) can be
 pulled into DL Streamer Pipeline Server and used for inference in the sample application.
 
-.. figure:: ./images/industrial-edge-insights-vision-architecture.drawio.svg
-   :alt: Architecture and high-level representation of the flow of data through the architecture
-
-   Figure 1: Architecture diagram
+![architecture and high-level representation of the flow of data through the architecture](./images/industrial-edge-insights-vision-architecture.drawio.svg)
 
 This sample application is built with the following Intel Edge AI Stack Microservices:
 
-- `DL Streamer Pipeline Server <https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html>`__
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   is an interoperable containerized microservice based on Python for video ingestion and
   deep learning inferencing functions.
-- `Model Registry Microservice <https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-registry/index.html>`__
+- [Model Registry Microservice](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-registry/index.html)
   provides a centralized repository that facilitates the management of AI models
 
 It also consists of the below Third-party microservices:
 
-- `Nginx <https://hub.docker.com/_/nginx>`__
+- [Nginx](https://hub.docker.com/_/nginx)
   is a high-performance web server and reverse proxy that provides TLS termination and unified HTTPS access.
-- `MediaMTX Server <https://hub.docker.com/r/bluenviron/mediamtx>`__
+- [MediaMTX Server](https://hub.docker.com/r/bluenviron/mediamtx)
   is a real-time media server and media proxy that allows to publish webrtc stream.
-- `Coturn Server <https://hub.docker.com/r/coturn/coturn>`__
+- [Coturn Server](https://hub.docker.com/r/coturn/coturn)
   is a media traffic NAT traversal server and gateway.
-- `Open telemetry Collector <https://hub.docker.com/r/otel/opentelemetry-collector-contrib>`__
+- [Open telemetry Collector](https://hub.docker.com/r/otel/opentelemetry-collector-contrib)
   is a set of receivers, exporters, processors, connectors for Open Telemetry.
-- `Prometheus <https://hub.docker.com/r/prom/prometheus>`__
+- [Prometheus](https://hub.docker.com/r/prom/prometheus)
   is a systems and service monitoring system used for viewing Open Telemetry.
-- `Postgres <https://hub.docker.com/_/postgres>`__
+- [Postgres](https://hub.docker.com/_/postgres)
   is object-relational database system that provides reliability and data integrity.
-- `Minio <https://hub.docker.com/r/minio/minio>`__
+- [Minio](https://hub.docker.com/r/minio/minio)
   is high performance object storage that is API compatible with
   Amazon S3 cloud storage service.
 
-Features
-########
+## Features
 
 This sample application offers the following features:
 
@@ -71,27 +75,31 @@ This sample application offers the following features:
 - AI-assisted anomaly detection in PCBs.
 - On-premise data processing for data privacy and efficient use of bandwidth.
 
-.. toctree::
-   :hidden:
+<!--hide_directive
+:::{toctree}
+:hidden:
 
-   overview-architecture
-   system-requirements
-   get-started
-   troubleshooting-guide
-   how-to-change-input-video-source
-   how-to-deploy-using-helm-charts
-   how-to-deploy-with-edge-orchestrator
-   how-to-enable-mlops
-   how-to-manage-pipelines
-   how-to-run-multiple-ai-pipelines
-   how-to-scale-video-resolution
-   how-to-use-an-ai-model-and-video-file-of-your-own
-   how-to-use-opcua-publisher
-   how-to-run-store-frames-in-s3
-   how-to-view-telemetry-data
-   how-to-use-gpu-for-inference
-   how-to-start-mqtt-publisher
-   how-to-benchmark
-   api-reference
-   environment-variables
-   release_notes/Overview
+overview-architecture
+system-requirements
+get-started
+troubleshooting-guide
+how-to-change-input-video-source
+how-to-deploy-using-helm-charts
+how-to-deploy-with-edge-orchestrator
+how-to-enable-mlops
+how-to-manage-pipelines
+how-to-run-multiple-ai-pipelines
+how-to-scale-video-resolution
+how-to-use-an-ai-model-and-video-file-of-your-own
+how-to-use-opcua-publisher
+how-to-run-store-frames-in-s3
+how-to-view-telemetry-data
+how-to-use-gpu-for-inference
+how-to-start-mqtt-publisher
+how-to-benchmark
+api-reference
+environment-variables
+release_notes/Overview
+
+:::
+hide_directive-->

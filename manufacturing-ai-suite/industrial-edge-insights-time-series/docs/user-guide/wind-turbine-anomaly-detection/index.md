@@ -1,5 +1,13 @@
 # Wind Turbine Anomaly Detection
 
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection">
+     GitHub project
+  </a>
+  </div>
+hide_directive-->
+
 This sample app demonstrates a time series use case by detecting anomalous power generation
 patterns in wind turbines, relative to wind speed. By identifying deviations, it helps
 optimize maintenance schedules and prevent potential turbine failures, enhancing
@@ -10,7 +18,6 @@ In this article, you can learn about the architecture of the sample and its data
 If you want to start working with it, instead, check out the
 [Get Started Guide](../get-started.md) or [How-to Guides](../how-to-guides/index.md)
 for Time-series applications.
-
 
 ## App Architecture
 
