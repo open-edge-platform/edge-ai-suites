@@ -302,7 +302,7 @@ services:
     networks:
       - timeseries_network
   dlstreamer-pipeline-server:
-    image: ${DOCKER_REGISTRY}${DLSTREAMER_PIPELINE_SERVER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
+    image: ${DOCKER_REGISTRY}${DLSTREAMER_PIPELINE_SERVER_IMAGE}
     container_name: dlstreamer-pipeline-server
     hostname: dlstreamer-pipeline-server
     read_only: true
