@@ -27,13 +27,13 @@ services:
       - ${RENDER_GROUP_ID}
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
-      - "${HOME}/.Xauthority:/home/openvino/.Xauthority:rw"
-    working_dir: /home/openvino/metro
+      - "${HOME}/.Xauthority:/home/tfcc/.Xauthority:rw"
+    working_dir: /home/tfcc/metro
     entrypoint: /bin/bash
     tty: true
     stdin_open: true
     healthcheck:
-      test: ["CMD", "test", "-d", "/home/openvino/metro"]
+      test: ["CMD", "test", "-d", "/home/tfcc/metro"]
       interval: 30s
       timeout: 3s
       retries: 3
@@ -68,13 +68,13 @@ services:
       - ${RENDER_GROUP_ID}
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
-      - "${HOME}/.Xauthority:/home/openvino/.Xauthority:rw"
-    working_dir: /home/openvino/metro
+      - "${HOME}/.Xauthority:/home/tfcc/.Xauthority:rw"
+    working_dir: /home/tfcc/metro
     entrypoint: /bin/bash
     tty: true
     stdin_open: true
     healthcheck:
-      test: ["CMD", "test", "-d", "/home/openvino/metro"]
+      test: ["CMD", "test", "-d", "/home/tfcc/metro"]
       interval: 30s
       timeout: 3s
       retries: 3

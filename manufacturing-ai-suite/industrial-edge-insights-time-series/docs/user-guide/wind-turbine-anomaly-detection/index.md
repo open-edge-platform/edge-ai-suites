@@ -7,6 +7,14 @@
   </div>
 hide_directive-->
 
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection">
+     GitHub project
+  </a>
+  </div>
+hide_directive-->
+
 This sample app demonstrates a time series use case by detecting anomalous power generation
 patterns in wind turbines, relative to wind speed. By identifying deviations, it helps
 optimize maintenance schedules and prevent potential turbine failures, enhancing

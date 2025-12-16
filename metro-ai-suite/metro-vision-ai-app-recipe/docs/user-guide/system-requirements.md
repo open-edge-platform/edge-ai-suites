@@ -8,23 +8,22 @@ This section provides detailed hardware, software, and platform requirements to 
 - Include supported operating systems, versions, and platform-specific notes.
 -->
 **Operating Systems**
+- Ubuntu 22.04 LTS
 - Ubuntu 24.04 LTS 
 
 **Hardware Platforms**
-- Intel® Core™ processors (i5 or higher)
-- Intel® Xeon® processors (recommended for large deployments)
+- 12th Generation Intel® Core™ processor or above with Intel® HD Graphics or , or Intel® Xeon® processor
 
 ## Minimum Requirements
 | **Component**      | **Minimum Requirement**   | **Recommended**         |
 |---------------------|---------------------------|--------------------------|
-| **Processor**       | Intel® Core™ processor   | Intel® Core™ Ultra 7    |
-| **Memory**          | 8 GB                     | 16 GB                   |
-| **Disk Space**      | 128 GB SSD               | 256 GB SSD              |
-| **GPU/Accelerator** | Integrated GPU           | Integrated/Discrete GPU  |
+| **Processor**       | 12th Generation Intel® Core™ processor and above with Intel® HD Graphics   | Intel® Core™ Ultra Processors (Series 2) also known as Arrow Lake |
+| **Memory**          | 16 GB                     | 16 GB                   |
+| **Disk Space**      | 64 GB                | 128 GB               |
 
 ## Software Requirements
 
 **Required Software**:
-- Docker 24.0 or higher 
+- Docker 27.3.1 or higher
 - Python 3.10+
 - Git

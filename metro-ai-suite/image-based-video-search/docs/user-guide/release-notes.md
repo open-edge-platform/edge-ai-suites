@@ -32,7 +32,7 @@
 Details about the changes, improvements, and known issues in this release of the
 application.
 
-## Version 1.1.0 ( Upcoming release )
+## Version 1.1.0
 
 - Added Nginx reverse proxy server, updated npm packages and python packages
 - Fixed high coverity issues and added healthchecks for compose and helm deployment

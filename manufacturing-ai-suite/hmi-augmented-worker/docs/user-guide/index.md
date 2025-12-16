@@ -1,5 +1,15 @@
-HMI Augmented Worker
-============================================
+# HMI Augmented Worker
+
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/hmi-augmented-worker">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/hmi-augmented-worker/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
 
 The HMI Augmented Worker is a RAG enabled HMI application deployed on Type-2 hypervisors.
 Deploying RAG-enabled HMI applications in a Type-2 hypervisor setup allows flexible and
@@ -8,10 +18,10 @@ a single physical machine.
 
 In this architecture, the HMI application operates within a Windows® virtual machine managed
 by a Type-2 hypervisor such as
-`EMT <https://github.com/open-edge-platform/edge-microvisor-toolkit>`__.
+[EMT](https://github.com/open-edge-platform/edge-microvisor-toolkit).
 The Retrieval-Augmented Generation (RAG) pipeline and supporting AI services are deployed
 natively on a host system, which is EMT in this implementation.
-`Chat Question-and-Answer Core <https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/chat-question-and-answer-core>`__
+[Chat Question-and-Answer Core](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/chat-question-and-answer-core)
 provides the RAG capability.
 This separation ensures robust isolation between the HMI and AI components, enabling
 independent scaling, maintenance, and updates. The setup leverages the strengths of both
@@ -29,15 +39,13 @@ productivity for machine operators. In this sample application, the focus is on 
 an RAG pipeline in a Type-2 Hypervisor-based setup. There is no reference HMI used and the
 user is expected to do the HMI integration using the RAG pipeline APIs provided.
 
-How it works
-############
+## How it works
 
 This section highlights the high-level architecture of the sample application.
 
-High-Level Architecture
-+++++++++++++++++++++++
+### High-Level Architecture
 
-The system has a RAG pipeline reusing ``Chat Question and Answer Core`` application
+The system has a RAG pipeline reusing `Chat Question and Answer Core` application
 running on the host alongside a typical HMI application which is executing on
 the Windows® Guest VM (virtual machine). A knowledge base is initialized by using the
 contents from a pre-configured folder. The folder contains the knowledge base like user
@@ -51,12 +59,9 @@ and runs independently from the HMI application. The HMI application is responsi
 providing the required interface along with associated user experience to enable
 the operator to access this knowledge base.
 
+![HMI augmented worker architecture diagram](./_images/hmi-augmented-worker-architecture.png)
 
-.. image:: ./_images/hmi-augmented-worker-architecture.png
-   :alt: HMI Augmented Worker Architecture Diagram
-
-Chat Question-and-Answer Core (ChatQnA Core)
-++++++++++++++++++++++++++++++++++++++++++++
+### Chat Question-and-Answer Core (ChatQnA Core)
 
 The 'ChatQnA Core' sample application serves as a basic Retrieval Augmented Generation
 (RAG) pipeline, allowing users to pose questions and obtain answers, even from their
@@ -64,14 +69,13 @@ private data corpus. This sample application illustrates the construction of RAG
 It is designed for minimal memory usage, being developed as a single, monolithic application
 with the complete RAG pipeline integrated into one microservice.
 
-The 'ChatQnA Core` application should be setup on the host system. For further details,
-visit `Chat Question-and-Answer Core Sample Application Overview <https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/overview.md>`__.
+The `ChatQnA Core` application should be setup on the host system. For further details,
+visit [Chat Question-and-Answer Core Sample Application Overview](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/overview.md).
 The application is used as is without any changes.
 The configurable parameters like the LLM model, Embedding model, Reranker model, or
 Retriever model are setup based on the HMI application requirement.
 
-File Watcher Service
-++++++++++++++++++++
+### File Watcher Service
 
 The File Watcher Service runs alongside with HMI application on the Windows environment,
 consistently observing file system activities like creation, modification, and deletion.
@@ -80,11 +84,9 @@ When changes are detected, it sends the pertinent file data over the network to 
 Retrieval-Augmented Generation (RAG) workflows. The watcher service logic is shown in
 the following flow diagram:
 
-.. image:: ./_images/file-watcher-implementation-logic.png
-   :alt: File Watcher Service Implementation Logic Flow
+![file watcher service implementation logic flow](./_images/file-watcher-implementation-logic.png)
 
-Human Machine Interface(HMI) Application
-++++++++++++++++++++++++++++++++++++++++
+### Human Machine Interface(HMI) Application
 
 A Human-Machine Interface(HMI) can vary depending on the use case or the creator.
 While HMIs generally serve as interface connecting users to machines, systems, or
@@ -96,17 +98,19 @@ an accurate summary to state that this sample application illustrates how the `C
 RAG pipeline can be executed in a Type-2 Hypervisor setup enabling applications like HMI
 to benefit from it.
 
-Supporting Resources
-####################
+## Supporting Resources
 
 For more comprehensive guidance on beginning, see the
-:doc:`Getting Started Guide <./get-started>`.
+[Getting Started Guide](./get-started).
 
-.. toctree::
-   :hidden:
+<!--hide_directive
+:::{toctree}
+:hidden:
 
-   system-requirements
-   get-started
-   release-notes
-   how-to-build-from-source
-   Source Code <https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/hmi-augmented-worker>
+system-requirements
+get-started
+release-notes
+how-to-build-from-source
+Source Code <https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/hmi-augmented-worker>
+:::
+hide_directive-->

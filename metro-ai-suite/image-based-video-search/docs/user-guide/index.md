@@ -1,12 +1,20 @@
-Image-Based Video Search Sample Application
-===========================================
+# Image-Based Video Search Sample Application
+
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
 
 Performs near real-time analysis and image-based search to detect and retrieve
 objects of interest in large video datasets.
 
-Overview
-########
-
+## Overview
 
 This sample application lets users search live or recorded camera feeds
 by providing an image and view matching objects with location, timestamp,
@@ -20,18 +28,13 @@ You can use this foundation to build solutions for diverse use cases, including
 city infrastructure monitoring and security applications, helping operators
 quickly locate objects of interest across large video datasets.
 
-How it Works
-############
+## How it Works
 
 The application workflow has three stages: inputs, processing, and outputs.
 
-.. figure:: ./_images/architecture.svg
-   :alt: Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.
+![architectural diagram](./_images/architecture.svg)
 
-   Figure 1: Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.
-
-Inputs
-######
+## Inputs
 
 - Video files or live camera streams (simulated or real time)
 - User-provided images or images captured from video for search
@@ -39,8 +42,7 @@ Inputs
 The application includes a demonstration video for testing. The video loops
 continuously and appears in the UI as soon as the application starts.
 
-Processing
-##########
+## Processing
 
 - **Nginx reverse proxy server**: All interactions with user happens via Nginx server. It protects IBVS app by handling SSL/TLS encryption, filtering and validating requests and making the app directly inaccessible from external access.
 - **Video analysis with Deep Learning Streamer Pipeline Server and MediaMTX**:
@@ -63,26 +65,25 @@ Processing
   ImageIngestor, processes them with DL Streamer Pipeline Server, and matches
   them against stored feature vectors in MilvusDB.
 
-Outputs
-#######
+## Outputs
 
 - Matched search results, including metadata, timestamps, confidence scores, and
   frames
 
-.. figure:: ./_images/imagesearch2.png
-   :alt: Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results.
+![application interface screenshot](./_images/imagesearch2.png)
+*Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results*
 
-   Figure 2: Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results
+<!--hide_directive
+:::{toctree}
 
-.. toctree::
-   :hidden:
-
-   Overview
-   overview-architecture
-   system-requirements
-   release-notes
-   get-started
-   how-to-deploy-helm
-   how-to-deploy-with-edge-orchestrator
-   GitHub <https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search>
-   support
+Overview
+overview-architecture
+system-requirements
+release-notes
+get-started
+how-to-deploy-helm
+how-to-deploy-with-edge-orchestrator
+GitHub <https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search>
+support
+:::
+hide_directive-->

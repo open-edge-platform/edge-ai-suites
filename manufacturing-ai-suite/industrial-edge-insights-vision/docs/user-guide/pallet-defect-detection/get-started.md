@@ -24,7 +24,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     cp .env_pallet_defect_detection .env
     ```
 
-3.  Edit the `HOST_IP`, `MTX_WEBRTCICESERVERS2_0_USERNAME` and `MTX_WEBRTCICESERVERS2_0_PASSWORD` environment variables in the `.env` file as follows:
+3.  Edit the below mentioned environment variables in the `.env` file as follows:
 
     ```bash
     HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.

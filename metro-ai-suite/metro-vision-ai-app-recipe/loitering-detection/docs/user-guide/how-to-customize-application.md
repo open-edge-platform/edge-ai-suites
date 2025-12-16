@@ -13,7 +13,7 @@ The system follows a modular architecture:
 
 ## DL Streamer Pipeline Server
 
-> For detailed documentation on Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server), visit the [DL Streamer Pipeline Server Documentation](https://docs.edgeplatform.intel.com/dlstreamer-pipeline-server/3.0.0/user-guide/Overview.html)
+> For detailed documentation on Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server), visit the [DL Streamer Pipeline Server Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 
 ![Pipeline Architecture](_images/pipeline.png)
 
