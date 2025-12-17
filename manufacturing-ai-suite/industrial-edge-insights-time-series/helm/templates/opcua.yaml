@@ -38,6 +38,13 @@ spec:
       labels:
         app: ia-opcua-server
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+        runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        fsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        seccompProfile:
+          type: RuntimeDefault
       {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
       imagePullSecrets:
       - name: registryauth
@@ -47,6 +54,7 @@ spec:
         image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.opcua_server_image }}{{ if .Values.images.image_suffix }}-{{ .Values.images.image_suffix }}{{ end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
+          runAsNonRoot: true
           readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
           capabilities:
@@ -64,11 +72,11 @@ spec:
         - name: CONTINUOUS_SIMULATOR_INGESTION
           value: '{{ .Values.env.CONTINUOUS_SIMULATOR_INGESTION }}'
         volumeMounts:
-        - name: ingestor-{{ .Values.env.SAMPLE_APP }}
-          mountPath: /app/{{ .Values.env.SAMPLE_APP }}.csv
-          subPath: {{ .Values.env.SAMPLE_APP }}.csv
+        - name: simulation-data
+          mountPath: /app/simulation-data
+          readOnly: true
       volumes:
-      - name: ingestor-{{ .Values.env.SAMPLE_APP }}
+      - name: simulation-data
         configMap:
-          name: ingestor-{{ .Values.env.SAMPLE_APP }}
+          name: simulation-data
 {{ end }}

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
 # Physical parameters
-
+---
 dh_parameters:
   d1: 0.089159
   a2: -0.42500
@@ -52,15 +52,15 @@ inertia_parameters:
     wrist_3:
       radius: 0.0375
       length: 0.0345
-    wrist_1:
-      radius: 0.06
-      length: 0.095
-    wrist_2:
-      radius: 0.06
-      length: 0.085
-    wrist_3:
-      radius: 0.0375
-      length: 0.0305
+    # wrist_1:
+    #   radius: 0.06
+    #   length: 0.095
+    # wrist_2:
+    #   radius: 0.06
+    #   length: 0.085
+    # wrist_3:
+    #   radius: 0.0375
+    #   length: 0.0305
 
   center_of_mass:
     shoulder_cog:

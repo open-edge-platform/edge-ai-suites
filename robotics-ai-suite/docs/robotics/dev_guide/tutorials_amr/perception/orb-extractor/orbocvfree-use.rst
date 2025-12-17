@@ -43,8 +43,10 @@ The GPU orb-extractor feature OpenCV free library provides similar features exce
         --threads <integer>    :  Number of threads to run. Default value: 1
         --iterations <integer> :  Number of iterations to run. Default value: 10
 
-      The following command, it will run four threads, each thread is taking two cameras image input.
+   The following command, it will run four threads, each thread is taking two cameras image input.
 
+   .. code-block::
+      
       ./feature_extract --images=2 --threads=4
 
    After executing, the input image will display keypoints in blue color dots.
@@ -90,7 +92,7 @@ The above code illustrates how to store images in Mat2d class object.
     Based on BUILD_OPENCV_FREE=ON, only OpenCV-free dependency code will compile and link to the ``libgpu_orb_ocvfree.so`` library.
     Orb-extractor feature libraries have their own defined classes for *image input* and *keypoint output*.
     For more details, see the */usr/include/orb_type.h* file.
-    This file is installed by the |deb_pack| ``liborb-lze-dev``.
+    This file is installed by the Deb package ``liborb-lze-dev``.
 
 The vector of keypts can be used by application, or convert to different type. This example show how to convert ORB extractor ``KeyPoint`` to ``cv::KeyPoint``.
 

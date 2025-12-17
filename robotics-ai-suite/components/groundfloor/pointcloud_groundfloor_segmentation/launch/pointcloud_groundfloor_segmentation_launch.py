@@ -19,41 +19,56 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction
-from launch.conditions import IfCondition, LaunchConfigurationEquals
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 import launch
 from launch_ros.actions import Node, PushRosNamespace
-from nav2_common.launch import RewrittenYaml
+
 
 def generate_launch_description():
-
     launch_dir = get_package_share_directory('pointcloud_groundfloor_segmentation')
 
     namespace = LaunchConfiguration('namespace')
     pointcloud_topic = LaunchConfiguration('pointcloud_topic')
 
     launch_desc_segmentation = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'launch', 'realsense_groundfloor_segmentation_launch.py')),
-        launch_arguments={'camera_name': 'pseudo_camera'}.items())
+        PythonLaunchDescriptionSource(
+            os.path.join(launch_dir, 'launch', 'realsense_groundfloor_segmentation_launch.py')
+        ),
+        launch_arguments={'camera_name': 'pseudo_camera'}.items(),
+    )
 
     # Create the launch description and populate
-    return LaunchDescription([
-        DeclareLaunchArgument('namespace', description='Namespace of nodes/topics.', default_value=''),
-        DeclareLaunchArgument('pointcloud_topic', description='Name of input pointcloud topic.', default_value='/input/points'),
-        GroupAction([
-            PushRosNamespace(
-                condition=IfCondition(PythonExpression(['"" != "', namespace,'"'])),
-                namespace=namespace),
-
-            Node(
-                package='pointcloud_groundfloor_segmentation',
-                executable='pointcloud_input_node',
-                output='screen',
-                remappings=[('/tf_static', 'tf_static'), ('/tf', 'tf'), ('/input/points', pointcloud_topic)],
-                on_exit=launch.actions.Shutdown()
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                'namespace', description='Namespace of nodes/topics.', default_value=''
             ),
-
-            launch_desc_segmentation
-        ])
-    ])
+            DeclareLaunchArgument(
+                'pointcloud_topic',
+                description='Name of input pointcloud topic.',
+                default_value='/input/points',
+            ),
+            GroupAction(
+                [
+                    PushRosNamespace(
+                        condition=IfCondition(PythonExpression(['"" != "', namespace, '"'])),
+                        namespace=namespace,
+                    ),
+                    Node(
+                        package='pointcloud_groundfloor_segmentation',
+                        executable='pointcloud_input_node',
+                        output='screen',
+                        remappings=[
+                            ('/tf_static', 'tf_static'),
+                            ('/tf', 'tf'),
+                            ('/input/points', pointcloud_topic),
+                        ],
+                        on_exit=launch.actions.Shutdown(),
+                    ),
+                    launch_desc_segmentation,
+                ]
+            ),
+        ]
+    )

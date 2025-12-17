@@ -1,4 +1,4 @@
-# Tutorial 3 - Grafana
+# Visual AI Demo Kit - Tutorial 3
 
 <!--
 **Sample Description**: Learn how to create custom Grafana dashboards that integrate real-time video streams and MQTT data visualization for metro vision AI applications.
@@ -9,6 +9,7 @@ This tutorial guides you through creating a custom Grafana dashboard that displa
 **What You Can Do**: Highlight the developer workflows supported by the guide.
 -->
 By following this guide, you will learn how to:
+
 - **Create Custom Dashboards**: Build new Grafana dashboards tailored for metro vision applications
 - **Integrate Video Streams**: Embed real-time WebRTC video feeds using HTML panels
 - **Visualize MQTT Data**: Create dynamic tables that display live object detection data from MQTT streams
@@ -17,7 +18,7 @@ By following this guide, you will learn how to:
 
 - Verify that your metro vision AI application is running: [Setup Guide](./tutorial-1.md)
 - Verify that your Node Red flow setup is completed: [Node Red Flow](./tutorial-2.md)
-- Access to Grafana dashboard (typically at `http://localhost:3000`)
+- Access to Grafana dashboard (typically at `https://localhost/grafana`)
 - WebRTC streaming service configured and operational
 - MQTT broker running with object detection data feed
 
@@ -26,7 +27,7 @@ By following this guide, you will learn how to:
 ### 1. **Create a New Dashboard**
 
 1. **Access Grafana Interface**:
-   - Open your web browser and navigate to `http://localhost:3000`
+   - Open your web browser and navigate to `https://localhost/grafana`
    - Log in with your Grafana credentials
       - Username: admin
       - Password: admin
@@ -46,9 +47,9 @@ By following this guide, you will learn how to:
    - In the below code update <HOST_IP> to your host IP address. If you are testing on localhost, update it to localhost.
 
    ```html
-   <iframe 
-     src="http://<HOST_IP>:8889/object_detection_1" 
-     style="width:100%;height:500px;" 
+   <iframe
+     src="https://<HOST_IP>/mediamtx/object_detection_1/"
+     style="width:100%;height:500px;"
      allow="autoplay; encrypted-media"
      frameborder="0">
    </iframe>
@@ -58,7 +59,6 @@ By following this guide, you will learn how to:
    - Set panel title to "Live Object Detection Feed"
    - Click "Save Dashboard" to save the panel
    - Adjust panel size as needed.
-
 
 ### 3. **Create MQTT Data Table**
 
@@ -70,11 +70,10 @@ By following this guide, you will learn how to:
 2. **Configure Data Source**:
    - Set your MQTT data source as "grafana-mqtt-datasource"
    - Configure topic to fetch object detection metrics
-   - Update Topic to "inference/enhanced"
+   - Update Topic to "enhanced"
 
 3. **Add Transformations** (Optional):
-   - You can add different types of transformations to this dashboard panel. 
-
+   - You can add different types of transformations to this dashboard panel.
 
 ### 4. **Configure Dashboard Layout**
 
@@ -91,6 +90,8 @@ By following this guide, you will learn how to:
 ## Expected Results
 
 ![Grafana Visualization](images/grafana-visualization.png)
+
+If you are unable to visualize any data, try restarting the inference pipeline.
 
 After completing this tutorial, you should have:
 

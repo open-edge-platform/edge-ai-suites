@@ -14,6 +14,18 @@
 # in the License.
 
 cmake_minimum_required(VERSION 3.8)
+
+# Suppress CMake developer warnings from third-party dependencies (PCL/FLANN)
+set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE INTERNAL "No dev warnings")
+
+# Set CMake policies BEFORE project() to suppress warnings from dependencies
+if(POLICY CMP0074)
+  cmake_policy(SET CMP0074 NEW)  # Use <PackageName>_ROOT variables
+endif()
+if(POLICY CMP0144)
+  cmake_policy(SET CMP0144 NEW)  # Use upper-case <PACKAGENAME>_ROOT variables
+endif()
+
 project(rvc_pose_detector)
 set(PROJECT_NAME_PLUGIN ${PROJECT_NAME}_composable_plugin)
 
@@ -44,6 +56,11 @@ find_package(rvc_messages REQUIRED)
 find_package(rvc_vision_messages REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_eigen REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_sensor_msgs REQUIRED)
 
 # find non-ROS dependencies
 find_package(PCL REQUIRED)
@@ -66,6 +83,9 @@ ament_target_dependencies(${PROJECT_NAME_PLUGIN}
     pcl_conversions
     message_filters
     tf2_eigen
+    tf2_ros
+    tf2_geometry_msgs 
+    tf2_sensor_msgs 
 )
 target_include_directories(${PROJECT_NAME_PLUGIN} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

@@ -7,8 +7,8 @@ This tutorial covers the process of downsampling / reducing the number of points
 
 .. note::
 
-  This tutorial is applicable for execution both within inside and outside a |docker| image. It assumes that the
-  *pcl-oneapi-tutorials* |deb_pack| is installed, and the user has copied the *tutorial*
+  This tutorial is applicable for execution both within inside and outside a Docker image. It assumes that the
+  *pcl-oneapi-tutorials* Deb package is installed, and the user has copied the *tutorial*
   directory from */opt/intel/pcl/oneapi/tutorials/* to a user-writable directory.
 
 
@@ -26,7 +26,10 @@ This tutorial covers the process of downsampling / reducing the number of points
       :linenos:
 
 
-#. Source the |l_oneapi| environment:
+#. This tutorial needs ``boost`` patching to be applied for C++17 as a workaround if the Boost version < 1.83. Refer to `Boost Patching for Compatibility <../installation.html#boost-patching-for-compatibility>`__ for required code changes.
+
+
+#. Source the Intel® oneAPI Base Toolkit environment:
 
    .. code-block::
 

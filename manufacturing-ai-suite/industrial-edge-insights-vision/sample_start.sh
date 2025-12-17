@@ -15,6 +15,7 @@ SCRIPT_DIR=$(dirname $(readlink -f "$0"))
 PIPELINE_ROOT="user_defined_pipelines" # Default root directory for pipelines
 PIPELINE="all"                         # Default to running all pipelines
 PAYLOAD_COPIES=1                       # Default to running a single copy of the payloads
+DEPLOYMENT_TYPE=""                     # Default deployment type (empty for existing flow)
 
 init() {
     # load environment variables from .env file if it exists
@@ -39,6 +40,14 @@ init() {
         exit 1
     fi
 
+    # Set the appropriate HOST_IP with port for curl commands based on deployment type
+    if [[ "$DEPLOYMENT_TYPE" == "helm" ]]; then
+        CURL_HOST_IP="${HOST_IP}:30443"
+        echo "Using Helm deployment - curl commands will use: $CURL_HOST_IP"
+    else
+        CURL_HOST_IP="$HOST_IP"
+        echo "Using default deployment - curl commands will use: $CURL_HOST_IP"
+    fi
 }
 
 load_payload() {
@@ -66,9 +75,9 @@ post_payload() {
     local PIPELINE="$1"
     local PAYLOAD="$2"
     # Post the payload to the REST server
-    echo "Posting payload to REST server at https://$HOST_IP/api/pipelines/$PIPELINE_ROOT/$PIPELINE"
+    echo "Posting payload to REST server at https://$CURL_HOST_IP/api/pipelines/$PIPELINE_ROOT/$PIPELINE"
     # Use curl to post the payload
-    response=$(curl -s -k -w "\n%{http_code}" https://$HOST_IP/api/pipelines/$PIPELINE_ROOT/$PIPELINE -X POST -H "Content-Type: application/json" -d "$PAYLOAD")
+    response=$(curl -s -k -w "\n%{http_code}" https://$CURL_HOST_IP/api/pipelines/$PIPELINE_ROOT/$PIPELINE -X POST -H "Content-Type: application/json" -d "$PAYLOAD")
 
     # Split response and status
     body=$(echo "$response" | sed '$d')
@@ -129,12 +138,11 @@ start_piplines() {
     # load the payload
     load_payload
 
-    # If no arguments are provided, start all pipelines
+    # If no arguments are provided, start only the first pipeline
     if [[ -z "$1" ]]; then
-        echo "Starting all pipelines"
-        for pipeline in $(echo "$ALL_PIPELINES_IN_PAYLOAD" | jq -r '.[].pipeline'); do
-            launch_pipeline "$pipeline"
-        done
+        first_pipeline=$(echo "$ALL_PIPELINES_IN_PAYLOAD" | jq -r '.[0].pipeline')
+        echo "Starting first pipeline: $first_pipeline"
+        launch_pipeline "$first_pipeline"
         return
     fi
     # Expect other arguments to be pipeline names
@@ -155,7 +163,7 @@ start_piplines() {
 }
 
 get_status() {
-    response=$(curl -s -k -w "\n%{http_code}" https://$HOST_IP/api/pipelines/status)
+    response=$(curl -s -k -w "\n%{http_code}" https://$CURL_HOST_IP/api/pipelines/status)
     # Split response and status
     body=$(echo "$response" | sed '$d')
     status=$(echo "$response" | tail -n1)
@@ -174,7 +182,9 @@ err() {
 }
 
 usage() {
-    echo "Usage: $0 [--all] [-p | --pipeline <pipeline_name>] [ -n | --payload-copies ] [-h | --help]"
+    echo "Usage: $0 [helm] [--all] [-p | --pipeline <pipeline_name>] [ -n | --payload-copies ] [-h | --help]"
+    echo "Arguments:"
+    echo "  helm                            For Helm deployment (adds :30443 port to HOST_IP for curl commands)"
     echo "Options:"
     echo "  --all                           Run all pipelines in the config (Default)"
     echo "  -p, --pipeline <pipeline_name>  Specify the pipeline to run"
@@ -184,6 +194,24 @@ usage() {
 }
 
 main() {
+
+    # Check for helm argument first and set DEPLOYMENT_TYPE
+    args=("$@")
+    for i in "${!args[@]}"; do
+        if [[ "${args[i]}" == "helm" ]]; then
+            DEPLOYMENT_TYPE="helm"
+            # Remove helm from the args array
+            unset 'args[i]'
+            break
+        fi
+    done
+
+    # Reconstruct the arguments from the modified array (removing empty elements)
+    filtered_args=()
+    for arg in "${args[@]}"; do
+        [[ -n "$arg" ]] && filtered_args+=("$arg")
+    done
+    set -- "${filtered_args[@]}"
 
     # Check for -n in arg list and set PAYLOAD_COPIES, then remove it from args
     args=("$@")

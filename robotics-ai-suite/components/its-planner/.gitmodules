@@ -1,0 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+[submodule "3rd_party/navigation2"]
+	path = 3rd_party/navigation2
+	url = https://github.com/ros-navigation/navigation2

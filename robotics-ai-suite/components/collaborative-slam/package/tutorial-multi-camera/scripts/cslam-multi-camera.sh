@@ -1,29 +1,58 @@
 #!/bin/bash
-# SPDX-License-Identifier: Apache-2.0
+
 # Copyright (C) 2025 Intel Corporation
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions
-# and limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 cd "$( dirname "$0" )" || exit
 
-BAGS_DIR=/opt/ros/humble/share/bagfiles
-INSTALL_DIR=/opt/ros/humble/share/collab-slam
+# Detect ROS distro
+if [ -z "$ROS_DISTRO" ]; then
+    if [ -f "/opt/ros/jazzy/setup.bash" ]; then
+        export ROS_DISTRO="jazzy"
+    elif [ -f "/opt/ros/humble/setup.bash" ]; then
+        export ROS_DISTRO="humble"
+    else
+        echo "Error: No supported ROS distro found (humble/jazzy)"
+        exit 1
+    fi
+fi
+
+echo "Using ROS distro: $ROS_DISTRO"
+
+# Set paths based on detected distro
+BAGS_DIR=/opt/ros/$ROS_DISTRO/share/bagfiles
+INSTALL_DIR=/opt/ros/$ROS_DISTRO/share/collab-slam
+
+
+# Check if directories exist
+if [ ! -d "$BAGS_DIR" ]; then
+    echo "Error: Bags directory not found: $BAGS_DIR"
+    exit 1
+fi
+
+if [ ! -d "$INSTALL_DIR" ]; then
+    echo "Error: Install directory not found: $INSTALL_DIR"
+    exit 1
+fi
 
 # Include pre-script which handles clean shutdown of all background processes
-. $INSTALL_DIR/pre.sh
+if [ -f "$INSTALL_DIR/pre.sh" ]; then
+    # shellcheck disable=SC1091
+    . "${INSTALL_DIR}/pre.sh"
+else
+    echo "Warning: pre.sh not found in $INSTALL_DIR"
+fi
+
+# Source ROS setup
+echo "Sourcing ROS $ROS_DISTRO setup..."
+# shellcheck disable=SC1090
+source "/opt/ros/${ROS_DISTRO}/setup.bash"
+
+echo "Launch files with ROS $ROS_DISTRO..."
 
 # Launch robot localization
-ros2 run robot_localization ukf_node --ros-args --params-file $INSTALL_DIR/tutorial-multi-camera/ukf_config_two_camera.yaml &
+ros2 run robot_localization ukf_node --ros-args --params-file "${INSTALL_DIR}/tutorial-multi-camera/ukf_config_two_camera.yaml" &
 pid1=$!
 
 # Publish static TF for extrinsic matrices
@@ -47,7 +76,7 @@ pid5=$!
 
 # Save trajectory outputs from trackers and Kalman Filter
 #
-# the trajectories will be stored and then analyzed using cslam-multi-camera-traj-compare.py
+# the trajectories will be stored and then analyzed using cslam-multi-camera-traj_compare.py
 sleep 2
 ros2 topic echo /univloc_tracker_0/kf_pose > /tmp/tracker0.txt &
 pid6=$!
@@ -60,7 +89,7 @@ pid8=$!
 #
 # robot localization package cannot properly handle ROS bags, see details in https://github.com/ros2/rosbag2/issues/299 (no issue using real robot)
 # so we need to use a separate python script to change the timestamp of msgs to current time to avoid the issue
-python3 $INSTALL_DIR/tutorial-multi-camera/play_rosbag_ros2.py $BAGS_DIR/multi-camera use_sim_time=0 keep_time=0 &
+python3 "${INSTALL_DIR}/tutorial-multi-camera/play_rosbag_ros2.py" "${BAGS_DIR}/multi-camera" use_sim_time=0 keep_time=0 &
 pid9=$!
 sleep 2
 pid10=$(pgrep -f "/usr/bin/python3 -c from ros2cli.daemon.daemonize" | head -n 1)

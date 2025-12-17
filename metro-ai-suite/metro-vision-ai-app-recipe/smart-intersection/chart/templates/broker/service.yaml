@@ -4,14 +4,13 @@ metadata:
   name: {{ .Release.Name }}-broker
   namespace: {{ .Release.Namespace }}
 spec:
+  type: ClusterIP
   selector:
     app: {{ .Release.Name }}-broker
   ports:
     - name: mqtt
       protocol: TCP
       port: 1883
-      targetPort: 1883
     - name: mqtt-ws
       protocol: TCP
       port: 1884
-      targetPort: 1884

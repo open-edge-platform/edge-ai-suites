@@ -12,6 +12,7 @@ The following steps will help you get started with using RVC in a reference setu
    
    getstarted/requirements
    getstarted/supported_hw
+   getstarted/camera_setup.rst
    getstarted/prepare_system
    getstarted/install
 

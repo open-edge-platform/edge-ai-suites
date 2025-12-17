@@ -81,13 +81,13 @@ spec:
         - containerPort: {{ .Values.config.nginx.int.https_port }}
         env:
         - name: http_proxy
-          value: ""
+          value: {{ $.Values.env.http_proxy }}
         - name: https_proxy
-          value: ""
+          value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
-          value: ""
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
         - name: NO_PROXY
-          value: ""
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
         volumeMounts:
         - name: nginx-conf
           mountPath: /etc/nginx/nginx.conf

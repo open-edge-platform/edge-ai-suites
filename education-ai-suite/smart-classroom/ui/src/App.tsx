@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom'; // Add this import
 import TopPanel from './components/TopPanel/TopPanel';
 import HeaderBar from './components/Header/Header';
 import Body from './components/common/Body';
 import Footer from './components/Footer/Footer';
+import Modal from './components/Modals/Modal'; // Import your existing Modal
+import SettingsForm from './components/Modals/SettingsForm'; // Import your existing SettingsForm
 import './App.css';
 import MetricsPoller from './components/common/MetricsPoller';
 import { getSettings, pingBackend } from './services/api';
@@ -10,6 +13,7 @@ import { getSettings, pingBackend } from './services/api';
 const App: React.FC = () => {
   const [projectName, setProjectName] = useState<string>('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
   const wasInitiallyUnavailableRef = useRef(false);
   const reloadTriggeredRef = useRef(false);
@@ -62,29 +66,6 @@ const App: React.FC = () => {
     }
   }, [backendStatus]);
 
-  if (backendStatus === 'checking') {
-    return (
-      <div className="app-loading">
-        <div className="loading-content">
-          <div className="spinner"></div>
-          <h2>Connecting to Backend...</h2>
-          <p>Checking backend server availability...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (backendStatus === 'unavailable') {
-    return (
-      <div className="app-error">
-        <div className="error-content">
-          <h1>Backend Connection Lost</h1>
-          <p>Please check your server. Auto reload will occur once backend is up.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="app">
       <MetricsPoller />
@@ -99,6 +80,22 @@ const App: React.FC = () => {
         <Body isModalOpen={isSettingsOpen} />
       </div>
       <Footer />
+      
+      {/* Render modal as portal to document.body using your existing Modal component */}
+      {createPortal(
+        <Modal 
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          showCloseIcon={true}
+        >
+          <SettingsForm 
+            onClose={() => setIsSettingsOpen(false)}
+            projectName={projectName}
+            setProjectName={setProjectName}
+          />
+        </Modal>,
+        document.body
+      )}
     </div>
   );
 };

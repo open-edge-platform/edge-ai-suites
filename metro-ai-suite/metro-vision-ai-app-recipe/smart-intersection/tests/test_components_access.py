@@ -11,7 +11,7 @@ from tests.utils.ui_utils import waiter, driver
 from tests.utils.kubernetes_utils import get_node_port, get_scenescape_kubernetes_url
 from tests.utils.utils import check_urls_access
 from .conftest import (
-  SCENESCAPE_URL,  
+  SCENESCAPE_URL,
   SCENESCAPE_REMOTE_URL,
   GRAFANA_URL,
   GRAFANA_REMOTE_URL,
@@ -45,7 +45,7 @@ def remote_components_access_functionality_check(scenescape_remote_url, grafana_
   Skips the test if any of the remote URL environment variables are not set.
 
   Args:
-    scenescape_remote_url: Remote Scenescape URL to test
+    scenescape_remote_url: Remote SceneScape URL to test
     grafana_remote_url: Remote Grafana URL to test
     influx_remote_url: Remote InfluxDB URL to test
     nodered_remote_url: Remote Node-RED URL to test

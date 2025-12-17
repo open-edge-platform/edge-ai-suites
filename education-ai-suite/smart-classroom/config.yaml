@@ -11,7 +11,7 @@ monitoring:
 models:
   asr:
     provider: openvino # openvino, funasr and openai supported
-    name: whisper-tiny  # can be (whisper-base, whisper-small etc) or paraformer-zh
+    name: whisper-base  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
     models_base_path: "models"
@@ -23,7 +23,7 @@ models:
     device: GPU # GPU or CPU
     weight_format: int8 # supports fp16, int4, int8 (Recommended)
     max_new_tokens: 1024
-    temperature: 0.5 # 0.5 default
+    temperature: 0.3 # 0.5 default
     use_cache: True
     models_base_path: "models"
     language: en # en or zh
@@ -32,11 +32,66 @@ models:
       zh: "你是一个课堂教学助手，根据提供的原始课堂音频的转录文本，以Markdown格式提炼出本节课的核心内容、知识点结构、讲解顺序，解释每个知识点后，用简洁清晰的语言进行总结。注意不要遗漏主要知识点，也不要捏造任何没有提及的知识点，总结要保证知识点真实准确，避免任何冗余或误导性内容。"
     model_hub: huggingface # huggingface or modelscope
 
+  va:
+    models_base_path: "models"
+    threshold: 0.5 # confidence threshold for YOLO detections
+
+mindmap:
+  system_prompt:
+    en: |
+      Generate a Mermaid mindmap with correct syntax. Follow these strict rules:
+ 
+      1. The diagram must start with the keyword: mindmap
+      2. There must be exactly ONE root node, written with double parentheses: root((Your Root Title))
+      3. If the summary contains multiple top-level topics, create a synthetic root such as:
+         - "Class Overview"
+         - "Lecture Summary"
+         - "Main Topics"
+         Then place all major topics as first-level children under this synthetic root.
+      4. Use 2 spaces for each indentation level.
+      5. Do NOT use bullet points, Markdown fences, or multiple mindmap declarations.
+      6. Do NOT include ```mermaid or any Markdown formatting.
+      7. All content must be inside one single mindmap structure.
+ 
+      Example format:
+      mindmap
+        root((Class Overview))
+          Topic A
+            Subtopic A1
+            Subtopic A2
+          Topic B
+            Subtopic B1
+            Subtopic B2
+    zh: 
+      生成正确语法的Mermaid思维导图，严格遵循以下规则：
+ 
+      1. 必须以 mindmap 开头。
+      2. 必须且只能有一个根节点((主题))。
+      3. 如果总结内容包含多个顶级主题，请创建一个合成根节点，如：
+         - “课堂概览”
+         - “课程总结”
+         - “主要内容”
+         然后将所有主要主题作为一级子节点放在该根节点下。
+      4. 每一层缩进使用两个空格。
+      5. 不要使用项目符号、Markdown代码块或多个 mindmap 声明。
+      6. 不要包含 ```mermaid 或任何Markdown格式。
+      7. 所有内容必须包含在一个单一的 mindmap 结构中。
+ 
+      示例格式：
+      mindmap
+        root((课堂主题))
+          部分一
+            子节点A
+            子节点B
+          部分二
+            子节点C
+  min_token: 20
+
 audio_preprocessing:
-  chunk_duration_sec: 30
+  chunk_duration_sec: 15
   silence_threshold: -35  # in dB
   silence_duration: 0.3   # minimum silence length in seconds
-  search_window_sec: 1.5    # how far to look for silence if no silence exactly at chunk boundary
+  search_window_sec: 1    # how far to look for silence if no silence exactly at chunk boundary
   chunk_output_path: chunks/
 
 audio_util:
@@ -48,3 +103,10 @@ audio_util:
 
 pipeline:
   delete_chunks_after_use: true
+
+va_pipeline:
+  mediamtx_path: components/va/bin/mediamtx
+  plugin_path: components/va
+  rtsp_codec: h264 # h264 or h265
+  output_rtsp_url: rtsp://127.0.0.1:8554
+  hls_base_url: http://127.0.0.1:8888

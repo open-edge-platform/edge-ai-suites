@@ -41,18 +41,13 @@ export SAMPLE_APP
 # Example: Run a shell if-else block before starting containers
 define multi_stream_check
 	@if [ "$(num_of_streams)" -gt 1 ]; then \
-		if [ "$(SAMPLE_APP)" = "$(DEFAULT_SAMPLE_APP)" ]; then \
-			TELEGRAF_METRIC_BATCH_SIZE=$$(grep -m1 TELEGRAF_METRIC_BATCH_SIZE $(DOCKER_COMPOSE_FILE) | awk -F ': ' '{print $$2}' | xargs); \
-			LOG_LEVEL=$$(grep -E "^LOG_LEVEL=" $(ENV_FILE) | cut -d'=' -f2); \
-			python3 -m venv ./venv; \
-			. ./venv/bin/activate; \
-			python3 -m pip install -r requirements.txt; \
-			python generate-telegraf-config.py $(num_of_streams) $$LOG_LEVEL $$TELEGRAF_METRIC_BATCH_SIZE $(ingestion_interval) $(1); \
-			deactivate; \
-		else \
-			echo "Multi-stream ingestion is only supported for the 'Wind Turbine Anomaly Detection' sample app."; \
-			exit 1; \
-		fi; \
+		TELEGRAF_METRIC_BATCH_SIZE=$$(grep -m1 TELEGRAF_METRIC_BATCH_SIZE $(DOCKER_COMPOSE_FILE) | awk -F ': ' '{print $$2}' | xargs); \
+		LOG_LEVEL=$$(grep -E "^LOG_LEVEL=" $(ENV_FILE) | cut -d'=' -f2); \
+		python3 -m venv ./venv; \
+		. ./venv/bin/activate; \
+		python3 -m pip install -r requirements.txt; \
+		python generate-telegraf-config.py --no_of_streams $(num_of_streams) --log_level $$LOG_LEVEL --telegraf_metric_batch_size $$TELEGRAF_METRIC_BATCH_SIZE --ingestion_interval $(ingestion_interval) --ingestion_type $(1) --app_name $(SAMPLE_APP); \
+		deactivate; \
 	fi
 endef
 
@@ -68,7 +63,8 @@ ENV_FILE = ./.env
 
 include $(ENV_FILE)
 export $(shell sed 's/=.*//' $(ENV_FILE))
-
+DRI_MOUNT_PATH := $(shell [ -d /dev/dri ] && [ -n "$$(ls -A /dev/dri 2>/dev/null)" ] && echo "/dev/dri" || echo "/dev/null")
+export DRI_MOUNT_PATH
 
 # Build Docker containers
 .PHONY: build
@@ -121,24 +117,6 @@ check_env_variables:
 					exit 1; \
 				fi \
 				;; \
-			MR_PSQL_PASSWORD) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
-					echo "MR_PSQL_PASSWORD length must be a minimum of 10 alphanumeric characters with atleast one digit"; \
-					exit 1; \
-				fi \
-				;; \
-			MR_MINIO_ACCESS_KEY) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
-					echo "MR_MINIO_ACCESS_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit"; \
-					exit 1; \
-				fi \
-				;; \
-			MR_MINIO_SECRET_KEY) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
-					echo "MR_MINIO_SECRET_KEY length must be a minimum of 10 alphanumeric characters with atleast one digit"; \
-					exit 1; \
-				fi \
-				;; \
 		esac; \
 	done
 
@@ -153,10 +131,15 @@ up_mqtt_ingestion: check_env_variables down
 		export TELEGRAF_CONFIG_PATH=/etc/telegraf/Telegraf_multi_stream.conf; \
     fi; \
 	echo "Starting Docker containers..."; \
+	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
 	if [ $(INCLUDE) = 'validation' ]; then \
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-opcua-server=0 -d; \
 	else \
-		$(DOCKER_COMPOSE) up --scale ia-mqtt-publisher=$(num_of_streams) --scale ia-opcua-server=0 -d; \
+		for i in $$(seq 1 $(num_of_streams)); do \
+			echo "Starting ia-mqtt-publisher instance $$i for SAMPLE_APP: $$SAMPLE_APP";\
+			$(DOCKER_COMPOSE) run -d --name ia-mqtt-publisher-$$i -e INSTANCE_ID=$$i ia-mqtt-publisher; \
+		done; \
+		$(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d $(shell $(DOCKER_COMPOSE) config --services | grep -v ia-mqtt-publisher); \
 	fi;
 
 # Run Docker containers
@@ -172,6 +155,7 @@ up_opcua_ingestion: check_env_variables down
     fi; \
 	export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	echo "Starting Docker containers..."; \
+	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
 	if [ $(INCLUDE) = 'validation' ]; then \
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-mqtt-publisher=0 -d ;\
 	else \
@@ -238,7 +222,8 @@ gen_helm_charts:
 	@cp -f configs/influxdb/config/*.conf helm/
 	@cp -f configs/influxdb/init-influxdb.sh helm/
 	@cp -f configs/mqtt-broker/*.conf helm/
-	@cp -f apps/${SAMPLE_APP}/${SAMPLE_APP}.csv helm/
+	@rm -rf helm/simulation-data
+	@cp -rf apps/${SAMPLE_APP}/simulation-data helm/
 	@cp -f apps/${SAMPLE_APP}/telegraf-config/*.conf helm
 	@cp -f apps/${SAMPLE_APP}/time-series-analytics-config/config.json helm/
 	@cp -f configs/telegraf/entrypoint.sh helm/telegraf_entrypoint.sh

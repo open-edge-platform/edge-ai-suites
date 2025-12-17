@@ -28,11 +28,11 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-
 #ifndef OCTREE_CONFIG_H
 #define OCTREE_CONFIG_H
 
 #include <cstdint>
+
 #include "utils/math_utils.h"
 
 #define BLOCK_SIDE 8
@@ -40,48 +40,36 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CAST_STACK_DEPTH 23
 #define SCALE_MASK ((se::key_t)0x1FF)
 
-namespace se {
+namespace se
+{
+
 typedef uint64_t key_t;
-//   typedef long long int morton_type;
-}
+// typedef long long int morton_type;
+
+}  // namespace se
 
 /*
  * Mask generated with:
    MASK[0] = 0x7000000000000000,
    for(int i = 1; i < 21; ++i) {
-   MASK[i] = MASK[i-1] | (MASK[0] >> (i*3));
-   std::bitset<64> b(MASK[i]);
-   std::cout << std::hex << b.to_ullong() << std::endl;
+     MASK[i] = MASK[i-1] | (MASK[0] >> (i*3));
+     std::bitset<64> b(MASK[i]);
+     std::cout << std::hex << b.to_ullong() << std::endl;
    }
  *
 */
-constexpr uint64_t MASK[] = {
-  0x7000000000000000,
-  0x7e00000000000000,
-  0x7fc0000000000000,
-  0x7ff8000000000000,
-  0x7fff000000000000,
-  0x7fffe00000000000,
-  0x7ffffc0000000000,
-  0x7fffff8000000000,
-  0x7ffffff000000000,
-  0x7ffffffe00000000,
-  0x7fffffffc0000000,
-  0x7ffffffff8000000,
-  0x7fffffffff000000,
-  0x7fffffffffe00000,
-  0x7ffffffffffc0000,
-  0x7fffffffffff8000,
-  0x7ffffffffffff000,
-  0x7ffffffffffffe00,
-  0x7fffffffffffffc0,
-  0x7ffffffffffffff8,
-  0x7fffffffffffffff
-};
+
+constexpr uint64_t MASK[] = {0x7000000000000000, 0x7e00000000000000, 0x7fc0000000000000,
+                             0x7ff8000000000000, 0x7fff000000000000, 0x7fffe00000000000,
+                             0x7ffffc0000000000, 0x7fffff8000000000, 0x7ffffff000000000,
+                             0x7ffffffe00000000, 0x7fffffffc0000000, 0x7ffffffff8000000,
+                             0x7fffffffff000000, 0x7fffffffffe00000, 0x7ffffffffffc0000,
+                             0x7fffffffffff8000, 0x7ffffffffffff000, 0x7ffffffffffffe00,
+                             0x7fffffffffffffc0, 0x7ffffffffffffff8, 0x7fffffffffffffff};
 
 #ifdef SE_FIELD_TYPE
 #undef SE_FIELD_TYPE
-#endif
+#endif  // SE_FIELD_TYPE
 #define SE_FIELD_TYPE OFusion
 
-#endif
+#endif  // OCTREE_CONFIG_H

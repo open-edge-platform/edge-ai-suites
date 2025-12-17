@@ -1,20 +1,9 @@
 #!/usr/bin/env python3
+
+# Copyright (C) 2025 Intel Corporation
+# Copyright 2019 Joep Tool ROBOTIS CO., LTD.
 #
-# Copyright 2019 ROBOTIS CO., LTD.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# Authors: Joep Tool
+# SPDX-License-Identifier: Apache-2.0
 
 import os
 
@@ -27,7 +16,9 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
-    launch_file_dir = os.path.join(get_package_share_directory('followme_turtlebot3_gazebo'), 'launch')
+    launch_file_dir = os.path.join(
+        get_package_share_directory('followme_turtlebot3_gazebo'), 'launch'
+    )
     pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
@@ -37,31 +28,31 @@ def generate_launch_description():
     y_pose_gbot = LaunchConfiguration('y_pose_gbot', default='0.0')
 
     # Declare the launch arguments
-    
+
     declare_x_pos_gbot = DeclareLaunchArgument(
-        'x_pose_gbot', default_value='0.0',
-        description='Specify initial x position of the guide robot')
+        'x_pose_gbot',
+        default_value='0.0',
+        description='Specify initial x position of the guide robot',
+    )
     declare_y_pos_gbot = DeclareLaunchArgument(
-        'y_pose_gbot', default_value='0.0',
-        description='Specify initial y position of the guide robot')
+        'y_pose_gbot',
+        default_value='0.0',
+        description='Specify initial y position of the guide robot',
+    )
 
     world = os.path.join(
-        get_package_share_directory('followme_turtlebot3_gazebo'),
-        'worlds',
-        'empty_world.world'
+        get_package_share_directory('followme_turtlebot3_gazebo'), 'worlds', 'empty_world.world'
     )
 
     gzserver_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
         ),
-        launch_arguments={'world': world}.items()
+        launch_arguments={'world': world}.items(),
     )
 
     gzclient_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_gazebo_ros, 'launch', 'gzclient.launch.py')
-        )
+        PythonLaunchDescriptionSource(os.path.join(pkg_gazebo_ros, 'launch', 'gzclient.launch.py'))
     )
 
     # turtlebot: robot state publisher and spawn_entity
@@ -69,17 +60,12 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(launch_file_dir, 'robot_state_publisher.launch.py')
         ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
+        launch_arguments={'use_sim_time': use_sim_time}.items(),
     )
 
     spawn_turtlebot_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(launch_file_dir, 'spawn_turtlebot3.launch.py')
-        ),
-        launch_arguments={
-            'x_pose': x_pose,
-            'y_pose': y_pose
-        }.items()
+        PythonLaunchDescriptionSource(os.path.join(launch_file_dir, 'spawn_turtlebot3.launch.py')),
+        launch_arguments={'x_pose': x_pose, 'y_pose': y_pose}.items(),
     )
 
     # guide robot: robot state publisher and spawn_entity
@@ -87,19 +73,13 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(launch_file_dir, 'gbot_robot_state_publisher.launch.py')
         ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
+        launch_arguments={'use_sim_time': use_sim_time}.items(),
     )
 
     spawn_gbot_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(launch_file_dir, 'spawn_gbot.launch.py')
-        ),
-        launch_arguments={
-            'x_pose': x_pose_gbot,
-            'y_pose': y_pose_gbot
-        }.items()
+        PythonLaunchDescriptionSource(os.path.join(launch_file_dir, 'spawn_gbot.launch.py')),
+        launch_arguments={'x_pose': x_pose_gbot, 'y_pose': y_pose_gbot}.items(),
     )
-
 
     ld = LaunchDescription()
 

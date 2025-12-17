@@ -41,19 +41,27 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Define the arguments
-    parser.add_argument("no_of_streams", type=int, help="Number of streams to generate", default=1)
-    parser.add_argument("log_level", type=str, help="Log level", default="INFO")
-    parser.add_argument("telegraf_metric_batch_size", type=int, help="Telegraf metric batch size", default=100)
-    parser.add_argument("ingestion_interval", type=str, help="Rate of ingestions like 1s, 100ms, 10ms, etc.,", default="1s")
-    parser.add_argument("ingestion_type", type=str, help="Type of ingestion (e.g., 'opcua' or 'mqtt')", default="opcua")
+    parser.add_argument("--no_of_streams", type=int, help="Number of streams to generate", default=1)
+    parser.add_argument("--log_level", type=str, help="Log level", default="INFO")
+    parser.add_argument("--telegraf_metric_batch_size", type=int, help="Telegraf metric batch size", default=100)
+    parser.add_argument("--ingestion_interval", type=str, help="Rate of ingestions like 1s, 100ms, 10ms, etc.", default="1s")
+    parser.add_argument("--ingestion_type", type=str, help="Type of ingestion (e.g., 'opcua' or 'mqtt')", default="opcua")
+    parser.add_argument("--app_name", type=str, help="Application name", default="wind-turbine-anomaly-detection")
 
     # Parse the arguments
     args = parser.parse_args()
     if args.no_of_streams < 1:
         raise ValueError("Number of streams must be greater than 0")
-    dir_path = os.path.join("apps", "wind-turbine-anomaly-detection", "telegraf-config")
+    dir_path = os.path.join("apps", args.app_name, "telegraf-config")
 
-    with open(dir_path + "/Telegraf.conf", 'r') as file:
+    telegraf_conf_path = os.path.join(dir_path, "Telegraf.conf")
+    if not os.path.exists(telegraf_conf_path):
+        raise FileNotFoundError(
+            f"Config file not found: {telegraf_conf_path}. "
+            f"Please verify that '{args.app_name}' is a valid application name with a telegraf-config directory."
+        )
+
+    with open(telegraf_conf_path, 'r') as file:
         # Read the content and replace environment variables with placeholders
         content = file.read()
         content = content.replace("$TELEGRAF_METRIC_BATCH_SIZE", str(args.telegraf_metric_batch_size))

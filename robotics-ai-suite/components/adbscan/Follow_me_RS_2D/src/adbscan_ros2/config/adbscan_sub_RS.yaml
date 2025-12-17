@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+---
 adbscan_sub_node:
   ros__parameters:
     Lidar_type: RS
@@ -22,7 +23,7 @@ adbscan_sub_node:
     max_angular: 0.8
     max_frame_blocked: 2
     tracking_radius: 0.2
-  
+
 adbscan_sub_w_gesture_node:
   ros__parameters:
     Lidar_type: RS

@@ -3,7 +3,7 @@
 Feature Tracking Model: LightGlue
 #################################
 
-LightGlue is a model designed for efficient and accurate feature matching in computer vision tasks. It builds upon the 
+LightGlue is a model designed for efficient and accurate feature matching in computer vision tasks. It builds upon the
 principles of feature matching, which is crucial for applications like image stitching, 3D reconstruction, and visual
 localization. LightGlue aims to provide a lightweight and high-performance solution for these tasks.
 
@@ -33,7 +33,7 @@ robustness and accuracy of feature matching, while also being optimized for real
 
 - Supervised training in 2 stages:
 
-  - First train it to predict correspondences and only after train the confidence classifier. 
+  - First train it to predict correspondences and only after train the confidence classifier.
   - The latter thus does not impact the accuracy at the final layer or the convergence of the training.
 
 **More Information:**
@@ -43,8 +43,8 @@ robustness and accuracy of feature matching, while also being optimized for real
 
 Model Conversion
 ================
-The LightGlue model is trained using |pytorch| but can achieve optimized inference performance on Intel devices using |OpenVINO|.
-To enable this, the |pytorch| model must first be converted to the |OpenVINO| IR format. This process is done in two stages: first converting to ONNX, and then converting to IR format.
+The LightGlue model is trained using PyTorch but can achieve optimized inference performance on Intel devices using OpenVINO™.
+To enable this, the PyTorch model must first be converted to the OpenVINO™ IR format. This process is done in two stages: first converting to ONNX, and then converting to IR format.
 
 .. contents:: Table of Contents
    :local:
@@ -76,10 +76,10 @@ Use the following command to export the LightGlue model to ONNX format:
 Convert ONNX to OpenVINO IR
 ---------------------------
 Ensure OpenVINO is Installed
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
-.. note::  
-   Make sure OpenVINO is installed by following the guide:  
-   :ref:`Install OpenVINO via pip <openvino_install>` 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. note::
+   Make sure OpenVINO is installed by following the guide:
+   :ref:`Install OpenVINO via pip <openvino_install>`
 
 Once the model is in ONNX format, it can be converted to OpenVINO's Intermediate Representation (IR) format using OpenVINO’s command-line model conversion tool, ``ovc``.
 

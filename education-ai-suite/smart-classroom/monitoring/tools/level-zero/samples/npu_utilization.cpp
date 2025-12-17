@@ -180,6 +180,7 @@ int main() {
     while (true) {
         double util = zero.get_engine_utilization(0, 0);
         std::cout << "Utilization : " << util << " %\n";
+        std::cout.flush();
         Sleep(1000); // 1 second delay (Windows)
     }
 

@@ -1,0 +1,55 @@
+# Copyright (c) 2024 Intel Corporation
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mqtt-conf
+  namespace: {{ .Values.namespace }}
+data:
+  mosquitto.conf: |-
+{{ (.Files.Get (printf "apps/%s/configs/mosquitto.conf" .Values.env.SAMPLE_APP)) | indent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Values.config.mqtt_broker.name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: mqtt-broker
+  ports:
+  - name: "mqtt"
+    port: {{ $.Values.config.mqtt_broker.int.mqtt_port }}
+    targetPort: {{ $.Values.config.mqtt_broker.int.mqtt_port }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mqtt-broker
+  name: deployment-{{ $.Values.config.mqtt_broker.name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-broker
+  template:
+    metadata:
+      labels:
+        app: mqtt-broker
+    spec:
+      containers:
+      - name: {{ $.Values.config.mqtt_broker.name }}
+        image: {{ $.Values.images.mqtt_broker }}
+        imagePullPolicy: {{ $.Values.imagePullPolicy }}
+        ports:
+        - containerPort: {{ $.Values.config.mqtt_broker.int.mqtt_port }}
+        volumeMounts:
+        - name: mqtt-conf
+          mountPath: /mosquitto/config/mosquitto.conf
+          subPath: mosquitto.conf
+      volumes:
+      - name: mqtt-conf
+        configMap:
+          name: mqtt-conf

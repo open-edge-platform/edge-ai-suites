@@ -29,7 +29,7 @@ By following this guide, you will learn how to:
 <!--
 **Architecture Image Placeholder**: Add architecture diagram showing the flow from video input through AI models to toll processing output
 -->
-![AI Tolling Sytem Diagram](_images/metro_app_arch.png)
+![AI Tolling Sytem Diagram](_images/metro-vision-ai-app-recipe-architecture.drawio.svg)
 
 
 The AI Tolling system consists of several key components:
@@ -227,6 +227,7 @@ if [ ! -f server.key ] || [ ! -f server.crt ]; then
     chown -R "$(id -u):$(id -g)" server.key server.crt 2>/dev/null || true
 
 fi
+cd ../../../..
 
 # Verify the configuration
 grep SAMPLE_APP= .env
@@ -270,15 +271,7 @@ Expected output should show containers for:
 - `grafana`
 - `mosquitto` (MQTT broker)
 
-### 2. **Access the Application Interface**
-
-Open your web browser and navigate to:
-- **Main Dashboard**: `https://localhost/grafana` (Grafana)
-    - Username: admin
-    - Password: admin
-- **Node-RED Flow Editor**: `https://localhost/nodered/`
-
-### 3. **Test Video Processing**
+### 2. **Test Video Processing**
 
 Start the AI pipeline and process the sample video:
 
@@ -307,17 +300,17 @@ curl -k -s https://localhost/api/pipelines/user_defined_pipelines/car_plate_reco
 }'
 ```
 
-### 4. **View Live Video Stream**
+### 3. **View Live Video Stream**
 
 Access the processed video stream with AI annotations through WebRTC:
 
 ```bash
 # Open in your web browser (replace <HOST_IP> with your actual IP address)
 # For local testing, typically use localhost or 127.0.0.1
-http://localhost/mediamtx/object_detection_1/
+https://<HOST_IP>/mediamtx/object_detection_1/
 ```
 
-For local testing, you can use: `http://localhost/mediamtx/object_detection_1/`
+For local testing, you can use: `https://localhost/mediamtx/object_detection_1/`
 
 ![Vehicle Live Detection](_images/car_live_detection.jpg)
 

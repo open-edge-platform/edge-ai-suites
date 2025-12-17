@@ -1,4 +1,4 @@
-# Getting Started Guide
+# Getting Started Guide - Visual AI Demo Kits
 
 ## Overview
 
@@ -7,6 +7,7 @@ The Visual AI Demo Kit provides a comprehensive demonstration environment for co
 ## Learning Objectives
 
 Upon completion of this guide, you will be able to:
+
 - Install and configure the Visual AI Demo Kit
 - Run pre-configured AI applications with real-time dashboards
 - Execute visual AI inference pipelines on video content
@@ -33,6 +34,7 @@ curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/he
 ![Visual AI Demo Kit Installation](images/visual-ai-demo-kit-install.png)
 
 The installation process configures the following components:
+
 - Docker containerization platform
 - Intel DLStreamer video analytics framework
 - OpenVINO inference optimization toolkit
@@ -53,8 +55,6 @@ Navigate to the metro-vision-ai-app-recipe directory:
 ```bash
 cd ~/metro/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ```
-
-![Visual AI Demo Kit Installation](images/visual-ai-demo-kit-install.png)
 
 ### Step 2: Setup Application and Download Assets
 
@@ -82,6 +82,7 @@ docker ps
 ```
 
 **Expected Services:**
+
 - Grafana Dashboard
 - DL Streamer Pipeline Server
 - MQTT Broker
@@ -100,7 +101,7 @@ Start video streams to run video inference pipelines:
 
 ### Step 5: View the Application Output
 
-1. Open a browser and go to `http://localhost:3000` to access the Grafana dashboard
+1. Open a browser and go to `https://localhost/grafana` to access the Grafana dashboard
    - Change localhost to your host IP if accessing remotely
 2. Log in with the following credentials:
    - **Username**: `admin`
@@ -147,19 +148,25 @@ Expand your visual AI expertise with these comprehensive tutorials that demonstr
 ### Tutorial Series: Advanced Visual AI Applications
 
 #### [Tutorial 1: AI Tolling System Tutorial](tutorial-1.md)
+
 Transform the Smart Parking application into a comprehensive AI-based tolling system. This tutorial covers:
+
 - Converting parking detection algorithms to vehicle toll processing
 - Implementing license plate recognition and vehicle classification
 - Setting up automated toll calculation and payment processing workflows
 
-#### [Tutorial 2: Customizing Node-RED Flows for Metro Vision AI Applications](tutorial-2.md)
+#### [Tutorial 2: Customizing Node-RED Flows for Metro Vision AI Applications](./tutorial-2.md)
+
 Master the art of workflow automation and data processing customization. Learn to:
+
 - Design custom Node-RED flows for visual AI applications
 - Integrate data sources and external APIs
 - Build sophisticated data processing pipelines for real-time analytics
 
-#### [Tutorial 3: Customize Grafana Dashboard for Real-Time Object Detection](tutorial-3.md)
+#### [Tutorial 3: Customize Grafana Dashboard for Real-Time Object Detection](./tutorial-3.md)
+
 Create compelling visualization experiences for your AI applications. This tutorial demonstrates:
+
 - Building custom Grafana panels and widgets for object detection metrics
 - Implementing real-time data visualization with dynamic updates
 - Designing professional dashboards for monitoring and reporting
@@ -167,12 +174,31 @@ Create compelling visualization experiences for your AI applications. This tutor
 ## Additional Resources
 
 ### Technical Documentation
-- [DLStreamer](http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html) - Comprehensive documentation for Intel's GStreamer-based video analytics framework
-- [DLStreamer Pipeline Server](https://docs.openedgeplatform.intel.com/edge-ai-libraries/dlstreamer-pipeline-server/main/user-guide/Overview.html) - RESTful microservice architecture documentation for scalable video analytics deployment
-- [OpenVINO](https://docs.openvino.ai/2025/get-started.html) - Complete reference for Intel's cross-platform inference optimization toolkit
-- [OpenVINO Model Server](https://docs.openvino.ai/2025/model-server/ovms_what_is_openvino_model_server.html) - Model serving infrastructure documentation for production deployments
-- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/dev/ai-libraries.html) - Comprehensive development toolkit documentation and API references
-- [Edge AI Suites](https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html) - Complete application suite documentation with implementation examples
+
+- [DLStreamer](http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html)
+  \- Comprehensive documentation for Intel's GStreamer-based video analytics framework
+- [DLStreamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+  \- RESTful microservice architecture documentation for scalable video analytics deployment
+- [OpenVINO](https://docs.openvino.ai/2025/get-started.html)
+  \- Complete reference for Intel's cross-platform inference optimization toolkit
+- [OpenVINO Model Server](https://docs.openvino.ai/2025/model-server/ovms_what_is_openvino_model_server.html)
+  \- Model serving infrastructure documentation for production deployments
+- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/dev/ai-libraries.html)
+  \- Comprehensive development toolkit documentation and API references
+- [Edge AI Suites](https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html)
+  \- Complete application suite documentation with implementation examples
 
 ### Support Channels
-- [GitHub Issues](https://github.com/open-edge-platform/edge-ai-suites/issues) - Technical issue tracking and community support
+
+- [GitHub Issues](https://github.com/open-edge-platform/edge-ai-suites/issues)
+  \- Technical issue tracking and community support
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+tutorial-1
+tutorial-2
+tutorial-3
+:::
+hide_directive-->

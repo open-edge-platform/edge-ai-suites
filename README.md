@@ -1,6 +1,6 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)]()
 [![Metro-AI-Suite](https://img.shields.io/badge/Metro%20AI%20Suite-3%20Samples-green)]()
-[![Manufacturing-AI-Suite](https://img.shields.io/badge/Manufacturing%20AI%20Suite-3%20Samples-green)]()
+[![Manufacturing-AI-Suite](https://img.shields.io/badge/Manufacturing%20AI%20Suite-8%20Samples-green)]()
 [![Retail-AI-Suite](https://img.shields.io/badge/Retail%20AI%20Suite-2%20Samples-green)]()
 
 # Edge-AI-Suites
@@ -45,7 +45,6 @@ The **Edge AI Suites** project is licensed under the [APACHE 2.0](LICENSE), exce
 | Sample Application | License |
 |:-------------------|:--------|
 |[Smart Intersection](metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection) | [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/LICENSE.txt) |
-|[Video Processing for NVR](metro-ai-suite/video-processing-for-nvr) | [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](metro-ai-suite/video-processing-for-nvr/LICENSE.txt) |
 
 ## Third-Party
 

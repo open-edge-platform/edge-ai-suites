@@ -1,0 +1,21 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+version = 1
+
+[[annotations]]
+path = [
+    ".bdsignore.all",
+    "dependencies/**",
+    "*/debian/**",
+]
+SPDX-FileCopyrightText = "2025 Intel Corporation"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = [
+    "src/fast_mapping_lib/se/**",
+]
+SPDX-FileCopyrightText = "Copyright 2016 Emanuele Vespa, Imperial College London"
+SPDX-License-Identifier = "BSD-3-Clause"

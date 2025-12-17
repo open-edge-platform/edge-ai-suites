@@ -1,6 +1,9 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
-cmake_minimum_required(VERSION 3.5)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# https://docs.ros.org/en/humble/The-ROS2-Project/Contributing/Code-Style-Language-Versions.html#id5
+cmake_minimum_required(VERSION 3.14.4)
 project(its_planner)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -65,16 +68,19 @@ target_link_libraries(${library_name} boost_serialization
 
 target_compile_definitions(${library_name} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
+if($ENV{ROS_DISTRO} STREQUAL "humble")
+  target_compile_definitions(${library_name} PUBLIC "ROS_DISTRO_HUMBLE")
+endif()
+
+if($ENV{ROS_DISTRO} STREQUAL "jazzy")
+  target_compile_definitions(${library_name} PUBLIC "ROS_DISTRO_JAZZY")
+endif()
 
 pluginlib_export_plugin_description_file(nav2_core global_planner_plugin.xml)
 
 install(TARGETS ${library_name}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
-
-install(TARGETS ${executable_name}
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -85,6 +91,31 @@ install(DIRECTORY include/
 install(FILES global_planner_plugin.xml
   DESTINATION share/${PROJECT_NAME}
 )
+
+# Install launch files
+install(DIRECTORY launch/
+  DESTINATION share/${PROJECT_NAME}/launch
+  FILES_MATCHING PATTERN "*.py"
+)
+
+# Install configuration files - ROS distro specific
+if($ENV{ROS_DISTRO} STREQUAL "humble")
+  # Humble specific files
+  install(FILES 
+    nav2_params_humble.yaml
+    nav2_params_dubins_humble.yaml
+    navigate_w_recovery_humble.xml
+    DESTINATION share/${PROJECT_NAME}
+  )
+else()
+  # Default to jazzy for newer distros
+  install(FILES 
+    nav2_params_jazzy.yaml
+    nav2_params_dubins_jazzy.yaml
+    navigate_w_recovery_jazzy.xml
+    DESTINATION share/${PROJECT_NAME}
+  )
+endif()
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

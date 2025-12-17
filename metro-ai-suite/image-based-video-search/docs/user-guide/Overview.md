@@ -23,7 +23,7 @@ quickly locate objects of interest across large video datasets.
 
 The application workflow has three stages: inputs, processing, and outputs.
 
-![Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.](_images/architecture.png)
+![Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.](_images/architecture.svg)
 
 ### Inputs
 
@@ -62,3 +62,9 @@ continuously and appears in the UI as soon as the application starts.
   frames
 
 ![Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results](_images/imagesearch2.png)
+
+### Learn More
+- [System Requirements](system-requirements.md)
+- [Get Started](get-started.md)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+- [Release Notes](release-notes.md)

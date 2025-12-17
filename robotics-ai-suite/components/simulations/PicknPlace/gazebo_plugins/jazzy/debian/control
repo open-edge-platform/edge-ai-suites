@@ -1,0 +1,42 @@
+Source: ros-jazzy-robot-config-plugins
+Section: misc
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+ ros-jazzy-ament-cmake, 
+ gz-harmonic,
+ gz-sim8-cli,
+ libgz-sim8-dev,
+ ros-jazzy-gz-sim-vendor, 
+ ros-jazzy-rclcpp, 
+ ros-jazzy-rosidl-default-generators, 
+ ros-jazzy-std-srvs,
+ ros-jazzy-std-msgs,
+ ros-jazzy-builtin-interfaces,
+ ros-jazzy-ros-gz,
+ ros-jazzy-gz-ros2-control,
+ ros-jazzy-ros2-controllers,
+ ros-jazzy-ros2-control
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-robot-config-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, 
+ gz-harmonic,
+ gz-sim8-cli,
+ libgz-sim8,
+ libgz-sim8-dev,
+ ros-jazzy-gz-sim-vendor, 
+ ros-jazzy-rclcpp, 
+ ros-jazzy-rosidl-default-runtime, 
+ ros-jazzy-std-srvs,
+ ros-jazzy-std-msgs,
+ ros-jazzy-builtin-interfaces,
+ ros-jazzy-ros-gz,
+ ros-jazzy-gz-ros2-control,
+ ros-jazzy-ros2-control,
+ ros-jazzy-ros2-controllers,
+ ros-jazzy-joint-state-publisher,
+ ros-jazzy-robot-state-publisher
+Description: Clear ROS2 Namespace from Gazebo process and Vacuum Gripper Plugin

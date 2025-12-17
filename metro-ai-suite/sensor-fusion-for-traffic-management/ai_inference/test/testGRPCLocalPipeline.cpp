@@ -124,7 +124,7 @@ void workload(const std::string &host,
         // std::vector<std::string> mediaVector;
         getAllFiles(data_path, mediaVector);
         std::sort(mediaVector.begin(), mediaVector.end());
-        
+
         std::cout << "Load " << mediaVector.size() << " files from folder: " << data_path.c_str() << std::endl;
     }
     else if (media_type == "multisensor") {
@@ -453,7 +453,7 @@ int main(int argc, char **argv)
         std::vector<std::string> inputs;  // paths of input bin files
 
         for (unsigned i = 0; i < threadNum; ++i) {
-            std::string reportFileName ="performance_data.json";
+            std::string reportFileName = "performance_data.json";
             std::thread t(workload, std::ref(host), std::ref(port), std::ref(contents), std::ref(dataPath), repeats, mediaType, i, crossStreamNum, warmupFlag,
                           pipeline_repeats, reportFileName);
             vThs.push_back(std::move(t));

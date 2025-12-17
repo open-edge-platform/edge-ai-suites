@@ -24,11 +24,15 @@ class SummarizationService:
     def __init__(self):
         logger.debug(f"SummarizationService initialized")
 
-    def video_upload(self, video_path: Union[str, Path], base_url: str) -> dict:
+    def video_upload(self, video_path: Union[str, Path], base_url: str, camera_name: str) -> dict:
         logger.debug(f"Starting video upload: {video_path}")
 
         try:
             video_path = Path(video_path)  # Ensure consistent use of Path
+            tags = f"{camera_name}"
+            data = {
+                    "tags": tags
+                }
 
             if not video_path.exists():
                 logger.error(f"File does not exist at path: {video_path}")
@@ -48,11 +52,11 @@ class SummarizationService:
                 logger.debug(f"Sending POST request to {upload_url}")
 
                 response = requests.post(
-                    upload_url, files=files, timeout=30
+                    upload_url, files=files, data=data, timeout=30
                 )
 
             response.raise_for_status()
-            logger.info(f"Video uploaded successfully: {video_path}")
+            logger.info(f"Video uploaded successfully: {video_path} and tag: {tags}")
             logger.debug(f"Upload response: {response.json()}")
 
             return response.json()

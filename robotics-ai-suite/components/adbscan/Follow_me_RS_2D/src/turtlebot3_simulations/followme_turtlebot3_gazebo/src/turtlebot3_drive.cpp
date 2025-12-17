@@ -1,18 +1,7 @@
-// Copyright 2019 ROBOTIS CO., LTD.
+// Copyright (C) 2025 Intel Corporation
+// Copyright 2019 Taehun Lim (Darby), Ryan Shim ROBOTIS CO., LTD.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// Authors: Taehun Lim (Darby), Ryan Shim
+// SPDX-License-Identifier: Apache-2.0
 
 #include "followme_turtlebot3_gazebo/turtlebot3_drive.hpp"
 
@@ -20,8 +9,7 @@
 
 using namespace std::chrono_literals;
 
-Turtlebot3Drive::Turtlebot3Drive()
-: Node("turtlebot3_drive_node")
+Turtlebot3Drive::Turtlebot3Drive() : Node("turtlebot3_drive_node")
 {
   /************************************************************
   ** Initialise variables
@@ -43,12 +31,8 @@ Turtlebot3Drive::Turtlebot3Drive()
 
   // Initialise subscribers
   scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-    "scan", \
-    rclcpp::SensorDataQoS(), \
-    std::bind(
-      &Turtlebot3Drive::scan_callback, \
-      this, \
-      std::placeholders::_1));
+    "scan", rclcpp::SensorDataQoS(),
+    std::bind(&Turtlebot3Drive::scan_callback, this, std::placeholders::_1));
   odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
     "odom", qos, std::bind(&Turtlebot3Drive::odom_callback, this, std::placeholders::_1));
 
@@ -71,9 +55,7 @@ Turtlebot3Drive::~Turtlebot3Drive()
 void Turtlebot3Drive::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
   tf2::Quaternion q(
-    msg->pose.pose.orientation.x,
-    msg->pose.pose.orientation.y,
-    msg->pose.pose.orientation.z,
+    msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z,
     msg->pose.pose.orientation.w);
   tf2::Matrix3x3 m(q);
   double roll, pitch, yaw;

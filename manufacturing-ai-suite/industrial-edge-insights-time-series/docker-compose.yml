@@ -3,7 +3,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-version: '3.6'
+
 services:
   ia-telegraf:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -118,11 +118,11 @@ services:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/udfs/:/tmp/${SAMPLE_APP}/udfs/
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/tick_scripts/:/tmp/${SAMPLE_APP}/tick_scripts/
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/config.json:/app/config.json
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/models/:/tmp/${SAMPLE_APP}/models/
-    - /dev/dri:/dev/dri
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/udfs/:/tmp/${SAMPLE_APP}/udfs/:ro
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/tick_scripts/:/tmp/${SAMPLE_APP}/tick_scripts/:ro
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/config.json:/app/config.json:ro
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/models/:/tmp/${SAMPLE_APP}/models/:ro
+    - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:
     # render group ID for ubuntu 20.04 host OS
@@ -134,7 +134,7 @@ services:
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
-    - "/dev/dri:/dev/dri"
+    - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri
 
   ia-grafana:
     image: grafana/grafana-oss:12.0.0-ubuntu
@@ -164,6 +164,9 @@ services:
       GF_PROVISIONING_DASHBOARDS: /etc/grafana/provisioning/dashboards
       GF_SERVER_PROTOCOL: http
       GF_LOG_LEVEL: ${LOG_LEVEL}
+      GF_AUTH_LOGIN_MAXIMUM_INACTIVE_LIFETIME_DURATION: ${VISUALIZER_GRAFANA_INACTIVE_TIMEOUT}
+      GF_AUTH_LOGIN_MAXIMUM_LIFETIME_DURATION: ${VISUALIZER_GRAFANA_INACTIVE_TIMEOUT}
+      GF_SECURITY_LOGIN_REMEMBER_DAYS: "1"
     networks:
     - timeseries_network
     volumes:
@@ -223,7 +226,7 @@ services:
     ports:
     - ${OPCUA_SERVER_PORT}-30048:4840
     volumes:
-    - ./apps/${SAMPLE_APP}/${SAMPLE_APP}.csv:/app/${SAMPLE_APP}.csv
+    - ./apps/${SAMPLE_APP}/simulation-data:/app/simulation-data
 
   ia-mqtt-publisher:
     build:
@@ -235,7 +238,6 @@ services:
         http_proxy:
         https_proxy:
         no_proxy:
-    hostname: ia-mqtt-publisher
     read_only: true
     image: ${DOCKER_REGISTRY}${MQTT_PUBLISHER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
     restart: unless-stopped
@@ -256,7 +258,7 @@ services:
     networks:
     - timeseries_network
     volumes:
-    - ./apps/${SAMPLE_APP}/${SAMPLE_APP}.csv:/${SAMPLE_APP}.csv
+    - ./apps/${SAMPLE_APP}/simulation-data:/simulation-data
 
   nginx:
     image: nginx:1.29.1-bookworm-perl

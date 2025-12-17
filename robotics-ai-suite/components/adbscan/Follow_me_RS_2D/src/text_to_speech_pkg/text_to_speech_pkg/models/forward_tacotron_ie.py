@@ -40,11 +40,15 @@ class ForwardTacotronIE:
         # fixed length of the input embeddings for forward
         self.forward_len = self.forward_net.input_info['data'].input_data.shape[1]
         if self.verbose:
-            print('Forward limitations : {0} symbols and {1} embeddings'.format(self.duration_len, self.forward_len))
+            print(
+                'Forward limitations : {0} symbols and {1} embeddings'.format(
+                    self.duration_len, self.forward_len
+                )
+            )
         self.is_attention = 'pos_mask' in self.forward_net.input_info
         if self.is_attention:
             self.init_pos_mask()
-            print("Load ForwardTacotron with attention")
+            print('Load ForwardTacotron with attention')
         else:
             self.pos_mask = None
 
@@ -62,7 +66,7 @@ class ForwardTacotronIE:
         mask_arr = np.zeros((1, 1, mask_sz, mask_sz), dtype=np.float32)
         width = 2 * window_size + 1
         for i in range(mask_sz - width):
-            mask_arr[0][0][i][i:i + width] = 1.0
+            mask_arr[0][0][i][i: i + width] = 1.0  # fmt: skip
 
         self.pos_mask = mask_arr
 
@@ -99,14 +103,18 @@ class ForwardTacotronIE:
 
     @staticmethod
     def gather(a, dim, index):
-        expanded_index = [index if dim == i else np.arange(a.shape[i]).reshape(
-                                                  [-1 if i == j else 1 for j in range(a.ndim)]) for i in range(a.ndim)]
+        expanded_index = [
+            index
+            if dim == i
+            else np.arange(a.shape[i]).reshape([-1 if i == j else 1 for j in range(a.ndim)])
+            for i in range(a.ndim)
+        ]
         return a[tuple(expanded_index)]
 
     def load_network(self, model_xml):
-        model_bin_name = ".".join(osp.basename(model_xml).split('.')[:-1]) + ".bin"
+        model_bin_name = '.'.join(osp.basename(model_xml).split('.')[:-1]) + '.bin'
         model_bin = osp.join(osp.dirname(model_xml), model_bin_name)
-        print("Loading network files:\n\t{}\n\t{}".format(model_xml, model_bin))
+        print('Loading network files:\n\t{}\n\t{}'.format(model_xml, model_bin))
         net = self.ie.read_network(model=model_xml, weights=model_bin)
         return net
 
@@ -117,43 +125,42 @@ class ForwardTacotronIE:
     def infer_duration(self, sequence, speaker_embedding=None, alpha=1.0, non_empty_symbols=None):
         if self.is_attention:
             input_mask = self.sequence_mask(np.array([[non_empty_symbols]]), sequence.shape[1])
-            pos_mask = self.pos_mask[:, :, :sequence.shape[1], :sequence.shape[1]]
-            inputs = {"input_seq": sequence,
-                      "input_mask": input_mask,
-                      "pos_mask": pos_mask}
+            pos_mask = self.pos_mask[:, :, : sequence.shape[1], : sequence.shape[1]]
+            inputs = {'input_seq': sequence, 'input_mask': input_mask, 'pos_mask': pos_mask}
             if speaker_embedding is not None:
-                inputs["speaker_embedding"] = speaker_embedding
+                inputs['speaker_embedding'] = speaker_embedding
             out = self.duration_predictor_exec.infer(inputs)
         else:
-            out = self.duration_predictor_exec.infer(inputs={"input_seq": sequence})
-        duration = out["duration"] * alpha
+            out = self.duration_predictor_exec.infer(inputs={'input_seq': sequence})
+        duration = out['duration'] * alpha
 
         duration = (duration + 0.5).astype('int').flatten()
         duration = np.expand_dims(duration, axis=0)
-        preprocessed_embeddings = out["embeddings"]
+        preprocessed_embeddings = out['embeddings']
 
         if non_empty_symbols is not None:
             duration = duration[:, :non_empty_symbols]
             preprocessed_embeddings = preprocessed_embeddings[:, :non_empty_symbols]
         indexes = self.build_index(duration, preprocessed_embeddings)
         if self.verbose:
-            print("Index: {0}, duration: {1}, embeddings: {2}, non_empty_symbols: {3}"
-                  .format(indexes.shape, duration.shape, preprocessed_embeddings.shape, non_empty_symbols))
+            print(
+                'Index: {0}, duration: {1}, embeddings: {2}, non_empty_symbols: {3}'.format(
+                    indexes.shape, duration.shape, preprocessed_embeddings.shape, non_empty_symbols
+                )
+            )
 
         return self.gather(preprocessed_embeddings, 1, indexes)
 
     def infer_mel(self, aligned_emb, non_empty_symbols, speaker_embedding=None):
         if self.is_attention:
             data_mask = self.sequence_mask(np.array([[non_empty_symbols]]), aligned_emb.shape[1])
-            pos_mask = self.pos_mask[:, :, :aligned_emb.shape[1], :aligned_emb.shape[1]]
-            inputs = {"data": aligned_emb,
-                      "data_mask": data_mask,
-                      "pos_mask": pos_mask}
+            pos_mask = self.pos_mask[:, :, : aligned_emb.shape[1], : aligned_emb.shape[1]]
+            inputs = {'data': aligned_emb, 'data_mask': data_mask, 'pos_mask': pos_mask}
             if speaker_embedding is not None:
-                inputs["speaker_embedding"] = speaker_embedding
+                inputs['speaker_embedding'] = speaker_embedding
             out = self.forward_exec.infer(inputs)
         else:
-            out = self.forward_exec.infer(inputs={"data": aligned_emb})
+            out = self.forward_exec.infer(inputs={'data': aligned_emb})
         return out['mel'][:, :non_empty_symbols]
 
     def find_optimal_delimiters_position(self, sequence, delimiters, idx, window=20):
@@ -173,7 +180,11 @@ class ForwardTacotronIE:
             sequence = sequence + [_symbol_to_id[' ']] * (self.duration_len - seq_len)
             sequence = np.array(sequence)
             sequence = np.expand_dims(sequence, axis=0)
-            outputs.append(self.infer_duration(sequence, speaker_embedding, alpha, non_empty_symbols=non_empty_symbols))
+            outputs.append(
+                self.infer_duration(
+                    sequence, speaker_embedding, alpha, non_empty_symbols=non_empty_symbols
+                )
+            )
         else:
             punctuation = '.!?,;: '
             delimiters = [_symbol_to_id[p] for p in punctuation]
@@ -181,9 +192,12 @@ class ForwardTacotronIE:
             start_idx = 0
             while start_idx < seq_len:
                 if start_idx + self.duration_len < seq_len:
-                    positions = self.find_optimal_delimiters_position(sequence, delimiters,
-                                                                      start_idx + self.duration_len,
-                                                                      window=self.duration_len//10)
+                    positions = self.find_optimal_delimiters_position(
+                        sequence,
+                        delimiters,
+                        start_idx + self.duration_len,
+                        window=self.duration_len // 10,
+                    )
                 else:
                     positions = {delimiters[0]: seq_len}
                 edge = -1
@@ -192,14 +206,24 @@ class ForwardTacotronIE:
                         edge = positions[d]
                         break
                 if edge < 0:
-                    raise Exception("Bad delimiter position {0} for sequence with length {1}".format(edge, seq_len))
+                    raise Exception(
+                        'Bad delimiter position {0} for sequence with length {1}'.format(
+                            edge, seq_len
+                        )
+                    )
 
                 sub_sequence = sequence[start_idx:edge]
-                non_empty_symbols = len(sub_sequence) + min(1, self.duration_len - len(sub_sequence))
+                non_empty_symbols = len(sub_sequence) + min(
+                    1, self.duration_len - len(sub_sequence)
+                )
                 sub_sequence += [_symbol_to_id[' ']] * (self.duration_len - len(sub_sequence))
                 sub_sequence = np.array(sub_sequence)
                 sub_sequence = np.expand_dims(sub_sequence, axis=0)
-                outputs.append(self.infer_duration(sub_sequence, speaker_embedding, alpha, non_empty_symbols=non_empty_symbols))
+                outputs.append(
+                    self.infer_duration(
+                        sub_sequence, speaker_embedding, alpha, non_empty_symbols=non_empty_symbols
+                    )
+                )
                 start_idx = edge
 
         aligned_emb = np.concatenate(outputs, axis=1)
@@ -213,7 +237,9 @@ class ForwardTacotronIE:
             else:
                 speaker_embedding = self.speaker_embeddings[speaker_id, :]
 
-        aligned_emb = self.forward_duration_prediction_by_delimiters(text, speaker_embedding, alpha)
+        aligned_emb = self.forward_duration_prediction_by_delimiters(
+            text, speaker_embedding, alpha
+        )
 
         mels = []
         start_idx = 0
@@ -222,18 +248,21 @@ class ForwardTacotronIE:
             end_idx = min(start_idx + self.forward_len, aligned_emb.shape[1])
             sub_aligned_emb = aligned_emb[:, start_idx:end_idx, :]
             if sub_aligned_emb.shape[1] < self.forward_len:
-                sub_aligned_emb = np.pad(sub_aligned_emb,
-                                         ((0, 0), (0, self.forward_len - sub_aligned_emb.shape[1]), (0, 0)),
-                                         'constant', constant_values=0)
+                sub_aligned_emb = np.pad(
+                    sub_aligned_emb,
+                    ((0, 0), (0, self.forward_len - sub_aligned_emb.shape[1]), (0, 0)),
+                    'constant',
+                    constant_values=0,
+                )
             if self.verbose:
-                print("SAEmb shape: {0}".format(sub_aligned_emb.shape))
+                print('SAEmb shape: {0}'.format(sub_aligned_emb.shape))
             mel = self.infer_mel(sub_aligned_emb, end_idx - start_idx, speaker_embedding)
             mels.append(mel)
             start_idx += self.forward_len
 
         res = np.concatenate(mels, axis=1)
         if self.verbose:
-            print("MEL shape :{0}".format(res.shape))
+            print('MEL shape :{0}'.format(res.shape))
 
         return res
 
@@ -250,7 +279,7 @@ class ForwardTacotronIE:
         if not self.has_speaker_embeddings():
             return None
 
-        emb = self.male_embeddings if gender == "Male" else self.female_embeddings
+        emb = self.male_embeddings if gender == 'Male' else self.female_embeddings
         pca = PCA()
         projection = pca.build(emb)
         x1 = min(projection)
@@ -260,49 +289,84 @@ class ForwardTacotronIE:
         return emb
 
     def init_speaker_information(self):
-        self.male_idx = [2, 3, 7, 11, 12, 15, 16, 19, 20, 21, 25, 26, 27, 29, 32, 33, 34, 35, 36, 38]
+        self.male_idx = [
+            2,
+            3,
+            7,
+            11,
+            12,
+            15,
+            16,
+            19,
+            20,
+            21,
+            25,
+            26,
+            27,
+            29,
+            32,
+            33,
+            34,
+            35,
+            36,
+            38,
+        ]
         self.female_idx = [0, 1, 4, 5, 6, 8, 9, 10, 13, 14, 17, 18, 22, 23, 24, 28, 30, 31, 37, 39]
-        self.speaker_embeddings = np.array([[-0.4327550530433655, -0.5420686602592468],
-                                   [-0.5264465808868408, -0.6281864643096924],
-                                   [0.15513141453266144, 0.7856010794639587],
-                                   [0.3424123525619507, 0.8129010200500488],
-                                   [-0.6081429719924927, -0.6511518359184265],
-                                   [-0.49752333760261536, -0.8568740487098694],
-                                   [-0.005007751286029816, -1.3364707231521606],
-                                   [0.14275427162647247, 1.121581792831421],
-                                   [-0.45601722598075867, -0.9648892283439636],
-                                   [-0.26137179136276245, -1.1388417482376099],
-                                   [0.12628738582134247, -1.149622917175293],
-                                   [0.34105026721954346, 1.0184416770935059],
-                                   [0.3222722113132477, 1.070836067199707],
-                                   [-0.2694351375102997, -0.9980007410049438],
-                                   [-0.11780811846256256, -1.0476068258285522],
-                                   [0.2472933977842331, 1.1816325187683105],
-                                   [0.04263993725180626, 1.4357256889343262],
-                                   [0.05275965854525566, -1.0010212659835815],
-                                   [-0.17100927233695984, -1.1538763046264648],
-                                   [0.09288709610700607, 1.296027660369873],
-                                   [0.13041983544826508, 1.1497610807418823],
-                                   [0.11197542399168015, 1.0537633895874023],
-                                   [-0.13089995086193085, -1.2036861181259155],
-                                   [0.055261872708797455, -1.338423728942871],
-                                   [0.20335668325424194, -1.2085381746292114],
-                                   [-0.038247253745794296, 1.268439769744873],
-                                   [-0.11069679260253906, 1.050403356552124],
-                                   [-0.19113299250602722, 1.0872247219085693],
-                                   [0.17568981647491455, -1.247299075126648],
-                                   [-0.34791627526283264, 1.0054986476898193],
-                                   [0.2401651293039322, -1.1724580526351929],
-                                   [0.30263951420783997, -1.043319582939148],
-                                   [-0.3040805160999298, 1.1061657667160034],
-                                   [-0.27853792905807495, 1.145222544670105],
-                                   [-0.49230968952178955, 0.9106340408325195],
-                                   [-0.45115727186203003, 0.9025603532791138],
-                                   [-0.49153658747673035, 0.7804651260375977],
-                                   [0.253637433052063, -1.014277696609497],
-                                   [-0.48516881465911865, 0.6745203137397766],
-                                   [0.3036082983016968, -0.8406648635864258]])
-        mask = np.array([True if i in self.male_idx else False for i in range(self.speaker_embeddings.shape[0])])
+        self.speaker_embeddings = np.array(
+            [
+                [-0.4327550530433655, -0.5420686602592468],
+                [-0.5264465808868408, -0.6281864643096924],
+                [0.15513141453266144, 0.7856010794639587],
+                [0.3424123525619507, 0.8129010200500488],
+                [-0.6081429719924927, -0.6511518359184265],
+                [-0.49752333760261536, -0.8568740487098694],
+                [-0.005007751286029816, -1.3364707231521606],
+                [0.14275427162647247, 1.121581792831421],
+                [-0.45601722598075867, -0.9648892283439636],
+                [-0.26137179136276245, -1.1388417482376099],
+                [0.12628738582134247, -1.149622917175293],
+                [0.34105026721954346, 1.0184416770935059],
+                [0.3222722113132477, 1.070836067199707],
+                [-0.2694351375102997, -0.9980007410049438],
+                [-0.11780811846256256, -1.0476068258285522],
+                [0.2472933977842331, 1.1816325187683105],
+                [0.04263993725180626, 1.4357256889343262],
+                [0.05275965854525566, -1.0010212659835815],
+                [-0.17100927233695984, -1.1538763046264648],
+                [0.09288709610700607, 1.296027660369873],
+                [0.13041983544826508, 1.1497610807418823],
+                [0.11197542399168015, 1.0537633895874023],
+                [-0.13089995086193085, -1.2036861181259155],
+                [0.055261872708797455, -1.338423728942871],
+                [0.20335668325424194, -1.2085381746292114],
+                [-0.038247253745794296, 1.268439769744873],
+                [-0.11069679260253906, 1.050403356552124],
+                [-0.19113299250602722, 1.0872247219085693],
+                [0.17568981647491455, -1.247299075126648],
+                [-0.34791627526283264, 1.0054986476898193],
+                [0.2401651293039322, -1.1724580526351929],
+                [0.30263951420783997, -1.043319582939148],
+                [-0.3040805160999298, 1.1061657667160034],
+                [-0.27853792905807495, 1.145222544670105],
+                [-0.49230968952178955, 0.9106340408325195],
+                [-0.45115727186203003, 0.9025603532791138],
+                [-0.49153658747673035, 0.7804651260375977],
+                [0.253637433052063, -1.014277696609497],
+                [-0.48516881465911865, 0.6745203137397766],
+                [0.3036082983016968, -0.8406648635864258],
+            ]
+        )
+        mask = np.array(
+            [
+                True if i in self.male_idx else False
+                for i in range(self.speaker_embeddings.shape[0])
+            ]
+        )
         self.male_embeddings = self.speaker_embeddings[mask, :]
-        mask = np.array([True if i in self.female_idx else False for i in range(self.speaker_embeddings.shape[0])])
+        mask = np.array(
+            [
+                True if i in self.female_idx else False
+                for i in range(self.speaker_embeddings.shape[0])
+            ]
+        )
         self.female_embeddings = self.speaker_embeddings[mask, :]

@@ -32,7 +32,7 @@ def pad_tensor(x, pad, side='both'):
     total = t + 2 * pad if side == 'both' else t + pad
     padded = np.zeros((b, total, c), dtype=np.float)
     if side in ('before', 'both'):
-        padded[:, pad:pad + t, :] = x
+        padded[:, pad: pad + t, :] = x  # fmt: skip
     elif side == 'after':
         padded[:, :t, :] = x
     return padded
@@ -40,7 +40,7 @@ def pad_tensor(x, pad, side='both'):
 
 # https://github.com/fatchord/WaveRNN
 def fold_with_overlap(x, target, overlap):
-    ''' Fold the tensor with overlap for quick batched inference.
+    """Fold the tensor with overlap for quick batched inference.
         Overlap will be used for crossfading in xfade_and_unfold()
 
     Args:
@@ -62,14 +62,16 @@ def fold_with_overlap(x, target, overlap):
         folded = [[h1, h2, h3, h4],
                   [h4, h5, h6, h7],
                   [h7, h8, h9, h10]]
-    '''
+    """
 
     _, total_len, features = x.shape
 
     # Calculate variables needed
     num_folds = (total_len - overlap) // (target + overlap)
     if num_folds < 1:
-        raise ValueError('Too short mel-spectrogram with width {0}. Try longer sentence.'.format(total_len))
+        raise ValueError(
+            'Too short mel-spectrogram with width {0}. Try longer sentence.'.format(total_len)
+        )
     log_2 = math.log2(num_folds)
     optimal_batch_sz = 2 ** int(math.ceil(log_2))
 
@@ -98,7 +100,6 @@ def fold_with_overlap(x, target, overlap):
 
     folded = np.zeros((num_folds, target + 2 * overlap, features), dtype=np.float)
 
-
     # Get the values for the folded tensor
     for i in range(num_folds):
         start = i * (target + overlap)
@@ -110,7 +111,7 @@ def fold_with_overlap(x, target, overlap):
 
 # https://github.com/fatchord/WaveRNN
 def xfade_and_unfold(y, overlap):
-    ''' Applies a crossfade and unfolds into a 1d array.
+    """Applies a crossfade and unfolds into a 1d array.
 
     Args:
         y (ndarry)    : Batched sequences of audio samples
@@ -138,7 +139,7 @@ def xfade_and_unfold(y, overlap):
 
         [seq1_in, seq1_target, (seq1_out + seq2_in), seq2_target, ...]
 
-    '''
+    """
     num_folds, length = y.shape
     target = length - 2 * overlap
     total_len = num_folds * (target + overlap) + overlap
@@ -176,7 +177,7 @@ def xfade_and_unfold(y, overlap):
 
 def get_one_hot(argmaxes, n_classes):
     res = np.eye(n_classes)[np.array(argmaxes).reshape(-1)]
-    return res.reshape(list(argmaxes.shape)+[n_classes])
+    return res.reshape(list(argmaxes.shape) + [n_classes])
 
 
 def infer_from_discretized_mix_logistic(params):
@@ -192,22 +193,25 @@ def infer_from_discretized_mix_logistic(params):
     nr_mix = params.shape[1] // 3
 
     # B x T x C
-    y = params #np.transpose(params, (1, 0))
+    y = params  # np.transpose(params, (1, 0))
     logit_probs = y[:, :nr_mix]
 
     temp = np.random.uniform(low=1e-5, high=1.0 - 1e-5, size=logit_probs.shape)
-    temp = logit_probs - np.log(- np.log(temp))
+    temp = logit_probs - np.log(-np.log(temp))
     argmax = np.argmax(temp, axis=-1)
 
     one_hot = get_one_hot(argmax, nr_mix).astype(dtype=float)
 
-    means = np.sum(y[:, nr_mix:2 * nr_mix] * one_hot, axis=-1)
-    log_scales = np.clip(np.sum(
-        y[:, 2 * nr_mix:3 * nr_mix] * one_hot, axis=-1), a_min=log_scale_min, a_max=None)
+    means = np.sum(y[:, nr_mix: 2 * nr_mix] * one_hot, axis=-1)  # fmt: skip
+    log_scales = np.clip(
+        np.sum(y[:, 2 * nr_mix: 3 * nr_mix] * one_hot, axis=-1),
+        a_min=log_scale_min,
+        a_max=None,
+    )  # fmt: skip
 
     u = np.random.uniform(low=1e-5, high=1.0 - 1e-5, size=means.shape)
-    x = means + np.exp(log_scales) * (np.log(u) - np.log(1. - u))
+    x = means + np.exp(log_scales) * (np.log(u) - np.log(1.0 - u))
 
-    x = np.clip(x, a_min=-1., a_max=1.)
+    x = np.clip(x, a_min=-1.0, a_max=1.0)
 
     return x

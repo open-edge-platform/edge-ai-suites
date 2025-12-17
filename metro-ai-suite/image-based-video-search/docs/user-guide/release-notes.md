@@ -32,9 +32,11 @@
 Details about the changes, improvements, and known issues in this release of the
 application.
 
-## Version 1.0.2-pre-RC1 ( Upcoming release )
+## Version 1.1.0
 
-- Added healthchecks for compose and helm deployment
+- Added Nginx reverse proxy server, updated npm packages and python packages
+- Fixed high coverity issues and added healthchecks for compose and helm deployment
+- DL Streamer and DL Streamer Pipeline Server versions upgraded to 2025.2
 
 ## Version 1.0.1
 

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
-from setuptools import setup, find_packages
+from setuptools import setup
 
 package_name = 'picknplace'
 
@@ -9,7 +9,7 @@ setup(
     version='0.0.0',
     packages=[package_name],
     py_modules=[],
-    package_dir={'': 'scripts'}
+    package_dir={'': 'scripts'},
     install_requires=['setuptools'],
     zip_safe=True,
     author='ECI Maintainer',
@@ -30,7 +30,7 @@ setup(
             'cube_controller = scripts.cube_controller:main',
             'arm1_controller = scripts.arm1_controller:main',
             'arm2_controller = scripts.arm2_controller:main',
-            'turtlebot_controller = scripts.turtlebot_controller:main',            
+            'turtlebot_controller = scripts.turtlebot_controller:main',
         ],
     },
 )

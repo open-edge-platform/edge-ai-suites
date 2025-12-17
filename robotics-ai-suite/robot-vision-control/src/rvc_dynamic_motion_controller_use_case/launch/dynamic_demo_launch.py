@@ -58,6 +58,9 @@ from launch.actions import OpaqueFunction
 
 packageName = "rvc_dynamic_motion_controller_use_case"
 
+# Detect ROS distro for compatibility
+ros_distro = os.environ.get('ROS_DISTRO', 'humble')
+
 def load_yaml(package_path, file_path):
     absolute_file_path = os.path.join(package_path, file_path)
 
@@ -74,6 +77,10 @@ def launch_setup(context, *args, **kwargs):
     # UR specific arguments
     #ur_type_arg = LaunchConfiguration( "ur_type", default="ur5e")
     #robot_ip_arg = LaunchConfiguration( "robot_ip", default="10.11.12.99")
+    
+    myRSModelTypeConf = LaunchConfiguration("rs_model")
+    myRSModelType= context.perform_substitution(myRSModelTypeConf)
+    
     launch_rviz_arg = LaunchConfiguration( "launch_rviz", default="false")
     headless_mode_arg = LaunchConfiguration( "headless_mode", default="false")
 
@@ -153,8 +160,10 @@ def launch_setup(context, *args, **kwargs):
     visual_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "visual_parameters.yaml"]
     )
+    # Use external_control.urscript for Jazzy, ros_control.urscript for Humble
     script_filename = PathJoinSubstitution(
-        [FindPackageShare("ur_robot_driver"), "resources", "ros_control.urscript"]
+        [FindPackageShare("ur_robot_driver"), "resources",
+         "external_control.urscript" if ros_distro == "jazzy" else "ros_control.urscript"]
     )
     input_recipe_filename = PathJoinSubstitution(
         [FindPackageShare("ur_robot_driver"), "resources", "rtde_input_recipe.txt"]
@@ -384,7 +393,7 @@ def launch_setup(context, *args, **kwargs):
 
     )
 
-    camera_xacro_path = robot_demo_main_dir + '/cameraurdf/d415camera' + whoAmI_arg + '.xacro'
+    camera_xacro_path = robot_demo_main_dir + '/cameraurdf/' + myRSModelType + 'camera' + whoAmI_arg + '.xacro'
     camera_robot_state_publisher_node = Node(
             name='camera_robot_state_publisher',
 
@@ -528,13 +537,13 @@ def launch_setup(context, *args, **kwargs):
             )
         ]
     if ((motion_controller_string == "servo") or (motion_controller_string == "linear_controller")):
-       nodes_to_start.append(io_and_status_controller_spawner) 
-       nodes_to_start.append(dashboard_client_node) 
+       #nodes_to_start.append(io_and_status_controller_spawner) 
+       #nodes_to_start.append(dashboard_client_node) 
        nodes_to_start.append(control_node) 
        nodes_to_start.append(joint_state_broadcaster_spawner) 
        nodes_to_start.append(robot_controller_spawner) 
        nodes_to_start.append(gripper_forward_command_controller_spawner)
-       nodes_to_start.append(joint_trajectory_controller_node)
+       #nodes_to_start.append(joint_trajectory_controller_node)
        nodes_to_start.append(gripper_sensor_broadcaster)
     return nodes_to_start
 
@@ -581,10 +590,11 @@ def generate_launch_description():
         )
     )
     # General arguments
+    # Use ur_robot_driver for Jazzy (ur_bringup merged into it), ur_bringup for Humble
     declared_arguments.append(
         DeclareLaunchArgument(
             "runtime_config_package",
-            default_value="ur_bringup",
+            default_value="ur_robot_driver" if ros_distro == "jazzy" else "ur_bringup",
             description='Package with the controller\'s configuration in "config" folder. \
         Usually the argument is not set, it enables use of a custom setup.',
         )
@@ -727,6 +737,14 @@ def generate_launch_description():
             "script_command_port",
             default_value="50004",
             description="Port that will be opened to forward script commands from the driver to the robot",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument( 
+            "rs_model", 
+            description="model type, can be d405, d415, d435, d455",
+            default_value="d415",
+            choices=['d405', 'd415', 'd435', 'd455']
         )
     )
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)] )

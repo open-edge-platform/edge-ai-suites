@@ -26,64 +26,79 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * */
-
 #ifndef UNIQUE_HPP
 #define UNIQUE_HPP
+
 #include <se/octant_ops.hpp>
 
-namespace se {
-namespace algorithms {
-  template <typename T>
-    inline int unique(T* keys, int num_keys){
-      int end = 1;
-      if(num_keys < 2) return end;
-      for (int i = 1; i < num_keys; ++i){
-        if(keys[i] != keys[i-1]){
-          keys[end] = keys[i];
-          ++end;
-        }
-      }
-      return end;
-    }
+namespace se
+{
+namespace algorithms
+{
 
-  template <typename KeyT>
-    inline int filter_ancestors(KeyT* keys, int num_keys, const int max_depth) {
-      int e = 0;
-      for (int i = 0; i < num_keys; ++i){
-        if(keyops::descendant(keys[i], keys[e], max_depth)){
-          keys[e] = keys[i];
-        } else {
-          /* end does not advance but previous entry is overwritten */
-          keys[++e] = keys[i];
-        }
-      }
-      return e + 1;
-    }
+template <typename T>
+inline int unique(T * keys, int num_keys)
+{
+  int end = 1;
+  if (num_keys < 2) {
+    return end;
+  }
 
-  template <typename KeyT>
-    inline int unique_multiscale(KeyT* keys, int num_keys,
-        const KeyT , const unsigned current_level){
-      int e = 0;
-      int tmp;
-      // Find the first key whose level is not smaller than the current level.
-      for (tmp = 0; tmp < num_keys; tmp++) {
-        KeyT level_tmp = se::keyops::level(keys[tmp]);
-        if (level_tmp >= current_level) break;
-      }
-      keys[e] = keys[tmp];
-      for (int i = tmp + 1; i < num_keys; ++i){
-        const KeyT level = se::keyops::level(keys[i]);
-        if(level >= current_level) {
-          if(se::keyops::code(keys[i]) != se::keyops::code(keys[e])){
-            keys[++e] = keys[i];
-          } else if(se::keyops::level(keys[i]) > se::keyops::level(keys[e])) {
-            /* end does not advance but previous entry is overwritten */
-            keys[e] = keys[i];
-          }
-        }
-      }
-      return e + 1;
+  for (int i = 1; i < num_keys; ++i) {
+    if (keys[i] != keys[i - 1]) {
+      keys[end] = keys[i];
+      ++end;
     }
+  }
+
+  return end;
 }
+
+template <typename KeyT>
+inline int filter_ancestors(KeyT * keys, int num_keys, const int max_depth)
+{
+  int e = 0;
+  for (int i = 0; i < num_keys; ++i) {
+    if (keyops::descendant(keys[i], keys[e], max_depth)) {
+      keys[e] = keys[i];
+    } else {
+      // end does not advance but previous entry is overwritten
+      keys[++e] = keys[i];
+    }
+  }
+
+  return e + 1;
 }
-#endif
+
+template <typename KeyT>
+inline int unique_multiscale(KeyT * keys, int num_keys, const KeyT, const unsigned current_level)
+{
+  int e = 0;
+  int tmp;
+  // Find the first key whose level is not smaller than the current level.
+  for (tmp = 0; tmp < num_keys; tmp++) {
+    KeyT level_tmp = se::keyops::level(keys[tmp]);
+    if (level_tmp >= current_level) {
+      break;
+    }
+  }
+  keys[e] = keys[tmp];
+  for (int i = tmp + 1; i < num_keys; ++i) {
+    const KeyT level = se::keyops::level(keys[i]);
+    if (level >= current_level) {
+      if (se::keyops::code(keys[i]) != se::keyops::code(keys[e])) {
+        keys[++e] = keys[i];
+      } else if (se::keyops::level(keys[i]) > se::keyops::level(keys[e])) {
+        // end does not advance but previous entry is overwritten
+        keys[e] = keys[i];
+      }
+    }
+  }
+
+  return e + 1;
+}
+
+}  // namespace algorithms
+}  // namespace se
+
+#endif  // UNIQUE_HPP

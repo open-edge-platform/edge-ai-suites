@@ -1,0 +1,93 @@
+# Copyright (c) 2025 Intel Corporation.
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: {{ $.Values.namespace }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ $.Values.config.prometheus.int.prometheus_port }}
+      targetPort: {{ $.Values.config.prometheus.int.prometheus_port }}
+      protocol: TCP
+      name: http
+  selector:
+    app: prometheus
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: prometheus
+  name: deployment-prometheus
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: prometheus
+          image: prom/prometheus:latest
+          ports:
+            - containerPort: {{ $.Values.config.prometheus.int.prometheus_port }}
+          command:
+            - /bin/prometheus
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --web.route-prefix=/prometheus
+            - --web.external-url=https://{{ $.Values.env.HOST_IP }}:30443/prometheus
+          env:
+            - name: HTTP_PROXY
+              value: {{ $.Values.env.http_proxy }}
+            - name: HTTPS_PROXY
+              value: {{ $.Values.env.https_proxy }}
+            - name: NO_PROXY
+              value: otel-collector,localhost,127.0.0.1,{{ $.Values.env.HOST_IP }}
+          volumeMounts:
+            - name: prometheus-config-input
+              mountPath: /etc/prometheus/prometheus.yml
+              subPath: prometheus.yml
+            - name: prometheus-data
+              mountPath: /prometheus
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: prometheus-config-input
+          configMap:
+            name: prometheus-config
+        - name: prometheus-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 10s  # Scrape metrics every 10 seconds
+
+    scrape_configs:
+      - job_name: 'otel-log-collector'
+        static_configs:
+           - targets: ['otel-collector:{{ $.Values.config.otel_collector.int.otlp_prometheus_endpoint_port }}']

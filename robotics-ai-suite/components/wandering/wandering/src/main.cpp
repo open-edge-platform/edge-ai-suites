@@ -17,14 +17,13 @@ and limitations under the License.
 
 #include <memory>
 
-#include "rclcpp/rclcpp.hpp"
-
 #include "WanderingMapper.h"
-
+#include "rclcpp/rclcpp.hpp"
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
+
   try {
     auto wanderingWrapper = std::make_shared<WanderingMapper>();
     rclcpp::spin(wanderingWrapper);
@@ -33,6 +32,8 @@ int main(int argc, char * argv[])
     rclcpp::shutdown();
     return 1;
   }
+
   rclcpp::shutdown();
+
   return 0;
 }

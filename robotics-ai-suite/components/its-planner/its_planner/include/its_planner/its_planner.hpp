@@ -49,10 +49,17 @@ public:
   // plugin deactivate
   void deactivate() override;
 
+#ifdef ROS_DISTRO_HUMBLE
   // This method creates path for given start and goal pose.
   nav_msgs::msg::Path createPlan(
     const geometry_msgs::msg::PoseStamped & start,
     const geometry_msgs::msg::PoseStamped & goal) override;
+#else
+  nav_msgs::msg::Path createPlan(
+    const geometry_msgs::msg::PoseStamped & start,
+    const geometry_msgs::msg::PoseStamped & goal,
+    std::function<bool()>) override;
+#endif
 
 private:
   // TF buffer

@@ -13,7 +13,7 @@ The system follows a modular architecture:
 
 ## DL Streamer Pipeline Server
 
-> For detailed documentation on DL Streamer Pipeline Server, visit the [DL Streamer Pipeline Server Documentation](https://eiidocs.intel.com/IEdgeInsights/EdgeVideoAnalyticsMicroservice/eii/README.html)
+> For detailed documentation on DL Streamer Pipeline Server, visit the [DL Streamer Pipeline Server Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 
 ![Pipeline Architecture](_images/pipeline.png)
 
@@ -34,9 +34,9 @@ The DL Streamer Pipeline Server utilizes GStreamer pipelines to define the flow 
 
 ##### Object Detection Pipelines (YOLOv11s Series)
 
-Pipelines like `yolov11s_1_cpu`, `yolov11s_1_gpu`, `yolov11s_1_npu` etc., are used to identify objects in the video frames.
+Pipelines like `yolov11s`, `yolov11s_gpu`, `yolov11s_npu` etc., are used to identify objects in the video frames.
 
-*   **Pipelines:** `yolov11s_1_cpu`, `yolov11s_1_gpu`, `yolov11s_1_npu`
+*   **Pipelines:** `yolov11s`, `yolov11s_gpu`, `yolov11s_npu`
 *   **How They Work:**
     *   **Video Source:** Uses GStreamer to capture live video.
     *   **Decoding & Detection:** The pipeline decodes the video stream and uses the `gvadetect` element with a YOLO model (located at `/home/pipeline-server/models/public/yolo11s/INT8/yolo11s.xml`) to identify objects.

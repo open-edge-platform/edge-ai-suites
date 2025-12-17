@@ -1,4 +1,4 @@
-# Overview 
+# Overview
 
 <!--Please add the introduction section in the index.rst file-->
 
@@ -29,7 +29,7 @@ The key benefits are as follows:
 <!--If you are updating this section. Please update in the how-it-works.rst file-->
 This section provides a high-level view of how the application integrates with a typical system architecture.
 
-![High-Level System Diagram](./_images/architecture.png)
+![High-Level System Diagram](./_images/smart-intersection-architecture.drawio.svg)
 
 ### Example Content for Diagram Description
 - **Inputs**:
@@ -55,5 +55,7 @@ This section provides a high-level view of how the application integrates with a
 - [System Requirements](system-requirements.md): Check the hardware and software requirements for deploying the application.
 - [Get Started](get-started.md): Follow step-by-step instructions to set up the application.
 - [How to Deploy with Helm](how-to-deploy-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
+- [SceneScape](https://docs.openedgeplatform.intel.com/dev/scenescape/index.html): Intel Scene-based AI software framework.
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
 - [Support and Troubleshooting](support.md): Find solutions to common issues and troubleshooting steps.
 

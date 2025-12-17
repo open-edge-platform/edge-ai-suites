@@ -1,8 +1,46 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 build/
 .vscode/
-.clang-format
 *.swp
 config/visualize_server.rviz
 .obj-x86_64-linux-gnu*
 *.deb
+*.ddeb
 tmp/
+
+# Build artifacts
+*.buildinfo
+*.changes
+*.dsc
+*.tar.gz
+*-build-deps_*
+**/CMakeFiles/
+
+# Debian packaging artifacts (consolidated)
+**/debian/.debhelper/
+**/debian/debhelper-build-stamp
+**/debian/files
+**/debian/*.orig
+**/debian/*.log
+**/debian/*.substvars
+**/debian/ros-*/
+slam/openvslam/debian/
+
+# Other build files
+*.o
+*.bin
+*.pyc
+*/*.d
+
+# Local development files
+Dockerfile
+build*.sh
+local-entrypoint.sh
+local_docker/
+info.txt
+
+# Backup files 
+*.backup

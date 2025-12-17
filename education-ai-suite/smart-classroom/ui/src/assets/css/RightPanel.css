@@ -9,7 +9,10 @@
   overflow-x: hidden;
   padding: 12px 8px; 
 }
-
+.container.fullscreen .right-panel {
+  margin-top: 70vh; /* Push the RightPanel below the full-screen VideoStream */
+  z-index: 1000; /* Ensure it stays above the background */
+}
 
 .platform-configuration,
 .software-performance {

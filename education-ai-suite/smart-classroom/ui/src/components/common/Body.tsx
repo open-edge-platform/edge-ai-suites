@@ -9,10 +9,7 @@ interface BodyProps {
 
 const Body: React.FC<BodyProps> = ({ isModalOpen }) => {
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
-
-  const toggleRightPanel = () => {
-    setIsRightPanelCollapsed(!isRightPanelCollapsed);
-  };
+  const toggleRightPanel = () => setIsRightPanelCollapsed(!isRightPanelCollapsed);
 
   return (
     <div className="container">
@@ -22,29 +19,18 @@ const Body: React.FC<BodyProps> = ({ isModalOpen }) => {
       <div className="right-panel" style={{ flex: isRightPanelCollapsed ? 0 : 1 }}>
         <RightPanel />
       </div>
-      {/* <div
-        className="divider"
-        style={{ left: isRightPanelCollapsed ? '100%' : '50%' }}
-      /> */}
       {!isModalOpen && (
         <div
-        className={`arrow${isRightPanelCollapsed ? ' collapsed' : ''}`}
-        style={{
-          left: isRightPanelCollapsed ? 'calc(100% - 38px)' : 'calc(50% - 14px)',
-          top: '50%',
-          transform: 'translateY(-50%)'
-        }}
-        onClick={toggleRightPanel}
-      >
-        {isRightPanelCollapsed ? "◀" : "▶"}
-      </div>
-      //   <div
-      //   className={`arrow${isRightPanelCollapsed ? ' collapsed' : ''}`}
-      //   style={{ left: isRightPanelCollapsed ? 'calc(100% - 38px)' : 'calc(50% - 14px)' }}
-      //   onClick={toggleRightPanel}
-      // >
-      //   {isRightPanelCollapsed ? "◀" : "▶"}
-      // </div>
+          className={`arrow${isRightPanelCollapsed ? ' collapsed' : ''}`}
+          style={{
+            left: isRightPanelCollapsed ? 'calc(100% - 38px)' : 'calc(50% - 14px)',
+            top: '50%',
+            transform: 'translateY(-50%)'
+          }}
+          onClick={toggleRightPanel}
+        >
+          {isRightPanelCollapsed ? "◀" : "▶"}
+        </div>
       )}
     </div>
   );

@@ -1,4 +1,11 @@
 <?xml version="1.0" ?>
+
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 <net name="quartznet-15x5-en" version="10">
 	<layers>
 		<layer id="0" name="audio_signal" type="Parameter" version="opset1">

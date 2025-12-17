@@ -1,0 +1,27 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+version = 1
+
+[[annotations]]
+path = [
+    "**/debian/**",
+    "**/*.jpg",
+    "**/*.png",
+    "**/*.gif",
+    "**/*.bin",
+    "**/*.world",
+    "**/*.urdf",
+    "**/*.dae",
+    "**/*.sdf",
+    "**/*.wav",
+    "**/*.task",
+    "**/model.config",
+    "**/*.mapping",
+    "**/*.rviz",
+    "**/*.txt",
+    "**/*.json",
+]
+SPDX-FileCopyrightText = "2025 Intel Corporation"
+SPDX-License-Identifier = "Apache-2.0"

@@ -26,9 +26,14 @@
           <!-- Box or plane geometry is used -->
         <box><size>0.05 0.05 0.05</size></box></geometry>
         <material>
-          <script>
-            <name>marker_id_0</name>
-          <uri>model://marker_0/materials/scripts/</uri><uri>model://marker_0/materials/textures/</uri></script>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>1 1 1 1</specular>
+          <pbr>
+            <metal>
+              <albedo_map>model://marker_0/materials/textures/marker0.png</albedo_map>
+            </metal>
+          </pbr>
         </material>
       </visual>
       <inertial>

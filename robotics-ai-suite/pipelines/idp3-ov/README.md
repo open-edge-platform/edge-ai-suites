@@ -31,8 +31,8 @@ git am ../patches/0001-Fix-unsafe-PyTorch-load-issue.patch
 
 ## Next Steps
 
-After completing the source code setup, please refer to the [Robotics AI Suite documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/embodied/developer_tools_tutorials/model_tutorials/model_idp3.html) to build and run the sample pipeline.
+After completing the source code setup, please refer to the [Robotics AI Suite documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/developer_tools_tutorials/model_tutorials/model_idp3.html) to build and run the sample pipeline.
 
 ## Support
 
-For issues related to the OpenVINO optimizations, please consult the [Robotics AI Suite documentation](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/embodied/developer_tools_tutorials/model_tutorials/model_idp3.html) or contact the development team.
+For issues related to the OpenVINO optimizations, please consult the [Robotics AI Suite documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/developer_tools_tutorials/model_tutorials/model_idp3.html) or contact the development team.

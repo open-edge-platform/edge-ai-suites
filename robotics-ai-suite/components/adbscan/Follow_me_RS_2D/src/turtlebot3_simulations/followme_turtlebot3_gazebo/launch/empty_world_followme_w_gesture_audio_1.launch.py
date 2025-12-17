@@ -1,19 +1,9 @@
 #!/usr/bin/env python3
-#
+
+# Copyright (C) 2025 Intel Corporation
 # Copyright 2019 ROBOTIS CO., LTD.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# SPDX-License-Identifier: Apache-2.0
 
 import os
 
@@ -26,7 +16,9 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    launch_file_dir = os.path.join(get_package_share_directory('followme_turtlebot3_gazebo'), 'launch')
+    launch_file_dir = os.path.join(
+        get_package_share_directory('followme_turtlebot3_gazebo'), 'launch'
+    )
     pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
@@ -38,14 +30,13 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(launch_file_dir, 'empty_world_multibot.launch.py')
         ),
-        launch_arguments={
-            'x_pose_gbot': x_pose_gbot,
-            'y_pose_gbot': y_pose_gbot
-        }.items()
+        launch_arguments={'x_pose_gbot': x_pose_gbot, 'y_pose_gbot': y_pose_gbot}.items(),
     )
 
     # Adbscan node
-    # adbscan_params_file = os.path.join(get_package_share_directory('adbscan_ros2_follow_me'),'config','adbscan_sub_RS.yaml')
+    # adbscan_params_file = os.path.join(
+    #     get_package_share_directory('adbscan_ros2_follow_me'), 'config', 'adbscan_sub_RS.yaml'
+    # )
     # adbscan_node = Node(
     #     package="adbscan_ros2_follow_me",
     #     executable="adbscan_sub_w_gesture_audio",
@@ -56,11 +47,15 @@ def generate_launch_description():
     # )
 
     # Gesture node
-    gesture_recognition_params_file = os.path.join(get_package_share_directory('gesture_recognition_pkg'),'config','gesture_recognition_v2.yaml')
+    gesture_recognition_params_file = os.path.join(
+        get_package_share_directory('gesture_recognition_pkg'),
+        'config',
+        'gesture_recognition_v2.yaml',
+    )
     gesture_recognition_node = Node(
-        package="gesture_recognition_pkg",
-        executable="gesture_recognition_node.py",
-        parameters=[gesture_recognition_params_file, {'use_sim_time': sim_mode}]
+        package='gesture_recognition_pkg',
+        executable='gesture_recognition_node.py',
+        parameters=[gesture_recognition_params_file, {'use_sim_time': sim_mode}],
     )
 
     # traj_and_img_publisher node
@@ -70,11 +65,13 @@ def generate_launch_description():
     #     parameters=[gesture_recognition_params_file, {'use_sim_time': sim_mode}]
     # )
     # Audio node
-    speech_recognition_params_file = os.path.join(get_package_share_directory('speech_recognition_pkg'),'config','speech_recognition.yaml')
+    speech_recognition_params_file = os.path.join(
+        get_package_share_directory('speech_recognition_pkg'), 'config', 'speech_recognition.yaml'
+    )
     speech_recognition_node = Node(
-        package="speech_recognition_pkg",
-        executable="speech_recognition_node.py",
-        parameters=[speech_recognition_params_file, {'use_sim_time': sim_mode}]
+        package='speech_recognition_pkg',
+        executable='speech_recognition_node.py',
+        parameters=[speech_recognition_params_file, {'use_sim_time': sim_mode}],
     )
     # audio_file_publisher node
     # audio_file_publisher_node = Node(
@@ -83,7 +80,7 @@ def generate_launch_description():
     #     parameters=[speech_recognition_params_file, {'use_sim_time': sim_mode}],
     #     output = "screen"
     # )
-    
+
     ld = LaunchDescription()
 
     # Add the commands to the launch description
@@ -93,6 +90,5 @@ def generate_launch_description():
     ld.add_action(speech_recognition_node)
     # ld.add_action(traj_and_img_publisher_node)
     # ld.add_action(audio_file_publisher_node)
-
 
     return ld

@@ -30,7 +30,7 @@
 #
 # Author: Andrej Orsula
 
-'''
+"""
 Update:
 As of the time of this writing, the official Python bindings for MoveIt2,
 designed to be compatible with ROS 2 Humble, were not yet fully developed.
@@ -43,7 +43,7 @@ are updated and fully compatible with ROS 2 Humble.
 Please be aware that this file represents a modified version of the original.
 The alterations primarily address bug fixes in the initialization process.
 
-'''
+"""
 
 import threading
 from typing import List, Optional, Tuple, Union
@@ -80,6 +80,7 @@ from shape_msgs.msg import Mesh, MeshTriangle, SolidPrimitive
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 import time
 
+
 class MoveIt2:
     """
     Python interface for MoveIt 2 that enables planning and execution of trajectories.
@@ -92,12 +93,12 @@ class MoveIt2:
         joint_names: List[str],
         base_link_name: str,
         end_effector_name: str,
-        group_name: str = "arm",
-        namespace_prefix: str = "",
+        group_name: str = 'arm',
+        namespace_prefix: str = '',
         execute_via_moveit: bool = False,
         ignore_new_calls_while_executing: bool = False,
         callback_group: Optional[CallbackGroup] = None,
-        follow_joint_trajectory_action_name: str = "arm_controller/follow_joint_trajectory",
+        follow_joint_trajectory_action_name: str = 'arm_controller/follow_joint_trajectory',
     ):
         """
         Construct an instance of `MoveIt2` interface.
@@ -109,10 +110,13 @@ class MoveIt2:
           - `execute_via_moveit` - Flag that enables execution via MoveGroup action (MoveIt 2)
                                    FollowJointTrajectory action (controller) is employed otherwise
                                    together with a separate planning service client
-          - `ignore_new_calls_while_executing` - Flag to ignore requests to execute new trajectories
+          - `ignore_new_calls_while_executing` - Flag to ignore requests
+                                                 to execute new trajectories
                                                  while previous is still being executed
-          - `callback_group` - Optional callback group to use for ROS 2 communication (topics/services/actions)
-          - `follow_joint_trajectory_action_name` - Name of the action server for the controller
+          - `callback_group` - Optional callback group
+                               to use for ROS 2 communication (topics/services/actions)
+          - `follow_joint_trajectory_action_name` - Name of the action server
+                                                    for the controller
         """
 
         self._node = node
@@ -122,7 +126,7 @@ class MoveIt2:
         # Create subscriber for current joint states
         self._node.create_subscription(
             msg_type=JointState,
-            topic=self.namespace_prefix + "joint_states",
+            topic=self.namespace_prefix + 'joint_states',
             callback=self.__joint_state_callback,
             qos_profile=QoSProfile(
                 durability=QoSDurabilityPolicy.VOLATILE,
@@ -138,7 +142,7 @@ class MoveIt2:
             self.__move_action_client = ActionClient(
                 node=self._node,
                 action_type=MoveGroup,
-                action_name=self.namespace_prefix + "move_action",
+                action_name=self.namespace_prefix + 'move_action',
                 goal_service_qos_profile=QoSProfile(
                     durability=QoSDurabilityPolicy.VOLATILE,
                     reliability=QoSReliabilityPolicy.RELIABLE,
@@ -175,7 +179,7 @@ class MoveIt2:
             # Otherwise create a separate service client for planning
             self._plan_kinematic_path_service = self._node.create_client(
                 srv_type=GetMotionPlan,
-                srv_name=self.namespace_prefix + "plan_kinematic_path",
+                srv_name=self.namespace_prefix + 'plan_kinematic_path',
                 qos_profile=QoSProfile(
                     durability=QoSDurabilityPolicy.VOLATILE,
                     reliability=QoSReliabilityPolicy.RELIABLE,
@@ -189,7 +193,7 @@ class MoveIt2:
         # Create a separate service client for Cartesian planning
         self._plan_cartesian_path_service = self._node.create_client(
             srv_type=GetCartesianPath,
-            srv_name=self.namespace_prefix + "compute_cartesian_path",
+            srv_name=self.namespace_prefix + 'compute_cartesian_path',
             qos_profile=QoSProfile(
                 durability=QoSDurabilityPolicy.VOLATILE,
                 reliability=QoSReliabilityPolicy.RELIABLE,
@@ -239,8 +243,10 @@ class MoveIt2:
         )
 
         self.__collision_object_publisher = self._node.create_publisher(
-            CollisionObject, self.namespace_prefix + "collision_object", 10
+            CollisionObject, self.namespace_prefix + 'collision_object', 10
         )
+
+        self._node.get_logger().debug("before running __init_move_action_goal ")
 
         self.__joint_state_mutex = threading.Lock()
         self.__joint_state = None
@@ -251,11 +257,13 @@ class MoveIt2:
             end_effector=end_effector_name,
         )
 
-        # Flag to determine whether to execute trajectories via MoveIt2, or rather by calling a separate action with the controller itself
+        # Flag to determine whether to execute trajectories via MoveIt2,
+        # or rather by calling a separate action with the controller itself
         # Applies to `move_to_pose()` and `move_to_configuraion()`
         self.__execute_via_moveit = execute_via_moveit
 
-        # Flag that determines whether a new goal can be send while the previous one is being executed
+        # Flag that determines whether a new goal can be send
+        # while the previous one is being executed
         self.__ignore_new_calls_while_executing = ignore_new_calls_while_executing
 
         # Store additional variables for later use
@@ -271,7 +279,6 @@ class MoveIt2:
 
         # Event that enables waiting until async future is done
         self.__future_done_event = threading.Event()
-
 
     def move_to_pose(
         self,
@@ -297,7 +304,7 @@ class MoveIt2:
         if self.__execute_via_moveit:
             if self.__ignore_new_calls_while_executing and self.__is_executing:
                 self._node.get_logger().warn(
-                    "Controller is already following a trajectory. Skipping motion."
+                    'Controller is already following a trajectory. Skipping motion.'
                 )
                 return
             self.__is_motion_requested = True
@@ -315,9 +322,7 @@ class MoveIt2:
             )
             # Define starting state as the current state
             if self.joint_state is not None:
-                self.__move_action_goal.request.start_state.joint_state = (
-                    self.joint_state
-                )
+                self.__move_action_goal.request.start_state.joint_state = self.joint_state
             # Send to goal to the server (async) - both planning and execution
             self._send_goal_async_move_action()
             # Clear all previous goal constrains
@@ -354,7 +359,7 @@ class MoveIt2:
         if self.__execute_via_moveit:
             if self.__ignore_new_calls_while_executing and self.__is_executing:
                 self._node.get_logger().warn(
-                    "Controller is already following a trajectory. Skipping motion."
+                    'Controller is already following a trajectory. Skipping motion.'
                 )
                 return
             self.__is_motion_requested = True
@@ -368,9 +373,7 @@ class MoveIt2:
             )
             # Define starting state as the current state
             if self.joint_state is not None:
-                self.__move_action_goal.request.start_state.joint_state = (
-                    self.joint_state
-                )
+                self.__move_action_goal.request.start_state.joint_state = self.joint_state
             # Send to goal to the server (async) - both planning and execution
             self._send_goal_async_move_action()
             # Clear all previous goal constrains
@@ -391,9 +394,7 @@ class MoveIt2:
     def plan(
         self,
         position: Optional[Union[Point, Tuple[float, float, float]]] = None,
-        quat_xyzw: Optional[
-            Union[Quaternion, Tuple[float, float, float, float]]
-        ] = None,
+        quat_xyzw: Optional[Union[Quaternion, Tuple[float, float, float, float]]] = None,
         joint_positions: Optional[List[float]] = None,
         joint_names: Optional[List[str]] = None,
         frame_id: Optional[str] = None,
@@ -441,15 +442,11 @@ class MoveIt2:
         # Define starting state for the plan (default to the current state)
         if start_joint_state is not None:
             if isinstance(start_joint_state, JointState):
-                self.__move_action_goal.request.start_state.joint_state = (
-                    start_joint_state
-                )
+                self.__move_action_goal.request.start_state.joint_state = start_joint_state
             else:
-                self.__move_action_goal.request.start_state.joint_state = (
-                    init_joint_state(
-                        joint_names=self.__joint_names,
-                        joint_positions=start_joint_state,
-                    )
+                self.__move_action_goal.request.start_state.joint_state = init_joint_state(
+                    joint_names=self.__joint_names,
+                    joint_positions=start_joint_state,
                 )
         elif self.joint_state is not None:
             self.__move_action_goal.request.start_state.joint_state = self.joint_state
@@ -477,7 +474,7 @@ class MoveIt2:
 
         if self.__ignore_new_calls_while_executing and self.__is_executing:
             self._node.get_logger().warn(
-                "Controller is already following a trajectory. Skipping motion."
+                'Controller is already following a trajectory. Skipping motion.'
             )
             return
         self.__is_motion_requested = True
@@ -488,7 +485,7 @@ class MoveIt2:
 
         if follow_joint_trajectory_goal is None:
             self._node.get_logger().warn(
-                "Cannot execute motion because the provided/planned trajectory is invalid."
+                'Cannot execute motion because the provided/planned trajectory is invalid.'
             )
             self.__is_motion_requested = False
             return
@@ -497,25 +494,25 @@ class MoveIt2:
 
     def wait_until_executed(self):
         """
-        Wait until the previously requested motion is finalised through either a success or failure.
+        Wait until the previously requested motion is finalised
+        through either a success or failure.
         """
 
         if not self.__is_motion_requested:
             self._node.get_logger().warn(
-                "Cannot wait until motion is executed (no motion is in progress)."
+                'Cannot wait until motion is executed (no motion is in progress).'
             )
             return
 
         while self.__is_motion_requested or self.__is_executing:
             self.__wait_until_executed_rate.sleep()
 
-    def reset_controller(
-        self, joint_state: Union[JointState, List[float]], sync: bool = True
-    ):
+    def reset_controller(self, joint_state: Union[JointState, List[float]], sync: bool = True):
         """
         Reset controller to a given `joint_state` by sending a dummy joint trajectory.
         This is useful for simulated robots that allow instantaneous reset of joints.
         """
+        self._node.get_logger().warn("trigger reset_controller")
 
         if not isinstance(joint_state, JointState):
             joint_state = init_joint_state(
@@ -580,27 +577,17 @@ class MoveIt2:
         constraint = PositionConstraint()
 
         # Define reference frame and target link
-        constraint.header.frame_id = (
-            frame_id if frame_id is not None else self.__base_link_name
-        )
-        constraint.link_name = (
-            target_link if target_link is not None else self.__end_effector_name
-        )
+        constraint.header.frame_id = frame_id if frame_id is not None else self.__base_link_name
+        constraint.link_name = target_link if target_link is not None else self.__end_effector_name
 
         # Define target position
         constraint.constraint_region.primitive_poses.append(Pose())
         if isinstance(position, Point):
             constraint.constraint_region.primitive_poses[0].position = position
         else:
-            constraint.constraint_region.primitive_poses[0].position.x = float(
-                position[0]
-            )
-            constraint.constraint_region.primitive_poses[0].position.y = float(
-                position[1]
-            )
-            constraint.constraint_region.primitive_poses[0].position.z = float(
-                position[2]
-            )
+            constraint.constraint_region.primitive_poses[0].position.x = float(position[0])
+            constraint.constraint_region.primitive_poses[0].position.y = float(position[1])
+            constraint.constraint_region.primitive_poses[0].position.z = float(position[2])
 
         # Define goal region as a sphere with radius equal to the tolerance
         constraint.constraint_region.primitives.append(SolidPrimitive())
@@ -611,9 +598,9 @@ class MoveIt2:
         constraint.weight = weight
 
         # Append to other constraints
-        self.__move_action_goal.request.goal_constraints[
-            -1
-        ].position_constraints.append(constraint)
+        self.__move_action_goal.request.goal_constraints[-1].position_constraints.append(
+            constraint
+        )
 
     def set_orientation_goal(
         self,
@@ -633,12 +620,8 @@ class MoveIt2:
         constraint = OrientationConstraint()
 
         # Define reference frame and target link
-        constraint.header.frame_id = (
-            frame_id if frame_id is not None else self.__base_link_name
-        )
-        constraint.link_name = (
-            target_link if target_link is not None else self.__end_effector_name
-        )
+        constraint.header.frame_id = frame_id if frame_id is not None else self.__base_link_name
+        constraint.link_name = target_link if target_link is not None else self.__end_effector_name
 
         # Define target orientation
         if isinstance(quat_xyzw, Quaternion):
@@ -658,9 +641,9 @@ class MoveIt2:
         constraint.weight = weight
 
         # Append to other constraints
-        self.__move_action_goal.request.goal_constraints[
-            -1
-        ].orientation_constraints.append(constraint)
+        self.__move_action_goal.request.goal_constraints[-1].orientation_constraints.append(
+            constraint
+        )
 
     def set_joint_goal(
         self,
@@ -697,9 +680,9 @@ class MoveIt2:
             constraint.weight = weight
 
             # Append to other constraints
-            self.__move_action_goal.request.goal_constraints[
-                -1
-            ].joint_constraints.append(constraint)
+            self.__move_action_goal.request.goal_constraints[-1].joint_constraints.append(
+                constraint
+            )
 
     def clear_goal_constraints(self):
         """
@@ -730,7 +713,7 @@ class MoveIt2:
           - `joint_state` defaults to the current joint state
         """
 
-        if not hasattr(self, "__compute_fk_client"):
+        if not hasattr(self, '__compute_fk_client'):
             self.__init_compute_fk()
 
         if fk_link_names is None:
@@ -752,11 +735,9 @@ class MoveIt2:
         stamp = self._node.get_clock().now().to_msg()
         self.__compute_fk_req.header.stamp = stamp
 
-        if not self.__compute_fk_client.wait_for_service(
-            timeout_sec=wait_for_server_timeout_sec
-        ):
+        if not self.__compute_fk_client.wait_for_service(timeout_sec=wait_for_server_timeout_sec):
             self._node.get_logger().warn(
-                f"Service '{self.__compute_fk_client.srv_name}' is not yet available. Better luck next time!"
+                f"Service '{self.__compute_fk_client.srv_name}' is not yet available. Better luck next time!"  # noqa: E501
             )
             return None
 
@@ -766,7 +747,7 @@ class MoveIt2:
             return res.pose_stamped
         else:
             self._node.get_logger().warn(
-                f"FK computation failed! Error code: {res.error_code.val}."
+                f'FK computation failed! Error code: {res.error_code.val}.'
             )
             return None
 
@@ -786,48 +767,30 @@ class MoveIt2:
           - `constraints` defaults to None.
         """
 
-        if not hasattr(self, "__compute_ik_client"):
+        if not hasattr(self, '__compute_ik_client'):
             self.__init_compute_ik()
 
         if isinstance(position, Point):
             self.__compute_ik_req.ik_request.pose_stamped.pose.position = position
         else:
-            self.__compute_ik_req.ik_request.pose_stamped.pose.position.x = float(
-                position[0]
-            )
-            self.__compute_ik_req.ik_request.pose_stamped.pose.position.y = float(
-                position[1]
-            )
-            self.__compute_ik_req.ik_request.pose_stamped.pose.position.z = float(
-                position[2]
-            )
+            self.__compute_ik_req.ik_request.pose_stamped.pose.position.x = float(position[0])
+            self.__compute_ik_req.ik_request.pose_stamped.pose.position.y = float(position[1])
+            self.__compute_ik_req.ik_request.pose_stamped.pose.position.z = float(position[2])
         if isinstance(quat_xyzw, Quaternion):
             self.__compute_ik_req.ik_request.pose_stamped.pose.orientation = quat_xyzw
         else:
-            self.__compute_ik_req.ik_request.pose_stamped.pose.orientation.x = float(
-                quat_xyzw[0]
-            )
-            self.__compute_ik_req.ik_request.pose_stamped.pose.orientation.y = float(
-                quat_xyzw[1]
-            )
-            self.__compute_ik_req.ik_request.pose_stamped.pose.orientation.z = float(
-                quat_xyzw[2]
-            )
-            self.__compute_ik_req.ik_request.pose_stamped.pose.orientation.w = float(
-                quat_xyzw[3]
-            )
+            self.__compute_ik_req.ik_request.pose_stamped.pose.orientation.x = float(quat_xyzw[0])
+            self.__compute_ik_req.ik_request.pose_stamped.pose.orientation.y = float(quat_xyzw[1])
+            self.__compute_ik_req.ik_request.pose_stamped.pose.orientation.z = float(quat_xyzw[2])
+            self.__compute_ik_req.ik_request.pose_stamped.pose.orientation.w = float(quat_xyzw[3])
 
         if start_joint_state is not None:
             if isinstance(start_joint_state, JointState):
-                self.__compute_ik_req.ik_request.robot_state.joint_state = (
-                    start_joint_state
-                )
+                self.__compute_ik_req.ik_request.robot_state.joint_state = start_joint_state
             else:
-                self.__compute_ik_req.ik_request.robot_state.joint_state = (
-                    init_joint_state(
-                        joint_names=self.__joint_names,
-                        joint_positions=start_joint_state,
-                    )
+                self.__compute_ik_req.ik_request.robot_state.joint_state = init_joint_state(
+                    joint_names=self.__joint_names,
+                    joint_positions=start_joint_state,
                 )
         elif self.joint_state is not None:
             self.__compute_ik_req.ik_request.robot_state.joint_state = self.joint_state
@@ -838,11 +801,9 @@ class MoveIt2:
         stamp = self._node.get_clock().now().to_msg()
         self.__compute_ik_req.ik_request.pose_stamped.header.stamp = stamp
 
-        if not self.__compute_ik_client.wait_for_service(
-            timeout_sec=wait_for_server_timeout_sec
-        ):
+        if not self.__compute_ik_client.wait_for_service(timeout_sec=wait_for_server_timeout_sec):
             self._node.get_logger().warn(
-                f"Service '{self.__compute_ik_client.srv_name}' is not yet available. Better luck next time!"
+                f"Service '{self.__compute_ik_client.srv_name}' is not yet available. Better luck next time!"  # noqa: E501
             )
             return None
 
@@ -852,7 +813,7 @@ class MoveIt2:
             return res.solution.joint_state
         else:
             self._node.get_logger().warn(
-                f"IK computation failed! Error code: {res.error_code.val}."
+                f'IK computation failed! Error code: {res.error_code.val}.'
             )
             return None
 
@@ -867,8 +828,10 @@ class MoveIt2:
 
     def force_reset_executing_state(self):
         """
-        Force reset of internal states that block execution while `ignore_new_calls_while_executing` is being
-        used. This function is applicable only in a very few edge-cases, so it should almost never be used.
+        Force reset of internal states that block execution
+        while `ignore_new_calls_while_executing` is being used.
+        This function is applicable only in a very few edge-cases,
+        so it should almost never be used.
         """
 
         self.__is_motion_requested = False
@@ -893,16 +856,14 @@ class MoveIt2:
         except ImportError as err:
             raise ImportError(
                 "Python module 'trimesh' not found! Please install it manually in order "
-                "to add collision objects into the MoveIt 2 planning scene."
+                'to add collision objects into the MoveIt 2 planning scene.'
             ) from err
 
         mesh = trimesh.load(filepath)
         msg = CollisionObject()
 
         if not isinstance(position, Point):
-            position = Point(
-                x=float(position[0]), y=float(position[1]), z=float(position[2])
-            )
+            position = Point(x=float(position[0]), y=float(position[1]), z=float(position[2]))
         if not isinstance(quat_xyzw, Quaternion):
             quat_xyzw = Quaternion(
                 x=float(quat_xyzw[0]),
@@ -919,17 +880,13 @@ class MoveIt2:
         msg.meshes.append(
             Mesh(
                 triangles=[MeshTriangle(vertex_indices=face) for face in mesh.faces],
-                vertices=[
-                    Point(x=vert[0], y=vert[1], z=vert[2]) for vert in mesh.vertices
-                ],
+                vertices=[Point(x=vert[0], y=vert[1], z=vert[2]) for vert in mesh.vertices],
             )
         )
 
         msg.id = id
         msg.operation = operation
-        msg.header.frame_id = (
-            frame_id if frame_id is not None else self.__base_link_name
-        )
+        msg.header.frame_id = frame_id if frame_id is not None else self.__base_link_name
         msg.header.stamp = self._node.get_clock().now().to_msg()
 
         self.__collision_object_publisher.publish(msg)
@@ -946,10 +903,9 @@ class MoveIt2:
         self.__collision_object_publisher.publish(msg)
 
     def __joint_state_callback(self, msg: JointState):
-
         # Update only if all relevant joints are included in the message
         for joint_name in self.joint_names:
-            if not joint_name in msg.name:
+            if joint_name not in msg.name:
                 return
 
         self.__joint_state_mutex.acquire()
@@ -967,11 +923,9 @@ class MoveIt2:
         stamp = self._node.get_clock().now().to_msg()
         self.__move_action_goal.request.workspace_parameters.header.stamp = stamp
 
-        if not self.__move_action_client.wait_for_server(
-            timeout_sec=wait_for_server_timeout_sec
-        ):
+        if not self.__move_action_client.wait_for_server(timeout_sec=wait_for_server_timeout_sec):
             self._node.get_logger().warn(
-                f"Action server '{self.__move_action_client._action_name}' is not yet available. Better luck next time!"
+                f"Action server '{self.__move_action_client._action_name}' is not yet available. Better luck next time!"  # noqa: E501
             )
             return None
 
@@ -992,17 +946,11 @@ class MoveIt2:
         self, wait_for_server_timeout_sec: Optional[float] = 1.0
     ) -> Optional[JointTrajectory]:
         # Re-use request from move action goal
-        self.__kinematic_path_request.motion_plan_request = (
-            self.__move_action_goal.request
-        )
+        self.__kinematic_path_request.motion_plan_request = self.__move_action_goal.request
 
         stamp = self._node.get_clock().now().to_msg()
-        self.__kinematic_path_request.motion_plan_request.workspace_parameters.header.stamp = (
-            stamp
-        )
-        for (
-            constraints
-        ) in self.__kinematic_path_request.motion_plan_request.goal_constraints:
+        self.__kinematic_path_request.motion_plan_request.workspace_parameters.header.stamp = stamp
+        for constraints in self.__kinematic_path_request.motion_plan_request.goal_constraints:
             for position_constraint in constraints.position_constraints:
                 position_constraint.header.stamp = stamp
             for orientation_constraint in constraints.orientation_constraints:
@@ -1012,7 +960,7 @@ class MoveIt2:
             timeout_sec=wait_for_server_timeout_sec
         ):
             self._node.get_logger().warn(
-                f"Service '{self._plan_kinematic_path_service.srv_name}' is not yet available. Better luck next time!"
+                f"Service '{self._plan_kinematic_path_service.srv_name}' is not yet available. Better luck next time!"  # noqa: E501
             )
             return None
 
@@ -1023,9 +971,7 @@ class MoveIt2:
         if MoveItErrorCodes.SUCCESS == res.error_code.val:
             return res.trajectory.joint_trajectory
         else:
-            self._node.get_logger().warn(
-                f"Planning failed! Error code: {res.error_code.val}."
-            )
+            self._node.get_logger().warn(f'Planning failed! Error code: {res.error_code.val}.')
             return None
 
     def _plan_cartesian_path(
@@ -1035,12 +981,8 @@ class MoveIt2:
         frame_id: Optional[str] = None,
     ) -> Optional[JointTrajectory]:
         # Re-use request from move action goal
-        self.__cartesian_path_request.start_state = (
-            self.__move_action_goal.request.start_state
-        )
-        self.__cartesian_path_request.group_name = (
-            self.__move_action_goal.request.group_name
-        )
+        self.__cartesian_path_request.start_state = self.__move_action_goal.request.start_state
+        self.__cartesian_path_request.group_name = self.__move_action_goal.request.group_name
         self.__cartesian_path_request.link_name = self.__end_effector_name
         self.__cartesian_path_request.max_step = max_step
 
@@ -1083,7 +1025,7 @@ class MoveIt2:
             timeout_sec=wait_for_server_timeout_sec
         ):
             self._node.get_logger().warn(
-                f"Service '{self._plan_cartesian_path_service.srv_name}' is not yet available. Better luck next time!"
+                f"Service '{self._plan_cartesian_path_service.srv_name}' is not yet available. Better luck next time!"  # noqa: E501
             )
             return None
 
@@ -1092,22 +1034,16 @@ class MoveIt2:
         if MoveItErrorCodes.SUCCESS == res.error_code.val:
             return res.solution.joint_trajectory
         else:
-            self._node.get_logger().warn(
-                f"Planning failed! Error code: {res.error_code.val}."
-            )
+            self._node.get_logger().warn(f'Planning failed! Error code: {res.error_code.val}.')
             return None
 
-    def _send_goal_async_move_action(
-        self, wait_for_server_timeout_sec: Optional[float] = 1.0
-    ):
+    def _send_goal_async_move_action(self, wait_for_server_timeout_sec: Optional[float] = 1.0):
         stamp = self._node.get_clock().now().to_msg()
         self.__move_action_goal.request.workspace_parameters.header.stamp = stamp
 
-        if not self.__move_action_client.wait_for_server(
-            timeout_sec=wait_for_server_timeout_sec
-        ):
+        if not self.__move_action_client.wait_for_server(timeout_sec=wait_for_server_timeout_sec):
             self._node.get_logger().warn(
-                f"Action server '{self.__move_action_client._action_name}' is not yet available. Better luck next time!"
+                f"Action server '{self.__move_action_client._action_name}' is not yet available. Better luck next time!"  # noqa: E501
             )
             self.__is_motion_requested = False
             return
@@ -1117,9 +1053,7 @@ class MoveIt2:
             feedback_callback=None,
         )
 
-        self.__send_goal_future_move_action.add_done_callback(
-            self.__response_callback_move_action
-        )
+        self.__send_goal_future_move_action.add_done_callback(self.__response_callback_move_action)
 
     def __response_callback_move_action(self, response):
         goal_handle = response.result()
@@ -1134,14 +1068,12 @@ class MoveIt2:
         self.__is_motion_requested = False
 
         self.__get_result_future_move_action = goal_handle.get_result_async()
-        self.__get_result_future_move_action.add_done_callback(
-            self.__result_callback_move_action
-        )
+        self.__get_result_future_move_action.add_done_callback(self.__result_callback_move_action)
 
     def __result_callback_move_action(self, res):
         if res.result().status != GoalStatus.STATUS_SUCCEEDED:
             self._node.get_logger().error(
-                f"Action '{self.__move_action_client._action_name}' was unsuccessful: {res.result().status}."
+                f"Action '{self.__move_action_client._action_name}' was unsuccessful: {res.result().status}."  # noqa: E501
             )
 
         self.__is_executing = False
@@ -1156,7 +1088,7 @@ class MoveIt2:
             timeout_sec=wait_for_server_timeout_sec
         ):
             self._node.get_logger().warn(
-                f"Action server '{self.__follow_joint_trajectory_action_client._action_name}' is not yet available. Better luck next time!"
+                f"Action server '{self.__follow_joint_trajectory_action_client._action_name}' is not yet available. Better luck next time!"  # noqa: E501
             )
             self.__is_motion_requested = False
             return None
@@ -1166,9 +1098,7 @@ class MoveIt2:
             feedback_callback=None,
         )
 
-        action_result.add_done_callback(
-            self.__response_callback_follow_joint_trajectory
-        )
+        action_result.add_done_callback(self.__response_callback_follow_joint_trajectory)
 
         if wait_until_response:
             self.__future_done_event.clear()
@@ -1177,15 +1107,13 @@ class MoveIt2:
             )
             self.__future_done_event.wait(timeout=wait_for_server_timeout_sec)
         else:
-            action_result.add_done_callback(
-                self.__response_callback_follow_joint_trajectory
-            )
+            action_result.add_done_callback(self.__response_callback_follow_joint_trajectory)
 
     def __response_callback_follow_joint_trajectory(self, response):
         goal_handle = response.result()
         if not goal_handle.accepted:
             self._node.get_logger().warn(
-                f"Action '{self.__follow_joint_trajectory_action_client._action_name}' was rejected."
+                f"Action '{self.__follow_joint_trajectory_action_client._action_name}' was rejected."  # noqa: E501
             )
             self.__is_motion_requested = False
             return
@@ -1193,9 +1121,7 @@ class MoveIt2:
         self.__is_executing = True
         self.__is_motion_requested = False
 
-        self.__get_result_future_follow_joint_trajectory = (
-            goal_handle.get_result_async()
-        )
+        self.__get_result_future_follow_joint_trajectory = goal_handle.get_result_async()
         self.__get_result_future_follow_joint_trajectory.add_done_callback(
             self.__result_callback_follow_joint_trajectory
         )
@@ -1207,7 +1133,7 @@ class MoveIt2:
     def __result_callback_follow_joint_trajectory(self, res):
         if res.result().status != GoalStatus.STATUS_SUCCEEDED:
             self._node.get_logger().error(
-                f"Action '{self.__follow_joint_trajectory_action_client._action_name}' was unsuccessful: {res.result().status}."
+                f"Action '{self.__follow_joint_trajectory_action_client._action_name}' was unsuccessful: {res.result().status}."  # noqa: E501
             )
 
         self.__is_executing = False
@@ -1233,7 +1159,7 @@ class MoveIt2:
         move_action_goal.request.allowed_planning_time = 0.5
         move_action_goal.request.max_velocity_scaling_factor = 0.0
         move_action_goal.request.max_acceleration_scaling_factor = 0.0
-        move_action_goal.request.cartesian_speed_end_effector_link = end_effector
+        move_action_goal.request.cartesian_speed_limited_link = end_effector
         move_action_goal.request.max_cartesian_speed = 0.0
 
         # move_action_goal.planning_options.planning_scene_diff = "Ignored"
@@ -1250,7 +1176,7 @@ class MoveIt2:
     def __init_compute_fk(self):
         self.__compute_fk_client = self._node.create_client(
             srv_type=GetPositionFK,
-            srv_name="compute_fk",
+            srv_name='compute_fk',
             callback_group=self._callback_group,
         )
 
@@ -1267,7 +1193,7 @@ class MoveIt2:
         # Service client for IK
         self.__compute_ik_client = self._node.create_client(
             srv_type=GetPositionIK,
-            srv_name=self.namespace_prefix + "compute_ik",
+            srv_name=self.namespace_prefix + 'compute_ik',
             callback_group=self._callback_group,
         )
 
@@ -1280,9 +1206,7 @@ class MoveIt2:
         # self.__compute_ik_req.ik_request.constraints = "Set during request OR Ignored"
         self.__compute_ik_req.ik_request.avoid_collisions = True
         # self.__compute_ik_req.ik_request.ik_link_name = "Ignored"
-        self.__compute_ik_req.ik_request.pose_stamped.header.frame_id = (
-            self.__base_link_name
-        )
+        self.__compute_ik_req.ik_request.pose_stamped.header.frame_id = self.__base_link_name
         # self.__compute_ik_req.ik_request.pose_stamped.header.stamp = "Set during request"
         # self.__compute_ik_req.ik_request.pose_stamped.pose = "Set during request"
         # self.__compute_ik_req.ik_request.ik_link_names = "Ignored"
@@ -1361,9 +1285,7 @@ def init_joint_state(
     joint_state.velocity = (
         joint_velocities if joint_velocities is not None else [0.0] * len(joint_names)
     )
-    joint_state.effort = (
-        joint_effort if joint_effort is not None else [0.0] * len(joint_names)
-    )
+    joint_state.effort = joint_effort if joint_effort is not None else [0.0] * len(joint_names)
 
     return joint_state
 

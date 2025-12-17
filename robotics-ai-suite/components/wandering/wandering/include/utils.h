@@ -14,19 +14,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions
 and limitations under the License.
 */
-
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef UTILS_H_
+#define UTILS_H_
 #include <stdio.h>
-#include <iostream>
+
 #include <array>
+#include <cstdint>
+#include <iostream>
 
 #include "nav2_costmap_2d/cost_values.hpp"
 
 #define COSTMAP_VAL_SIZE 256
 
-using namespace std;
+using std::array;
 
 array<uint8_t, COSTMAP_VAL_SIZE> occup_cost_mapping();
 
-#endif
+#endif  // UTILS_H_

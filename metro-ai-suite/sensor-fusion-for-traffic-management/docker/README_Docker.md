@@ -78,7 +78,7 @@ newgrp docker
 6. Then pull base image
 
 ```bash
-docker pull ubuntu:22.04
+docker pull ubuntu:24.04
 ```
 
 
@@ -91,19 +91,38 @@ bash install_driver_related_libs.sh
 
 **If driver are already installed on the machine, you don't need to do this step.**
 
+### Pull docker image through docker hub
 
+You can pull latest tfcc docker image through [intel/tfcc - Docker Image](https://hub.docker.com/r/intel/tfcc/).
+
+For example:
+
+```bash
+docker pull intel/tfcc:latest
+```
 
 ### Build and run docker image through scripts
 
-> **Note that the default username is `openvino` and password is `intel` in docker image.**
+> **Note that the default username is `tfcc` and password is `intel` in docker image.**
 
-##### Build and run docker image
+#### Build docker image
 
 Usage:
 
 ```bash
-bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 22.04> 
+bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04> 
 ```
+
+Example:
+
+```bash
+cd $PROJ_DIR/docker
+bash build_docker.sh tfcc:latest Dockerfile_TFCC.dockerfile
+```
+
+#### Run docker image
+
+Usage:
 
 ```
 bash run_docker.sh <DOCKER_IMAGE, default tfcc:latest> <NPU_ON, default false>
@@ -113,12 +132,11 @@ Example:
 
 ```bash
 cd $PROJ_DIR/docker
-bash build_docker.sh tfcc:latest Dockerfile_TFCC.dockerfile
 bash run_docker.sh tfcc:latest false
 # After the run is complete, the container ID will be output, or you can view it through docker ps 
 ```
 
-##### Enter docker
+#### Enter docker
 
 Get the container id by command bellow:
 
@@ -134,7 +152,7 @@ docker exec -it <container id> /bin/bash
 
 
 
-##### Copy dataset
+#### Copy dataset
 
 If you want to copy dataset or other files to docker, you can refer the command bellow:
 
@@ -146,7 +164,7 @@ docker cp /path/to/dataset <container id>:/path/to/dataset
 
 ### Build and run docker image through docker compose
 
-> **Note that the default username is `openvino` and password is `intel` in docker image.**
+> **Note that the default username is `tfcc` and password is `intel` in docker image.**
 
 Modify `proxy`, `VIDEO_GROUP_ID` and `RENDER_GROUP_ID` in `.env` file.
 
@@ -156,7 +174,7 @@ https_proxy=
 http_proxy=
 # base image settings
 BASE=ubuntu
-BASE_VERSION=22.04
+BASE_VERSION=24.04
 # group IDs for various services
 VIDEO_GROUP_ID=44
 RENDER_GROUP_ID=110
@@ -175,7 +193,7 @@ echo $(getent group render | awk -F: '{printf "%s\n", $3}')
 
 
 
-##### Build and run docker image
+#### Build and run docker image
 Uasge:
 ```bash
 cd $PROJ_DIR/docker
@@ -196,7 +214,7 @@ cd $PROJ_DIR/docker
 docker compose up tfcc-npu -d
 ```
 
-##### Enter docker
+#### Enter docker
 Usage:
 ```bash
 docker compose exec <services-name> /bin/bash
@@ -206,7 +224,7 @@ Example:
 docker compose exec tfcc /bin/bash
 ```
 
-##### Copy dataset
+#### Copy dataset
 
 Find the container name or ID:
 
@@ -227,6 +245,8 @@ copy dataset
 docker cp /path/to/dataset docker-tfcc-1:/path/to/dataset
 ```
 
-### Running inside docker
-
-Enter the project directory `/home/openvino/metro-2.0` then run `bash -x build.sh` to build the project. Then following the guides [How it works](../docs/user-guide/Advanced-User-Guide.md#how-it-works) to run sensor fusion application.
+> **Caution:**
+>
+> This container image is intended for demo purposes only and not intended for production use.
+>
+> To receive expanded security maintenance from Canonical on the Ubuntu base layer, you may follow the [how-to guide to enable Ubuntu Pro in a Dockerfile](https://documentation.ubuntu.com/pro-client/en/docs/howtoguides/enable_in_dockerfile), which will require the image to be rebuilt.

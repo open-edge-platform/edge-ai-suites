@@ -5,7 +5,7 @@
   <version>2.0.0</version>
   <description>Node to gather various statistics of RVC</description>
   <maintainer email="robotics@intel.com">Intel Robotics Team</maintainer>
-  <license>Rapid Prototype License</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <build_depend>ament_index_cpp</build_depend>

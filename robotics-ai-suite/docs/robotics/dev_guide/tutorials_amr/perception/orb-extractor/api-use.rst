@@ -7,7 +7,7 @@ This tutorial shows how to use GPU orb-extractor feature library API.
 
 The GPU orb-extractor feature library offers thread-safe support for both single and multiple cameras.
 
-This tutorial illustrates GPU orb-extractor feature library usage with OpenCV ``cv::Mat and cv::Keypoints``.
+This tutorial illustrates GPU orb-extractor feature library usage with OpenCV ``cv::Mat`` and ``cv::Keypoints``.
 It explains employing multiple CPU threads with multiple ORB extractor objects, as well as using a single orb-extractor feature object to handle multiple camera inputs.
 
 The multithread feature provides more flexibility for visual SLAM to call multiple objects of the orb-extractor feature library.
@@ -22,14 +22,14 @@ Tutorial
 
 .. note::
 
-   This tutorial can be run both inside and outside a Docker* image. We assume that the ``liborb-lze-dev`` |deb_pack| has been installed,
+   This tutorial can be run both inside and outside a Docker* image. We assume that the ``liborb-lze-dev`` Deb package has been installed,
    and the user has copied the tutorial directory from ``/opt/intel/orb_lze/samples/`` to a user-writable directory.
 
 #. Prepare the environment:
 
    .. code-block::
 
-      sudo apt install liborb-lze-dev
+      sudo apt install liborb-lze-dev libgflags-dev
       cp -r /opt/intel/orb_lze/samples/ ~/orb_lze_samples
       cd ~/orb_lze_samples/
 
@@ -62,7 +62,9 @@ Tutorial
         --threads <integer>    :  Number of threads to run. Default value: 1
         --iterations <integer> :  Number of iterations to run. Default value: 10
 
-      The following command, it will run four threads, each thread is taking two cameras image input.
+   The following command, it will run four threads, each thread is taking two cameras image input.
+
+   .. code-block::
 
       ./feature_extract --images=2 --threads=4
 
@@ -121,7 +123,7 @@ Create orb_extract object:
 .. note::
 
    The macro ORBLZE_KERNEL_PATH_STRING is defined as *"/usr/lib/x86_64-linux-gnu"* in the header file ``config.h``.
-   This header file is installed by the |deb_pack| ``liborb-lze-dev`` at */usr/include/config.h*.
+   This header file is installed by the Deb package ``liborb-lze-dev`` at */usr/include/config.h*.
 
 Call the extract function to output the keypoints and descriptors for all camera input images.
 Depending on the number of camera inputs, the orb-extractor feature library returns the number of the keypoints vector and the descriptors vector.

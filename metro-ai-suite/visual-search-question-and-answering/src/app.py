@@ -36,7 +36,7 @@ BACKEND_VQA_BASE_URL = os.getenv("BACKEND_VQA_BASE_URL", "http://localhost:8399"
 BACKEND_SEARCH_BASE_URL = os.getenv("BACKEND_SEARCH_BASE_URL", "http://localhost:7770")
 BACKEND_DATAPREP_BASE_URL = os.getenv("BACKEND_DATAPREP_BASE_URL", "http://localhost:9990")
 
-VCLIP_MODEL = os.getenv("VCLIP_MODEL", "openai/clip-vit-base-patch32")
+EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "openai/clip-vit-base-patch32")
 VLM_MODEL_NAME=os.getenv("VLM_MODEL_NAME", "Qwen/Qwen2.5-VL-7B-Instruct")
 
 DATA_INGEST_WITH_DETECT = os.getenv("DATA_INGEST_WITH_DETECT", "True").lower() == "true"
@@ -181,7 +181,7 @@ def send_query_request(text: str = "", image_base64: str = "", k: int = 10, filt
     results = {}
 
     try:
-        response = requests.post(url, json=payload, timeout=10)  # Set a timeout to avoid hanging
+        response = requests.post(url, json=payload, timeout=100)  # Set a timeout to avoid hanging
         response.raise_for_status()  # Raise an exception for HTTP errors
 
         # Parse the response JSON
@@ -327,7 +327,7 @@ def send_update_db_request():
     result = {}
 
     try:
-        response = requests.post(url, json=payload, timeout=10)  # Set a timeout to avoid hanging
+        response = requests.post(url, json=payload, timeout=10000)  # Set a timeout to avoid hanging
         response.raise_for_status()  # Raise an exception for HTTP errors
 
         # Parse the response JSON
@@ -458,7 +458,7 @@ def query_submit():
         if len(st.session_state["ktext"]) > PROMPT_LENGTH_LIMIT:
             query_display.error(f"Please enter a prompt with less than {PROMPT_LENGTH_LIMIT} characters!")
             return
-        if not is_english(st.session_state["ktext"]) and "cn" not in VCLIP_MODEL.lower():
+        if not is_english(st.session_state["ktext"]) and "cn" not in EMBEDDING_MODEL_NAME.lower():
             query_display.error("Current embedding model only supports English!")
             return
         if is_english(st.session_state["ktext"]) and is_bad_string(st.session_state["ktext"]):
@@ -525,9 +525,8 @@ def vote():
     db_info = send_db_info_request()
     if db_info:
         st.write("Vector DB info:")
-        st.write(f"Local embedding model id: {db_info['model_id']}")
-        st.write(f"device: {db_info['device']}")
-        st.write(f"Number of processed files: {db_info['Number of processed files']}")
+        st.write(f"Embedding service url: {db_info['embed_svc_url']}")
+        st.write(f"Embedding service model name: {db_info['model_name']}")
 
     if st.session_state.latest_log:
         st.write("Latest response:")

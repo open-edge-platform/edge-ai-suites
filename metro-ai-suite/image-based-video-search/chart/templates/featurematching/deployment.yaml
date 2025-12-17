@@ -55,9 +55,9 @@ spec:
         {{- end }}
         {{- if .Values.featurematching.healthcheck.enabled }}
         livenessProbe:
-          {{- toYaml .Values.featurematching.healthcheck.livenessProbe | nindent 8 }}
+          {{- toYaml .Values.featurematching.healthcheck.livenessProbe | nindent 10 }}
         readinessProbe:
-          {{- toYaml .Values.featurematching.healthcheck.readinessProbe | nindent 8 }}
+          {{- toYaml .Values.featurematching.healthcheck.readinessProbe | nindent 10 }}
         {{- end }}
       volumes:
       - name: static-data

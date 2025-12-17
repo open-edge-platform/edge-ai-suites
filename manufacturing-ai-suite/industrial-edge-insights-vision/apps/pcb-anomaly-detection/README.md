@@ -13,13 +13,13 @@ models for video analysis. This sample application offers the following:
 
 To see the system requirements and other installation procedures, see the following guides:
 
-- [System Requirements](../../docs/pcb-anomaly-detection/system-requirements.md)
-- [Setup guide](../../docs/pcb-anomaly-detection/get-started.md)
-- [Overview](../../docs/pcb-anomaly-detection/Overview.md)
+- [System Requirements](../../docs/user-guide/pcb-anomaly-detection/system-requirements.md)
+- [Setup guide](../../docs/user-guide/pcb-anomaly-detection/get-started.md)
+- [Overview](../../docs/user-guide/pcb-anomaly-detection/Overview.md)
 
 ## How It Works
 
-You can read the overview of the architecture and logic of the application [here](../../docs/pcb-anomaly-detection/overview-architecture.md)
+You can read the overview of the architecture and logic of the application [here](../../docs/user-guide/pcb-anomaly-detection/overview-architecture.md)
 
 The components and services are as follows:
 
@@ -37,6 +37,7 @@ for display in Grafana.
 
 It also consists of the following third-party microservices:
 
+- [Nginx](https://hub.docker.com/_/nginx) is a high-performance web server and reverse proxy that provides TLS termination and unified HTTPS access.
 - [MediaMTX Server](https://hub.docker.com/r/bluenviron/mediamtx) is a real-time media server and media proxy that allows publishing webrtc stream.
 - [Coturn Server](https://hub.docker.com/r/coturn/coturn) is a media traffic NAT traversal server and a gateway.
 - [Open telemetry Collector](https://hub.docker.com/r/otel/opentelemetry-collector-contrib) is a set of receivers, exporters, processors, connectors for Open Telemetry.

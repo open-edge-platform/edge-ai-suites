@@ -1,0 +1,87 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# This file was originally written by Joey Hess and Craig Small.
+# Sample debian/rules that uses debhelper.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Modified by Intel Corporation with build performance optimizations.
+
+export ROS_DISTRO=humble
+export CXXFLAGS="-fuse-ld=lld"
+export CFLAGS="-fuse-ld=lld"
+export LDFLAGS="-fuse-ld=lld"
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+export PKG_CONFIG_PATH=/opt/ros/$(ROS_DISTRO)/lib/pkgconfig
+# Explicitly enable -DNDEBUG, see:
+# 	https://github.com/ros-infrastructure/bloom/issues/327
+export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG
+ifneq ($(filter nocheck,$(DEB_BUILD_OPTIONS)),)
+	BUILD_TESTING_ARG=-DBUILD_TESTING=OFF
+endif
+
+# CI Build Performance Optimizations
+export CI=1
+export CMAKE_BUILD_TYPE=Release
+# Enable ccache if available
+export PATH:=/usr/lib/ccache:$(PATH)
+# Use all available CPU cores for parallel builds
+NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+ifeq (,$(NUMJOBS))
+	NUMJOBS := $(shell nproc)
+endif
+MAKEFLAGS += -j$(NUMJOBS)
+
+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+
+%:
+	dh $@ -v --buildsystem=cmake --parallel
+
+override_dh_auto_configure:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/$(ROS_DISTRO)/setup.sh" ]; then . "/opt/ros/$(ROS_DISTRO)/setup.sh"; fi && \
+	dh_auto_configure -- \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/$(ROS_DISTRO) \
+		-DAMENT_PREFIX_PATH=/opt/ros/$(ROS_DISTRO) \
+		-DCMAKE_PREFIX_PATH=/opt/ros/$(ROS_DISTRO) \
+		-DCMAKE_LINKER=/usr/bin/ld.lld \
+		-DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" \
+		-DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
+		$(BUILD_TESTING_ARG) ${CMAKE_FLAGS_EXTRA}
+
+override_dh_auto_build:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/$(ROS_DISTRO)/setup.sh" ]; then . "/opt/ros/$(ROS_DISTRO)/setup.sh"; fi && \
+	dh_auto_build
+
+override_dh_auto_test:
+	if [ -f "/opt/ros/$(ROS_DISTRO)/setup.sh" ]; then . "/opt/ros/$(ROS_DISTRO)/setup.sh"; fi && \
+	export LD=ld.lld; \
+	export CXXFLAGS="-fuse-ld=lld $$CXXFLAGS"; \
+	export LDFLAGS="-fuse-ld=lld $$LDFLAGS"; \
+	dh_auto_test || true
+
+override_dh_shlibdeps:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/$(ROS_DISTRO)/setup.sh" ]; then . "/opt/ros/$(ROS_DISTRO)/setup.sh"; fi && \
+	dh_shlibdeps -l$(CURDIR)/debian/ros-$(ROS_DISTRO)-openvino-yolov8//opt/ros/$(ROS_DISTRO)/lib/
+
+override_dh_auto_install:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/$(ROS_DISTRO)/setup.sh" ]; then . "/opt/ros/$(ROS_DISTRO)/setup.sh"; fi && \
+	dh_auto_install
+
+override_dh_strip:
+	# Skip stripping due to debugedit bug with LLD
+	dh_strip --no-automatic-dbgsym

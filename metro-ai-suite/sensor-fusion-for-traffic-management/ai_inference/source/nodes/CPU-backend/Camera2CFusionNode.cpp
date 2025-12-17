@@ -203,7 +203,8 @@ hva::hvaStatus_t Camera2CFusionNode::Impl::reset()
 
 Camera2CFusionNode::Camera2CFusionNode(std::size_t totalThreadNum)
     : hva::hvaNode_t(CAMERA_2CFUSION_MODULE_INPORT_NUM, 1, totalThreadNum), m_impl(new Impl(*this))
-{}
+{
+}
 
 Camera2CFusionNode::~Camera2CFusionNode() {}
 
@@ -420,20 +421,22 @@ void Camera2CFusionNodeWorker::Impl::process(std::size_t batchIdx)
         TimeStampAll_t timeMetaAll;
         TimeStamp_t timeMeta;
         if (ptrFrameBuf1->getMeta(timeMeta) == hva::hvaSuccess) {
-            timeMetaAll.timeStamp1 = timeMeta.timeStamp;
+            timeMetaAll.timeStamp[0] = timeMeta.timeStamp;
         }
         if (ptrFrameBuf2->getMeta(timeMeta) == hva::hvaSuccess) {
-            timeMetaAll.timeStamp2 = timeMeta.timeStamp;
+            timeMetaAll.timeStamp[1] = timeMeta.timeStamp;
         }
         ptrFrameBuf1->setMeta<TimeStampAll_t>(timeMetaAll);
 
         InferenceTimeStamp_t inferenceTimeMeta;
         InferenceTimeAll_t inferenceTimeMetaAll;
         if (ptrFrameBuf1->getMeta(inferenceTimeMeta) == hva::hvaSuccess) {
-            inferenceTimeMetaAll.inferenceLatencies[0] = std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
+            inferenceTimeMetaAll.inferenceLatencies[0] =
+                std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
         }
         if (ptrFrameBuf2->getMeta(inferenceTimeMeta) == hva::hvaSuccess) {
-            inferenceTimeMetaAll.inferenceLatencies[1] = std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
+            inferenceTimeMetaAll.inferenceLatencies[1] =
+                std::chrono::duration<double, std::milli>(inferenceTimeMeta.endTime - inferenceTimeMeta.startTime).count();
         }
         ptrFrameBuf1->setMeta<InferenceTimeAll_t>(inferenceTimeMetaAll);
 
@@ -446,7 +449,7 @@ void Camera2CFusionNodeWorker::Impl::process(std::size_t batchIdx)
             videoTimeMetaAll.videoLatencies[1] = std::chrono::duration<double, std::milli>(videoTimeMeta.endTime - videoTimeMeta.startTime).count();
         }
         ptrFrameBuf1->setMeta<VideoTimeAll_t>(videoTimeMetaAll);
-        
+
         ptrFrameBuf1->setMeta<FusionOutput>(fusionOutput);
         HVA_DEBUG("Camera2CFusionNode sending blob with frameid %u and streamid %u", cameraBlob1->frameId, cameraBlob1->streamId);
         m_ctx.sendOutput(cameraBlob1, 0, std::chrono::milliseconds(0));
@@ -477,7 +480,8 @@ Camera2CFusionNodeWorker::Camera2CFusionNodeWorker(hva::hvaNode_t *parentNode,
                                                    const camera2CFusionInPortsInfo_t &camera2CFusionInPortsInfo)
     : hva::hvaNodeWorker_t(parentNode),
       m_impl(new Impl(*this, registrationMatrixFilePath, qMatrixFilePath, homographyMatrixFilePath, pclConstraints, inMediaNum, camera2CFusionInPortsInfo))
-{}
+{
+}
 
 Camera2CFusionNodeWorker::~Camera2CFusionNodeWorker() {}
 

@@ -18,7 +18,6 @@ on:
     - cron: "0 2 * * 0"  # 2 a.m. on Sunday
 
 jobs:   
-
   trivy-scan:
     runs-on: ubuntu-latest
     permissions:
@@ -26,8 +25,20 @@ jobs:
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
-          path: edge-ai-suites-repo
           persist-credentials: false
+
+      - name: Build Docker images
+        run: |
+          ls
+          cd metro-ai-suite
+          docker build -t visual-search-qa-app:latest -f visual-search-question-and-answering/src/Dockerfile .
+          
+      - name: Verify Docker image
+        run: |
+          echo "=== Built Docker Image ==="
+          docker images
+          ls
+          echo "=== Image Build Verification Complete ==="
       - name: Run Trivy Filesystem Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
         id: trivy-fs
@@ -35,66 +46,49 @@ jobs:
           scan_type: "fs"  
           scan-scope: "all"  
           severity: "HIGH,CRITICAL" 
-          format: "json"  
-      
-      - name: Build Docker images
-        run: |
-          git clone https://github.com/open-edge-platform/edge-ai-libraries.git
-          cd edge-ai-libraries/microservices
-          docker build -t dataprep-visualdata-milvus:latest -f visual-data-preparation-for-retrieval/milvus/src/Dockerfile .
-          docker build -t retriever-milvus:latest -f vector-retriever/milvus/src/Dockerfile .
-          cd vlm-openvino-serving
-          docker build -t vlm-openvino-serving:latest -f docker/Dockerfile .
-          cd ../../..
-          cd edge-ai-suites-repo
-          cd metro-ai-suite
-          ls -R
-          docker build -t visual-search-qa-app:latest -f visual-search-question-and-answering/src/Dockerfile .
+          format: "json"
+          scan_target: "metro-ai-suite/visual-search-question-and-answering/"
+          report_suffix: "-fs-vsqa-CT7"
+
+      - name: Run trivy Scan -vsqa (HTML Report)
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: vsqa-visual-html
+        with:
+          scan_type: "image"  
+          scan-scope: "all"
+          scan_target: "visual-search-qa-app:latest"  
+          severity: "HIGH,CRITICAL"
+          format: "table"
+          report_suffix: "-image-vsqa-visual-html-CT248"
+          generate_sbom: "false"
           
-      - name: Run trivy Scan - dataprep-visualdata-milvus
+      - name: Run trivy Scan - vsqa (SPDX SBOM)
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: dataprep-visualdata-milvus
+        id: vsqa-visual-spdx
         with:
           scan_type: "image"  
-          scan-scope: all
-          scan_target: "dataprep-visualdata-milvus:latest"  
+          scan-scope: "all"
+          scan_target: "visual-search-qa-app:latest"  
           severity: "HIGH,CRITICAL"  
-          format: "json"  
+          format: "spdx-json"
+          scanners: "vuln"
+          report_suffix: "-image-vsqa-visual-spdx-CT248"
+          generate_sbom: "false"
 
-      - name: Run trivy Scan - retriever-milvus
+      - name: Scan Dockerfile with Trivy
         uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id: retriever-milvus
         with:
-          scan_type: "image"  
-          scan-scope: all
-          scan_target: "retriever-milvus:latest"  
-          severity: "HIGH,CRITICAL"  
-          format: "json"  
+          scan_type: "config"
+          scan_target: "metro-ai-suite/visual-search-question-and-answering/src/"
+          severity: "HIGH,CRITICAL"
+          format: "json"
+          misconfig_scanners: "dockerfile"
+          report_suffix: "-config-vsqa-CT222"
 
-      - name: Run trivy Scan - vlm-openvino-serving
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id:  vlm-openvino-serving
-        with:
-          scan_type: "image"  
-          scan-scope: all
-          scan_target: "vlm-openvino-serving:latest"  
-          severity: "HIGH,CRITICAL"  
-          format: "json"  
-
-      - name: Run trivy Scan - visual-search-qa-app
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
-        id:  visual-search-qa-app
-        with:
-          scan_type: "image"  
-          scan-scope: all
-          scan_target: "visual-search-qa-app:latest" 
-          severity: "HIGH,CRITICAL"  
-          format: "json"  
-          
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
-          name: trivy-report
+          name: trivy-report-vsqa
           path: security-results/trivy*
 
   bandit-scan:
@@ -108,7 +102,9 @@ jobs:
         with:
           scan-scope: "all"  
           output-format: "txt" 
-          fail-on-findings: "false" 
+          fail-on-findings: "false"
+          paths: "metro-ai-suite/visual-search-question-and-answering"
+          report_suffix: "-bandit-visual-search-qa-CT161"
           
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
@@ -128,7 +124,9 @@ jobs:
         with:
           scan-scope: "all"  
           output-format: "txt" 
-          fail-on-findings: "false" 
+          fail-on-findings: "false"
+          paths: "metro-ai-suite/visual-search-question-and-answering"
+          exclude_dirs: ".git,tests,docs,.pytest_cache,__pycache__,.venv"
           
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
@@ -136,4 +134,45 @@ jobs:
           name: clamav-report
           path: security-results/clamav*
 
+  coverity-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:        
+      - name: Check out edge-ai-suites repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+        with:
+          persist-credentials: false   
 
+      - name: Build with Coverity Analysis
+        run: |
+          wget --quiet https://scan.coverity.com/download/linux64 \
+            --post-data "token=${{ secrets.VQA_COVERITY_TOKEN }}&project=${{ secrets.VQA_COVERITY_PROJECT }}" \
+            -O coverity_tool.tgz
+          mkdir -p cov-analysis
+          tar xzf coverity_tool.tgz --strip-components=1 -C cov-analysis
+          COV_PATH="$(pwd)/cov-analysis/bin"
+          export PATH="$COV_PATH:$PATH"
+          ls
+          cd metro-ai-suite/visual-search-question-and-answering/src
+          coverity capture --dir cov-int --project-dir ./
+          
+      - name: Create tarball for upload
+        run: |
+          cd metro-ai-suite/visual-search-question-and-answering/src
+          tar -czvf coverity_output.tgz -C . cov-int
+          # Verify tarball contents
+          echo "=== Tarball Contents ==="
+          tar tzvf coverity_output.tgz
+          echo "=== head ==="
+          tar -tzvf coverity_output.tgz | head
+          
+      - name: Upload to Coverity Scan
+        run: |
+          cd metro-ai-suite/visual-search-question-and-answering/src
+          curl --form token=${{ secrets.VQA_COVERITY_TOKEN }} \
+               --form email=${{ secrets.VQA_COVERITY_EMAIL }} \
+               --form file=@coverity_output.tgz \
+               --form version="`date +%Y%m%d%H%M%S`" \
+               --form description="GitHub Action upload" \
+               https://scan.coverity.com/builds?project=${{ secrets.VQA_COVERITY_PROJECT }}

@@ -1,8 +1,10 @@
-# Collaborative SLAM
+<!--
+Copyright (C) 2025 Intel Corporation
 
-## Component Documentation
+SPDX-License-Identifier: Apache-2.0
+-->
 
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/edge-ai-suites/robotics-ai-suite/main/robotics/dev_guide/tutorials_amr/navigation/collaborative-slam.html)
+# Collaborative SLAM (CSLAM)
 
 ## Overview
 
@@ -17,9 +19,37 @@ There are four components:
 
 Refer to [this paper](https://arxiv.org/abs/2102.03228) for more explanation of the system.
 
-### System Requirement
+## Get Started
 
-We support Ubuntu 22.04 with [ROS 2 Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html).
+### System Requirements
+
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html).
+
+We support Ubuntu 22.04 with [ROS 2 Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html) and Ubuntu 24.04 with [ROS 2 Jazzy](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html).
+
+### Build
+
+To build debian packages, export `ROS_DISTRO` env variable to desired platform and run `make package` command. After build process successfully finishes, built packages will be available in the `<ROS_DISTRO>_cslam_deb_packages/` directory. The following command is an example for `Humble` distribution.
+
+```bash
+ROS_DISTRO=humble make package
+```
+
+You can list all built packages:
+
+```bash
+$ ls humble_cslam_deb_packages/|grep -i .deb
+ros-humble-univloc-msgs_2.0.1-1_amd64.deb
+ros-humble-univloc-server_2.0.1-1_amd64.deb
+ros-humble-univloc-slam_2.0.1-1_amd64.deb
+ros-humble-univloc-tracker_2.0.1-1_amd64.deb
+```
+
+To clean all build artifacts:
+
+```bash
+make clean
+```
 
 ### Third-party Dependencies
 
@@ -27,36 +57,79 @@ We depend on Eigen, OpenCV and yaml-cpp. They should have already been in your s
 
 We also depend on [DBoW2](https://github.com/shinsumicco/DBoW2), [g2o](https://github.com/RainerKuemmerle/g2o), [nlohmann/json](https://github.com/nlohmann/json) and [spdlog](https://github.com/gabime/spdlog). They are included in this repo as git submodule, so that you do NOT have to download or install them manually.
 
-### Clone and Build
+### Install
 
-To setup, clone or download UnivLoc into a colcon workspace, and build with `colcon build`:
+If Ubuntu 22.04 with Humble is used, then run
 
 ```bash
-git clone --recursive https://github.com/open-edge-platform/edge-ai-suites
-# If you have cloned the repo without the --recursive flag, run the following command to remedy:
-#git submodule update --init --recursive
-
-cp -r edge-ai-suites/robotics-ai-suite/components/collaborative-slam YOUR_COLCON_WORKSPACE/src
-cd YOUR_COLCON_WORKSPACE/src
-
-cd ..
-# build with native support (default build - some platforms not supported)
-colcon build
-
-# build without native support
-colcon build --cmake-args -DBUILD_NATIVE=OFF
-# or without tests
-colcon build --cmake-args -DBUILD_TESTING=OFF -DBUILD_NATIVE=OFF
-# build with tremont architecture support (some platforms not supported)
-colcon build --cmake-args -DBUILD_TREMONT=ON
-
-Note: If not defined, default values will be BUILD_NATIVE=ON, BUILD_TREMONT=OFF
-
-# build in debug mode
-colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug
-
-Note: for cases when BUILD_NATIVE=OFF or using debug mode, the g2o optimization might not work properly, which can lead to degraded performance.
+source /opt/ros/humble/setup.bash
 ```
+
+If Ubuntu 24.04 with Jazzy is used, then run
+
+```bash
+source /opt/ros/jazzy/setup.bash
+```
+
+Finally, install the Debian packages that were built via `make package`:
+
+```bash
+sudo apt update
+sudo apt install ./$(ROS_DISTRO)_cslam_deb_packages/*.deb
+```
+
+### Development
+
+There is a set of prepared Makefile targets to speed up the development.
+
+In particular, use the following Makefile target to run code linters.
+
+```bash
+make lint
+```
+
+Alternatively, you can run linters individually.
+
+```bash
+make lint-bash
+make lint-clang
+make lint-githubactions
+make lint-json
+make lint-markdown
+make lint-python
+make lint-yaml
+```
+
+To run license compliance validation:
+
+```bash
+make license-check
+```
+
+To see a full list of available Makefile targets:
+
+```bash
+$ make help
+Target               Description
+------               -----------
+clean                Clean up all build artifacts
+clean-colcon         Clean up Colcon build and test artifacts
+clean-debian         Clean up Debian packaging artifacts
+license-check        Perform a REUSE license check using docker container https://hub.docker.com/r/fsfe/reuse
+lint                 Run all sub-linters using super-linter (using linters defined for this repo only)
+lint-all             Run super-linter over entire repository (auto-detects code to lint)
+lint-bash            Run Bash linter using super-linter
+lint-clang           Run clang linter using super-linter
+lint-githubactions   Run Github Actions linter using super-linter
+lint-json            Run JSON linter using super-linter
+lint-markdown        Run Markdown linter using super-linter
+lint-python          Run Python linter using super-linter
+lint-yaml            Run YAML linter using super-linter
+package              Build Debian package
+source-package       Create source package tarball
+```
+
+## Usage
 
 To leverage GPU, check this [guide](docs/GPU_CM.md) for environment setup.
 
@@ -64,7 +137,7 @@ To leverage GPU, check this [guide](docs/GPU_CM.md) for environment setup.
 
 The tracker and server are ROS programs. All the configurations are passed with ROS parameters. Check [tracker.launch.py](tracker/launch/tracker.launch.py)
 and [server.launch.py](server/launch/server.launch.py) for all available parameters and comments.
-For ROS2, parameters and launch file are separated and parameters are stored in [tracker.yaml](tracker/config/tracker.yaml).  
+For ROS2, parameters and launch file are separated and parameters are stored in [tracker.yaml](tracker/config/tracker.yaml).
 There are ready-to-use configurations for RealSense D400-Series RGBD camera or the OpenLORIS-Scene dataset (`tracker.launch.py`), the TUM RGBD dataset (`tum_rgbd.launch.py`), the EuRoC dataset (`euroc_mono.launch.py` or `euroc_stereo.launch.py`), the KITTI dataset (`kitti_mono.launch.py` or `kitti_stereo.launch.py`).
 
 Collaborative SLAM currently supports total 4 operating modes, including mapping, localization, remapping and re-localization modes. We provide `slam_mode` option for the tracker and `server_mode` option for the server to configure.
@@ -260,12 +333,16 @@ Fast Mapping support. By default, Fast Mapping support is disabled, but setting 
 will enable Fast Mapping that will result in the topics `map`(2D) and `fused_map`(3D) maps being published.
 The parameters for configuring Fast Mapping are present in the [tracker.yaml](tracker/config/tracker.yaml).
 
-### Documentation
+## Documentation
 
-Documentations are placed under docs folder.
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/collaborative-slam.html).
 
-For enabling imu and odometry data, you can refer to [use_odometry.md](docs/use_odometry.md), [use_imu.md](docs/use_imu.md).
+Additional documentation is placed under docs folder:
 
-For localization mode, saving map or trajectory for evaluation, you can refer to [geekplus_doc.md](docs/geekplus_doc.md).
+- For enabling imu and odometry data, you can refer to [use_odometry.md](docs/use_odometry.md), [use_imu.md](docs/use_imu.md).
+- For localization mode, saving map or trajectory for evaluation, you can refer to [geekplus_doc.md](docs/geekplus_doc.md).
+- For remapping mode, updating pre-constructed keyframe/landmark map and octree map with manual region input from user, you can refer to [remapping_mode.md](docs/remapping_mode.md).
 
-For remapping mode, updating pre-constructed keyframe/landmark map and octree map with manual region input from user, you can refer to [remapping_mode.md](docs/remapping_mode.md).
+## License
+
+`collaborative-slam` is licensed under [Apache 2.0 License](./LICENSES/Apache-2.0.txt).

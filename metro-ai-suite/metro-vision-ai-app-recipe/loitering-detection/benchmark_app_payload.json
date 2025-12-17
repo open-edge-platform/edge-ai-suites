@@ -1,0 +1,80 @@
+[
+    {
+        "pipeline": "object_tracking_cpu",
+        "payload":{
+            "source": {
+                "uri": "file:///home/pipeline-server/videos/VIRAT_S_000101_looped.mp4",
+                "type": "uri"
+            },
+            "destination": {
+                "metadata": {
+                    "type": "mqtt",
+                    "topic": "object_tracking_$x",
+                    "publish_frame":false
+                },
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "object_tracking_$x"
+                }
+            },
+            "parameters": {
+                "detection-properties": {
+                    "model": "/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml",
+                    "device": "CPU"
+                }
+            }
+        }
+    },
+    {
+        "pipeline": "object_tracking_gpu",
+        "payload":{
+            "source": {
+                "uri": "file:///home/pipeline-server/videos/VIRAT_S_000101_looped.mp4",
+                "type": "uri"
+            },
+            "destination": {
+                "metadata": {
+                    "type": "mqtt",
+                    "topic": "object_tracking_$x",
+                    "publish_frame":false
+                },
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "object_tracking_$x"
+                }
+            },
+            "parameters": {
+                "detection-properties": {
+                    "model": "/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml",
+                    "device": "GPU"
+                }
+            }
+        }
+    },
+    {
+        "pipeline": "object_tracking_npu",
+        "payload":{
+            "source": {
+                "uri": "file:///home/pipeline-server/videos/VIRAT_S_000101_looped.mp4",
+                "type": "uri"
+            },
+            "destination": {
+                "metadata": {
+                    "type": "mqtt",
+                    "topic": "object_tracking_$x",
+                    "publish_frame":false
+                },
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "object_tracking_$x"
+                }
+            },
+            "parameters": {
+                "detection-properties": {
+                    "model": "/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml",
+                    "device": "NPU"
+                }
+            }
+        }
+    }
+]

@@ -3,6 +3,7 @@
 AI and machine vision enable real-time detection of welding defects, ensuring immediate corrective action before issues escalate. By leveraging the right camera and computing hardware, a trained AI model continuously monitors the weld, halting the process the moment a defect is detected. Deep learning AI processes video data at frame rates far beyond human capability, delivering unmatched precision and reliability.
 
 ## Deploy using Docker Compose
+
 ---
 For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/weld-porosity/get-started.html).
 
@@ -21,6 +22,7 @@ For more details on deployment, refer to the [documentation](https://docs.opened
 1.0.0
 
 ## License Agreement
+
 ---
 Copyright (C) 2024 Intel Corporation.
 
@@ -30,6 +32,7 @@ You may obtain a copy of the License at
 http://www.apache.org/licenses/LICENSE-2.0
 
 ## Legal Information
+
 ---
 Intel, the Intel logo, and Xeon are trademarks of Intel Corporation in the U.S. and/or other countries.
 

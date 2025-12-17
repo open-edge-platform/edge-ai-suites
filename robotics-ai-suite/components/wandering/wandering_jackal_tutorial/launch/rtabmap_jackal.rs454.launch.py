@@ -14,62 +14,73 @@
 # See the License for the specific language governing permissions
 # and limitations under the License.
 
+import os
+
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition, UnlessCondition
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-import os
+
 
 def generate_launch_description():
-
     localization = LaunchConfiguration('localization')
     params_file = LaunchConfiguration('params_file')
 
-    remappings=[
-          ('rgbd_image','/sensors/camera_0/rgbd_image')]
+    remappings = [('rgbd_image', '/sensors/camera_0/rgbd_image')]
 
-    remapping_rs=[
-          ('rgbd_image',      '/sensors/camera_0/rgbd_image'),
-          ('rgb/image',       '/sensors/camera_0/color/image_raw'),
-          ('rgb/camera_info', '/sensors/camera_0/color/camera_info'),
-          ('depth/image',     '/sensors/camera_0/aligned_depth_to_color/image_raw')]
+    remapping_rs = [
+        ('rgbd_image', '/sensors/camera_0/rgbd_image'),
+        ('rgb/image', '/sensors/camera_0/color/image_raw'),
+        ('rgb/camera_info', '/sensors/camera_0/color/camera_info'),
+        ('depth/image', '/sensors/camera_0/aligned_depth_to_color/image_raw'),
+    ]
 
-    return LaunchDescription([
-
-        DeclareLaunchArgument(
-            'qos', default_value='2',
-            description='QoS used for input sensor topics'),
-
-        DeclareLaunchArgument(
-            'localization', default_value='false',
-            description='Launch in localization mode.'),
-
-        DeclareLaunchArgument(
-            'params_file',
-            default_value=os.path.join(get_package_share_directory('wandering_jackal_tutorial'), 'params', 'jackal_nav.param.yaml'),
-            description='Full path to the ROS2 parameters file to use for all launched nodes'),
-
-        # SLAM node:
-        Node(
-            package='rtabmap_sync', executable='rgbd_sync', remappings=remapping_rs,
-            parameters=[{'approx_sync' : False }]
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                'qos', default_value='2', description='QoS used for input sensor topics'
             ),
-
-        Node(
-            condition=UnlessCondition(localization),
-            package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=[params_file],
-            remappings=remappings,
-            arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
-
-        # Localization node:
-        Node(
-            condition=IfCondition(localization),
-            package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=[params_file,
-              {'Mem/IncrementalMemory':'False',
-               'Mem/InitWMWithAllNodes':'True'}],
-            remappings=remappings),
-   ])
+            DeclareLaunchArgument(
+                'localization', default_value='false', description='Launch in localization mode.'
+            ),
+            DeclareLaunchArgument(
+                'params_file',
+                default_value=os.path.join(
+                    get_package_share_directory('wandering_jackal_tutorial'),
+                    'params',
+                    'jackal_nav.param.yaml',
+                ),
+                description='Full path to the ROS2 parameters file to use for all launched nodes',
+            ),
+            # SLAM node:
+            Node(
+                package='rtabmap_sync',
+                executable='rgbd_sync',
+                remappings=remapping_rs,
+                parameters=[{'approx_sync': False}],
+            ),
+            Node(
+                condition=UnlessCondition(localization),
+                package='rtabmap_slam',
+                executable='rtabmap',
+                output='screen',
+                parameters=[params_file],
+                remappings=remappings,
+                arguments=['-d'],
+            ),  # This will delete the previous database (~/.ros/rtabmap.db)
+            # Localization node:
+            Node(
+                condition=IfCondition(localization),
+                package='rtabmap_slam',
+                executable='rtabmap',
+                output='screen',
+                parameters=[
+                    params_file,
+                    {'Mem/IncrementalMemory': 'False', 'Mem/InitWMWithAllNodes': 'True'},
+                ],
+                remappings=remappings,
+            ),
+        ]
+    )

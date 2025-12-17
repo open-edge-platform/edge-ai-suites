@@ -7,8 +7,8 @@ This tutorial demonstrates how to execute passthrough filtering.
 
 .. note::
 
-  This tutorial is applicable for execution for both within inside and outside a |docker| image. It assumes that the
-  *pcl-oneapi-tutorials* |deb_pack| is installed, and the user has copied the *tutorial*
+  This tutorial is applicable for execution for both within inside and outside a Docker image. It assumes that the
+  *pcl-oneapi-tutorials* Deb package is installed, and the user has copied the *tutorial*
   directory from */opt/intel/pcl/oneapi/tutorials/* to a user-writable directory.
 
 #. Prepare the environment:
@@ -25,7 +25,10 @@ This tutorial demonstrates how to execute passthrough filtering.
       :linenos:
 
 
-#. Source the |l_oneapi| environment:
+#. This tutorial needs ``boost`` patching to be applied for C++17 as a workaround if the Boost version < 1.83. Refer to `Boost Patching for Compatibility <../installation.html#boost-patching-for-compatibility>`__ for required code changes.
+
+
+#. Source the Intel® oneAPI Base Toolkit environment:
 
    .. code-block::
 

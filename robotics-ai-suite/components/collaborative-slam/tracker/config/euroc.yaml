@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+---
 univloc_tracker:
   # ID of this tracker
   ID: 0
@@ -217,7 +218,7 @@ univloc_tracker:
   imu_noise: [1.6968e-04, 1.6968e-04, 1.6968e-04, 2.0000e-3, 2.0000e-3, 2.0000e-3]
 
   # The bias_walker parameter used to process the imu input, i.e. wgx, wgy, wgz, wax, way, waz
-  imu_bias_walker: [1.9393e-05 , 1.9393e-05 , 1.9393e-05, 3.0000e-03, 3.0000e-03, 3.0000e-03]
+  imu_bias_walker: [1.9393e-05, 1.9393e-05, 1.9393e-05, 3.0000e-03, 3.0000e-03, 3.0000e-03]
 
   # namespace under which topics are created
   namespace: ''

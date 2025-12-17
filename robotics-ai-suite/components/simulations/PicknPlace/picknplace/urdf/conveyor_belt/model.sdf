@@ -33,10 +33,6 @@
           <shader type='pixel'>
             <normal_map>__default__</normal_map>
           </shader>
-          <script>
-            <name>ModelPreview_1::belt_visual::belt_visual_visual_MATERIAL_</name>
-            <uri>__default__</uri>
-          </script>
           <ambient>0 0 0 1</ambient>
           <diffuse>0 0 0 1</diffuse>
           <specular>0 0 0 1</specular>
@@ -107,12 +103,9 @@
         <pose>0 0 0.01 0 -0 0</pose>
         <mass>.1</mass>
         <inertia>
-          <ixx>0</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0</iyy>
-          <iyz>0</iyz>
-          <izz>0</izz>
+          <ixx>1e-6</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>1e-6</iyy><iyz>0</iyz>
+          <izz>1e-6</izz>
         </inertia>
       </inertial>
       <self_collide>0</self_collide>
@@ -210,13 +203,12 @@
     <static>0</static>
     <allow_auto_disable>1</allow_auto_disable>
     
-    <plugin name='conveyor_belt_plugin' filename='libConveyorBeltPlugin.so'>
-      <robot_namespace>/</robot_namespace>
-      <link>belt_moving</link>
-      <power>90</power>
+    <plugin name='libConveyorBeltPlugin' filename='libConveyorBeltPlugin'>
       <max_velocity>1.0</max_velocity>
-      <robotNamespace>/</robotNamespace>
+      <publish_rate>1000</publish_rate>
+      <joint_name>belt_joint</joint_name>
+      <lower_limit>0.0</lower_limit>
+      <upper_limit>1.01</upper_limit>
     </plugin>
-    
   </model>
 </sdf>

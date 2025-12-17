@@ -1,5 +1,7 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 add_library(prm_lib SHARED
   prm.cpp
   ../path_utils/path_utils.cpp

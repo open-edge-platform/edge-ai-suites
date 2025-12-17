@@ -1,5 +1,9 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025 Intel Corporation
+/*
+ * Copyright (C) 2025 Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef OPENVSLAM_DATA_BOW_VOCABULARY_H
 #define OPENVSLAM_DATA_BOW_VOCABULARY_H
 
@@ -10,8 +14,10 @@
 #include <fbow/fbow.h>
 #endif  // USE_DBOW2
 
-namespace openvslam {
-namespace data {
+namespace openvslam
+{
+namespace data
+{
 
 #ifdef USE_DBOW2
 

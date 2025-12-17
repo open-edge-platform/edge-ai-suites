@@ -1,6 +1,10 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
-cmake_minimum_required(VERSION 3.5)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# https://docs.ros.org/en/humble/The-ROS2-Project/Contributing/Code-Style-Language-Versions.html#id5
+cmake_minimum_required(VERSION 3.14.4)
+
 # Test dynamic parameters
 ament_add_gtest(test_dynamic_parameters
   test_dynamic_parameters.cpp

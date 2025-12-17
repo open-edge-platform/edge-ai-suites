@@ -10,7 +10,7 @@ metadata:
   name: {{ $.Values.config.grafana.name }}
   namespace: {{ $.Values.namespace }}
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: ia-grafana
   ports:
@@ -35,6 +35,13 @@ spec:
       labels:
         app: ia-grafana
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+        runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        fsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        seccompProfile:
+          type: RuntimeDefault
       {{- if and $.Values.DOCKER_USERNAME $.Values.DOCKER_PASSWORD }}
       imagePullSecrets:
       - name: registryauth
@@ -44,6 +51,9 @@ spec:
         image: grafana/grafana-oss:12.0.0-ubuntu
         imagePullPolicy: {{ $.Values.imagePullPolicy }}
         securityContext:
+          runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+          runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+          runAsNonRoot: true
           readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
           capabilities:
@@ -88,6 +98,12 @@ spec:
           value: "/etc/grafana/provisioning/dashboards"
         - name: GF_LOG_LEVEL
           value: '{{ $.Values.env.LOG_LEVEL }}'
+        - name: GF_AUTH_LOGIN_MAXIMUM_INACTIVE_LIFETIME_DURATION
+          value: '{{ $.Values.env.VISUALIZER_GRAFANA_INACTIVE_TIMEOUT }}'
+        - name: GF_AUTH_LOGIN_MAXIMUM_LIFETIME_DURATION
+          value: '{{ $.Values.env.VISUALIZER_GRAFANA_INACTIVE_TIMEOUT }}'
+        - name: GF_SECURITY_LOGIN_REMEMBER_DAYS
+          value: "1"
       volumes:
       - name: vol-temp-grafana
         emptyDir: {}

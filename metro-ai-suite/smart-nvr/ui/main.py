@@ -7,7 +7,7 @@ Main entry point for NVR Event Router UI.
 
 import logging
 from interface.interface import create_ui
-from interface.interface import initialize_app, stop_event_updates, cleanup_temp_files
+from interface.interface import initialize_app, stop_event_updates
 
 # Configure logging
 logging.basicConfig(

@@ -1,3 +1,7 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # Holds an entity's pose and twist
 string name                 # Entity's scoped name.
                             # An entity can be a model, link, collision, light, etc.

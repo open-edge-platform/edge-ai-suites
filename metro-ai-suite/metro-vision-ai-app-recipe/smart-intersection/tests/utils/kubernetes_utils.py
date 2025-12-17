@@ -48,7 +48,7 @@ def wait_for_pods_ready(namespace, timeout=300, interval=10):
   raise TimeoutError("Pods did not become ready in time.")
 
 def get_scenescape_kubernetes_url():
-  """Get the Kubernetes URL for Scenescape service."""
+  """Get the Kubernetes URL for SceneScape service."""
   global SCENESCAPE_KUBERNETES_URL
   if SCENESCAPE_KUBERNETES_URL is None:
     web_node_port = get_node_port("smart-intersection-web", "smart-intersection")
@@ -70,12 +70,12 @@ def start_port_forwarding(service_name, local_port, remote_port, namespace="smar
 def check_helm_deployment_status(release_name, namespace):
   """Check if Helm deployment is successful."""
   logger.info(f"Checking Helm deployment status for release '{release_name}' in namespace '{namespace}'")
-  
+
   out, err, code = run_command(f"helm status {release_name} -n {namespace}")
   if code != 0:
     logger.error(f"Failed to get Helm release status: {err}")
     return False
-  
+
   if "STATUS: deployed" in out:
     logger.info(f"Helm release '{release_name}' is successfully deployed")
     return True
@@ -86,7 +86,7 @@ def check_helm_deployment_status(release_name, namespace):
 def check_namespace_exists(namespace):
   """Check if Kubernetes namespace exists."""
   logger.info(f"Checking if namespace '{namespace}' exists")
-  
+
   out, err, code = run_command(f"kubectl get namespace {namespace}")
   if code == 0:
     logger.info(f"Namespace '{namespace}' exists")
@@ -98,12 +98,12 @@ def check_namespace_exists(namespace):
 def get_pods_in_namespace(namespace):
   """Get all pods in a namespace with their status."""
   logger.info(f"Getting pods in namespace '{namespace}'")
-  
+
   out, err, code = run_command(f"kubectl get pods -n {namespace} --no-headers")
   if code != 0:
     logger.error(f"Failed to get pods: {err}")
     return None
-  
+
   pods = []
   for line in out.strip().split('\n'):
     if line.strip():
@@ -113,7 +113,7 @@ def get_pods_in_namespace(namespace):
       status = parts[2]
       restarts = parts[3]
       age = parts[4]
-      
+
       pods.append({
         'name': pod_name,
         'ready': ready,
@@ -121,7 +121,7 @@ def get_pods_in_namespace(namespace):
         'restarts': restarts,
         'age': age
       })
-  
+
   logger.info(f"Found {len(pods)} pods in namespace '{namespace}'")
   return pods
 
@@ -130,36 +130,36 @@ def check_all_pods_running(namespace):
   pods = get_pods_in_namespace(namespace)
   if pods is None:
     return False
-  
+
   running_pods = []
   failed_pods = []
-  
+
   for pod in pods:
     if pod['status'] == 'Running':
       running_pods.append(pod['name'])
     else:
       failed_pods.append({'name': pod['name'], 'status': pod['status']})
-  
+
   logger.info(f"Running pods ({len(running_pods)}): {', '.join(running_pods)}")
-  
+
   if failed_pods:
     logger.error(f"Pods not running ({len(failed_pods)}):")
     for pod in failed_pods:
       logger.error(f"  - {pod['name']}: {pod['status']}")
     return False
-  
+
   logger.info(f"All {len(running_pods)} pods are in Running state")
   return True
 
 def get_services_in_namespace(namespace):
   """Get all services in a namespace."""
   logger.info(f"Getting services in namespace '{namespace}'")
-  
+
   out, err, code = run_command(f"kubectl get services -n {namespace} --no-headers")
   if code != 0:
     logger.error(f"Failed to get services: {err}")
     return None
-  
+
   services = []
   for line in out.strip().split('\n'):
     if line.strip():
@@ -170,7 +170,7 @@ def get_services_in_namespace(namespace):
       external_ip = parts[3]
       ports = parts[4]
       age = parts[5]
-      
+
       services.append({
         'name': service_name,
         'type': service_type,
@@ -179,6 +179,6 @@ def get_services_in_namespace(namespace):
         'ports': ports,
         'age': age
       })
-  
+
   logger.info(f"Found {len(services)} services in namespace '{namespace}'")
   return services

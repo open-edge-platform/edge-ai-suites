@@ -1,4 +1,4 @@
-# Tutorial 4: Video Analytics Pipelines
+# Metro Vision AI SDK - Tutorial 4
 
 This tutorial demonstrates how to build sophisticated video analytics pipelines using Intel® DL Streamer framework. You'll learn to create real-time human pose estimation applications, understand GStreamer pipeline architecture, and develop custom video analytics solutions for computer vision applications.
 
@@ -38,12 +38,20 @@ Before starting this tutorial, ensure you have:
 
 ## System Requirements
 
-- **Operating System:** Ubuntu 22.04 LTS or Ubuntu 24.04 LTS
+- **Operating System:** Ubuntu 22.04 LTS or Ubuntu 24.04 LTS (Desktop edition required)
 - **Processor:** Intel® Core™, Intel® Core™ Ultra, or Intel® Xeon® processors
 - **Memory:** Minimum 8GB RAM (16GB recommended for complex pipelines)
 - **Storage:** 4GB free disk space for models, videos, and intermediate files
 - **Graphics:** Intel integrated graphics or discrete GPU (recommended for acceleration)
 - **Display:** Monitor capable of displaying real-time video output
+
+**Important Display Requirements**
+This tutorial requires **Ubuntu Desktop** with a physical display and active graphical session. It will **not work** with:
+- Ubuntu Server (no GUI)
+- Remote SSH sessions without X11 forwarding
+- Headless systems
+ 
+You must be logged in to a local desktop session with a connected monitor or Remote Desktop/VNC connection for the video output to display correctly.
 
 ## Tutorial Steps
 
@@ -74,6 +82,7 @@ wget -O models/intel/human-pose-estimation-0001/human-pose-estimation-0001.json 
 ### Step 2: Understand Human Pose Estimation Model
 
 **Model Architecture:**
+
 - **Model Name**: human-pose-estimation-0001
 - **Framework**: OpenVINO optimized model from Intel Model Zoo
 - **Input**: 256x456 RGB image
@@ -114,6 +123,7 @@ docker run -it --rm --net=host \
 ```
 
 **Pipeline Execution Features:**
+
 - Real-time human pose detection and visualization
 - Skeletal overlay on detected persons
 - Keypoint confidence scoring

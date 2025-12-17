@@ -4,7 +4,7 @@
 import os
 from streamlit.testing.v1 import AppTest
 
-APP_TIMEOUT = 30
+APP_TIMEOUT = 300
 
 HOST_DATA_PATH = os.environ.get("HOST_DATA_PATH", "/home/user/data")
 HOST_DATA_PATH = os.path.join(HOST_DATA_PATH, "DAVIS", "subset")

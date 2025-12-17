@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Tracker Frame-Level Pose Trajectory Fusion using Kalman Filter
 
 ## Overall logic
@@ -8,7 +14,8 @@ This doc illustrates part of the multi-camera feature in Collaborative SLAM. As 
 
 ## Expected Behavior
 
-For the current implementation, we used two cameras (i.e. front and rear cameras) in a single robot and one Kalman Filter ROS2 node (robot_localization package) to generate the final fused pose trajectory. Since we haven't finished developing multi-camera feature, the performance is not optimal, for example, if one tracker loses tracking, it is difficult to get back to normal tracking and produce pose output for Kalman Filter unless it relocalizes itself in the local map. This will be improved after finishing the complete version of multi-camera feature.
+For the current implementation, we used two cameras (i.e. front and rear cameras) in a single robot and one Kalman Filter ROS2 node (robot_localization package) to generate the final fused pose trajectory.
+Since we haven't finished developing multi-camera feature, the performance is not optimal, for example, if one tracker loses tracking, it is difficult to get back to normal tracking and produce pose output for Kalman Filter unless it relocalizes itself in the local map. This will be improved after finishing the complete version of multi-camera feature.
 
 ### Prerequisite
 
@@ -22,7 +29,10 @@ git checkout foxy-devel
 git apply robot_localization.patch
 ```
 
-Second, make sure that at least two RealSense cameras (front and rear cameras) are launched properly. For Pengo robot, by default it has four cameras facing four directions. You could refer to the doc about [record bag for multiple cameras](https://intel.sharepoint.com/sites/IOTGATIEIASW/_layouts/15/Doc.aspx?sourcedoc={769afa91-dc77-4972-bc6a-beff70d06bfc}&action=edit&wd=target%28Multi-Camera.one%7Cfdb027af-8428-49d7-88fe-93f3f52cb743%2FRecord%20Bag%20for%20Multiple%20Cameras%7C3aadd5d9-bb3d-482b-ace3-ce0a9fe32911%2F%29&wdorigin=NavigationUrl) for more information. After launching the cameras, you need to check the following items are correct:
+Second, make sure that at least two RealSense cameras (front and rear cameras) are launched properly.
+For Pengo robot, by default it has four cameras facing four directions.
+You could refer to the doc about [record bag for multiple cameras](https://intel.sharepoint.com/sites/IOTGATIEIASW/_layouts/15/Doc.aspx?sourcedoc={769afa91-dc77-4972-bc6a-beff70d06bfc}&action=edit&wd=target%28Multi-Camera.one%7Cfdb027af-8428-49d7-88fe-93f3f52cb743%2FRecord%20Bag%20for%20Multiple%20Cameras%7C3aadd5d9-bb3d-482b-ace3-ce0a9fe32911%2F%29&wdorigin=NavigationUrl) for more information.
+After launching the cameras, you need to check the following items are correct:
 
 - Topic names for the 2 cameras (front camera use *camera1* and rear camera use *camera3* as prefix)
 - TF tree

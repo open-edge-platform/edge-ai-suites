@@ -47,7 +47,7 @@ hostname -I | awk '{print $1}'
 
 Open your web browser and navigate to the Node-RED interface:
 ```
-http://<HOST_IP>:1880
+https://<HOST_IP>/nodered/
 ```
 
 Replace `<HOST_IP>` with your actual system IP address.
@@ -64,7 +64,7 @@ If you cannot access Node-RED:
    ```
 2. Check that port 1880 is exposed and accessible
 3. Ensure no firewall is blocking the connection
-4. Try accessing via localhost if running on the same machine: `http://localhost:1880`
+4. Try accessing via localhost if running on the same machine: `https://localhost/nodered/`
 
 </details>
 
@@ -76,7 +76,7 @@ Remove any existing flows to start with a clean workspace:
 2. **Delete Selected Nodes**: Press the `Delete` key to remove all selected nodes
 3. **Deploy Changes**: Click the red **Deploy** button in the top-right corner to save the changes
 
-- Go to the URL http://<HOST_IP>:1880.
+- Go to the URL https://<HOST_IP>/nodered/.
 - Select everything inside the flow and delete it.
 - This clears the your node red flow.
 
@@ -120,27 +120,27 @@ Create a debug node to monitor incoming data:
    If you don't see data in the debug panel, execute the AI pipeline using this curl command:
 
    ```bash
-   curl http://localhost:8080/pipelines/user_defined_pipelines/car_plate_recognition_1 -X POST -H 'Content-Type: application/json' -d '
+   # Start the AI tolling pipeline with the sample video
+   curl -k -s https://localhost/api/pipelines/user_defined_pipelines/car_plate_recognition_1 -X POST -H 'Content-Type: application/json' -d '
    {
-         "source": {
-            "uri": "file:///home/pipeline-server/videos/cars_extended.mp4",
-            "type": "uri"
-         },
-         "destination": {
-            "metadata": {
+      "source": {
+         "uri": "file:///home/pipeline-server/videos/cars_extended.mp4",
+         "type": "uri"
+      },
+      "destination": {
+         "metadata": {
                "type": "mqtt",
-               "host": "broker:1883",
                "topic": "object_detection_1",
                "timeout": 1000
-            },
-            "frame": {
+         },
+         "frame": {
                "type": "webrtc",
                "peer-id": "object_detection_1"
-            }
-         },
-         "parameters": {
-            "detection-device": "CPU"
          }
+      },
+      "parameters": {
+         "detection-device": "CPU"
+      }
    }'
    ```
 
@@ -162,35 +162,53 @@ Add a function node to enhance the AI inference data with custom metadata:
 ```javascript
 // Extract license, color, and type from msg.payload
 // Skip frames that don't have all required attributes
+// Uses payload.metadata.objects and parses JSON
 
-// Check if payload exists and has objects array
-if (!msg.payload || !msg.payload.objects || !Array.isArray(msg.payload.objects)) {
-    return null; // Ignore this data frame
+// Parse JSON if payload is a string
+if (typeof msg.payload === "string") {
+    try {
+        msg.payload = JSON.parse(msg.payload);
+    } catch (e) {
+        node.error("Failed to parse JSON: " + e);
+        return null;
+    }
+}
+
+// Validate that metadata.objects exists
+if (
+    !msg.payload ||
+    !msg.payload.metadata ||
+    !msg.payload.metadata.objects ||
+    !Array.isArray(msg.payload.metadata.objects)
+) {
+    return null; // Ignore this frame
 }
 
 let extractedData = [];
 
-// Process each object in the objects array
-for (let obj of msg.payload.objects) {
-    // Check if object has all required attributes
+// Process each object in metadata.objects
+for (let obj of msg.payload.metadata.objects) {
+
+    // All attributes must exist
     if (!obj.license_plate || !obj.color || !obj.type) {
         continue; // Skip this object if missing any attribute
     }
-    
-    // Extract the data
+
     let extractedObj = {
         license: obj.license_plate.label || null,
         color: obj.color.label || null,
         type: obj.type.label || null,
-        // Optional: include confidence scores
+
+        // Confidence fields
+        license_confidence: obj.license_plate.confidence || null,
         color_confidence: obj.color.confidence || null,
         type_confidence: obj.type.confidence || null
     };
-    
+
     extractedData.push(extractedObj);
 }
 
-// If no valid objects found, ignore this data frame
+// If no valid objects found, ignore this frame
 if (extractedData.length === 0) {
     return null;
 }

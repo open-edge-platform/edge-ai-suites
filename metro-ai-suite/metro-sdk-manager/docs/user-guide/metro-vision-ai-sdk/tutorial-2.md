@@ -1,4 +1,4 @@
-# Tutorial 2: Video Decode and Tiled Display
+# Metro Vision AI SDK - Tutorial 2
 
 This tutorial demonstrates advanced video processing capabilities using Intel's hardware-accelerated video decoding and composition. You'll learn to decode multiple video streams simultaneously and display them in a tiled layout on a 4K monitor using VAAPI (Video Acceleration API) and GStreamer.
 
@@ -6,7 +6,7 @@ This tutorial demonstrates advanced video processing capabilities using Intel's 
 
 Multi-stream video processing is essential for applications like video surveillance, broadcasting, and media production. This tutorial showcases how Intel's hardware acceleration can efficiently decode and composite 16 simultaneous video streams into a single 4K display output, demonstrating the power of Intel® Quick Sync Video technology.
 
-> ** Platform Compatibility**  
+> **Platform Compatibility**
 > This tutorial requires Intel® Core™ or Intel® Core™ Ultra processors with integrated graphics. Intel® Xeon® processors without integrated graphics are not supported for this specific use case.
 
 ## Time to Complete
@@ -37,16 +37,65 @@ Before starting this tutorial, ensure you have:
 
 ## System Requirements
 
-- **Operating System:** Ubuntu 22.04 LTS or Ubuntu 24.04 LTS
+- **Operating System:** Ubuntu 22.04 LTS or Ubuntu 24.04 LTS (Desktop edition required)
 - **Processor:** Intel® Core™ or Intel® Core™ Ultra with integrated graphics
 - **Memory:** Minimum 8GB RAM (16GB recommended for smooth performance)
 - **Display:** 4K monitor (3840x2160) or compatible display
 - **Storage:** 2GB free disk space for video files
 - **Graphics:** Intel integrated graphics with VAAPI support
 
+**Important Display Requirements**
+This tutorial requires **Ubuntu Desktop** with a **local physical display** and active graphical session. It will **not work properly** with:
+- Ubuntu Server (no GUI)
+- Remote SSH sessions (even with X11 forwarding)
+- Remote Desktop/VNC connections
+- Headless systems
+ 
+**Why Remote Connections Don't Work:**
+Streaming 16 simultaneous 4K video streams requires extremely high bandwidth (~150-200 Mbps) and low latency. Remote desktop protocols (SSH/X11, VNC, RDP) compress video heavily and introduce significant latency, resulting in:
+- Severe frame drops and stuttering
+- Poor visual quality due to compression artifacts
+- Inability to accurately measure hardware acceleration performance
+- Network congestion and timeouts
+
+**You must be physically logged into a local desktop session with a directly connected monitor** to experience proper performance and validate hardware acceleration capabilities.
+
 ## Tutorial Steps
 
-### Step 1: Create Working Directory and Download Video Content
+### Step 1: Verify Intel Integrated GPU Availability
+
+Before proceeding, verify that your system has an Intel integrated GPU and that VAAPI support is properly configured:
+
+```bash
+# Check for Intel GPU device
+lspci | grep -i "VGA.*Intel"
+
+# Expected output should show Intel graphics, for example:
+# 00:02.0 VGA compatible controller: Intel Corporation Raptor Lake-P [Iris Xe Graphics]
+
+# Verify VAAPI device availability
+ls -la /dev/dri/
+
+# Expected output should show renderD128 (or similar):
+# drwxr-xr-x  3 root root         100 Dec  2 10:00 .
+# drwxr-xr-x 20 root root        4420 Dec  2 10:00 ..
+# drwxr-xr-x  2 root root          80 Dec  2 10:00 by-path
+# crw-rw----  1 root video  226,   0 Dec  2 10:00 card0
+# crw-rw----  1 root render 226, 128 Dec  2 10:00 renderD128
+
+# Check VAAPI driver information
+vainfo
+
+# Expected output should show Intel iHD or i965 driver with supported profiles
+```
+
+**Troubleshooting:**
+- If `lspci` shows no Intel graphics, this tutorial cannot proceed on your system
+- If `/dev/dri/renderD128` is missing, install drivers: `sudo apt install intel-media-va-driver-non-free`
+- If `vainfo` command is not found: `sudo apt install vainfo`
+- Ensure your user is in the `video` and `render` groups: `sudo usermod -aG video,render $USER` (requires logout/login)
+
+### Step 2: Create Working Directory and Download Video Content
 
 Create a dedicated workspace and download the sample video for multi-stream processing:
 
@@ -56,17 +105,10 @@ mkdir -p ~/metro/metro-vision-tutorial-2/videos/
 cd ~/metro/metro-vision-tutorial-2
 
 # Download Big Buck Bunny sample video (Creative Commons licensed)
-wget -O videos/Big_Buck_Bunny.mp4 "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_30MB.mp4s"
-```
-
-**Alternative Download Method:**
-If the above link doesn't work, you can download from the official source:
-```bash
-# Alternative: Download from Internet Archive
 wget -O videos/Big_Buck_Bunny.mp4 "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4"
 ```
 
-### Step 2: Create Multi-Stream Video Processing Script
+### Step 3: Create Multi-Stream Video Processing Script
 
 Create a GStreamer pipeline script that will decode and compose 16 video streams into a 4x4 tiled display:
 
@@ -108,7 +150,7 @@ gst-launch-1.0 \
         sink_14::xpos=960  sink_14::ypos=1620 sink_14::alpha=1 \
         sink_15::xpos=1920 sink_15::ypos=1620 sink_15::alpha=1 \
         sink_16::xpos=2880 sink_16::ypos=1620 sink_16::alpha=1 \
-    ! vapostproc ! xvimagesink display=:0 sync=false \
+    ! vapostproc ! xvimagesink display=$DISPLAY sync=false \
 \
     filesrc location=${VIDEO_IN} ! qtdemux ! vah264dec ! gvafpscounter ! vapostproc scale-method=fast ! video/x-raw,width=960,height=540 ! comp0.sink_1 \
     filesrc location=${VIDEO_IN} ! qtdemux ! vah264dec ! gvafpscounter ! vapostproc scale-method=fast ! video/x-raw,width=960,height=540 ! comp0.sink_2 \
@@ -138,6 +180,7 @@ EOF
 The script creates a complex pipeline with these key components:
 
 **Pipeline Architecture:**
+
 - **Input Sources**: 16 identical video file streams
 - **Decoder**: `vah264dec` - Hardware-accelerated H.264 decoding using VAAPI
 - **Scaling**: `vapostproc` - Hardware-accelerated video post-processing and scaling
@@ -145,7 +188,8 @@ The script creates a complex pipeline with these key components:
 - **Output**: `xvimagesink` - X11-based video display
 
 **Tiled Layout Configuration:**
-```
+
+```text
 ┌─────────┬─────────┬─────────┬─────────┐
 │ Stream1 │ Stream2 │ Stream3 │ Stream4 │  ← Row 1 (y=0)
 │  0,0    │ 960,0   │1920,0   │2880,0   │
@@ -162,11 +206,12 @@ The script creates a complex pipeline with these key components:
 ```
 
 **Performance Optimizations:**
+
 - **VAAPI Acceleration**: Hardware-accelerated decoding, scaling, and composition
 - **Fast Scaling**: `scale-method=fast` for optimal performance
 - **Async Display**: `sync=false` to prevent frame dropping
 
-### Step 3: Prepare Environment and Permissions
+### Step 4: Prepare Environment and Permissions
 
 Configure the execution environment for the containerized video processing:
 
@@ -180,11 +225,9 @@ xhost +local:docker
 # Verify GPU device availability
 ls -la /dev/dri/
 
-# Check Intel GPU support
-vainfo --display drm --device /dev/dri/renderD128
 ```
 
-### Step 4: Execute Multi-Stream Video Processing
+### Step 5: Execute Multi-Stream Video Processing
 
 Launch the containerized multi-stream decode and composition pipeline:
 
@@ -201,7 +244,7 @@ docker run -it --rm --net=host \
   -e http_proxy=$http_proxy \
   -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
   --device /dev/dri --group-add ${DEVICE_GRP} \
-  -e DISPLAY=$DISPLAY \
+  -e DISPLAY=$DISPLAY --ipc=host \
   -v $HOME/.Xauthority:/home/dlstreamer/.Xauthority:ro \
   -v $PWD/videos:/home/dlstreamer/videos:ro \
   -v $PWD/decode.sh:/home/dlstreamer/decode.sh:ro \
@@ -209,7 +252,7 @@ docker run -it --rm --net=host \
   /home/dlstreamer/decode.sh
 ```
 
-### Step 5: Monitor Performance and Results
+### Step 6: Monitor Performance and Results
 
 The application will display a 4x4 tiled video composition on your 4K monitor. You should see:
 
@@ -221,16 +264,13 @@ Monitor system resources during playback:
 ```bash
 # In a separate terminal, monitor GPU utilization
 sudo intel_gpu_top
-
+```
+```bash
 # Monitor CPU and memory usage
 htop
-
-# Check video decoder utilization
-cat /sys/class/drm/card0/gt/gt0/rc6_residency_ms
 ```
 
-
-### Step 6: Stop the Application
+### Step 7: Stop the Application
 
 To stop the video processing pipeline:
 
@@ -251,7 +291,6 @@ xhost -local:docker
 docker system prune -f
 ```
 
-
 ## Understanding the Technology
 
 ### Intel® Quick Sync Video Technology
@@ -259,14 +298,16 @@ docker system prune -f
 This tutorial leverages Intel's hardware-accelerated video processing capabilities:
 
 **Hardware Acceleration Benefits:**
+
 - **Dedicated Video Engines**: Separate silicon for video decode/encode operations
-- **CPU Offloading**: Frees CPU resources for other computational tasks  
+- **CPU Offloading**: Frees CPU resources for other computational tasks
 - **Power Efficiency**: Lower power consumption compared to software decoding
 - **Parallel Processing**: Multiple decode engines can process streams simultaneously
 
 ### VAAPI Integration
 
 **Video Acceleration API (VAAPI)** provides:
+
 - **Hardware Abstraction**: Unified interface across Intel graphics generations
 - **Pipeline Optimization**: Direct GPU memory access without CPU copies
 - **Format Support**: Hardware acceleration for H.264, H.265, VP9, and AV1 codecs
@@ -277,14 +318,16 @@ This tutorial leverages Intel's hardware-accelerated video processing capabiliti
 The tutorial demonstrates advanced GStreamer concepts:
 
 **Element Types:**
+
 - **Source Elements**: `filesrc` - File input
-- **Demuxer Elements**: `qtdemux` - Container format parsing  
+- **Demuxer Elements**: `qtdemux` - Container format parsing
 - **Decoder Elements**: `vah264dec` - Hardware-accelerated decoding
 - **Transform Elements**: `vapostproc` - Hardware scaling and format conversion
 - **Compositor Elements**: `vacompositor` - Multi-stream composition
 - **Sink Elements**: `xvimagesink` - Display output
 
 **Pipeline Benefits:**
+
 - **Zero-Copy Operations**: Direct GPU memory transfers
 - **Parallel Processing**: Concurrent decode of multiple streams
 - **Dynamic Reconfiguration**: Runtime pipeline modifications

@@ -12,17 +12,14 @@ spec:
       protocol: TCP
       port: {{ $.Values.config.otel_collector.int.otlp_grpc_port }}
       targetPort: {{ $.Values.config.otel_collector.int.otlp_grpc_port }}
-      nodePort: {{ $.Values.config.otel_collector.ext.otlp_grpc_port }}
     - name: otlp-http
       protocol: TCP
       port: {{ $.Values.config.otel_collector.int.otlp_http_port }}
       targetPort: {{ $.Values.config.otel_collector.int.otlp_http_port }}
-      nodePort: {{ $.Values.config.otel_collector.ext.otlp_http_port }}
     - name: otlp-prometheus-endpoint
       port: {{ $.Values.config.otel_collector.int.otlp_prometheus_endpoint_port }}
       targetPort: {{ $.Values.config.otel_collector.int.otlp_prometheus_endpoint_port }}
-      nodePort: {{ $.Values.config.otel_collector.ext.otlp_prometheus_endpoint_port }}
-  type: NodePort
+  type: ClusterIP
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -55,6 +52,7 @@ spec:
           ports:
             - containerPort: {{ $.Values.config.otel_collector.int.otlp_grpc_port }}
             - containerPort: {{ $.Values.config.otel_collector.int.otlp_http_port }}
+            - containerPort: {{ $.Values.config.otel_collector.int.otlp_prometheus_endpoint_port }}
           env:
             - name: HTTP_PROXY
               value: {{ $.Values.env.http_proxy }}

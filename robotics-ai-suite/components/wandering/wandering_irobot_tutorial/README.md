@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # iRobot create 3 wandering tutorial
 
 Tutorial for running the wandering app on the iRobot create 3 with

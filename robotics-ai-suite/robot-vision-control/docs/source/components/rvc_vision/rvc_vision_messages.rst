@@ -4,7 +4,7 @@
 RVC Vision Messages
 ====================
 
-Two |ROS| custom messages have been created for the dynamic use case Vision container internal
+Two ROS 2 custom messages have been created for the dynamic use case Vision container internal
 communication: ``rvc_vision_messages``
 
 rvc_vision_messages contains following messages:

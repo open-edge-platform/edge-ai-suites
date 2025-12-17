@@ -1,0 +1,38 @@
+From ae53174ceec4357134397b233ae236ee004b9aaa Mon Sep 17 00:00:00 2001
+From: "Okuniewska, Julia" <julia.okuniewska@intel.com>
+Date: Mon, 1 Sep 2025 13:11:59 +0000
+Subject: [PATCH] msgs: add global Localization server
+
+---
+ /CMakeLists.txt             | 1 +
+ /srv/GlobalLocalization.srv | 6 ++++++
+ 2 files changed, 7 insertions(+)
+ create mode 100644 /srv/GlobalLocalization.srv
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 8cee7cdb..4b8fedb9 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -40,6 +40,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
+   "srv/LoadMap.srv"
+   "srv/SaveMap.srv"
+   "srv/SetInitialPose.srv"
++  "srv/GlobalLocalization.srv"
+   "srv/ReloadDockDatabase.srv"
+   "action/AssistedTeleop.action"
+   "action/BackUp.action"
+diff --git a/srv/GlobalLocalization.srv b/srv/GlobalLocalization.srv
+new file mode 100644
+index 00000000..2a4dd0e9
+--- /dev/null
++++ b/srv/GlobalLocalization.srv
+@@ -0,0 +1,6 @@
++float64[] weights
++float64[] sigma
++float64[] center_x
++float64[] center_y
++---
++std_msgs/Empty response
+-- 
+2.34.1
+

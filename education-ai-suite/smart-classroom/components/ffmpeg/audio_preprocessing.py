@@ -3,19 +3,24 @@ import subprocess
 from uuid import uuid4
 import atexit
 import shutil
-from utils.config_loader import config
+import platform,time
 import logging
+from utils.config_loader import config
+from utils.runtime_config_loader import RuntimeConfig
+from dto.audiosource import AudioSource
 
 logger = logging.getLogger(__name__)
 
-CHUNK_DURATION =  config.audio_preprocessing.chunk_duration_sec # seconds
-SILENCE_THRESH = config.audio_preprocessing.silence_threshold  # in dB
-SILENCE_DURATION = config.audio_preprocessing.silence_duration # in seconds
+CHUNK_DURATION = config.audio_preprocessing.chunk_duration_sec
+SILENCE_THRESH = config.audio_preprocessing.silence_threshold
+SILENCE_DURATION = config.audio_preprocessing.silence_duration
 SEARCH_WINDOW = config.audio_preprocessing.search_window_sec
 CLEAN_UP_ON_EXIT = config.app.cleanup_on_exit
 
 CHUNKS_DIR = config.audio_preprocessing.chunk_output_path
 os.makedirs(CHUNKS_DIR, exist_ok=True)
+
+FFMPEG_PROCESSES = {}
 
 @atexit.register
 def cleanup_chunks_folder():
@@ -70,45 +75,128 @@ def get_closest_silence(silences, target_time, window=SEARCH_WINDOW):
 
     return closest  # None if nothing close enough
 
+def process_audio_segment(audio_path, start_time, end_time, chunk_index):
+    chunk_name = f"chunk_{chunk_index}_{uuid4().hex[:6]}.wav"
+    chunk_path = os.path.join(CHUNKS_DIR, chunk_name)
+    subprocess.run(
+        [
+            "ffmpeg", "-y", "-i", audio_path,
+            "-ss", str(start_time), "-to", str(end_time),
+            "-ar", "16000", "-ac", "1",
+            "-c:a", "pcm_s16le", "-vn",
+            chunk_path
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        encoding="utf-8",
+        errors="replace"
+    )
+    logger.debug(f"Chunk {chunk_index} saved: {chunk_path}")
+    return {
+        "chunk_path": chunk_path,
+        "start_time": start_time,
+        "end_time": end_time,
+        "chunk_index": chunk_index
+    }
+
 def chunk_audio_by_silence(audio_path):
-
     if SEARCH_WINDOW > CHUNK_DURATION:
-        raise ValueError(f"Silence search window ({SEARCH_WINDOW}s) can't be more then Chunk Duration({CHUNK_DURATION}s).")
-
+        raise ValueError(
+            f"Silence search window ({SEARCH_WINDOW}s) can't be more than chunk duration ({CHUNK_DURATION}s)."
+        )
     duration = get_audio_duration(audio_path)
     silences = detect_silences(audio_path)
-
-    current_time = 0.0
-    chunk_index = 0
-
+    current_time, chunk_index = 0.0, 0
     while current_time < duration:
         ideal_end = current_time + CHUNK_DURATION
-        end_time = get_closest_silence(silences, ideal_end)
-
-        cut_by_silence = True
-        if not end_time or end_time <= current_time or end_time > duration:
+        end_time = get_closest_silence(silences, ideal_end) or min(ideal_end, duration)
+        if end_time <= current_time:
             end_time = min(ideal_end, duration)
-            cut_by_silence = False
-
-        chunk_name = f"chunk_{chunk_index}_{uuid4().hex[:6]}.wav"
-        chunk_path = os.path.join(CHUNKS_DIR, chunk_name)
-
-        subprocess.run([
-            "ffmpeg", "-y", "-i", audio_path,
-            "-ss", str(current_time), "-to", str(end_time),
-            "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", "-vn",
-            chunk_path
-        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, encoding="utf-8", errors="replace")
-
-        chunk_meta = {
-            "chunk_path": chunk_path,
-            "start_time": current_time,
-            "end_time": end_time if end_time < duration else None,
-            "chunk_index": chunk_index,
-            "cut_by_silence": cut_by_silence
-        }
-
-        yield chunk_meta
-
+        yield process_audio_segment(audio_path, current_time, end_time, chunk_index)
         current_time = end_time
         chunk_index += 1
+
+def chunk_audiostream_by_silence(session_id: str):
+    global FFMPEG_PROCESSES
+    mic_device = RuntimeConfig.get_section("Project").get("microphone", "").strip()
+    if not mic_device:
+        raise ValueError(
+            "Microphone device not set in runtime_config.yaml under Project.microphone"
+        )
+    record_file = os.path.join(CHUNKS_DIR, f"live_input_{session_id}.wav")
+    process = subprocess.Popen(
+        [
+            "ffmpeg", "-y",
+            "-f", "dshow",
+            "-i", f"audio={mic_device}",
+            "-ar", "16000", "-ac", "1",
+            "-c:a", "pcm_s16le", "-rf64", "auto",
+            record_file
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+    FFMPEG_PROCESSES[session_id] = process
+    logger.info(f"🎙️ Recording from {mic_device} (session={session_id}) ... use /stop-mic to stop.")
+    current_time, chunk_index = 0.0, 0
+    MAX_DURATION = 45 * 60
+    try:
+        while True:
+            if current_time >= MAX_DURATION:
+                logger.info(f"Session {session_id}: reached 45 min limit, stopping.")
+                break
+            if not os.path.exists(record_file) or os.path.getsize(record_file) < 44:
+                time.sleep(0.02)
+                continue
+            duration = get_audio_duration(record_file)
+            if (process.poll() is not None) and (duration - current_time < CHUNK_DURATION):
+                logger.info(f"Session {session_id}: FFmpeg stopped, processing final chunk...")
+                yield process_audio_segment(record_file, current_time, duration, chunk_index)
+                break
+            if duration - current_time < CHUNK_DURATION:
+                time.sleep(0.02)
+                continue
+            segment_file = os.path.join(CHUNKS_DIR, f"temp_segment_{uuid4().hex[:6]}.wav")
+            subprocess.run(
+                [
+                    "ffmpeg", "-y", "-i", record_file,
+                    "-ss", str(current_time), "-to", str(duration),
+                    "-ar", "16000", "-ac", "1",
+                    "-c:a", "pcm_s16le", "-vn",
+                    segment_file
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            silences = detect_silences(segment_file)
+            silences = [
+                    {"start": s["start"] + current_time, "end": s["end"] + current_time}
+                    for s in detect_silences(segment_file)
+            ]
+            ideal_end = current_time + CHUNK_DURATION
+            end_time = get_closest_silence(silences, ideal_end) or min(ideal_end, duration)
+            if end_time <= current_time:
+                end_time = min(ideal_end, duration)
+            yield process_audio_segment(record_file, current_time, end_time, chunk_index)
+            current_time = end_time
+            chunk_index += 1
+            os.remove(segment_file)
+    finally:
+        proc = FFMPEG_PROCESSES.pop(session_id, None)
+        if proc:
+            try:
+                proc.terminate()
+            except Exception as e:
+                logger.warning(f"Error stopping FFmpeg for session {session_id}: {e}")
+        if os.path.exists(record_file):
+            try:
+                os.remove(record_file)
+            except Exception as e:
+                logger.warning(f"Could not remove {record_file}: {e}")
+        logger.info(f"🎧 Live recording stopped for session {session_id}.")
+
+def chunk_by_silence(input, session_id: str):
+    if input.source_type == AudioSource.MICROPHONE:
+        yield from chunk_audiostream_by_silence(session_id)
+    else:
+        yield from chunk_audio_by_silence(input.audio_filename)

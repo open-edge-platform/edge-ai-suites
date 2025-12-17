@@ -1,0 +1,27 @@
+Source: ros-jazzy-moveit2-servo-motion-controller
+Section: misc
+Priority: optional
+Maintainer: Intel Robotics Team <robotics@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+    ros-jazzy-ament-cmake-ros,
+    ros-jazzy-ament-lint-auto <!nocheck>,
+    ros-jazzy-ament-lint-common <!nocheck>,
+    ros-jazzy-moveit-core,
+    ros-jazzy-moveit-ros-planning-interface,
+    ros-jazzy-moveit-servo,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rvc-motion-controller-interface
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-moveit2-servo-motion-controller
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, 
+    ros-jazzy-moveit-core,
+    ros-jazzy-moveit-ros-planning-interface,
+    ros-jazzy-moveit-servo,
+    ros-jazzy-pluginlib,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rvc-motion-controller-interface
+Description: RVC Motion controller interface-based plugin implemented using moveit2 servo

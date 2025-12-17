@@ -15,7 +15,13 @@ if [[ -n "$RENDER_GROUP_ID" ]]; then
 fi
 USER_GROUP_ID=$(id -g)
 echo $EXTRA_PARAMS
-
+MEI_DEVICES=""
+for device in /dev/mei*; do
+    if [ -e "$device" ]; then
+        MEI_DEVICES="$MEI_DEVICES --device $device"
+        echo "Found MEI device: $device"
+    fi
+done
 
 if [[ "$NPU_ON" == "true" ]]; then
     echo "Running with NPU support"
@@ -28,13 +34,14 @@ if [[ "$NPU_ON" == "true" ]]; then
         --device /dev/dri \
         --group-add $VIDEO_GROUP_ID --group-add $RENDER_GROUP_ID \
         --device /dev/accel \
+        $MEI_DEVICES \
         --group-add $(stat -c "%g" /dev/accel/accel* | sort -u | head -n 1) \
         --env ZE_ENABLE_ALT_DRIVERS=libze_intel_vpu.so \
         -e DISPLAY=$DISPLAY \
         -e QT_X11_NO_MITSHM=1 \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v $HOME/.Xauthority:/home/openvino/.Xauthority:rw \
-        -w /home/openvino/metro-2.0 \
+        -v $HOME/.Xauthority:/home/tfcc/.Xauthority:rw \
+        -w /home/tfcc/metro \
         $DOCKER_IMAGE
 else
     echo "Running without NPU support"
@@ -45,11 +52,12 @@ else
         -e https_proxy=${https_proxy} \
         --cap-add=SYS_ADMIN \
         --device /dev/dri \
+        $MEI_DEVICES \
         --group-add $VIDEO_GROUP_ID --group-add $RENDER_GROUP_ID \
         -e DISPLAY=$DISPLAY \
         -e QT_X11_NO_MITSHM=1 \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v $HOME/.Xauthority:/home/openvino/.Xauthority:rw \
-        -w /home/openvino/metro-2.0 \
+        -v $HOME/.Xauthority:/home/tfcc/.Xauthority:rw \
+        -w /home/tfcc/metro \
         $DOCKER_IMAGE
 fi

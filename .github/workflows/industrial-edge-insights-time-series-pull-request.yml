@@ -3,12 +3,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-name: "[Industrial Edge Insights Time Series] PR workflow"
-run-name: "[Industrial Edge Insights Time Series] PR  workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+name: "[Industrial Edge Insights Time Series and Multimodal] PR workflow"
+run-name: "[Industrial Edge Insights Time Series and Multimodal] PR workflow (by @${{ github.actor }} via ${{ github.event_name }})"
 on:
   pull_request:
     paths:
       - 'manufacturing-ai-suite/industrial-edge-insights-time-series/*'
+      - 'manufacturing-ai-suite/industrial-edge-insights-multimodal/*'
   workflow_call:
   workflow_dispatch:
 
@@ -52,26 +53,23 @@ jobs:
       with:
           path: timeseries
           persist-credentials: false
-    - name: Building Wind Turbine Anomaly Detection Sample App
+    - name: Building Time Series Sample App
       run: |
         cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
         make down 
         # Generate random values for sensitive environment variables
         INFLUXDB_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
-        INFLUXDB_PASSWORD=$(openssl rand -hex 6)
+        base=$(tr -dc 'a-zA-Z' </dev/urandom | head -c9)
+        digit=$(tr -dc '0-9' </dev/urandom | head -c1)
+        pos=$((RANDOM % 10))
+        INFLUXDB_PASSWORD=${base:0:$pos}${digit}${base:$pos}
         VISUALIZER_GRAFANA_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
-        VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 6)
-        MR_PSQL_PASSWORD=$(openssl rand -hex 10)
-        MR_MINIO_ACCESS_KEY=$(openssl rand -hex 10)
-        MR_MINIO_SECRET_KEY=$(openssl rand -hex 10)
+        VISUALIZER_GRAFANA_PASSWORD=${base:0:$pos}${digit}${base:$pos}
 
         sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
         sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
         sed -i "s/VISUALIZER_GRAFANA_USER=.*/VISUALIZER_GRAFANA_USER=${VISUALIZER_GRAFANA_USER}/g" .env
         sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
-        sed -i "s/MR_PSQL_PASSWORD=.*/MR_PSQL_PASSWORD=${MR_PSQL_PASSWORD}/g" .env
-        sed -i "s/MR_MINIO_ACCESS_KEY=.*/MR_MINIO_ACCESS_KEY=${MR_MINIO_ACCESS_KEY}/g" .env
-        sed -i "s/MR_MINIO_SECRET_KEY=.*/MR_MINIO_SECRET_KEY=${MR_MINIO_SECRET_KEY}/g" .env 
         make build
     - name: Deploying Wind Turbine Anomaly Detection Sample App
       run: |
@@ -86,6 +84,53 @@ jobs:
       run: |
         cd "${{ github.workspace }}"
         cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
+        make down
+    - name: Deploying Weld Anomaly Detection Sample App
+      run: |
+        cd "${{ github.workspace }}"
+        cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
+        echo "Deploying Weld Anomaly Detection Sample App"
+        make up_mqtt_ingestion app=weld-anomaly-detection
+    - name: Undeploying Weld Anomaly Detection Sample App
+      run: |
+        cd "${{ github.workspace }}"
+        cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
+        make down
+
+    - name: Building Multimodal Sample App
+      run: |
+        cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-multimodal
+        make down 
+        # Generate random values for sensitive environment variables
+        INFLUXDB_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+        base=$(tr -dc 'a-zA-Z' </dev/urandom | head -c9)
+        digit=$(tr -dc '0-9' </dev/urandom | head -c1)
+        pos=$((RANDOM % 10))
+        INFLUXDB_PASSWORD=${base:0:$pos}${digit}${base:$pos}
+        VISUALIZER_GRAFANA_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+        VISUALIZER_GRAFANA_PASSWORD=${base:0:$pos}${digit}${base:$pos}
+        MTX_WEBRTCICESERVERS2_0_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+        MTX_WEBRTCICESERVERS2_0_PASSWORD=$(openssl rand -hex 10)
+        HOST_IP=$(hostname -I | awk '{print $1}')
+
+        sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
+        sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
+        sed -i "s/VISUALIZER_GRAFANA_USER=.*/VISUALIZER_GRAFANA_USER=${VISUALIZER_GRAFANA_USER}/g" .env
+        sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
+        sed -i "s/MTX_WEBRTCICESERVERS2_0_USERNAME=.*/MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME}/g" .env
+        sed -i "s/MTX_WEBRTCICESERVERS2_0_PASSWORD=.*/MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}/g" .env
+        sed -i "s/HOST_IP=.*/HOST_IP=${HOST_IP}/g" .env
+        make build
+    - name: Deploying Multimodal Weld Defect Detection Sample App
+      run: |
+        cd "${{ github.workspace }}"
+        cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-multimodal
+        echo "Deploying Multimodal Weld Defect Detection Sample App"
+        make up
+    - name: Undeploying Multimodal Weld Defect Detection Sample App
+      run: |
+        cd "${{ github.workspace }}"
+        cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-multimodal
         make down
 
   industrial-edge-insights-time-series-scans:

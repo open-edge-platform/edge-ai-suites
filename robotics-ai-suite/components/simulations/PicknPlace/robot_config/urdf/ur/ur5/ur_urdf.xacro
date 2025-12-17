@@ -75,7 +75,7 @@
      sim_gazebo="$(arg sim_gazebo)"
      sim_ignition="$(arg sim_ignition)"
      headless_mode="$(arg headless_mode)"
-     initial_positions="${load_yaml(initial_positions_file)}"
+     initial_positions="${xacro.load_yaml(initial_positions_file)}"
      use_tool_communication="$(arg use_tool_communication)"
      tool_voltage="$(arg tool_voltage)"
      tool_parity="$(arg tool_parity)"
@@ -138,13 +138,17 @@
         <inertial>
           <mass value="120"/>
           <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
-          <inertia ixx="200" ixy="200" ixz="200" iyy="200" iyz="200" izz="200"/>
+          <inertia ixx="100" ixy="0" ixz="0" iyy="120" iyz="0" izz="130"/>
         </inertial>
       </link>
       <gazebo reference="$(arg prefix)pedestal">
         <mu1>0.2</mu1>
         <mu2>0.2</mu2>
-        <material>Gazebo/Orange</material>
+        <material>
+          <ambient>1.00 0.44 0.00 1</ambient>
+          <diffuse>1.00 0.44 0.00 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+        </material>
       </gazebo>
       <joint name="$(arg prefix)world_joint" type="fixed">
         <parent link="world"/>
@@ -155,23 +159,26 @@
         <xacro:include filename="$(find robot_config)/urdf/ur/ur5/ur_vacuum.xacro" />
       </xacro:if>
       <gazebo>
-        <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+        <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
           <ros>
             <namespace>$(arg namespace)</namespace>
           </ros>
           <parameters>$(arg simulation_controllers)</parameters>
+          <controller_manager_node_name>$(arg namespace)controller_manager</controller_manager_node_name>
         </plugin>
       </gazebo>
       
   </xacro:if>
 
-  <xacro:if value="$(arg sim_ignition)">
+  <xacro:if value="$(eval arg('sim_gazebo') or arg('sim_ignition'))">
     <!-- Gazebo plugins -->
     <gazebo reference="world">
- 
     </gazebo>
     <gazebo>
-      <plugin filename="libign_ros2_control-system.so" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+      <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <ros>
+          <namespace>$(arg namespace)</namespace>
+        </ros>
         <parameters>$(arg simulation_controllers)</parameters>
         <controller_manager_node_name>$(arg prefix)controller_manager</controller_manager_node_name>
       </plugin>

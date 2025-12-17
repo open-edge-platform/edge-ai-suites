@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: LicenseRef-Intel
+---
+httpProxy: # example: httpProxy: http://proxy.example.com:891
+httpsProxy: # example: httpsProxy: http://proxy.example.com:891
+noProxy: # example: noProxy="localhost,127.0.0.1"

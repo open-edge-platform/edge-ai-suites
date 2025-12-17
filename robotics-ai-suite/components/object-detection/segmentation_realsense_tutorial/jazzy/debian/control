@@ -1,0 +1,10 @@
+Source: ros-jazzy-segmentation-realsense-tutorial
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-jazzy-segmentation-realsense-tutorial
+Architecture: any
+Depends: ros-jazzy-realsense2-camera, ros-jazzy-openvino-node
+Description: Example tutorial for Openvino Semantic Segmentation with Realsense Topic
