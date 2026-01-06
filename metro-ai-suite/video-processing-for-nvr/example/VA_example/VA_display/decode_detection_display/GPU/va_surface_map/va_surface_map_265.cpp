@@ -29,20 +29,19 @@ std::string det_model_name="yolov8";
 std::shared_ptr<ov::Model> loadAndPreprocessModel(std::string model_path) {
     ov::Core core;
     std::shared_ptr<ov::Model> model = core.read_model(model_path);
-    model->reshape({{1, 3, 640, 640}});
+    model->reshape({{1, 640, 640, 3}});
     std::string input_tensor_name = model->input().get_any_name();
     PrePostProcessor ppp = PrePostProcessor(model);
     InputInfo& input_info = ppp.input(input_tensor_name);
     input_info.tensor()
-    .set_element_type(ov::element::u8)
-    .set_color_format(ColorFormat::NV12_TWO_PLANES, {"Y", "UV"})
-    .set_spatial_dynamic_shape();
-    input_info.preprocess()
-    .convert_element_type(ov::element::f32)
-    .convert_color(ColorFormat::RGB)
-    .resize(ResizeAlgorithm::RESIZE_LINEAR, 640, 640)
-    .scale({255.0f, 255.0f, 255.0f});
-    input_info.model().set_layout("NCHW");
+    .set_shape({1, 640, 640, 3})
+    .set_layout("NHWC")
+    .set_color_format(ov::preprocess::ColorFormat::BGR)
+    .set_element_type(ov::element::u8);
+    // input_info.preprocess()
+    // .convert_element_type(ov::element::f32)
+    // .scale({255.0f, 255.0f, 255.0f});
+    input_info.model().set_layout("NHWC");
     model = ppp.build();
     return model;
 }
@@ -93,7 +92,7 @@ int main(int argc, char* argv[])
     std::shared_ptr<ov::Model> det_model = loadAndPreprocessModel(det_model_path);
     
     ov::Core core;
-    ov::CompiledModel compiled_model_det = core.compile_model(det_model, "GPU", ov::hint::performance_mode(ov::hint::PerformanceMode::THROUGHPUT));
+    ov::CompiledModel compiled_model_det = core.compile_model(det_model, "GPU", ov::hint::performance_mode(ov::hint::PerformanceMode::LATENCY));
     std::vector<ov::InferRequest> infer_requests_det(16);
     for(int i = 0; i < 16; i++) {
         infer_requests_det[i] = compiled_model_det.create_infer_request();
@@ -102,7 +101,7 @@ int main(int argc, char* argv[])
     VPP_Init();
     for (int32_t id = 0; id < 16; ++id) {
         VPP_DECODE_STREAM_Attr attr;
-        attr.CodecStandard = VPP_CODEC_STANDARD_H264;
+        attr.CodecStandard = VPP_CODEC_STANDARD_H265;
         attr.OutputFormat = VPP_PIXEL_FORMAT_NV12;
         attr.InputMode = VPP_DECODE_INPUT_MODE_STREAM;
         attr.OutputHeight = 640;
@@ -208,18 +207,24 @@ int main(int argc, char* argv[])
             frame_counter++;
             
             if (frame_counter % skip_frames == 0 && id < 8){
-		sts = VPP_SYS_MapSurface(hdl, &vppSurfData);
-                size_t origin_height = vppSurfData.Height;
-                size_t origin_width = vppSurfData.Width;
+		        sts = VPP_SYS_MapSurface(hdl, &vppSurfData);
+                size_t origin_height = vppSurfData.Pitches[1];
+                size_t origin_width = vppSurfData.Pitches[0];
+                // printf("height is %d\n", vppSurfData.Pitches[1]);
+                // printf("width is %d\n", vppSurfData.Pitches[0]);
                 size_t batch = 1;
                 float scale_x = origin_width / 640.0;
                 float scale_y = origin_height / 640.0;
-                ov::Tensor input_det_tensor_y{ov::element::u8, {batch, origin_height, origin_width, 1}, vppSurfData.Y};
-                ov::Tensor input_det_tensor_uv{ov::element::u8, {batch, origin_height/2, origin_width/2, 2}, vppSurfData.UV};
-                std::vector<ov::Tensor> input_det_tensor_ys = {input_det_tensor_y};
-                std::vector<ov::Tensor> input_det_tensor_uvs = {input_det_tensor_uv};
-                infer_requests_det[id].set_input_tensors(0, input_det_tensor_ys);
-                infer_requests_det[id].set_input_tensors(1, input_det_tensor_uvs);
+
+                // Convert NV12 to RGB for classification
+                cv::Mat nv12(origin_height + origin_height / 2, origin_width, CV_8UC1, vppSurfData.Y);
+                cv::Mat input_image;
+                cv::cvtColor(nv12, input_image, cv::COLOR_YUV2BGR_NV12);
+
+                // Detection on GPU
+                ov::Tensor input_det_tensor{ov::element::u8, {batch, origin_height, origin_width, 3}, input_image.data};
+                std::vector<ov::Tensor> input_det_tensors = {input_det_tensor};
+                infer_requests_det[id].set_input_tensors(0, input_det_tensors); 
                 infer_requests_det[id].infer();
                 
                 //Retrieve inference results
@@ -299,8 +304,8 @@ int main(int argc, char* argv[])
     }
 
     auto dec = [](int32_t id) {
-        FILE* fp = fopen("/opt/video/car_1080p.h264", "rb");
-        // FILE* fp = fopen("/opt/video/long_time_1080p.h264", "rb");
+        FILE* fp = fopen("/opt/video/car_1080p.h265", "rb");
+        // FILE* fp = fopen("/opt/video/long_time_1080p.h265", "rb");
 
         const uint64_t size = 1 * 1024 * 1024;
         void* addr = malloc(size);
