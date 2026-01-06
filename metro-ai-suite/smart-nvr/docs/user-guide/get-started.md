@@ -120,11 +120,21 @@ To enable Smart NVR's GenAI capabilities for intelligent event descriptions:
 
 #### 1. Update Frigate Configuration
 
-Modify `resources/frigate-config/config.yml`:
+Modify the configuration file based on your deployment mode:
+
+- **Standard Deployment**: Modify `resources/frigate-config/config-default.yml`
+- **Scenescape Deployment**: Modify `resources/frigate-config/config-scenescape.yml`
+
+Update the `genai` section in the appropriate file to enable it globally and for specific cameras:
 
 ```yaml
 genai:
   enabled: true
+
+cameras:
+  <camera_name>:
+    genai:
+      enabled: true
 ```
 
 #### 2. Ensure VLM Service Availability
