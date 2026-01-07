@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 version = "1.0.0"
-name="Smart Traffic Intersection Agent"
+name="Smart-Traffic-Intersection-Agent"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi==0.104.1",
