@@ -1,0 +1,217 @@
+---
+openapi: 3.1.0
+info:
+  title: Traffic Intelligence API
+  description: Lightweight traffic analysis service for single intersection monitoring
+  version: 1.0.0
+paths:
+  "/api/v1/traffic/current":
+    get:
+      summary: Get Current Traffic Intelligence
+      description: |-
+        Get current traffic intelligence data for the intersection.
+
+        Returns complete traffic intelligence response matching data.json schema
+        with weather data and VLM analysis.
+      operationId: get_current_traffic_intelligence_api_v1_traffic_current_get
+      parameters:
+      - name: images
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          description: Include camera images in response
+          title: Images
+        description: Include camera images in response
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Response Get Current Traffic Intelligence Api V1 Traffic Current
+                  Get
+        '404':
+          description: No traffic data available
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/api/v1/weather/current":
+    get:
+      summary: Get Current Weather
+      description: Get current weather data for the intersection location.
+      operationId: get_current_weather_api_v1_weather_current_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Response Get Current Weather Api V1 Weather Current Get
+        '404':
+          description: Weather data not available
+
+  "/api/v1/config":
+    get:
+      summary: Get Service Config
+      description: Get service configuration (excluding sensitive data).
+      operationId: get_service_config_api_v1_config_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Response Get Service Config Api V1 Config Get
+  "/api/v1/config/threshold":
+    put:
+      summary: Update Threshold
+      description: Update high density threshold for traffic analysis.
+      operationId: update_threshold_api_v1_config_threshold_put
+      parameters:
+      - name: threshold
+        in: query
+        required: true
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          description: New high density threshold
+          title: Threshold
+        description: New high density threshold
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Response Update Threshold Api V1 Config Threshold Put
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/api/v1/config/weather":
+    put:
+      summary: Update Climate Threat markers
+      description: Update Climate Threat markers configuration.
+      operationId: update_climate_threat_markers_api_v1_config_weather_put
+      parameters:
+      - name: marker_type
+        in: query
+        required: true
+        schema:
+          "$ref": "#/components/schemas/WeatherType"
+        description: Type of Climate Threat markers to enable (clear, fires, storm, flood)
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Response Update Climate Threat Markers Api V1 Config Weather Put
+        '400':
+          description: Invalid marker type
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/api/v1/config/incident":
+    put:
+      summary: Update Incident Markers
+      description: Update incident markers configuration.
+      operationId: update_incident_markers_api_v1_config_incident_put
+      parameters:
+      - name: incident_type
+        in: query
+        required: true
+        schema:
+          "$ref": "#/components/schemas/IncidentType"
+        description: Set the incident markers at the intersection
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Response Update Incident Markers Api V1 Config Incident Put
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/health":
+    get:
+      summary: Health Check
+      description: Health check endpoint.
+      operationId: health_check_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+components:
+  schemas:
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            "$ref": "#/components/schemas/ValidationError"
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    WeatherType:
+      type: string
+      enum:
+      - clear
+      - fires
+      - storm
+      - flood
+      title: WeatherType
+      description: Climate Threat marker types
+    IncidentType:
+      type: string
+      enum:
+      - clear
+      - accident
+      - road_work
+      - hazard
+      title: IncidentType
+      description: Incident marker types for intersection
