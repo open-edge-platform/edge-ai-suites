@@ -30,9 +30,9 @@ then
 	echo "************************************************************************"
 
 	cd $WORKING_DIR;
-	sudo rm -f openvino_2024.2.0.tgz
-	sudo curl -L https://storage.openvinotoolkit.org/repositories/openvino/packages/2024.2/linux/l_openvino_toolkit_ubuntu22_2024.2.0.15519.5c0f38f83f6_x86_64.tgz --output openvino_2024.2.0.tgz
-	sudo tar zxf openvino_2024.2.0.tgz --one-top-level=openvino --strip-components 1
+	sudo rm -f openvino_2025.4.0.tgz
+	sudo curl -L https://storage.openvinotoolkit.org/repositories/openvino/packages/2025.4/linux/openvino_toolkit_ubuntu24_2025.4.0.20398.8fdad55727d_x86_64.tgz --output openvino_2025.4.0.tgz
+	sudo tar zxf openvino_2025.4.0.tgz --one-top-level=openvino --strip-components 1
 fi
 
 if [ ! -d ${WORKING_DIR}"/neo" ]
@@ -44,13 +44,15 @@ then
 	cd $WORKING_DIR;
 	sudo mkdir neo
 	cd neo
-	sudo wget --no-check-certificate https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17384.11/intel-igc-core_1.0.17384.11_amd64.deb
-	sudo wget --no-check-certificate https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17384.11/intel-igc-opencl_1.0.17384.11_amd64.deb
-	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/24.31.30508.7/intel-level-zero-gpu-dbgsym_1.3.30508.7_amd64.ddeb
-	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/24.31.30508.7/intel-level-zero-gpu_1.3.30508.7_amd64.deb
-	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/24.31.30508.7/intel-opencl-icd-dbgsym_24.31.30508.7_amd64.ddeb
-	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/24.31.30508.7/intel-opencl-icd_24.31.30508.7_amd64.deb
-	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/24.31.30508.7/libigdgmm12_22.4.1_amd64.deb
+	sudo wget --no-check-certificate https://github.com/intel/intel-graphics-compiler/releases/download/v2.24.8/intel-igc-core-2_2.24.8+20344_amd64.deb
+	sudo wget --no-check-certificate https://github.com/intel/intel-graphics-compiler/releases/download/v2.24.8/intel-igc-opencl-2_2.24.8+20344_amd64.deb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/intel-ocloc-dbgsym_25.48.36300.8-0_amd64.ddeb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/intel-ocloc_25.48.36300.8-0_amd64.deb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/intel-opencl-icd-dbgsym_25.48.36300.8-0_amd64.ddeb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/intel-opencl-icd_25.48.36300.8-0_amd64.deb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/libigdgmm12_22.8.2_amd64.deb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/libze-intel-gpu1-dbgsym_25.48.36300.8-0_amd64.ddeb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/libze-intel-gpu1_25.48.36300.8-0_amd64.deb
 fi
 
 # Install openvino
@@ -60,8 +62,8 @@ echo "Install openvino dependency"
 echo "************************************************************************"
 
 cd ${WORKING_DIR}
-sudo cp -r openvino  /opt/intel/openvino_2024
-cd /opt/intel/openvino_2024
+sudo cp -r openvino  /opt/intel/openvino_2025
+cd /opt/intel/openvino_2025
 sudo -E ./install_dependencies/install_openvino_dependencies.sh
 
 
@@ -99,9 +101,8 @@ else
 
     # Download NPU packages for Ubuntu 24.04
     echo "Downloading NPU packages for Ubuntu 24.04..."
-    sudo wget https://github.com/intel/linux-npu-driver/releases/download/v1.13.0/intel-driver-compiler-npu_1.13.0.20250131-13074932693_ubuntu24.04_amd64.deb
-    sudo wget https://github.com/intel/linux-npu-driver/releases/download/v1.13.0/intel-fw-npu_1.13.0.20250131-13074932693_ubuntu24.04_amd64.deb
-    sudo wget https://github.com/intel/linux-npu-driver/releases/download/v1.13.0/intel-level-zero-npu_1.13.0.20250131-13074932693_ubuntu24.04_amd64.deb
+    sudo wget https://github.com/intel/linux-npu-driver/releases/download/v1.26.0/linux-npu-driver-v1.26.0.20251125-19665715237-ubuntu2404.tar.gz
+    sudo wget https://github.com/oneapi-src/level-zero/releases/download/v1.24.2/level-zero_1.24.2+u24.04_amd64.deb
 
     # Install dependency
     echo "Installing libtbb12 dependency..."

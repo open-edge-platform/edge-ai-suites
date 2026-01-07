@@ -1,4 +1,4 @@
-source /opt/intel/openvino_2024/setupvars.sh
+source /opt/intel/openvino_2025/setupvars.sh
 source /opt/intel/vppsdk/env.sh
 
 sudo mkdir build

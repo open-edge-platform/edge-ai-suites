@@ -31,21 +31,21 @@ std::vector<int> current_ids(8, 0);
 std::shared_ptr<ov::Model> loadAndPreprocessModel(std::string model_path) {
     ov::Core core;
     std::shared_ptr<ov::Model> model = core.read_model(model_path);
-    model->reshape({{1, 3, 640, 640}});
+    model->reshape({{1, 640, 640, 3}});
     std::string input_tensor_name = model->input().get_any_name();
     PrePostProcessor ppp = PrePostProcessor(model);
     InputInfo& input_info = ppp.input(input_tensor_name);
     input_info.tensor()
     .set_element_type(ov::element::u8)
     .set_color_format(ov::preprocess::ColorFormat::NV12_TWO_PLANES, {"y", "uv"})
-    .set_memory_type(ov::intel_gpu::memory_type::surface)
-    .set_spatial_static_shape(1088, 1920);
+    .set_memory_type(ov::intel_gpu::memory_type::surface);
+    // .set_spatial_static_shape(640, 640);
     input_info.preprocess()
-    .convert_color(ColorFormat::RGB)
-    .resize(ResizeAlgorithm::RESIZE_NEAREST, 640, 640)
-    .convert_element_type(ov::element::f32)
-    .scale({255.0f, 255.0f, 255.0f});
-    input_info.model().set_layout("NCHW");
+    .convert_color(ColorFormat::RGB);
+    // .resize(ResizeAlgorithm::RESIZE_NEAREST, 640, 640);
+    // .convert_element_type(ov::element::f32)
+    // .scale({255.0f, 255.0f, 255.0f});
+    input_info.model().set_layout("NHWC");
     model = ppp.build();
     return model;
 }
@@ -101,8 +101,8 @@ int main(int argc, char* argv[])
         attr.CodecStandard = VPP_CODEC_STANDARD_H264;
         attr.OutputFormat = VPP_PIXEL_FORMAT_NV12;
         attr.InputMode = VPP_DECODE_INPUT_MODE_STREAM;
-        attr.OutputHeight = 0;
-        attr.OutputWidth = 0;
+        attr.OutputHeight = 640;
+        attr.OutputWidth = 640;
         attr.OutputBufQueueLength = 0;
         attr.RingBufferSize = 0;
         assert(VPP_DECODE_STREAM_Create(id, &attr) == VPP_STATUS_SUCCESS);
@@ -192,10 +192,10 @@ int main(int argc, char* argv[])
         usleep(1'000'000);
         int i = 0;
         int frame_counter = 0;
-        int skip_frames = 5;
+        int skip_frames = 2;
         bool isFirstRun = true;
-        size_t origin_height = 1088;
-        size_t origin_width = 1920;
+        size_t origin_height = 640;
+        size_t origin_width = 640;
         float scale_x = origin_width / 640.0;
         float scale_y = origin_height / 640.0;
         while (1) {
@@ -213,21 +213,22 @@ int main(int argc, char* argv[])
                     VADisplay disp = vppSurfExport.VADisplay;
                         if (!ptr_context) {
                             ptr_context = new ov::intel_gpu::ocl::VAContext(core, disp);
-                            compiled_model =  new ov::CompiledModel(core.compile_model(det_model, *ptr_context));
+                            compiled_model =  new ov::CompiledModel(core.compile_model(det_model, *ptr_context, ov::hint::performance_mode(ov::hint::PerformanceMode::LATENCY)));
                         }
                     }
                 auto input0 = det_model->get_parameters().at(0);
                 auto input1 = det_model->get_parameters().at(1);
                 auto shape = input0->get_shape();
-                auto height = shape[1];
-                auto width = shape[2];
+                auto height = 640;
+                auto width = 640;
                 VASurfaceID va_surface = vppSurfExport.VASurfaceId;
                 auto nv12_blob = ptr_context->create_tensor_nv12(height, width, va_surface);
                 auto infer_requests_det = compiled_model->create_infer_request();
                 infer_requests_det.set_tensor(input0->get_friendly_name(), nv12_blob.first);
                 infer_requests_det.set_tensor(input1->get_friendly_name(), nv12_blob.second);
-                infer_requests_det.start_async();
-                infer_requests_det.wait();
+                infer_requests_det.infer();
+                // infer_requests_det.start_async();
+                // infer_requests_det.wait();
                 
                 //Retrieve inference results
                 auto output_tensor_det = infer_requests_det.get_output_tensor(0);
