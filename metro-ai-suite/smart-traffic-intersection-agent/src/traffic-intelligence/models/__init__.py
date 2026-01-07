@@ -25,39 +25,6 @@ class AlertType(Enum):
 class WeatherType(Enum):
     """Types of weather conditions."""
     CLEAR = "clear"
-    FIRES = "fires"
-    FLOOD = "flood"
-    STORM = "storm"
-
-class IncidentType(Enum):
-    """Types of incidents """
-    CLEAR = "clear"
-    ACCIDENT = "accident"
-    CROWDING = "crowding"
-    ROADBLOCK = "roadblock"
-    MAINTENANCE = "maintenance"
-
-    @property
-    def alert_info(self) -> tuple[AlertType, AlertLevel]:
-        incident_mapping = {
-            IncidentType.ACCIDENT: (AlertType.ACCIDENT, AlertLevel.CRITICAL),
-            IncidentType.CROWDING: (AlertType.CONGESTION, AlertLevel.WARNING),
-            IncidentType.ROADBLOCK: (AlertType.ROAD_CONDITION, AlertLevel.CRITICAL),
-            IncidentType.MAINTENANCE: (AlertType.MAINTENANCE, AlertLevel.CRITICAL),
-            IncidentType.CLEAR: (AlertType.NORMAL, AlertLevel.INFO)
-        }
-        return incident_mapping.get(self, (AlertType.NORMAL, AlertLevel.INFO))
-
-    @property
-    def description(self) -> str:
-        description_mapping = {
-            IncidentType.ACCIDENT: "Traffic accident reported",
-            IncidentType.CROWDING: "Heavy traffic congestion",
-            IncidentType.ROADBLOCK: "Road blockage detected",
-            IncidentType.MAINTENANCE: "Road maintenance in progress",
-            IncidentType.CLEAR: "Normal traffic conditions"
-        }
-        return description_mapping.get(self, "Unknown incident type")
 
 @dataclass
 class WeatherData:

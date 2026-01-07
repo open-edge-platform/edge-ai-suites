@@ -46,10 +46,7 @@ class WeatherService:
         self.use_mock = self.weather_config.get("use_mock", False)
         self.mock_data_file = "config/weather.json"
         self.mock_weather_descriptions = {
-            "clear": "Clear conditions with 9 mph winds from the N.",
-            "fires": "Active roadside fire reducing visibility ~30%  and slowing traffic.",
-            "storm": "Stormy conditions with heavy rain and strong winds expected.",
-            "flood": "Flood conditions with submerged roads and significant traffic disruptions."
+            "clear": "Clear conditions with 9 mph winds from the N."
         }
 
         logger.info("Weather service initialized", 
@@ -136,7 +133,7 @@ class WeatherService:
             return self._cached_weather
 
         if self.use_mock:
-            weather_data = self._get_mock_weather_from_mapping()
+            weather_data = self._load_mock_weather_from_file()
         else:
             # Get intersection coordinates and fetch live weather data
             lat, lon = self.config_service.get_intersection_coordinates()
@@ -300,20 +297,6 @@ class WeatherService:
             logger.error("Error loading mock weather data from file", error=str(e), file=self.mock_data_file)
             return self.get_default_weather()
 
-    def _get_mock_weather_from_mapping(self) -> WeatherData:
-        """Get mock weather data based on intersection mapping.
-
-        Returns:
-            WeatherData object with appropriate weather based on enabled markers
-        """
-        if self.config_service.get_weather_config().get("enable_fire_markers", False):
-            return self._load_mock_weather_from_file(WeatherType.FIRES)
-        elif self.config_service.get_weather_config().get("enable_flood_markers", False):
-            return self._load_mock_weather_from_file(WeatherType.FLOOD)
-        elif self.config_service.get_weather_config().get("enable_storm_markers", False):
-            return self._load_mock_weather_from_file(WeatherType.STORM)
-        return self._load_mock_weather_from_file()
-
     def get_default_weather(self) -> WeatherData:
         """Get default weather data when none is available."""
         return WeatherData(
@@ -427,5 +410,5 @@ class WeatherService:
         age = datetime.now(timezone.utc) - self._cache_timestamp
         return age < self.cache_duration
 
-    def get_weather_description(self, weather_type: WeatherType) -> str:
-        return self.mock_weather_descriptions.get(weather_type.value, "Unknown weather conditions")
+    def get_current_weather_description(self) -> str:
+        return self._cached_weather.detailed_forecast if self._cached_weather else "Unknown weather conditions"
