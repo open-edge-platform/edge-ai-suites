@@ -135,9 +135,10 @@ Re-run the application after [configuring](./get-started.md#step-2-configure-env
 
 > **⚠️ Important Notes**:
 >
-> - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation
-> - Requires VLM microservice to be running
-> - Disabled by default for system stability
+> - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
+> - Requires VLM microservice to be running.
+> - Disabled by default for system stability.
+> - This is currently incompatible with Scenescape integration. (`NVR_SCENESCAPE=true`)
 
 ## Running Tests and Generating Coverage Report
 
