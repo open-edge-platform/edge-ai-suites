@@ -13,25 +13,13 @@ RUN apt-get update && \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv package manager to /usr/local/bin
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
-    mv /root/.cargo/bin/uv /usr/local/bin/uv || \
-    mv /root/.local/bin/uv /usr/local/bin/uv || \
-    find /root -name uv -type f -exec mv {} /usr/local/bin/uv \;
+# Install uv package manager
+RUN pip install --no-cache-dir uv==0.9.22
 
-# Verify uv is installed
-RUN uv --version
-
-# Copy pyproject.toml and README.md for package metadata
-COPY pyproject.toml README.md ./
-
-# Copy application code (needed for editable install)
 COPY . .
 
 # Create virtual environment and install dependencies using uv
-RUN uv venv && \
-    uv pip install -e . && \
-    uv pip install -r ui/requirements.txt
+RUN uv sync && uv pip install -r ui/requirements.txt
 
 # Create non-root user and adjust permissions
 RUN useradd -m -u 1000 traffic && \

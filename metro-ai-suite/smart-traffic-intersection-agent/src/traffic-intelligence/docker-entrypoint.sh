@@ -20,7 +20,7 @@ export API_URL=${API_URL:-"http://localhost:${TRAFFIC_INTELLIGENCE_PORT}/api/v1/
 
 echo "Configuration:"
 echo "  Backend API Port: $TRAFFIC_INTELLIGENCE_PORT"
-echo "  UI Dashboard Port: $APP_PORT"
+echo "  UI Dashboard Port: $TRAFFIC_INTELLIGENCE_UI_PORT"
 echo "  Host: $TRAFFIC_INTELLIGENCE_HOST"
 echo "  Log Level: ${LOG_LEVEL:-INFO}"
 
@@ -44,7 +44,7 @@ BACKEND_PID=$!
 sleep 3
 
 # Start the UI dashboard
-echo -e "${GREEN}Starting UI Dashboard on port $APP_PORT...${NC}"
+echo -e "${GREEN}Starting UI Dashboard on port $TRAFFIC_INTELLIGENCE_UI_PORT...${NC}"
 cd ui && python app.py &
 UI_PID=$!
 cd ..

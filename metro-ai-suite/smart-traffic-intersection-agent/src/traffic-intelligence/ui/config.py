@@ -35,9 +35,7 @@ class Config:
         """Get all configuration settings as a dictionary"""
         return {
             "refresh_interval": cls.REFRESH_INTERVAL_SECONDS,
-            "data_file_path": cls.DATA_FILE_PATH,
             "api_url": cls.API_URL,
-            "use_api": cls.USE_API,
             "app_title": cls.APP_TITLE,
             "app_port": cls.APP_PORT,
             "app_host": cls.APP_HOST,
