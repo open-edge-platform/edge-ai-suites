@@ -118,28 +118,18 @@ source setup.sh stop
 
 To enable Smart NVR's GenAI capabilities for intelligent event descriptions:
 
-#### 1. Update Frigate Configuration
-
-Modify `resources/frigate-config/config.yml`:
-
-```yaml
-genai:
-  enabled: true
-```
-
-#### 2. Ensure VLM Service Availability
+#### 1. Ensure VLM Service Availability
 
 Verify the VLM microservice is running and accessible at the configured endpoint.
 
-#### 3. Set Environment Variable
-
+#### 2. Set Environment Variable
 ```bash
 export NVR_GENAI=true
 export VLM_SERVING_IP=<vlm-serving-device-ip>
 export VLM_SERVING_PORT=<vlm-serving-port>
 ```
 
-#### 4. Run the application
+#### 3. Run the application
 
 Re-run the application after [configuring](./get-started.md#step-2-configure-environment) the rest of environment variables. Ensure that the environment value `export NVR_GENAI=true` is set.
 
