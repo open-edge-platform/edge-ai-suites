@@ -1,10 +1,20 @@
-# Robotics AI Suite
+The **Robotics AI Suite** is a preview collection of robotics applications, libraries, samples, and benchmarking tools to help you build solutions faster. It includes models and pipelines optimized with the OpenVINO™ toolkit for accelerated performance on Intel® CPUs, integrated GPUs, and NPUs. Refer to the [detailed user guide and documentation](https://docs.openedgeplatform.intel.com/dev/ai-suite-robotics.html).
 
-## Description
-Robotics AI Suite is a preview collection of robotics applications, libraries, samples, and benchmarking tools to help you build solutions faster. It includes models and pipelines optimized with the OpenVINO™ toolkit for accelerated performance on Intel® CPUs, integrated GPUs, and NPUs. Refer to the [detailed user guide and documentation](https://docs.openedgeplatform.intel.com/dev/ai-suite-robotics.html).
+The **Robotics AI Suite** is organized into **collections** that group workflows and capabilities for different robot categories. Each collection provides:
 
-## Collections
-Collections organize workflows and capabilities for three robot categories—Autonomous Mobile Robots (AMRs), Humanoid Imitation Learning, and Stationary Robot Vision & Control. Each collection brings together libraries for core robotics workloads, robotics control recipes, and virtualization or application management; with Robot Operating System 2 (ROS 2) integration points, supported sensor profiles, and repeatable benchmarking. Each collection includes OpenVINO™ toolkit–optimized models across computer vision, large language models (LLMs), and vision-language-action (VLA) to accelerate inference on Intel® CPUs, integrated GPUs, and NPUs; helping teams evaluate, assemble, and scale solutions faster.
+- Libraries for core robotics workloads and control recipes.
+- Integration with ROS 2, supported sensor profiles, and benchmarking tools.
+- OpenVINO™-optimised models for computer vision, large language models (LLMs), and vision-language-action (VLA).
+- Hardware acceleration on Intel® CPUs, integrated GPUs, and NPUs for faster inference.
+
+The types of collection are as follows:
+
+- **Humanoid Imitation Learning**
+  For robots that learn and replicate human actions to perform interactive or assistive tasks.
+- **Autonomous Mobile Robots (AMRs)**
+  For robots that navigate and operate independently in dynamic environments such as warehouses or factories.
+- **Stationary Robot Vision & Control**
+  For fixed-position robots using vision systems for tasks like inspection, assembly, or quality control.
 
 **Humanoid - Imitation Learning:**
 

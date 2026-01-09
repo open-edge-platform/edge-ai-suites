@@ -1,9 +1,12 @@
-FROM docker.io/library/node:24
+FROM docker.io/library/node:25
 
 USER root
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
+
+# Upgrade npm to latest package version
+RUN npm install -g npm@11.7.0
 
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
@@ -16,6 +19,9 @@ COPY . .
 
 # Build the Vue.js application
 RUN npm run build
+
+# REMOVE build-time dependencies
+RUN rm -rf node_modules
 
 # Install serve globally *before* switching user
 RUN npm install -g serve
