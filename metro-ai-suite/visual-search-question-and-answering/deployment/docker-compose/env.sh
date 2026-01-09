@@ -25,7 +25,6 @@ export DATA_INGEST_WITH_DETECT=true
 # huggingface mirror 
 export HF_ENDPOINT=https://hf-mirror.com
 
-export DEVICE="GPU.1"
 export VLM_DEVICE="GPU.1"
 export HOST_DATA_PATH="$HOME/data"
 # export VLM_MODEL_NAME="Qwen/Qwen2.5-VL-7B-Instruct"
