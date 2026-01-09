@@ -138,7 +138,9 @@ Re-run the application after [configuring](./get-started.md#step-2-configure-env
 > - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
 > - Requires VLM microservice to be running.
 > - Disabled by default for system stability.
-> - This is currently incompatible with Scenescape integration. (`NVR_SCENESCAPE=true`)
+> - SmartNVR uses either Frigate or Scenescape for GenAI capabilities. GenAI in both cannot be enabled at the same time. If Scenescape is enabled, its capabilities are prioritized over Frigate, with Frigate used in "dumb" mode.
+> - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Else, error is thrown.
+
 
 ## Running Tests and Generating Coverage Report
 
