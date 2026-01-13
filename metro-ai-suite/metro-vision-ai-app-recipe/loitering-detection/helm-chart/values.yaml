@@ -29,11 +29,11 @@ nginx:
 env:
   ENABLE_WEBRTC: "true"
   ENABLE_RTSP: "true"
-  HOST_IP: 10.223.22.169
+  HOST_IP: <HOST_IP>
   ENABLE_HTTPS_MODE: false
   MIN_LOG_LEVEL: DEBUG
-  http_proxy: http://proxy-chain.intel.com:912
-  https_proxy: http://proxy-chain.intel.com:912
+  http_proxy:
+  https_proxy:
   no_proxy:
   ENABLE_OPEN_TELEMETRY: true
   OTEL_EXPORT_INTERVAL_MILLIS: 5000
@@ -43,8 +43,8 @@ gpu:
   type: "gpu.intel.com/i915"
   count: 1
 webrtcturnserver:
-  username: myuser
-  password: mypassword
+  username: <WEBRTC_TURN_SERVER_USERNAME>
+  password: <WEBRTC_TURN_SERVER_PASSWORD>
 config:
   prometheus:
     name: prometheus
