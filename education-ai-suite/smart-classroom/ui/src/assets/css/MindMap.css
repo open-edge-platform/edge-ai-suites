@@ -1,80 +1,49 @@
-.mindmap-tab {
-  font-family: "Segoe UI", "Arial", sans-serif;
-  color: #111;
+.mindmap-tab-fullscreen {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.mindmap-wrapper-fullscreen {
+  width: 100%;
   height: 100%;
-  width: 100%;
-  padding: 1rem;
-  overflow: auto; 
-  background: #fafafa;
 }
 
-.mindmap-loading {
+.mindmap-content-fullscreen {
+  width: 100%;
+  height: 100%;
+}
+
+.jsmind-container-fullscreen {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.jsmind-error {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  font-size: 1rem;
-  color: #333;
-}
-
-.tab-spinner {
-  display: inline-block;
-  width: 22px;
-  height: 22px;
-  border: 3px solid #e3e6f7;
-  border-top: 3px solid #6a67ce;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  vertical-align: middle;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.mindmap-content {
-  margin-top: 1rem;
-  width: 100%;
+  height: 100vh;
+  color: #d32f2f;
+  font-size: 18px;
   text-align: center;
+  background: transparent;
 }
 
-.mermaid-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  overflow: visible; 
-}
-
-.mermaid-container svg {
-  max-width: 95%;
-  height: auto;
-  background: transparent !important;
-  margin: auto;
-}
-
-.mermaid-container text {
-  font-size: 14px;
-  font-weight: 500;
-  fill: #222;
-}
-
-.mermaid-container g.node rect,
-.mermaid-container g.node ellipse,
-.mermaid-container g.node circle {
-  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.1));
-}
-
-.mermaid-error {
-  color: #b00020;
-  background: #fff;
-  border: none;
-  font-family: monospace;
-  padding: 1rem;
-  text-align: left;
+@media (max-width: 768px) {
+  .mindmap-tab-fullscreen {
+    height: calc(100vh - 60px);
+  }
+  
+  .jsmind-container-fullscreen jmnode {
+    font-size: 12px !important;
+    max-width: 250px !important;
+    padding: 6px 10px !important;
+  }
+  
+  .jsmind-container-fullscreen .jmexpander {
+    width: 10px !important;
+    height: 10px !important;
+  }
 }

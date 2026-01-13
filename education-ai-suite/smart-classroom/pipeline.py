@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+import re
 from components.stream_reader import AudioStreamReader
 from components.asr_component import ASRComponent
 from utils.config_loader import config
@@ -78,6 +79,7 @@ class Pipeline:
             pass 
 
     def run_mindmap(self):
+
         project_config = RuntimeConfig.get_section("Project")
         session_dir = os.path.join(
             project_config.get("location"),
@@ -111,19 +113,47 @@ class Pipeline:
             )
         summary_plain = markdown_to_plain(summary_md)
 
-        token_count = len(summary_plain.split())
+        token_count = len(re.findall(r'[\u4e00-\u9fff]|[^\u4e00-\u9fff\s]+', summary_plain))
         logger.info(f"Summary token count: {token_count}, Minimum required: {min_tokens}")
 
         if token_count < min_tokens:
             logger.warning("Insufficient information to generate mindmap.")
-            insufficient_mindmap = (
-                "mindmap\n"
-                "  root((Insufficient Input))\n"
-                "    The summary is too short to generate a meaningful mindmap."
-            )
+            insufficient_mindmap = {
+                "meta": {
+                    "name": "insufficient_input",
+                    "author": "ai_assistant",
+                    "version": "1.0"
+                },
+                "format": "node_tree",
+                "data": {
+                    "id": "root",
+                    "topic": "Insufficient Input",
+                    "children": [
+                        {
+                            "id": "insufficient_info",
+                            "topic": "Insufficient Information",
+                            "children": [
+                                {
+                                    "id": "short_summary",
+                                    "topic": "The summary is too short to generate a meaningful mindmap"
+                                },
+                                {
+                                    "id": "token_info",
+                                    "topic": f"Current tokens: {token_count}, Required: {min_tokens}"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+            
+            # Convert to JSON string
+            import json
+            insufficient_mindmap_json = json.dumps(insufficient_mindmap, indent=2)
+            
             mindmap_path = os.path.join(session_dir, "mindmap.mmd")
-            StorageManager.save(mindmap_path, insufficient_mindmap, append=False)
-            return insufficient_mindmap
+            StorageManager.save(mindmap_path, insufficient_mindmap_json, append=False)
+            return insufficient_mindmap_json
 
         try:
             full_mindmap = self.mindmap_component.generate_mindmap(summary_plain)

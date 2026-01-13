@@ -39,52 +39,128 @@ models:
 mindmap:
   system_prompt:
     en: |
-      Generate a Mermaid mindmap with correct syntax. Follow these strict rules:
+      Generate a comprehensive jsMind JSON structure that accurately captures ALL key concepts from the summary. Follow these strict rules:
  
-      1. The diagram must start with the keyword: mindmap
-      2. There must be exactly ONE root node, written with double parentheses: root((Your Root Title))
-      3. If the summary contains multiple top-level topics, create a synthetic root such as:
-         - "Class Overview"
-         - "Lecture Summary"
-         - "Main Topics"
-         Then place all major topics as first-level children under this synthetic root.
-      4. Use 2 spaces for each indentation level.
-      5. Do NOT use bullet points, Markdown fences, or multiple mindmap declarations.
-      6. Do NOT include ```mermaid or any Markdown formatting.
-      7. All content must be inside one single mindmap structure.
+      1. The output must be a valid JSON object with "meta", "format", and "data" properties
+      2. Set format to "node_tree"
+      3. There must be exactly ONE root node with id "root"
+      4. If the summary contains multiple top-level topics, create a synthetic root topic that reflects the main theme:
+         - Use the actual title if provided 
+         - Otherwise use descriptive titles like "Class Overview", "Lecture Summary", "Main Topics"
+      5. Each node must have "id" and "topic" properties
+      6. Child nodes are placed in a "children" array
+      7. IMPORTANT: Extract ALL key details and concepts from the summary:
+         - Include specific examples, definitions, and explanations mentioned
+         - Capture contrasts, comparisons, and relationships between concepts
+         - Include technical terms, equations, or scientific principles mentioned
+         - Don't oversimplify - preserve the depth and nuance of the content
+      8. Use descriptive and specific topic names that reflect the actual content:
+         - Instead of "Topic A" use "Discontinuous electron transitions between orbits"
+         - Instead of "Definition" use "Areas without atomic particles (ether/empty space)"
+         - Capture the essence and specificity of each concept
+      9. Create 2-4 levels of hierarchy to properly organize information:
+         - Main topics (from headings)
+         - Sub-concepts (key points within each topic)
+         - Specific details (examples, explanations, technical details)
+      10. Ensure conceptual accuracy - each node should represent a distinct, meaningful concept
+      11. Do NOT include any markdown formatting, code fences, or explanatory text
+      12. Output only the raw JSON structure
  
-      Example format:
-      mindmap
-        root((Class Overview))
-          Topic A
-            Subtopic A1
-            Subtopic A2
-          Topic B
-            Subtopic B1
-            Subtopic B2
-    zh: 
-      生成正确语法的Mermaid思维导图，严格遵循以下规则：
+      Example of GOOD specificity:
+      {
+        "meta": {
+          "name": "physics_lecture",
+          "author": "ai_assistant", 
+          "version": "1.0"
+        },
+        "format": "node_tree",
+        "data": {
+          "id": "root",
+          "topic": "Quantum Mechanics and Wave Theory",
+          "children": [
+            {
+              "id": "wave_particle_duality",
+              "topic": "Wave-Particle Duality",
+              "children": [
+                {"id": "photon_behavior", "topic": "Photons exhibit both wave and particle properties"},
+                {"id": "double_slit", "topic": "Double-slit experiment demonstrates interference"},
+                {"id": "measurement_effect", "topic": "Measurement collapses wave function"}
+              ]
+            },
+            {
+              "id": "uncertainty_principle",
+              "topic": "Heisenberg Uncertainty Principle",
+              "children": [
+                {"id": "position_momentum", "topic": "Cannot precisely know both position and momentum"},
+                {"id": "mathematical_formulation", "topic": "Δx·Δp ≥ ℏ/2 mathematical relationship"},
+                {"id": "quantum_limitations", "topic": "Fundamental limit of quantum measurements"}
+              ]
+            }
+          ]
+        }
+      }
+
+    zh: |
+      生成全面的jsMind JSON结构，准确捕获摘要中的所有关键概念。严格遵循以下规则：
  
-      1. 必须以 mindmap 开头。
-      2. 必须且只能有一个根节点((主题))。
-      3. 如果总结内容包含多个顶级主题，请创建一个合成根节点，如：
-         - “课堂概览”
-         - “课程总结”
-         - “主要内容”
-         然后将所有主要主题作为一级子节点放在该根节点下。
-      4. 每一层缩进使用两个空格。
-      5. 不要使用项目符号、Markdown代码块或多个 mindmap 声明。
-      6. 不要包含 ```mermaid 或任何Markdown格式。
-      7. 所有内容必须包含在一个单一的 mindmap 结构中。
+      1. 输出必须是包含"meta"、"format"和"data"属性的有效JSON对象
+      2. 将format设置为"node_tree"
+      3. 必须且只能有一个id为"root"的根节点
+      4. 如果总结内容包含多个顶级主题，创建反映主要主题的合成根主题：
+         - 如果提供了实际标题则使用（如"相对论与原子世界"）
+         - 否则使用描述性标题如"课堂概览"、"课程总结"、"主要内容"
+      5. 每个节点必须有"id"和"topic"属性
+      6. 子节点放在"children"数组中
+      7. 重要：从摘要中提取所有关键细节和概念：
+         - 包括提到的具体例子、定义和解释
+         - 捕获概念之间的对比、比较和关系
+         - 包括提到的技术术语、方程或科学原理
+         - 不要过度简化 - 保持内容的深度和细致差别
+      8. 使用反映实际内容的描述性和具体的主题名称：
+         - 不用"主题A"而用"电子在轨道间的不连续跃迁"
+         - 不用"定义"而用"无原子粒子区域（以太/空间）"
+         - 捕获每个概念的本质和特殊性
+      9. 创建2-4层级结构来正确组织信息：
+         - 主要主题（来自标题）
+         - 子概念（每个主题内的关键点）
+         - 具体细节（例子、解释、技术细节）
+      10. 确保概念准确性 - 每个节点应代表一个独特、有意义的概念
+      11. 不要包含任何markdown格式、代码块或解释性文本
+      12. 只输出原始JSON结构
  
-      示例格式：
-      mindmap
-        root((课堂主题))
-          部分一
-            子节点A
-            子节点B
-          部分二
-            子节点C
+      良好特异性示例：
+      {
+        "meta": {
+          "name": "physics_lecture",
+          "author": "ai_assistant",
+          "version": "1.0"
+        },
+        "format": "node_tree", 
+        "data": {
+          "id": "root",
+          "topic": "量子力学与波动理论",
+          "children": [
+            {
+              "id": "wave_particle_duality",
+              "topic": "波粒二象性",
+              "children": [
+                {"id": "photon_behavior", "topic": "光子同时表现出波动和粒子特性"},
+                {"id": "double_slit", "topic": "双缝实验证明干涉现象"},
+                {"id": "measurement_effect", "topic": "测量导致波函数坍缩"}
+              ]
+            },
+            {
+              "id": "uncertainty_principle",
+              "topic": "海森堡不确定性原理",
+              "children": [
+                {"id": "position_momentum", "topic": "无法同时精确知道位置和动量"},
+                {"id": "mathematical_formulation", "topic": "Δx·Δp ≥ ℏ/2 数学关系"},
+                {"id": "quantum_limitations", "topic": "量子测量的基本限制"}
+              ]
+            }
+          ]
+        }
+      }
   min_token: 20
 
 audio_preprocessing:
