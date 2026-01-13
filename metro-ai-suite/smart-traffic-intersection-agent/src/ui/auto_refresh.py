@@ -1,3 +1,5 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 """
 Auto-refresh enhancement for the Gradio UI
 This creates a periodic refresh mechanism using gradio's built-in capabilities

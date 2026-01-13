@@ -1,3 +1,5 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 """
 Traffic Intelligence Service - Lightweight traffic analysis for a single intersection
  
