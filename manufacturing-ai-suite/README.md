@@ -28,7 +28,7 @@ It includes:
 
 |              |             |
 |:-------------|:------------|
-| [Deep Learning Streamer](https://github.com/open-edge-platform/dlstreamer/tree/master)                                     | A framework for building optimized media analytics pipelines powered by OpenVINO&trade; toolkit.                                 |
+| [Deep Learning Streamer](https://github.com/open-edge-platform/dlstreamer/tree/main)                                     | A framework for building optimized media analytics pipelines powered by OpenVINO&trade; toolkit.                                 |
 | [Deep Learning Streamer Pipeline Server](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/dlstreamer-pipeline-server)  | A containerized microservice, built on top of GStreamer, for development and deployment of video analytics pipelines.            |
 | [Model Registry](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-registry)                                      | Providing capabilities to manage the lifecycle of an AI model.                                                                   |
 | [Time Series Analytics Microservice](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/time-series-analytics)           | Built on top of **Kapacitor**, a containerized microservice for development and deployment of time series analytics capabilities |
