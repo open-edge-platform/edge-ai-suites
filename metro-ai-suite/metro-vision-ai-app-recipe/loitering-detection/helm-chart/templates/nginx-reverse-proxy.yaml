@@ -37,11 +37,11 @@ spec:
   ports:
   - name: http
     port: {{ .Values.config.nginx.int.http_port }}
-    targetPort: {{ .Values.config.nginx.int.http_port }}
+    targetPort: {{ .Values.config.nginx.target.http_port }}
     nodePort: {{ .Values.config.nginx.ext.http_port }}
   - name: https
     port: {{ .Values.config.nginx.int.https_port }}
-    targetPort: {{ .Values.config.nginx.int.https_port }}
+    targetPort: {{ .Values.config.nginx.target.https_port }}
     nodePort: {{ .Values.config.nginx.ext.https_port }}
 ---
 apiVersion: apps/v1
