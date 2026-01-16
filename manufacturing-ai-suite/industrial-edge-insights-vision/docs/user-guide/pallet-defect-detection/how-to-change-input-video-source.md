@@ -2,18 +2,20 @@
 
 Typically, a pipeline is started with a cURL request with JSON payload containing source, destination and parameters. For example, the following cURL request start an AI pipeline on a file inferencing on pallet defect detection model.
 
-         curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/<pipeline_name> -X POST -H 'Content-Type: application/json' -d '{
-            "source": {
-               "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
-               "type": "uri"
-            },
-            "parameters": {
-               "detection-properties": {
-                  "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
-                  "device": "CPU"
-               }
-            }
-         }'
+```bash
+curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/<pipeline_name> -X POST -H 'Content-Type: application/json' -d '{
+   "source": {
+      "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
+      "type": "uri"
+   },
+   "parameters": {
+      "detection-properties": {
+         "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
+         "device": "CPU"
+      }
+   }
+}'
+```
 
 To change the input video source for the pipeline, refer to the following table:
 
