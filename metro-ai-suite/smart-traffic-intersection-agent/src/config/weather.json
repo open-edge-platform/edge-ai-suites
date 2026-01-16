@@ -1,0 +1,23 @@
+{
+    "clear": {
+        "name": "Mock Weather Period",
+        "temperature": 78,
+        "temperature_unit": "F",
+        "detailed_forecast": "Clear conditions with 9 mph winds from the N.",
+        "short_forecast": "Clear",
+        "wind_speed": "9 mph",
+        "wind_direction": "N",
+        "wind_info": "9mph/N",
+        "fetched_at": "2025-10-16T07:50:59.478546",
+        "is_precipitation": false,
+        "is_mock": true,
+        "precipitation_prob": 0,
+        "dewpoint": 37,
+        "dewpoint_unit": "F",
+        "relative_humidity": 65,
+        "is_daytime": true,
+        "start_time": "2025-10-16T07:00:00-07:00",
+        "end_time": "2025-10-16T08:00:00-07:00",
+        "is_cached": false
+    }
+}

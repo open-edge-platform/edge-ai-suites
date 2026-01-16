@@ -1,0 +1,86 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: telegraf
+  name: deployment-telegraf
+  namespace: {{ .Values.namespace }}
+
+spec:
+  selector:
+    matchLabels:
+      app: telegraf
+  template:
+    metadata:
+      labels:
+        app: telegraf
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: ia-telegraf
+        image: telegraf:1.34.3
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        command: ["/bin/sh"]
+        args: ["/entrypoint.sh"]
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: tmpfs-volume
+          mountPath: /tmp
+        - name: telegraf-entrypoint
+          mountPath: /entrypoint.sh
+          subPath: entrypoint.sh     
+        - name: telegraf-conf-input
+          mountPath: /etc/telegraf/Telegraf.conf
+          subPath: Telegraf.conf
+        
+        env:
+        - name: TELEGRAF_INPUT_PLUGIN
+          value: '{{ .Values.env.TELEGRAF_INPUT_PLUGIN }}'
+        - name: MQTT_BROKER_HOST
+          value: '{{ .Values.config.telegraf.MQTT_BROKER_HOST }}'
+        - name: INFLUXDB_USERNAME
+          value: '{{ .Values.env.INFLUXDB_USERNAME }}'
+        - name: INFLUXDB_PASSWORD
+          value: '{{ .Values.env.INFLUXDB_PASSWORD }}'
+        - name: INFLUX_SERVER
+          value: "influxdb"
+        - name: INFLUXDB_DBNAME
+          value: "datain"
+        - name: INFLUXDB_PORT
+          value: "8086"
+        - name: LOG_LEVEL
+          value: '{{ .Values.env.LOG_LEVEL }}'
+        - name: TELEGRAF_METRIC_BATCH_SIZE
+          value: '{{ .Values.env.TELEGRAF_METRIC_BATCH_SIZE }}'
+        - name: TELEGRAF_CONFIG_PATH
+          value: /etc/telegraf/Telegraf.conf
+        
+        - name: TS_MS_SERVER_URL
+          value: "http://{{ .Values.config.time_series_analytics_microservice.name }}:{{ .Values.config.time_series_analytics_microservice.kapacitor_port }}"
+        - name: OPCUA_SERVER
+          value: "opc.tcp://ia-opcua-server:4840/freeopcua/server/"
+      volumes:
+      - name: tmpfs-volume
+        emptyDir: {}
+      - name: telegraf-entrypoint
+        configMap:
+          name: telegraf-entrypoint
+      - name: telegraf-conf-input
+        configMap:
+          name: telegraf-conf-input

@@ -1,0 +1,36 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.namespace }}-egress
+  namespace: {{ .Values.namespace }}
+spec:
+  egress:
+  - {}
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: {{ .Values.namespace }}
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.namespace }}-ingress
+  namespace: {{ .Values.namespace }}
+spec:
+  ingress:
+  - {}
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: {{ .Values.namespace }}
+  podSelector: {}
+  policyTypes:
+  - Ingress

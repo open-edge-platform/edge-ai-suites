@@ -1,0 +1,127 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: scene-intelligence
+
+secrets:
+  root-cert:
+    file: ../edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs/scenescape-ca.pem
+
+services:
+  # VLM OpenVINO Serving Service
+  vlm-openvino-serving:
+    image: intel/vlm-openvino-serving:1.3.1
+    ports:
+      - "${VLM_SERVICE_PORT:-9764}:8000"
+    ipc: host
+    networks:
+      - scenescape
+    environment:
+      # Proxy settings
+      no_proxy_env: ${no_proxy_env},${HOST_IP}
+      no_proxy: ${no_proxy_env},${HOST_IP}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      # VLM Model configuration
+      VLM_MODEL_NAME: ${VLM_MODEL_NAME:-Qwen/Qwen2.5-VL-3B-Instruct}
+      VLM_COMPRESSION_WEIGHT_FORMAT: ${VLM_COMPRESSION_WEIGHT_FORMAT:-int4}
+      VLM_DEVICE: ${VLM_DEVICE:-CPU}
+      VLM_SEED: ${VLM_SEED:-42}
+      WORKERS: ${VLM_WORKERS:-1}
+      VLM_MAX_COMPLETION_TOKENS: ${VLM_MAX_COMPLETION_TOKENS:-1500}
+      HUGGINGFACE_TOKEN: ${HUGGINGFACE_TOKEN}
+      OV_CONFIG: ${OV_CONFIG}
+      VLM_LOG_LEVEL: ${VLM_LOG_LEVEL:-info}
+      OPENVINO_LOG_LEVEL: ${VLM_OPENVINO_LOG_LEVEL:-1}
+      VLM_ACCESS_LOG_FILE: ${VLM_ACCESS_LOG_FILE:-/dev/null}
+    restart: unless-stopped
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - ${USER_GROUP_ID:-1000} 
+      - ${VIDEO_GROUP_ID:-44}    
+      - ${RENDER_GROUP_ID:-109} 
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 60
+      start_period: 10s
+    volumes:
+      - ov-models:/root/.cache/huggingface
+      - ov-models:/app/ov-model
+
+  # Traffic Intelligence Service
+  traffic-intelligence:
+    build:
+      context: ../src
+      dockerfile: Dockerfile
+    image: ${REGISTRY:-}traffic-intelligence:${TAG:-latest}
+    ports:
+      - "${TRAFFIC_INTELLIGENCE_PORT:-8081}:8081"
+      - "${TRAFFIC_INTELLIGENCE_UI_PORT:-7860}:7860"
+    networks:
+      - scenescape
+    depends_on:
+      vlm-openvino-serving:
+        condition: service_healthy
+    environment:
+      # Service configuration
+      TRAFFIC_INTELLIGENCE_HOST: 0.0.0.0
+      TRAFFIC_INTELLIGENCE_PORT: ${TRAFFIC_INTELLIGENCE_PORT:-8081}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      
+      # UI configuration
+      TRAFFIC_INTELLIGENCE_UI_PORT: ${TRAFFIC_INTELLIGENCE_UI_PORT:-7860}
+      USE_API: "true"
+      API_URL: http://localhost:${TRAFFIC_INTELLIGENCE_PORT:-8081}/api/v1/traffic/current
+      REFRESH_INTERVAL: ${REFRESH_INTERVAL:-15}
+      
+      # Proxy settings
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy_env},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving
+      NO_PROXY: ${no_proxy_env},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      
+      # MQTT configuration (connects to broker service)
+      MQTT_HOST: ${MQTT_HOST:-broker.scenescape.intel.com}
+      MQTT_PORT: ${MQTT_PORT:-1883}
+
+      # Intersection configuration (overrides config/traffic_intelligence.json)
+      INTERSECTION_NAME: ${INTERSECTION_NAME:-Intersection-1}
+      INTERSECTION_LATITUDE: ${INTERSECTION_LATITUDE:-37.7049108}
+      INTERSECTION_LONGITUDE: ${INTERSECTION_LONGITUDE:--121.9096158}
+      
+      # Weather configuration (overrides config/traffic_intelligence.json)
+      WEATHER_MOCK: ${WEATHER_MOCK:-true}
+      
+      # VLM configuration (overrides config/traffic_intelligence.json)
+      VLM_MODEL: ${VLM_MODEL_NAME:-Qwen/Qwen2.5-VL-3B-Instruct}
+      
+      # Traffic analysis configuration (overrides config/traffic_intelligence.json)
+      HIGH_DENSITY_THRESHOLD: ${HIGH_DENSITY_THRESHOLD:-10}
+
+    volumes:
+      - ../src/config:/app/config:ro
+      - traffic-intelligence-data:/app/data
+    secrets:
+      - source: root-cert
+        target: /app/secrets/certs/scenescape-ca.pem
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/health || exit 1"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-3}
+      start_period: ${HEALTH_CHECK_START_PERIOD:-10s}
+    restart: unless-stopped
+
+volumes:
+  ov-models:
+  traffic-intelligence-data:
+
+networks:
+  scenescape:
+    external: true
+    name: metro-vision-ai-app-recipe_scenescape

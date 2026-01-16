@@ -1,0 +1,92 @@
+---
+openapi: 3.1.0
+info:
+  title: Traffic Intelligence API
+  description: Lightweight traffic analysis service for single intersection monitoring
+  version: 1.0.0
+paths:
+  "/api/v1/traffic/current":
+    get:
+      summary: Get Current Traffic Intelligence
+      description: |-
+        Get current traffic intelligence data for the intersection.
+
+        Returns complete traffic intelligence response matching data.json schema
+        with weather data and VLM analysis.
+      operationId: get_current_traffic_intelligence_api_v1_traffic_current_get
+      parameters:
+      - name: images
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          description: Include camera images in response
+          title: Images
+        description: Include camera images in response
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Response Get Current Traffic Intelligence Api V1 Traffic Current
+                  Get
+        '404':
+          description: No traffic data available
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/health":
+    get:
+      summary: Health Check
+      description: Health check endpoint.
+      operationId: health_check_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+components:
+  schemas:
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            "$ref": "#/components/schemas/ValidationError"
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    WeatherType:
+      type: string
+      enum:
+      - clear
+      title: WeatherType
+      description: Weather condition
