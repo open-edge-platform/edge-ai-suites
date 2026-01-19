@@ -11,13 +11,13 @@ The microservice processes real-time traffic data from MQTT streams and provides
 The diagram below illustrates the high-level architecture of the Smart Traffic Intelligence Agent, showcasing its core components and their interactions with external systems.
 
 <p align="center">
-    <img src="./images/traffic_agent.png" alt="Architecture" />
+    <img src="./_images/traffic_agent.png" alt="Architecture" />
 </p>
 
 The Smart Traffic UI below shows how traffic, weather data is analyzed and summary, alerts are shown to the user.
 
 <p align="center">
-    <img src="./images/traffic_agent_ui.png" alt="Architecture" />
+    <img src="./_images/traffic_agent_ui.png" alt="Architecture" />
 </p>
 
 ## Components
