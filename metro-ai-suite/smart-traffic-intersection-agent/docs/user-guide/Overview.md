@@ -1,6 +1,6 @@
-# Scene Traffic Intersection Agent
+# Smart Traffic Intersection Agent
 
-The Scene Traffic Intersection Agent is a comprehensive traffic analysis service that provides real-time intersection monitoring, directional traffic density analysis, and Vision Language Model (VLM) powered traffic insights. It processes MQTT traffic data, manages camera images, and delivers intelligent traffic analysis through RESTful APIs.
+The Smart Traffic Intersection Agent is a comprehensive traffic analysis service that provides real-time intersection monitoring, directional traffic density analysis, and Vision Language Model (VLM) powered traffic insights. It processes MQTT traffic data, manages camera images, and delivers intelligent traffic analysis through RESTful APIs.
 
 ## Overview
 
