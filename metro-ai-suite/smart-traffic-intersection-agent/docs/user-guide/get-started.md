@@ -1,8 +1,8 @@
 # Get Started
 
-The **Scene Intelligence microservice** provides comprehensive traffic analysis capabilities including real-time intersection monitoring, directional traffic density analysis, and VLM-powered traffic insights. This guide provides step-by-step instructions to:
+The **Scene Traffic Intersection Agent (STIA)** provides comprehensive traffic analysis capabilities including real-time intersection monitoring, directional traffic density analysis, and VLM-powered traffic insights. This guide provides step-by-step instructions to:
 
-- Set up the microservice using the automated setup script for quick deployment.
+- Set up the agent using the automated setup script for quick deployment.
 - Run predefined tasks to explore its functionality.
 - Learn how to modify configurations to suit specific requirements.
 
@@ -18,7 +18,7 @@ This guide assumes basic familiarity with Docker commands and terminal usage. If
 
 ## Quick Start with Setup Script
 
-The Scene Intelligence microservice includes an automated setup script that handles environment configuration, secrets generation, building, and deployment. This is the **recommended approach** for getting started.
+The Scene Traffic Intersection Agent includes an automated setup script that handles environment configuration, secrets generation, building, and deployment. This is the **recommended approach** for getting started.
 
 ### 1. Clone the Repository
 
@@ -44,7 +44,7 @@ This single command will:
 - Build Docker images
 - Start all services in the Scene Intelligence stack
 
-The setup command starts all services including the containerized Traffic Intelligence service.
+The setup command starts all services including the containerized Traffic Intelligence agent.
 
 ### 3. Verify Services
 
@@ -72,6 +72,68 @@ The stack provides multiple interfaces:
 - **Traffic Intelligence UI**: `http://localhost:7860`
 - **SceneScape Web**: `https://localhost:443`
 - **API Documentation**: `http://localhost:8081/docs` (Swagger UI)
+
+## Running Multiple Instances (Test/Dev Only)
+
+For testing or development purposes, you may want to run multiple instances of the Smart Traffic Intersection Agent deployment to simulate multiple intersections. Each setup run (n runs) brings up n instances of the agent. In production environments, only a single ITT instance is required.
+
+> **Note**: Step 2 (updating `intersection-config.json`) is optional for single-instance production deployments—the system runs with default values.
+
+> **Recommendation**: Running 3 agent instances is recommended to experience all use cases and workflows. The number of instances you can run depends on available device resources—systems with higher resources can support more instances.
+
+### 1. Clone the Repository
+
+For each instance, clone the repository into a separate directory:
+
+```bash
+# First instance
+git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
+cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
+
+# Second instance (in a new terminal)
+git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
+cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
+```
+
+### 2. Update intersection-config.json
+
+Each instance must have a unique configuration. Edit `intersection-config.json` in each instance directory:
+
+**Instance 1** (`edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/intersection-config.json`):
+```json
+{
+    "intersection-name": "intersection_1",
+    "latitude": 33.3091336,
+    "longitude": -111.9353095,
+    "backend_port": "8081",
+    "ui_port": "7860"
+}
+```
+
+**Instance 2** (`edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/intersection-config.json`):
+```json
+{
+    "intersection-name": "intersection_2",
+    "latitude": 33.4484,
+    "longitude": -112.0740,
+    "backend_port": "8082",
+    "ui_port": "7861"
+}
+```
+
+Ensure each instance has:
+- A unique `intersection-name`
+- Different `backend_port` and `ui_port` values to avoid port conflicts (optional—if not specified, an ephemeral port is picked automatically)
+
+### 3. Run Setup for Each Instance
+
+In each instance directory, run:
+
+```bash
+source setup.sh --setup
+```
+
+Each instance will deploy with its own configuration and ports.
 
 ## Manual Setup (Advanced Users)
 
@@ -161,18 +223,6 @@ The complete stack exposes several services on different ports:
 | Traffic Intelligence API | 8081 | Real-time traffic analysis REST API |
 | Traffic Intelligence UI | 7860 | Interactive Gradio dashboard |
 | Scene Intelligence API | 8082 | Scene analytics service (optional) |
-| VLM OpenVINO Serving | 9764 | Vision Language Model service |
-| SceneScape Web | 443 | Management web interface (HTTPS) |
-| MQTT Broker | 1883 | Message broker |
-| DL Streamer | 8555 | Video analytics pipeline |
-
-## Service Ports
-
-The complete stack exposes several services on different ports:
-
-| Service | Port | Description |
-|---------|------|-------------|
-| Scene Intelligence API | 8082 | Main traffic analysis API |
 | VLM OpenVINO Serving | 9764 | Vision Language Model service |
 | SceneScape Web | 443 | Management web interface (HTTPS) |
 | MQTT Broker | 1883 | Message broker |
