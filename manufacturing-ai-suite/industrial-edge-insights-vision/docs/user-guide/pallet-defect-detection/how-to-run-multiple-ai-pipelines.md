@@ -6,55 +6,59 @@ The DL Streamer Pipeline Server config supports multiple pipelines that you can 
 
 ## Steps
 
- The following demonstrates running two AI pipelines.
+The following demonstrates running two AI pipelines.
+
 > **Note** We assume that the model and sample video is already available in the application directory under `resources/`.
 
 1. Bring up the containers.
-    ```sh
-    docker compose up -d
-    ```
+
+   ```sh
+   docker compose up -d
+   ```
+
 2. Start the pallet defect detection pipeline with the following Client URL (cURL) command by replacing the `<peer-str-id>` with a string id eg: `pdd` and `<HOST_IP>` with the system IP. This pipeline is configured to run in a loop forever. This REST/cURL request will return a pipeline instance ID, which can be used as an identifier to query later the pipeline status or stop the pipeline instance. For example, a6d67224eacc11ec9f360242c0a86003.
 
-    ``` sh
-    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection_mlops -X POST -H 'Content-Type: application/json' -d '{
-        "destination": {
-            "frame": {
-                "type": "webrtc",
-                "peer-id": "<peer-str-id>"
-            }
-        },
-        "parameters": {
-            "detection-properties": {
-                "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
-                "device": "CPU"
-            }
-        }
-    }'
-    ```
+   ``` sh
+   curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection_mlops -X POST -H 'Content-Type: application/json' -d '{
+       "destination": {
+           "frame": {
+               "type": "webrtc",
+               "peer-id": "<peer-str-id>"
+           }
+       },
+       "parameters": {
+           "detection-properties": {
+               "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
+               "device": "CPU"
+           }
+       }
+   }'
+   ```
 
 3. Start another pallet defect detection pipeline with the following Client URL (cURL) command by replacing the `<different-peer-str-id>` with a different string id than the one in above step. eg: `pddstream` and `<HOST_IP>` with the system IP. This pipeline is not configured to run in a loop forever. This REST/cURL request will return a pipeline instance ID, which can be used as an identifier to query later the pipeline status or stop the pipeline instance. For example, a6d67224eacc11ec9f360242c0a86003.
 
-    ``` sh
-    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection -X POST -H 'Content-Type: application/json' -d '{
-        "source": {
-            "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
-            "type": "uri"
-        },
-        "destination": {
-            "frame": {
-                "type": "webrtc",
-                "peer-id": "<different-peer-str-id>"
-            }
-        },
-        "parameters": {
-            "detection-properties": {
-                "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
-                "device": "CPU"
-            }
-        }
-    }'
-    ```
-    **Note the instance ID of this pipeline**
+   ``` sh
+   curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection -X POST -H 'Content-Type: application/json' -d '{
+       "source": {
+           "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
+           "type": "uri"
+       },
+       "destination": {
+           "frame": {
+               "type": "webrtc",
+               "peer-id": "<different-peer-str-id>"
+           }
+       },
+       "parameters": {
+           "detection-properties": {
+               "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
+               "device": "CPU"
+           }
+       }
+   }'
+   ```
+
+   **Note the instance ID of this pipeline**
 
 4. View the WebRTC streaming on `https://<HOST_IP>/mediamtx/<peer-str-id>/` and `https://<HOST_IP>/mediamtx/<different-peer-str-id>/`.
 
@@ -64,9 +68,10 @@ The DL Streamer Pipeline Server config supports multiple pipelines that you can 
 
    You can see boxes, shipping labels, and defects being detected. You have successfully run the sample application.
 
-   > NOTE: You can also observe telemetry data from the Prometheus UI. Refer [this](./how-to-view-telemetry-data.md) document to learn more.
+   > **Note:** You can also observe telemetry data from the Prometheus UI. Refer [this](./how-to-view-telemetry-data.md) document to learn more.
 
 5. Stop the 2nd pipeline using the instance ID noted in point #3 above, before proceeding with this documentation.
-   ```shell
+
+   ```sh
    curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
    ```
