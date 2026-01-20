@@ -7,15 +7,7 @@ ARG USER_ID=1000
 ARG USER_GROUP_ID=1000
 
 # Install system dependencies first
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgomp1 \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update
 
 # Set working directory
 WORKDIR /app

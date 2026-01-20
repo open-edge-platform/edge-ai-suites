@@ -42,6 +42,9 @@ logs/
 # Ignore pytest result files
 *.pytest_cache
 
+# Other cache files
+**/.ruff_cache
+
 # pytest related dir
 empty_model_dir
 mock_model_dir

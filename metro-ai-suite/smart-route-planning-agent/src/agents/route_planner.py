@@ -71,9 +71,9 @@ class RoutePlanner:
             # Check if waypoints match the source and destination in graph state
             if source_wpt and destination_wpt:
                 if (
-                    source_wpt["name"] == source
-                    or source_wpt["description"] == source
-                    and destination_wpt["name"] == destination
+                    source_wpt["name"] == source or source_wpt["description"] == source
+                ) and (
+                    destination_wpt["name"] == destination
                     or destination_wpt["description"] == destination
                 ):
                     # Get the route with shortest distance for given source and destination
@@ -247,11 +247,17 @@ class RoutePlanner:
 
             # Get the waypoints and first track and collect all trackpoints for the track
             trackpoints = route_data.get("waypoints", [])
-            trackpoints.extend(route_data.get("tracks", [{}])[0].get("track_points", []))
+            trackpoints.extend(
+                route_data.get("tracks", [{}])[0].get("track_points", [])
+            )
 
             num_intersections_in_route: int = 0
-            intersection_blocked_count_valid: int = 0      # Intersection blocked due to correct game move by user
-            intersection_blocked_count_invalid: int = 0    # Intersection blocked due to incorrect game move by user
+            intersection_blocked_count_valid: int = (
+                0  # Intersection blocked due to correct game move by user
+            )
+            intersection_blocked_count_invalid: int = (
+                0  # Intersection blocked due to incorrect game move by user
+            )
             logger.debug(f"Analyzing route: {next_shortest_route_name}")
             for i, trackpoint in enumerate(trackpoints):
                 # If route has been found not to be optimal break out of loop
@@ -278,21 +284,32 @@ class RoutePlanner:
                         num_intersections_in_route += 1
 
                         # Verify if traffic status from Intersection API reflects the actual recorded scenario at the intersection
-                        if WEATHER_ISSUE_MAP.get(next_shortest_route_name) == traffic_status.weather_status or \
-                            INCIDENT_ISSUE_MAP.get(next_shortest_route_name) == traffic_status.incident_status:
+                        if (
+                            WEATHER_ISSUE_MAP.get(next_shortest_route_name)
+                            == traffic_status.weather_status
+                            or INCIDENT_ISSUE_MAP.get(next_shortest_route_name)
+                            == traffic_status.incident_status
+                        ):
                             intersection_blocked_count_valid += 1
-                        elif traffic_status.weather_status != WeatherStatus.CLEAR or traffic_status.incident_status != IncidentStatus.CLEAR:
+                        elif (
+                            traffic_status.weather_status != WeatherStatus.CLEAR
+                            or traffic_status.incident_status != IncidentStatus.CLEAR
+                        ):
                             intersection_blocked_count_invalid += 1
 
-                        logger.debug("Getting blocked routes when intersection is found to be in current route ...")
+                        logger.debug(
+                            "Getting blocked routes when intersection is found to be in current route ..."
+                        )
                         logger.debug(f"Blocked routes valid : {blocked_routes}")
-                        logger.debug(f"Blocked routes invalid : {blocked_routes_invalid}")
+                        logger.debug(
+                            f"Blocked routes invalid : {blocked_routes_invalid}"
+                        )
 
                         # Do not try to update sub_optimal_route or live_traffic_state if route is already blocked
                         if (
                             next_shortest_route_name
                             not in state.get("blocked_routes", [])
-                            and next_shortest_route_name 
+                            and next_shortest_route_name
                             not in state.get("blocked_routes_invalid", [])
                             and traffic_status.traffic_density
                             > ThresholdController.TRAFFIC_DENSITY_THRESHOLD
@@ -340,9 +357,9 @@ class RoutePlanner:
                             )
                             break
 
-
             if (
-                0 < intersection_blocked_count_valid + intersection_blocked_count_invalid
+                0
+                < intersection_blocked_count_valid + intersection_blocked_count_invalid
             ):
                 logger.info(
                     f"Some intersections in route {next_shortest_route_name} report issues. Considering route as non-optimal."
@@ -423,6 +440,7 @@ class RoutePlanner:
             logger.info(
                 "Picking previous live traffic status as current optimal route is sub-optimal"
             )
+            # Picks second last entry from list if num of entries > 1 else picks the only entry available.
             live_traffic_state = self.live_traffic_status_list[
                 len(self.live_traffic_status_list) - 2
             ]

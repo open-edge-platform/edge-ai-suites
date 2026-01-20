@@ -8,51 +8,6 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "ai-route-planner"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "black" },
-    { name = "branca" },
-    { name = "folium" },
-    { name = "gpxpy" },
-    { name = "gradio" },
-    { name = "isort" },
-    { name = "langgraph" },
-    { name = "mypy" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "pillow" },
-    { name = "pydantic" },
-    { name = "pytest" },
-    { name = "python-dateutil" },
-    { name = "requests" },
-    { name = "rich" },
-    { name = "typing-extensions" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "black", specifier = "==23.7.0" },
-    { name = "branca", specifier = "==0.6.0" },
-    { name = "folium", specifier = "==0.14.0" },
-    { name = "gpxpy" },
-    { name = "gradio", specifier = ">=5.43.1" },
-    { name = "isort" },
-    { name = "langgraph", specifier = ">=0.6.6" },
-    { name = "mypy" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "pillow", specifier = ">=10.4.0" },
-    { name = "pydantic" },
-    { name = "pytest" },
-    { name = "python-dateutil" },
-    { name = "requests" },
-    { name = "rich" },
-    { name = "typing-extensions" },
-]
-
-[[package]]
 name = "aiofiles"
 version = "23.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -473,6 +428,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/6f/67/b3a7cba3ec31eb00c6fcb4d6df6cce94dd9a4fbc5ae3eb9b20f18e1c1040/gradio_client-1.12.1.tar.gz", hash = "sha256:64ae7b1d951482194e3a2f8d20cd3fbdaaa13418ee988445d3c9edb28da50ea2", size = 322580, upload-time = "2025-08-19T20:25:44.668Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/77/95/e248cabea8c5b1eaa69c0e4742e4d4cbb3708272670917daf8eef2f78aa1/gradio_client-1.12.1-py3-none-any.whl", hash = "sha256:37c0bcd0e6b3794b2b2e0b5039696d6962d8125bdb96960ad1b79412326b1664", size = 324611, upload-time = "2025-08-19T20:25:42.933Z" },
+]
+
+[[package]]
+name = "gradio-toggle"
+version = "2.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "gradio" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/99/94/ac6e2a5d099f4fcf1f64093bf1f51c30cca63a9ae34bdb2b15be7787a94e/gradio_toggle-2.0.2.tar.gz", hash = "sha256:d6491486749e3cde6779142a15f608ef2fee17f9d05e10ea8942bf6f36954284", size = 1185425, upload-time = "2024-10-19T14:21:53.065Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5e/e6/f1c4e614ea764b5481e8539c4edcb7bf432b738f230afeeaa5f008e6b205/gradio_toggle-2.0.2-py3-none-any.whl", hash = "sha256:adaa81d1d861eb0a0e427d287eefa705b296200d8743ddd9db8995c5be174ed3", size = 1137094, upload-time = "2024-10-19T14:21:51.549Z" },
 ]
 
 [[package]]
@@ -1376,6 +1343,53 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
+]
+
+[[package]]
+name = "smart-route-planning-agent"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "black" },
+    { name = "branca" },
+    { name = "folium" },
+    { name = "gpxpy" },
+    { name = "gradio" },
+    { name = "gradio-toggle" },
+    { name = "isort" },
+    { name = "langgraph" },
+    { name = "mypy" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pillow" },
+    { name = "pydantic" },
+    { name = "pytest" },
+    { name = "python-dateutil" },
+    { name = "requests" },
+    { name = "rich" },
+    { name = "typing-extensions" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "black", specifier = "==23.7.0" },
+    { name = "branca", specifier = "==0.6.0" },
+    { name = "folium", specifier = "==0.14.0" },
+    { name = "gpxpy" },
+    { name = "gradio", specifier = ">=5.43.1" },
+    { name = "gradio-toggle", specifier = ">=0.1.5" },
+    { name = "isort" },
+    { name = "langgraph", specifier = ">=0.6.6" },
+    { name = "mypy" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pillow", specifier = ">=10.4.0" },
+    { name = "pydantic" },
+    { name = "pytest" },
+    { name = "python-dateutil" },
+    { name = "requests" },
+    { name = "rich" },
+    { name = "typing-extensions" },
 ]
 
 [[package]]
