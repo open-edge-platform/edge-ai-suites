@@ -126,8 +126,10 @@ spec:
           name: vol-pipeline-root-tmpfs0
         - name: dev-gpu
           mountPath: /dev/dri
+          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
         - name: dev-npu
           mountPath: /dev/accel
+          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
         - name: dev-shm
           mountPath: /dev/shm
         - name: var-tmp
