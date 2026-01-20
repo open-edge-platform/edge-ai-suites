@@ -107,8 +107,6 @@ spec:
           subPath: person-vehicle-bike-detection-2004.json
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline-root'
           mountPath: /var/cache/pipeline_root
-        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-tmp'
-          mountPath: /tmp
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
           mountPath: /models
         - name: dev-gpu

@@ -79,8 +79,6 @@ spec:
           readOnly: true # Reduce risk while preserving access to GPU/NPU devices
         - name: dev-shm
           mountPath: /dev/shm
-        - name: tmp
-          mountPath: /tmp
         - name: var-tmp
           mountPath: /var/tmp
         - name: run-udev
@@ -181,9 +179,6 @@ spec:
       - name: dev-shm
         hostPath:
           path: /dev/shm
-      - name: tmp
-        hostPath:
-          path: /tmp
       - name: var-tmp
         hostPath:
           path: /var/tmp
