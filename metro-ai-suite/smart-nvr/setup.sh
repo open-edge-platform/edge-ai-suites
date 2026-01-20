@@ -107,6 +107,26 @@ configure_scenescape_setup() {
     fi
 }
 
+configure_genai_setup() {
+    print_info "Configuring GenAI setup based on NVR_GENAI setting"
+    
+    if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
+        print_info "NVR_GENAI is enabled - configuring GenAI mode"
+        
+        if [ -f "./resources/frigate-config/config.yml" ]; then
+            sed -i '/^\s*genai:/!b;n;s/enabled: false/enabled: true/' "./resources/frigate-config/config.yml"
+            # Enable Detect - required for GenAI
+            sed -i '/^\s*detect:/!b;n;s/enabled: false/enabled: true/' "./resources/frigate-config/config.yml"
+            print_success "GenAI and Detection enabled in Frigate configuration"
+        else
+            print_error "Frigate config file not found at ./resources/frigate-config/config.yml"
+            return 1
+        fi
+    else
+        print_info "NVR_GENAI is disabled"
+    fi
+}
+
 # Function to validate required environment variables
 validate_environment() {    
     # Check for NVR_GENAI flag
@@ -119,7 +139,15 @@ validate_environment() {
         print_error "NVR_SCENESCAPE environment variable is required"
         print_info "Please set it to 'true' or 'false' to enable/disable NVR SceneScape features"
         return 1
-    fi    
+    fi
+
+    # Check for incompatible configuration
+    if ([ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]) && ([ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]); then
+        print_error "NVR_GENAI cannot be enabled when NVR_SCENESCAPE is enabled"
+        print_info "Please set NVR_GENAI to 'false' if using SceneScape, or disable NVR_SCENESCAPE"
+        return 1
+    fi
+    
     # Check for VSS IP and port
     if [ -z "${VSS_SUMMARY_IP}" ]; then
         print_error "VSS_SUMMARY_IP environment variable is required"
@@ -198,6 +226,11 @@ start_services() {
     
     # Configure Scenescape setup (config and certificates)
     if ! configure_scenescape_setup; then
+        return 1
+    fi
+    
+    # Configure GenAI setup
+    if ! configure_genai_setup; then
         return 1
     fi
     

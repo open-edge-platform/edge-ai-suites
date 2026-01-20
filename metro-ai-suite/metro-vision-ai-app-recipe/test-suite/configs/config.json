@@ -21,12 +21,18 @@
    },
    "SP006": {
       "app": "SP",
-      "dlsps_log_param" : ["height","width","channels","fps","frame_id","yolov10_1_cpu"]
+      "dlsps_log_param": [
+         "number-streams=4",
+         "fps"
+      ]
    },
    "SP007": {
       "app": "SP",
       "grafana_url": true,
-      "dlsps_log_param" : ["height","width","channels","fps","frame_id"]
+      "dlsps_log_param": [
+         "number-streams=4",
+         "fps"
+      ]
    },
    "LD001": {
       "app": "LD",
@@ -50,12 +56,18 @@
    },
    "LD006": {
       "app": "LD",
-      "dlsps_log_param" : ["height","width","channels","fps","frame_id"]
+      "dlsps_log_param": [
+         "number-streams=4",
+         "fps"
+      ]
    },
    "LD007": {
       "app": "LD",
       "grafana_url": true,
-      "dlsps_log_param" : ["height","width","channels","fps","frame_id"]
+      "dlsps_log_param": [
+         "number-streams=4",
+         "fps"
+      ]
    },
    "SI001": {
       "app": "SI",
@@ -67,11 +79,60 @@
    },
    "SI003": {
       "app": "SI",
-      "dlsps_log_param" : ["Created RTSP Stream for instance","State to RUNNING"]
+      "dlsps_log_param": [
+         "Created RTSP Stream for instance",
+         "State to RUNNING"
+      ]
    },
    "SI004": {
       "app": "SI",
       "grafana_url": true,
-      "dlsps_log_param" : ["Created RTSP Stream for instance","State to RUNNING"]
+      "dlsps_log_param": [
+         "Created RTSP Stream for instance",
+         "State to RUNNING"
+      ]
+   },
+   "LDHELM001": {
+      "app": "LD",
+      "device": "CPU",
+      "dlsps_log_param": [
+         "number-streams=4",
+         "fps"
+      ]
+   },
+   "LDHELM002": {
+      "app": "LD",
+      "device": "CPU",
+      "deploy": true,
+      "webrtc_url": true
+   },
+   "SPHELM001": {
+      "app": "SP",
+      "device": "CPU",
+      "dlsps_log_param": [
+         "number-streams=4",
+         "fps"
+      ]
+   },
+   "SPHELM002": {
+      "app": "SP",
+      "device": "CPU",
+      "deploy": true,
+      "webrtc_url": true
+   },
+   "SIHELM001": {
+      "app": "SI",
+      "device": "CPU",
+      "dlsps_log_param": [
+         "fps",
+         "timestamp_for_next_block",
+         "postdecode_timestamp"
+      ]
+   },
+   "SIHELM002": {
+      "app": "SI",
+      "device": "CPU",
+      "deploy": true,
+      "webrtc_url": true
    }
 }

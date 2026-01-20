@@ -7,6 +7,7 @@ interface MindmapState {
   svg: string | null;
   generationTime: number | null;
   error: string | null;
+  sessionId: string | null; // Add sessionId to track which session the mindmap belongs to
 }
 
 const initialState: MindmapState = {
@@ -16,19 +17,24 @@ const initialState: MindmapState = {
   svg: null,
   generationTime: null,
   error: null,
+  sessionId: null,
 };
 
 const mindmapSlice = createSlice({
   name: "mindmap",
   initialState,
   reducers: {
-    startMindmap: (state) => {
-      state.isLoading = true;
-      state.isRendered = false;
-      state.finalText = null;
-      state.svg = null;
-      state.generationTime = null;
-      state.error = null;
+    startMindmap: (state, action: PayloadAction<string>) => {
+      // Only clear if it's a different session
+      if (state.sessionId !== action.payload) {
+        state.isLoading = true;
+        state.isRendered = false;
+        state.finalText = null;
+        state.svg = null;
+        state.generationTime = null;
+        state.error = null;
+        state.sessionId = action.payload;
+      }
     },
     
     setMindmap: (state, action: PayloadAction<string>) => {

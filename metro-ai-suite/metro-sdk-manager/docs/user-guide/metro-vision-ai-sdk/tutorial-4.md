@@ -50,7 +50,7 @@ This tutorial requires **Ubuntu Desktop** with a physical display and active gra
 - Ubuntu Server (no GUI)
 - Remote SSH sessions without X11 forwarding
 - Headless systems
- 
+
 You must be logged in to a local desktop session with a connected monitor or Remote Desktop/VNC connection for the video output to display correctly.
 
 ## Tutorial Steps
@@ -76,7 +76,7 @@ wget -O models/intel/human-pose-estimation-0001/FP32/human-pose-estimation-0001.
   "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/human-pose-estimation-0001/FP32/human-pose-estimation-0001.bin"
 
 wget -O models/intel/human-pose-estimation-0001/human-pose-estimation-0001.json \
-  "https://raw.githubusercontent.com/dlstreamer/dlstreamer/master/samples/gstreamer/model_proc/intel/human-pose-estimation-0001.json"
+  "https://raw.githubusercontent.com/dlstreamer/dlstreamer/main/samples/gstreamer/model_proc/intel/human-pose-estimation-0001.json"
 ```
 
 ### Step 2: Understand Human Pose Estimation Model
