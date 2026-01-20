@@ -21,7 +21,7 @@ route_service = RouteService()
 current_route_info = None
 optimization_active = False
 optimization_thread = None
-agent_iteration_count = 1
+curr_agent_iteration = 1
 game_mode_enabled = False  # Global flag for game mode
 UI_UPDATE_INTERVAL = 8  # Poll interval for new updates from data_queue used by thread
 OPTIMIZATION_INTERVAL = 12  # Seconds between agent invocations
@@ -143,17 +143,17 @@ def planner_agent_thread(source: str, destination: str):
     global optimization_active
     logger.info(f"Triggering Route Planner Agent for route {source} to {destination}")
 
-    global agent_iteration_count
+    global curr_agent_iteration
     try:
         while optimization_active:
             logger.info(
-                f"Running agent iteration {agent_iteration_count} for route {source} to {destination}"
+                f"Running agent iteration {curr_agent_iteration} for route {source} to {destination}"
             )
 
             time.sleep(OPTIMIZATION_INTERVAL)
 
             intersection_images = None
-            if agent_iteration_count == 1:
+            if curr_agent_iteration == 1:
                 # Start by getting direct shortest route. Shortest direct route needs to found only once.
                 agent_status_msg, thinking_output, map_output = get_direct_route(
                     source, destination
@@ -168,7 +168,7 @@ def planner_agent_thread(source: str, destination: str):
             # Put the results in the queue to be picked up by the UI
             data_queue.put(
                 {
-                    "iteration": agent_iteration_count,
+                    "iteration": curr_agent_iteration,
                     "timestamp": time.time(),
                     "agent_status": agent_status_msg,
                     "thinking_output": thinking_output,
@@ -177,7 +177,7 @@ def planner_agent_thread(source: str, destination: str):
                 }
             )
 
-            agent_iteration_count += 1
+            curr_agent_iteration += 1
 
     except Exception as e:
         logger.error(f"Error in Route Planning Agent thread: {e}")
