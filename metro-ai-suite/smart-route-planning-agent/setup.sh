@@ -18,16 +18,16 @@ COMPOSE_MAIN="${DOCKER_DIR}/compose.yaml"
 
 # Function to show help
 show_help() {
-    echo -e "${BLUE}Scene Intelligence Setup Script${NC}"
+    echo -e "${BLUE}Smart-Route-Planning-Agent Setup Script${NC}"
     echo -e "${YELLOW}USAGE: ${GREEN}source setup.sh ${BLUE}[COMMAND]${NC}"
     echo -e "-----------------------------------------------------------------"
     echo ""
     echo -e "${BLUE}Available Commands:${NC}"
-    echo -e "  ${GREEN}setup${NC}         Build and start the Scene Intelligence container"
-    echo -e "  ${GREEN}build${NC}         Build the Scene Intelligence Docker container"
-    echo -e "  ${GREEN}up${NC}            Start the Scene Intelligence container"
+    echo -e "  ${GREEN}setup${NC}         Build and start the Smart-Route-Planning-Agent container"
+    echo -e "  ${GREEN}build${NC}         Build the Smart-Route-Planning-Agent Docker container"
+    echo -e "  ${GREEN}up${NC}            Start the Smart-Route-Planning-Agent container"
     echo -e "  ${GREEN}down${NC}          Stop the running container"
-    echo -e "  ${GREEN}restart${NC}       Restart the Scene Intelligence container"
+    echo -e "  ${GREEN}restart${NC}       Restart the Smart-Route-Planning-Agent container"
     echo -e "  ${GREEN}help${NC}          Show this help message"
     echo ""
     echo -e "${BLUE}Quick Start:${NC}"
@@ -117,7 +117,7 @@ echo -e "  REGISTRY: ${YELLOW}$REGISTRY${NC}"
 
 # Function to build Docker images
 build_images() {
-    echo -e "${BLUE}==> Building Scene Intelligence Docker container...${NC}"
+    echo -e "${BLUE}==> Building Smart-Route-Planning-Agent Docker container...${NC}"
     
     docker compose -f $COMPOSE_MAIN build
     if [ $? -eq 0 ]; then
@@ -130,18 +130,18 @@ build_images() {
 
 # Function to start the service
 start_service() {
-    echo -e "${BLUE}==> Starting Scene Intelligence container...${NC}"
+    echo -e "${BLUE}==> Starting Smart-Route-Planning-Agent container...${NC}"
     
     docker compose -f $COMPOSE_MAIN up -d
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}Scene Intelligence container started successfully!${NC}"
+        echo -e "${GREEN}Smart-Route-Planning-Agent container started successfully!${NC}"
         echo -e "${BLUE}AI Route Planner UI: ${YELLOW}http://${HOST_IP}:${AI_ROUTE_PLANNER_PORT}${NC}"
         echo ""
         echo -e "${BLUE}To follow logs in real-time, run:${NC}"
         echo -e "${YELLOW}docker compose -f docker/compose.yaml logs -f${NC}"
     else
-        echo -e "${RED}Failed to start Scene Intelligence container${NC}"
+        echo -e "${RED}Failed to start Smart-Route-Planning-Agent container${NC}"
         return 1
     fi
 }
@@ -172,17 +172,17 @@ case "$1" in
         start_service
         ;;
     "down")
-        echo -e "${YELLOW}Stopping Scene Intelligence container...${NC}"
+        echo -e "${YELLOW}Stopping Smart-Route-Planning-Agent container...${NC}"
         docker compose -f $COMPOSE_MAIN down
         if [ $? -eq 0 ]; then
-            echo -e "${GREEN}Scene Intelligence container stopped successfully.${NC}"
+            echo -e "${GREEN}Smart-Route-Planning-Agent container stopped successfully.${NC}"
         else
             echo -e "${RED}Failed to stop container${NC}"
             if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then exit 1; else return 1; fi
         fi
         ;;
     "restart")
-        echo -e "${BLUE}==> Restarting Scene Intelligence container...${NC}"
+        echo -e "${BLUE}==> Restarting Smart-Route-Planning-Agent container...${NC}"
         docker compose -f $COMPOSE_MAIN down
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}Container stopped successfully${NC}"
