@@ -4,6 +4,7 @@ import os
 import json
 import hashlib
 from typing import Dict, List, Optional
+from pathlib import Path
 import structlog
 
 logger = structlog.get_logger(__name__)
@@ -25,6 +26,7 @@ class ConfigService:
     
     def __init__(self):
         """Initialize configuration service."""
+        self._config_dir = Path(__file__).resolve().parent / "config"
         self.config = self._load_config()
         logger.info("Configuration service initialized", 
                    intersection_id=self.get_intersection_id())
@@ -32,32 +34,50 @@ class ConfigService:
     def _load_config(self) -> dict:
         """Load configuration from environment and file."""
         config = {}
+
+        agent_config_file = self._config_dir / "traffic_agent.json"
+        deployment_config_file = self._config_dir / "deployment_instance.json"
+
+        try:
+            if agent_config_file.exists():
+                try:
+                    with open(agent_config_file, 'r') as f:
+                        file_config = json.load(f)
+                    config.update(file_config)
+                    logger.info("Loaded configuration from file", path=agent_config_file)
+                except Exception as e:
+                    logger.warning("Failed to load config file", path=agent_config_file, error=str(e))
+
+            if "intersection" not in config:
+                    config["intersection"] = {}
+            
+            # Load deployment specific configuration from deployment_instance.json
+            if deployment_config_file.exists():
+                try:
+                    with open(deployment_config_file, 'r') as f:
+                        deployment_config = json.load(f)
+
+                    # Add intersection and deployment details for current instance from deployment_instance.json
+                    config["intersection"].update(deployment_config)
+                    logger.info("Loaded deployment configuration from file", path=deployment_config_file)
+                except Exception as e:
+                    logger.warning("Failed to load deployment config file", path=deployment_config_file, error=str(e))
+            
+            # Override the deployment configs with environment variables if set
+            if os.getenv("INTERSECTION_NAME"):
+                config["intersection"]["name"] = os.getenv("INTERSECTION_NAME")
+            if os.getenv("INTERSECTION_LATITUDE"):
+                config["intersection"]["latitude"] = float(os.getenv("INTERSECTION_LATITUDE", 0.0))
+            if os.getenv("INTERSECTION_LONGITUDE"):
+                config["intersection"]["longitude"] = float(os.getenv("INTERSECTION_LONGITUDE", 0.0))
         
-        # Load from config file if specified
-        config_file = os.getenv("TRAFFIC_INTELLIGENCE_CONFIG", "config/traffic_intelligence.json")
-        if os.path.exists(config_file):
-            try:
-                with open(config_file, 'r') as f:
-                    file_config = json.load(f)
-                config.update(file_config)
-                logger.info("Loaded configuration from file", path=config_file)
-            except Exception as e:
-                logger.warning("Failed to load config file", path=config_file, error=str(e))
-        
-        # Override with environment variables
-        # Intersection configuration
-        if os.getenv("INTERSECTION_NAME"):
-            if "intersection" not in config:
-                config["intersection"] = {}
-            config["intersection"]["name"] = os.getenv("INTERSECTION_NAME")
-        if os.getenv("INTERSECTION_LATITUDE"):
-            if "intersection" not in config:
-                config["intersection"] = {}
-            config["intersection"]["latitude"] = float(os.getenv("INTERSECTION_LATITUDE"))
-        if os.getenv("INTERSECTION_LONGITUDE"):
-            if "intersection" not in config:
-                config["intersection"] = {}
-            config["intersection"]["longitude"] = float(os.getenv("INTERSECTION_LONGITUDE"))
+        # handle error while typecasting to float
+        except ValueError as e:
+            logger.error("Invalid value in deployment configuration or environment variables", error=str(e))
+            raise e
+        except Exception as e:
+            logger.error("Error processing deployment configuration", error=str(e))
+            raise e
         
         # MQTT configuration
         if os.getenv("MQTT_HOST"):
@@ -135,14 +155,17 @@ class ConfigService:
         """Get the intersection name."""
         return self.config.get("intersection", {}).get("name", "Intersection-1")
     
-    def get_intersection_coordinates(self) -> tuple:
+    def get_intersection_coordinates(self) -> tuple[float, float]:
         """Get intersection coordinates (lat, lon)."""
         intersection = self.config.get("intersection", {})
-        return (
-            intersection.get("latitude", 33.3091336),
-            intersection.get("longitude", -111.9353095)
-        )
-    
+        try:
+            lat = float(intersection.get("latitude", 33.3091336))
+            lon = float(intersection.get("longitude", -111.9353095))
+            return (lat, lon)
+        except (TypeError, ValueError) as e:
+            logger.error("Invalid value in deployment configuration or environment variables for intersection coordinates", error=str(e))
+            raise e
+        
     def get_camera_topics(self) -> List[str]:
         """Get MQTT camera topics."""
         return self.config.get("mqtt", {}).get("camera_topics", [

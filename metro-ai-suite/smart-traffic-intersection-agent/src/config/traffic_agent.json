@@ -1,9 +1,4 @@
 {
-  "intersection": {
-    "name": "Intersection-1",
-    "latitude": 33.3091336,
-    "longitude": -111.9353095
-  },
   "mqtt": {
     "host": "broker.scenescape.intel.com",
     "port": 1883,
