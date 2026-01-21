@@ -49,4 +49,4 @@ typing_extensions==4.12.2
 tzdata==2025.2
 ultralytics==8.3.156
 ultralytics-thop==2.0.14
-urllib3==2.5.0
+urllib3==2.6.3
