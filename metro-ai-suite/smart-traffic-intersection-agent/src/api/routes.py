@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""API routes for traffic intelligence service."""
+"""API routes for Traffic Intersection Agent."""
 
 from datetime import datetime, timedelta
 from typing import Dict, Any

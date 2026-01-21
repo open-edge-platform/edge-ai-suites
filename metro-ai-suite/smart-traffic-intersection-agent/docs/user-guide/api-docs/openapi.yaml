@@ -1,7 +1,7 @@
 ---
 openapi: 3.1.0
 info:
-  title: Traffic Intelligence API
+  title: Traffic Intersection Agent API
   description: Lightweight traffic analysis service for single intersection monitoring
   version: 1.0.0
 paths:

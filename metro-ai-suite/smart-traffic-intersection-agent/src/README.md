@@ -1,6 +1,6 @@
-# Traffic Intelligence Service
+# Smart Traffic Intersection Agent
 
-A lightweight microservice for real-time traffic analysis at individual intersections. This service provides weather-aware traffic intelligence with VLM-powered insights and structured alerts.
+An intelligent agent that monitors and analyzes traffic conditions at individual intersections in real-time. The agent provides weather-aware traffic intelligence with VLM-powered insights and structured alerts to help optimize traffic flow and safety.
 
 ## Features
 

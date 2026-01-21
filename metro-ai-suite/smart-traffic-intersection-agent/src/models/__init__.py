@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from .traffic import (
     IntersectionData,
-    TrafficIntelligenceResponse,
+    TrafficIntersectionAgentResponse,
     CameraDataMessage,
     TrafficSnapshot,
     CameraImage,
@@ -13,7 +13,7 @@ from .enums import AlertLevel, AlertType, WeatherType, TrafficState
 
 __all__ = [
     "IntersectionData",
-    "TrafficIntelligenceResponse",
+    "TrafficIntersectionAgentResponse",
     "CameraDataMessage",
     "TrafficSnapshot",
     "CameraImage",

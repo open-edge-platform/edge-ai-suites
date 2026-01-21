@@ -52,7 +52,7 @@ class IntersectionData:
 
 
 @dataclass
-class TrafficIntelligenceResponse:
+class TrafficIntersectionAgentResponse:
     """Complete traffic intelligence response matching data.json structure."""
     timestamp: str               # ISO format timestamp
     intersection_id: str         # UUID of intersection
