@@ -159,9 +159,9 @@ def main():
     # Create FastAPI app
     app = create_app()
     
-    # Get configuration
-    port = int(os.getenv("TRAFFIC_INTELLIGENCE_PORT", "8081"))
-    host = os.getenv("TRAFFIC_INTELLIGENCE_HOST", "0.0.0.0")
+    # When running application on host we can override host and port via env variables
+    port = int(os.getenv("AGENT_BACKEND_HOSTPORT", "8081"))
+    host = os.getenv("AGENT_BACKEND_HOST", "0.0.0.0")
     
     logger.info("Starting Traffic Intelligence service", 
                host=host, port=port, log_level=log_level)

@@ -39,12 +39,6 @@ For most users, **the setup script approach documented in [Get Started](./get-st
 **Default**: `8081`  
 **Example**: `export SCENE_INTELLIGENCE_PORT=8081`
 
-#### VLM_SERVICE_PORT
-
-**Description**: External port for VLM OpenVINO serving service  
-**Default**: `9764`  
-**Example**: `export VLM_SERVICE_PORT=9764`
-
 #### SCENESCAPE_PORT
 
 **Description**: External port for SceneScape web interface  

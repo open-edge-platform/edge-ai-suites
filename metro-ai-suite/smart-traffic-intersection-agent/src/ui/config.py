@@ -12,12 +12,12 @@ class Config:
     REFRESH_INTERVAL_SECONDS: float = float(os.getenv("REFRESH_INTERVAL", "10.0"))
     
     # API settings
-    API_URL: str = os.getenv("API_URL", "http://localhost:8081/api/v1/traffic/current")
+    API_URL: str = os.getenv("AGENT_API_URL", "http://localhost:8081/api/v1/traffic/current")
     
     # UI settings
     APP_TITLE: str = os.getenv("APP_TITLE", "TRAFFIC MONITORING SYSTEM")
-    APP_PORT: int = int(os.getenv("TRAFFIC_INTELLIGENCE_UI_PORT", "7860"))
-    APP_HOST: str = "0.0.0.0"
+    APP_PORT: int = int(os.getenv("AGENT_UI_HOSTPORT", "7860"))
+    APP_HOST: str = os.getenv("AGENT_UI_HOST", "0.0.0.0")
     
     # Theme settings
     UI_THEME: str = os.getenv("UI_THEME", "light")
