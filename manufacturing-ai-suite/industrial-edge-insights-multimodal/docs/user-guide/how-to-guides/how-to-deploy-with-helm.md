@@ -207,8 +207,3 @@ To configure alerts in Time Series Analytics Microservice, follow [the steps](./
   kubectl describe pod <pod_name> -n multimodal-sample-app # Shows details of the pod
   kubectl logs -f <pod_name> -n multimodal-sample-app # Shows logs of the container in the pod
   ```
-
-## Known Issues
-
-- The video stream is not rendering in the Grafana.
-- Time Series data and Fusion analytics results are initially displayed for the first 2-3 minutes, but then stop updating and no new results are loaded.
