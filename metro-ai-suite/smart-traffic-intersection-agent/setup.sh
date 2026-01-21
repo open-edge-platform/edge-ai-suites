@@ -8,16 +8,35 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 
-# Verifiying intersection config file and setting project name based on intersection name defined in config
-INTERSECTION_CONFIG_FILE="$APP_DIR/intersection-config.json"
-if [ ! -f "$INTERSECTION_CONFIG_FILE" ]; then
-    echo -e "${RED}Intersection configuration file not found: $INTERSECTION_CONFIG_FILE${NC}"
+export APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7}')
+if [ -z "$HOST_IP" ]; then
+    export HOST_IP="localhost"
+fi
+
+# Verifiying and reading deployment instance config file and setting config specific to the current instance
+DEPLOYMENT_CONFIG="$APP_DIR/src/config/deployment_instance.json"
+if [ ! -f "$DEPLOYMENT_CONFIG" ]; then
+    echo -e "${RED}Deployment configuration file not found: $DEPLOYMENT_CONFIG${NC}"
     return 1
 fi
-export INTERSECTION_NAME=$(grep -oP '"intersection-name"\s*:\s*"\K[^"]+' "$INTERSECTION_CONFIG_FILE")
+
+# set agent instance specific environment variables based on deployment_instance.json 
+export INTERSECTION_NAME=$(grep -oP '"name"\s*:\s*"\K[^"]+' "$DEPLOYMENT_CONFIG")
 PROJECT_NAME=${INTERSECTION_NAME:-trafficagent}
+export INTERSECTION_LATITUDE=$(grep -oP '"latitude"\s*:\s*\K-?[\d.]+(?=,|$)' "$DEPLOYMENT_CONFIG")
+export INTERSECTION_LONGITUDE=$(grep -oP '"longitude"\s*:\s*\K-?[\d.]+' "$DEPLOYMENT_CONFIG")
+export AGENT_BACKEND_PORT=$(grep -oP '"agent_backend_port"\s*:\s*\K\d+' "$DEPLOYMENT_CONFIG")
+export AGENT_UI_PORT=$(grep -oP '"agent_ui_port"\s*:\s*\K\d+' "$DEPLOYMENT_CONFIG")
+
+# Unset port variables if they are empty in config file to allow using ephemeral port in docker-compose
+[ "$AGENT_BACKEND_PORT" = "" ] && unset AGENT_BACKEND_PORT
+[ "$AGENT_UI_PORT" = "" ] && unset AGENT_UI_PORT 
+
 
 # Setting command usage and invalid arguments handling before the actual setup starts
 if [ "$#" -eq 0 ] || ([ "$#" -eq 1 ] && [ "$1" = "--help" ]); then
@@ -81,17 +100,11 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
 fi
 
 # ============================================================================
-# PREREQUISITES: Setup edge-ai-suites before running the application
+# PREREQUISITES: Setup Smart Intersection RI before running the application
 # ============================================================================
 
-# Set application-specific environment variables
-export SAMPLE_APP="smart-intersection"
-export APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7}')
-if [ -z "$HOST_IP" ]; then
-    export HOST_IP="localhost"
-fi
 
+export SAMPLE_APP="smart-intersection"
 SUBMODULE="deps/metro-vision"
 SUBMODULE_PATH="$APP_DIR/$SUBMODULE"
 export DEPS_DIR="$SUBMODULE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
@@ -152,32 +165,15 @@ fi
 # END PREREQUISITES
 # ============================================================================
 
-# Export required environment variables (HOST_IP already set above)
-export TAG=${TAG:-latest}
-export REGISTRY=${REGISTRY:-}
-
-# Smart-Traffic-Intersection-Agent Configuration
-export APP_BACKEND_PORT=${TRAFFIC_AGENT_BACKEND_PORT:-8081}
-export APP_UI_PORT=${TRAFFIC_AGENT_UI_PORT:-7860}
+# Export environment variables required by application (HOST_IP already set above)
+export LOG_LEVEL=${LOG_LEVEL:-INFO}
 export REFRESH_INTERVAL=${REFRESH_INTERVAL:-15}
-
-# User and group IDs for containers
 export USER_GROUP_ID=$(id -g)
 export VIDEO_GROUP_ID=$(getent group video | awk -F: '{printf "%s\n", $3}' 2>/dev/null || echo "44")
 export RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}' 2>/dev/null || echo "109")
 
-# Traffic Analysis Configuration
-export TRAFFIC_BUFFER_DURATION=${TRAFFIC_BUFFER_DURATION:-60}
-export LOG_LEVEL=${LOG_LEVEL:-INFO}
-export DATA_RETENTION_HOURS=${DATA_RETENTION_HOURS:-24}
-
 # VLM Service Configuration
-export VLM_SERVICE_PORT=${VLM_SERVICE_PORT:-9764}
 export VLM_MODEL_NAME=${VLM_MODEL_NAME:-microsoft/Phi-3.5-vision-instruct}
-export VLM_TIMEOUT_SECONDS=${VLM_TIMEOUT_SECONDS:-300}
-export VLM_MAX_COMPLETION_TOKENS=${VLM_MAX_COMPLETION_TOKENS:-1500}
-export VLM_TEMPERATURE=${VLM_TEMPERATURE:-0.1}
-export VLM_TOP_P=${VLM_TOP_P:-0.1}
 
 # VLM OpenVINO Configuration
 export VLM_DEVICE=${VLM_DEVICE:-CPU}
@@ -199,29 +195,70 @@ export HEALTH_CHECK_TIMEOUT=${HEALTH_CHECK_TIMEOUT:-10s}
 export HEALTH_CHECK_RETRIES=${HEALTH_CHECK_RETRIES:-3}
 export HEALTH_CHECK_START_PERIOD=${HEALTH_CHECK_START_PERIOD:-10s}
 
-# Proxy settings
-export no_proxy_env=${no_proxy}
+print_all_service_host_endpoints() {
+    # get the host port of each service using docker ps command and print
+    echo -e
+    echo -e "${MAGENTA}======================================================="
+    echo -e "SERVICE ENDPOINTS"
+    echo -e "=======================================================${NC}"
+    
+    for CONTAINER_NAME in $(docker ps --format '{{.Names}}' | grep $PROJECT_NAME);
+    do
+        # Set/print service name and the host port based on corresponding container name
+         case "$CONTAINER_NAME" in
+            *dlstreamer-pipeline-server*)
+                SERVICE_NAME="DLStreamer Pipeline Server"
+                PORT=$(docker port "$CONTAINER_NAME" 8080 | cut -d: -f2)
+                echo -e "${BLUE}Access $SERVICE_NAME at -> http://$HOST_IP:$PORT${NC}"
+                ;;
+            *grafana*)
+                SERVICE_NAME="Grafana Dashboard"
+                PORT=$(docker port "$CONTAINER_NAME" 3000 | cut -d: -f2)
+                echo -e "${BLUE}Access $SERVICE_NAME at -> http://$HOST_IP:$PORT${NC}"
+                ;;
+            *node-red*)
+                SERVICE_NAME="Node-RED"
+                PORT=$(docker port "$CONTAINER_NAME" 1880 | cut -d: -f2)
+                echo -e "${BLUE}Access $SERVICE_NAME at -> http://$HOST_IP:$PORT${NC}"
+                ;;
+            *web*)
+                SERVICE_NAME="Scenescape Web UI"
+                PORT=$(docker port "$CONTAINER_NAME" 443 | cut -d: -f2)
+                echo -e "${BLUE}Access $SERVICE_NAME at -> https://$HOST_IP:$PORT${NC}"
+                ;;
+            *app*)
+                BACKEND_SERVICE_NAME="Traffic Intersection Agent API Docs"
+                PORT=$(docker port "$CONTAINER_NAME" 8081 | cut -d: -f2)
+                echo -e "${CYAN}$BACKEND_SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
+
+                UI_SERVICE_NAME="Traffic Intersection Agent UI"
+                PORT=$(docker port "$CONTAINER_NAME" 7860 | cut -d: -f2)
+                echo -e "${CYAN}$UI_SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
+                ;;
+            *vlm*)
+                SERVICE_NAME="VLM OpenVINO Serving API"
+                PORT=$(docker port "$CONTAINER_NAME" 8000 | cut -d: -f2)
+                echo -e "${CYAN}$SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
+                ;;
+            *)
+                SERVICE_NAME="Unknown Service"
+                ;;
+        esac
+    done
+    echo -e "${MAGENTA}=======================================================${NC}"
+    echo -e
+}   
 
 # Function to build and start the services
 build_and_start_service() {
     echo -e "${BLUE}==> Starting Smart-Traffic-Intersection-Agent ...${NC}"
-
-    # set intersection-specific environment variables based on intersection-config.json 
-    export INTERSECTION_LATITUDE=$(grep -oP '"latitude"\s*:\s*\K-?[\d.]+(?=,|$)' "$INTERSECTION_CONFIG_FILE")
-    export INTERSECTION_LONGITUDE=$(grep -oP '"longitude"\s*:\s*\K-?[\d.]+' "$INTERSECTION_CONFIG_FILE")
-    export APP_BACKEND_PORT=$(grep -oP '"backend_port"\s*:\s*\K\d+' "$INTERSECTION_CONFIG_FILE")
-    export APP_UI_PORT=$(grep -oP '"ui_port"\s*:\s*\K\d+' "$INTERSECTION_CONFIG_FILE")
-
-    if [ "$APP_BACKEND_PORT" = "" ] || [ "$APP_UI_PORT" = "" ]; then
-        unset APP_BACKEND_PORT
-        unset APP_UI_PORT
-    fi    
 
     # Build and start the services
     docker compose --project-directory $DEPS_DIR -f docker/ri-compose.yaml -f docker/agent-compose.yaml -p $PROJECT_NAME up -d --build 2>&1 1>/dev/null
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services built and started successfully!${NC}"
+        print_all_service_host_endpoints
     else
         echo -e "${RED}Failed to build and start Smart-Traffic-Intersection-Agent Services${NC}"
         return 1
@@ -241,6 +278,8 @@ start_service() {
         echo -e "${RED}Failed to start Smart-Traffic-Intersection-Agent Services${NC}"
         return 1
     fi
+
+
 }
 
 # Function to restart the services (for env var changes)
@@ -264,6 +303,7 @@ restart_service() {
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services restarted successfully with updated configuration!${NC}"
+                print_all_service_host_endpoints
             else
                 echo -e "${RED}Failed to restart Smart-Traffic-Intersection-Agent Services${NC}"
                 return 1
@@ -301,14 +341,6 @@ restart_service() {
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}Prerequisite Services restarted successfully with updated configuration!${NC}"
                 
-                echo ""
-                echo -e "${BLUE}Edge AI Suites Services:${NC}"
-                echo -e "  • SceneScape Web UI: ${YELLOW}https://${HOST_IP}:443${NC}"
-                echo -e "  • DLStreamer Pipeline Server API: ${YELLOW}http://${HOST_IP}:8080${NC}"
-                echo -e "  • InfluxDB UI: ${YELLOW}http://${HOST_IP}:8086${NC}"
-                echo -e "  • Grafana Dashboard: ${YELLOW}http://${HOST_IP}:3000${NC}"
-                echo -e "  • Node-RED UI: ${YELLOW}http://${HOST_IP}:1880${NC}"
-                echo ""
             else
                 echo -e "${RED}Failed to restart Prerequisite Services${NC}"
                 cd - > /dev/null
@@ -353,19 +385,6 @@ restart_service() {
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}All services restarted successfully with updated configuration!${NC}"
                 
-                echo ""
-                echo -e "${BLUE}Edge AI Suites Services:${NC}"
-                echo -e "  • SceneScape Web UI: ${YELLOW}https://${HOST_IP}:443${NC}"
-                echo -e "  • DLStreamer Pipeline Server API: ${YELLOW}http://${HOST_IP}:8080${NC}"
-                echo -e "  • InfluxDB UI: ${YELLOW}http://${HOST_IP}:8086${NC}"
-                echo -e "  • Grafana Dashboard: ${YELLOW}http://${HOST_IP}:3000${NC}"
-                echo -e "  • Node-RED UI: ${YELLOW}http://${HOST_IP}:1880${NC}"
-                echo ""
-                echo -e "${BLUE}Smart-Traffic-Intersection-Agent Services:${NC}"
-                echo -e "  • Backend API: ${YELLOW}http://${HOST_IP}:${APP_BACKEND_PORT}${NC}"
-                echo -e "  • UI: ${YELLOW}http://${HOST_IP}:${APP_UI_PORT}${NC}"
-                echo -e "  • VLM Service: ${YELLOW}http://${HOST_IP}:${VLM_SERVICE_PORT}${NC}"
-                echo ""
             else
                 echo -e "${RED}Failed to restart Smart-Traffic-Intersection-Agent Services${NC}"
                 return 1
