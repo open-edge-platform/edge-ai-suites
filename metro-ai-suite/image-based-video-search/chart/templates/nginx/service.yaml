@@ -9,19 +9,19 @@ spec:
   type: NodePort 
   ports:
   - name: nginx-reverse-proxy-80
-    port: 80
+    port: {{ .Values.config.nginx.int.http_port }}
     protocol: TCP
-    targetPort: 8080
-    nodePort: 30080 
+    targetPort: {{ .Values.config.nginx.target.http_port }}
+    nodePort: {{ .Values.config.nginx.ext.http_port }} 
   - name: nginx-reverse-proxy-443
-    port: 443
+    port: {{ .Values.config.nginx.int.https_port }}
     protocol: TCP
-    targetPort: 8443
-    nodePort: 30443
+    targetPort: {{ .Values.config.nginx.target.https_port }}
+    nodePort: {{ .Values.config.nginx.ext.https_port }}
   - name: nginx-reverse-proxy-8554
-    port: 8554
-    targetPort: 8554
-    nodePort: 30554  # external port for 8554
+    port: {{ .Values.config.nginx.int.rtsp_port }}
+    targetPort: {{ .Values.config.nginx.target.rtsp_port }}
+    nodePort: {{ .Values.config.nginx.ext.rtsp_port }}
   selector:
     {{- include "image_based_video_search.selectorLabels" . | nindent 4 }}
     katenary.v3/component: nginx-reverse-proxy
