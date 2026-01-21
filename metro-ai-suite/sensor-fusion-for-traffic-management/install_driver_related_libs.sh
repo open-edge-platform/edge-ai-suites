@@ -44,6 +44,16 @@ _upgrade_kernel()
   mkdir -p ${THIRD_PARTY_BUILD_DIR}/6.16.0_kernel
   pushd ${THIRD_PARTY_BUILD_DIR}/6.16.0_kernel
   cur_kernel=$(uname -r)
+  # Extract numeric version prefix from uname (e.g. 6.8.0-xx -> 6.8.0)
+  cur_kernel_ver=$(echo "${cur_kernel}" | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+
+  # If current kernel is already >= 6.16.0, skip upgrading.
+  if dpkg --compare-versions "${cur_kernel_ver}" ge "6.16.0"; then
+    echo "Current kernel (${cur_kernel}) is >= 6.16.0, skipping kernel upgrade."
+    popd
+    return 0
+  fi
+
   if [[ "$cur_kernel" != *"6.16.0-061600-generic"* ]]; then
     sudo -E apt update
     wget https://kernel.ubuntu.com/mainline/v6.16/amd64/linux-headers-6.16.0-061600_6.16.0-061600.202507272138_all.deb
@@ -53,7 +63,12 @@ _upgrade_kernel()
 
     sudo dpkg -i *.deb
 
-    sudo sed -i 's#^GRUB_DEFAULT=0$#GRUB_DEFAULT="Advanced options for Ubuntu>Ubuntu, with Linux 6.16.0-061600-generic"#' /etc/default/grub
+    grub_default_value="Advanced options for Ubuntu>Ubuntu, with Linux 6.16.0-061600-generic"
+    if sudo grep -q '^GRUB_DEFAULT=' /etc/default/grub; then
+      sudo sed -i "s#^GRUB_DEFAULT=.*#GRUB_DEFAULT=\"${grub_default_value}\"#" /etc/default/grub
+    else
+      echo "GRUB_DEFAULT=\"${grub_default_value}\"" | sudo tee -a /etc/default/grub > /dev/null
+    fi
 
     sudo update-grub
 

@@ -23,8 +23,8 @@ The Scene Intelligence microservice includes an automated setup script that hand
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-libraries.git
-cd edge-ai-libraries/microservices/scene-intelligence
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
 ### 2. Run the Complete Setup

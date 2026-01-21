@@ -118,36 +118,29 @@ source setup.sh stop
 
 To enable Smart NVR's GenAI capabilities for intelligent event descriptions:
 
-#### 1. Update Frigate Configuration
-
-Modify `resources/frigate-config/config.yml`:
-
-```yaml
-genai:
-  enabled: true
-```
-
-#### 2. Ensure VLM Service Availability
+#### 1. Ensure VLM Service Availability
 
 Verify the VLM microservice is running and accessible at the configured endpoint.
 
-#### 3. Set Environment Variable
-
+#### 2. Set Environment Variable
 ```bash
 export NVR_GENAI=true
 export VLM_SERVING_IP=<vlm-serving-device-ip>
 export VLM_SERVING_PORT=<vlm-serving-port>
 ```
 
-#### 4. Run the application
+#### 3. Run the application
 
 Re-run the application after [configuring](./get-started.md#step-2-configure-environment) the rest of environment variables. Ensure that the environment value `export NVR_GENAI=true` is set.
 
 > **⚠️ Important Notes**:
 >
-> - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation
-> - Requires VLM microservice to be running
-> - Disabled by default for system stability
+> - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
+> - Requires VLM microservice to be running.
+> - Disabled by default for system stability.
+> - SmartNVR uses either Frigate or Scenescape for GenAI capabilities. GenAI in both cannot be enabled at the same time. If Scenescape is enabled, its capabilities are prioritized over Frigate, with Frigate used in "dumb" mode.
+> - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Else, error is thrown.
+
 
 ## Running Tests and Generating Coverage Report
 

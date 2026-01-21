@@ -13,6 +13,7 @@ This guide explains how to create a custom Docker image based on the Intel DL St
 ## Cloning and building the docker image
 
 ### Step 1: Base Image and User Setup
+
 Download the edge-ai-libraries source and go to `dlstreamer-pipeline-server` folder
 
 ```bash
@@ -81,7 +82,8 @@ docker compose up -d
 
 ### Step 5: Run a test pipeline and dump the camera output into a file in the /tmp directory
 
-Note down serial number of the basler camera and update `<basler-camera-serial>` in the following command
+Note down serial number of the basler camera and update `<basler-camera-serial>` in the following command:
+
 ```bash
 docker exec -it dlstreamer-pipeline-server bash
 $ gst-launch-1.0 gencamsrc serial=<basler-camera-serial> pixel-format=bayerrggb name=source ! bayer2rgb ! videoscale ! video/x-raw, width=1920,height=1080 ! videoconvert ! queue ! jpegenc ! avimux ! filesink location=/tmp/gencam_basler_output.avi
@@ -93,7 +95,7 @@ Verify that the /tmp/gencam_basler_output.avi has the captured content
 
 ## Deploying the Pallet Defect Detection (PDD) Application Using live camera
 
-This guide provides detailed, step-by-step instructions for setting up and deploying the **Pallet Defect Detection (PDD)** pipeline to use the **Balluff** or **Basler** camera connected over USB or GigE.  
+This guide provides detailed, step-by-step instructions for setting up and deploying the **Pallet Defect Detection (PDD)** pipeline to use the **Balluff** or **Basler** camera connected over USB or GigE.
 It covers environment setup, configuration updates, and validation steps to ensure a successful deployment.
 
 ---
@@ -125,6 +127,7 @@ Execute the setup script to initialize project directories and configurations.
 ```bash
 ./setup.sh
 ```
+
 ---
 
 ### Step 4: Update the Pipeline Configuration
@@ -184,6 +187,7 @@ Start all required services using Docker Compose:
 ```bash
 docker compose up -d
 ```
+
 ---
 
 ### Step 7: Modify the Payload File
@@ -212,6 +216,7 @@ Edit `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps
     }
 ]
 ```
+
 ---
 
 ### Step 8: Start the Sample Pipeline
@@ -221,13 +226,14 @@ Run the sample script to start the pipeline:
 ```bash
 ./sample_start.sh -p pallet_defect_detection
 ```
+
 ---
 
 ### Step 9: Access the Web Interface
 
 Open a browser and navigate to:
 
-```
+```text
 https://<HOST_IP>/mediamtx/pdd/
 ```
 

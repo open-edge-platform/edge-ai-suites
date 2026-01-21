@@ -2,15 +2,15 @@
 
 Edge Orchestrator, part of Intel’s Edge Software, simplifies edge application deployment and management, making it easier to deploy edge solutions at scale. Edge Orchestrator provides:
 
-* **Secure Infrastructure Management**: Offers secure and efficient remote onboarding and management of your edge node fleet across sites and geographies. Zero-trust security configuration reduces the time required to secure your edge applications.
+- **Secure Infrastructure Management**: Offers secure and efficient remote onboarding and management of your edge node fleet across sites and geographies. Zero-trust security configuration reduces the time required to secure your edge applications.
 
-* **Deployment Orchestration and Automation**: Lets you roll out and update applications and configure infrastructure nodes across your network from a single pane of glass. Edge Orchestrator provides automated cluster orchestration and dynamic application deployment.
+- **Deployment Orchestration and Automation**: Lets you roll out and update applications and configure infrastructure nodes across your network from a single pane of glass. Edge Orchestrator provides automated cluster orchestration and dynamic application deployment.
 
-* **Automated Deployment**: Automates the remote installation and updating of applications at scale.
+- **Automated Deployment**: Automates the remote installation and updating of applications at scale.
 
-* **Deep Telemetry**: Gives you policy-based life cycle management and centralized visibility into your distributed edge infrastructure and deployments.
+- **Deep Telemetry**: Gives you policy-based life cycle management and centralized visibility into your distributed edge infrastructure and deployments.
 
-* **Flexible Configuration**: From organizing your physical infrastructure to managing the permutations of executing applications in a variety of runtime environments, Edge Orchestrator gives you the flexibility to define the policies, criteria, and hierarchies that make the most sense for your specific business needs.
+- **Flexible Configuration**: From organizing your physical infrastructure to managing the permutations of executing applications in a variety of runtime environments, Edge Orchestrator gives you the flexibility to define the policies, criteria, and hierarchies that make the most sense for your specific business needs.
 
 To deploy the **Pallet Defect Detection** Sample Application with the Edge Orchestrator, follow the steps described in this document.
 
@@ -20,7 +20,7 @@ To deploy the **Pallet Defect Detection** Sample Application with the Edge Orche
 
 1. Access to the web interface of the Edge Orchestrator with one or more [edge nodes onboarded](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/edge_node_onboard/index.html) to the Edge Orchestrator.
 
-1. Clusters with a [privilege template](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/advanced_functionality/set_up_a_cluster_template.html) have been created on the needed edge nodes following the steps in [Create Cluster](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/clusters/create_clusters.html#create-cluster).
+2. Clusters with a [privilege template](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/advanced_functionality/set_up_a_cluster_template.html) have been created on the needed edge nodes following the steps in [Create Cluster](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/clusters/create_clusters.html#create-cluster).
 
 ### Make the Deployment Package Available
 
@@ -31,9 +31,9 @@ To deploy the **Pallet Defect Detection** Sample Application with the Edge Orche
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps/pallet-defect-detection
     ```
 
-1. From the web browser, open the URL of the Edge Orchestrator and import the deployment package in the folder **deployment-package** by following the steps in [Import Deployment Package](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/package_software/import_deployment.html#import-deployment-package).
+2. From the web browser, open the URL of the Edge Orchestrator and import the deployment package in the folder **deployment-package** by following the steps in [Import Deployment Package](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/package_software/import_deployment.html#import-deployment-package).
 
-1. After you have imported the deployment package into Edge Orchestrator, you can see it in the list of deployment packages:
+3. After you have imported the deployment package into Edge Orchestrator, you can see it in the list of deployment packages:
 
    **![PDD Image](./images/pdd-dp.png)**
 
@@ -45,23 +45,23 @@ To set up a deployment:
 
 1. Click the **Deployments** tab on the top menu to view the Deployments page. On the Deployments page, you can view the list of deployments that have been created. The status indicator shows a quick view of the status of the deployment, which depends on many factors.
 
-1. Select the **Deployments** tab and click the **Setup a Deployment** button. The Setup a Deployment page appears.
+2. Select the **Deployments** tab and click the **Setup a Deployment** button. The Setup a Deployment page appears.
 
-1. On the Setup a Deployment page, select the **pdd** package for the deployment from the list, and click **Next**. The Select a Profile step appears.
+3. On the Setup a Deployment page, select the **pdd** package for the deployment from the list, and click **Next**. The Select a Profile step appears.
 
-1. In the Select a Profile step, select the deployment profile, and click **Next**. The Override Profile Values page appears.
+4. In the Select a Profile step, select the deployment profile, and click **Next**. The Override Profile Values page appears.
 
-1. The Override Profile Values page shows the deployment profile values that are available for overriding. Provide the necessary overriding values, then click **Next** to proceed to the Select Deployment Type step.
+5. The Override Profile Values page shows the deployment profile values that are available for overriding. Provide the necessary overriding values, then click **Next** to proceed to the Select Deployment Type step.
 
-1. On the Select Deployment Type page, select the type of deployment, and click **Next**:
+6. On the Select Deployment Type page, select the type of deployment, and click **Next**:
 
     1. If you select **Automatic** as the deployment type, enter the deployment name and metadata in the key-value format, to select the target cluster.
 
-    1. If you select **Manual** as the deployment type, enter the deployment name and select the clusters from the list of clusters.
+    2. If you select **Manual** as the deployment type, enter the deployment name and select the clusters from the list of clusters.
 
-1. Click **Next** to view the Review page.
+7. Click **Next** to view the Review page.
 
-1. Verify that the deployment details are correct and click **Deploy**.
+8. Verify that the deployment details are correct and click **Deploy**.
 
 After a few minutes, the deployment will start and will take about 5 minutes to complete.
 
@@ -81,4 +81,4 @@ For more information on setting up a deployment, see [Set up a Deployment](https
 
 1. Follow the steps in the **Pallet Defect Detection** [Documentation](how-to-deploy-using-helm-charts.md#deploy-the-application) on the usage of the application.
 
-   > Note: Skip the Install the Helm chart step.
+   > **Note:** Skip the Install the Helm chart step.

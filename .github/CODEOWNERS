@@ -1,91 +1,118 @@
+# CODEOWNERS
+# This file defines file ownership for automatic review requests.
+# The later matching patterns take precedence over the earlier ones, which means that more specific patterns should appear after general ones.
+# If a resource has under three technical code owners, it should not be assigned to the Documentation team either, even if it includes documentation (for the process reasons).
+
 LICENSE            @xwu2intel
 CONTRIBUTING.md    @xwu2intel
 CODE_OF_CONDUCT.md @xwu2intel
 SECURITY.md        @xwu2intel
 README.md          @xwu2intel
 
-# manufacturing-ai
-/manufacturing-ai-suite/hmi-augmented-worker/             @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel
-/manufacturing-ai-suite/industrial-edge-insights-vision/  @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel
-/manufacturing-ai-suite/industrial-edge-insights-time-series/   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe
-/manufacturing-ai-suite/industrial-edge-insights-multimodal/   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @sugnanprabhu
-# moved into "industrial-edge-insights-vision" - consider removing
-/manufacturing-ai-suite/pallet-defect-detection/          @ajagadi1 @sugnanprabhu @rrajore @xwu2intel
-/manufacturing-ai-suite/weld-porosity/                    @ajagadi1 @sugnanprabhu @rrajore @xwu2intel
 
-# metro-ai
-/metro-ai-suite/                                                 @rrajore @vagheshp @ArokiEdgard @xwu2intel @ajagadi1
-/metro-ai-suite/image-based-video-search/                        @rrajore @vagheshp @ArokiEdgard @rohitkatakol @xwu2intel @ajagadi1
+# ============================================================================
+# Education-AI Suite
+# ============================================================================
+
+/education-ai-suite/                                                  @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich
+/education-ai-suite/README.md                                         @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich  @open-edge-platform/open-edge-platform-docs-write
+
+/education-ai-suite/smart-classroom/docs/                             @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich  @open-edge-platform/open-edge-platform-docs-write
+/education-ai-suite/smart-classroom/README.md                         @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich  @open-edge-platform/open-edge-platform-docs-write
+
+# ============================================================================
+# Manufacturing-AI Suite
+# ============================================================================
+
+/manufacturing-ai-suite/README.md                                      @xwu2intel @hteeyeoh @ajagadi1 @vkb1  @open-edge-platform/open-edge-platform-docs-write
+
+/manufacturing-ai-suite/hmi-augmented-worker/                          @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel
+/manufacturing-ai-suite/hmi-augmented-worker/docs/                     @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/hmi-augmented-worker/README.md                 @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+
+/manufacturing-ai-suite/industrial-edge-insights-multimodal/            @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @sugnanprabhu
+/manufacturing-ai-suite/industrial-edge-insights-multimodal/docs/       @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @sugnanprabhu  @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-multimodal/README.md   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @sugnanprabhu  @open-edge-platform/open-edge-platform-docs-write
+
+/manufacturing-ai-suite/industrial-edge-insights-time-series/           @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe
+/manufacturing-ai-suite/industrial-edge-insights-time-series/docs/      @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe  @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-time-series/README.md  @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe  @open-edge-platform/open-edge-platform-docs-write
+
+/manufacturing-ai-suite/industrial-edge-insights-vision/                @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel
+/manufacturing-ai-suite/industrial-edge-insights-vision/docs/           @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-vision/README.md       @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-vision/**/README.md    @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+
+
+# ============================================================================
+# Metro-AI Suite
+# ============================================================================
+
+/metro-ai-suite/                                                 @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard
+/metro-ai-suite/README.md                                        @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard  @open-edge-platform/open-edge-platform-docs-write
+
+/metro-ai-suite/image-based-video-search/                        @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard @rohitkatakol
+/metro-ai-suite/image-based-video-search/docs/                   @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard @rohitkatakol  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/image-based-video-search/README.md               @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard @rohitkatakol  @open-edge-platform/open-edge-platform-docs-write
+
 /metro-ai-suite/interactive-digital-avatar/                      @senhui2intel @Junyu-B @wzq112358 @myqi @xwu2intel
+/metro-ai-suite/interactive-digital-avatar/docs/                 @senhui2intel @Junyu-B @wzq112358 @myqi @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/interactive-digital-avatar/README.md             @senhui2intel @Junyu-B @wzq112358 @myqi @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
-/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/  @vagheshp @tjanczak @xwu2intel @ajagadi1 @rrajore
-/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/   @saratpoluri @sarthakdeva-intel @xwu2intel @ajagadi1 @sajeevrajput @rrajore @vagheshp
-/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/        @vagheshp @tjanczak @xwu2intel @ajagadi1 @rrajore
+# /metro-ai-suite/metro-sdk-manager/                             no codeowners, the top codeowners apply
 
-/metro-ai-suite/sensor-fusion-for-traffic-management/            @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel
-/metro-ai-suite/smart-nvr/                                       @bharagha @yogeshmpandey @bhardwaj-nakul @xwu2intel
+/metro-ai-suite/metro-vision-ai-app-recipe/docs/                           @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/metro-vision-ai-app-recipe/README.md                       @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard  @open-edge-platform/open-edge-platform-docs-write
+
+/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/            @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak
+/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/docs/       @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/README.md   @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak  @open-edge-platform/open-edge-platform-docs-write
+
+/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/             @rrajore @vagheshp @xwu2intel @ajagadi1 @saratpoluri @sarthakdeva-intel @sajeevrajput
+/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/        @rrajore @vagheshp @xwu2intel @ajagadi1 @saratpoluri @sarthakdeva-intel @sajeevrajput  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/README.md    @rrajore @vagheshp @xwu2intel @ajagadi1 @saratpoluri @sarthakdeva-intel @sajeevrajput  @open-edge-platform/open-edge-platform-docs-write
+
+/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/                  @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak
+/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/             @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/README.md         @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak  @open-edge-platform/open-edge-platform-docs-write
+
+/metro-ai-suite/sensor-fusion-for-traffic-management/                      @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel
+/metro-ai-suite/sensor-fusion-for-traffic-management/docs/                 @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/sensor-fusion-for-traffic-management/README.md             @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+
+/metro-ai-suite/smart-nvr/                                              @bharagha @yogeshmpandey @bhardwaj-nakul @xwu2intel
+/metro-ai-suite/smart-nvr/docs/                                         @bharagha @yogeshmpandey @bhardwaj-nakul @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/smart-nvr/README.md                                     @bharagha @yogeshmpandey @bhardwaj-nakul @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+
+/metro-ai-suite/smart-route-planning-agent/                             @bharagha @yogeshmpandey @madhuri-rai07 @krish918
+/metro-ai-suite/smart-route-planning-agent/docs/                        @bharagha @yogeshmpandey @madhuri-rai07 @krish918  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/smart-route-planning-agent/README.md                    @bharagha @yogeshmpandey @madhuri-rai07 @krish918  @open-edge-platform/open-edge-platform-docs-write
+
+/metro-ai-suite/smart-traffic-intersection-agent/                       @bharagha @yogeshmpandey @madhuri-rai07 @krish918
+/metro-ai-suite/smart-traffic-intersection-agent/docs/                  @bharagha @yogeshmpandey @madhuri-rai07 @krish918  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/smart-traffic-intersection-agent/README.md              @bharagha @yogeshmpandey @madhuri-rai07 @krish918  @open-edge-platform/open-edge-platform-docs-write
+
 /metro-ai-suite/video-processing-for-nvr/                        @zhangcong2019 @llin60 @Johere @xwu2intel
-/metro-ai-suite/visual-search-question-and-answering/            @llin60 @Johere @zhangcong2019 @xwu2intel
-# moved into metro-vision-ai-app-recipe
-/metro-ai-suite/loitering-detection/                             @vagheshp @tjanczak @xwu2intel
-/metro-ai-suite/smart-parking/                                   @vagheshp @tjanczak @xwu2intel
+/metro-ai-suite/video-processing-for-nvr/docs/                   @zhangcong2019 @llin60 @Johere @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/video-processing-for-nvr/README.md               @zhangcong2019 @llin60 @Johere @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
-/metro-ai-suite/smart-route-planning-agent/                             @bharagha @madhuri-rai07 @yogeshmpandey @krish918
-/metro-ai-suite/smart-traffic-intersection-agent/                @bharagha @madhuri-rai07 @yogeshmpandey @krish918
+/metro-ai-suite/visual-search-question-and-answering/            @zhangcong2019 @llin60 @Johere @xwu2intel
+/metro-ai-suite/visual-search-question-and-answering/docs/       @zhangcong2019 @llin60 @Johere @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/visual-search-question-and-answering/README.md   @zhangcong2019 @llin60 @Johere @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
-# robotics-ai
-/robotics-ai-suite/        @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @dariorusso1972
+# ============================================================================
+# Retail-AI Suite
+# ============================================================================
 
-# education-ai
-/education-ai-suite/        @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich
-
-# documentation content - manufacturing-ai
-/manufacturing-ai-suite/README.md                                      @xwu2intel @hteeyeoh @ajagadi1 @vkb1                                     @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/hmi-augmented-worker/docs/                     @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel                            @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/hmi-augmented-worker/README.md                 @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel                            @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/industrial-edge-insights-vision/**/docs/       @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel                @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/industrial-edge-insights-vision/**/README.md   @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel                @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/industrial-edge-insights-vision/README.md      @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel                @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/industrial-edge-insights-time-series/docs/     @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe   @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/industrial-edge-insights-time-series/README.md @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe   @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/industrial-edge-insights-multimodal/docs/           @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @sugnanprabhu   @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/industrial-edge-insights-multimodal/docs/README.md   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @sugnanprabhu   @open-edge-platform/open-edge-platform-docs-write
+# Retail-ai patterns - to be defined when content is added
 
 
+# ============================================================================
+# Robotics-AI Suite
+# ============================================================================
 
-
-# documentation content - metro-ai
-/metro-ai-suite/README.md                                       @rrajore @vagheshp @ArokiEdgard @xwu2intel @ajagadi1            @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/metro-vision-ai-app-recipe/docs/                @rrajore @vagheshp @ArokiEdgard @xwu2intel @ajagadi1            @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/metro-vision-ai-app-recipe/README.md            @rrajore @vagheshp @ArokiEdgard @xwu2intel @ajagadi1            @open-edge-platform/open-edge-platform-docs-write
-
-/metro-ai-suite/image-based-video-search/docs/                  @rrajore @vagheshp @ArokiEdgard @rohitkatakol @xwu2intel @ajagadi1       @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/image-based-video-search/README.md              @rrajore @vagheshp @ArokiEdgard @rohitkatakol @xwu2intel @ajagadi1       @open-edge-platform/open-edge-platform-docs-write
-
-/metro-ai-suite/interactive-digital-avatar/docs/                @senhui2intel @Junyu-B @wzq112358 @myqi @xwu2intel              @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/interactive-digital-avatar/README.md            @senhui2intel @Junyu-B @wzq112358 @myqi @xwu2intel              @open-edge-platform/open-edge-platform-docs-write
-
-/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/docs/           @vagheshp @tjanczak @xwu2intel @ajagadi1 @rrajore                 @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/README.md       @vagheshp @tjanczak @xwu2intel @ajagadi1 @rrajore                 @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/            @saratpoluri @sarthakdeva-intel @xwu2intel @ajagadi1 @rrajore @sajeevrajput @vagheshp       @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/README.md        @saratpoluri @sarthakdeva-intel @xwu2intel @ajagadi1 @rrajore @sajeevrajput @vagheshp       @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/                 @vagheshp @tjanczak @xwu2intel @ajagadi1 @rrajore                  @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/README.md             @vagheshp @tjanczak @xwu2intel @ajagadi1 @rrajore                  @open-edge-platform/open-edge-platform-docs-write
-
-/metro-ai-suite/sensor-fusion-for-traffic-management/docs/      @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel    @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/sensor-fusion-for-traffic-management/README.md  @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel    @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/smart-nvr/docs/                                         @bharagha @yogeshmpandey @bhardwaj-nakul @xwu2intel     @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/smart-nvr/README.md                                     @bharagha @yogeshmpandey @bhardwaj-nakul @xwu2intel     @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/video-processing-for-nvr/docs/                          @zhangcong2019 @llin60 @Johere @xwu2intel               @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/video-processing-for-nvr/README.md                      @zhangcong2019 @llin60 @Johere @xwu2intel               @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/visual-search-question-and-answering/docs/              @llin60 @Johere @zhangcong2019 @xwu2intel               @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/visual-search-question-and-answering/README.md          @llin60 @Johere @zhangcong2019 @xwu2intel               @open-edge-platform/open-edge-platform-docs-write
-
-
-# documentation content - robotics-ai
-/robotics-ai-suite/docs/               @jouillet @jb-balaji @dariorusso1972 @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/robotics-ai-suite/README.md           @jouillet @jb-balaji @dariorusso1972 @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/robotics-ai-suite/**/docs/            @jouillet @jb-balaji @dariorusso1972 @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/robotics-ai-suite/**/README.md        @jouillet @jb-balaji @dariorusso1972 @pirouf @mohitmeh12 @pperycz @seanohair22 @zschafft-intel @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-
-# documentation content - retail-ai - needs to be defined once content appears
+/robotics-ai-suite/                    @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel
+/robotics-ai-suite/docs/               @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/README.md           @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/**/docs/            @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/**/README.md        @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
