@@ -1,3 +1,0 @@
-application	ICE_Supervisor
-domainId	0
-deviceType	PO_Simulator

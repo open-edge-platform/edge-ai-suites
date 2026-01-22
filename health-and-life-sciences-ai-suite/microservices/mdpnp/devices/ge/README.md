@@ -1,4 +1,0 @@
-GE
-=========
-
-Serial protocol
