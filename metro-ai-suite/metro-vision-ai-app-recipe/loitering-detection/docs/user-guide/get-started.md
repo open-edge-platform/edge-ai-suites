@@ -68,8 +68,8 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      - Grafana Dashboard
      - DL Streamer Pipeline Server
      - MQTT Broker
-     - Node-RED (for applications without Scenescape)
-     - Scenescape services (for Smart Intersection only)
+     - Node-RED (for applications without Intel® SceneScape)
+     - Intel® SceneScape services (for Smart Intersection only)
 
      </details>
 
@@ -189,4 +189,3 @@ Choose one of the following methods to deploy the Loitering Detection Sample App
 ## Supporting Resources
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
-

@@ -97,6 +97,18 @@ Note: supported media types: jpg, png, mp4
 
    **Note**: The default volume directory for Milvus (the vector DB) data is under `/opt/volumes`. If this directory is under constraint or you simply would like to store the data in a diffrent location, please set the environment variable via `export DOCKER_VOLUME_DIRECTORY=<your_data_directory>`. The Milvus data will be stored at `${DOCKER_VOLUME_DIRECTORY}/volumes` in such case.
 
+   <details>
+   <summary>For EMT-S platform</summary>
+   If you are on an EMT-S platform, please set up the variables correspondingly by running
+
+   ``` bash
+    cd emt-s   # go to emt-s specific files
+    export EMBEDDING_MODEL_NAME="CLIP/clip-vit-h-14" # Replace with other models if needed
+    export VLM_MODEL_NAME="Qwen/Qwen2.5-VL-7B-Instruct" # Replace with other models if needed
+    source env.sh 
+   ```
+   </details>
+
 3.  Deploy with docker compose
 
     ``` bash

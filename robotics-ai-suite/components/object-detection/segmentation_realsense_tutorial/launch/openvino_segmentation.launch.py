@@ -1,19 +1,7 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
-
 # Copyright (C) 2025 Intel Corporation
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions
-# and limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import os
@@ -47,10 +35,16 @@ def create_modified_yaml(device):
             / 'object_segmentation_pipeline.yaml'
         )
 
+        # Get package share directory for dynamic path resolution
+        package_share_dir = get_package_share_directory('segmentation_realsense_tutorial')
+
         with template_path.open('r') as file:
             config = yaml.safe_load(file)
 
-        config['Pipelines'][0]['infers'][0]['engine'] = device
+        # Update paths dynamically using ROS package share directory
+        pipeline = config['Pipelines'][0]
+        pipeline['infers'][0]['label'] = os.path.join(package_share_dir, 'label', 'object.labels')
+        pipeline['infers'][0]['engine'] = device
 
         with NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as tmp_file:
             yaml.safe_dump(config, tmp_file)

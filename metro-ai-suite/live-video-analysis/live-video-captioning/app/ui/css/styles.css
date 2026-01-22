@@ -1,0 +1,941 @@
+:root {
+    --bg: #050814;
+    --bg-gradient: radial-gradient(circle at 20% -10%, #12225b 0%, #050814 55%);
+    --panel: #0d152c;
+    --panel-strong: #111c38;
+    --accent: #1a73e8;
+    --accent-strong: #0f5cc8;
+    --text: #f5f7fb;
+    --muted: #8ca0c2;
+    --border: rgba(255, 255, 255, 0.08);
+    --shadow: 0 18px 38px rgba(5, 8, 20, 0.55);
+    --input-bg: #0b1026;
+    --input-border: var(--border);
+}
+
+[data-theme="light"] {
+    --bg: #f6f8fc;
+    --bg-gradient: radial-gradient(circle at 20% -10%, #ffffff 0%, #e8eef8 55%);
+    --panel: #ffffff;
+    --panel-strong: #f1f4fb;
+    --accent: #1a73e8;
+    --accent-strong: #0f5cc8;
+    --text: #0b152c;
+    --muted: #5b6a85;
+    --border: rgba(0, 0, 0, 0.08);
+    --shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    --input-bg: #eef2fb;
+    --input-border: rgba(0, 0, 0, 0.12);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text);
+}
+
+header,
+main {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+header {
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-left: 20px;
+    padding-top: 6px;
+    padding-right: 20px;
+    flex-shrink: 0;
+}
+
+h1,
+h2 {
+    margin: 0;
+    font-size: clamp(1.2rem, 2vw, 1.8rem);
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cc-icon {
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+p {
+    color: var(--muted);
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 5px 20px;
+    overflow: hidden;
+    height: calc(100vh - 50px);
+}
+
+.panels {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(300px, 30%) minmax(0, 1fr);
+    align-items: stretch;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* When runsContainer is empty, collapse the right panel */
+.live-layout:has(#runsContainer:empty) {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 200px;
+}
+
+.live-layout:has(#runsContainer:empty) #runsContainer {
+    display: none;
+}
+
+.card {
+    background: var(--panel);
+    border: 3px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: var(--shadow);
+}
+
+/* Left sidebar card - scrollable */
+.panels>.card:first-child {
+    overflow-y: auto;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 6px;
+}
+
+/* Make System Stats card fill remaining space */
+.panels>.card:first-child>.card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.panels>.card:first-child>.card .chart-grid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.panels>.card:first-child>.card .chart-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.panels>.card:first-child>.card .chart-wrap {
+    flex: 1;
+    min-height: 40px;
+}
+
+.live-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.icon-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease;
+    box-shadow: var(--shadow);
+}
+
+.icon-button:hover {
+    transform: translateY(-1px);
+}
+
+.icon-button:active {
+    transform: translateY(0);
+}
+
+.icon-button .icon-sun,
+.icon-button .icon-moon {
+    width: 20px;
+    height: 20px;
+    display: none;
+}
+
+[data-theme="dark"] .icon-moon {
+    display: block;
+}
+
+[data-theme="light"] .icon-sun {
+    display: block;
+}
+
+@media (max-width: 520px) {
+    header {
+        flex-direction: row;
+    }
+}
+
+#runsContainer {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+    width: 100%;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    padding-right: 4px;
+}
+
+
+#runsContainer:empty+.empty-alert {
+    grid-column: 1 / -1;
+}
+
+/* Video card styling within the grid - fixed height based on container */
+#runsContainer .card {
+    margin-top: 0;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100%;
+    min-height: 350px;
+    overflow: hidden;
+    padding: 6px;
+}
+
+.caption-panel,
+.video-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Inner grid container for video + caption with fixed proportions */
+#runsContainer .card > div:last-child,
+.run-grid {
+    display: grid;
+    grid-template-rows: 60% 40%;
+    gap: 2px;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.caption-panel {
+    overflow: hidden;
+    padding: 4px 5px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* Chips row must not shrink */
+.caption-panel > div:first-child {
+    flex-shrink: 0;
+}
+
+/* Watcher status must not shrink */
+.caption-panel > .status {
+    flex-shrink: 0;
+}
+
+/* Caption content wrapper - takes remaining space */
+.caption-content {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.video-panel iframe {
+    flex: 1;
+    min-height: 0;
+}
+
+.fc h2 {
+    margin: 0 0 10px 0;
+    letter-spacing: 0.01em;
+}
+
+.card strong {
+    color: var(--text);
+}
+
+iframe {
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    background: #000;
+}
+
+.run-video {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    color: var(--muted);
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s ease;
+    flex-shrink: 0;
+}
+
+.dot.active {
+    background: var(--accent);
+}
+
+.status-connected {
+    color: #4ade80;
+    font-weight: 500;
+}
+
+.status-disconnected {
+    color: var(--muted);
+    font-weight: 400;
+}
+
+.caption-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    line-height: 1.5;
+    margin: 0;
+    font-weight: 300;
+    color: var(--text);
+    overflow-y: scroll;
+    font-size: 0.9rem;
+    word-wrap: break-word;
+    scrollbar-gutter: stable;
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+.timestamp {
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+.empty-alert {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #ffb347;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Agent Mode Alert Styling */
+.card.alert-active {
+    border-color: #ff4444;
+    box-shadow: 0 0 30px rgba(255, 68, 68, 0.4), var(--shadow);
+    animation: alert-pulse 1.5s ease-in-out infinite;
+}
+
+.card.safe-active {
+    border-color: #44ff88;
+    box-shadow: 0 0 30px rgba(68, 255, 136, 0.4), var(--shadow);
+    animation: safe-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes alert-pulse {
+
+    0%,
+    100% {
+        border-color: #ff4444;
+        box-shadow: 0 0 30px rgba(255, 68, 68, 0.4), var(--shadow);
+    }
+
+    50% {
+        border-color: #ff6b6b;
+        box-shadow: 0 0 40px rgba(255, 68, 68, 0.6), var(--shadow);
+    }
+}
+
+@keyframes safe-pulse {
+
+    0%,
+    100% {
+        border-color: #44ff88;
+        box-shadow: 0 0 30px rgba(68, 255, 136, 0.4), var(--shadow);
+    }
+
+    50% {
+        border-color: #66ffaa;
+        box-shadow: 0 0 40px rgba(68, 255, 136, 0.6), var(--shadow);
+    }
+}
+
+/* Empty state styling */
+#runsContainer:empty {
+    display: none;
+}
+
+.empty-alert {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+}
+
+.live-layout:has(#runsContainer:empty) {
+    justify-content: center;
+    align-items: center;
+}
+
+/* Pipeline start form: stack inputs vertically without flex-growing gaps */
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.field-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.field-row .field {
+    flex: 1;
+}
+
+@media (max-width: 720px) {
+    .field-row {
+        flex-direction: column;
+    }
+}
+
+/* Prevent form fields from stretching vertically (avoids large blank gaps) */
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Keep Start/Stop buttons on one row */
+.button-row {
+    display: flex;
+    gap: 10px;
+    margin: 0;
+}
+
+/* Textarea sizing: compact but readable */
+.input.textarea {
+    min-height: 56px;
+    resize: vertical;
+}
+
+.label {
+    font-size: 0.9rem;
+    color: var(--muted);
+}
+
+.input {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text);
+    width: 100%;
+}
+
+/* Make keyboard focus visible without changing theme colors */
+.input:focus {
+    outline: 2px solid rgba(106, 230, 255, 0.35);
+    outline-offset: 2px;
+}
+
+/* Number input usability: keep the spinner unobstructed and easier to click */
+.input[type="number"] {
+    padding-right: .6rem;
+    /* room for the stepper controls */
+    font-variant-numeric: tabular-nums;
+}
+
+/* WebKit (Chrome/Edge/Safari): make the spin buttons fully visible */
+.input[type="number"]::-webkit-inner-spin-button,
+.input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+    height: 1.8em;
+}
+
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: #041022;
+    box-shadow: 0 8px 20px rgba(35, 28, 235, 0.25);
+}
+
+.btn-danger {
+    background: #ff8a80;
+    color: #1b0b0b;
+    box-shadow: 0 8px 20px rgba(255, 138, 128, 0.25);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.stack {
+    display: grid;
+    gap: 12px;
+}
+
+.chart-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+    padding-bottom: 16px;
+}
+
+.chart-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+    flex-shrink: 0;
+}
+
+.chart-value {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.chart-sub {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+
+.chart-wrap {
+    height: auto;
+    min-height: 40px;
+    flex: 1;
+}
+
+/* GPU Info Styles */
+.gpu-info {
+    padding: 4px 0;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+}
+
+.gpu-name {
+    font-weight: 500;
+    color: var(--accent);
+}
+
+.gpu-engines {
+    opacity: 0.85;
+    line-height: 1.4;
+}
+
+.gpu-stats-row span {
+    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.gpu-error {
+    padding: 4px 8px;
+    background: rgba(255, 140, 0, 0.1);
+    border-radius: 4px;
+    border-left: 2px solid #ff8c00;
+}
+
+@media (max-width: 1200px) {
+    #runsContainer {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .panels {
+        grid-template-columns: 1fr;
+    }
+
+    .live-layout {
+        flex-direction: column;
+    }
+}
+
+/* Make the right panel take remaining space */
+.live-layout {
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.live-layout>.status {
+    flex-shrink: 0;
+    margin-bottom: 6px;
+}
+
+/* Hide hint when there are pipelines */
+.live-layout:has(#runsContainer:not(:empty)) .empty-alert {
+    display: none;
+}
+
+/* Ensure video cards have consistent sizing */
+.run-video {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Info Button Styles */
+.info-btn-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.info-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s ease, background 0.2s ease, border-color 0.2s ease;
+    padding: 0;
+    margin-left: 4px;
+}
+
+.info-btn:hover {
+    background: var(--panel-strong);
+    border-color: var(--accent);
+    transform: scale(1.1);
+}
+
+.info-btn:active {
+    transform: scale(0.95);
+}
+
+.info-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Info Tooltip Styles */
+.info-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    min-width: 360px;
+    max-width: 480px;
+    background: var(--panel-strong);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: var(--shadow);
+    z-index: 1000;
+    font-size: 0.8rem;
+}
+
+.info-tooltip::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid var(--border);
+}
+
+.info-tooltip::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid var(--panel-strong);
+}
+
+.info-tooltip-title {
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+}
+
+.info-tooltip-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    line-height: 1.4;
+    color: var(--text);
+}
+
+.info-tooltip-row strong {
+    color: var(--muted);
+    flex-shrink: 0;
+    min-width: 80px;
+}
+
+.info-tooltip-row span {
+    word-break: break-word;
+    color: var(--text);
+}
+
+.info-tooltip-prompt {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-height: 4.2em;
+}
+
+/* Layout for the label row */
+.field .label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Provide positioning context and avoid clipping */
+.field,
+.label,
+.tooltip-wrap {
+    position: relative;
+    overflow: visible;
+    /* do NOT clip the tooltip box */
+}
+
+.tooltip-wrap {
+    display: inline-block;
+    /* predictable absolute positioning */
+}
+
+/* Reset button styles for the icon */
+.tooltip-icon {
+    border: none;
+    background: none;
+    padding: 0;
+    margin: 0;
+    cursor: help;
+    /* indicates it's informational */
+    color: #2c3e50;
+    /* icon color */
+    line-height: 0;
+}
+
+.tooltip-icon:focus-visible {
+    outline: 2px solid #1e90ff;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Base tooltip styles */
+.tooltip {
+    position: absolute;
+    box-sizing: border-box;
+
+    /* Base position (will be overridden by variant class) */
+    top: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+
+    background: #1f2937;
+    /* dark background */
+    color: #fff;
+    padding: 8px 10px;
+    font-size: 13px;
+    line-height: 1.35;
+    border-radius: 6px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+
+    /* Wrap text cleanly */
+    white-space: normal;
+    word-break: normal;
+    /* reset any global break-all */
+    overflow-wrap: normal;
+    /* do not break anywhere by default */
+    hyphens: auto;
+
+    /* Avoid collapsing in flex contexts, constrain width */
+    flex: 0 0 auto;
+    min-width: 220px;
+    /* sensible minimum */
+    max-width: 320px;
+    /* keep it from getting too wide */
+    width: max-content;
+    /* grow to fit content up to max-width */
+
+    z-index: 9999;
+    display: none;
+    /* default hidden */
+}
+
+/* Arrow (base). Will be repositioned by variant class */
+.tooltip::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent transparent #1f2937 transparent;
+}
+
+/* Variant: Top-right float (above the icon, nudged to the right) */
+.tooltip.top-right-float {
+    top: auto;
+    bottom: calc(100% + 8px);
+    /* above the icon with an 8px gap */
+    left: 50%;
+    transform: translateX(8px);
+    /* nudge ~8px to the right from center */
+}
+
+.tooltip.top-right {
+    top: auto;
+    /* above the icon */
+    bottom: calc(100% + 8px);
+    /* 8px gap; adjust as needed */
+    left: auto;
+    right: 0;
+    /* align the tooltip box to the icon's right edge */
+    transform: none;
+    /* no centering translate */
+
+}
+
+/* Arrow under the tooltip body, slightly right of center */
+.tooltip.top-right-float::after {
+    top: auto;
+    bottom: -6px;
+    left: 40%;
+    /* move arrow slightly right; adjust 35–60% */
+    transform: translateX(-50%);
+    border-color: #1f2937 transparent transparent transparent;
+    /* arrow pointing DOWN */
+}
+
+.tooltip.top-right::after {
+    top: auto;
+    bottom: -6px;
+    left: auto;
+    right: 10px;
+    /* tweak this to align the arrow tip with the icon */
+    transform: none;
+    border-width: 6px;
+    border-style: solid;
+    border-color: #1f2937 transparent transparent transparent;
+}
+
+/* Show tooltip ONLY when icon is hovered or focused */
+.tooltip-icon:hover+.tooltip,
+.tooltip-icon:focus+.tooltip {
+    display: block;
+}
+
+/* Keep hidden unless shown via hover/focus */
+.tooltip[hidden] {
+    display: none;
+}
+
+/* Optional: tweak the SVG color */
+.info-svg {
+    color: #1e90ff;
+}

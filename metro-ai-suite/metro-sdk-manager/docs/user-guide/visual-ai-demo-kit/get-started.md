@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Visual AI Demo Kit provides a comprehensive demonstration environment for computer vision applications using Intel's optimized tools and frameworks. This guide demonstrates the installation process and provides practical AI application implementations including smart parking, smart intersection, and other visual AI use cases using DLStreamer and OpenVINO.
+The Visual AI Demo Kit provides a comprehensive demonstration environment for computer vision applications using Intel's optimized tools and frameworks. This guide demonstrates the installation process and provides practical AI application implementations including smart parking, smart intersection, and other visual AI use cases using DL Streamer and OpenVINO.
 
 ## Learning Objectives
 
@@ -36,7 +36,7 @@ curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/he
 The installation process configures the following components:
 
 - Docker containerization platform
-- Intel DLStreamer video analytics framework
+- DL Streamer video analytics framework
 - OpenVINO inference optimization toolkit
 - Grafana dashboard for monitoring
 - MQTT Broker for messaging
@@ -86,8 +86,8 @@ docker ps
 - Grafana Dashboard
 - DL Streamer Pipeline Server
 - MQTT Broker
-- Node-RED (for applications without Scenescape)
-- Scenescape services (for Smart Intersection only)
+- Node-RED (for applications without Intel® SceneScape)
+- Intel® SceneScape services (for Smart Intersection only)
 
 </details>
 
@@ -121,7 +121,7 @@ docker compose down
 
 The Visual AI Demo Kit implements a microservice architecture with the following components:
 
-1. **DLStreamer Pipeline Server**: Handles video analytics and AI inference processing
+1. **DL Streamer Pipeline Server**: Handles video analytics and AI inference processing
 2. **Grafana Dashboard**: Provides real-time visualization and monitoring
 3. **MQTT Broker**: Manages message communication between services
 4. **Node-RED**: Orchestrates workflow automation and data processing
@@ -135,7 +135,7 @@ The resulting application provides a complete visual AI solution with real-time 
 
 The Visual AI Demo Kit integrates multiple technologies to provide a comprehensive demonstration environment:
 
-- DLStreamer Pipeline Server
+- DL Streamer Pipeline Server
 - Grafana Dashboard
 - MQTT Broker
 - Node-RED
@@ -175,9 +175,9 @@ Create compelling visualization experiences for your AI applications. This tutor
 
 ### Technical Documentation
 
-- [DLStreamer](http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html)
+- [DL Streamer](http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html)
   \- Comprehensive documentation for Intel's GStreamer-based video analytics framework
-- [DLStreamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   \- RESTful microservice architecture documentation for scalable video analytics deployment
 - [OpenVINO](https://docs.openvino.ai/2025/get-started.html)
   \- Complete reference for Intel's cross-platform inference optimization toolkit

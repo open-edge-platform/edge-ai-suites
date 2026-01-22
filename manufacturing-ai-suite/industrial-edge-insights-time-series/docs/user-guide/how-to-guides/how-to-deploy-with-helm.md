@@ -41,7 +41,10 @@ hide_directive-->
 
 **Option B: Generate Helm charts**
 
-    `tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-weekly.tgz`
+1. Navigate to the source directory:
+   ```bash
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series  # path relative to git clone folder
+   ```
 
 2. Generate the charts:
    ```bash

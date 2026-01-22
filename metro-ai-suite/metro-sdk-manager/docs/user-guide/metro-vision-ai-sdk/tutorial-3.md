@@ -49,12 +49,12 @@ This tutorial requires **Ubuntu Desktop** with a physical display and active gra
 - Ubuntu Server (no GUI)
 - Remote SSH sessions without X11 forwarding
 - Headless systems
- 
+
 You must be logged in to a local desktop session with a connected monitor or Remote Desktop/VNC connection for the video output to display correctly.
 
 ## Tutorial Steps
 
-### Step 1: Create Working Directory 
+### Step 1: Create Working Directory
 
 Set up your workspace and download a sample city intersection video
 
@@ -75,7 +75,7 @@ This sample video shows a busy city intersection with vehicles, pedestrians, and
 Download the YOLOv10s object detection model and convert it to OpenVINO format:
 
 ```bash
-# Download YOLOv10s model using DLStreamer container
+# Download YOLOv10s model using DL Streamer container
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
@@ -158,37 +158,37 @@ def postprocess(frame, results):
     # YOLOv10 output shape: [1, 300, 6] where 6 = [x1, y1, x2, y2, conf, class_id]
     detections = np.squeeze(results)  # Remove batch dimension
     ih, iw, _ = frame.shape
-    
+
     print(f"Detections shape: {detections.shape}")  # Debug info
-    
+
     for det in detections:
         conf = det[4]
         if conf < conf_threshold:
             continue
-        
+
         # YOLOv10 output: [x1, y1, x2, y2, conf, class_id]
         x1, y1, x2, y2 = det[:4]
         class_id = int(det[5])
-        
+
         # Coordinates are normalized to input size (640x640)
         # Scale to original frame size
         x1 = int(x1 * iw / w)
         y1 = int(y1 * ih / h)
         x2 = int(x2 * iw / w)
         y2 = int(y2 * ih / h)
-        
+
         # Ensure coordinates are within frame bounds
         x1 = max(0, min(x1, iw))
         y1 = max(0, min(y1, ih))
         x2 = max(0, min(x2, iw))
         y2 = max(0, min(y2, ih))
-        
+
         color = colors[class_id % len(colors)]
         cv2.rectangle(frame, (x1, y1), (x2, y2), color, thickness=3)
         label = class_names[class_id] if class_id < len(class_names) else f"ID:{class_id}"
         cv2.putText(frame, label, (x1, y1 - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, thickness=3)
-        
+
         print(f"Detection: class={class_id}, conf={conf:.2f}, box=[{x1},{y1},{x2},{y2}]")  # Debug
 
     return frame
@@ -250,7 +250,7 @@ docker run -it --rm \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
   --user root \
-  openvino/ubuntu24_dev:2025.3.0 
+  openvino/ubuntu24_dev:2025.3.0
 ```
 ```bash
 apt update
@@ -259,7 +259,7 @@ pip install opencv-python "numpy<2"
 
 ```
 ```bash
-python3 /home/openvino/inference.py 
+python3 /home/openvino/inference.py
 ```
 
 **Expected Console Output:**
@@ -282,7 +282,7 @@ docker run -it --rm \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
   --user root \
-  openvino/ubuntu24_dev:2025.3.0 
+  openvino/ubuntu24_dev:2025.3.0
 ```
 ```bash
 apt update
@@ -290,7 +290,7 @@ apt install -y libgtk2.0-dev pkg-config libcanberra-gtk-module libcanberra-gtk3-
 pip install opencv-python "numpy<2"
 ```
 ```bash
-python3 /home/openvino/inference.py 
+python3 /home/openvino/inference.py
 ```
 
 **Custom Thresholds:**

@@ -1,0 +1,13 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+.python-version
+__pycache__/
+.gitignore
+.dockerignore
+docker-compose.yml
+Dockerfile
+README.md
+compose.yaml
+.venv/
+venv/

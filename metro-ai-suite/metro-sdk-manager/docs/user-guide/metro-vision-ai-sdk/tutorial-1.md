@@ -53,10 +53,10 @@ wget -O bottle-detection.mp4 https://storage.openvinotoolkit.org/test_data/video
 
 ### Step 2: Download Pre-trained Model
 
-Download the YOLOv10s model using the DLStreamer container:
+Download the YOLOv10s model using the DL Streamer container:
 
 ```bash
-# Download YOLOv10s model using DLStreamer
+# Download YOLOv10s model using DL Streamer
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \

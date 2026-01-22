@@ -1,19 +1,9 @@
-# SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions
-# and limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import logging
+import os
 from pathlib import Path
 import sys
 from tempfile import NamedTemporaryFile
@@ -37,10 +27,17 @@ def create_modified_yaml(device):
             / 'object_detection_pipeline.yaml'
         )
 
+        # Get package share directory for dynamic path resolution
+        package_share_dir = get_package_share_directory('object_detection_tutorial')
+
         with template_path.open('r') as file:
             config = yaml.safe_load(file)
 
-        config['Pipelines'][0]['infers'][0]['engine'] = device
+        # Update paths dynamically using ROS package share directory
+        pipeline = config['Pipelines'][0]
+        pipeline['input_path'] = os.path.join(package_share_dir, 'image', 'coco_bike.jpg')
+        pipeline['infers'][0]['label'] = os.path.join(package_share_dir, 'label', 'object.labels')
+        pipeline['infers'][0]['engine'] = device
 
         with NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as tmp_file:
             yaml.safe_dump(config, tmp_file)
@@ -73,6 +70,17 @@ def generate_launch_description(*args, **kwargs):
 
         modified_config_path = create_modified_yaml(selected_device)
 
+        default_rviz = os.path.join(
+            get_package_share_directory('object_detection_tutorial'), 'rviz', 'default.rviz'
+        )
+
+        rviz_node = Node(
+            package='rviz2',
+            executable='rviz2',
+            output='screen',
+            arguments=['--display-config', default_rviz],
+        )
+
         openvino_node = Node(
             package='openvino_node',
             executable='pipeline_with_params',
@@ -88,7 +96,7 @@ def generate_launch_description(*args, **kwargs):
             output='screen',
         )
 
-        return [openvino_node]
+        return [openvino_node, rviz_node]
 
     return LaunchDescription(
         [

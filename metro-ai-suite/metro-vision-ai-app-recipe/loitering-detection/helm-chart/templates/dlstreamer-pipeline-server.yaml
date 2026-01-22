@@ -43,6 +43,14 @@ spec:
       initContainers:
       - name: video-downloader
         image: curlimages/curl:latest
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
         command:
         - /bin/sh
         - -c
@@ -64,6 +72,14 @@ spec:
           mountPath: /tmp/videos
       - name: model-downloader
         image: intel/dlstreamer:2025.1.2-ubuntu24
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
         command:
         - /bin/sh
         - -c
@@ -90,6 +106,15 @@ spec:
         {{- if $.Values.privileged_access_required }}
         securityContext:
           privileged: true  # Required for direct access to /dev
+        {{- else }}
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          runAsUser: 1999
+          capabilities:
+            drop:
+              - ALL
         {{- end }}
         {{- if $.Values.gpu.enabled }}
         resources:
@@ -99,12 +124,14 @@ spec:
         volumeMounts:
         - mountPath: /var/cache/pipeline_root
           name: vol-pipeline-root-tmpfs0
-        - name: dev
-          mountPath: /dev
+        - name: dev-gpu
+          mountPath: /dev/dri
+          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
+        - name: dev-npu
+          mountPath: /dev/accel
+          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
         - name: dev-shm
           mountPath: /dev/shm
-        - name: tmp
-          mountPath: /tmp
         - name: var-tmp
           mountPath: /var/tmp
         - name: run-udev
@@ -158,15 +185,15 @@ spec:
       volumes:
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}
-      - name: dev
+      - name: dev-gpu
         hostPath:
-          path: /dev
+          path: /dev/dri
+      - name: dev-npu
+        hostPath:
+          path: /dev/accel
       - name: dev-shm
         hostPath:
           path: /dev/shm
-      - name: tmp
-        hostPath:
-          path: /tmp
       - name: var-tmp
         hostPath:
           path: /var/tmp

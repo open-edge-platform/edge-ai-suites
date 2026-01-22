@@ -1,0 +1,97 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: fusion-analytics
+  name: deployment-fusion-analytics
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fusion-analytics
+  template:
+    metadata:
+      labels:
+        app: fusion-analytics
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+      - name: fusion-analytics
+        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.fusion_analytics_image }}{{ if .Values.images.image_suffix }}-{{ .Values.images.image_suffix }}{{ end }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          runAsUser: {{ .Values.env.TIMESERIES_UID }}
+          runAsGroup: {{ .Values.env.TIMESERIES_UID }}
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        env:
+        # MQTT Configuration
+        - name: MQTT_BROKER
+          value: "{{ .Values.config.mqttbroker.name }}"
+        - name: MQTT_PORT
+          value: "{{ .Values.config.mqttbroker.mqttbroker_port }}"
+        - name: no_proxy
+          value: "{{ .Values.config.mqttbroker.name }},{{ .Values.config.influx_db_server.name }},{{ .Values.env.timeseries_no_proxy }}"
+        - name: NO_PROXY
+          value: "{{ .Values.config.mqttbroker.name }},{{ .Values.config.influx_db_server.name }},{{ .Values.env.timeseries_no_proxy }}"
+        # Topic Configuration
+        - name: VISION_TOPIC
+          value: "vision_weld_defect_classification"
+        - name: TS_TOPIC
+          value: "ts_weld_anomaly_detection"
+        - name: FUSION_TOPIC
+          value: "fusion/anomaly_detection_results"
+        # Performance Configuration
+        - name: BUFFER_SIZE
+          value: "100"
+        - name: TOLERANCE_NS
+          value: "{{ .Values.env.TOLERANCE_NS }}"
+        # InfluxDB Configuration
+        - name: INFLUXDB_HOST
+          value: "{{ .Values.config.influx_db_server.name }}"
+        - name: INFLUXDB_PORT
+          value: "{{ .Values.config.influx_db_server.influx_http }}"
+        - name: INFLUXDB_DB
+          value: "datain"
+        - name: INFLUXDB_USERNAME
+          value: "{{ .Values.env.INFLUXDB_USERNAME }}"
+        - name: INFLUXDB_PASSWORD
+          value: "{{ .Values.env.INFLUXDB_PASSWORD }}"
+        # Python Configuration
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: FUSION_MODE
+          value: "{{ .Values.env.FUSION_MODE }}"
+        - name: LOG_LEVEL
+          value: "{{ .Values.env.LOG_LEVEL }}"
+        # Proxy Configuration
+        - name: HTTP_PROXY
+          value: "{{ .Values.env.HTTP_PROXY }}"
+        - name: HTTPS_PROXY
+          value: "{{ .Values.env.HTTPS_PROXY }}"
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: app-volume
+          mountPath: /app/data
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: app-volume
+        emptyDir: {}
+      restartPolicy: Always

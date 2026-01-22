@@ -4,7 +4,7 @@
 **Sample Description**: This tutorial demonstrates how to build an intelligent tolling system using edge AI technologies for real-time vehicle detection, license plate recognition, and vehicle attribute analysis.
 -->
 
-This tutorial walks you through creating an AI-powered tolling system that automatically detects vehicles, recognizes license plates, and analyzes vehicle attributes in real-time. The system leverages Intel's DLStreamer framework with pre-trained AI models to process video streams from toll booth cameras, enabling automated toll collection and traffic monitoring.
+This tutorial walks you through creating an AI-powered tolling system that automatically detects vehicles, recognizes license plates, and analyzes vehicle attributes in real-time. The system leverages Intel's Deep Learning Streamer (DL Streamer) framework with pre-trained AI models to process video streams from toll booth cameras, enabling automated toll collection and traffic monitoring.
 
 <!--
 **What You Can Do**: This guide covers the complete development workflow for building an AI tolling application.
@@ -14,12 +14,11 @@ By following this guide, you will learn how to:
 
 - **Set up the AI Tolling Application**: Create a new application based on the Smart Parking template and configure it for tolling use cases
 - **Download and Configure AI Models**: Install YOLO object detection models and Intel's specialized license plate recognition models
-- **Configure Video Processing Pipeline**: Set up the DLStreamer pipeline for real-time vehicle detection and license plate recognition
+- **Configure Video Processing Pipeline**: Set up the DL Streamer pipeline for real-time vehicle detection and license plate recognition
 - **Deploy and Run the System**: Launch the containerized application and monitor its performance
 
 ## Prerequisites
 
-- Verify that your system meets the [minimum system requirements](./system-requirements.md) for running edge AI applications
 - Install Docker: [Docker Installation Guide](https://docs.docker.com/get-docker/)
 - Enable running Docker without "sudo": [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/)
 - Ensure you have at least 8GB of available disk space for AI models and video files
@@ -100,12 +99,12 @@ python3 -m pip install openvino-dev[onnx,tensorflow2]
 
 omz_downloader --name license-plate-recognition-barrier-0007 -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
 omz_converter --name license-plate-recognition-barrier-0007  -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/ -d /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
-wget -O "/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/public/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json" "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/master/samples/gstreamer/model_proc/intel/license-plate-recognition-barrier-0007.json"
+wget -O "/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/public/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json" "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/license-plate-recognition-barrier-0007.json"
 
 
 omz_downloader --name vehicle-attributes-recognition-barrier-0039 -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
 omz_converter --name  vehicle-attributes-recognition-barrier-0039 -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/ -d /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
-wget -O "/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json" "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/master/samples/gstreamer/model_proc/intel/vehicle-attributes-recognition-barrier-0039.json"
+wget -O "/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json" "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/vehicle-attributes-recognition-barrier-0039.json"
 
 echo "Fix ownership..."
 chown -R "$(id -u):$(id -g)" ai-tolling/src/dlstreamer-pipeline-server/models ai-tolling/src/dlstreamer-pipeline-server/videos 2>/dev/null || true
@@ -130,7 +129,7 @@ Model Download Process Details
 The installation script performs the following operations:
 
 1. Creates the required directory structure under `src/dlstreamer-pipeline-server/models/`
-2. Runs a DLStreamer container to access model download tools
+2. Runs a DL Streamer container to access model download tools
 3. Downloads public YOLO models using the built-in download scripts
 4. Uses OpenVINO Model Zoo downloader for Intel-optimized models
 5. Downloads corresponding model configuration files for proper inference
@@ -255,7 +254,7 @@ docker compose up -d
 The deployment process will:
 
 - Pull required container images
-- Start the DLStreamer pipeline server
+- Start the DL Streamer pipeline server
 - Initialize the Node-RED flow management
 - Launch the Grafana dashboard
 - Set up the MQTT message broker
@@ -402,5 +401,5 @@ After successfully setting up the AI Tolling system, consider these enhancements
 
 ## Supporting Resources
 
-- [DLStreamer Documentation](https://dlstreamer.github.io/)
+- [DL Streamer Documentation](https://dlstreamer.github.io/)
 - [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)

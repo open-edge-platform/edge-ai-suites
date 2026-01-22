@@ -1,10 +1,49 @@
 # ITS Path Planner Plugin Customization
 
-The ROS 2 navigation bring-up application is started using the TurtleBot 3 Gazebo
-simulation, and it receives as input parameter its_nav2_params.yaml.
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
+
+The ROS 2 navigation bring-up application is started using
+the TurtleBot 3 Gazebo simulation
+and it receives as input parameter `nav2_params_jazzy.yaml`.
 
 To use the ITS path planner plugin, the following parameters are added in
-its_nav2_params.yaml:
+`nav2_params_jazzy.yaml`:
+
+> ```yaml
+> planner_server:
+>   ros__parameters:
+>     expected_planner_frequency: 20.0
+>     use_sim_time: True
+>     planner_plugins: ["GridBased"]
+>     costmap_update_timeout: 1.0
+>     GridBased:
+>       plugin: "its_planner/ITSPlanner"
+>       interpolation_resolution: 0.05
+>       catmull_spline: False
+>       smoothing_window: 15
+>       buffer_size: 10
+>       build_road_map_once: True
+>       enable_k: False
+>       min_samples: 250
+>       roadmap: "PROBABLISTIC"
+>       w: 32
+>       h: 32
+>       n: 2
+> ```
+
+
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
+
+The ROS 2 navigation bring-up application is started using
+the TurtleBot 3 Gazebo simulation
+and it receives as input parameter `nav2_params_humble.yaml`.
+
+To use the ITS path planner plugin, the following parameters are added in
+`nav2_params_humble.yaml`:
 
 > ```yaml
 > planner_server:
@@ -19,6 +58,7 @@ its_nav2_params.yaml:
 >       smoothing_window: 15
 >       buffer_size: 10
 >       build_road_map_once: True
+>       enable_k: False
 >       min_samples: 250
 >       roadmap: "PROBABLISTIC"
 >       w: 32
@@ -26,7 +66,12 @@ its_nav2_params.yaml:
 >       n: 2
 > ```
 
+<!--hide_directive:::
+::::hide_directive-->
+
+
 ## ITS Path Planner Plugin Parameters
+
 
 ```bash
 catmull_spline:
@@ -83,18 +128,22 @@ The height of the window for intelligent sampling
 n:
 ```
 
-The minimum number of samples that is required in an area defined by `w` and
-`h`
+The minimum number of samples that is required in an area defined by `w` and `h`.
 
-You can modify these values by editing the file below for the default
-ITS planner, at lines 274-291:
+## ITS Path Planner Plugin Parameters modification
+
+### Default ITS Planner
+
+You can modify plugin parameters by editing the `planner_server` section
+in the configuration file below for the `default ITS planner`:
+
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
 <!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
-/opt/ros/jazzy/share/its_planner/nav2_params.yaml
+/opt/ros/jazzy/share/its_planner/nav2_params_jazzy.yaml
 ```
 
 <!--hide_directive:::
@@ -102,20 +151,24 @@ ITS planner, at lines 274-291:
 <!--hide_directive:sync: humblehide_directive-->
 
 ```bash
-/opt/ros/humble/share/its_planner/nav2_params.yaml
+/opt/ros/humble/share/its_planner/nav2_params_humble.yaml
 ```
 
 <!--hide_directive:::
 ::::hide_directive-->
 
-You can modify these values by editing the file below for the Ackermann ITS planner, at lines 274-296:
+
+### Ackermann ITS Planner
+
+You can modify plugin parameters by editing the `planner_server` section
+in the configuration file below for the `Ackermann ITS planner`:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
 <!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
-/opt/ros/jazzy/share/its_planner/nav2_params_dubins.yaml
+/opt/ros/jazzy/share/its_planner/nav2_params_dubins_jazzy.yaml
 ```
 
 <!--hide_directive:::
@@ -123,7 +176,7 @@ You can modify these values by editing the file below for the Ackermann ITS plan
 <!--hide_directive:sync: humblehide_directive-->
 
 ```bash
-/opt/ros/humble/share/its_planner/nav2_params_dubins.yaml
+/opt/ros/humble/share/its_planner/nav2_params_dubins_humble.yaml
 ```
 
 <!--hide_directive:::

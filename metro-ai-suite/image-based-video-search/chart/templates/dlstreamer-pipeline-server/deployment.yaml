@@ -107,12 +107,14 @@ spec:
           subPath: person-vehicle-bike-detection-2004.json
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline-root'
           mountPath: /var/cache/pipeline_root
-        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-tmp'
-          mountPath: /tmp
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
           mountPath: /models
-        - name: dev
-          mountPath: /dev
+        - name: dev-gpu
+          mountPath: /dev/dri
+          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
+        - name: dev-npu
+          mountPath: /dev/accel
+          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
         {{- if .Values.dlstreamerpipelineserver.resources }}
         resources:
           {{ .Values.dlstreamerpipelineserver.resources | toYaml | nindent 10 }}
@@ -132,9 +134,12 @@ spec:
       - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
         emptyDir:
           sizeLimit: 10Gi
-      - name: dev
+      - name: dev-gpu
         hostPath:
-          path: /dev
+          path: /dev/dri
+      - name: dev-npu
+        hostPath:
+          path: /dev/accel
       {{- if .Values.pullSecrets }}
       imagePullSecrets:
       {{- .Values.pullSecrets | toYaml | nindent 6 }}

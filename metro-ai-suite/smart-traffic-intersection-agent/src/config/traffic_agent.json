@@ -1,0 +1,45 @@
+{
+  "intersection": {
+    "name": "Intersection-1",
+    "latitude": 33.3091336,
+    "longitude": -111.9353095
+  },
+  "mqtt": {
+    "host": "broker.scenescape.intel.com",
+    "port": 1883,
+    "use_tls": true,
+    "cert_required": false,
+    "verify_hostname": false,
+    "ca_cert_path": "secrets/certs/scenescape-ca.pem",
+    "camera_topics": [
+      "scenescape/data/camera/camera1",
+      "scenescape/data/camera/camera2",
+      "scenescape/data/camera/camera3",
+      "scenescape/data/camera/camera4"
+    ],
+    "image_topics": [
+      "scenescape/image/camera/camera1",
+      "scenescape/image/camera/camera2",
+      "scenescape/image/camera/camera3",
+      "scenescape/image/camera/camera4"
+    ],
+    "rate_limit_seconds": 10.0
+  },
+  "weather": {
+    "api_base_url": "https://api.weather.gov",
+    "user_agent": "traffic-intelligence (admin@example.com)",
+    "cache_duration_minutes": 11
+  },
+  "vlm": {
+    "base_url": "http://vlm-openvino-serving:8000",
+    "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "timeout_seconds": 300,
+    "max_completion_tokens": 1500,
+    "temperature": 0.1,
+    "top_p": 0.1
+  },
+  "traffic": {
+    "high_density_threshold": 10,
+    "analysis_window_seconds": 30
+  }
+}

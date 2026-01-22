@@ -1,6 +1,6 @@
 # Release Notes
 
-## v1.3.0 (Upcoming release)
+## v1.3.0
 
 ### Updates
 - Consumed latest DL Streamer Pipeline Server version 2025.2

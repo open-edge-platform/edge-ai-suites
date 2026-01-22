@@ -1,15 +1,15 @@
 **Manufacturing AI Suite (MAS)** is a comprehensive toolkit for building, deploying, and scaling AI applications in industrial environments. Powered by Intel’s Edge AI technologies, it enables real-time integration and innovation with optimized hardware.
 
 It includes:
-•	Tools for AI acceleration (for example, MQTT/OPC UA support, analytics libraries, camera system software)
-•	A complete AI pipeline for closed-loop systems
-•	Benchmarking support for evaluating performance across time series, vision, and generative AI workloads
+-	Tools for AI acceleration (for example, MQTT/OPC UA support, analytics libraries, camera system software)
+-	A complete AI pipeline for closed-loop systems
+-	Benchmarking support for evaluating performance across time series, vision, and generative AI workloads
 
-The Manufacturing AI Suite helps you develop solutions for:
-•	**Production Workflow**: Detect defects, optimize efficiency
-•	**Workplace Safety**: AI-driven risk reduction
-•	**Real-Time Insights**: Local data processing, trend tracking
-•	**Automation**: Instant alerts and corrective actions
+**Manufacturing AI Suite** helps you develop solutions for:
+-	**Production Workflow**: Detect defects, optimize efficiency
+-	**Workplace Safety**: AI-driven risk reduction
+-	**Real-Time Insights**: Local data processing, trend tracking
+-	**Automation**: Instant alerts and corrective actions
 
 **Sample Applications**
 
@@ -28,7 +28,7 @@ The Manufacturing AI Suite helps you develop solutions for:
 
 |              |             |
 |:-------------|:------------|
-| [Deep Learning Streamer](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/libraries/dl-streamer)                                     | A framework for building optimized media analytics pipelines powered by OpenVINO&trade; toolkit.                                 |
+| [Deep Learning Streamer](https://github.com/open-edge-platform/dlstreamer/tree/main)                                     | A framework for building optimized media analytics pipelines powered by OpenVINO&trade; toolkit.                                 |
 | [Deep Learning Streamer Pipeline Server](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/dlstreamer-pipeline-server)  | A containerized microservice, built on top of GStreamer, for development and deployment of video analytics pipelines.            |
 | [Model Registry](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-registry)                                      | Providing capabilities to manage the lifecycle of an AI model.                                                                   |
 | [Time Series Analytics Microservice](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/time-series-analytics)           | Built on top of **Kapacitor**, a containerized microservice for development and deployment of time series analytics capabilities |

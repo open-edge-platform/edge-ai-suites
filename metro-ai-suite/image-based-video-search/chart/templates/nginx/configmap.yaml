@@ -48,13 +48,13 @@ data:
 
         # Redirect all HTTP -> HTTPS
         server {
-            listen 80;
+            listen 8080;
             return 301 https://$host$request_uri;
         }
 
         # HTTPS server block
         server {
-            listen 443 ssl;
+            listen 8443 ssl;
             server_name localhost;
             client_max_body_size 500M;
 

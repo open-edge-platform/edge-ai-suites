@@ -1,6 +1,6 @@
 # Metro Vision AI SDK - Tutorial 5
 
-This tutorial will guide you through profiling and monitoring performance of Metro Vision AI workloads using command-line tools. You'll learn to use `perf`, `htop`, and `intel_gpu_top` to analyze system performance while running DLStreamer Pipeline Server or OpenVINO applications.
+This tutorial will guide you through profiling and monitoring performance of Metro Vision AI workloads using command-line tools. You'll learn to use `perf`, `htop`, and `intel_gpu_top` to analyze system performance while running DL Streamer Pipeline Server or OpenVINO applications.
 
 ## Prerequisites
 
@@ -54,7 +54,7 @@ ls -la /dev/dri/
 
 ## Step 3: Start Your Metro Vision AI Workload
 
-Create and start a DLStreamer pipeline that continuously runs in the background for profiling:
+Create and start a DL Streamer pipeline that continuously runs in the background for profiling:
 
 ```bash
 mkdir -p ~/metro/metro-vision-tutorial-5
@@ -63,14 +63,14 @@ cd ~/metro/metro-vision-tutorial-5
 # Download sample video for object detection
 wget -O bottle-detection.mp4 https://storage.openvinotoolkit.org/test_data/videos/bottle-detection.mp4
 
-# Download YOLOv10s model using DLStreamer container
+# Download YOLOv10s model using DL Streamer container
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
   intel/dlstreamer:2025.1.2-ubuntu24 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
 
-# Create a continuous DLStreamer pipeline script
+# Create a continuous DL Streamer pipeline script
 cat > metro_vision_pipeline.sh << 'EOF'
 #!/bin/bash
 
@@ -131,7 +131,7 @@ echo "Metro Vision AI pipeline started with PID: $PIPELINE_PID"
 echo "Use 'kill $PIPELINE_PID' to stop the pipeline when done profiling"
 ```
 
-**Note**: This creates a continuously running Docker-based DLStreamer pipeline that processes real video using the YOLOv10s object detection model, providing a realistic AI workload for performance profiling. The pipeline runs in a Docker container with access to Intel GPU hardware.
+**Note**: This creates a continuously running Docker-based DL Streamer pipeline that processes real video using the YOLOv10s object detection model, providing a realistic AI workload for performance profiling. The pipeline runs in a Docker container with access to Intel GPU hardware.
 
 ## Step 4: Monitor Overall System Performance with htop
 
@@ -176,7 +176,7 @@ sudo intel_gpu_top
 When you're done profiling, stop the background pipeline:
 
 ```bash
-# Stop the background DLStreamer pipeline
+# Stop the background DL Streamer pipeline
 pkill -9 -f metro_vision_pipeline.sh
 ```
 

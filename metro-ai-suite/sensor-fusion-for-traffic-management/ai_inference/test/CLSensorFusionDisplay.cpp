@@ -370,6 +370,20 @@ void parseReply(cv::Mat &windowImage,
     double latency;
     double e2eLatency;
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime, endTime;
+
+    auto isCornerInsideCanvas = [&](const std::vector<float> &corner_2D) {
+        if (corner_2D.size() != 16) {
+            return false;
+        }
+        for (size_t idx = 0; idx + 1 < corner_2D.size(); idx += 2) {
+            float x = corner_2D[idx];
+            float y = corner_2D[idx + 1];
+            if (x < 0 || y < 0 || x >= visualizer.config_.camera_canvas_width || y >= visualizer.config_.camera_canvas_height) {
+                return false;
+            }
+        }
+        return true;
+    };
     if (jsonTree.get<double>("latency")) {
         roi_all.clear();
         latency = jsonTree.get<double>("latency");
@@ -557,8 +571,18 @@ void parseReply(cv::Mat &windowImage,
                 }
 
                 if ("media_fusion" == display_type) {
-                    visualizer.drawCamera3DBox(windowImage, thread_id * visualizer.config_.sensor_num + (sensor_source == -1 ? 0 : sensor_source),
-                                               corner_2D_arr, cv::Scalar{0, 0, 255}, 1, cv::LINE_8);
+                    std::vector<std::vector<float>> corner_2D_in_canvas;
+                    corner_2D_in_canvas.reserve(corner_2D_arr.size());
+                    for (const auto &c : corner_2D_arr) {
+                        if (isCornerInsideCanvas(c)) {
+                            corner_2D_in_canvas.push_back(c);
+                        }
+                    }
+
+                    if (!corner_2D_in_canvas.empty()) {
+                        visualizer.drawCamera3DBox(windowImage, thread_id * visualizer.config_.sensor_num + (sensor_source == -1 ? 0 : sensor_source),
+                                                   corner_2D_in_canvas, cv::Scalar{0, 0, 255}, 1, cv::LINE_8);
+                    }
                 }
             }
         }

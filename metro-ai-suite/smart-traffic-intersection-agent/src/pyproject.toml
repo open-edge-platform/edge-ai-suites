@@ -1,0 +1,73 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+version = "1.0.0"
+name="Smart-Traffic-Intersection-Agent"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi==0.104.1",
+    "uvicorn[standard]==0.24.0",
+    "paho-mqtt==1.6.1",
+    "aiohttp==3.9.1",
+    "structlog==23.2.0",
+    "pydantic==2.5.0",
+    "python-dateutil==2.8.2",
+    "python-dotenv==1.0.0",
+    "gradio>=4.0.0",
+    "pillow>=9.0.0",
+    "markdown>=3.4.0",
+    "requests>=2.25.0",
+    "huggingface_hub==0.36.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==7.4.3",
+    "pytest-asyncio==0.21.1",
+    "httpx==0.25.2",
+    "black==23.11.0",
+    "flake8==6.1.0",
+    "mypy==1.7.1",
+]
+
+[project.scripts]
+traffic-intelligence = "traffic_intelligence.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["traffic_intelligence"]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers"
+testpaths = [
+    "tests",
+]
+asyncio_mode = "auto"

@@ -4,7 +4,7 @@ With this feature, during runtime, you can download a new model from the registr
 
 ## Contents
 
-### Launch a pipeline in DLStreamer Pipeline Server
+### Launch a pipeline in DL Streamer Pipeline Server
 1.  Set up the sample application to start a pipeline. A pipeline named `pcb_anomaly_detection_mlops` is already provided in the `pipeline-server-config.json` for this demonstration with the PCB anomaly detection sample app.
 
     > Ensure that the pipeline inference element such as gvadetect/gvaclassify/gvainference should not have a `model-instance-id` property set. If set, this would not allow the new model to be run with the same value provided in the model-instance-id.
@@ -68,21 +68,21 @@ With this feature, during runtime, you can download a new model from the registr
     ./sample_start.sh -p pcb_anomaly_detection_mlops
     ```
 
-    
+
 ### Upload a model to Model Registry
 
-   > The following section assumes Model Registry microservice is up and running. 
+   > The following section assumes Model Registry microservice is up and running.
 
    > For this demonstration we will be using Geti trained PCB anomaly detection model. Usually, the newer model is the same as older, architecture wise, but is retrained for better performance. We will using the same model and call it a different version.
 
 1.  Download and prepare the model.
     ```sh
     export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/FP16/pcb-anomaly-detection.zip'
-    
+
     curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
     ```
 
-2.  Run the following curl command to upload the local model. 
+2.  Run the following curl command to upload the local model.
     ```sh
     curl -k -L -X POST "https://<HOST_IP>/registry/models" \
     -H 'Content-Type: multipart/form-data' \

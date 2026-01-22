@@ -1,4 +1,19 @@
 # Wind Turbine Anomaly Detection
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection">
+     GitHub project
+  </a>
+  </div>
+hide_directive-->
+
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection">
+     GitHub project
+  </a>
+  </div>
+hide_directive-->
 
 This sample app demonstrates a time series use case by detecting anomalous power generation
 patterns in wind turbines, relative to wind speed. By identifying deviations, it helps
@@ -10,7 +25,6 @@ In this article, you can learn about the architecture of the sample and its data
 If you want to start working with it, instead, check out the
 [Get Started Guide](../get-started.md) or [How-to Guides](../how-to-guides/index.md)
 for Time-series applications.
-
 
 ## App Architecture
 
@@ -94,7 +108,7 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 ##### **`models/`**
 
-The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo from scikit-learn libary.
+The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo from scikit-learn library.
 More details on how it is built is accessible at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/windturbine/README.md`
 
 <!--hide_directive

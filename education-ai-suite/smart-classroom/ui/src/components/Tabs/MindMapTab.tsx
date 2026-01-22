@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from "react";
-import mermaid from "mermaid";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import "../../assets/css/MindMap.css";
 import {
@@ -23,101 +22,76 @@ import { fetchMindmap } from "../../services/api";
 import "../../assets/css/MindMap.css";
 import { useTranslation } from "react-i18next";
 
+declare global {
+  interface Window {
+    jsMind: any;
+  }
+}
+
 const activeMindmapSessions = new Set<string>();
 
-const cleanMindmapContent = (content: string): string => {
-  if (!content) return "mindmap\n  root((Main Topic))";
-  content = content.replace(/```[a-zA-Z]*\n?([\s\S]*?)```/g, "$1").trim();
-  if (!/^mindmap/.test(content)) {
-    content = "mindmap\n" + content;
+const validateJsMindData = (data: any): boolean => {
+  try {
+    if (!data || typeof data !== 'object') return false;
+    if (!data.meta || !data.format || !data.data) return false;
+    if (data.format !== 'node_tree') return false;
+    if (!data.data.id || !data.data.topic) return false;
+    return true;
+  } catch (error) {
+    return false;
   }
-  const wrapText = (text: string, maxLength: number = 25): string => {
-    if (text.length <= maxLength) return text;
-    const words = text.split(" ");
-    const lines: string[] = [];
-    let currentLine = "";
-    for (const word of words) {
-      if ((currentLine + " " + word).trim().length <= maxLength) {
-        currentLine = currentLine ? currentLine + " " + word : word;
-      } else {
-        if (currentLine) lines.push(currentLine);
-        currentLine = word;
-      }
-    }
-    if (currentLine) lines.push(currentLine);
-    return lines.join("<br/>");
-  };
-  content = content
-    .replace(/\r\n/g, "\n")
-    .split("\n")
-    .map((line) => {
-      let cleaned = line.replace(/\s+$/g, "");
-      cleaned = cleaned.replace(/^(\s*)[-*•]\s+/, "$1");
-      cleaned = cleaned.replace(/^(\s*)\|\s*/, "$1");
-      cleaned = cleaned.replace(/\t/g, "  ");
-
-      const match = cleaned.match(/^(\s*)(.*?)(\s*\([^)]*\)\s*)?$/);
-      if (match && match[2]) {
-        const indent = match[1] || "";
-        const text = match[2];
-        const suffix = match[3] || "";
-        if (!text.includes("<br/>") && text.length > 25) {
-          const wrapped = wrapText(text);
-          cleaned = indent + wrapped + suffix;
-        }
-      }
-      return cleaned;
-    })
-    .join("\n");
-  content = content.replace(/root\s*\(\(\s*(.*?)\s*\)\)/, (match, label) => {
-    const wrappedLabel = wrapText(label, 30);
-    return `root((${wrappedLabel}))`;
-  });
-
-  const lines = content.split("\n");
-  const topLevel = lines.filter((ln) => /^ {2}[^ ]/.test(ln));
-  const hasExplicitRoot = topLevel.some((ln) => /root\s*\(\(/.test(ln));
-
-  if (!hasExplicitRoot || topLevel.length > 1) {
-    const body = lines
-      .filter((ln, idx) => !(idx === 0 && ln.startsWith("mindmap")))
-      .map((ln) => "    " + ln.trim());
-
-    const wrapped = ["mindmap", "  root((Auto Root))", ...body];
-
-    return wrapped.join("\n").trim();
-  }
-
-  const rootLine = topLevel.find((l) => /root\s*\(\(/.test(l));
-
-  if (!rootLine) {
-    content =
-      "mindmap\n  root((Auto Root))\n" +
-      lines
-        .slice(1)
-        .map((l) => "    " + l.trim())
-        .join("\n");
-  } else {
-    const rootIndent = rootLine.match(/^(\s*)/)?.[1] || "  ";
-    const childIndent = rootIndent + "  ";
-    const fixedLines: string[] = [];
-
-    for (const ln of lines) {
-      if (/^ {2}root/.test(ln)) {
-        fixedLines.push(ln);
-        continue;
-      }
-      if (/^ {2}[^ ]/.test(ln)) {
-        fixedLines.push(childIndent + ln.trim());
-      } else {
-        fixedLines.push(ln);
-      }
-    }
-
-    content = fixedLines.join("\n");
-  }
-  return content.trim();
 };
+
+const cleanJsMindContent = (content: string): any => {
+  if (!content) {
+    return {
+      "meta": {
+        "name": "default",
+        "author": "ai_assistant",
+        "version": "1.0"
+      },
+      "format": "node_tree",
+      "data": {
+        "id": "root",
+        "topic": "Main Topic",
+        "children": []
+      }
+    };
+  }
+
+  try {
+    const cleanedContent = content.replace(/```[a-zA-Z]*\n?([\s\S]*?)```/g, "$1").trim();
+    const parsedData = JSON.parse(cleanedContent);
+    if (validateJsMindData(parsedData)) {
+      return parsedData;
+    } else {
+      throw new Error("Invalid jsMind format");
+    }
+  } catch (error) {
+    console.error("Failed to parse jsMind data:", error);
+    
+    const errorData = {
+      "meta": {
+        "name": "error_fallback",
+        "author": "ai_assistant", 
+        "version": "1.0"
+      },
+      "format": "node_tree",
+      "data": {
+        "id": "root",
+        "topic": "Error: Invalid Format",
+        "children": [
+          {
+            "id": "error_msg",
+            "topic": "Failed to parse mindmap data"
+          }
+        ]
+      }
+    };
+    throw new Error("INVALID_FORMAT");
+  }
+};
+
 const MindMapTab: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -126,86 +100,181 @@ const MindMapTab: React.FC = () => {
   const sessionId = useAppSelector((s) => s.ui.sessionId);
   const shouldStartMindmap = useAppSelector((s) => s.ui.shouldStartMindmap);
 
-  const { finalText, isRendered, svg } = useAppSelector((s) => s.mindmap);
+  const { finalText, isRendered, sessionId: mindmapSessionId } = useAppSelector((s) => s.mindmap);
 
   const startedRef = useRef(false);
-  const mermaidRef = useRef<HTMLDivElement>(null);
+  const jsmindRef = useRef<HTMLDivElement>(null);
+  const jsmindInstance = useRef<any>(null);
   const startTimeRef = useRef<number | null>(null);
+  const isInitializedRef = useRef(false);
+
+  const cleanupJsMind = () => {
+    try {
+      if (jsmindInstance.current) {
+        if (typeof jsmindInstance.current.remove === 'function') {
+          jsmindInstance.current.remove();
+        } else if (typeof jsmindInstance.current.destroy === 'function') {
+          jsmindInstance.current.destroy();
+        } else if (typeof jsmindInstance.current.clear === 'function') {
+          jsmindInstance.current.clear();
+        }
+        jsmindInstance.current = null;
+      }
+      
+      if (jsmindRef.current) {
+        jsmindRef.current.innerHTML = '';
+      }
+    } catch (error) {
+      console.warn('Error during jsMind cleanup:', error);
+      if (jsmindRef.current) {
+        jsmindRef.current.innerHTML = '';
+      }
+      jsmindInstance.current = null;
+    }
+  };
 
   useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: "default",
-      securityLevel: "loose",
-      mindmap: { useMaxWidth: true },
-    });
+    const loadJsMind = async () => {
+      if (window.jsMind) return;
+      const cssLink = document.createElement('link');
+      cssLink.rel = 'stylesheet';
+      cssLink.href = '//cdn.jsdelivr.net/npm/jsmind@0.8.5/style/jsmind.css';
+      document.head.appendChild(cssLink);
+      const script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/jsmind@0.8.5/es6/jsmind.js';
+      script.onload = () => {
+        console.log('jsMind loaded successfully');
+      };
+      script.onerror = () => {
+        console.error('Failed to load jsMind');
+      };
+      document.head.appendChild(script);
+    };
+
+    loadJsMind();
   }, []);
 
   useEffect(() => {
-    if (svg && mermaidRef.current && !mermaidRef.current.innerHTML) {
-      mermaidRef.current.innerHTML = svg;
+    if (!finalText || !jsmindRef.current) return;
+    if (isRendered && !isInitializedRef.current) {
+      renderMindmap();
+      return;
     }
-  }, [svg]);
+    if (!isRendered) {
+      renderMindmap();
+    }
+  }, [finalText, isRendered]);
 
-  useEffect(() => {
-    if (!finalText || !mermaidRef.current || isRendered) return;
+  const renderMindmap = async () => {
+    let isInvalidFormat = false;
+    
+    try {
+      let attempts = 0;
+      while (!window.jsMind && attempts < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
 
-    const renderMermaid = async () => {
+      if (!window.jsMind) {
+        throw new Error("jsMind library not loaded");
+      }
+
+      let mindData;
       try {
-        const cleaned = cleanMindmapContent(finalText);
-
-        const { svg } = await mermaid.render("diagram-" + Date.now(), cleaned);
-
-        if (/Syntax error/i.test(svg) || /mermaid version/i.test(svg)) {
-          throw new Error("Mermaid syntax error");
-        }
-
-        mermaidRef.current!.innerHTML = svg;
-        dispatch(setSVG(svg));
-
-        if (startTimeRef.current) {
-          dispatch(setGenerationTime(performance.now() - startTimeRef.current));
-        }
-
-        dispatch(setRendered(true));
+        mindData = cleanJsMindContent(finalText || ' ');
       } catch (error: any) {
-        console.error("❌ Mermaid render error:", error);
+        if (error.message === "INVALID_FORMAT") {
+          isInvalidFormat = true;
+          mindData = {
+            "meta": {
+              "name": "error_fallback",
+              "author": "ai_assistant", 
+              "version": "1.0"
+            },
+            "format": "node_tree",
+            "data": {
+              "id": "root",
+              "topic": "Error: Invalid Format",
+              "children": [
+                {
+                  "id": "error_msg",
+                  "topic": "Failed to parse mindmap data"
+                }
+              ]
+            }
+          };
+        } else {
+          throw error;
+        }
+      }
+      cleanupJsMind();
+      const options = {
+        container: jsmindRef.current,
+        theme: 'primary',
+        editable: true,
+        mode: 'full',
+        view: {
+          engine: 'svg',
+          hmargin: 120,        
+          vmargin: 60,         
+          line_width: 2,
+          line_color: '#555',  
+          draggable: true,
+          hide_scrollbars_when_draggable: false,
+          line_style: 'curved',
+          node_overflow: 'wrap', 
+          expander_style: 'char'
+        },
+      };
 
-        dispatch(setError("Mindmap rendering failed"));
+      jsmindInstance.current = new window.jsMind(options);
+      jsmindInstance.current.show(mindData);
+
+      isInitializedRef.current = true;
+
+      if (startTimeRef.current && !isRendered) {
+        dispatch(setGenerationTime(performance.now() - startTimeRef.current));
+      }
+
+      if (!isRendered) {
         dispatch(setRendered(true));
-
-        mermaidRef.current!.innerHTML = `
-          <div class="mermaid-error">
-            ⚠️ ${t("mindmap.invalidFormat") || "Invalid mindmap format"}
-          </div>
-        `;
-
+      }
+      if (isInvalidFormat) {
+        dispatch(setError("MindMap generation failed due to invalid format"));
+        dispatch(uiMindmapFailed());
         window.dispatchEvent(
-          new CustomEvent("global-error", {
+          new CustomEvent("global-notification", {
             detail: {
-              message: "Failed to render MindMap: Invalid format",
+              message: t("notifications.mindmapError") || "MindMap generation failed due to invalid format.",
               type: "error",
             },
           })
         );
       }
-    };
 
-    renderMermaid();
-  }, [finalText, dispatch, isRendered, t]);
+    } catch (error: any) {
+      console.error("❌ jsMind render error:", error);
+
+      dispatch(setError("Mindmap rendering failed"));
+      dispatch(setRendered(true));
+      dispatch(uiMindmapFailed());
+    }
+  };
 
   useEffect(() => {
     if (!mindmapEnabled || !sessionId || !shouldStartMindmap) return;
+    if (mindmapSessionId === sessionId && finalText) {
+      return;
+    }
+    
     if (activeMindmapSessions.has(sessionId) || startedRef.current) return;
-
     startedRef.current = true;
     activeMindmapSessions.add(sessionId);
     startTimeRef.current = performance.now();
 
-    dispatch(clearMindmap());
+    dispatch(mmStart(sessionId));
     dispatch(clearMindmapStartRequest());
     dispatch(uiMindmapStart());
-    dispatch(mmStart());
 
     (async () => {
       try {
@@ -221,29 +290,32 @@ const MindMapTab: React.FC = () => {
         console.error("❌ Mindmap fetch error:", err);
         dispatch(setError(err.message || "Mindmap generation failed"));
         dispatch(uiMindmapFailed());
-
-        if (mermaidRef.current) {
-          mermaidRef.current.innerHTML = `
-            <div class="mermaid-error">
-              ⚠️ Failed to generate mindmap: ${err.message}
-            </div>
-          `;
-        }
       } finally {
         dispatch(clearMindmapStartRequest());
       }
     })();
-  }, [mindmapEnabled, shouldStartMindmap, sessionId, dispatch]);
+  }, [mindmapEnabled, shouldStartMindmap, sessionId, dispatch, mindmapSessionId, finalText]);
 
+  useEffect(() => {
+    isInitializedRef.current = false;
+    startedRef.current = false;
+  }, [sessionId]);
+
+  useEffect(() => {
+    return () => {
+      cleanupJsMind();
+      isInitializedRef.current = false;
+    };
+  }, []);
 
   return (
-    <div className="mindmap-tab">
-      <div
-        className="mindmap-wrapper"
-        style={{ display: isRendered ? "flex" : "none" }}
-      >
-        <div className="mindmap-content">
-          <div ref={mermaidRef} className="mermaid-container" />
+    <div className="mindmap-tab-fullscreen">
+      <div className="mindmap-wrapper-fullscreen">
+        <div className="mindmap-content-fullscreen">
+          <div 
+            ref={jsmindRef} 
+            className="jsmind-container-fullscreen"
+          />
         </div>
       </div>
     </div>

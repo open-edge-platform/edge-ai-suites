@@ -46,6 +46,9 @@ spec:
       labels:
         app: mediamtx
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
       imagePullSecrets:
       - name: registryauth
@@ -86,5 +89,13 @@ spec:
         - name: MTX_WEBRTCTRACKGATHERTIMEOUT
           value: "10s"
         image: {{ $.Values.mediamtx.image }}:{{ $.Values.mediamtx.imageTag }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
         imagePullPolicy: {{ .Values.imagePullPolicy }}
       restartPolicy: Always

@@ -63,6 +63,8 @@ Once the tutorial is started, the ``mobilenetssd`` model is downloaded, converte
 
 ## Expected Output
 
+The RViz window will show up and the image with detected objects will be displayed, as presented below:
+
 ![Object_detection](../../../../images/Object_detection.png)
 
 To close this application, type ``Ctrl-c`` in the terminal where you ran the launch script.

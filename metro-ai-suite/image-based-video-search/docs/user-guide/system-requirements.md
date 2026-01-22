@@ -10,26 +10,24 @@ help you set up and run the application efficiently.
 - Ubuntu 22.04 LTS
 - Windows 10/11 with WSL 2
 
-<!--
 **Hardware Platforms**
-- Intel® Core™ processors (i5 or higher)
-- Intel® Xeon® processors (recommended for large deployments)
--->
+- 12th Generation Intel® Core™ processor or above with Intel® HD Graphics or , or Intel® Xeon® processor
+
 
 ## Minimum Requirements
-
-| **Component**       | **Recommended**    |
-| ------------------- | ------------------ |
-| **Processor**       | Intel Ultra 7-155H |
-| **Memory**          | 8 GB               |
-| **Disk Space**      | 256 GB SSD         |
-| **GPU/Accelerator** | Intel Arc Graphics |
+| **Component**      | **Minimum Requirement**   | **Recommended**         |
+|---------------------|---------------------------|--------------------------|
+| **Processor**       | 12th Generation Intel® Core™ processor and above with Intel® HD Graphics   | Intel® Core™ Ultra Processors (Series 2) also known as Arrow Lake |
+| **Memory**          | 16 GB                     | 16 GB                   |
+| **Disk Space**      | 64 GB                | 128 GB               |
 
 ## Software Requirements
 
 **Required Software**:
 
-- Docker 20.10 or higher
+- Docker 27.3.1 or higher
+- Python 3.10+
+- Git
 
 <!--
 ## Compatibility Notes

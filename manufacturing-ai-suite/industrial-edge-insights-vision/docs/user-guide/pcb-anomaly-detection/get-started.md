@@ -25,10 +25,10 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     cp .env_pcb_anomaly_detection .env
     ```
 
-3.  Edit the `HOST_IP`, `MTX_WEBRTCICESERVERS2_0_USERNAME` and `MTX_WEBRTCICESERVERS2_0_PASSWORD` environment variables in the `.env` file as follows:
+3.  Edit the below mentioned environment variables in the `.env` file as follows:
 
     ```bash
-    HOST_IP=<HOST_IP>   # IP address of server where DLStreamer Pipeline Server is running.
+    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
 
     MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
 
@@ -104,7 +104,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     ./sample_start.sh -p pcb_anomaly_detection
     ```
 
-    This command will look for the payload for the pipeline specified in the `-p` argument above, inside the `payload.json` file and launch a pipeline instance in DLStreamer Pipeline Server. Refer to the table, to learn about different available options.
+    This command will look for the payload for the pipeline specified in the `-p` argument above, inside the `payload.json` file and launch a pipeline instance in DL Streamer Pipeline Server. Refer to the table, to learn about different available options.
 
     > **IMPORTANT**: Before you run `sample_start.sh` script, make sure that
     > `jq` is installed on your system. See the

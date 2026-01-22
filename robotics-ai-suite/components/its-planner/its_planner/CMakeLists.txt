@@ -84,10 +84,6 @@ install(TARGETS ${library_name}
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-install(TARGETS ${executable_name}
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
-
 install(DIRECTORY include/
   DESTINATION include/
 )
@@ -95,6 +91,31 @@ install(DIRECTORY include/
 install(FILES global_planner_plugin.xml
   DESTINATION share/${PROJECT_NAME}
 )
+
+# Install launch files
+install(DIRECTORY launch/
+  DESTINATION share/${PROJECT_NAME}/launch
+  FILES_MATCHING PATTERN "*.py"
+)
+
+# Install configuration files - ROS distro specific
+if($ENV{ROS_DISTRO} STREQUAL "humble")
+  # Humble specific files
+  install(FILES 
+    nav2_params_humble.yaml
+    nav2_params_dubins_humble.yaml
+    navigate_w_recovery_humble.xml
+    DESTINATION share/${PROJECT_NAME}
+  )
+else()
+  # Default to jazzy for newer distros
+  install(FILES 
+    nav2_params_jazzy.yaml
+    nav2_params_dubins_jazzy.yaml
+    navigate_w_recovery_jazzy.xml
+    DESTINATION share/${PROJECT_NAME}
+  )
+endif()
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -287,5 +287,5 @@ After successfully setting up the AI Tolling system with Node Red, consider thes
 
 - [Node-RED Official Documentation](https://nodered.org/docs/)
 - [MQTT Protocol Specification](https://mqtt.org/)
-- [Intel DLStreamer Documentation](https://dlstreamer.github.io/)
+- [DL Streamer Documentation](https://dlstreamer.github.io/)
 - [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)

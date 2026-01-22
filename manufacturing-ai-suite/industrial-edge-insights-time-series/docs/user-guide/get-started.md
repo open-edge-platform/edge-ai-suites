@@ -167,10 +167,10 @@ hide_directive-->
 ### Running User Defined Function(UDF) inference on GPU
 
 By default, UDF for both the sample apps is configured to run on `CPU`.
-The `Wind Turbine Anomaly Detection` sample app ML model can run on `iGPU` while
+The `Wind Turbine Anomaly Detection` sample app ML model can run on `GPU` while
 the `Weld Anomaly Detection` sample app ML model can only run on `CPU`.
 
-To trigger the UDF inference on GPU in Time Series Analytics Microservice, run the following command:
+To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run the following command:
 
 ```sh
  curl -k -X 'POST' \
@@ -224,7 +224,7 @@ hide_directive-->
      > **Note**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
 
    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-     in `.env` file and select **Wind Turbine Dashboard**.
+     in `.env` file.
 
      ![Grafana login](./_images/login_wt.png)
 
@@ -279,7 +279,7 @@ hide_directive-->
      > **Note**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
 
    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-     in `.env` file
+     in `.env` file.
 
      ![Grafana login](./_images/login_wt.png)
 

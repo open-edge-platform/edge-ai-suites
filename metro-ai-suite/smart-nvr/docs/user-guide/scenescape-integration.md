@@ -1,10 +1,10 @@
-# Scenescape Integration Guide
+# Intel® SceneScape Integration Guide
 
-This guide covers the integration of Intel Scenescape with Smart NVR for enhanced traffic monitoring using live data from smart intersection application.
+This guide covers the integration of Intel® SceneScape with Smart NVR for enhanced traffic monitoring using live data from smart intersection application.
 
 ## Overview
 
-Smart NVR system integrates with Intel Scenescape to enable:
+Smart NVR system integrates with Intel® SceneScape to enable:
 - Real-time object counting and tracking (vehicles, pedestrians)
 - Traffic flow analysis
 - Automated event routing based on count thresholds
@@ -12,7 +12,7 @@ Smart NVR system integrates with Intel Scenescape to enable:
 
 ## Prerequisites
 
-- **Smart Intersection Reference Implementation**: We will use the Smart Intersection application to showcase the SceneScape integration.
+- **Smart Intersection Reference Implementation**: We will use the Smart Intersection application to showcase the Intel® SceneScape integration.
 
 > **Please follow the below steps to run Smart Intersection Application.**
 
@@ -20,7 +20,7 @@ Smart NVR system integrates with Intel Scenescape to enable:
 # Clone smart intersection repository inside smart nvr directory if not already done
 git clone https://github.com/open-edge-platform/edge-ai-suites.git -b v1.2.0
 
-# From the Smart NVR directory, copy the DLStreamer configuration (enables RTSP streaming)
+# From the Smart NVR directory, copy the DL Streamer configuration (enables RTSP streaming)
 cp ./resources/si-rtsp-config.json edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/config.json
 
 # Copy the SceneScape compose configuration
@@ -43,8 +43,8 @@ cd ../../../../smart-nvr
 
 These files provide:
 
-- RTSP streaming support in the DLStreamer pipeline
-- SceneScape-specific Docker Compose settings
+- RTSP streaming support in the DL Streamer pipeline
+- Intel® SceneScape-specific Docker Compose settings
 
 ## Installation and Setup
 
@@ -59,7 +59,7 @@ cat edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/
 ### Step 2: Configure Environment Variables
 
 ```bash
-# Enable Scenescape Integration
+# Enable SceneScape Integration
 export NVR_SCENESCAPE=true
 
 # MQTT Configuration (from browser.auth JSON)
@@ -78,24 +78,24 @@ export SCENESCAPE_THROTTLE_INTERVAL=2.0  # Optional: throttle interval in second
 ./setup.sh restart
 ```
 
-**Note:** The setup script automatically copies Scenescape certificates from Smart Intersection if available. If certificates are missing, setup will fail with an error message.
+**Note:** The setup script automatically copies Intel® SceneScape certificates from Smart Intersection if available. If certificates are missing, setup will fail with an error message.
 
 ### Step 4: Verify Integration
 
-Check logs to confirm Scenescape connection:
+Check logs to confirm Intel® SceneScape connection:
 
 ```bash
 docker logs nvr-event-router -f
-# Look for: "Scenescape MQTT client started"
+# Look for: "SceneScape MQTT client started"
 ```
 
 ## User Interface Changes
 
-### With Scenescape Enabled and Scenescape Source Selected
+### With Intel® SceneScape Enabled and SceneScape Source Selected
 
-![Scenescape Enabled Interface](_images/Scenescape_enabled.png)
+![SceneScape Enabled Interface](_images/Scenescape_enabled.png)
 
-When Scenescape is enabled (`NVR_SCENESCAPE=true`) and scenescape source is selected:
+When Intel® SceneScape is enabled (`NVR_SCENESCAPE=true`) and scenescape source is selected:
 
 - Source dropdown shows both **"frigate"** and **"scenescape"** options
 - **Count** field becomes visible and editable
@@ -103,11 +103,11 @@ When Scenescape is enabled (`NVR_SCENESCAPE=true`) and scenescape source is sele
 - Rules table includes "Count" column for tracking thresholds
 - Count validation ensures non-negative integers only
 
-### With Scenescape Enabled but Frigate Source Selected
+### With Intel® SceneScape Enabled but Frigate Source Selected
 
 ![Frigate Selected Interface](_images/Scenescape_enabled_frigate.png)
 
-When Scenescape is enabled but frigate source is selected:
+When Intel® SceneScape is enabled but frigate source is selected:
 
 - Currently frigate object detection is disabled in this mode
 - Source dropdown still shows both **"frigate"** and **"scenescape"** options
@@ -124,7 +124,7 @@ When Scenescape is enabled but frigate source is selected:
 
 1. Navigate to **Auto-Route Events** tab
 2. **Select Source:** "scenescape" or "frigate"
-3. **Set Count:** (Scenescape only) Define minimum threshold (e.g., 5)
+3. **Set Count:** (SceneScape only) Define minimum threshold (e.g., 5)
 4. **Select Camera:** Choose target camera
 5. **Choose Detection Label:** Select object type
 6. **Select Action:** "Summarize" or "Add to Search"
@@ -132,12 +132,12 @@ When Scenescape is enabled but frigate source is selected:
 
 **Key Differences:**
 
-- **Scenescape:** Count field visible when selected
+- **SceneScape:** Count field visible when selected
 - **Frigate:** Count field hidden
 
 ### Rule Behavior Examples
 
-**Scenescape Rule Example:**
+**SceneScape Rule Example:**
 
 ```
 Source: scenescape
@@ -164,7 +164,7 @@ Action: Add to Search
 
 ### Common Issues
 
-**Scenescape features not visible:**
+**SceneScape features not visible:**
 ```bash
 # Check and set environment variable
 echo $NVR_SCENESCAPE  # Should show 'true'
@@ -173,7 +173,7 @@ export NVR_SCENESCAPE=true
 # Refresh browser (Ctrl+F5)
 ```
 
-**No scenescape events received:**
+**No SceneScape events received:**
 
 ```bash
 # Check MQTT connection
@@ -193,7 +193,7 @@ docker logs nvr-event-router -f | grep "scenescape"
 # Check UI logs
 docker logs nvr-event-router-ui -f
 
-# Verify Scenescape MQTT connection
+# Verify SceneScape MQTT connection
 docker logs nvr-event-router | grep "Scenescape MQTT client"
 ```
 
@@ -206,7 +206,7 @@ cat /proc/loadavg && docker stats --no-stream --format "table {{.Name}}\t{{.CPUP
 
 ## Support
 
-For Scenescape integration issues:
+For Intel® SceneScape integration issues:
 
 1. **Certificate Error**: Ensure Smart Intersection application is running and has generated certificates
 2. **Environment Variables**: Verify `NVR_SCENESCAPE=true` and MQTT credentials are set

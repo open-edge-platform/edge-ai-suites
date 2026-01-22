@@ -11,7 +11,7 @@ set up the applications, system requirements, and best practices for deployment.
 
 
 **Available Sample Applications:**
-- **Smart Intersection Management** (includes optional Scenescape components) - AI-driven traffic flow optimization and intersection monitoring
+- **Smart Intersection Management** (includes optional Intel® SceneScape components) - AI-driven traffic flow optimization and intersection monitoring
 - **Loitering Detection** - Real-time detection of loitering behavior in transportation hubs
 - **Smart Parking** - Automated parking space monitoring and management
 
@@ -56,9 +56,9 @@ insights for traffic management.
 
 ### Optional Components
 
-- **Scenescape Management UI:** A web-based user interface for advanced scene configuration, camera calibration, and visual rule setup. Provides intuitive tools for defining detection zones, traffic lanes, and monitoring areas through a graphical interface.
-- **Scenescape Controller:** The backend service that manages scene configurations, processes spatial analytics, and coordinates between the Management UI and the video analytics pipeline. Handles complex scene understanding and geometric transformations.
-- **Scenescape Database (PostgreSQL):** A robust relational database that stores scene configurations, camera metadata, calibration parameters, and historical analytics data. Ensures data persistence and enables complex queries for reporting and analysis.
+- **Intel® SceneScape Management UI:** A web-based user interface for advanced scene configuration, camera calibration, and visual rule setup. Provides intuitive tools for defining detection zones, traffic lanes, and monitoring areas through a graphical interface.
+- **Intel® SceneScape Controller:** The backend service that manages scene configurations, processes spatial analytics, and coordinates between the Management UI and the video analytics pipeline. Handles complex scene understanding and geometric transformations.
+- **Intel® SceneScape Database (PostgreSQL):** A robust relational database that stores scene configurations, camera metadata, calibration parameters, and historical analytics data. Ensures data persistence and enables complex queries for reporting and analysis.
 - **InfluxDB:** A time-series database optimized for storing and querying high-frequency transportation metrics such as vehicle counts, traffic flow rates, speed measurements, and system performance data. Enables efficient historical analysis and trend monitoring.
 
 

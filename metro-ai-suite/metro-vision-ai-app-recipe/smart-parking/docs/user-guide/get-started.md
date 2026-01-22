@@ -64,8 +64,8 @@ By following this guide, you will learn how to:
      - Grafana Dashboard
      - DL Streamer Pipeline Server
      - MQTT Broker
-     - Node-RED (for applications without Scenescape)
-     - Scenescape services (for Smart Intersection only)
+     - Node-RED (for applications without Intel® SceneScape)
+     - Intel® SceneScape services (for Smart Intersection only)
 
      </details>
 

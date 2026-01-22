@@ -15,9 +15,20 @@ spec:
       labels:
         app: broker
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
       - name: mqtt
         image: {{ $.Values.mqtt_broker.image }}:{{ $.Values.mqtt_broker.imageTag }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
         ports:
         - containerPort: {{ $.Values.config.mqtt_broker.int.mqtt_port }}
           name: mqtt

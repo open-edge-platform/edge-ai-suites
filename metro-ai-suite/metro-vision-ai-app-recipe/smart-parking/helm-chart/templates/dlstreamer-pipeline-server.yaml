@@ -43,6 +43,14 @@ spec:
       initContainers:
       - name: video-downloader
         image: curlimages/curl:latest
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
         command:
         - /bin/sh
         - -c
@@ -64,25 +72,29 @@ spec:
           mountPath: /tmp/videos
       - name: model-downloader
         image: intel/dlstreamer:2025.1.2-ubuntu24
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
         command:
         - /bin/sh
         - -c
         - |
-          mkdir -p /tmp/models
-          cd /tmp/
-          {{- if eq $.Values.gitSource.type "tag" }}
-          curl -L -o /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/tags/{{ $.Values.gitSource.ref }}.tar.gz && \
-          tar -xzf /tmp/main.tar.gz -C /tmp && \
-          EXTRACTED_DIR="edge-ai-suites-{{ $.Values.gitSource.ref | trimPrefix "v" }}" && \
-          {{- else }}
-          curl -L -o /tmp/main.tar.gz https://github.com/open-edge-platform/edge-ai-suites/archive/refs/heads/{{ $.Values.gitSource.ref }}.tar.gz && \
-          tar -xzf /tmp/main.tar.gz -C /tmp && \
-          EXTRACTED_DIR="edge-ai-suites-{{ $.Values.gitSource.ref | replace "/" "-" }}" && \
-          {{- end }}
-          cp -r /tmp/${EXTRACTED_DIR}/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src/dlstreamer-pipeline-server/models/* /tmp/models/ && \
-          rm -rf /tmp/main.tar.gz /tmp/${EXTRACTED_DIR}
+          cd /tmp/repo/
+          git clone --depth 1 --filter=blob:none --sparse \
+            {{- if eq $.Values.gitSource.type "tag" }}
+            --branch {{ $.Values.gitSource.ref }} \
+            {{- else }}
+            --branch {{ $.Values.gitSource.ref }} \
+            {{- end }}
+            https://github.com/open-edge-platform/edge-ai-suites.git
+
+          cd edge-ai-suites
+          git sparse-checkout set \
+            metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src/dlstreamer-pipeline-server/models
+          cp -r metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src/dlstreamer-pipeline-server/models/* /tmp/models/
           cd /home/dlstreamer/dlstreamer/samples
-          chmod +x download_public_models.sh
+          rm -rf /tmp/repo/edge-ai-suites
           export MODELS_PATH=/tmp/models/
           ./download_public_models.sh yolo11s coco128
         env:
@@ -95,6 +107,8 @@ spec:
         volumeMounts:
         - name: models-volume
           mountPath: /tmp/models
+        - name: repo-volume
+          mountPath: /tmp/repo
       containers:
       - name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
         image: {{ $.Values.dlstreamer_pipeline_server.image }}:{{ $.Values.dlstreamer_pipeline_server.imageTag }}
@@ -102,6 +116,15 @@ spec:
         {{- if $.Values.privileged_access_required }}
         securityContext:
           privileged: true  # Required for direct access to /dev
+        {{- else }}
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          runAsUser: 1999
+          capabilities:
+            drop:
+              - ALL
         {{- end }}
         {{- if $.Values.gpu.enabled }}
         resources:
@@ -111,12 +134,14 @@ spec:
         volumeMounts:
         - mountPath: /var/cache/pipeline_root
           name: vol-pipeline-root-tmpfs0
-        - name: dev
-          mountPath: /dev
+        - name: dev-gpu
+          mountPath: /dev/dri
+          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
+        - name: dev-npu
+          mountPath: /dev/accel
+          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
         - name: dev-shm
           mountPath: /dev/shm
-        - name: tmp
-          mountPath: /tmp
         - name: var-tmp
           mountPath: /var/tmp
         - name: run-udev
@@ -170,15 +195,15 @@ spec:
       volumes:
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}
-      - name: dev
+      - name: dev-gpu
         hostPath:
-          path: /dev
+          path: /dev/dri
+      - name: dev-npu
+        hostPath:
+          path: /dev/accel
       - name: dev-shm
         hostPath:
           path: /dev/shm
-      - name: tmp
-        hostPath:
-          path: /tmp
       - name: var-tmp
         hostPath:
           path: /var/tmp
@@ -197,6 +222,8 @@ spec:
       - name: models-volume
         emptyDir:
           sizeLimit: 150Mi
+      - name: repo-volume
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: ConfigMap

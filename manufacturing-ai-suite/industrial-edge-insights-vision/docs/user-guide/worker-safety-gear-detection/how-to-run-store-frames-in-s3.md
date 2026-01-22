@@ -1,6 +1,6 @@
 # Storing frames to S3 storage
 
-Applications can take advantage of S3 publish feature from DLStreamer Pipeline Server and use it to save frames to an S3 compatible storage.
+Applications can take advantage of S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
 
 ## Steps
 
@@ -14,14 +14,14 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     ```
 
 3. Install the package `boto3` in your python environment if not installed.
-    
+
     It is recommended to create a virtual environment and install it there. You can run the following commands to add the necessary dependencies as well as create and activate the environment.
-        
+
     ```sh
     sudo apt update && \
     sudo apt install -y python3 python3-pip python3-venv
     ```
-    ```sh 
+    ```sh
     python3 -m venv venv && \
     source venv/bin/activate
     ```
@@ -31,9 +31,9 @@ Applications can take advantage of S3 publish feature from DLStreamer Pipeline S
     pip3 install --upgrade pip && \
     pip3 install boto3==1.36.17
     ```
-    > **Note** DLStreamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
+    > **Note** DL Streamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
 
-4. Create a S3 bucket using the following script. 
+4. Create a S3 bucket using the following script.
 
     Update the `HOST_IP` and credentials with that of the running MinIO server. Name the file as `create_bucket.py`.
 
