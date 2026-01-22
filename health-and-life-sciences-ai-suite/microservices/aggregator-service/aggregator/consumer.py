@@ -1,6 +1,6 @@
-
 from .buffers import TimeWindowBuffer
 from .processor import VitalProcessor
+
 
 class VitalConsumer:
     def __init__(self, window_seconds=5):
@@ -15,4 +15,11 @@ class VitalConsumer:
         samples = self.buffer.get(key)
         result = self.processor.process(vital.device_id, vital.metric, samples)
         if result:
-            print("Aggregated:", result)
+            # Helpful debug log to confirm aggregation is happening
+            print("[Aggregator] Aggregated result:", {
+                "device_id": vital.device_id,
+                "metric": vital.metric,
+                "result": result,
+            })
+            return result
+        return None
