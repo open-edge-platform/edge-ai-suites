@@ -1,4 +1,0 @@
-<jboss-web>
-    <context-root>DocBoxAdapter</context-root>
-    <class-loading java2ClassLoadingCompliance='true'/>
-</jboss-web>

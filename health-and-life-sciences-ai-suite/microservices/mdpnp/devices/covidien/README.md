@@ -1,4 +1,0 @@
-Covidien Zephyr
-=========
-
-Serial protocol
