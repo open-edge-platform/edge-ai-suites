@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.*?>
+<?import java.lang.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.BorderPane?>
+
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.web.WebView?>
+<BorderPane styleClass="pca-config"
+ xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+ fx:controller="org.mdpnp.apps.testapp.rbs.RBSConfig">
+ <bottom>
+  <BorderPane>
+   <center>
+    <FlowPane fx:id="controls">
+     <children>
+      <Button fx:id="load" mnemonicParsing="false" onAction="#loadVitalRule" text="Load Event Description" />
+     </children>
+    </FlowPane>
+   </center>
+  </BorderPane>
+ </bottom>
+ <center>
+  <SplitPane dividerPositions="0.75" orientation="VERTICAL">
+   <items>
+    <GridPane>
+     <children>
+      <BorderPane GridPane.columnIndex="0" >
+      <center>
+       <WebView fx:id="ruleInformation" focusTraversable="false"/>
+      </center>
+      </BorderPane>
+      <BorderPane GridPane.columnIndex="1">
+       <center>
+        <ScrollPane fitToHeight="true" fitToWidth="true">
+         <content>
+          <AnchorPane id="Content">
+           <children>
+            <TextArea fx:id="warningStatus" editable="false"
+             prefColumnCount="1"
+             text="Here is some text about informational messages"
+             wrapText="true" AnchorPane.bottomAnchor="0.0"
+             AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+             AnchorPane.topAnchor="0.0" />
+           </children>
+          </AnchorPane>
+         </content>
+        </ScrollPane>
+       </center>
+       <top>
+        <Label text="Informational Messages" />
+       </top>
+      </BorderPane>
+     </children>
+     <columnConstraints>
+      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="300.0" />
+      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+     </columnConstraints>
+     <rowConstraints>
+      <RowConstraints vgrow="ALWAYS" />
+     </rowConstraints>
+    </GridPane>
+    <ScrollPane fitToHeight="false" fitToWidth="true">
+      <VBox styleClass="vitals-panel" fx:id="vitalsPanel"/>
+    </ScrollPane>
+   </items>
+  </SplitPane>
+
+ </center>
+</BorderPane>
