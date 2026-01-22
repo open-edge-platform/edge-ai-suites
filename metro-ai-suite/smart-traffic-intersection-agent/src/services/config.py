@@ -1,4 +1,6 @@
-"""Configuration service for traffic intelligence."""
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Configuration service for Traffic Intersection Agent."""
 
 import os
 import json
@@ -17,7 +19,7 @@ def hash_intersection_name(name: str, length: int = 16) -> str:
 
 class ConfigService:
     """
-    Configuration service for traffic intelligence.
+    Configuration service for Traffic Intersection Agent.
     
     Manages configuration for single intersection monitoring,
     MQTT topics, weather API, and VLM service settings.
@@ -34,7 +36,7 @@ class ConfigService:
         config = {}
         
         # Load from config file if specified
-        config_file = os.getenv("TRAFFIC_INTELLIGENCE_CONFIG", "config/traffic_intelligence.json")
+        config_file = os.getenv("TRAFFIC_INTELLIGENCE_CONFIG", "config/traffic_agent.json")
         if os.path.exists(config_file):
             try:
                 with open(config_file, 'r') as f:

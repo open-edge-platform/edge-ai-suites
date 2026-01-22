@@ -1,3 +1,5 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 """
 UI Components for the RSU Monitoring System
 """
@@ -55,12 +57,12 @@ class UIComponents:
         Returns:
             CSS background color string
         """
-        if density > 8:
-            return "#ecb3b3"  # Light red for >8 vehicles
-        elif density >= 5:
-            return "#ffff99"  # Yellow for 5-8 vehicles
+        if density >= Config.HIGH_DENSITY_THRESHOLD:
+            return "#ecb3b3"  # Light red for high density
+        elif density >= Config.MODERATE_DENSITY_THRESHOLD:
+            return "#ffff99"  # Yellow for moderate density
         else:
-            return "#ffffff"  # Default white for <5 vehicles
+            return "#ffffff"  # Default white for low density
     @staticmethod
     def create_header(monitoring_data: Optional[MonitoringData] = None) -> str:
         """Create the header section with system title and status"""

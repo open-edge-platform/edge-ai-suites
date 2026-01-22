@@ -17,41 +17,39 @@ class TestCaseManager(BaseTest):
         test_case = os.environ['TEST_CASE']
         key, value = self.utils.json_reader(test_case, JSONPATH)
         
-        if value.get("setup-app") is True:
+        try:
+            # Setup phase
             self.utils.setup(value)
-            return
-        self.utils.setup(value)
-
-        if value.get("verify_status") is True:
+            if value.get("setup-app"): return
+            
+            # Docker compose up phase
             self.utils.docker_compose_up(value)
-            return
-        self.utils.docker_compose_up(value)
-
-        if value.get("sample_start") is True:
+            if value.get("verify_status"): return
+            
+            # Pipeline operations
             self.utils.start_pipeline_and_check(value)
-            return
-
-        if value.get("sample_status") is True:
-            self.utils.start_pipeline_and_check(value)
+            if value.get("sample_start"): return
+            
+            if value.get("sample_status"):
+                self.utils.get_pipeline_status(value)
+                return
+            
+            if value.get("sample_stop"):
+                self.utils.stop_pipeline_and_check(value)
+                return
+            
+            # Default full test flow
             self.utils.get_pipeline_status(value)
-            return
-
-        if value.get("sample_stop") is True:
-            self.utils.start_pipeline_and_check(value)
-            self.utils.stop_pipeline_and_check(value)
-            return
-        self.utils.start_pipeline_and_check(value)
-        self.utils.get_pipeline_status(value)
-
-        if value.get("grafana_url") is True:
-            self.utils.verify_grafana_url(value)
-            return
-        self.utils.container_logs_checker_dlsps(test_case, value)
-        self.utils.stop_pipeline_and_check(value)
+            if value.get("grafana_url"):
+                self.utils.verify_grafana_url(value)
+            else:
+                self.utils.container_logs_checker_dlsps(test_case, value)
+                self.utils.stop_pipeline_and_check(value)
+        finally:
+            self.utils.docker_compose_down(value)
 
     @classmethod
     def tearDownClass(cls):
         os.chdir(cls.utils.metro_path)
-        subprocess.check_output("git checkout -- .", shell=True, executable='/bin/bash')
-        cls.utils.docker_compose_down()
+        # subprocess.check_output("git checkout -- .", shell=True, executable='/bin/bash')
         time.sleep(5)

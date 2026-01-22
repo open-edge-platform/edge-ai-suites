@@ -1,3 +1,5 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 """
 Data loader module for the RSU Monitoring System
 """
@@ -16,10 +18,10 @@ logger = logging.getLogger(__name__)
 
 def load_monitoring_data_from_api(api_url: str = "http://localhost:8081/api/v1/traffic/current") -> Optional[MonitoringData]:
     """
-    Load monitoring data from the traffic intelligence API
+    Load monitoring data from the Traffic Intersection Agent API
     
     Args:
-        api_url: URL of the traffic intelligence API endpoint
+        api_url: URL of the Traffic Intersection Agent API endpoint
         
     Returns:
         MonitoringData object or None if loading fails
@@ -44,7 +46,7 @@ def load_monitoring_data_from_api(api_url: str = "http://localhost:8081/api/v1/t
 
 def parse_api_response(raw_data: dict) -> Optional[MonitoringData]:
     """
-    Parse the traffic intelligence API response and convert to MonitoringData
+    Parse the Traffic Intersection Agent API response and convert to MonitoringData
     
     Args:
         raw_data: Raw API response dictionary

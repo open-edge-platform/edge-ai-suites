@@ -1,0 +1,41 @@
+{
+    "api_endpoint": "/api/v1/traffic/current?images=false",
+    "api_hosts": [
+        {
+            "name": "Intersection-X",
+            "host": "http://10.0.1.135:8081"
+        },
+        {
+            "name": "Intersection-X",
+            "host": "http://10.0.1.154:8081"
+        },
+        {
+            "name": "Intersection-X",
+            "host": "http://10.0.1.24:8081"
+        },
+        {
+            "name": "Intersection-X",
+            "host": "http://10.0.1.235:8081"
+        },
+        {
+            "name": "Intersection-X",
+            "host": "http://10.0.2.124:8081"
+        },
+        {
+            "name": "Intersection-X",
+            "host": "http://10.0.2.145:8081"
+        },
+        {
+            "name": "Intersection-X",
+            "host": "http://10.0.2.164:8081"
+        },
+        {
+            "name": "Intersection-X",
+            "host": "http://10.0.2.186:8081"
+        },
+        {
+            "name": "Intersection-X",
+            "host": "http://10.0.2.120:8081"
+        }
+    ]
+}

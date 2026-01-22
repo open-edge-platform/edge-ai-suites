@@ -1,6 +1,6 @@
 # How to Build from Source
 
-Build the Scene Intelligence microservice from source to customize or extend its functionality. This guide covers building the containerized Traffic Intelligence service.
+Build the Scene Intelligence microservice from source to customize or extend its functionality. This guide covers building the containerized Traffic Intersection Agent.
 
 ## Prerequisites
 
@@ -8,7 +8,7 @@ Build the Scene Intelligence microservice from source to customize or extend its
 - **Docker**: Install Docker from [Get Docker](https://docs.docker.com/get-docker/).
 - Basic familiarity with Git and Docker commands.
 
-## Build Traffic Intelligence Service
+## Build Traffic Intersection Agent
 
 ### 1. Clone the Repository
 
@@ -19,10 +19,10 @@ cd edge-ai-libraries/microservices/scene-intelligence
 
 ### 2. Build the Docker Image
 
-Build the Traffic Intelligence service:
+Build the Traffic Intersection Agent:
 
 ```bash
-docker compose -f docker/compose.yaml build traffic-intelligence
+docker compose -f docker/compose.yaml build traffic-intersection-agent
 ```
 
 ### 3. Run the Service
@@ -32,7 +32,7 @@ docker compose -f docker/compose.yaml build traffic-intelligence
 source setup.sh --run
 
 # Or manually with Docker Compose
-docker compose -f docker/compose.yaml up traffic-intelligence
+docker compose -f docker/compose.yaml up traffic-intersection-agent
 ```
 
 ### 4. Verify the Build
@@ -45,7 +45,7 @@ curl http://localhost:8081/health
 curl http://localhost:7860/
 
 # View logs
-docker logs scene-intelligence-traffic-intelligence
+docker compose -f docker/compose.yaml logs traffic-intersection-agent
 ```
 
 ### Verify API Endpoints
@@ -64,13 +64,13 @@ When you modify code:
 
 ```bash
 # Rebuild the image
-docker compose -f docker/compose.yaml build traffic-intelligence
+docker compose -f docker/compose.yaml build traffic-intersection-agent
 
 # Restart the service
-docker compose -f docker/compose.yaml up -d traffic-intelligence
+docker compose -f docker/compose.yaml up -d traffic-intersection-agent
 
 # View startup logs
-docker logs -f scene-intelligence-traffic-intelligence
+docker compose -f docker/compose.yaml logs traffic-intersection-agent
 ```
 
 

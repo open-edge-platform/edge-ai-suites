@@ -1,7 +1,7 @@
 ---
 openapi: 3.1.0
 info:
-  title: Traffic Intelligence API
+  title: Traffic Intersection Agent API
   description: Lightweight traffic analysis service for single intersection monitoring
   version: 1.0.0
 paths:
@@ -30,11 +30,11 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                title: Response Get Current Traffic Intelligence Api V1 Traffic Current
-                  Get
+                "$ref": "#/components/schemas/TrafficIntelligenceResponse"
         '404':
           description: No traffic data available
+        '500':
+          description: Internal server error
         '422':
           description: Validation Error
           content:
@@ -54,6 +54,237 @@ paths:
               schema: {}
 components:
   schemas:
+    TrafficIntelligenceResponse:
+      type: object
+      title: TrafficIntelligenceResponse
+      required:
+        - timestamp
+        - intersection_id
+        - data
+        - weather_data
+        - vlm_analysis
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Response timestamp
+        response_age:
+          type: number
+          nullable: true
+          description: Age of the traffic response in seconds
+        intersection_id:
+          type: string
+          description: Unique intersection identifier
+        data:
+          "$ref": "#/components/schemas/IntersectionData"
+        weather_data:
+          "$ref": "#/components/schemas/WeatherData"
+        vlm_analysis:
+          "$ref": "#/components/schemas/VLMAnalysis"
+        camera_images:
+          type: object
+          nullable: true
+          additionalProperties:
+            "$ref": "#/components/schemas/CameraImageData"
+          description: Camera images keyed by direction (north_camera, south_camera, etc.). Included only if images=true
+    IntersectionData:
+      type: object
+      title: IntersectionData
+      required:
+        - intersection_id
+        - intersection_name
+        - latitude
+        - longitude
+        - timestamp
+        - total_density
+        - intersection_status
+        - total_pedestrian_count
+      properties:
+        intersection_id:
+          type: string
+        intersection_name:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        timestamp:
+          type: string
+          format: date-time
+        north_camera:
+          type: integer
+        south_camera:
+          type: integer
+        east_camera:
+          type: integer
+        west_camera:
+          type: integer
+        total_density:
+          type: integer
+        intersection_status:
+          type: string
+        north_pedestrian:
+          type: integer
+        south_pedestrian:
+          type: integer
+        east_pedestrian:
+          type: integer
+        west_pedestrian:
+          type: integer
+        total_pedestrian_count:
+          type: integer
+        north_timestamp:
+          type: string
+          format: date-time
+          nullable: true
+        south_timestamp:
+          type: string
+          format: date-time
+          nullable: true
+        east_timestamp:
+          type: string
+          format: date-time
+          nullable: true
+        west_timestamp:
+          type: string
+          format: date-time
+          nullable: true
+    WeatherData:
+      type: object
+      title: WeatherData
+      description: Current weather conditions for traffic analysis
+      required:
+        - temperature
+        - temperature_unit
+        - detailed_forecast
+        - weather_type
+      properties:
+        temperature:
+          type: integer
+          description: Temperature value
+        temperature_unit:
+          type: string
+          enum:
+            - F
+            - C
+          description: Temperature unit (Fahrenheit or Celsius)
+        detailed_forecast:
+          type: string
+          description: Detailed weather description
+        weather_type:
+          type: string
+          description: Type of weather condition
+        short_forecast:
+          type: string
+          description: Short weather condition (e.g., Clear, Rainy)
+          nullable: true
+        wind_speed:
+          type: string
+          description: Wind speed with units (e.g., "5 mph")
+          nullable: true
+        wind_direction:
+          type: string
+          description: Wind direction (e.g., N, NE, S)
+          nullable: true
+        precipitation_prob:
+          type: number
+          format: float
+          description: Precipitation probability (0-100)
+          nullable: true
+        relative_humidity:
+          type: number
+          format: float
+          description: Relative humidity percentage (0-100)
+          nullable: true
+        is_precipitation:
+          type: boolean
+          description: Whether precipitation is occurring
+    VLMAnalysis:
+      type: object
+      title: VLMAnalysis
+      required:
+        - traffic_summary
+        - alerts
+        - recommendations
+      properties:
+        traffic_summary:
+          type: string
+          description: Summary of traffic conditions
+        alerts:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Alert"
+          description: List of alerts
+        recommendations:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Traffic management recommendations
+        analysis_timestamp:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the VLM analysis
+    Alert:
+      type: object
+      title: Alert
+      required:
+        - alert_type
+        - level
+        - description
+        - weather_related
+      properties:
+        alert_type:
+          type: string
+          description: Type of alert
+        level:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+            - critical
+          description: Alert severity level
+        description:
+          type: string
+          description: Alert description
+        weather_related:
+          type: boolean
+          description: Whether the alert is weather-related
+    CameraImageData:
+      type: object
+      title: CameraImageData
+      required:
+        - camera_id
+        - direction
+        - image_base64
+      properties:
+        camera_id:
+          type: string
+          description: Unique camera identifier
+        direction:
+          type: string
+          enum:
+            - north
+            - south
+            - east
+            - west
+          description: Camera direction
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when image was captured
+        image_base64:
+          type: string
+          description: Base64-encoded image data
+        image_size_bytes:
+          type: integer
+          nullable: true
+          description: Size of the original image in bytes
     HTTPValidationError:
       properties:
         detail:

@@ -31,6 +31,7 @@ The following is an example of the pallet defect detection pipeline, which is in
 ```
 
 Customize the pipeline according to your needs. For details, see the following DL Streamer Pipeline Server documentation:
+
 - [Launch configurable pipelines](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/how-to-launch-configurable-pipelines.html)
 - [Autostart pipelines](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/how-to-autostart-pipelines.html)
 
@@ -53,23 +54,24 @@ Follow this procedure to start the pipeline.
 
 2. You use a Client URL (cURL) command to start the pipeline.
 
-      In this example, a pipeline included in this sample application is `pallet_defect_detection`. Start this pipeline with the following cURL command.
+    In this example, a pipeline included in this sample application is `pallet_defect_detection`. Start this pipeline with the following cURL command.
 
-            curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection -X POST -H 'Content-Type: application/json' -d '{
-                "source": {
-                    "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
-                    "type": "uri"
-                },
-                "parameters": {
-                    "detection-properties": {
-                        "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
-                        "device": "CPU"
-                    }
-                }
-            }'
+   ```bash
+   curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection -X POST -H 'Content-Type: application/json' -d '{
+       "source": {
+           "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
+           "type": "uri"
+       },
+       "parameters": {
+           "detection-properties": {
+               "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
+               "device": "CPU"
+           }
+       }
+   }'
+   ```
 
-
-2. Take note of the instance ID (without quotes).
+3. Take note of the instance ID (without quotes).
 
    Each pipeline has its **instance ID**. You will need the instance ID to stop the pipeline later.
 
@@ -83,7 +85,9 @@ Request the pipeline statistics with this cURL command.
 
 Replace `HOST_IP` with the IP address of your system.
 
-         curl -k --location -X GET https://<HOST_IP>/api/pipelines/status
+```bash
+curl -k --location -X GET https://<HOST_IP>/api/pipelines/status
+```
 
 ## Stop the Pipeline
 
@@ -91,7 +95,9 @@ Stop the pipeline with the following cURL command.
 
 Replace `HOST_IP` with the IP address of your system and `instance_id` with the instance ID (without quotes) of the running pipeline.
 
-         curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
+```bash
+curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
+```
 
 > **Note**
 > The instance ID is shown in the Terminal when the [pipeline was started](#start-the-pipeline) or when [pipeline statistics were requested](#get-statistics-of-the-running-pipelines).

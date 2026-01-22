@@ -1,3 +1,5 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 """MQTT service for traffic intelligence camera data subscription."""
 
 import asyncio

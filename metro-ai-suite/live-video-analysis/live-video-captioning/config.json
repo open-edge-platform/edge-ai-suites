@@ -1,0 +1,210 @@
+{
+    "config": {
+        "pipelines": [
+            {
+                "name": "GenAI_Pipeline_on_CPU",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} ! decodebin force-sw-decoders=true ! tee name=split split. ! queue leaky=downstream max-size-buffers=1 ! videoconvert ! videorate drop-only=true ! video/x-raw,format=BGRA,framerate=1/1 ! gvagenai name=captioner device=CPU model-path=\"/home/pipeline-server/models/{parameters[captioner_model_name]}\" generation-config=\"max_new_tokens={parameters[captioner_max_new_tokens]},num_beams=1,do_sample=false,repetition_penalty=1.1\" scheduler-config=\"{parameters[captioner_scheduler_config]}\" frame-rate=1 chunk-size=1 metrics=true ! gvametaconvert add-empty-results=true name=metaconvert ! gvapython class=MQTTPublisher function=process module=/home/pipeline-server/gvapython/mqtt_publisher/mqtt_publisher.py name=mqtt_publisher ! gvametapublish name=destination ! fakesink sync=false split. ! queue leaky=downstream max-size-buffers=1 ! videoconvert ! videorate drop-only=true ! video/x-raw,format=NV12,framerate=30/1 ! appsink name=appsink sync=false max-buffers=1 drop=true",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "captioner_model_name": {
+                            "type": "string",
+                            "default": "OpenGVLab/InternVL2-2B"
+                        },
+                        "captioner_max_new_tokens": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4096,
+                            "default": 70
+                        },
+                        "captioner_scheduler_config": {
+                            "type": "string",
+                            "element": {
+                                "name": "captioner",
+                                "property": "scheduler-config"
+                            },
+                            "default": "max_num_batched_tokens=256,cache_size=4,enable_prefix_caching=true,dynamic_split_fuse=true"
+                        },
+                        "captioner-prompt": {
+                            "type": "string",
+                            "element": {
+                                "name": "captioner",
+                                "property": "prompt"
+                            },
+                            "default": "Describe what you see in the image in one sentence."
+                        },
+                        "mqtt_publisher": {
+                            "element": {
+                                "name": "mqtt_publisher",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "GenAI_Pipeline_on_GPU",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} ! decodebin ! tee name=split split. ! queue leaky=downstream max-size-buffers=1 ! videoconvert ! videorate drop-only=true ! video/x-raw,format=BGRA,framerate=1/1 ! gvagenai name=captioner device=GPU model-path=\"/home/pipeline-server/models/{parameters[captioner_model_name]}\" generation-config=\"max_new_tokens={parameters[captioner_max_new_tokens]},num_beams=1,do_sample=false,repetition_penalty=1.1\" scheduler-config=\"{parameters[captioner_scheduler_config]}\" model-cache-path=\"/tmp/ov_cache\" frame-rate=1 chunk-size=1 metrics=true ! gvametaconvert add-empty-results=true name=metaconvert ! gvapython class=MQTTPublisher function=process module=/home/pipeline-server/gvapython/mqtt_publisher/mqtt_publisher.py name=mqtt_publisher ! gvametapublish name=destination ! fakesink sync=false split. ! queue leaky=downstream max-size-buffers=1 ! videoconvert ! videorate drop-only=true ! video/x-raw,format=NV12,framerate=30/1 ! appsink name=appsink sync=false max-buffers=1 drop=true",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "captioner_model_name": {
+                            "type": "string",
+                            "default": "OpenGVLab/InternVL2-2B"
+                        },
+                        "captioner_max_new_tokens": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4096,
+                            "default": 70
+                        },
+                        "captioner_scheduler_config": {
+                            "type": "string",
+                            "element": {
+                                "name": "captioner",
+                                "property": "scheduler-config"
+                            },
+                            "default": "max_num_batched_tokens=512,cache_size=8,enable_prefix_caching=true,dynamic_split_fuse=true,use_cache_eviction=true"
+                        },
+                        "captioner-prompt": {
+                            "type": "string",
+                            "element": {
+                                "name": "captioner",
+                                "property": "prompt"
+                            },
+                            "default": "Describe what you see in the image in one sentence."
+                        },
+                        "mqtt_publisher": {
+                            "element": {
+                                "name": "mqtt_publisher",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "GenAI_Detection_Pipeline_on_CPU",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} ! decodebin ! tee name=split split. ! queue leaky=downstream max-size-buffers=1 max-size-time=0 max-size-bytes=0 ! videoconvert ! videorate drop-only=true ! video/x-raw,format=BGRA,framerate=1/1 ! gvadetect name=detection device=CPU model=\"/home/pipeline-server/detection_models/{parameters[detection_model_name]}/public/{parameters[detection_model_name]}/FP32/{parameters[detection_model_name]}.xml\" threshold={parameters[detection_threshold]} ! queue leaky=downstream max-size-buffers=1 max-size-time=0 max-size-bytes=0 ! gvametaconvert format=json add-empty-results=false ! gvapython class=DetectionFilter function=process module=/home/pipeline-server/gvapython/publisher/detection_filter.py name=detection_filter ! queue leaky=downstream max-size-buffers=1 max-size-time=0 max-size-bytes=0 ! gvagenai name=captioner device=CPU model-path=\"/home/pipeline-server/models/{parameters[captioner_model_name]}\" generation-config=\"max_new_tokens={parameters[captioner_max_new_tokens]},num_beams=1,do_sample=false,repetition_penalty=1.1\" scheduler-config=\"{parameters[captioner_scheduler_config]}\" frame-rate=1 chunk-size=1 metrics=true ! gvametaconvert add-empty-results=true name=metaconvert ! gvapython class=MQTTPublisher function=process module=/home/pipeline-server/gvapython/mqtt_publisher/mqtt_publisher.py name=mqtt_publisher ! gvametapublish name=destination ! fakesink sync=false split. ! queue leaky=downstream max-size-buffers=1 max-size-time=0 max-size-bytes=0 ! videoconvert ! videorate drop-only=true ! video/x-raw,format=NV12,framerate=30/1 ! gvadetect name=detection_preview device=CPU model=\"/home/pipeline-server/detection_models/{parameters[detection_model_name]}/public/{parameters[detection_model_name]}/FP32/{parameters[detection_model_name]}.xml\" threshold={parameters[detection_threshold]} ! appsink name=appsink sync=false max-buffers=1 drop=true",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection_model_name": {
+                            "type": "string",
+                            "default": "yolov8s"
+                        },
+                        "detection_threshold": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "default": 0.6
+                        },
+                        "captioner_model_name": {
+                            "type": "string",
+                            "default": "OpenGVLab/InternVL2-2B"
+                        },
+                        "captioner_max_new_tokens": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4096,
+                            "default": 70
+                        },
+                        "captioner_scheduler_config": {
+                            "type": "string",
+                            "element": {
+                                "name": "captioner",
+                                "property": "scheduler-config"
+                            },
+                            "default": "max_num_batched_tokens=256,cache_size=4,enable_prefix_caching=true,dynamic_split_fuse=true"
+                        },
+                        "captioner-prompt": {
+                            "type": "string",
+                            "element": {
+                                "name": "captioner",
+                                "property": "prompt"
+                            },
+                            "default": "Describe what you see in the image in one sentence."
+                        },
+                        "mqtt_publisher": {
+                            "element": {
+                                "name": "mqtt_publisher",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "GenAI_Detection_Pipeline_on_GPU",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} ! decodebin ! tee name=split split. ! queue leaky=downstream max-size-buffers=1 max-size-time=0 max-size-bytes=0 ! videoconvert ! videorate drop-only=true ! video/x-raw,format=BGRA,framerate=1/1 ! gvadetect name=detection device=GPU model=\"/home/pipeline-server/detection_models/{parameters[detection_model_name]}/public/{parameters[detection_model_name]}/FP16/{parameters[detection_model_name]}.xml\" threshold={parameters[detection_threshold]} ! queue leaky=downstream max-size-buffers=1 max-size-time=0 max-size-bytes=0 ! gvametaconvert format=json add-empty-results=false ! gvapython class=DetectionFilter function=process module=/home/pipeline-server/gvapython/publisher/detection_filter.py name=detection_filter ! queue leaky=downstream max-size-buffers=1 max-size-time=0 max-size-bytes=0 ! gvagenai name=captioner device=GPU model-path=\"/home/pipeline-server/models/{parameters[captioner_model_name]}\" generation-config=\"max_new_tokens={parameters[captioner_max_new_tokens]},num_beams=1,do_sample=false,repetition_penalty=1.1\" scheduler-config=\"{parameters[captioner_scheduler_config]}\" model-cache-path=\"/tmp/ov_cache\" frame-rate=1 chunk-size=1 metrics=true ! gvametaconvert add-empty-results=true name=metaconvert ! gvapython class=MQTTPublisher function=process module=/home/pipeline-server/gvapython/mqtt_publisher/mqtt_publisher.py name=mqtt_publisher ! gvametapublish name=destination ! fakesink sync=false split. ! queue leaky=downstream max-size-buffers=1 max-size-time=0 max-size-bytes=0 ! videoconvert ! videorate drop-only=true ! video/x-raw,format=NV12,framerate=30/1 ! gvadetect name=detection_preview device=GPU model=\"/home/pipeline-server/detection_models/{parameters[detection_model_name]}/public/{parameters[detection_model_name]}/FP16/{parameters[detection_model_name]}.xml\" threshold={parameters[detection_threshold]} ! appsink name=appsink sync=false max-buffers=1 drop=true",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection_model_name": {
+                            "type": "string",
+                            "default": "yolov8s"
+                        },
+                        "detection_threshold": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "default": 0.6
+                        },
+                        "captioner_model_name": {
+                            "type": "string",
+                            "default": "OpenGVLab/InternVL2-2B"
+                        },
+                        "captioner_max_new_tokens": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4096,
+                            "default": 70
+                        },
+                        "captioner_scheduler_config": {
+                            "type": "string",
+                            "element": {
+                                "name": "captioner",
+                                "property": "scheduler-config"
+                            },
+                            "default": "max_num_batched_tokens=512,cache_size=8,enable_prefix_caching=true,dynamic_split_fuse=true,use_cache_eviction=true"
+                        },
+                        "captioner-prompt": {
+                            "type": "string",
+                            "element": {
+                                "name": "captioner",
+                                "property": "prompt"
+                            },
+                            "default": "Describe what you see in the image in one sentence."
+                        },
+                        "mqtt_publisher": {
+                            "element": {
+                                "name": "mqtt_publisher",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "auto_start": false
+            }
+        ]
+    }
+}

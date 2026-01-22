@@ -37,11 +37,11 @@ spec:
   ports:
   - name: http
     port: {{ .Values.config.nginx.int.http_port }}
-    targetPort: {{ .Values.config.nginx.int.http_port }}
+    targetPort: {{ .Values.config.nginx.target.http_port }}
     nodePort: {{ .Values.config.nginx.ext.http_port }}
   - name: https
     port: {{ .Values.config.nginx.int.https_port }}
-    targetPort: {{ .Values.config.nginx.int.https_port }}
+    targetPort: {{ .Values.config.nginx.target.https_port }}
     nodePort: {{ .Values.config.nginx.ext.https_port }}
 ---
 apiVersion: apps/v1
@@ -61,9 +61,20 @@ spec:
       labels:
         app: nginx-reverse-proxy
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       initContainers:
       - name: generate-certs
         image: alpine/openssl:3.5.4
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
         command: 
         - /bin/sh
         - /scripts/generate_certs.sh
@@ -75,6 +86,14 @@ spec:
       containers:
       - name: nginx-reverse-proxy
         image: {{ .Values.nginx.image }}:{{ .Values.nginx.imageTag }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: {{ .Values.config.nginx.int.http_port }}
@@ -94,6 +113,10 @@ spec:
           subPath: nginx.conf
         - name: nginx-ssl
           mountPath: /etc/nginx/ssl
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
+        - name: nginx-run
+          mountPath: /var/run
         resources:
           requests:
             memory: "64Mi"
@@ -116,4 +139,8 @@ spec:
             path: generate_certs.sh
             mode: 0755
       - name: nginx-ssl
+        emptyDir: {}
+      - name: nginx-cache
+        emptyDir: {}
+      - name: nginx-run
         emptyDir: {}

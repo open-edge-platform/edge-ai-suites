@@ -1,3 +1,5 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 """Enhanced VLM service for traffic intelligence with weather-aware analysis."""
 
 import asyncio
