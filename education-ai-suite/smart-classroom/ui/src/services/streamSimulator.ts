@@ -1,5 +1,7 @@
 export type StreamEvent =
   | { type: 'transcript'; token: string }
+  | { type: 'transcript_chunk'; data: TranscriptChunk }
+  | { type: 'final'; data: FinalEvent }
   | { type: 'summary_token'; token: string }
   | { type: 'mindmap_complete'; token: string }
   | { type: 'error'; message: string }
@@ -11,14 +13,35 @@ export interface StreamOptions {
   signal?: AbortSignal;
   onSessionId?: (id: string | null) => void; 
   alreadyTokenized?: boolean; 
-};
+}
+
+interface Segment {
+  speaker: string;
+  text: string;
+  start: number;
+  end: number;
+}
+
+interface TranscriptChunk {
+  chunk_path: string;
+  start_time: number;
+  end_time: number;
+  chunk_index: number;
+  text: string;
+  segments: Segment[];
+}
+
+interface FinalEvent {
+  event: 'final';
+  teacher_speaker: string;
+  speaker_text_stats: Record<string, number>;
+}
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
 function tokenize(text: string): string[] {
-  // keep trailing whitespace for natural typewriter effect
   return Array.from(text.matchAll(/\S+\s*/g)).map((m) => m[0]);
 }
 
@@ -67,3 +90,5 @@ export async function* simulateSummaryStream(
   }
   yield { type: 'done' };
 }
+
+export type { Segment, TranscriptChunk, FinalEvent };
