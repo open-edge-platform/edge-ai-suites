@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.image.*?>
+<?import java.lang.*?>
+<?import javafx.collections.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.web.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane fx:id="main" prefHeight="-1" prefWidth="-1"
+ xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+ fx:controller="org.mdpnp.apps.testapp.ConfigurationDialog">
+ <bottom>
+  <BorderPane prefHeight="-1.0" prefWidth="-1.0">
+   <left>
+    <Button fx:id="quit" cancelButton="true" mnemonicParsing="false"
+     text="Quit" />
+   </left>
+   <padding>
+    <Insets bottom="10.0" left="10.0" right="10.0" />
+   </padding>
+   <right>
+    <Button fx:id="start" defaultButton="true" mnemonicParsing="false"
+     text="Start" />
+   </right>
+   <BorderPane.margin>
+    <Insets fx:id="insets" />
+   </BorderPane.margin>
+  </BorderPane>
+ </bottom>
+ <center>
+  <fx:include fx:id="settings" source="Settings.fxml"
+   BorderPane.alignment="TOP_CENTER" BorderPane.margin="$insets" />
+ </center>
+ <top>
+
+  <WebView fx:id="welcome" minHeight="170.0" minWidth="520.0"
+   prefHeight="170.0" prefWidth="520.0" AnchorPane.bottomAnchor="0.0"
+   AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+   AnchorPane.topAnchor="0.0"></WebView>
+ </top>
+</BorderPane>
