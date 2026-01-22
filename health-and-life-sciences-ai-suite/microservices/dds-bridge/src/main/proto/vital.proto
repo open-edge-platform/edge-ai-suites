@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package org.intel.grpc;
+
+option java_multiple_files = true;
+option java_package = "org.intel.grpc";
+option java_outer_classname = "VitalProto";
+
+import "google/protobuf/empty.proto";
+
+message Vital {
+  string device_id = 1;
+  string metric    = 2;
+  double value     = 3;
+  string unit      = 4;
+  int64 timestamp  = 5;
+}
+
+service VitalService {
+  // rpc PushVital(Vital) returns (google.protobuf.Empty);
+  // Optional: for streaming if you need it later
+  rpc StreamVitals(stream Vital) returns (google.protobuf.Empty);
+}
