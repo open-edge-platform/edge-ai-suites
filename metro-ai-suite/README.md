@@ -11,7 +11,6 @@ generate system qualification reports. It also enables showcasing high-performin
 as part of the [recommended hardware catalog](https://builders.intel.com/ecosystem-engagement/solution-hub/edge-ai-catalog/partner-spotlight?checkTracking=&type=system).
 
 
-- [Device qualification tool](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=metro-ai-suite-device-qualification-for-hardware-builder) For device and equipment manufacturers, the suite includes a device qualification tool to verify and benchmark hardware performance and create system qualification reports. See [recommended hardware catalog](https://www.intel.com/content/www/us/en/developer/topic-technology/edge-5g/edge-solutions/hardware.html) for a list of qualified system configurations.
 
 The Suite also provides a collection of visual analytics sample applications, using deep learning and large models (generative AI):
 
