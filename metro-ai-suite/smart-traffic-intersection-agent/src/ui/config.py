@@ -1,3 +1,5 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 """
 Configuration module for the RSU Monitoring System
 """
@@ -23,8 +25,8 @@ class Config:
     UI_THEME: str = os.getenv("UI_THEME", "light")
     
     # Alert thresholds
-    HIGH_DENSITY_THRESHOLD: int = int(float(os.getenv("HIGH_DENSITY_THRESHOLD", "5")))
-    MODERATE_DENSITY_THRESHOLD: int = int(float(os.getenv("MODERATE_DENSITY_THRESHOLD", "3")))
+    HIGH_DENSITY_THRESHOLD: int = int(float(os.getenv("HIGH_DENSITY_THRESHOLD", "10")))
+    MODERATE_DENSITY_THRESHOLD: int = int(float(os.getenv("MODERATE_DENSITY_THRESHOLD", "5")))
 
     # Weather alert thresholds
     HIGH_WIND_THRESHOLD: float = float(os.getenv("HIGH_WIND_THRESHOLD", "25.0"))

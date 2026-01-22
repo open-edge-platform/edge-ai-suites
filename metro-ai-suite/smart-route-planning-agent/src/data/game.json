@@ -1,0 +1,125 @@
+{
+  "fire_emojis": [
+    {
+      "id": 1,
+      "emoji": "🔥",
+      "latitude": 37.735341,
+      "longitude": -122.116071,
+      "label": "Fire Zone 1"
+    },
+    {
+      "id": 2,
+      "emoji": "🔥",
+      "latitude": 37.436072,
+      "longitude": -121.843004,
+      "label": "Fire Zone 2"
+    },
+    {
+      "id": 3,
+      "emoji": "🔥",
+      "latitude": 37.672323,
+      "longitude": -121.966501,
+      "label": "Fire Zone 3"
+    },
+    {
+      "id": 4,
+      "emoji": "🔥",
+      "latitude": 37.762145,
+      "longitude": -122.125834,
+      "label": "Fire Zone 4"
+    },
+    {
+      "id": 5,
+      "emoji": "🔥",
+      "latitude": 37.718522,
+      "longitude": -122.089316,
+      "label": "Fire Zone 5"
+    },
+    {
+      "id": 6,
+      "emoji": "🔥",
+      "latitude": 37.462891,
+      "longitude": -121.856742,
+      "label": "Fire Zone 6"
+    },
+    {
+      "id": 7,
+      "emoji": "🔥",
+      "latitude": 37.411234,
+      "longitude": -121.828156,
+      "label": "Fire Zone 7"
+    },
+    {
+      "id": 8,
+      "emoji": "🔥",
+      "latitude": 37.697845,
+      "longitude": -121.981274,
+      "label": "Fire Zone 8"
+    },
+    {
+      "id": 9,
+      "emoji": "🔥",
+      "latitude": 37.647912,
+      "longitude": -121.952318,
+      "label": "Fire Zone 39"
+    }
+  ],
+  "flood_emojis": [
+    {
+      "id": 1,
+      "emoji": "🌊",
+      "latitude": 37.594019,
+      "longitude": -122.110582,
+      "label": "Flood Zone 1"
+    },
+    {
+      "id": 2,
+      "emoji": "🌊",
+      "latitude": 37.776600,
+      "longitude": -122.260151,
+      "label": "Flood Zone 2"
+    },
+    {
+      "id": 3,
+      "emoji": "🌊",
+      "latitude": 37.487305,
+      "longitude": -121.991201,
+      "label": "Flood Zone 3"
+    },
+    {
+      "id": 4,
+      "emoji": "🌊",
+      "latitude": 37.619842,
+      "longitude": -122.095317,
+      "label": "Flood Zone 4"
+    },
+    {
+      "id": 5,
+      "emoji": "🌊",
+      "latitude": 37.741000,
+      "longitude": -122.221783,
+      "label": "Flood Zone 5"
+    },
+    {
+      "id": 6,
+      "emoji": "🌊",
+      "latitude": 37.751892,
+      "longitude": -122.244783,
+      "label": "Flood Zone 6"
+    },
+    {
+      "id": 7,
+      "emoji": "🌊",
+      "latitude": 37.514672,
+      "longitude": -122.005438,
+      "label": "Flood Zone 7"
+    },
+    {
+      "id": 8,
+      "emoji": "🌊",
+      "latitude": 37.461823,
+      "longitude": -121.975964,
+      "label": "Flood Zone 8"
+    }
+  ]
+}

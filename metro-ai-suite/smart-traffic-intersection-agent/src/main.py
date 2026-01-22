@@ -1,7 +1,9 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 """
-Traffic Intelligence Service - Lightweight traffic analysis for a single intersection
+Traffic Intersection Agent - Lightweight traffic analysis for a single intersection
  
-This service reads camera data from a single intersection via MQTT topics and provides
+This agent reads camera data from a single intersection via MQTT topics and provides
 real-time traffic analysis with weather-enriched insights and VLM-powered alerts.
 
 Key Features:
@@ -54,8 +56,8 @@ logger = structlog.get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """FastAPI lifespan context manager for traffic intelligence service."""
-    logger.info("Starting Traffic Intelligence service")
+    """FastAPI lifespan context manager for Traffic Intersection Agent."""
+    logger.info("Starting Traffic Intersection Agent")
     
     try:
         # Load configuration
@@ -91,19 +93,19 @@ async def lifespan(app: FastAPI):
         mqtt_task = asyncio.create_task(mqtt_service.start())
         app.state.mqtt_task = mqtt_task
         
-        logger.info("Traffic Intelligence service started successfully", 
+        logger.info("Traffic Intersection Agent started successfully", 
                    intersection_id=config_service.get_intersection_id(),
                    mqtt_topics=config_service.get_camera_topics())
         
         yield
         
     except Exception as e:
-        logger.error("Failed to start Traffic Intelligence service", error=str(e))
+        logger.error("Failed to start Traffic Intersection Agent", error=str(e))
         raise
     
     finally:
         # Cleanup
-        logger.info("Shutting down Traffic Intelligence service")
+        logger.info("Shutting down Traffic Intersection Agent")
         
         # Stop MQTT service
         if hasattr(app.state, 'mqtt_task'):
@@ -120,12 +122,12 @@ async def lifespan(app: FastAPI):
         if hasattr(app.state, 'weather_service'):
             await app.state.weather_service.stop()
         
-        logger.info("Traffic Intelligence service stopped")
+        logger.info("Traffic Intersection Agent stopped")
 
 
 def create_app() -> FastAPI:
-    """Create and configure FastAPI application for traffic intelligence."""
-    api_name = os.getenv("API_NAME", "Traffic Intelligence Service")
+    """Create and configure FastAPI application for Traffic Intersection Agent."""
+    api_name = os.getenv("API_NAME", "Traffic Intersection Agent")
     
     app = FastAPI(
         title=api_name,
@@ -143,7 +145,7 @@ def create_app() -> FastAPI:
         """Health check endpoint."""
         return {
             "status": "healthy", 
-            "service": "traffic-intelligence",
+            "service": "traffic-intersection-agent",
             "timestamp": datetime.utcnow().isoformat()
         }
     
@@ -151,7 +153,7 @@ def create_app() -> FastAPI:
 
 
 def main():
-    """Main entry point for traffic intelligence service."""
+    """Main entry point for Traffic Intersection Agent."""
     # Set up logging level
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
     logging.basicConfig(level=getattr(logging, log_level))
@@ -160,10 +162,10 @@ def main():
     app = create_app()
     
     # Get configuration
-    port = int(os.getenv("TRAFFIC_INTELLIGENCE_PORT", "8081"))
-    host = os.getenv("TRAFFIC_INTELLIGENCE_HOST", "0.0.0.0")
+    port = int(os.getenv("TRAFFIC_INTERSECTION_AGENT_PORT", "8081"))
+    host = os.getenv("TRAFFIC_INTERSECTION_AGENT_HOST", "0.0.0.0")
     
-    logger.info("Starting Traffic Intelligence service", 
+    logger.info("Starting Traffic Intersection Agent", 
                host=host, port=port, log_level=log_level)
     
     # Run the application

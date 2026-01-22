@@ -44,7 +44,7 @@ This single command will:
 - Build Docker images
 - Start all services in the Scene Intelligence stack
 
-The setup command starts all services including the containerized Traffic Intelligence service.
+The setup command starts all services including the containerized Traffic Intersection Agent.
 
 ### 3. Verify Services
 
@@ -54,10 +54,10 @@ Check that all services are running:
 # Check container status
 docker ps
 
-# Verify Traffic Intelligence API
+# Verify Traffic Intersection Agent API
 curl -s http://localhost:8081/health
 
-# Verify Traffic Intelligence UI
+# Verify Traffic Intersection Agent UI
 curl -s http://localhost:7860/
 
 # Check Scene Intelligence (if deployed separately)
@@ -68,8 +68,8 @@ curl -s http://localhost:8082/health
 
 The stack provides multiple interfaces:
 
-- **Traffic Intelligence API**: `http://localhost:8081`
-- **Traffic Intelligence UI**: `http://localhost:7860`
+- **Traffic Intersection Agent API**: `http://localhost:8081`
+- **Traffic Intersection Agent UI**: `http://localhost:7860`
 - **SceneScape Web**: `https://localhost:443`
 - **API Documentation**: `http://localhost:8081/docs` (Swagger UI)
 
@@ -82,8 +82,9 @@ For advanced users who need more control over the configuration, you can manuall
 If you prefer to manually configure environment variables instead of using the setup script, see the [Environment Variables Guide](./environment-variables.md) for complete details. Key variables include:
 
 ```bash
-# Core Scene Intelligence Configuration
-export SCENE_INTELLIGENCE_PORT=8082
+# Core Smart Traffic Intelligence Configuration
+export TRAFFIC_INTELLIGENCE_PORT=8081
+export TRAFFIC_INTELLIGENCE_UI_PORT=7860
 export LOG_LEVEL=INFO
 
 # MQTT Broker Configuration
@@ -101,7 +102,8 @@ export SCENESCAPE_PORT=443
 export DLSTREAMER_PORT=8555
 
 # Traffic Analysis Parameters
-export HIGH_DENSITY_THRESHOLD=5.0
+export HIGH_DENSITY_THRESHOLD=10
+export MODERATE_DENSITY_THRESHOLD=5
 export VLM_WORKERS=4
 export VLM_COOLDOWN_MINUTES=1
 export VLM_TIMEOUT_SECONDS=10
@@ -117,13 +119,13 @@ The Scene Intelligence stack includes these containerized services:
 - **SceneScape Web Server** - Management interface
 - **SceneScape Controller** - Orchestration service
 - **VLM OpenVINO Serving** - Vision Language Model inference
-- **Traffic Intelligence** - Real-time traffic analysis with dual interface (API + UI)
+- **Traffic Intersection Agent** - Real-time traffic analysis with dual interface (API + UI)
 
 ## Testing the API
 
-### 1. Traffic Intelligence Service
+### 1. Traffic Intersection Agent Service
 
-The Traffic Intelligence service provides real-time intersection monitoring:
+The Traffic Intersection Agent provides real-time intersection monitoring:
 
 ```bash
 # Check service health
@@ -139,7 +141,7 @@ curl -s http://localhost:8081/api/v1/weather/current
 
 ### 2. Access UI Dashboard
 
-Open the Traffic Intelligence UI in your browser:
+Open the Traffic Intersection Agent UI in your browser:
 
 Visit http://localhost:7860 in your browser
 
@@ -158,8 +160,8 @@ The complete stack exposes several services on different ports:
 
 | Service | Port | Description |
 |---------|------|-------------|
-| Traffic Intelligence API | 8081 | Real-time traffic analysis REST API |
-| Traffic Intelligence UI | 7860 | Interactive Gradio dashboard |
+| Traffic Intersection Agent API | 8081 | Real-time traffic analysis REST API |
+| Traffic Intersection Agent UI | 7860 | Interactive Gradio dashboard |
 | Scene Intelligence API | 8082 | Scene analytics service (optional) |
 | VLM OpenVINO Serving | 9764 | Vision Language Model service |
 | SceneScape Web | 443 | Management web interface (HTTPS) |
@@ -182,9 +184,9 @@ The complete stack exposes several services on different ports:
 
 The Scene Intelligence stack uses several configuration files located in the `config/` and `src/traffic-intelligence/config/` directories:
 
-### Traffic Intelligence Configuration
+### Traffic Intersection Agent Configuration
 
-The Traffic Intelligence service configuration is at `src/traffic-intelligence/config/traffic_intelligence.json`:
+The Traffic Intersection Agent service configuration is at `src/config/traffic_agent.json`:
 
 ```json
 {
@@ -223,8 +225,8 @@ Note: Configuration values can be overridden by environment variables set in `se
 
 ## Next Steps
 
-- **Traffic Intelligence**: Access the UI dashboard at `http://localhost:7860` for interactive traffic monitoring
-- **API Documentation**: Explore the Traffic Intelligence API at `http://localhost:8081/docs` (Swagger UI)
+- **Traffic Intersection Agent**: Access the UI dashboard at `http://localhost:7860` for interactive traffic monitoring
+- **API Documentation**: Explore the Traffic Intersection Agent API at `http://localhost:8081/docs` (Swagger UI)
 - **Advanced Configuration**: For detailed environment variable options, see [Environment Variables](./environment-variables.md)
 - **Traffic Analysis Deep Dive**: See [Traffic Data Analysis Workflow](./traffic-data-analysis-workflow.md) for VLM integration details
 - **SceneScape Management**: Access the web interface at `https://localhost:443` for visual management
@@ -266,7 +268,7 @@ Common issues:
 - Insufficient system resources for VLM service
 - Proxy configuration issues
 
-### Traffic Intelligence Service Issues
+### Traffic Intersection Agent Issues
 
 Check service health:
 
@@ -289,7 +291,7 @@ docker ps | grep traffic-intelligence
 Verify individual service health:
 
 ```bash
-# Traffic Intelligence
+# Traffic Intersection Agent
 curl http://localhost:8081/health
 
 # VLM Service
@@ -349,7 +351,7 @@ Validate configuration files:
 
 ```bash
 # Check JSON syntax
-cat src/traffic-intelligence/config/traffic_intelligence.json | jq .
+cat src/config/traffic_agent.json | jq .
 cat config/scene_intelligence_config.json | jq .
 
 # Verify mounted configuration

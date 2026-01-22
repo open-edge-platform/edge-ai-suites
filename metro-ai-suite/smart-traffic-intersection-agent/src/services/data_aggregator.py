@@ -1,4 +1,6 @@
-"""Data aggregator service for traffic intelligence."""
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Data aggregator service for Traffic Intersection Agent."""
 
 import asyncio
 from datetime import datetime, timezone
@@ -8,7 +10,7 @@ import structlog
 
 from models import (
     CameraDataMessage, CameraImage, TrafficSnapshot, IntersectionData,
-    TrafficIntelligenceResponse, WeatherData, VLMAnalysisData
+    TrafficIntersectionAgentResponse, WeatherData, VLMAnalysisData
 )
 from .config import ConfigService
 from .vlm_service import VLMService
@@ -19,7 +21,7 @@ logger = structlog.get_logger(__name__)
 
 class DataAggregatorService:
     """
-    Data aggregator service for traffic intelligence.
+    Data aggregator service for Traffic Intersection Agent.
     
     Aggregates camera data, coordinates with weather and VLM services,
     and maintains current traffic state for API responses.
@@ -300,7 +302,7 @@ class DataAggregatorService:
         except Exception as e:
             logger.error("Failed to trigger VLM analysis", error=str(e))
     
-    async def get_current_traffic_intelligence(self) -> Optional[TrafficIntelligenceResponse]:
+    async def get_current_traffic_intelligence(self) -> Optional[TrafficIntersectionAgentResponse]:
         """
         Get current traffic intelligence response.
         
@@ -328,7 +330,7 @@ class DataAggregatorService:
                 }
             
             # Create response with VLM-analyzed data only
-            response = TrafficIntelligenceResponse(
+            response = TrafficIntersectionAgentResponse(
                 timestamp=datetime.now(timezone.utc).isoformat(),
                 intersection_id=self.vlm_analyzed_intersection_data.intersection_id,
                 data=self.vlm_analyzed_intersection_data,

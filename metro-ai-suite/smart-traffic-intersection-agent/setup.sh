@@ -253,7 +253,7 @@ fi
 export TAG=${TAG:-latest}
 export REGISTRY=${REGISTRY:-}
 
-# Traffic Intelligence Service Configuration
+# Traffic Intersection Agent Configuration
 export TRAFFIC_INTELLIGENCE_PORT=${TRAFFIC_INTELLIGENCE_PORT:-8081}
 export TRAFFIC_INTELLIGENCE_UI_PORT=${TRAFFIC_INTELLIGENCE_UI_PORT:-7860}
 export REFRESH_INTERVAL=${REFRESH_INTERVAL:-15}
@@ -311,8 +311,8 @@ build_and_start_service() {
         
         echo ""
         echo -e "${BLUE}Services:${NC}"
-        echo -e "  • Traffic Intelligence API Docs: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_PORT}/docs${NC}"
-        echo -e "  • Traffic Intelligence UI: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_UI_PORT}${NC}"
+        echo -e "  • Traffic Intersection Agent API Docs: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_PORT}/docs${NC}"
+        echo -e "  • Traffic Intersection Agent UI: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_UI_PORT}${NC}"
         echo -e "  • VLM Service API Docs: ${YELLOW}http://${HOST_IP}:${VLM_SERVICE_PORT}/docs${NC}"
         echo ""
         echo -e "${BLUE}To view logs:${NC}"
@@ -337,8 +337,8 @@ start_service() {
         
         echo ""
         echo -e "${BLUE}Services:${NC}"
-        echo -e "  • Traffic Intelligence API: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_PORT}${NC}"
-        echo -e "  • Traffic Intelligence UI: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_UI_PORT}${NC}"
+        echo -e "  • Traffic Intersection Agent API: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_PORT}${NC}"
+        echo -e "  • Traffic Intersection Agent UI: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_UI_PORT}${NC}"
         echo -e "  • VLM Service: ${YELLOW}http://${HOST_IP}:${VLM_SERVICE_PORT}${NC}"
         echo ""
         echo -e "${BLUE}To view logs:${NC}"
@@ -375,8 +375,8 @@ restart_service() {
                 
                 echo ""
                 echo -e "${BLUE}Services:${NC}"
-                echo -e "  • Traffic Intelligence API: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_PORT}${NC}"
-                echo -e "  • Traffic Intelligence UI: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_UI_PORT}${NC}"
+                echo -e "  • Traffic Intersection Agent API: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_PORT}${NC}"
+                echo -e "  • Traffic Intersection Agent UI: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_UI_PORT}${NC}"
                 echo -e "  • VLM Service: ${YELLOW}http://${HOST_IP}:${VLM_SERVICE_PORT}${NC}"
                 echo ""
                 echo -e "${BLUE}To view logs:${NC}"
@@ -476,9 +476,9 @@ restart_service() {
                 echo -e "  • Grafana Dashboard: ${YELLOW}http://${HOST_IP}:3000${NC}"
                 echo -e "  • Node-RED UI: ${YELLOW}http://${HOST_IP}:1880${NC}"
                 echo ""
-                echo -e "${BLUE}Scene Intelligence Services:${NC}"
-                echo -e "  • Traffic Intelligence API: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_PORT}${NC}"
-                echo -e "  • Traffic Intelligence UI: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_UI_PORT}${NC}"
+                echo -e "${BLUE}Traffic Intersection Agent:${NC}"
+                echo -e "  • Traffic Intersection Agent API: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_PORT}${NC}"
+                echo -e "  • Traffic Intersection Agent UI: ${YELLOW}http://${HOST_IP}:${TRAFFIC_INTELLIGENCE_UI_PORT}${NC}"
                 echo -e "  • VLM Service: ${YELLOW}http://${HOST_IP}:${VLM_SERVICE_PORT}${NC}"
                 echo ""
             else

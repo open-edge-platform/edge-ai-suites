@@ -76,7 +76,7 @@ agent_ui/
 
 ## Data Source
 
-The system fetches data from the Traffic Intelligence API endpoint. The API returns data in this structure:
+The system fetches data from the Traffic Intersection Agent API endpoint. The API returns data in this structure:
 
 ```json
 {
@@ -165,7 +165,7 @@ To extend the system:
 ### Common Issues
 
 1. **Port already in use**: Change `APP_PORT` in configuration
-2. **API connection failed**: Ensure the Traffic Intelligence API is running at the configured endpoint
+2. **API connection failed**: Ensure the Traffic Intersection Agent API is running at the configured endpoint
 3. **Import errors**: Make sure virtual environment is activated and dependencies are installed
 
 ### Logs

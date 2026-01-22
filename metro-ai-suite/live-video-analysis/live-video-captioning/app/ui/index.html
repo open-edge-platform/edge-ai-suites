@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Caption Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+    <header class="topbar">
+        <h2>
+            <svg class="cc-icon" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false">
+                <rect x="2" y="4" width="20" height="16" rx="3" ry="3" fill="none" stroke="currentColor"
+                    stroke-width="2" />
+                <text x="6" y="15.5" font-size="8" font-weight="bold" fill="currentColor">CC</text>
+            </svg>
+            <span id="appTitle">Live Video Captioning</span>
+        </h2>
+        <button id="themeToggle" class="icon-button" type="button" aria-label="Switch theme">
+            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none" />
+                <line x1="12" y1="2" x2="12" y2="5" stroke="currentColor" stroke-width="2" />
+                <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="2" />
+                <line x1="4.22" y1="4.22" x2="6.34" y2="6.34" stroke="currentColor" stroke-width="2" />
+                <line x1="17.66" y1="17.66" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2" />
+                <line x1="2" y1="12" x2="5" y2="12" stroke="currentColor" stroke-width="2" />
+                <line x1="19" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2" />
+                <line x1="4.22" y1="19.78" x2="6.34" y2="17.66" stroke="currentColor" stroke-width="2" />
+                <line x1="17.66" y1="6.34" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2" />
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M21 12.8A9 9 0 0 1 11.2 3 7.5 7.5 0 1 0 21 12.8Z" stroke="currentColor" stroke-width="2"
+                    fill="none" />
+            </svg>
+        </button>
+    </header>
+    <main>
+        <section class="panels">
+            <article class="card">
+                <form id="pipelineForm" class="controls">
+                    <label class="field">
+                        <span class="label">Enter RTSP URL</span>
+                        <input id="rtspInput" class="input" type="text" placeholder="Enter RTSP link" />
+                    </label>
+                    <label class="field">
+                        <span class="label">Enter Prompt</span>
+                        <textarea id="promptInput" class="input textarea"
+                            rows="2">Describe what you see in one sentence.</textarea>
+                    </label>
+                    <div class="field-row">
+                        <label class="field">
+                            <span class="label">Select Model</span>
+                            <select id="modelNameSelect" class="input"></select>
+                        </label>
+                        <label class="field">
+                            <span class="label">Max New Tokens</span>
+                            <input id="maxTokensInput" class="input" type="number" min="1" max="4096" value="70" />
+                        </label>
+                    </div>
+                    <div class="field-row">
+                        <label class="field">
+                            <span class="label">Select Pipeline</span>
+                            <select id="pipelineSelect" class="input"></select>
+                        </label>
+                        <label class="field">
+                            <span class="label">Run Name</span>
+                            <input id="runNameInput" class="input" type="text"
+                                placeholder="Enter Run Name (Optional)" />
+                        </label>
+                    </div>
+                    <div id="detectionSection" class="field-group" style="display: none;">
+                        <div class="field">
+                            <span class="label">
+                                <label class="text-label">Detection Properties</label>
+                                <span class="tooltip-wrap">
+                                    <button type="button" class="tooltip-icon"
+                                        aria-label="More info about Detection Properties"
+                                        aria-describedby="detection-tooltip">
+                                        <svg class="info-svg" width="16" height="16" viewBox="0 0 24 24"
+                                            aria-hidden="true" focusable="false">
+                                            <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15"></circle>
+                                            <path d="M11 10h2v7h-2zM11 7h2v2h-2z" fill="currentColor"></path>
+                                        </svg>
+                                    </button>
+                                    <div id="detection-tooltip" role="tooltip" class="tooltip top-right-float" hidden>
+                                        Configuration for gvadetect detection element.
+                                    </div>
+                                </span>
+                            </span>
+                        </div>
+
+                        <div class="field-row">
+                            <label class="field" id="detectionModelField">
+                                <span class="label">
+                                    Detection Model
+                                    <span class="tooltip-wrap">
+                                        <button type="button" class="tooltip-icon"
+                                            aria-label="More info about Detection Model"
+                                            aria-describedby="detection-model-tooltip">
+                                            <svg class="info-svg" width="16" height="16" viewBox="0 0 24 24"
+                                                aria-hidden="true" focusable="false">
+                                                <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15">
+                                                </circle>
+                                                <path d="M11 10h2v7h-2zM11 7h2v2h-2z" fill="currentColor"></path>
+                                            </svg>
+                                        </button>
+                                        <div id="detection-model-tooltip" role="tooltip" class="tooltip top-right-float"
+                                            hidden>
+                                            Model used for object detection.
+                                        </div>
+                                    </span>
+                                </span>
+                                <select id="detectionModelNameSelect" class="input"></select>
+                            </label>
+
+                            <label class="field" id="detectionThresholdField">
+                                <span class="label">
+                                    Detection Threshold
+                                    <span class="tooltip-wrap">
+                                        <button type="button" class="tooltip-icon"
+                                            aria-label="More info about Detection Threshold"
+                                            aria-describedby="detection-threshold-tooltip">
+                                            <svg class="info-svg" width="16" height="16" viewBox="0 0 24 24"
+                                                aria-hidden="true" focusable="false">
+                                                <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15">
+                                                </circle>
+                                                <path d="M11 10h2v7h-2zM11 7h2v2h-2z" fill="currentColor"></path>
+                                            </svg>
+                                        </button>
+                                        <div id="detection-threshold-tooltip" role="tooltip" class="tooltip top-right"
+                                            hidden>
+                                            Threshold for detection results. Value between 0 and 1.
+                                        </div>
+                                    </span>
+                                </span>
+                                <input id="detectionThresholdInput" class="input" type="number" min="0" max="1"
+                                    step="0.1" value="0.5" />
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="field-row" style="justify-content: space-between; align-items: center;">
+                        <div class="status" style="margin: 0; flex-shrink: 0;">
+                            <span class="dot active"></span>
+                            <span id="pipelineInfo">Pipeline idle</span>
+                        </div>
+                        <div class="status" style="margin: 0; flex-shrink: 0; font-size: 0.85rem;">
+                            <span class="dot" id="collectorStatusDot"></span>
+                            <span>Collector: <span id="collectorStatus"
+                                    class="status-disconnected">Disconnected</span></span>
+                        </div>
+                        <button id="startBtn" class="btn btn-primary" type="submit">Start</button>
+                    </div>
+                </form>
+                <div class="card system-stats-card" style="margin-top:2px; background: var(--panel-strong);">
+                    <div class="chart-grid">
+                        <div class="chart-card">
+                            <div class="chart-header"><span>CPU</span><span class="chart-value" id="cpuVal">—</span>
+                            </div>
+                            <div class="chart-wrap"><canvas id="cpuChart"></canvas></div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-header"><span>RAM</span><span class="chart-value" id="ramVal">—</span>
+                            </div>
+                            <div class="chart-wrap"><canvas id="ramChart"></canvas></div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-header"><span>GPU</span><span class="chart-value" id="gpuVal">—</span>
+                            </div>
+                            <div class="gpu-error" id="gpuError"
+                                style="font-size: 0.7rem; color: var(--text-muted); display: none;"></div>
+                            <div class="chart-wrap"><canvas id="gpuChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            <article class="card live-layout">
+                <div id="runsContainer"></div>
+                <div class="empty-alert" id="hint">Start a pipeline to see video streams here</div>
+            </article>
+        </section>
+    </main>
+    <script src="/js/vendor/chart.js"></script>
+    <script src="/runtime-config.js"></script>
+    <script src="/js/utils/theme.js"></script>
+    <script src="/js/utils/settings.js"></script>
+    <script src="/js/utils/charts.js"></script>
+    <script src="/js/services/api.js"></script>
+    <script src="/js/services/metadata-stream.js"></script>
+    <script src="/js/services/metrics-collector.js"></script>
+    <script src="/js/components/run-card.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+
+</html>

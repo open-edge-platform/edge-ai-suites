@@ -1,0 +1,18 @@
+[project]
+name = "live-video-captioning"
+version = "0.1.0"
+description = "Live Video Captioning with FastAPI backend and WebRTC frontend"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]==0.128.0",
+    "uvicorn==0.40.0",
+    "paho-mqtt==2.1.0",
+]
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["backend*"]

@@ -23,17 +23,12 @@
       "scenescape/image/camera/camera3",
       "scenescape/image/camera/camera4"
     ],
-    "max_connect_attempts": -1,
-    "retry_delay_seconds": 5,
-    "max_retry_delay": 60,
-    "image_command_interval_seconds": 30,
     "rate_limit_seconds": 10.0
   },
   "weather": {
     "api_base_url": "https://api.weather.gov",
     "user_agent": "traffic-intelligence (admin@example.com)",
-    "cache_duration_minutes": 11,
-    "enable_markers": false
+    "cache_duration_minutes": 11
   },
   "vlm": {
     "base_url": "http://vlm-openvino-serving:8000",

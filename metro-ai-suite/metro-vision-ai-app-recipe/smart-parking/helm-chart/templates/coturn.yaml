@@ -41,10 +41,22 @@ spec:
       imagePullSecrets:
       - name: registryauth
       {{- end }}
-      # hostNetwork: true
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
       - name: coturn
         image: {{ $.Values.coturn.image }}:{{ $.Values.coturn.imageTag }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - NET_BIND_SERVICE
         args: ["-v"]  # Enable verbose logging
         ports:
         - containerPort: {{ $.Values.config.coturn.int.coturn_tcp_port }}

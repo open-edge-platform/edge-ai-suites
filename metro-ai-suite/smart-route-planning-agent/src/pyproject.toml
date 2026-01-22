@@ -1,0 +1,26 @@
+[project]
+name = "smart-route-planning-agent"
+version = "0.1.0"
+description = "Smart Route Planner - Agentic AI based Commuter Support System"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "black==23.7.0",
+    "branca==0.6.0",
+    "folium==0.14.0",
+    "gpxpy",
+    "gradio>=5.43.1",
+    "gradio_toggle>=0.1.5",
+    "isort",
+    "langgraph>=0.6.6",
+    "mypy",
+    "numpy",
+    "pandas",
+    "pillow>=10.4.0",
+    "pydantic",
+    "pytest",
+    "python-dateutil",
+    "requests",
+    "rich",
+    "typing-extensions",
+]
