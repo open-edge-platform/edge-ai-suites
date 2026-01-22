@@ -9,6 +9,7 @@ export interface UIState {
   aiProcessing: boolean;
   summaryEnabled: boolean;
   summaryLoading: boolean;
+  summaryComplete: boolean;
   mindmapEnabled: boolean;
   mindmapLoading: boolean;
   activeTab: Tab;
@@ -30,7 +31,6 @@ export interface UIState {
   videoAnalyticsLoading: boolean;
   videoAnalyticsActive: boolean;
   processingMode: ProcessingMode;
-  // New states for better notification management
   audioStatus: AudioStatus;
   videoStatus: VideoStatus;
   hasAudioDevices: boolean;
@@ -38,7 +38,6 @@ export interface UIState {
   isRecording: boolean;
   justStoppedRecording: boolean;
   videoAnalyticsStopping: boolean;
-  // New state for uploaded video files
   hasUploadedVideoFiles: boolean;
 }
  
@@ -46,6 +45,7 @@ const initialState: UIState = {
   aiProcessing: false,
   summaryEnabled: false,
   summaryLoading: false,
+  summaryComplete: false,
   mindmapEnabled: false,
   mindmapLoading: false,
   activeTab: 'transcripts',
@@ -67,7 +67,6 @@ const initialState: UIState = {
   videoAnalyticsLoading: false,
   videoAnalyticsActive: false,
   processingMode: null,
-  // New initial states
   audioStatus: 'idle',
   videoStatus: 'idle',
   hasAudioDevices: true,
@@ -82,28 +81,28 @@ const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-  startProcessing(state) {
-    state.aiProcessing = true;
-    state.summaryEnabled = false;
-    state.summaryLoading = false;
-    state.mindmapEnabled = false;
-    state.mindmapLoading = false;
-    state.activeTab = 'transcripts';
-    state.autoSwitched = false;
-    state.autoSwitchedToMindmap = false;
-    state.sessionId = null;
-    state.uploadedAudioPath = null;
-    state.shouldStartSummary = false;
-    state.shouldStartMindmap = false;
-    state.videoAnalyticsLoading = false;
-    state.videoAnalyticsActive = false;
-    // state.audioStatus = 'processing';
-    // Don't reset processingMode here as it's set by the caller
-  },
+    startProcessing(state) {
+      state.aiProcessing = true;
+      state.summaryEnabled = false;
+      state.summaryLoading = false;
+      state.summaryComplete = false;
+      state.mindmapEnabled = false;
+      state.mindmapLoading = false;
+      state.activeTab = 'transcripts';
+      state.autoSwitched = false;
+      state.autoSwitchedToMindmap = false;
+      state.sessionId = null;
+      state.uploadedAudioPath = null;
+      state.shouldStartSummary = false;
+      state.shouldStartMindmap = false;
+      state.videoAnalyticsLoading = false;
+      state.videoAnalyticsActive = false;
+    },
  
     processingFailed(state) {
       state.aiProcessing = false;
       state.summaryLoading = false;
+      state.summaryComplete = false;
       state.mindmapLoading = false;
       state.videoAnalyticsLoading = false;
       state.videoAnalyticsActive = false;
@@ -118,6 +117,7 @@ const uiSlice = createSlice({
       console.log('transcriptionComplete reducer called');
       state.summaryEnabled = true;
       state.summaryLoading = true;
+      state.summaryComplete = false;
       state.shouldStartSummary = true;
       state.audioStatus = 'summarizing';
       if (!state.autoSwitched) {
@@ -128,6 +128,13 @@ const uiSlice = createSlice({
  
     clearSummaryStartRequest(state) {
       state.shouldStartSummary = false;
+    },
+
+    summaryStreamComplete(state) {
+      state.summaryLoading = false;
+      state.summaryComplete = true;
+      state.audioStatus = 'summarizing';
+      console.log('🎯 Summary stream completed');
     },
  
     setUploadedAudioPath(state, action: PayloadAction<string>) {
@@ -161,6 +168,7 @@ const uiSlice = createSlice({
  
     summaryDone(state) {
       state.aiProcessing = false;
+      state.summaryComplete = true;
       state.mindmapEnabled = true;
       state.mindmapLoading = true;
       state.shouldStartMindmap = true;
@@ -271,12 +279,10 @@ const uiSlice = createSlice({
       if (backCamera) state.backCamera = backCamera;
       if (boardCamera) state.boardCamera = boardCamera;
       
-      // Update video status based on camera configuration
       const hasVideoConfig = Boolean(frontCamera?.trim() || backCamera?.trim() || boardCamera?.trim());
       state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
     },
 
-    // New actions for better state management
     setAudioStatus(state, action: PayloadAction<AudioStatus>) {
       state.audioStatus = action.payload;
     },
@@ -327,16 +333,13 @@ const uiSlice = createSlice({
       state.audioStatus = 'transcribing';
     },
 
-    // New action for uploaded video files
     setHasUploadedVideoFiles(state, action: PayloadAction<boolean>) {
       state.hasUploadedVideoFiles = action.payload;
-      // Update video status based on uploaded files
       if (action.payload && state.videoStatus === 'no-config') {
         state.videoStatus = 'ready';
       }
     },
     
-    // Enhanced reset that preserves device states
     resetFlow(state) {
       const preservedAudioDevices = state.hasAudioDevices;
       const preservedAudioDevicesLoading = state.audioDevicesLoading;
@@ -347,10 +350,8 @@ const uiSlice = createSlice({
         boardCamera: state.boardCamera,
       };
       
-      // Reset to initial state
       Object.assign(state, initialState);
       
-      // Restore preserved states
       state.hasAudioDevices = preservedAudioDevices;
       state.audioDevicesLoading = preservedAudioDevicesLoading;
       state.hasUploadedVideoFiles = preservedHasUploadedVideoFiles;
@@ -358,7 +359,6 @@ const uiSlice = createSlice({
       state.backCamera = preservedCameras.backCamera;
       state.boardCamera = preservedCameras.boardCamera;
       
-      // Set appropriate initial statuses
       state.audioStatus = preservedAudioDevicesLoading ? 'checking' : (preservedAudioDevices ? 'ready' : 'no-devices');
       const hasVideoConfig = Boolean(preservedCameras.frontCamera?.trim() || preservedCameras.backCamera?.trim() || preservedCameras.boardCamera?.trim() || preservedHasUploadedVideoFiles);
       state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
@@ -371,6 +371,7 @@ export const {
   processingFailed,
   transcriptionComplete,
   clearSummaryStartRequest,
+  summaryStreamComplete, 
   setUploadedAudioPath,
   setSessionId,
   setVideoSessionId,
@@ -397,7 +398,6 @@ export const {
   setVideoAnalyticsActive,
   setProcessingMode,
   loadCameraSettingsFromStorage,
-  // New exports
   setAudioStatus,
   setVideoStatus,
   setHasAudioDevices,

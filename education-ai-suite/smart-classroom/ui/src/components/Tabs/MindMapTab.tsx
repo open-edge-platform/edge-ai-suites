@@ -69,25 +69,6 @@ const cleanJsMindContent = (content: string): any => {
     }
   } catch (error) {
     console.error("Failed to parse jsMind data:", error);
-    
-    const errorData = {
-      "meta": {
-        "name": "error_fallback",
-        "author": "ai_assistant", 
-        "version": "1.0"
-      },
-      "format": "node_tree",
-      "data": {
-        "id": "root",
-        "topic": "Error: Invalid Format",
-        "children": [
-          {
-            "id": "error_msg",
-            "topic": "Failed to parse mindmap data"
-          }
-        ]
-      }
-    };
     throw new Error("INVALID_FORMAT");
   }
 };
@@ -99,10 +80,12 @@ const MindMapTab: React.FC = () => {
   const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
   const sessionId = useAppSelector((s) => s.ui.sessionId);
   const shouldStartMindmap = useAppSelector((s) => s.ui.shouldStartMindmap);
+  const summaryComplete = useAppSelector((s) => s.ui.summaryComplete);
 
   const { finalText, isRendered, sessionId: mindmapSessionId } = useAppSelector((s) => s.mindmap);
 
   const startedRef = useRef(false);
+  const sessionRef = useRef<string | null>(null);
   const jsmindRef = useRef<HTMLDivElement>(null);
   const jsmindInstance = useRef<any>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -132,6 +115,14 @@ const MindMapTab: React.FC = () => {
       jsmindInstance.current = null;
     }
   };
+
+  useEffect(() => {
+    if (sessionRef.current && sessionRef.current !== sessionId) {
+      activeMindmapSessions.delete(sessionRef.current);
+      startedRef.current = false;
+    }
+    sessionRef.current = sessionId ?? null;
+  }, [sessionId]);
 
   useEffect(() => {
     const loadJsMind = async () => {
@@ -263,6 +254,10 @@ const MindMapTab: React.FC = () => {
 
   useEffect(() => {
     if (!mindmapEnabled || !sessionId || !shouldStartMindmap) return;
+    if (!summaryComplete) {
+      console.log('🧠 Waiting for summary to complete before starting mindmap');
+      return;
+    }
     if (mindmapSessionId === sessionId && finalText) {
       return;
     }
@@ -294,7 +289,7 @@ const MindMapTab: React.FC = () => {
         dispatch(clearMindmapStartRequest());
       }
     })();
-  }, [mindmapEnabled, shouldStartMindmap, sessionId, dispatch, mindmapSessionId, finalText]);
+  }, [mindmapEnabled, shouldStartMindmap, sessionId, dispatch, mindmapSessionId, finalText, summaryComplete]);
 
   useEffect(() => {
     isInitializedRef.current = false;

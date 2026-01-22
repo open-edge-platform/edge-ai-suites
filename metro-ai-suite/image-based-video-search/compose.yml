@@ -52,8 +52,6 @@ services:
       context: src/feature-matching
       dockerfile: Dockerfile
     read_only: true
-    tmpfs:
-    - /usr/src/app/static:uid=1999,gid=1999,mode=775
     environment:
       MILVUS_ENDPOINT: http://milvus-db:19530
       COLLECTION_NAME: my_image_collection
@@ -74,7 +72,7 @@ services:
       broker:
         condition: service_started
     volumes:
-      - image-data:/user/src/app/static
+      - image-data:/usr/src/app/static:rw
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
       interval: 30s

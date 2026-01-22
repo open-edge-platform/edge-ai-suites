@@ -44,14 +44,31 @@ class Paraformer(BaseASR):
 
     def transcribe(self, audio_path: str, temperature=0.0) -> str:
         try:
-            res = self.model.generate(input=audio_path)
-            # res [{'key': <input>, 'text': '...', , 'timestamp': [[], [], ...]}]
-            if len(res) > 0:
-                return res[0]["text"]
-            else:
-                logger.error("ASR transcription generated empty result.")
-                return None
+            res = self.model.generate(
+                input=audio_path,
+                sentence_timestamp=True,
+                batch_size_s=300
+            )
+
+            if not res:
+                return {"text": "", "segments": []}
+
+            out = res[0]
+
+            segments = []
+            if "sentence_info" in out:
+                for s in out["sentence_info"]:
+                    segments.append({
+                        "start": s["start"] / 1000.0,  # ms → seconds
+                        "end": s["end"] / 1000.0,
+                        "text": s["text"].strip()
+                    })
+
+            return {
+                "text": out["text"].strip(),
+                "segments": segments
+            }
+
         except Exception as e:
-            logger.error(f"Error during transcription: {e}")
-            return None
-        
+            logger.error(f"[ASR] Paraformer transcription error: {e}")
+            return {"text": "", "segments": []}

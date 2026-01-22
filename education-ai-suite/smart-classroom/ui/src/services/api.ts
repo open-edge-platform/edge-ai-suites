@@ -1,5 +1,5 @@
 import { typewriterStream } from '../utils/typewriterStream';
-import type { StreamEvent, StreamOptions } from './streamSimulator';
+import type { StreamEvent, StreamOptions, Segment, TranscriptChunk, FinalEvent } from './streamSimulator';
 
 export type ProjectConfig = { 
   name: string; 
@@ -132,76 +132,88 @@ return res.json();
 });
 }
 
-// Updated to use session ID in header instead of generating it
 export async function* streamTranscript(
   audioPath: string,
-  sessionId: string, // Now required parameter
+  sessionId: string,
   opts: StreamOptions = {}
 ): AsyncGenerator<StreamEvent> {
- 
-  // Prepare request body based on whether it's microphone or file
   const requestBody =
     audioPath === "MICROPHONE" || audioPath === ""
-      ? {
-          audio_filename: "",
-          source_type: "microphone",
-        }
-      : {
-          audio_filename: audioPath,
-          source_type: "audio_file",
-        };
- 
-  console.log("Sending transcription request:", requestBody);
-  console.log("Using session ID:", sessionId);
- 
-  const res = await fetch(`${BASE_URL}/transcribe`, {
-    method: "POST",
-    headers: { 
-      "Content-Type": "application/json", 
-      "Accept": "application/json",
-      "x-session-id": sessionId // Pass session ID in header
-    },
-    body: JSON.stringify(requestBody),
-    signal: opts.signal,
-    cache: "no-store",
-    keepalive: true,
-  });
- 
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error("Transcription request failed:", errorText);
-    throw new Error(`Failed to start transcription: ${res.status} - ${errorText}`);
+      ? { audio_filename: "", source_type: "microphone" }
+      : { audio_filename: audioPath, source_type: "audio_file" };
+
+  let res: Response;
+
+  try {
+    res = await fetch(`${BASE_URL}/transcribe`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "x-session-id": sessionId
+      },
+      body: JSON.stringify(requestBody),
+      signal: opts.signal,
+      cache: "no-store"
+    });
+  } catch (err) {
+    console.error("❌ Network failure:", err);
+    yield { type: "error", message: "Network error. Please retry." };
+    yield { type: "done" };
+    return;
   }
 
-  // Session ID is already known, no need to extract from header
-  console.log("Using existing sessionId:", sessionId);
-  if (opts.onSessionId) opts.onSessionId(sessionId);
+  if (res.status === 429) {
+    console.warn("⏳ Rate limited");
+    yield { type: "error", message: "Too many requests. Please wait a moment." };
+    yield { type: "done" };
+    return;
+  }
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("❌ Transcription failed:", res.status, text);
+    yield { type: "error", message: `Transcription failed (${res.status})` };
+    yield { type: "done" };
+    return;
+  }
 
   const reader = res.body?.getReader();
+  if (!reader) {
+    yield { type: "error", message: "Streaming not supported" };
+    yield { type: "done" };
+    return;
+  }
+
   const decoder = new TextDecoder();
   let buffer = "";
-  while (reader) {
+
+  while (true) {
     const { value, done } = await reader.read();
     if (done) break;
+
     buffer += decoder.decode(value, { stream: true });
-    let lines = buffer.split("\n");
+    const lines = buffer.split("\n");
     buffer = lines.pop() || "";
- 
+
     for (const line of lines) {
       if (!line.trim()) continue;
- 
-      const chunk = JSON.parse(line);
-      const text = chunk.text || "";
-      for await (const token of typewriterStream(
-        text,
-        opts.tokenDelayMs ?? 0,   
-        opts.signal
-      )) {
-        yield { type: "transcript", token };
+      try {
+        const json = JSON.parse(line);
+        if (json.event === "final") {
+          yield { type: "final", data: json };
+          continue;
+        }
+        if ("segments" in json || "text" in json) {
+          yield { type: "transcript_chunk", data: json };
+          continue;
+        }
+      } catch {
+        yield { type: "transcript", token: line };
       }
     }
   }
- 
+
   yield { type: "done" };
 }
 

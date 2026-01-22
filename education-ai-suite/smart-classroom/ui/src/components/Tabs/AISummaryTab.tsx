@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import "../../assets/css/AISummaryTab.css";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { firstSummaryToken, summaryDone, clearSummaryStartRequest } from "../../redux/slices/uiSlice";
+import { firstSummaryToken, summaryDone, clearSummaryStartRequest, summaryStreamComplete } from "../../redux/slices/uiSlice";
 import { appendSummary, finishSummary, startSummary } from "../../redux/slices/summarySlice";
 import { streamSummary } from "../../services/api";
 
@@ -41,23 +41,29 @@ const AISummaryTab: React.FC = () => {
         let sentFirst = false;
         for await (const ev of streamSummary(sessionId)) {
           if (ev.type === "summary_token") {
-            if (!sentFirst) { dispatch(firstSummaryToken()); sentFirst = true; }
+            if (!sentFirst) { 
+              dispatch(firstSummaryToken()); 
+              sentFirst = true; 
+            }
             dispatch(appendSummary(ev.token));
           } else if (ev.type === "error") {
             window.dispatchEvent(new CustomEvent('global-error', { detail: ev.message || 'Summary error' }));
             dispatch(finishSummary());
-            dispatch(summaryDone());
+            dispatch(summaryStreamComplete());
+            dispatch(summaryDone()); // Dispatch immediately
             break;
           } else if (ev.type === "done") {
             dispatch(finishSummary());
-            dispatch(summaryDone());
+            dispatch(summaryStreamComplete());
+            dispatch(summaryDone()); // Dispatch immediately
             break;
           }
         }
       } catch (e: any) {
         if (e?.name !== 'AbortError') console.error('[AISummaryTab] stream error', e);
         dispatch(finishSummary());
-        dispatch(summaryDone());
+        dispatch(summaryStreamComplete());
+        dispatch(summaryDone()); // Dispatch immediately
       } finally {
         console.log('[AISummaryTab] stream finished', sessionId);
       }
@@ -68,15 +74,11 @@ const AISummaryTab: React.FC = () => {
 
   return (
     <div className="summary-tab">
-      {isLoading && (
-        <div className="summary-loading">
-          <span className="tab-spinner" aria-label="loading" />
-          Generating summary…
+      {typed && (
+        <div className="summary-content">
+          <ReactMarkdown>{typed}</ReactMarkdown>
         </div>
       )}
-      <div className="summary-content">
-        <ReactMarkdown>{typed}</ReactMarkdown>
-      </div>
     </div>
   );
 };
