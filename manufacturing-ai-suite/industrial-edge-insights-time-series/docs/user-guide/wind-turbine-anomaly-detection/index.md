@@ -1,11 +1,4 @@
 # Wind Turbine Anomaly Detection
-<!--hide_directive
-<div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection">
-     GitHub project
-  </a>
-  </div>
-hide_directive-->
 
 <!--hide_directive
 <div class="component_card_widget">
@@ -26,21 +19,28 @@ If you want to start working with it, instead, check out the
 [Get Started Guide](../get-started.md) or [How-to Guides](../how-to-guides/index.md)
 for Time-series applications.
 
-## App Architecture
+## How It Works
 
-As seen in the following architecture diagram, the sample app at a high-level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana.
+As seen in the following architecture diagram, the sample app at a high-level comprises data
+simulators (which can act as data destinations, if configured) - in the real world these would
+be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising
+of Telegraf, InfluxDB, and the Time Series Analytics microservice using Kapacitor and Grafana.
 
 ![Wind Turbine Anomaly Detection - Time Series AI Stack Architecture Diagram](../_images/wind-turbine-anomaly-detection-timeseries-ai-stack-architecture.png)
 
 ### Data flow explanation
 
-Let's discuss how this architecture translates to data flow in the wind turbine anomaly detection use case, by ingesting the data using the OPC-UA server/MQTT publisher simulators and publishing the anomaly alerts to OPC-UA server/MQTT broker.
+Below is an explanation of how this architecture translates to data flow in the wind turbine
+anomaly detection use case, in which the data is ingested using the OPC-UA server/MQTT publisher
+simulators and anomaly alerts are published to a OPC-UA server/MQTT broker.
 
 #### **Data Sources**
 
-Using the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/ingestor-data/wind-turbine-anomaly-detection.csv` which is a normalized version of open source data wind turbine dataset (`edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/T1.csv`) from <https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset>.
+The demonstration uses the dataset contained in `wind-turbine-anomaly-detection.csv`, which is
+a normalized version of an open source wind turbine dataset (`T1.csv`), as retrieved from
+[Kaggle](https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset).
 
-This data is being ingested into **Telegraf** using the **OPC-UA** protocol using the **OPC-UA** data simulator OR **MQTT** protocol using the MQTT publisher data simulator.
+This data is ingested into **Telegraf** through the **OPC-UA** protocol using the **OPC-UA** data simulator OR **MQTT** protocol using the MQTT publisher data simulator.
 
 #### **Data Ingestion**
 
@@ -48,16 +48,17 @@ This data is being ingested into **Telegraf** using the **OPC-UA** protocol usin
 
 #### **Data Storage**
 
-**InfluxDB** stores the incoming data coming from **Telegraf**.
+**InfluxDB** stores the incoming data from **Telegraf**.
 
 #### **Data Processing**
 
-**Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Wind Turbine Anomaly Detection` sample app is available
-at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config`.
+**Time Series Analytics Microservice** uses the User Defined Function (UDF) deployment package
+(TICK Scripts, UDFs, Models) from the sample apps. The UDF deployment package for the Wind
+Turbine Anomaly Detection sample app is available in [this folder](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config).
 
 Directory details is as below:
 
-##### **`config.json`**:
+##### **`config.json`**
 
 The `task` section defines the settings for the Kapacitor task and User-Defined Functions (UDFs).
 
@@ -80,9 +81,11 @@ The `udfs` section specifies the details of the UDFs used in the task.
 
 **Alerts Configuration**:
 
-The `alerts` section defines the settings for alerting mechanisms, such as MQTT protocol.
-For OPC-UA configuration, please refer [Publishing OPC-UA alerts](../how-to-guides/how-to-configure-alerts.md#helm---publish-opc-ua-alerts).
-Please note to enable only one of the MQTT or OPC-UA alerts.
+The `alerts` section defines the settings for alert mechanisms, using the MQTT protocol by
+default.
+For publishing OPC-UA alerts in Docker, refer to [Docker OPC-UA Alerts](../how-to-guides/how-to-configure-alerts.md#docker---publish-opc-ua-alerts).
+For OPC-UA Alerts in Helm, refer to [Helm OPC-UA Alerts](../how-to-guides/how-to-configure-alerts.md#helm---publish-opc-ua-alerts)
+> **Note:** Enable only one type of alerts: either MQTT or OPC-UA.
 
 **MQTT Configuration**:
 
@@ -96,20 +99,22 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 
 ##### **`udfs/`**
 
-Contains the python script to process the incoming data.
-Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with [Intel® Extension for Scikit-learn*](https://www.intel.com/content/www/us/en/developer/tools/oneapi/scikit-learn.html)
+Contains the Python script to process the incoming data.
+Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with
+[Intel® Extension for Scikit-learn*](https://www.intel.com/content/www/us/en/developer/tools/oneapi/scikit-learn.html)
 to run on CPU/GPU to detect the anomalous power generation data points relative to wind speed.
 
 ##### **`tick_scripts/`**
 
-The TICKScript `windturbine_anomaly_detector.tick` determines processing of the input data coming in.
-Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts.
+The TICKScript `windturbine_anomaly_detector.tick` determines processing of the input data
+coming in. The file contains the details on execution of the UDF file, storage of processed data and publishing of alerts.
 By default, it is configured to publish the alerts to **MQTT**.
 
 ##### **`models/`**
 
-The `windturbine_anomaly_detector.pkl` is a model built using the RandomForestRegressor Algo from scikit-learn library.
-More details on how it is built is accessible at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/windturbine/README.md`
+The `windturbine_anomaly_detector.pkl` is a model built using the Random Forest Regressor
+algorithm from the Scikit-learn library.
+For more details on how it is built refer to the [README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/README.md).
 
 <!--hide_directive
 :::{toctree}
