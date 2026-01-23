@@ -30,8 +30,8 @@ export INTERSECTION_NAME=$(grep -oP '"name"\s*:\s*"\K[^"]+' "$DEPLOYMENT_CONFIG"
 PROJECT_NAME=${INTERSECTION_NAME:-trafficagent}
 export INTERSECTION_LATITUDE=$(grep -oP '"latitude"\s*:\s*\K-?[\d.]+(?=,|$)' "$DEPLOYMENT_CONFIG")
 export INTERSECTION_LONGITUDE=$(grep -oP '"longitude"\s*:\s*\K-?[\d.]+' "$DEPLOYMENT_CONFIG")
-export AGENT_BACKEND_PORT=$(grep -oP '"agent_backend_port"\s*:\s*\K\d+' "$DEPLOYMENT_CONFIG")
-export AGENT_UI_PORT=$(grep -oP '"agent_ui_port"\s*:\s*\K\d+' "$DEPLOYMENT_CONFIG")
+export AGENT_BACKEND_PORT=$(grep -oP '"agent_backend_port"\s*:\s*"\K[^"]+' "$DEPLOYMENT_CONFIG")
+export AGENT_UI_PORT=$(grep -oP '"agent_ui_port"\s*:\s*"\K[^"]+' "$DEPLOYMENT_CONFIG")
 
 # Unset port variables if they are empty in config file to allow using ephemeral port in docker-compose
 [ "$AGENT_BACKEND_PORT" = "" ] && unset AGENT_BACKEND_PORT

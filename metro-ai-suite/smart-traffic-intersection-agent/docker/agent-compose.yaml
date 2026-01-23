@@ -54,8 +54,8 @@ services:
       dockerfile: Dockerfile
     image: ${REGISTRY:-}smart-traffic-intersection-agent:${TAG:-latest}
     ports:
-      - "${AGENT_BACKEND_PORT:-}8081"
-      - "${AGENT_UI_PORT:-}7860"
+      - "${AGENT_BACKEND_PORT:-}:8081"
+      - "${AGENT_UI_PORT:-}:7860"
     networks:
       - scenescape
     depends_on:
