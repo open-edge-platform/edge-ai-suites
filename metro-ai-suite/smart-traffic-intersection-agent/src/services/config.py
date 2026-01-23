@@ -26,7 +26,7 @@ class ConfigService:
     
     def __init__(self):
         """Initialize configuration service."""
-        self._config_dir = Path(__file__).resolve().parent / "config"
+        self._config_dir = Path(__file__).resolve().parent.parent / "config"
         self.config = self._load_config()
         logger.info("Configuration service initialized", 
                    intersection_id=self.get_intersection_id())
@@ -38,30 +38,33 @@ class ConfigService:
         agent_config_file = self._config_dir / "traffic_agent.json"
         deployment_config_file = self._config_dir / "deployment_instance.json"
 
+        logger.info("Loading configuration files",
+                    agent_config_path=str(agent_config_file),
+                    deployment_config_path=str(deployment_config_file))
+
         try:
             if agent_config_file.exists():
-                try:
-                    with open(agent_config_file, 'r') as f:
-                        file_config = json.load(f)
-                    config.update(file_config)
-                    logger.info("Loaded configuration from file", path=agent_config_file)
-                except Exception as e:
-                    logger.warning("Failed to load config file", path=agent_config_file, error=str(e))
+                with open(agent_config_file, 'r') as f:
+                    file_config = json.load(f)
+                config.update(file_config)
+                logger.info("Loaded configuration from file", path=agent_config_file)
+            else:
+                logger.error("Traffic agent config file does not exist", path=agent_config_file)
+                raise FileNotFoundError(f"Config file not found: {agent_config_file}")
 
+            # Create key for storing intersection/instance deployments specific configs
             if "intersection" not in config:
                     config["intersection"] = {}
             
             # Load deployment specific configuration from deployment_instance.json
             if deployment_config_file.exists():
-                try:
-                    with open(deployment_config_file, 'r') as f:
-                        deployment_config = json.load(f)
-
-                    # Add intersection and deployment details for current instance from deployment_instance.json
-                    config["intersection"].update(deployment_config)
-                    logger.info("Loaded deployment configuration from file", path=deployment_config_file)
-                except Exception as e:
-                    logger.warning("Failed to load deployment config file", path=deployment_config_file, error=str(e))
+                with open(deployment_config_file, 'r') as f:
+                    deployment_config = json.load(f)
+                config["intersection"].update(deployment_config)
+                logger.info("Loaded deployment configuration from file", path=deployment_config_file)
+            else:
+                logger.error("Deployment instance config file does not exist", path=deployment_config_file)
+                raise FileNotFoundError(f"Config file not found: {deployment_config_file}")
             
             # Override the deployment configs with environment variables if set
             if os.getenv("INTERSECTION_NAME"):
@@ -71,12 +74,12 @@ class ConfigService:
             if os.getenv("INTERSECTION_LONGITUDE"):
                 config["intersection"]["longitude"] = float(os.getenv("INTERSECTION_LONGITUDE", 0.0))
         
-        # handle error while typecasting to float
+        # handle error while typecasting to float or some generic error
         except ValueError as e:
-            logger.error("Invalid value in deployment configuration or environment variables", error=str(e))
+            logger.error("Invalid value in config file(s) or environment variables", error=str(e))
             raise e
         except Exception as e:
-            logger.error("Error processing deployment configuration", error=str(e))
+            logger.error("Error occurred while handling config file(s) or environment variables", error=str(e))
             raise e
         
         # MQTT configuration
