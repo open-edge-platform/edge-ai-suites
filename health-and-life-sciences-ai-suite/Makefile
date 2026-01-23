@@ -2,12 +2,22 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
+update-submodules-mdpnp:
+	@echo "Updating mdpnp submodule only"
+	git submodule update --init \
+	  services/mdpnp-service/mdpnp
 
-update-submodules:
-	@echo "Cloning performance tool repositories"
-	git submodule deinit -f .
-	git submodule update --init --recursive
-	@echo "Submodules updated (if any present)."
+update-mdpnp-remote:
+	@echo "Updating mdpnp submodule from remote"
+	git submodule update --remote \
+	  services/mdpnp-service/mdpnp
 
-run: update-submodules
-	docker-compose -f docker-compose.yaml build
+
+build-mdpnp-runtime:
+	@echo "Building mdpnp flat runtime"
+	cd services/mdpnp-service/mdpnp && \
+	  ./gradlew :interop-lab:demo-apps:makeFlatRuntime
+
+
+run: update-submodules-mdpnp build-mdpnp-runtime
+	docker compose -f docker-compose.yaml up --build
