@@ -1,6 +1,8 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 #!/usr/bin/env python3
 """
-Simple launcher script for traffic intelligence service.
+Simple launcher script for Traffic Intersection Agent.
 This script handles the module path setup and launches the main application.
 """
 

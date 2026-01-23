@@ -1,3 +1,5 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 """Weather service for traffic intelligence with caching and error handling."""
 
 import asyncio

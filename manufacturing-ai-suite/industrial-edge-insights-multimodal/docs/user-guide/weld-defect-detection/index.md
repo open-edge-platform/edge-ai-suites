@@ -1,15 +1,31 @@
 # Weld Defect Detection
 
-## App Architecture
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-multimodal">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-multimodal/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
+MultiModal Weld Defect Detection sample application demonstrates how to use AI
+at the edge to identify defects in manufacturing environments by analyzing both
+image and time series sensor data.
+
+## How It Works
 
 ![MultiModal Weld Defect Detection Architecture Diagram](../_images/Multimodal-Weld-Defect-Detection-Architecture.png)
 
-## Data flow explanation
+### Data flow explanation
 
-As seen in the architecture diagram above, the sample app at a high-level comprises of data simulator, analytics and visualization components.
-Let's discuss how this architecture translates to data flow in the weld defect detection use case.
+As seen in the architecture diagram above, the sample app at a high-level comprises of a data simulator, analytics and visualization components.
+Below is an explanation of how this architecture translates to data flow in the weld defect
+detection use case.
 
-### 1. **Weld Data Simulator**
+#### 1. **Weld Data Simulator**
 
 The Weld Data Simulator uses sets of time synchronized .avi and .csv files from the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator/simulation-data/` subset of test dataset coming from [Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset).
 It ingests the .avi files as RTSP streams via the **mediamtx** server. This enables real-time video ingestion, simulating camera feeds for weld defect detection.
@@ -17,14 +33,14 @@ Similarly, it ingests the .csv files as data points into **Telegraf** using the 
 
 ---
 
-### 2. **Analytics Modules**
+#### 2. **Analytics Modules**
 
-#### 2.1 **DL Streamer Pipeline Server**
+##### 2.1 **DL Streamer Pipeline Server**
 
 The `DL Streamer Pipeline Server` microservice reads the frames/images from the MediaMTX server over RTSP protocol, runs the configured DL weld
 defect classification model, publishes the frame metadata results over MQTT and generates the WebRTC stream with bounded boxes for visualization in **Grafana**.
 
-##### **`DL Streamer Pipeline Server config.json`**
+###### **`DL Streamer Pipeline Server config.json`**
 
 **Pipeline Configuration**:
 
@@ -56,7 +72,7 @@ defect classification model, publishes the frame metadata results over MQTT and 
 
 ---
 
-#### 2.2 **Time Series Analytics Microservice**
+##### 2.2 **Time Series Analytics Microservice**
 
 **Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points point by point coming from **Telegraf**, runs the ML CatBoost model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. Also, publishes all the processed weld sensor data points over MQTT.
 
@@ -64,7 +80,7 @@ The UDF deployment package used for
 weld data is available
 at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/config/time-series-analytics-microservice`. Directory details is as below:
 
-##### **`config.json`**
+###### **`config.json`**
 
 **UDFs Configuration**:
 
@@ -94,7 +110,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 | `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
 
 
-##### **`udfs/`**
+###### **`udfs/`**
 
 Contains the python script to process the incoming data.
 Uses CatBoostClassifier machine learning algorithm from the CatBoost library to run on CPU to
@@ -103,36 +119,35 @@ detect anomalous weld data points using sensor data.
 **Note**: Please note, CatBoost models don't run on Intel GPUs.
 
 
-##### **`tick_scripts/`**
+###### **`tick_scripts/`**
 
 The TICKScript `weld_anomaly_detector.tick` determines processing of the input data coming in.
 Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts.
 By default, it is configured to publish the alerts to **MQTT**.
 
-##### **`models/`**
+###### **`models/`**
 
 The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier Algo of CatBoost ML
 library.
 
 ---
 
-#### 2.3 **Fusion Analytics**
+##### 2.3 **Fusion Analytics**
 
 **Fusion Analytics** subscribes to the MQTT topics coming out of `DL Streamer Pipeline Server` and `Time Series Analytics Microservice`, applies `AND`/`OR` logic to determine the anomalies during weld process, publishes the results over MQTT and writes the results as a measurement/table in **InfluxDB**
 
-### 3. **Data Storage**
+#### 3. **Data Storage**
 
 **InfluxDB** stores the incoming data coming from **Telegraf**, **Time Series Analytics Microservice** and **Fusion Analytics** .
 
-### 4. **Data Visualization**
+#### 4. **Data Visualization**
 
 **Grafana** provides an intuitive user interface for visualizing time series data stored in **InfluxDB** and also rendering the output of `DL Streamer Pipeline Server` coming as WebRTC stream. Additionally, it visualizes the fusion analytics results stored in **InfluxDB**.
 
 ---
 
-### Summary
+## Next Steps
 
-This section provides an overview of the architecture for the Multimodal Weld Defect Detection sample app.
 Refer to the detailed instructions in [Get Started](../get-started.md).
 
 <!--hide_directive

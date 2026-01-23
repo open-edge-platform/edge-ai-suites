@@ -100,6 +100,9 @@ config:
     int:
       http_port: "80"
       https_port: "443"
+    target:
+      http_port: "8080"
+      https_port: "8443"
     ext:
       http_port: "30080"
       https_port: "30443"

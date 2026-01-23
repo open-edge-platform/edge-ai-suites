@@ -7,7 +7,7 @@ interface MindmapState {
   svg: string | null;
   generationTime: number | null;
   error: string | null;
-  sessionId: string | null; // Add sessionId to track which session the mindmap belongs to
+  sessionId: string | null;
 }
 
 const initialState: MindmapState = {
@@ -25,7 +25,7 @@ const mindmapSlice = createSlice({
   initialState,
   reducers: {
     startMindmap: (state, action: PayloadAction<string>) => {
-      // Only clear if it's a different session
+      console.log('🧠 Starting mindmap for session:', action.payload);
       if (state.sessionId !== action.payload) {
         state.isLoading = true;
         state.isRendered = false;

@@ -13,10 +13,23 @@ WHISPER_MODEL_MAP = {
 }    
  
 class Whisper(BaseASR):
-   def __init__(self, model_name="whisper-small", device="cpu", revision=None):
+     def __init__(self, model_name="whisper-small", device="cpu", revision=None):
         model = WHISPER_MODEL_MAP[model_name] if model_name in WHISPER_MODEL_MAP else (_ for _ in ()).throw(ValueError("Invalid ASR model name"))
         logger.info(f"Loading Model: model name={model_name}, device={device}")
         self.model = whisper.load_model(model)
  
-   def transcribe(self, audio_path: str, temperature: float) -> str:
-        return self.model.transcribe(audio_path, temperature=temperature)["text"]
+     def transcribe(self, audio_path: str, temperature: float):
+          result = self.model.transcribe(audio_path, temperature=temperature)
+
+          segments = []
+          for seg in result["segments"]:
+               segments.append({
+                    "start": float(seg["start"]),
+                    "end": float(seg["end"]),
+                    "text": seg["text"]
+               })
+
+          return {
+               "text": result["text"],
+               "segments": segments
+          }

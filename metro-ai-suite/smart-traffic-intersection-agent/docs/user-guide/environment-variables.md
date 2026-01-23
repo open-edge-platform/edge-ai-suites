@@ -33,11 +33,11 @@ For most users, **the setup script approach documented in [Get Started](./get-st
 
 ### Service Ports
 
-#### SCENE_INTELLIGENCE_PORT
+#### TRAFFIC_INTELLIGENCE_PORT
 
-**Description**: External port for Scene Intelligence API service  
+**Description**: External port for Smart Intelligence API service  
 **Default**: `8081`  
-**Example**: `export SCENE_INTELLIGENCE_PORT=8081`
+**Example**: `export TRAFFIC_INTELLIGENCE_PORT=8081`
 
 #### SCENESCAPE_PORT
 
@@ -85,9 +85,15 @@ For most users, **the setup script approach documented in [Get Started](./get-st
 
 #### HIGH_DENSITY_THRESHOLD
 
-**Description**: Traffic density threshold for VLM analysis  
-**Default**: `5.0`  
-**Example**: `export HIGH_DENSITY_THRESHOLD=5.0`
+**Description**: Traffic density threshold for high traffic (red highlight in UI)  
+**Default**: `10`  
+**Example**: `export HIGH_DENSITY_THRESHOLD=10`
+
+#### MODERATE_DENSITY_THRESHOLD
+
+**Description**: Traffic density threshold for moderate traffic (yellow highlight in UI)  
+**Default**: `5`  
+**Example**: `export MODERATE_DENSITY_THRESHOLD=5`
 
 #### VLM_TIMEOUT_SECONDS
 
@@ -189,7 +195,8 @@ source setup.sh --setup
 ### Manual Development Setup
 
 ```bash
-export SCENE_INTELLIGENCE_PORT=8081
+export TRAFFIC_INTELLIGENCE_PORT=8081
+export TRAFFIC_INTELLIGENCE_UI_PORT=7860
 export VLM_SERVICE_PORT=9764
 export VLM_WORKERS=2
 export LOG_LEVEL=DEBUG
@@ -199,7 +206,8 @@ export HIGH_DENSITY_THRESHOLD=3.0
 ### Manual Production Setup
 
 ```bash
-export SCENE_INTELLIGENCE_PORT=8081
+export TRAFFIC_INTELLIGENCE_PORT=8081
+export TRAFFIC_INTELLIGENCE_UI_PORT=7860
 export VLM_SERVICE_PORT=9764
 export VLM_WORKERS=4
 export LOG_LEVEL=INFO
@@ -344,21 +352,40 @@ export VLM_TIMEOUT_SECONDS=10
 
 #### HIGH_DENSITY_THRESHOLD
 
-**Description**: Traffic density threshold for triggering VLM analysis.
+**Description**: Traffic density threshold for triggering VLM analysis and high traffic UI highlighting (red).
 
-**Default**: `5.0`
+**Default**: `10`
 
 **Examples**:
 
 ```bash
 # Conservative threshold
-export HIGH_DENSITY_THRESHOLD=3.0
+export HIGH_DENSITY_THRESHOLD=6
 
 # Default threshold
-export HIGH_DENSITY_THRESHOLD=5.0
+export HIGH_DENSITY_THRESHOLD=10
 
 # High threshold for busy areas
-export HIGH_DENSITY_THRESHOLD=8.0
+export HIGH_DENSITY_THRESHOLD=15
+```
+
+#### MODERATE_DENSITY_THRESHOLD
+
+**Description**: Traffic density threshold for moderate traffic UI highlighting (yellow). Vehicles >= this value but < HIGH_DENSITY_THRESHOLD will show yellow.
+
+**Default**: `5`
+
+**Examples**:
+
+```bash
+# Low threshold
+export MODERATE_DENSITY_THRESHOLD=3
+
+# Default threshold
+export MODERATE_DENSITY_THRESHOLD=5
+
+# Higher threshold
+export MODERATE_DENSITY_THRESHOLD=7
 ```
 
 #### VLM_COOLDOWN_MINUTES
@@ -549,7 +576,7 @@ Environment variables take precedence over configuration file values in the foll
 ### Development Environment
 
 ```bash
-export SCENE_INTELLIGENCE_CONFIG_PATH="./config/scene_intelligence_config.json"
+export SMART_INTELLIGENCE_CONFIG_PATH="./config/traffic_agent.json"
 export VLM_CONFIG_PATH="./config/vlm_config.json"
 export MQTT_BROKER_HOST="localhost"
 export MQTT_BROKER_PORT=1883
@@ -561,7 +588,7 @@ export VLM_WORKERS=1
 ### Production Environment
 
 ```bash
-export SCENE_INTELLIGENCE_CONFIG_PATH="/app/config/scene_intelligence_config.json"
+export SMART_INTELLIGENCE_CONFIG_PATH="/app/config/traffic_agent.json"
 export VLM_CONFIG_PATH="/app/config/vlm_config.json"
 export MQTT_BROKER_HOST="mqtt-broker.production.com"
 export MQTT_BROKER_PORT=1883

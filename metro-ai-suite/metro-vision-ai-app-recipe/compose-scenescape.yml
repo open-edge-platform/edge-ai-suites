@@ -194,6 +194,8 @@ services:
       - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
+      # NPU related environment variables
+      - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
     volumes:
       - ./${SAMPLE_APP}/src/dlstreamer-pipeline-server/config.json:/home/pipeline-server/config.json
       - ./${SAMPLE_APP}/src/dlstreamer-pipeline-server/user_scripts:/home/pipeline-server/user_scripts

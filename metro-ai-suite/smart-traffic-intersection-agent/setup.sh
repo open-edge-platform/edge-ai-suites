@@ -376,7 +376,6 @@ restart_service() {
                 echo -e "${GREEN}All dependencies and Backend/UI services for Traffic Intersection Agent restarted successfully!${NC}"
             else
                 echo -e "${RED}Failed to restart dependencies and Backend/UI services!${NC}"
-                cd - > /dev/null
                 return 1
             fi
             ;;

@@ -1,23 +1,136 @@
-.transcripts-tab {
-  padding: 1rem 0.75rem;
-  background: none;
-  color: var(--color-dark);
-  font-family: var(--font-text);
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 20px;
-  border-radius: 0;
-  box-shadow: none;
+.chat-ui-root {
+  width: 100%;
+  background: #f7f8fa;
+  padding: 0;
+  min-height: 100vh;
 }
 
-.transcripts-tab h2 {
-  font-size: 1.25rem;
-  margin-bottom: 0.75rem;
-  font-family: var(--font-display);
+.chat-ui-content {
+  width: 100%;
+  padding: 1rem;
+  min-height: 100vh;
 }
 
-.transcript-content {
-  white-space: pre-wrap;
-  line-height: 1.6;
-  font-size: 14px;
+.chat-ui-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.chat-row {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.teacher-row {
+  justify-content: flex-start;
+}
+
+.student-row {
+  justify-content: flex-end;
+}
+
+.chat-row.has-both-speakers.teacher-row {
+  justify-content: flex-start;
+}
+
+.chat-row.has-both-speakers.student-row {
+  justify-content: flex-end;
+}
+
+.chat-bubble {
+  min-width: 200px;
+  padding: 0.6em 1em;
+  border-radius: 1em;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+  color: #222;
+  position: relative;
+  word-wrap: break-word;
+}
+
+.teacher-bubble {
+  border-bottom-left-radius: 0.3em;
+}
+
+.student-bubble {
+  border-bottom-right-radius: 0.3em;
+  align-items: flex-end;
+}
+
+@media (max-width: 768px) {
+  .chat-bubble {
+    max-width: 85%;
+    min-width: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-bubble {
+    max-width: 90%;
+    min-width: 120px;
+  }
+  
+  .chat-ui-content {
+    padding: 0.5rem;
+  }
+}
+
+
+.speaker-label {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+.teacher-bubble .speaker-label {
+  background-color: #fff3cd;
+  color: #8a6d1d;
+}
+
+.student-bubble .speaker-label {
+  background-color: #e7f3fe;
+  color: #1b4f72;
+}
+
+.speaker-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  white-space: pre-line;
+  position: relative;
+  will-change: contents;
+}
+
+.transcript-placeholder {
+  color: #888;
+  font-style: italic;
+}
+
+.typewriter-cursor {
+  font-weight: bold;
+  color: #007bff;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.chat-row {
+  contain: layout style;
+}
+
+.chat-bubble {
+  contain: layout style;
 }

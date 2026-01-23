@@ -78,22 +78,22 @@ services:
       MQTT_HOST: ${MQTT_HOST:-broker.scenescape.intel.com}
       MQTT_PORT: ${MQTT_PORT:-1883}
 
-      # Intersection configuration (overrides config/traffic_intelligence.json)
+      # Intersection configuration (overrides src/config/deployment_instance.json)
       INTERSECTION_NAME: ${INTERSECTION_NAME:-}
       INTERSECTION_LATITUDE: ${INTERSECTION_LATITUDE:-}
       INTERSECTION_LONGITUDE: ${INTERSECTION_LONGITUDE:-}
       
-      # Weather configuration (overrides config/traffic_intelligence.json)
+      # Weather configuration (overrides src/config/traffic_agent.json)
       WEATHER_MOCK: ${WEATHER_MOCK:-false}
       
-      # VLM configuration (overrides config/traffic_intelligence.json)
+      # VLM configuration (overrides src/config/traffic_agent.json)
       VLM_MODEL_NAME: ${VLM_MODEL_NAME:-Qwen/Qwen2.5-VL-3B-Instruct}
       VLM_TIMEOUT_SECONDS: ${VLM_TIMEOUT_SECONDS:-}
       VLM_MAX_COMPLETION_TOKENS: ${VLM_MAX_COMPLETION_TOKENS:-}
       VLM_TEMPERATURE: ${VLM_TEMPERATURE:-}
       VLM_TOP_P: ${VLM_TOP_P:-}
       
-      # Traffic analysis configuration (overrides config/traffic_intelligence.json)
+      # Traffic analysis configuration (overrides src/config/traffic_agent.json)
       HIGH_DENSITY_THRESHOLD: ${HIGH_DENSITY_THRESHOLD:-10}
       TRAFFIC_BUFFER_DURATION: ${TRAFFIC_BUFFER_DURATION:-}
 

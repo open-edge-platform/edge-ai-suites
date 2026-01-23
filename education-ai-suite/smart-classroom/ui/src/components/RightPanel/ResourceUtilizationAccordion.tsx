@@ -14,7 +14,7 @@ interface GPUMetricConfig {
   index: number;
   color: string;
   label: string;
-  yAxis: 'y';
+  yAxis: 'y' | 'y1';
   shortLabel: string;
 }
 
@@ -65,7 +65,7 @@ const ResourceUtilizationAccordion: React.FC = () => {
       index: 3, 
       color: 'rgba(255, 99, 132, 1)', 
       label: 'Shared Memory (GB)', 
-      yAxis: 'y', 
+      yAxis: 'y1', 
       shortLabel: 'Shared Mem' 
     },
     '3D_utilization_percent': { 
@@ -138,7 +138,7 @@ const ResourceUtilizationAccordion: React.FC = () => {
     };
   };
 
-  const chartOptions = {
+  const percentageChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
@@ -147,6 +147,14 @@ const ResourceUtilizationAccordion: React.FC = () => {
         display: true,
         position: 'left' as const,
         beginAtZero: true,
+        min: 0,
+        max: 100, 
+        ticks: {
+          stepSize: 20,
+          callback: function(value: any) {
+            return value;
+          }
+        }
       },
     },
     plugins: {
@@ -157,11 +165,83 @@ const ResourceUtilizationAccordion: React.FC = () => {
     },
   };
 
-  const simpleChartOptions = {
+
+  const gpuChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    scales: { y: { beginAtZero: true } },
-    plugins: { legend: { display: true, position: 'top' as const } },
+    scales: {
+      y: {
+        type: 'linear' as const,
+        display: true,
+        position: 'left' as const,
+        beginAtZero: true,
+        min: 0,
+        max: 100, 
+        title: {
+          display: true,
+          text: 'Utilization (%)'
+        },
+        ticks: {
+          stepSize: 20,
+          callback: function(value: any) {
+            return value ;
+          }
+        }
+      },
+      y1: {
+        type: 'linear' as const,
+        display: true,
+        position: 'right' as const,
+        beginAtZero: true,
+        min: 0,
+        title: {
+          display: true,
+          text: 'Shared Mem'
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+        ticks: {
+          callback: function(value: any) {
+            return value + ' GB';
+          }
+        }
+      },
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top' as const,
+      },
+    },
+  };
+
+  const powerChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        min: 0,
+        max: 500, 
+        title: {
+          display: true,
+          text: 'Watts'
+        },
+        ticks: {
+          stepSize: 100,
+          callback: function(value: any) {
+            return value ;
+          }
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top' as const,
+      },
+    },
   };
 
   return (
@@ -180,7 +260,7 @@ const ResourceUtilizationAccordion: React.FC = () => {
                 {resourceData.cpu_utilization && resourceData.cpu_utilization.length > 0 ? (
                   <Line 
                     data={createSimpleChartData(resourceData.cpu_utilization, 'CPU %', 'rgba(255, 99, 132, 1)')} 
-                    options={simpleChartOptions} 
+                    options={percentageChartOptions} 
                   />
                 ) : (
                   <p>{t('accordion.noData') || "No data available"}</p>
@@ -195,27 +275,29 @@ const ResourceUtilizationAccordion: React.FC = () => {
                 {resourceData.gpu_utilization && resourceData.gpu_utilization.length > 0 ? (
                   <Line 
                     data={createChartData(resourceData.gpu_utilization, gpuMetricsConfig)} 
-                    options={chartOptions} 
+                    options={gpuChartOptions} 
                   />
                 ) : (
                   <p>{t('accordion.noData') || "No data available"}</p>
                 )}
               </div>
             </div>
-              {/* NPU Utilization */}
-              <div className="chart-section">
-                <h4>{t('accordion.npuUtilization') || "NPU Utilization"}</h4>
-                <div style={{ height: '200px' }}>
-                  {resourceData.npu_utilization && resourceData.npu_utilization.length > 0 ? (
-                    <Line 
-                      data={createSimpleChartData(resourceData.npu_utilization, 'NPU %', 'rgba(255, 159, 64, 1)')} 
-                      options={simpleChartOptions} 
-                    />
-                  ) : (
-                    <p>{t('accordion.noData') || "No data available"}</p>
-                  )}
-                </div>
+
+            {/* NPU Utilization */}
+            <div className="chart-section">
+              <h4>{t('accordion.npuUtilization') || "NPU Utilization"}</h4>
+              <div style={{ height: '200px' }}>
+                {resourceData.npu_utilization && resourceData.npu_utilization.length > 0 ? (
+                  <Line 
+                    data={createSimpleChartData(resourceData.npu_utilization, 'NPU %', 'rgba(255, 159, 64, 1)')} 
+                    options={percentageChartOptions} 
+                  />
+                ) : (
+                  <p>{t('accordion.noData') || "No data available"}</p>
+                )}
               </div>
+            </div>
+
             {/* Memory Usage */}
             <div className="chart-section">
               <h4>{t('accordion.memoryUtilization') || "Memory Usage"}</h4>
@@ -223,7 +305,7 @@ const ResourceUtilizationAccordion: React.FC = () => {
                 {resourceData.memory && resourceData.memory.length > 0 ? (
                   <Line 
                     data={createSimpleChartData(resourceData.memory, 'Memory %', 'rgba(54, 162, 235, 1)')} 
-                    options={simpleChartOptions} 
+                    options={percentageChartOptions} 
                   />
                 ) : (
                   <p>{t('accordion.noData') || "No data available"}</p>
@@ -238,7 +320,7 @@ const ResourceUtilizationAccordion: React.FC = () => {
                 {resourceData.power && resourceData.power.length > 0 ? (
                   <Line 
                     data={createSimpleChartData(resourceData.power, 'Power (W)', 'rgba(75, 192, 192, 1)')} 
-                    options={simpleChartOptions} 
+                    options={powerChartOptions} 
                   />
                 ) : (
                   <p>{t('accordion.noData') || "No data available"}</p>
@@ -266,5 +348,3 @@ const ResourceUtilizationAccordion: React.FC = () => {
 };
 
 export default ResourceUtilizationAccordion;
-
-

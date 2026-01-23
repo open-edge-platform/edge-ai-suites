@@ -243,8 +243,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       case 'error':
         if (mindmapState.error) {
           setAudioNotification(t('notifications.mindmapError'));
-        } else {
-          setAudioNotification(t('notifications.audioProcessingError'));
         }
         break;
       default:
@@ -301,12 +299,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  // Check if there's nothing to record (no audio devices AND no video capability)
   const hasNothingToRecord = !hasAudioDevices && !hasVideoCapability;
 
   const isRecordingDisabled = isRecording ? false : (
     audioDevicesLoading ||
-    hasNothingToRecord ||  // ✅ NEW: Disable if nothing to record
+    hasNothingToRecord ||  
     videoAnalyticsActive ||
     isBusy ||
     transcriptStatus === 'streaming' ||     
@@ -469,14 +466,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         const sharedSessionId = sessionResponse.sessionId;
         dispatch(setSessionId(sharedSessionId));
         try {
-          console.log('📊 Starting monitoring for session:', sharedSessionId);
           const monitoringResult = await startMonitoring(sharedSessionId);
-          console.log('✅ Monitoring started successfully:', monitoringResult.message);
           const timer = setTimeout(async () => {
             try {
-              console.log('⏰ 45 minutes elapsed - stopping monitoring');
               const stopResult = await stopMonitoring();
-              console.log('✅ Monitoring stopped after 45 minutes:', stopResult.message);
             } catch (error) {
               console.error('❌ Failed to stop monitoring after 45 minutes:', error);
             }

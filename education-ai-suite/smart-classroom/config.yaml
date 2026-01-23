@@ -11,9 +11,11 @@ monitoring:
 models:
   asr:
     provider: openvino # openvino, funasr and openai supported
-    name: whisper-base  # can be (whisper-base, whisper-small etc) or paraformer-zh
+    name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
+    diarization: True
+    hf_token: None   # needed only if diarization=true
     models_base_path: "models"
     threads_limit: Null # applied only if > 0 (else defaults are used); value can be tuned based on CPU specifications
 
@@ -27,9 +29,191 @@ models:
     use_cache: True
     models_base_path: "models"
     language: en # en or zh
+    mode: dialog   # dialog | teacher | hybrid
     system_prompt: 
-      en: "Summarize the classroom transcription concisely and in Markdown format with heading. Preserve the full meaning of the lecture, focusing on key points and concepts. Do not add commentary or extra details beyond the transcription."
-      zh: "你是一个课堂教学助手，根据提供的原始课堂音频的转录文本，以Markdown格式提炼出本节课的核心内容、知识点结构、讲解顺序，解释每个知识点后，用简洁清晰的语言进行总结。注意不要遗漏主要知识点，也不要捏造任何没有提及的知识点，总结要保证知识点真实准确，避免任何冗余或误导性内容。"
+      en:
+
+        Dialog: |
+          Summarize the classroom transcript.
+
+          Format:
+          TEACHER = instructor
+          STUDENT_XX = students
+
+          Instructions:
+          - Provide a full dialog summary.
+          - Preserve the flow of discussion.
+          - Include both teacher explanations and student questions.
+          - Ignore filler or repetition.
+
+          Output valid Markdown using exactly these sections:
+
+          ## Teacher Summary
+          - ...
+
+          ## Student Questions
+          - ...
+
+          ## Key Takeaways
+          - ...
+
+          ## Session Outline
+          - ...
+
+          Rules:
+          - Bullet points only.
+          - Do not quote transcript text.
+          - Do not add extra headings.
+
+
+        Teacher: |
+          Summarize only the TEACHER explanations from the transcript.
+
+          Instructions:
+          - Ignore student dialog completely.
+          - Focus strictly on teacher explanations.
+          - Do not invent missing content.
+          - If a section has no content, write "None".
+
+          Output valid Markdown using exactly these sections:
+
+          ## Teacher Summary
+          - ...
+
+          ## Student Questions
+          - None
+
+          ## Key Takeaways
+          - ...
+
+          ## Session Outline
+          - ...
+
+          Rules:
+          - Bullet points only.
+          - Do not quote transcript text.
+          - Do not add extra headings.
+
+
+        Hybrid: |
+          Summarize with focus on TEACHER explanations,
+          but use STUDENT questions as supporting context.
+
+          Instructions:
+          - Teacher explanations are primary.
+          - Include student questions only when they clarify context.
+          - Do not invent content.
+          - Ignore filler.
+
+          Output valid Markdown using exactly these sections:
+
+          ## Teacher Summary
+          - ...
+
+          ## Student Questions
+          - ...
+
+          ## Key Takeaways
+          - ...
+
+          ## Session Outline
+          - ...
+
+          Rules:
+          - Bullet points only.
+          - Do not quote transcript text.
+          - Do not add extra headings.
+      zh:
+        Dialog: |
+          总结课堂转录内容。
+
+          转录格式:
+          教师 = 教师发言
+          学生_XX = 学生发言
+
+          指示:
+          - 提供完整的对话摘要。
+          - 保持讨论的整体流程。
+          - 包含教师讲解和学生提问。
+          - 忽略无意义的填充语或重复内容。
+
+          使用以下固定章节标题输出有效 Markdown:
+
+          ## 教师总结
+          - ...
+
+          ## 学生提问
+          - ...
+
+          ## 关键要点
+          - ...
+
+          ## 课程结构
+          - ...
+
+          规则:
+          - 仅使用项目符号列表。
+          - 不要直接引用原始转录文本。
+          - 不要添加额外标题。
+
+        Teacher: |
+          仅总结转录中 教师 的讲解内容。
+
+          指示:
+          - 完全忽略学生对话。
+          - 严格聚焦教师的解释内容。
+          - 不要编造缺失的内容。
+          - 如果某个章节没有内容，写 "None"。
+
+          使用以下固定章节标题输出有效 Markdown:
+
+          ## 教师总结
+          - ...
+
+          ## 学生提问
+          - None
+
+          ## 关键要点
+          - ...
+
+          ## 课程结构
+          - ...
+
+          规则:
+          - 仅使用项目符号列表。
+          - 不要直接引用原始转录文本。
+          - 不要添加额外标题。
+
+
+        Hybrid: |
+          以 教师 讲解为重点进行总结，
+          并在必要时使用 学生 提问作为上下文补充。
+
+          指示:
+          - 教师讲解为主要内容。
+          - 仅在学生问题能帮助理解上下文时才包含。
+          - 不要编造内容。
+          - 忽略填充语或重复内容。
+
+          使用以下固定章节标题输出有效 Markdown:
+
+          ## 教师总结
+          - ...
+
+          ## 学生提问
+          - ...
+
+          ## 关键要点
+          - ...
+
+          ## 课程结构
+          - ...
+
+          规则:
+          - 仅使用项目符号列表。
+          - 不要直接引用原始转录文本。
+          - 不要添加额外标题。
+
     model_hub: huggingface # huggingface or modelscope
 
   va:

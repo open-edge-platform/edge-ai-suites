@@ -67,8 +67,11 @@ spec:
       - envFrom:
         - configMapRef:
             name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-env'
+        env:
+        - name: ZE_ENABLE_ALT_DRIVERS
+          value: "libze_intel_npu.so"
         image: '{{ tpl .Values.dlstreamerpipelineserver.repository.image $ }}:{{ tpl .Values.dlstreamerpipelineserver.repository.tag $ | default "latest" }}'
-        {{- if eq .Values.dlstreamerpipelineserver.pipeline "config.gpu.json" }}
+        {{- if or (eq .Values.dlstreamerpipelineserver.pipeline "config.gpu.json") (eq .Values.dlstreamerpipelineserver.pipeline "config.npu.json") }}
         securityContext:
           privileged: true
           readOnlyRootFilesystem: true
@@ -103,16 +106,21 @@ spec:
           mountPath: /home/pipeline-server/config.gpu.json
           subPath: config.gpu.json
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline'
+          mountPath: /home/pipeline-server/config.npu.json
+          subPath: config.npu.json
+        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline'
           mountPath: /home/pipeline-server/person-vehicle-bike-detection-2004.json
           subPath: person-vehicle-bike-detection-2004.json
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline-root'
           mountPath: /var/cache/pipeline_root
-        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-tmp'
-          mountPath: /tmp
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
           mountPath: /models
-        - name: dev
-          mountPath: /dev
+        - name: dev-gpu
+          mountPath: /dev/dri
+          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
+        - name: dev-npu
+          mountPath: /dev/accel
+          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
         {{- if .Values.dlstreamerpipelineserver.resources }}
         resources:
           {{ .Values.dlstreamerpipelineserver.resources | toYaml | nindent 10 }}
@@ -132,9 +140,12 @@ spec:
       - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
         emptyDir:
           sizeLimit: 10Gi
-      - name: dev
+      - name: dev-gpu
         hostPath:
-          path: /dev
+          path: /dev/dri
+      - name: dev-npu
+        hostPath:
+          path: /dev/accel
       {{- if .Values.pullSecrets }}
       imagePullSecrets:
       {{- .Values.pullSecrets | toYaml | nindent 6 }}

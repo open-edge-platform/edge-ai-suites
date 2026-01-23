@@ -1,15 +1,11 @@
 {
     "config": {
-        "logging": {
-            "C_LOG_LEVEL": "INFO",
-            "PY_LOG_LEVEL": "INFO"
-        },
         "pipelines": [
             {
                 "name": "filter-pipeline",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/models/person-vehicle-bike-detection-2004/FP32/person-vehicle-bike-detection-2004.xml model-proc=/models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json inference-interval=3 threshold=0.4 model-instance-id=detect1 device=GPU pre-process-backend=va-surface-sharing ! queue ! gvainference model=/models/resnet50/FP32/resnet-50-pytorch.xml inference-region=1 device=GPU pre-process-backend=va-surface-sharing model-instance-id=classify1 ! queue ! vapostproc ! videoconvertscale ! gvametaconvert add-tensor-data=true name=metaconvert ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} ! decodebin3 ! gvadetect model=/models/person-vehicle-bike-detection-2004/FP32/person-vehicle-bike-detection-2004.xml model-proc=/models/person-vehicle-bike-detection-2004/person-vehicle-bike-detection-2004.json inference-interval=3 threshold=0.4 model-instance-id=detect1 device=GPU ! queue ! gvainference model=/models/resnet50/FP32/resnet-50-pytorch.xml inference-region=1 device=GPU model-instance-id=classify1 ! queue ! vapostproc ! videoconvertscale ! gvametaconvert add-tensor-data=true name=metaconvert ! jpegenc ! appsink name=destination",
                 "auto_start": false,
                 "mqtt_publisher": {
                     "publish_frame": true,
@@ -20,7 +16,7 @@
                 "name": "search_image",
                 "source": "image_ingestor",
                 "queue_maxsize": 50,
-                "pipeline": "appsrc name=source  ! decodebin ! videoconvert ! gvainference model=/models/resnet50/FP32/resnet-50-pytorch.xml model-instance-id=infer2 device=CPU pre-process-backend=opencv ! gvametaconvert add-tensor-data=true ! appsink name=destination"
+                "pipeline": "appsrc name=source  ! decodebin3 ! gvainference model=/models/resnet50/FP32/resnet-50-pytorch.xml model-instance-id=infer2 device=GPU ! gvametaconvert add-tensor-data=true ! appsink name=destination"
             }
         ]
     }

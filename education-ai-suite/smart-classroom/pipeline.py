@@ -25,7 +25,7 @@ class Pipeline:
         ]
 
         self.summarizer_pipeline = [
-            SummarizerComponent(self.session_id, provider=config.models.summarizer.provider, model_name=config.models.summarizer.name, temperature=config.models.summarizer.temperature, device=config.models.summarizer.device)
+            SummarizerComponent(self.session_id, provider=config.models.summarizer.provider, model_name=config.models.summarizer.name, temperature=config.models.summarizer.temperature, device=config.models.summarizer.device, mode=config.models.summarizer.mode)
         ]
 
         self.mindmap_component = MindmapComponent(

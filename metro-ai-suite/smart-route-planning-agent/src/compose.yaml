@@ -1,0 +1,45 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+networks:
+  routeplanner:
+    driver: bridge
+
+services:
+  route-planner-agent:
+    image: ${REGISTRY:-}smart-route-planning-agent:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        USER_GROUP_ID: ${USER_GROUP_ID:-1000}
+    ports:
+      - "${AI_ROUTE_PLANNER_PORT:-7864}:7860"
+    environment:
+      # Proxy settings
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},${HOST_IP}
+      - NO_PROXY=${no_proxy},${HOST_IP}
+      - HTTP_PROXY=${http_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      # Application settings
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - GRADIO_SERVER_PORT=7860
+      - PYTHONPATH=/app
+      # Scene Intelligence API Configuration
+      - SI_API_BASE=http://${HOST_IP}:${SCENE_INTELLIGENCE_PORT:-8082}
+    volumes:
+      - ./data/config.json:/app/config.json:ro
+      - ./data/game.json:/app/game.json:ro
+    networks:
+      - routeplanner
+    healthcheck:
+      test: ["CMD", "uv", "run", "health_check.py", "7860"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+

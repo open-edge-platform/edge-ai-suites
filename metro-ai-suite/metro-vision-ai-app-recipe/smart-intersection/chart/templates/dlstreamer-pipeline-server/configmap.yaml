@@ -36,6 +36,8 @@ data:
   config.json: |
 {{- if .Values.dlstreamerPipelineServer.gpuWorkload }}
 {{ include "requiredFile" (list . "files/dlstreamer-pipeline-server/config_gpu.json") | indent 4 }}
+{{- else if .Values.dlstreamerPipelineServer.npuWorkload }}
+{{ include "requiredFile" (list . "files/dlstreamer-pipeline-server/config_npu.json") | indent 4 }}
 {{- else }}
 {{ include "requiredFile" (list . "files/dlstreamer-pipeline-server/config.json") | indent 4 }}
 {{- end }}

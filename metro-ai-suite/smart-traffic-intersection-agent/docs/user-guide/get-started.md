@@ -1,6 +1,6 @@
 # Get Started
 
-The **Scene Traffic Intersection Agent (STIA)** provides comprehensive traffic analysis capabilities including real-time intersection monitoring, directional traffic density analysis, and VLM-powered traffic insights. This guide provides step-by-step instructions to:
+The **Smart Traffic Intersection Agent (STIA)** provides comprehensive traffic analysis capabilities including real-time intersection monitoring, directional traffic density analysis, and VLM-powered traffic insights. This guide provides step-by-step instructions to:
 
 - Set up the agent using the automated setup script for quick deployment.
 - Run predefined tasks to explore its functionality.
@@ -39,45 +39,32 @@ source setup.sh --setup
 This single command will:
 
 - Set all required environment variables with sensible defaults
+- Setup all dependencies required for Traffic Intersection Agent
 - Generate required TLS certificates and authentication files
 - Download demo video files for testing
 - Build Docker images
-- Start all services in the Scene Intelligence stack
+- Start all services in the Traffic Intersection Agent application stack
 
-The setup command starts all services including the containerized Traffic Intelligence agent.
+The setup command starts all services including the containerized Traffic Intersection Agent.
 
 ### 3. Verify Services
 
-Check that all services are running:
+Check that all services are running and healthy:
 
 ```bash
 # Check container status
 docker ps
-
-# Verify Traffic Intelligence API
-curl -s http://localhost:8081/health
-
-# Verify Traffic Intelligence UI
-curl -s http://localhost:7860/
-
-# Check Scene Intelligence (if deployed separately)
-curl -s http://localhost:8082/health
 ```
 
 ### 4. Access Services
 
-The stack provides multiple interfaces:
-
-- **Traffic Intelligence API**: `http://localhost:8081`
-- **Traffic Intelligence UI**: `http://localhost:7860`
-- **SceneScape Web**: `https://localhost:443`
-- **API Documentation**: `http://localhost:8081/docs` (Swagger UI)
+###### __TODO__
 
 ## Running Multiple Instances (Test/Dev Only)
 
 For testing or development purposes, you may want to run multiple instances of the Smart Traffic Intersection Agent deployment to simulate multiple intersections. Each setup run (n runs) brings up n instances of the agent. In production environments, only a single ITT instance is required.
 
-> **Note**: Step 2 (updating `intersection-config.json`) is optional for single-instance production deployments—the system runs with default values.
+> **Note**: Step 2 (updating `deployment_instance.json`) is optional for single-instance production deployments—the system runs with default values.
 
 > **Recommendation**: Running 3 agent instances is recommended to experience all use cases and workflows. The number of instances you can run depends on available device resources—systems with higher resources can support more instances.
 
@@ -95,39 +82,42 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suite
 cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
-### 2. Update intersection-config.json
+### 2. Update Deployment Configuration
 
-Each instance must have a unique configuration. Edit `intersection-config.json` in each instance directory:
+Each instance must have a unique deployment configuration. Edit `deployment_instance.json` in each instance directory:
 
-**Instance 1** (`edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/intersection-config.json`):
+**Instance 1** (`edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/src/config/deployment_instance.json`):
 ```json
 {
-    "intersection-name": "intersection_1",
+    "name": "intersection_1",
     "latitude": 33.3091336,
     "longitude": -111.9353095,
-    "backend_port": "8081",
-    "ui_port": "7860"
+    "agent_backend_port": "8081",
+    "agent_ui_port": "7860"
 }
 ```
 
-**Instance 2** (`edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/intersection-config.json`):
+> __**NOTE**__ : Keep `agent_backend_port` and `agent_ui_port` values empty to use random ephemeral ports and avoid port conflicts.
+
+**Instance 2** (`edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/src/config/deployment_instance.json`):
 ```json
 {
-    "intersection-name": "intersection_2",
+    "name": "intersection_2",
     "latitude": 33.4484,
     "longitude": -112.0740,
-    "backend_port": "8082",
-    "ui_port": "7861"
+    "agent_backend_port": "8082",
+    "agent_ui_port": "7861"
 }
 ```
 
-Ensure each instance has:
-- A unique `intersection-name`
-- Different `backend_port` and `ui_port` values to avoid port conflicts (optional—if not specified, an ephemeral port is picked automatically)
+Ensure each instance has their `deployment_instance.json` updated with:
+- A unique value for `name` field
+- Unique latitude and longitude co-ordinates
+- Different `agent_backend_port` and `agent_ui_port` values to avoid port conflicts (optional — if not specified, an ephemeral port is picked automatically)
 
 ### 3. Run Setup for Each Instance
 
-In each instance directory, run:
+In each instance's `metro-ai-suite/smart-traffic-intersection-agent` directory, run:
 
 ```bash
 source setup.sh --setup
@@ -144,8 +134,9 @@ For advanced users who need more control over the configuration, you can manuall
 If you prefer to manually configure environment variables instead of using the setup script, see the [Environment Variables Guide](./environment-variables.md) for complete details. Key variables include:
 
 ```bash
-# Core Scene Intelligence Configuration
-export SCENE_INTELLIGENCE_PORT=8082
+# Core Smart Traffic Intelligence Configuration
+export TRAFFIC_INTELLIGENCE_PORT=8081
+export TRAFFIC_INTELLIGENCE_UI_PORT=7860
 export LOG_LEVEL=INFO
 
 # MQTT Broker Configuration
@@ -163,17 +154,30 @@ export SCENESCAPE_PORT=443
 export DLSTREAMER_PORT=8555
 
 # Traffic Analysis Parameters
-export HIGH_DENSITY_THRESHOLD=5.0
+export HIGH_DENSITY_THRESHOLD=10
+export MODERATE_DENSITY_THRESHOLD=5
 export VLM_WORKERS=4
 export VLM_COOLDOWN_MINUTES=1
 export VLM_TIMEOUT_SECONDS=10
 ```
 
+## Services Included
+
+The Scene Intelligence stack includes these containerized services:
+
+- **MQTT Broker** (Eclipse Mosquitto) - Message broker for traffic data
+- **DL Streamer Pipeline Server** - Video analytics and AI inference
+- **SceneScape Database** - Configuration and metadata storage
+- **SceneScape Web Server** - Management interface
+- **SceneScape Controller** - Orchestration service
+- **VLM OpenVINO Serving** - Vision Language Model inference
+- **Traffic Intersection Agent** - Real-time traffic analysis with dual interface (API + UI)
+
 ## Testing the API
 
-### 1. Traffic Intelligence Service
+### 1. Traffic Intersection Agent Service
 
-The Traffic Intelligence service provides real-time intersection monitoring:
+The Traffic Intersection Agent provides real-time intersection monitoring:
 
 ```bash
 # Check service health
@@ -189,7 +193,7 @@ curl -s http://localhost:8081/api/v1/weather/current
 
 ### 2. Access UI Dashboard
 
-Open the Traffic Intelligence UI in your browser:
+Open the Traffic Intersection Agent UI in your browser:
 
 Visit http://localhost:7860 in your browser
 
@@ -208,9 +212,8 @@ The complete stack exposes several services on different ports:
 
 | Service | Port | Description |
 |---------|------|-------------|
-| Traffic Intelligence API | 8081 | Real-time traffic analysis REST API |
-| Traffic Intelligence UI | 7860 | Interactive Gradio dashboard |
-| Scene Intelligence API | 8082 | Scene analytics service (optional) |
+| Traffic Intersection Agent API | 8081 | Real-time traffic analysis REST API |
+| Traffic Intersection Agent UI | 7860 | Interactive Gradio dashboard |
 | VLM OpenVINO Serving | 9764 | Vision Language Model service |
 | SceneScape Web | 443 | Management web interface (HTTPS) |
 | MQTT Broker | 1883 | Message broker |
@@ -220,18 +223,12 @@ The complete stack exposes several services on different ports:
 
 The Scene Intelligence stack uses several configuration files located in the `config/` and `src/traffic-intelligence/config/` directories:
 
-### Traffic Intelligence Configuration
+### Traffic Intersection Agent Configuration
 
-The Traffic Intelligence service configuration is at `src/traffic-intelligence/config/traffic_intelligence.json`:
+The Traffic Intersection Agent service configuration is at `src/config/traffic_agent.json`:
 
 ```json
 {
-  "intersection": {
-    "id": "97781c36-b53a-4749-87e6-8815da99bac7",
-    "name": "Intersection-Demo",
-    "latitude": 33.3091336,
-    "longitude": -111.9353095
-  },
   "mqtt": {
     "host": "broker.scenescape.intel.com",
     "port": 1883,
@@ -257,15 +254,150 @@ The Traffic Intelligence service configuration is at `src/traffic-intelligence/c
 }
 ```
 
-Note: Configuration values can be overridden by environment variables set in `setup.sh`.
+Deployment instance configuration is at `src\config\deployment_instance.json`
+
+```json
+{
+    "name": "intersection-1",
+    "latitude": 33.3091336,
+    "longitude": -111.9353095,
+    "agent_backend_port": "",
+    "agent_ui_port": ""
+}
+```
+
+Note: Configuration values can be overridden by environment variables set in `setup.sh` and on shell where the setup script is run.
 
 ## Next Steps
 
-- **Overview**: For detailed architecture, key components, see [Overview](./Overview.md)  
-- **API Documentation**: Explore the Traffic Intelligence API at `http://localhost:8081/docs` (Swagger UI)
+- **Traffic Intersection Agent**: Access the UI dashboard at `http://localhost:7860` for interactive traffic monitoring
+- **API Documentation**: Explore the Traffic Intersection Agent API at `http://localhost:8081/docs` (Swagger UI)
 - **Advanced Configuration**: For detailed environment variable options, see [Environment Variables](./environment-variables.md)
 - **SceneScape Management**: Access the web interface at `https://localhost:443` for visual management
 - **Build from Source**: See [How to Build from Source](./how-to-build-from-source.md) for development and custom builds
 - **Troubleshooting**: If you encounter issues, check the [Troubleshooting Guide](./troubleshooting.md)
 
 
+### Key Integration Points
+
+- **MQTT Communication**: All services communicate via the shared MQTT broker
+- **Docker Network**: Services discover each other via Docker service names
+- **Shared Secrets**: TLS certificates and auth files mounted from `src/secrets/`
+- **Persistent Storage**: Traffic data stored in Docker volume `traffic-intelligence-data`
+- **Health Monitoring**: All services include health check endpoints
+
+## Troubleshooting
+
+### Stack Not Starting
+
+Check status and logs:
+
+```bash
+# View container status
+docker ps -a
+
+# Check specific service logs
+docker compose -f docker/compose.yaml logs traffic-intelligence
+docker compose -f docker/compose.yaml logs vlm-openvino-serving
+docker compose -f docker/compose.yaml logs broker
+
+# Restart services
+source setup.sh --stop
+source setup.sh --run
+```
+
+Common issues:
+- Missing secrets/certificates in `src/secrets/` directory
+- Port conflicts (check ports 8081, 7860, 9764, 443, 1883, 8555)
+- Insufficient system resources for VLM service
+- Proxy configuration issues
+
+### Traffic Intersection Agent Issues
+
+Check service health:
+
+```bash
+# Verify API is responding
+curl http://localhost:8081/health
+
+# Check UI accessibility
+curl http://localhost:7860/
+
+# View detailed logs
+docker logs -f scene-intelligence-traffic-intelligence
+
+# Check container is running
+docker ps | grep traffic-intelligence
+```
+
+### Service Health Issues
+
+Verify individual service health:
+
+```bash
+# Traffic Intersection Agent
+curl http://localhost:8081/health
+
+# VLM Service
+curl http://localhost:9764/health
+
+```
+
+### MQTT Connection Issues
+
+Verify MQTT broker connectivity:
+
+```bash
+# Check broker is running
+docker ps | grep broker
+
+# Verify certificate is mounted
+docker exec scene-intelligence-traffic-intelligence ls -la /app/secrets/certs/
+
+# Check network connectivity
+docker compose -f docker/compose.yaml exec traffic-intelligence ping broker.scenescape.intel.com
+```
+
+### VLM Analysis Not Working
+
+Debug VLM integration:
+
+```bash
+# Check VLM service health
+curl http://localhost:9764/health
+
+# Verify traffic threshold configuration
+curl http://localhost:8081/api/v1/config
+
+# Check camera data availability
+docker logs scene-intelligence-traffic-intelligence | grep "camera"
+
+# Monitor VLM requests
+docker logs scene-intelligence-traffic-intelligence | grep -i vlm
+```
+
+### Performance Issues
+
+Monitor resource usage:
+
+```bash
+# Check container resource usage
+docker stats
+
+# Adjust VLM workers if needed
+export VLM_WORKERS=2
+docker compose -f docker/compose.yaml up -d vlm-openvino-serving
+```
+
+### Configuration Issues
+
+Validate configuration files:
+
+```bash
+# Check JSON syntax
+cat src/config/traffic_agent.json | jq .
+cat config/scene_intelligence_config.json | jq .
+
+# Verify mounted configuration
+docker compose -f docker/compose.yaml exec traffic-intelligence ls -la /app/config/
+```

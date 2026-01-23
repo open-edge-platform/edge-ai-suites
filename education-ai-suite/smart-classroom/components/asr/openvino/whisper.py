@@ -15,9 +15,21 @@ class Whisper(BaseASR):
         self.model = ov_genai.WhisperPipeline( self.model_path, device=device,config=config)
  
    def transcribe(self, audio_path: str, temperature: float) -> str:
-          audio, sr = self._load_wav_mono_16k(audio_path)
-          result = self.model.generate(audio)
-          return getattr(result, "text", str(result))
+        audio, sr = self._load_wav_mono_16k(audio_path)
+        result = self.model.generate(audio, return_timestamps=True)
+        segments = []
+        if hasattr(result, "chunks") and result.chunks is not None:
+            for seg in result.chunks:
+                segments.append({
+                    "start": float(seg.start_ts),
+                    "end": float(seg.end_ts),
+                    "text": seg.text
+                })
+
+        return {
+            "text": result.texts[0],
+            "segments": segments
+        }
    
    def _load_wav_mono_16k(self, path):
     # load with soundfile and resample to 16 kHz if necessary
