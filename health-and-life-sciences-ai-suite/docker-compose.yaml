@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  aggregator-service:
+    build:
+      context: ./microservices/aggregator-service
+      dockerfile: Dockerfile
+    image: intel/hl-ai-aggregator-service:1.0.0
+    container_name: aggregator-service
+    environment:
+      - WORKLOAD_TYPE=mdpnp
+    network_mode: "host"
+
+  mdpnp:
+    build:
+      context: ./microservices/mdpnp
+      dockerfile: Dockerfile
+    image: intel/hl-ai-mdpnp:1.0.0
+    container_name: mdpnp
+    network_mode: "host"
+
+  dds-bridge:
+    build:
+      context: ./microservices/dds-bridge
+      dockerfile: Dockerfile
+    image: intel/hl-ai-dds-bridge:1.0.0
+    container_name: dds-bridge
+    environment:
+      - GRPC_HOST=localhost
+      - GRPC_PORT=50051
+    depends_on:
+      - mdpnp
+      - aggregator-service
+    network_mode: "host"
+
+  # Placeholder entries for additional workloads that will send data to
+  # aggregator-service (ai-ecg, rppg-web, 3d-pose-estimation, ui-frontend).
+  # Their Dockerfiles and exact configs can be added once available.
+
+  # ai-ecg:
+  #   build:
+  #     context: ./microservices/ai-ecg
+
+  # rppg-web:
+  #   build:
+  #     context: ./microservices/rppg-web
+
+  # pose3d:
+  #   build:
+  #     context: ./microservices/3d-pose-estimation
+
+  # ui-frontend:
+  #   build:
+  #     context: ./microservices/ui-frontend
+  #   ports:
+  #     - "3000:3000"   # example UI port
+
+# no custom networks when using host networking mode
+
