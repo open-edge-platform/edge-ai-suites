@@ -95,7 +95,7 @@ services:
       
       # Traffic analysis configuration (overrides config/traffic_intelligence.json)
       HIGH_DENSITY_THRESHOLD: ${HIGH_DENSITY_THRESHOLD:-10}
-      TRAFFIC_BUFFER_DURATION: ${TRAFFIC_BUFFER_DURATION}
+      TRAFFIC_BUFFER_DURATION: ${TRAFFIC_BUFFER_DURATION:-}
 
     volumes:
       - ${APP_DIR:-..}/src/config:/app/config:ro

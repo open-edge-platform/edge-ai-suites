@@ -35,25 +35,26 @@ export AGENT_UI_PORT=$(grep -oP '"agent_ui_port"\s*:\s*\K\d+' "$DEPLOYMENT_CONFI
 
 # Unset port variables if they are empty in config file to allow using ephemeral port in docker-compose
 [ "$AGENT_BACKEND_PORT" = "" ] && unset AGENT_BACKEND_PORT
-[ "$AGENT_UI_PORT" = "" ] && unset AGENT_UI_PORT 
+[ "$AGENT_UI_PORT" = "" ] && unset AGENT_UI_PORT
 
 
 # Setting command usage and invalid arguments handling before the actual setup starts
 if [ "$#" -eq 0 ] || ([ "$#" -eq 1 ] && [ "$1" = "--help" ]); then
     # If no valid argument is passed, print usage information
     echo -e "-----------------------------------------------------------------"
-    echo -e "${YELLOW}USAGE: ${GREEN}source setup.sh ${BLUE}[--setenv | --run | --setup | --restart [agent|prerequisite] | --stop | --clean | --help]"
+    echo -e "${YELLOW}USAGE: ${GREEN}source setup.sh ${BLUE}[--setenv | --setup | --run | --restart [agent|deps|all] | --stop | --clean | --help]"
     echo -e "${YELLOW}"
-    echo -e "  --setenv:                Set environment variables without starting any containers"
-    echo -e "  --run:                   Start the services"
-    echo -e "  --setup:                 Build and run the services (first time setup)"
-    echo -e "  --restart [service]:     Restart services with updated environment variables"
-    echo -e "                           • agent         - Restart only Smart-Traffic-Intersection-Agent services"
-    echo -e "                           • prerequisite  - Restart only prerequisite services (edge-ai-suites)"
-    echo -e "                           • (no argument) - Restart all services"
-    echo -e "  --stop:                  Stop the services"
-    echo -e "  --clean:                 Clean up containers, volumes, and logs"
-    echo -e "  --help:                  Show this help message${NC}"
+    echo -e "  --setenv:                 Set environment variables without building image or starting any containers"
+    echo -e "  --setup:                  Build and run the services"
+    echo -e "  --run:                    Start the services without building image (if already built)"
+    echo -e "  --restart [service_type]: Restart services"
+    echo -e "                              • agent         - Restart Backend/UI service for Smart Traffic Intersection Agent"
+    echo -e "                              • deps          - Restart dependencies (Services required by Smart Intersection RI)"
+    echo -e "                              • all           - Restart all services including Backend/UI and dependencies (default if no argument is provided)"
+    echo -e "  --stop:                   Stop the services"
+    echo -e "  --clean [option]:         Clean up containers, volumes, and logs"
+    echo -e "                              • --keep-models - Remove all application volume data except VLM models"
+    echo -e "  --help:                   Show this help message${NC}"
     echo -e "-----------------------------------------------------------------"
     return 0
 
@@ -68,20 +69,26 @@ elif [ "$1" != "--help" ] && [ "$1" != "--setenv" ] && [ "$1" != "--run" ] && [ 
     echo -e "${YELLOW}Use --help for usage information${NC}"
     return 1
 
-elif [ "$1" = "--restart" ] && [ "$#" -eq 2 ] && [ "$2" != "agent" ] && [ "$2" != "prerequisite" ]; then
+elif [ "$1" = "--clean" ] && [ "$#" -eq 2 ] && [ "$2" != "--keep-models" ]; then
+    echo -e "${RED}ERROR: Invalid option for --clean: $2${NC}"
+    echo -e "${YELLOW}Valid options: --keep-models${NC}"
+    echo -e "${YELLOW}Use --help for usage information${NC}"
+    return 1
+
+elif [ "$1" = "--restart" ] && [ "$#" -eq 2 ] && [ "$2" != "agent" ] && [ "$2" != "deps" ] && [ "$2" != "all" ]; then
     echo -e "${RED}ERROR: Invalid restart argument: $2${NC}"
-    echo -e "${YELLOW}Valid options: agent, prerequisite${NC}"
+    echo -e "${YELLOW}Valid options: agent, deps, all${NC}"
     echo -e "${YELLOW}Use --help for usage information${NC}"
     return 1
 
 elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
-    echo -e "${YELLOW}Stopping Smart-Traffic-Intersection-Agent... ${NC}"
+    echo -e "${YELLOW}Stopping Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${YELLOW}... ${NC}"
     
     # check if ri-compose.yaml exists and run docker compose down accordingly
-    if [ -L "docker/ri-compose.yaml" ]; then
-        docker compose -f docker/ri-compose.yaml -f docker/agent-compose.yaml -p ${PROJECT_NAME} down 2> /dev/null
+    if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
+        docker compose -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p ${PROJECT_NAME} down 2> /dev/null
     else
-        docker compose -f docker/agent-compose.yaml -p ${PROJECT_NAME} down 2> /dev/null
+        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p ${PROJECT_NAME} down 2> /dev/null
     fi
 
     if [ $? -ne 0 ]; then
@@ -92,17 +99,23 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
 
     if [ "$1" = "--clean" ]; then
         echo -e "${YELLOW}Removing volumes for Smart-Traffic-Intersection-Agent ... ${NC}"
-        docker volume ls | grep $PROJECT_NAME | awk '{ print $2 }' | xargs docker volume rm 2>/dev/null || true
-        echo -e "${GREEN}Docker cleanup completed successfully. ${NC}"
+        if [ "$2" = "--keep-models" ]; then
+            echo -e "${CYAN}Keeping VLM model cache volume (ov-models)...${NC}"
+            docker volume ls | grep $PROJECT_NAME | grep -v "ov-models" | awk '{ print $2 }' | xargs docker volume rm 2>/dev/null || true
+        else
+            docker volume ls | grep $PROJECT_NAME | awk '{ print $2 }' | xargs docker volume rm 2>/dev/null || true
+        fi
+        echo -e "${YELLOW}Removing secrets for Smart Intersection RI ... ${NC}"
+        rm -rf "$RI_DIR/src/secrets/browser.auth" "$RI_DIR/chart/files/secrets" 2>/dev/null || true
+        echo -e "${GREEN}Cleanup completed successfully. ${NC}"
     fi
 
     return 0
 fi
 
 # ============================================================================
-# PREREQUISITES: Setup Smart Intersection RI before running the application
+# Dependencies: Setup Smart Intersection RI before running the agent Backend/UI
 # ============================================================================
-
 
 export SAMPLE_APP="smart-intersection"
 SUBMODULE="deps/metro-vision"
@@ -110,8 +123,8 @@ SUBMODULE_PATH="$APP_DIR/$SUBMODULE"
 export DEPS_DIR="$SUBMODULE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
 export RI_DIR="$DEPS_DIR/$SAMPLE_APP"
 
-# Function to check if prerequisites are met
-check_and_setup_prerequisites() {
+# Verify if dependencies are setup; if not setup the required submodules and run install script
+check_and_setup_dependencies() {
     echo -e "${BLUE}==> Setting up required submodules ...${NC}"
 
     if [ ! -d "$DEPS_DIR" ]; then
@@ -136,7 +149,7 @@ check_and_setup_prerequisites() {
     
     # Run the installation script
     echo -e "${BLUE}==> Running installation script for smart-intersection...${NC}"
-    cd $RI_DIR && ./install.sh $HOST_IP && cd - > /dev/null
+    cd $RI_DIR && ./install.sh && cd - > /dev/null
     if [ $? -ne 0 ]; then
         echo -e "${RED}Failed to run install.sh for smart-intersection${NC}"
         cd - > /dev/null
@@ -147,22 +160,22 @@ check_and_setup_prerequisites() {
     # Create symbolic link to compose-scenescape.yml in docker dir of agent application
     rm "$APP_DIR/docker/ri-compose.yaml" 2> /dev/null 
     ln -sf "$DEPS_DIR/compose-scenescape.yml" "$APP_DIR/docker/ri-compose.yaml"
-    
+
     return 0
 }
 
-# Run prerequisites check and setup (skip if only shopwing help or setting envs)
+# Verify dependencies and setup (skip if stopping/cleaning services or only showing help or setting env vars)
 if [ "$1" != "--help" ] && [ "$1" != "--setenv" ] && [ "$1" != "--clean" ] && [ "$1" != "--stop" ]; then
-    check_and_setup_prerequisites
+    check_and_setup_dependencies
     
     if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed to setup prerequisites. Please check the errors above.${NC}"
+        echo -e "${RED}Failed to setup dependencies. Please check the errors above.${NC}"
         return 1
     fi
 fi
 
 # ============================================================================
-# END PREREQUISITES
+# END Dependencies
 # ============================================================================
 
 # Export environment variables required by application (HOST_IP already set above)
@@ -195,6 +208,7 @@ export HEALTH_CHECK_TIMEOUT=${HEALTH_CHECK_TIMEOUT:-10s}
 export HEALTH_CHECK_RETRIES=${HEALTH_CHECK_RETRIES:-3}
 export HEALTH_CHECK_START_PERIOD=${HEALTH_CHECK_START_PERIOD:-10s}
 
+# Get and print the ports of all running services
 print_all_service_host_endpoints() {
     # get the host port of each service using docker ps command and print
     echo -e
@@ -205,7 +219,7 @@ print_all_service_host_endpoints() {
     for CONTAINER_NAME in $(docker ps --format '{{.Names}}' | grep $PROJECT_NAME);
     do
         # Set/print service name and the host port based on corresponding container name
-         case "$CONTAINER_NAME" in
+        case "$CONTAINER_NAME" in
             *dlstreamer-pipeline-server*)
                 SERVICE_NAME="DLStreamer Pipeline Server"
                 PORT=$(docker port "$CONTAINER_NAME" 8080 | cut -d: -f2)
@@ -249,12 +263,12 @@ print_all_service_host_endpoints() {
     echo -e
 }   
 
-# Function to build and start the services
+# Build agent Backend/UI image and run its container along with all other services - to run Traffic Intersection Agent End-to-End
 build_and_start_service() {
-    echo -e "${BLUE}==> Starting Smart-Traffic-Intersection-Agent ...${NC}"
+    echo -e "${BLUE}==> Starting Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${BLUE}...${NC}"
 
     # Build and start the services
-    docker compose --project-directory $DEPS_DIR -f docker/ri-compose.yaml -f docker/agent-compose.yaml -p $PROJECT_NAME up -d --build 2>&1 1>/dev/null
+    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d --build
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services built and started successfully!${NC}"
@@ -265,131 +279,108 @@ build_and_start_service() {
     fi
 }
 
-# Function to start the services
+# Start the services without building agent Backend/UI service image
 start_service() {
-    echo -e "${BLUE}==> Starting Smart-Traffic-Intersection-Agent Services...${NC}"
+    echo -e "${BLUE}==> Starting Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${BLUE}...${NC}"
     
     # Start the services
-    docker compose --project-directory $DEPS_DIR -f docker/ri-compose.yaml -f docker/agent-compose.yaml -p $PROJECT_NAME up -d 2>&1 1>/dev/null
+    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services started successfully!${NC}"
+        print_all_service_host_endpoints
     else
         echo -e "${RED}Failed to start Smart-Traffic-Intersection-Agent Services${NC}"
         return 1
     fi
-
-
 }
 
-# Function to restart the services (for env var changes)
+# Restart the services based on provided service type (agent, deps or all)
 restart_service() {
     local SERVICE_TYPE="${1:-all}"
     
     case "$SERVICE_TYPE" in
         agent)
-            echo -e "${BLUE}==> Restarting Smart-Traffic-Intersection-Agent Services with updated environment variables...${NC}"
+            echo -e "${BLUE}==> Restarting Traffic Intersection Agent Backend/UI ...${NC}"
             
-            # Stop the Smart-Traffic-Intersection-Agent services
-            docker compose -f docker/agent-compose.yaml down
+            # Stop the Traffic Intersection Agent Backend/UI Service
+            docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME down
             
             if [ $? -ne 0 ]; then
-                echo -e "${RED}Failed to stop Smart-Traffic-Intersection-Agent services${NC}"
+                echo -e "${RED}Failed to stop Traffic Intersection Agent Backend/UI service!${NC}"
                 return 1
             fi
             
-            # Start with force-recreate to ensure env vars are picked up
-            docker compose -f docker/agent-compose.yaml -p $PROJECT_NAME up -d --force-recreate
+            docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d --force-recreate
             
             if [ $? -eq 0 ]; then
-                echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services restarted successfully with updated configuration!${NC}"
+                echo -e "${GREEN}Traffic Intersection Agent Backend/UI restarted successfully!${NC}"
                 print_all_service_host_endpoints
             else
-                echo -e "${RED}Failed to restart Smart-Traffic-Intersection-Agent Services${NC}"
+                echo -e "${RED}Failed to restart Traffic Intersection Agent Backend/UI service!${NC}"
                 return 1
             fi
             ;;
+
+        deps)
+            echo -e "${BLUE}==> Restarting Dependencies for Traffic Intersection Agent (Smart Intersection RI) ...${NC}"
             
-        prerequisite)
-            #TODO update this case implementation based on new submodule structure
-            echo -e "${BLUE}==> Restarting Prerequisite Services (edge-ai-suites)...${NC}"
-            
-            local METRO_DIR="edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe"
-            
-            if [ ! -d "$METRO_DIR" ]; then
-                echo -e "${RED}Directory $METRO_DIR not found${NC}"
-                echo -e "${YELLOW}Please run 'source setup.sh --setup' first to set up prerequisites${NC}"
+            if [ ! -d "$DEPS_DIR" ] || [ ! -f "${APP_DIR}/docker/ri-compose.yaml" ]; then
+                echo -e "${RED}Required Submodules for setting up Smart Intersection RI not found${NC}"
+                echo -e "${YELLOW}Please run 'source setup.sh --setup' first to set up submodules${NC}"
                 return 1
             fi
             
-            cd "$METRO_DIR"
-            
-            # Stop the prerequisite services
-            echo -e "${BLUE}==> Stopping prerequisite services...${NC}"
-            docker compose down
+            # Stop the dependency - Smart Intersection RI services
+            echo -e "${BLUE}==> Stopping dependencies ...${NC}"
+            docker compose -f "${APP_DIR}/docker/ri-compose.yaml" -p $PROJECT_NAME down
             
             if [ $? -ne 0 ]; then
-                echo -e "${RED}Failed to stop prerequisite services${NC}"
-                cd - > /dev/null
+                echo -e "${RED}Failed to stop dependencies!${NC}"
                 return 1
             fi
             
             # Start with force-recreate to ensure env vars are picked up
-            echo -e "${BLUE}==> Starting prerequisite services with updated configuration...${NC}"
-            docker compose up -d --force-recreate
+            echo -e "${BLUE}==> Restarting dependencies (Smart Intersection RI) ...${NC}"
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -p $PROJECT_NAME up -d --force-recreate
             
             if [ $? -eq 0 ]; then
-                echo -e "${GREEN}Prerequisite Services restarted successfully with updated configuration!${NC}"
-                
+                echo -e "${GREEN}Dependencies restarted successfully!${NC}"
+                print_all_service_host_endpoints
             else
-                echo -e "${RED}Failed to restart Prerequisite Services${NC}"
-                cd - > /dev/null
+                echo -e "${RED}Failed to restart dependencies!${NC}"
                 return 1
             fi
-            
-            cd - > /dev/null
             ;;
             
         all)
-            #TODO update based on new submodule structure
-            echo -e "${BLUE}==> Restarting All Services with updated environment variables...${NC}"
+            echo -e "${BLUE}==> Restarting all component services for Smart Traffic Intersection Agent ${RED}${PROJECT_NAME} ${BLUE} ...${NC}"
             
-            # Restart prerequisite services first
-            local METRO_DIR="edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe"
-            
-            if [ -d "$METRO_DIR" ]; then
-                cd "$METRO_DIR"
-                
-                echo -e "${BLUE}==> Restarting prerequisite services...${NC}"
-                docker compose down
-                docker compose up -d --force-recreate
-                
-                if [ $? -eq 0 ]; then
-                    echo -e "${GREEN}Prerequisite Services restarted successfully!${NC}"
-                else
-                    echo -e "${RED}Failed to restart Prerequisite Services${NC}"
-                    cd - > /dev/null
-                    return 1
-                fi
-                
-                cd - > /dev/null
-            else
-                echo -e "${YELLOW}Prerequisite services directory not found, skipping...${NC}"
+            if [ ! -d "$DEPS_DIR" ] || [ ! -f "$APP_DIR/docker/ri-compose.yaml" ]; then
+                echo -e "${RED}Required Submodules for setting up Smart Intersection RI not found${NC}"
+                echo -e "${YELLOW}Please run 'source setup.sh --setup' first to set up submodules${NC}"
+                return 1
             fi
             
-            # Restart Smart-Traffic-Intersection-Agent services
-            echo -e "${BLUE}==> Restarting Smart-Traffic-Intersection-Agent Services...${NC}"
-            docker compose -f docker/compose.yaml down
-            docker compose -f docker/compose.yaml up -d --force-recreate
+            # Stop all services
+            docker compose -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME down
+            if [ $? -ne 0 ]; then
+                echo -e "${RED}Failed to stop services for Traffic Intersection Agent!${NC}"
+                return 1
+            fi
+
+            # Restart all services
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d --force-recreate  
             
             if [ $? -eq 0 ]; then
-                echo -e "${GREEN}All services restarted successfully with updated configuration!${NC}"
-                
+                echo -e "${GREEN}All dependencies and Backend/UI services for Traffic Intersection Agent restarted successfully!${NC}"
             else
-                echo -e "${RED}Failed to restart Smart-Traffic-Intersection-Agent Services${NC}"
+                echo -e "${RED}Failed to restart dependencies and Backend/UI services!${NC}"
+                cd - > /dev/null
                 return 1
             fi
             ;;
+
     esac
 }
 
@@ -399,7 +390,7 @@ if [ "$1" = "--setenv" ]; then
     return 0
 fi
 
-# Main logic based on command
+# Execute actions based on options provided to setup script
 case $1 in
     --setup)
         build_and_start_service
