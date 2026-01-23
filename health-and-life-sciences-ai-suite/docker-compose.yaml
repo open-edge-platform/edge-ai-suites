@@ -3,7 +3,7 @@ version: "3.9"
 services:
   aggregator-service:
     build:
-      context: ./microservices/aggregator-service
+      context: ./services/aggregator-service
       dockerfile: Dockerfile
     image: intel/hl-ai-aggregator-service:1.0.0
     container_name: aggregator-service
@@ -11,17 +11,17 @@ services:
       - WORKLOAD_TYPE=mdpnp
     network_mode: "host"
 
-  mdpnp:
+  mdpnp-service:
     build:
-      context: ./microservices/mdpnp
+      context: ./services/mdpnp-service
       dockerfile: Dockerfile
     image: intel/hl-ai-mdpnp:1.0.0
-    container_name: mdpnp
+    container_name: mdpnp-service
     network_mode: "host"
 
   dds-bridge:
     build:
-      context: ./microservices/dds-bridge
+      context: ./services/dds-bridge
       dockerfile: Dockerfile
     image: intel/hl-ai-dds-bridge:1.0.0
     container_name: dds-bridge
@@ -29,7 +29,7 @@ services:
       - GRPC_HOST=localhost
       - GRPC_PORT=50051
     depends_on:
-      - mdpnp
+      - mdpnp-service
       - aggregator-service
     network_mode: "host"
 
@@ -39,19 +39,19 @@ services:
 
   # ai-ecg:
   #   build:
-  #     context: ./microservices/ai-ecg
+  #     context: ./services/ai-ecg
 
   # rppg-web:
   #   build:
-  #     context: ./microservices/rppg-web
+  #     context: ./services/rppg-web
 
   # pose3d:
   #   build:
-  #     context: ./microservices/3d-pose-estimation
+  #     context: ./services/3d-pose-estimation
 
   # ui-frontend:
   #   build:
-  #     context: ./microservices/ui-frontend
+  #     context: ./services/ui-frontend
   #   ports:
   #     - "3000:3000"   # example UI port
 

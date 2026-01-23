@@ -3,6 +3,11 @@
 
 
 
-run:
+update-submodules:
+	@echo "Cloning performance tool repositories"
+	git submodule deinit -f .
+	git submodule update --init --recursive
+	@echo "Submodules updated (if any present)."
+
+run: update-submodules
 	docker-compose -f docker-compose.yaml build
-	docker-compose -f docker-compose.yaml up -d
