@@ -104,6 +104,10 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
 1. Get into the InfluxDB* container.
 
+  > **Note**: Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
+  > where for <namespace> replace with namespace name where the application was deployed and
+  > for <influxdb-pod-name> replace with InfluxDB pod name.
+
    ``` bash
     docker exec -it ia-influxdb bash
    ```
@@ -122,6 +126,10 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
     # Run below query to check and output measurement processed
     # by Time Series Analytics microservice
     select * from "weld-sensor-anomaly-data"
+
+    # Run below query to check and output measurement processed
+    # by DL Streamer pipeline server microservice
+    select * from "vision-weld-classification-results"
     ```
 
 3. Check the output in Grafana.
