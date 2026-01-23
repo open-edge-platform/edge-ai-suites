@@ -68,62 +68,81 @@ For testing or development purposes, you may want to run multiple instances of t
 
 > **Recommendation**: Running 3 agent instances is recommended to experience all use cases and workflows. The number of instances you can run depends on available device resources—systems with higher resources can support more instances.
 
-### 1. Clone the Repository
+### Setting up Instance 1
 
-For each instance, clone the repository into a separate directory:
+#### 1. Clone the repository into a new directory:
 
 ```bash
 # First instance
-git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
+git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
 cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
-
-# Second instance (in a new terminal)
-git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
-cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
-### 2. Update Deployment Configuration
+#### 2. Edit Deployment Config for Instance 1
 
-Each instance must have a unique deployment configuration. Edit `deployment_instance.json` in each instance directory:
+```bash
+vi src/config/deployment_instance.json
+```
 
-**Instance 1** (`edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/src/config/deployment_instance.json`):
+Following is a sample value for the Instance 1 deployment config:
+
 ```json
 {
     "name": "intersection_1",
-    "latitude": 33.3091336,
-    "longitude": -111.9353095,
+    "latitude": 37.7049108,
+    "longitude": -121.9096158,
     "agent_backend_port": "8081",
     "agent_ui_port": "7860"
 }
 ```
+#### 3. Run Setup for Instance 1
 
-> __**NOTE**__ : Keep `agent_backend_port` and `agent_ui_port` values empty to use random ephemeral ports and avoid port conflicts.
+```bash
+source setup.sh --setup
+```
 
-**Instance 2** (`edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/src/config/deployment_instance.json`):
+### Setting up Instance 2
+
+#### 1. Clone the repository into a new directory:
+
+Open a new terminal window and move to different directory and run the following.
+
+```bash
+git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
+cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
+```
+
+#### 2. Edit Deployment Config for Instance 2
+
+```bash
+vi src/config/deployment_instance.json
+```
+
+Following is a sample value for the Instance 2 deployment config:
+
 ```json
 {
     "name": "intersection_2",
-    "latitude": 33.4484,
-    "longitude": -112.0740,
+    "latitude": 37.33874,
+    "longitude": -121.8852525,
     "agent_backend_port": "8082",
     "agent_ui_port": "7861"
 }
 ```
+#### 3. Run Setup for Instance 2
+
+```bash
+source setup.sh --setup
+```
+
+> __**NOTE**__ : Keep `agent_backend_port` and `agent_ui_port` values empty to use random ephemeral ports and avoid port conflicts.
+
 
 Ensure each instance has their `deployment_instance.json` updated with:
 - A unique value for `name` field
 - Unique latitude and longitude co-ordinates
 - Different `agent_backend_port` and `agent_ui_port` values to avoid port conflicts (optional — if not specified, an ephemeral port is picked automatically)
 
-### 3. Run Setup for Each Instance
-
-In each instance's `metro-ai-suite/smart-traffic-intersection-agent` directory, run:
-
-```bash
-source setup.sh --setup
-```
-
-Each instance will deploy with its own configuration and ports.
 
 ## Manual Setup (Advanced Users)
 
@@ -221,7 +240,7 @@ The complete stack exposes several services on different ports:
 
 ## Configuration Files
 
-The Scene Intelligence stack uses several configuration files located in the `config/` and `src/traffic-intelligence/config/` directories:
+The Smart Traffic Intersection Agent stack uses several configuration files located in the `src/config` directory:
 
 ### Traffic Intersection Agent Configuration
 
