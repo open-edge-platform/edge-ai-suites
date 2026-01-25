@@ -172,9 +172,12 @@ services:
       - http_proxy=
       - https_proxy=
       - no_proxy=
+      # NPU related environment variables
+      - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
     volumes:
       - "./src/dlstreamer-pipeline-server/configs/filter-pipeline/config.cpu.json:/home/pipeline-server/config.json"
       # - "./src/dlstreamer-pipeline-server/configs/filter-pipeline/config.gpu.json:/home/pipeline-server/config.json"
+      # - "./src/dlstreamer-pipeline-server/configs/filter-pipeline/config.npu.json:/home/pipeline-server/config.json"
       - "dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999"
       # - "../certificates:/MqttCerts:ro"
       # - "../Certificates/ssl_server/:/run/secrets/EdgeVideoAnalyticsMicroservice_Server:ro"
@@ -190,6 +193,8 @@ services:
       - "109"
       # render group ID for ubuntu 22.04 host OS
       - "110"
+      # render group ID for ubuntu 24.04 host OS
+      - "992"
     device_cgroup_rules:
       - 'c 189:* rmw'
       - 'c 209:* rmw'

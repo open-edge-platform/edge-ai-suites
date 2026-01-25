@@ -67,8 +67,11 @@ spec:
       - envFrom:
         - configMapRef:
             name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-env'
+        env:
+        - name: ZE_ENABLE_ALT_DRIVERS
+          value: "libze_intel_npu.so"
         image: '{{ tpl .Values.dlstreamerpipelineserver.repository.image $ }}:{{ tpl .Values.dlstreamerpipelineserver.repository.tag $ | default "latest" }}'
-        {{- if eq .Values.dlstreamerpipelineserver.pipeline "config.gpu.json" }}
+        {{- if or (eq .Values.dlstreamerpipelineserver.pipeline "config.gpu.json") (eq .Values.dlstreamerpipelineserver.pipeline "config.npu.json") }}
         securityContext:
           privileged: true
           readOnlyRootFilesystem: true
@@ -102,6 +105,9 @@ spec:
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline'
           mountPath: /home/pipeline-server/config.gpu.json
           subPath: config.gpu.json
+        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline'
+          mountPath: /home/pipeline-server/config.npu.json
+          subPath: config.npu.json
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-pipeline'
           mountPath: /home/pipeline-server/person-vehicle-bike-detection-2004.json
           subPath: person-vehicle-bike-detection-2004.json

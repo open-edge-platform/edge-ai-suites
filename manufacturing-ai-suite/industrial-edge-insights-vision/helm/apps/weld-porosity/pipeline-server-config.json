@@ -5,7 +5,7 @@
                 "name": "weld_porosity_classification_mlops",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/welding.avi name=source ! h264parse ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/welding.avi name=source ! h264parse ! decodebin3 ! gvaclassify inference-region=full-frame name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -23,7 +23,7 @@
                 "name": "weld_porosity_classification_s3write",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaclassify inference-region=full-frame name=classification model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -46,7 +46,7 @@
                 "name": "weld_porosity_classification_mqtt",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaclassify inference-region=full-frame name=classification model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -64,7 +64,7 @@
                 "name": "weld_porosity_classification_opcua",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification model-instance-id=inst0  ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaclassify inference-region=full-frame name=classification model-instance-id=inst0  ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -86,7 +86,7 @@
                 "name": "weld_porosity_classification_gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaclassify inference-region=full-frame device=GPU pre-process-backend=va-surface-sharing model-instance-id=instgpu0 inference-interval=1 batch-size=8 nireq=2 ie-config=\"GPU_THROUGHPUT_STREAMS=2\" name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaclassify inference-region=full-frame device=GPU model-instance-id=instgpu0 inference-interval=1 batch-size=8 nireq=2 ie-config=\"GPU_THROUGHPUT_STREAMS=2\" name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -104,7 +104,7 @@
                 "name": "weld_porosity_classification_npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaclassify inference-region=full-frame device=NPU pre-process-backend=va model-instance-id=instnpu0 inference-interval=1 batch-size=1 nireq=4 name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaclassify inference-region=full-frame device=NPU model-instance-id=instnpu0 inference-interval=1 batch-size=1 nireq=4 name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -122,7 +122,7 @@
                 "name": "weld_porosity_classification",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaclassify inference-region=full-frame device=CPU model-instance-id=inst0 name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {

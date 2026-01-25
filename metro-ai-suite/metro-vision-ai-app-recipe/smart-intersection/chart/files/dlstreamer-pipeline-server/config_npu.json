@@ -2,11 +2,11 @@
     "config": {
         "pipelines": [
             {
-                "name": "intersection-cam1-gpu",
+                "name": "intersection-cam1-npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122north.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122north.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=NPU batch-size=4 nireq=4 model-instance-id=npudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -72,11 +72,11 @@
                 }
             },
             {
-                "name": "intersection-cam2-gpu",
+                "name": "intersection-cam2-npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122east.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122east.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=NPU batch-size=4 nireq=4 model-instance-id=npudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -142,11 +142,11 @@
                 }
             },
             {
-                "name": "intersection-cam3-gpu",
+                "name": "intersection-cam3-npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122south.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122south.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=NPU batch-size=4 nireq=4 model-instance-id=npudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -212,11 +212,11 @@
                 }
             },
             {
-                "name": "intersection-cam4-gpu",
+                "name": "intersection-cam4-npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122west.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122west.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=NPU batch-size=4 nireq=4 model-instance-id=npudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
                     "properties": {
