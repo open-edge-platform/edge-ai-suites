@@ -1,4 +1,6 @@
-version: "3.9"
+# Copyright © 2026 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 
 services:
   aggregator-service:
