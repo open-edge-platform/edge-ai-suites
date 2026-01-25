@@ -14,6 +14,13 @@ class VitalConsumer:
 
         samples = self.buffer.get(key)
         result = self.processor.process(vital.device_id, vital.metric, samples)
+
+        # If waveform data is present in the Vital message,
+        # attach it to the result so it can be forwarded
+        # to WebSocket/UI consumers.
+        if result is not None and vital.waveform:
+            result["waveform"] = list(vital.waveform)
+            result["waveform_frequency_hz"] = vital.waveform_frequency_hz
         if result:
             # Helpful debug log to confirm aggregation is happening
             print("[Aggregator] Aggregated result:", {
