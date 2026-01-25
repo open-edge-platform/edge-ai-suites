@@ -7,6 +7,8 @@
 MDPNP_PATH := services/mdpnp-service/mdpnp
 DDS_BRIDGE_PATH := services/dds-bridge
 DOCKER_COMPOSE := docker-compose.yaml
+REGISTRY ?= true
+
 
 init-mdpnp:
 	@echo "Initializing mdpnp submodule..."
