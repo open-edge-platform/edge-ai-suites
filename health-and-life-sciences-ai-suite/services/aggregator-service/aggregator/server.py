@@ -62,18 +62,24 @@ class VitalService(vital_pb2_grpc.VitalServiceServicer):
 
     def StreamVitals(self, request_iterator, context):
         for vital in request_iterator:
+            # Infer event type based on presence of waveform samples
+            event_type = "waveform" if len(vital.waveform) > 0 else "numeric"
+
             print("[Aggregator] Received Vital from gRPC:", {
                 "device_id": vital.device_id,
                 "metric": vital.metric,
                 "value": vital.value,
                 "unit": vital.unit,
                 "timestamp": vital.timestamp,
+                "waveform_len": len(vital.waveform),
+                "waveform_frequency_hz": vital.waveform_frequency_hz
             })
             result = self.consumer.consume(vital)
             if result:
                 message = {
                     "workload_type": self.workload_type,
-                    "timestamp": vital.timestamp,
+                    "event_type": event_type,
+                    "timestamp": vital.timestamp,                    
                     "payload": result,
                 }
                 print("[Aggregator] Enqueuing message for WebSocket:", message)

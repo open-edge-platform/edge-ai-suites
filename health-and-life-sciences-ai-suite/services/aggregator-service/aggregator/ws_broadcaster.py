@@ -25,7 +25,8 @@ class WebSocketManager:
                 self.connections[websocket] = workloads
 
     async def broadcast(self, message: dict):
-        workload = message.get("workload")
+        # Support both legacy "workload" and current "workload_type" keys
+        workload = message.get("workload") or message.get("workload_type")
         data = json.dumps(message)
 
         async with self.lock:
