@@ -35,6 +35,16 @@ services:
       - aggregator-service
     network_mode: "host"
 
+
+  3dpose-service:
+      build:
+        context: ./services/3d-pose-estimation
+        dockerfile: src/Dockerfile
+      image: intel/hl-ai-3dpose:1.0.0
+      container_name: 3dpose-service
+      network_mode: "host"
+
+
   # Placeholder entries for additional workloads that will send data to
   # aggregator-service (ai-ecg, rppg-web, 3d-pose-estimation, ui-frontend).
   # Their Dockerfiles and exact configs can be added once available.

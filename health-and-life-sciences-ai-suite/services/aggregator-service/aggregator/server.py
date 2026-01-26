@@ -12,6 +12,8 @@ from google.protobuf.empty_pb2 import Empty
 
 import vital_pb2
 import vital_pb2_grpc
+import pose_pb2
+import pose_pb2_grpc
 from .consumer import VitalConsumer
 from .ws_broadcaster import WebSocketManager
 
@@ -87,10 +89,62 @@ class VitalService(vital_pb2_grpc.VitalServiceServicer):
         return Empty()
 
 
+class PoseService(pose_pb2_grpc.PoseServiceServicer):
+    """gRPC service that receives PoseFrame messages from 3D pose workloads.
+
+    It converts PoseFrame protos into JSON-serializable dictionaries and
+    enqueues them for broadcasting over WebSocket to interested UI clients.
+    """
+
+    def PublishPose(self, request: pose_pb2.PoseFrame, context):
+        try:
+            people_payload = []
+            for person in request.people:
+                joints_2d = [
+                    {"x": j.x, "y": j.y}
+                    for j in person.joints_2d
+                ]
+                joints_3d = [
+                    {"x": j.x, "y": j.y, "z": j.z}
+                    for j in person.joints_3d
+                ]
+                people_payload.append(
+                    {
+                        "person_id": person.person_id,
+                        "joints_2d": joints_2d,
+                        "joints_3d": joints_3d,
+                        "confidence": list(person.confidence),
+                    }
+                )
+
+            message = {
+                "workload_type": "3d-pose",
+                "event_type": "pose3d",
+                "timestamp": request.timestamp_ms,
+                "payload": {
+                    "source_id": request.source_id,
+                    "people": people_payload,
+                },
+            }
+
+            print("[Aggregator] Received PoseFrame from gRPC:", message)
+            message_queue.put(message)
+
+            return pose_pb2.Ack(ok=True)
+        except Exception as exc:
+            print("[Aggregator] Error handling PoseFrame:", exc)
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(exc))
+            return pose_pb2.Ack(ok=False)
+
+
 def start_grpc_server():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     vital_pb2_grpc.add_VitalServiceServicer_to_server(
         VitalService(WORKLOAD_TYPE), server
+    )
+    pose_pb2_grpc.add_PoseServiceServicer_to_server(
+        PoseService(), server
     )
     server.add_insecure_port("[::]:50051")
     server.start()
