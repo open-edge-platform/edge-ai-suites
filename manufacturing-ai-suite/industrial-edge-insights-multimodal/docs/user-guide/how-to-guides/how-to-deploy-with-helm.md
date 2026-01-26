@@ -4,14 +4,15 @@ This guide provides step-by-step instructions for deploying the MultiModal - Wel
 
 ## Prerequisites
 
-- [System Requirements](../system-requirements.md)
+- [System Requirements](../get-started/system-requirements.md)
 - K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note that the Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
-  Refer to tutorials such as <https://adamtheautomator.com/installing-kubernetes-on-ubuntu> and many other
-  online tutorials to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
+ Refer to online tutorials (such as <https://adamtheautomator.com/install-kubernetes-ubuntu>) to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
 - For Helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
 
 > **Note:**
-> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop). The target system refers to the system where you are installing the application.
+> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu
+> to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop). The target
+> system refers to the system where you are installing the application.
 
 ## Step 1: Generate or download the Helm charts
 
@@ -70,7 +71,7 @@ You can either generate or download the Helm charts.
 
 > **Note:**
 >
-> 1. Uninstall the Helm charts if already installed.
+> 1. Uninstall Helm charts if already installed.
 > 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in the `values.yaml` file.
 
@@ -99,7 +100,8 @@ To copy your own or existing model into DL Streamer Pipeline Server in order to 
 
 The model package is available in the repository at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server/`.
 
-Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
+Copy the resources such as video and model from local directory to the to the
+`dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
 
 ```bash
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server/
@@ -111,7 +113,8 @@ kubectl cp models $POD_NAME:/home/pipeline-server/resources/ -c dlstreamer-pipel
 
 **Time Series Analytics Microservice**
 
-To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
+To copy your own or existing model into Time Series Analytics Microservice in order to run
+this sample application in Kubernetes environment:
 
 1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice`.
 
@@ -146,7 +149,8 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 
 **DL Streamer Pipeline Server**
 
-You use a Client URL (cURL) command to start the pipeline. Start this pipeline with the following cURL command.
+You use a Client URL (cURL) command to start the pipeline. Start this pipeline with the
+following cURL command.
 
 ```bash
 curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification -X POST -H 'Content-Type: application/json' -d '{
@@ -171,7 +175,7 @@ curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_d
 
 **Time Series Analytics Microservice**
 
-> **NOTE**: UDF inferencing on GPU is not supported.
+> **NOTE:** UDF inferencing on GPU is not supported.
 
 Run the following command to activate the UDF deployment package:
 

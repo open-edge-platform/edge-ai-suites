@@ -6,16 +6,21 @@ The Weld Defect Detection sample application demonstrates a powerful fusion of v
 
 To see the system requirements and other installation, see the following guides:
 
-  - [System Requirements](docs/user-guide/system-requirements.md): Hardware and software requirements for running the sample application.
-  - [Get Started](docs/user-guide/get-started.md): Step-by-step guide to getting started with the docker compose deployment of the sample application.
+  - [Get Started](./docs/user-guide/get-started.md): Step-by-step guide to getting started with
+  the docker compose deployment of the sample application.
+  - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and
+  software requirements for running the sample application.
 
 ## Architecture and Functionality Overview
 
-Refer [How it works](docs/user-guide/weld-defect-detection/index.md).
+Refer to the [How it works](./docs/user-guide/weld-defect-detection/index.md#how-it-works) section.
 
 ## Learn More
 
-  - [How to build from source and deploy](docs/user-guide/how-to-guides/how-to-build-from-source.md): Guide to build from source and docker compose deployment
-  - [How to configure MQTT alerts](docs/user-guide/how-to-guides/how-to-configure-alerts.md): Guide for configuring the MQTT alerts for the sample app
+  - [How to build from source and deploy](./docs/user-guide/how-to-guides/how-to-build-from-source.md): Guide to build from source and docker compose deployment.
+  - [How to deploy with Helm](./docs/user-guide/how-to-guides/how-to-deploy-with-helm.md): Guide for deploying with Helm.
+  - [How to configure MQTT alerts](./docs/user-guide/how-to-guides/how-to-configure-alerts.md): Guide for configuring the MQTT alerts for the sample app.
+  - [How to update configuration](./docs/user-guide/how-to-guides/how-to-update-config.md): Guide for updating the configuration.
+  - [Troubleshooting](./docs/user-guide/troubleshooting.md): Troubleshooting information.
 - **Release Notes**
-  - [Release Notes](docs/user-guide/release_notes/Overview.md): Information on the latest updates, improvements, and bug fixes.
+  - [Release Notes](./docs/user-guide/release-notes.md): Information on the latest updates, improvements, and bug fixes.
