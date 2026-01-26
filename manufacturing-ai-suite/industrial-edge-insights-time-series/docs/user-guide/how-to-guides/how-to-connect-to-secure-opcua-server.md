@@ -1,8 +1,9 @@
 
 # Configuration to connect to secure External OPC UA server
 
-This guide explains how to securely connect your application to an external OPC UA server using TLS/SSL encryption for both data ingestion and alert publishing, replacing the default built-in OPC UA server.
-
+This guide explains how to securely connect your application to an external OPC UA server using
+TLS/SSL encryption for both data ingestion and alert publishing, replacing the default built-in
+OPC UA server.
 
 ## Step 1: Generate TLS Certificates
 
@@ -233,7 +234,8 @@ Edit your Telegraf configuration file:
 - `USERNAME` and `PASSWORD` with your OPC UA server credentials
 
 > **Note:**
-> Make sure your OPC UA server exposes nodes for both `wind_speed` and `grid_active_power`. These nodes must be available for data collection.
+> Make sure your OPC UA server exposes nodes for both `wind_speed` and `grid_active_power`.
+> These nodes must be available for data collection.
 
 ### 3.2 Update Wind Turbine Anomaly Detection Sample app configuration
 
@@ -271,4 +273,4 @@ For OPC UA servers, ensure the following configuration:
 
 ## Step 5: Deploy and Verify
 
-Deploy the sample application following the steps as mentioned [here](../get-started.md#deploy-with-docker-compose)
+Deploy the sample application following the steps as mentioned [here](../get-started.md#deploy-with-docker-compose).
