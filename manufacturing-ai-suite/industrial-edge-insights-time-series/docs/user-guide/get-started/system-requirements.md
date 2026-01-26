@@ -1,4 +1,3 @@
-
 # System Requirements
 
 This page provides detailed hardware, software, and platform requirements to help you set up and run the application efficiently.
