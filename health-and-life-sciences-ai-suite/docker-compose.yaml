@@ -49,9 +49,13 @@ services:
   # aggregator-service (ai-ecg, rppg-web, 3d-pose-estimation, ui-frontend).
   # Their Dockerfiles and exact configs can be added once available.
 
-  # ai-ecg:
-  #   build:
-  #     context: ./services/ai-ecg
+  ai-ecg:
+    build:
+      context: ./services/ai-ecg/backend
+      dockerfile: Dockerfile
+    image: intel/hl-ai-ecg:1.0.0
+    container_name: ai-ecg
+    network_mode: "host"
 
   # rppg-web:
   #   build:
