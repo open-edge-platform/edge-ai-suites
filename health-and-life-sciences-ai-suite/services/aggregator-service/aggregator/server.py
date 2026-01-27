@@ -3,6 +3,7 @@ import json
 import os
 import threading
 import queue
+import time
 
 import grpc
 from concurrent import futures
@@ -135,22 +136,22 @@ class PoseService(pose_pb2_grpc.PoseServiceServicer):
             context.set_details(str(exc))
             return pose_pb2.Ack(ok=False)
 
-    async def ai_ecg_polling_loop():
-        """
-        Poll AI-ECG backend and broadcast waveform + inference.
-        """
-        client = AIECGClient()
-        while True:
-            result = await asyncio.to_thread(client.poll_next)
-            if result:
-                message_queue.put({
-                    "workload_type": "ai-ecg",
-                    "event_type": "waveform",
-                    "timestamp": int(time.time() * 1000),
-                    "payload": result,
-                })
-                print("[Aggregator] Broadcasted AI-ECG result")
-            await asyncio.sleep(1.0)
+
+async def ai_ecg_polling_loop():
+    """Poll AI-ECG backend and enqueue waveform + inference results."""
+    client = AIECGClient()
+    while True:
+        result = await asyncio.to_thread(client.poll_next)
+        if result:
+            message = {
+                "workload_type": "ai-ecg",
+                "event_type": "waveform",
+                "timestamp": int(time.time() * 1000),
+                "payload": result,
+            }
+            message_queue.put(message)
+            print("[Aggregator] Broadcasted AI-ECG result", message)
+        await asyncio.sleep(1.0)
 
 
 def start_grpc_server():
@@ -177,17 +178,12 @@ async def on_startup():
     t = threading.Thread(target=start_grpc_server, daemon=True)
     t.start()
     app.state.grpc_thread = t
-    ecg_thread = threading.Thread(
-        target=run_ai_ecg_stream,
-        daemon=True
-    )
-    ecg_thread.start()
 
 
 if __name__ == "__main__":
     uvicorn.run(
         "aggregator.server:app",
         host="0.0.0.0",
-        port=8000,
+        port=8001,
         log_level="info",
     )
