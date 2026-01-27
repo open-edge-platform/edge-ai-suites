@@ -223,7 +223,7 @@ print_all_service_host_endpoints() {
             *dlstreamer-pipeline-server*)
                 SERVICE_NAME="DLStreamer Pipeline Server"
                 PORT=$(docker port "$CONTAINER_NAME" 8080 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME at -> http://$HOST_IP:$PORT${NC}"
+                echo -e "${BLUE}Access $SERVICE_NAME at -> http://$HOST_IP:$PORT${NC}/pipelines"
                 ;;
             *grafana*)
                 SERVICE_NAME="Grafana Dashboard"

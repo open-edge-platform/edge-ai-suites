@@ -95,6 +95,7 @@ services:
       
       # Traffic analysis configuration (overrides src/config/traffic_agent.json)
       HIGH_DENSITY_THRESHOLD: ${HIGH_DENSITY_THRESHOLD:-10}
+      MODERATE_DENSITY_THRESHOLD: ${MODERATE_DENSITY_THRESHOLD:-}
       TRAFFIC_BUFFER_DURATION: ${TRAFFIC_BUFFER_DURATION:-}
 
     volumes:
