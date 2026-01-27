@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package vital;
+
+// Service definition for streaming vital signs
+service VitalService {
+  // Services call this to SEND vital data TO aggregator
+  rpc StreamVitals(Vital) returns (Empty);
+}
+
+// Message format for vital signs data
+message Vital {
+  string device_id = 1;      // Service identifier (e.g., "rppg-service")
+  string metric = 2;         // Metric name (e.g., "HR", "RR", "PULSE_WAVE")
+  double value = 3;          // Numeric value (for metrics)
+  string unit = 4;           // Unit of measurement (e.g., "bpm", "brpm")
+  int64 timestamp = 5;       // Unix timestamp in milliseconds
+  repeated double samples = 6; // Array of samples (for waveforms)
+}
+
+// Empty response
+message Empty {}

@@ -1,0 +1,73 @@
+# ============================================================================
+# RPPG Service Configuration
+# ============================================================================
+# This file controls all service behavior. Update values here instead of
+# hardcoding in Python files.
+
+service:
+  name: "rppg-service"
+  port: 5004                    # gRPC server port
+  log_level: "INFO"             # DEBUG, INFO, WARNING, ERROR
+  
+video:
+  # Pre-recorded video input
+  input_path: "/app/videos/sample.mp4"
+  
+  # Playback control
+  target_fps: 30                # Frames per second (simulates real-time)
+  loop: true                    # Restart video when finished
+  
+  # Auto-download settings
+  auto_download: true           # Download sample if not found
+  sample_url: "https://github.com/opencv/opencv/raw/master/samples/data/vtest.avi"
+
+model:
+  # MTTS-CAN model weights
+  path: "/app/models/mtts_can.hdf5"
+  
+  # Model parameters (from rppg-web)
+  batch_size: 10                # Frames per inference batch
+  image_size: 36                # Input image size (36x36 pixels)
+  
+  # Auto-download settings
+  auto_download: true
+  download_url: "https://github.com/xliucs/MTTS-CAN/releases/download/v1.0/mtts_can.hdf5"
+
+preprocessing:
+  # Face ROI crop ratios (from rppg-web index.tsx:165)
+  # These values extract the forehead region for rPPG
+  crop_top: 0.1                 # Top 10% of frame
+  crop_left: 0.3                # Left 30% of frame
+  crop_bottom: 0.56             # Bottom at 56% of frame height
+  crop_right: 0.7               # Right at 70% of frame width
+
+postprocessing:
+  # Signal processing parameters
+  sampling_rate: 30.0           # Hz (matches video FPS)
+  
+  # Pulse (Heart Rate) bandpass filter
+  pulse_lowcut: 0.75            # Hz → 45 BPM (lower bound)
+  pulse_highcut: 2.5            # Hz → 150 BPM (upper bound)
+  pulse_filter_order: 3         # Butterworth filter order
+  
+  # Respiration (Breathing Rate) bandpass filter
+  resp_lowcut: 0.1              # Hz → 6 breaths/min (lower bound)
+  resp_highcut: 0.5             # Hz → 30 breaths/min (upper bound)
+  resp_filter_order: 3          # Butterworth filter order
+  
+  # Output settings
+  waveform_samples: 150         # Number of samples for visualization
+
+aggregator:
+  # Aggregator service connection (gRPC client)
+  host: "aggregator-service"    # Docker service name
+  port: 50051                   # Aggregator's gRPC port
+  retry_interval: 5             # Seconds between reconnection attempts
+
+streaming:
+  # How often to send updates to aggregator
+  update_interval: 1.0          # Send Vital messages every 1 second
+  
+  # Processing chunk size
+  chunk_duration: 5.0           # Process 5 seconds of video at a time
+                                # (5s × 30fps = 150 frames per chunk)
