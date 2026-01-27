@@ -24,7 +24,7 @@ build-dds-bridge:
 
 run:
 	@if [ "$(REGISTRY)" = "true" ]; then \
-		echo "##############Using registry mode - fetching pipeline runner..."; \
+		echo "##############Using registry mode - fetching all images..."; \
 		docker compose -f $(DOCKER_COMPOSE) up -d; \
 	else \
 		docker compose -f $(DOCKER_COMPOSE) up --build -d; \

@@ -25,14 +25,14 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0bvital.proto\x12\x0eorg.intel.grpc\x1a\x1bgoogle/protobuf/empty.proto\"\x8b\x01\n\x05Vital\x12\x11\n\tdevice_id\x18\x01 \x01(\t\x12\x0e\n\x06metric\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\x01\x12\x0c\n\x04unit\x18\x04 \x01(\t\x12\x11\n\ttimestamp\x18\x05 \x01(\x03\x12\x10\n\x08waveform\x18\x06 \x03(\x02\x12\x1d\n\x15waveform_frequency_hz\x18\x07 \x01(\x05\x32O\n\x0cVitalService\x12?\n\x0cStreamVitals\x12\x15.org.intel.grpc.Vital\x1a\x16.google.protobuf.Empty(\x01\x42\x1e\n\x0eorg.intel.grpcB\nVitalProtoP\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0bvital.proto\x12\x0eorg.intel.grpc\x1a\x1bgoogle/protobuf/empty.proto"\x8b\x01\n\x05Vital\x12\x11\n\tdevice_id\x18\x01 \x01(\t\x12\x0e\n\x06metric\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\x01\x12\x0c\n\x04unit\x18\x04 \x01(\t\x12\x11\n\ttimestamp\x18\x05 \x01(\x03\x12\x10\n\x08waveform\x18\x06 \x03(\x02\x12\x1d\n\x15waveform_frequency_hz\x18\x07 \x01(\x05\x32O\n\x0cVitalService\x12?\n\x0cStreamVitals\x12\x15.org.intel.grpc.Vital\x1a\x16.google.protobuf.Empty(\x01\x42\x1e\n\x0eorg.intel.grpcB\nVitalProtoP\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'vital_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'\n\016org.intel.grpcB\nVitalProtoP\001'
+  _globals['DESCRIPTOR']._serialized_options = b'\n\x0eorg.intel.grpcB\nVitalProtoP\x01'
   _globals['_VITAL']._serialized_start=61
   _globals['_VITAL']._serialized_end=200
   _globals['_VITALSERVICE']._serialized_start=202
