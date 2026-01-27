@@ -14,20 +14,6 @@ These suites accelerate the development of custom AI solutions by offering:
 •	Optimized code for AI, media, and end-to-end workloads
 •	Benchmarks and deployment guides
 
-
-## Run Health-ai-suite
-```
-make init-mdpnp
-
-make build-mdpnp
-
-make build-dds-bridge
-
-make run (REGISTRY=false in case of local build)
-
-make down 
-```
-
 ## Suites and Use Cases
 
 •	[The Metro AI Suite](metro-ai-suite) accelerates the development of solutions for Edge AI video, safety and security, smart city and transportation use cases. 
