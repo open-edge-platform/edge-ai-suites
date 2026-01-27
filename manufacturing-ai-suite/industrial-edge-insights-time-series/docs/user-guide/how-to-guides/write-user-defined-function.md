@@ -65,19 +65,11 @@ class MyHandler(Handler):
                                    "../models/" + model_name)
         model_path = os.path.abspath(model_path)
 
-        # Initialize model for analysis
-        self.model = # using algorithm import load the model
+        # Initialize model for analysis.
+        # Load the model using your algorithm's import method and assign it to self.model.
+        # Example: self.model = cb.CatBoostClassifier(...), then self.model.load_model(model_path)
+        self.model = None  # Replace None with your actual model instance
 
-        """ eg: 
-        self.model = cb.CatBoostClassifier(
-            depth=10,            # Set the depth of each tree to 10
-            iterations=2000,     # Number of boosting iterations (trees)
-            learning_rate=0.1,   # Step size for each iteration
-            task_type="CPU",     # Specify to use CPU for training/inference
-            devices="1:2",       # Specify device IDs (not used for CPU, but kept for config compatibility)
-            random_seed=40,      # Set random seed for reproducibility
-        )
-        """
         self.model.load_model(model_path)
 
     def info(self):
@@ -143,9 +135,9 @@ if __name__ == '__main__':
 
 ```
 
-## Implementing UDF with *Basic  Implementation Template*
+## Implementing UDF with *Basic Implementation Template*
 
-### Import and initialize the model in the init() (or constructor)
+### Import and initialize the model in the `__init__(self, agent)`
 
 Load ML models, thresholds, or external resources only once during initialization.
 
