@@ -12,19 +12,42 @@ This suite organizes workflows tailored for healthcare and life sciences, with i
 
 The Multi-Modal Patient Monitoring application demonstrates how multiple AI workloads can run **simultaneously on a single platform**, enabling consolidated patient monitoring.
 
-## Run Health-ai-suite
+## 🐳 Run Health-AI-Suite Using Pre-Built Images
+
 ```
+make run
+
+```
+
+## Prerequisites
+```
+ .  MDPnP and related components require Java 17
+ . If Java is not installed, install it and set JAVA_HOME correctly.
+ . If you are behind a corporate proxy, configure Gradle as follows:
+    mkdir -p ~/.gradle
+    nano ~/.gradle/gradle.properties
+
+```
+
+## 🚀 Run Health-AI-Suite (Local Build)
+```
+# Initialize MDPnP submodules and dependencies
 make init-mdpnp
 
+# Build MDPnP services locally
 make build-mdpnp
 
+# Build DDS bridge locally
 make build-dds-bridge
 
-make run (REGISTRY=false in case of local build)
+# Run the full Health-AI-Suite using locally built images
+# Set REGISTRY=false to avoid pulling images from a remote registry
+make run REGISTRY=false
 
-make down 
+# Stop and clean up all running containers
+make down
+
 ```
-
 ---
 
 ## Disclaimer
