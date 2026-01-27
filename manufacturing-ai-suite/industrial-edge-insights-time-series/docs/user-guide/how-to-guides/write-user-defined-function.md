@@ -2,7 +2,7 @@
 
 User Defined Functions (UDFs) are custom Python scripts that allow you to implement domain-specific analytics and anomaly detection algorithms in the Time Series Analytics Microservice. UDFs process streaming data from Kapacitor and can perform complex computations, machine learning inference, or custom business logic on time-series data.
 
-This guide provides step-by-step instructions for writing your own UDFs for the ia-time-series-analytics microservice.
+This guide provides step-by-step instructions for writing your own UDFs for the Time Series Analytics Microservice.
 
 ## Overview
 
@@ -148,9 +148,42 @@ Use it to extract fields, run inference or business logic, and emit results.
 
 ```python
     def point(self, point):
-        value = point.fieldsDouble["temperature"]
-        result = self.model.predict([[value]])
-        point.fieldsDouble["anomaly_status"] = float(result)
+
+        # Extract field values from the incoming data point
+        # Double fields (numeric values) - floating-point numbers like temperature, pressure
+        temperature = point.fieldsDouble.get("temperature", 0.0)
+        pressure = point.fieldsDouble.get("pressure", 0.0)
+        humidity = point.fieldsDouble.get("humidity", 0.0)
+        
+        # String fields (text values) - textual data like IDs, locations, status messages
+        sensor_id = point.fieldsString.get("sensor_id", "unknown")
+        location = point.fieldsString.get("location", "default")
+        status = point.fieldsString.get("status", "normal")
+        
+        # Boolean fields (true/false values) - binary states like active/inactive, enabled/disabled
+        is_active = point.fieldsBool.get("is_active", False)
+        is_calibrated = point.fieldsBool.get("is_calibrated", True)
+        
+        # Integer fields (whole numbers) - counts, codes, or discrete numeric values
+        sample_count = point.fieldsInt.get("sample_count", 0)
+        error_code = point.fieldsInt.get("error_code", 0)
+        
+        # Tags (metadata - always strings) - used for grouping and filtering, not for computation
+        device_name = point.tags.get("device", "")
+        site = point.tags.get("site", "")
+        
+        # Log the extracted values for debugging and monitoring
+        logger.debug(f"Processing point - Sensor: {sensor_id}, Temp: {temperature}, Active: {is_active}")
+        
+        # Perform your analysis using the extracted values
+        # Example: Run model inference, apply thresholds, calculate derived metrics
+        # Add your custom logic here
+        
+        # Example: Set output fields based on analysis results
+        # point.fieldsDouble["anomaly_score"] = calculated_score
+        # point.fieldsString["analysis_result"] = "normal" or "anomaly"
+        
+        # Write the processed point back to Kapacitor
         self._agent.write_response(udf_pb2.Response(point=point))
 ```
 
@@ -227,7 +260,9 @@ var data = stream
 
 - [Kapacitor UDF Documentation](https://docs.influxdata.com/kapacitor/v1/guides/anomaly_detection/#writing-a-user-defined-function-udf)
 - [Example UDFs in Repository](../../../apps/)
-  - [Wind Turbine Anomaly Detector](../../../apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
+  - [Wind Turbine Anomaly Detection](../../../apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
   - [Weld Anomaly Detector](../../../apps/weld-anomaly-detection/time-series-analytics-config/udfs/weld_anomaly_detector.py)
 - [Kapacitor TICKscript Reference](https://docs.influxdata.com/kapacitor/v1/reference/tick/introduction/)
+  - [Wind Turbine Anomaly Detection](../../../apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
+  - [Weld Anomaly Detector](../../../apps/weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
 - [Configure Custom UDF Deployment](./how-to-configure-custom-udf.md)
