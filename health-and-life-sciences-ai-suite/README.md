@@ -39,7 +39,6 @@ The Multi-Modal Patient Monitoring application demonstrates how multiple AI work
 
 ```
 make run
-
 ```
 ---
 ## 🚀 Run Health-AI-Suite (Local Build)
@@ -59,7 +58,6 @@ make run REGISTRY=false
 
 # Stop and clean up all running containers
 make down
-
 ```
 ---
 
