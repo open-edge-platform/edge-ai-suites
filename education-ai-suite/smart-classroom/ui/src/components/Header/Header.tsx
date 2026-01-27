@@ -5,7 +5,6 @@ import '../../assets/css/HeaderBar.css';
 import recordON from '../../assets/images/recording-on.svg';
 import recordOFF from '../../assets/images/recording-off.svg';
 import sideRecordIcon from '../../assets/images/sideRecord.svg';
-import { constants } from '../../constants';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { 
   resetFlow, 
@@ -35,30 +34,18 @@ import { resetSummary } from '../../redux/slices/summarySlice';
 import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { useTranslation } from 'react-i18next';
 import { 
-  uploadAudio, 
   stopMicrophone, 
   getAudioDevices,
   startVideoAnalytics,
   stopVideoAnalytics,
   createSession,
   getClassStatistics,
-  getSettings,
   startMonitoring,  
   stopMonitoring    
 } from '../../services/api';
 import { setClassStatistics } from '../../redux/slices/fetchClassStatistics';
 import Toast from '../common/Toast';
 import UploadFilesModal from '../Modals/UploadFilesModal';
-
-type ApiError = { response?: { data?: { message?: string } } };
-const getErrorMessage = (err: unknown, fallback: string) => {
-  if (err && typeof err === 'object') {
-    const resp = (err as ApiError).response;
-    const msg = resp?.data?.message;
-    if (typeof msg === 'string' && msg.trim() !== '') return msg;
-  }
-  return fallback;
-};
 
 interface HeaderBarProps {
   projectName: string;
@@ -72,7 +59,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const { t } = useTranslation();
   const [timer, setTimer] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [videoAnalyticsEnabled, setVideoAnalyticsEnabled] = useState(true);
+  const [videoAnalyticsEnabled] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); 
   const [monitoringTimer, setMonitoringTimer] = useState<number | null>(null);
 
@@ -466,10 +453,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         const sharedSessionId = sessionResponse.sessionId;
         dispatch(setSessionId(sharedSessionId));
         try {
-          const monitoringResult = await startMonitoring(sharedSessionId);
+          await startMonitoring(sharedSessionId);
           const timer = setTimeout(async () => {
             try {
-              const stopResult = await stopMonitoring();
+              await stopMonitoring();
             } catch (error) {
               console.error('❌ Failed to stop monitoring after 45 minutes:', error);
             }
