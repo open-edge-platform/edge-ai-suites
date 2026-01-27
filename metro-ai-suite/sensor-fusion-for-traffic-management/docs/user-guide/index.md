@@ -11,19 +11,18 @@
 </div>
 hide_directive-->
 
-A multi-modal reference implementation for traffic management, enabling partners to blend
-camera and radar/lidar sensor inputs to accurately monitor traffic conditions.
+A multi-modal reference implementation to accurately monitor traffic conditions by blending
+camera and sensor inputs. While cameras capture high-resolution visual data, radar/lidar
+sensors precisely measure the speed and distance, even under challenging conditions, such as
+fog, rain, or darkness.
 
-## Overview
+This integration improves on the camera-only solutions in performance, accuracy, and
+reliability, offering a more robust and comprehensive approach to traffic monitoring and
+management.
 
-Metro AI Suite Sensor Fusion for Traffic Management is a reference implementation of an AI
-system integrated with sensor fusion technology. It utilizes multi-modal sensors, such as
-cameras and radars/lidars, to deliver traffic-management focused on performance, accuracy, and
-reliability superseding those of camera-only solutions. Cameras capture high-resolution visual
-data, while radar/lidar sensors precisely measure speed and distance, even under challenging
-conditions, such as fog, rain, or darkness. This integration ensures a more robust and
-comprehensive approach to traffic monitoring and decision-making, enhancing overall system
-performance and safety.
+
+
+and decision-making, enhancing overall system performance and safety.
 
 This sample features multiple pipelines tailored to specific sensor fusion use cases, combining
 cameras with either radar or lidar:
@@ -64,14 +63,11 @@ hardware platform's capabilities, this reference implementation serves as the pe
 :::{toctree}
 :hidden:
 
-get-started-guide.md
-prerequisites.md
+Get Started <get-started-guide.md>
 How it Works <how-it-works.md>
-system-req.md
 Advanced user guide <advanced-user-guide.md>
 APIs.md
 FAQ.md
 release-notes.md
-
 :::
 hide_directive-->

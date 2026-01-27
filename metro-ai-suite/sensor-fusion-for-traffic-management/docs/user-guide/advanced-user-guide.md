@@ -14,12 +14,14 @@ As shown in Fig.1, the end-to-end pipeline includes the following major blocks (
 
 All these tasks run on single Intel SoC processor which provides all the required heterogeneous computing capabilities. To maximize its performance on Intel processors, we optimized this SW RI using Intel SW tool kits in addition to open-source SW libraries.
 
-![Case-C+L](./_images/Case-C+L.png)
+![Case-C+L](./_assets/Case-C+L.png)
 <center>(1) Use case: C+L</center>
 
 <center> Figure 1. E2E SW pipelines of sensor fusion C+L(Camera+Lidar).</center>
 
-For prerequisites and system requirements, see [prerequisites.md](./prerequisites.md) and [system-req.md](./system-req.md).
+For prerequisites and system requirements, see
+[prerequisites.md](./get-started-guide/prerequisites.md) and
+[system-req.md](./get-started-guide/system-req.md).
 
 ## Architecture Overview
 
@@ -34,32 +36,32 @@ There are two steps required for running the sensor fusion application:
 Besides, you can test each component (without display) following the guides at [2C+1L Unit Tests](#2c+1l-unit-tests), [4C+2L Unit Tests](#4c+2l-unit-tests), [12C+2L Unit Tests](#12c+2l-unit-tests), [8C+4L Unit Tests](#8c+4l-unit-tests), [12C+4L Unit Tests](#12c+4l-unit-tests)
 
 
-### Resources 
+### Resources
 - Local File Pipeline for Media pipeline
-  - Json File: localMediaPipeline.json 
-    
+  - Json File: localMediaPipeline.json
+
     > File location: `$PROJ_DIR/ai_inference/test/configs/kitti/1C1L/localMediaPipeline.json`
-  - Pipeline Description: 
+  - Pipeline Description:
     ```
     input -> decode -> detection -> tracking -> output
     ```
-  
+
 - Local File Pipeline for Lidar pipeline
   - Json File: localLidarPipeline.json
-    
+
     > File location: `$PROJ_DIR/ai_inference/test/configs/kitti/1C1L/localLidarPipeline.json`
-- Pipeline Description: 
-  
+- Pipeline Description:
+
     ```
     input -> lidar signal processing -> output
   ```
-  
+
 - Local File Pipeline for `Camera + Lidar(2C+1L)` Sensor fusion pipeline
 
   - Json File: localFusionPipeline.json
-    
+
     > File location: `$PROJ_DIR/ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json`
-  - Pipeline Description: 
+  - Pipeline Description:
     ```
            | -> decode     -> detector         -> tracker                  -> |                                    |
     input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> | -> output
@@ -68,24 +70,24 @@ Besides, you can test each component (without display) following the guides at [
 - Local File Pipeline for `Camera + Lidar(4C+2L)` Sensor fusion pipeline
 
   - Json File: localFusionPipeline.json
-    
+
     > File location: `$PROJ_DIR/ai_inference/test/configs/raddet/2C1L/localFusionPipeline.json`
-  - Pipeline Description: 
+  - Pipeline Description:
     ```
            | -> decode     -> detector         -> tracker                  -> |                                    |
     input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> |
            | ->                lidar signal processing                     -> |                                    |
            | -> decode     -> detector         -> tracker                  -> |                                    | -> output
-    input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> | 
+    input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> |
            | ->                lidar signal processing                     -> |                                    |
     ```
-  
+
 - Local File Pipeline for `Camera + Lidar(12C+2L)` Sensor fusion pipeline
 
     - Json File: localFusionPipeline.json
       `File location: ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json`
 
-    - Pipeline Description: 
+    - Pipeline Description:
 
         ```
                | -> decode     -> detector         -> tracker                  -> |                                    |
@@ -102,20 +104,20 @@ Besides, you can test each component (without display) following the guides at [
     - Json File: localFusionPipeline.json
       `File location: ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json`
 
-    - Pipeline Description: 
+    - Pipeline Description:
 
         ```
                | -> decode     -> detector         -> tracker                  -> |                                    |
         input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> |
                | ->                lidar signal processing                     -> |                                    |
                | -> decode     -> detector         -> tracker                  -> |                                    |
-        input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> | 
+        input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> |
                | ->                lidar signal processing                     -> |                                    | -> output
                | -> decode     -> detector         -> tracker                  -> |                                    |
-        input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> | 
+        input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> |
                | ->                lidar signal processing                     -> |                                    |
                | -> decode     -> detector         -> tracker                  -> |                                    |
-        input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> | 
+        input  | -> decode     -> detector         -> tracker                  -> | -> LidarCam2CFusion ->  fusion  -> |
                | ->                lidar signal processing                     -> |                                    |
         ```
 
@@ -124,7 +126,7 @@ Besides, you can test each component (without display) following the guides at [
     - Json File: localFusionPipeline.json
       `File location: ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json`
 
-    - Pipeline Description: 
+    - Pipeline Description:
 
         ```
                | -> decode     -> detector         -> tracker                  -> |                                    |
@@ -238,7 +240,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_fusion 2C1L
     ```
 
-    ![Display type: media_fusion](_images/2C1L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](_assets/2C1L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -249,7 +251,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_lidar 2C1L
     ```
 
-    ![Display type: media_lidar](_images/2C1L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](_assets/2C1L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -260,7 +262,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 1 1 /path-to-dataset media 2C1L
     ```
 
-    ![Display type: media](_images/2C1L-Display-type-media.png)
+    ![Display type: media](_assets/2C1L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -271,7 +273,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 1 1 /path-to-dataset lidar 2C1L
     ```
 
-    ![Display type: lidar](_images/2C1L-Display-type-lidar.png)
+    ![Display type: lidar](_assets/2C1L-Display-type-lidar.png)
 
 #### 2C+1L Unit Tests
 
@@ -329,7 +331,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 2 1 /path-to-dataset media_fusion 4C2L
     ```
 
-    ![Display type: media_fusion](_images/4C2L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](_assets/4C2L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -340,7 +342,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 2 1 /path-to-dataset media_lidar 4C2L
     ```
 
-    ![Display type: media_lidar](_images/4C2L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](_assets/4C2L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -351,7 +353,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 2 1 /path-to-dataset media 4C2L
     ```
 
-    ![Display type: media](_images/4C2L-Display-type-media.png)
+    ![Display type: media](_assets/4C2L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -362,7 +364,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 2 1 /path-to-dataset lidar 4C2L
     ```
 
-    ![Display type: lidar](_images/4C2L-Display-type-lidar.png)
+    ![Display type: lidar](_assets/4C2L-Display-type-lidar.png)
 
 #### 4C+2L Unit Tests
 
@@ -422,7 +424,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json 2 1 /path-to-dataset media_fusion 12C2L
     ```
 
-    ![Display type: media_fusion](_images/12C2L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](_assets/12C2L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -433,7 +435,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json 2 1 /path-to-dataset media_lidar 12C2L
     ```
 
-    ![Display type: media_lidar](_images/12C2L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](_assets/12C2L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -444,7 +446,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localMediaPipeline.json 2 1 /path-to-dataset media 12C2L
     ```
 
-    ![Display type: media](_images/12C2L-Display-type-media.png)
+    ![Display type: media](_assets/12C2L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -455,7 +457,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localLidarPipeline.json 2 1 /path-to-dataset lidar 12C2L
     ```
 
-    ![Display type: lidar](_images/12C2L-Display-type-lidar.png)
+    ![Display type: lidar](_assets/12C2L-Display-type-lidar.png)
 
 #### 12C+2L Unit Tests
 
@@ -515,7 +517,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 8C4L
     ```
 
-    ![Display type: media_fusion](_images/8C4L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](_assets/8C4L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -526,7 +528,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 8C4L
     ```
 
-    ![Display type: media_lidar](_images/8C4L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](_assets/8C4L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -537,7 +539,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 4 1 /path-to-dataset media 8C4L
     ```
 
-    ![Display type: media](_images/8C4L-Display-type-media.png)
+    ![Display type: media](_assets/8C4L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -548,7 +550,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 8C4L
     ```
 
-    ![Display type: lidar](_images/8C4L-Display-type-lidar.png)
+    ![Display type: lidar](_assets/8C4L-Display-type-lidar.png)
 
 #### 8C+4L Unit Tests
 
@@ -606,7 +608,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 12C4L
     ```
 
-    ![Display type: media_fusion](_images/12C4L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](_assets/12C4L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -617,7 +619,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 12C4L
     ```
 
-    ![Display type: media_lidar](_images/12C4L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](_assets/12C4L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -628,7 +630,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localMediaPipeline.json 4 1 /path-to-dataset media 12C4L
     ```
 
-    ![Display type: media](_images/12C4L-Display-type-media.png)
+    ![Display type: media](_assets/12C4L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -639,7 +641,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 12C4L
     ```
 
-    ![Display type: lidar](_images/12C4L-Display-type-lidar.png)
+    ![Display type: lidar](_assets/12C4L-Display-type-lidar.png)
 
 #### 12C+4L Unit Tests
 
@@ -938,7 +940,7 @@ docker pull intel/tfcc:latest
 Usage:
 
 ```bash
-bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04> 
+bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04>
 ```
 
 Example:
@@ -961,7 +963,7 @@ Example:
 ```bash
 cd $PROJ_DIR/docker
 bash run_docker.sh tfcc:latest false
-# After the run is complete, the container ID will be output, or you can view it through docker ps 
+# After the run is complete, the container ID will be output, or you can view it through docker ps
 ```
 
 #### Enter docker

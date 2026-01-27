@@ -11,7 +11,7 @@
 
     - Intel® Core™ Ultra 7 265H + Ubuntu24.04 (2C+1L/4C+2L usecase)
     - Intel® Core™ i7-13700 and Intel® B580 Graphics + Ubuntu24.10 (8C+4L/12C+2L/12C4L usecase)
-    
+
 - Intel® OpenVINO™ Toolkit
 
     - Version Type: 2025.2
@@ -38,7 +38,7 @@
     -   Radar Processing (mmWave Radar)
     -   Lidar Processing
     -   Sensor Fusion
-    
+
 -   Demo Application
 
 #### AI Inference Service
@@ -61,11 +61,10 @@ gRPCPort=50052
 
 
 #### Demo Application
-![Demo-2C1L](./_images/Demo-2C1L.png)
+![Demo-2C1L](./_assets/Demo-2C1L.png)
 <center>Figure 1. Visualization of 2C+1L results</center>
 
-Currently we support four display types: media, lidar, media_lidar, media_fusion. 
-
+Currently we support four display types: media, lidar, media_lidar, media_fusion.
 
 For system requirements, see [system-req.md](./system-req.md).
 
