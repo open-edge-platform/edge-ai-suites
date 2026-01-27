@@ -13,6 +13,7 @@ from google.protobuf.empty_pb2 import Empty
 from proto import vital_pb2, vital_pb2_grpc, pose_pb2, pose_pb2_grpc
 from .consumer import VitalConsumer
 from .ws_broadcaster import WebSocketManager
+from .ai_ecg_client import AIECGClient
 
 
 app = FastAPI(title="Aggregator Service")
@@ -134,6 +135,23 @@ class PoseService(pose_pb2_grpc.PoseServiceServicer):
             context.set_details(str(exc))
             return pose_pb2.Ack(ok=False)
 
+    async def ai_ecg_polling_loop():
+        """
+        Poll AI-ECG backend and broadcast waveform + inference.
+        """
+        client = AIECGClient()
+        while True:
+            result = await asyncio.to_thread(client.poll_next)
+            if result:
+                message_queue.put({
+                    "workload_type": "ai-ecg",
+                    "event_type": "waveform",
+                    "timestamp": int(time.time() * 1000),
+                    "payload": result,
+                })
+                print("[Aggregator] Broadcasted AI-ECG result")
+            await asyncio.sleep(1.0)
+
 
 def start_grpc_server():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -153,11 +171,17 @@ def start_grpc_server():
 async def on_startup():
     # Start background broadcaster task
     app.state.broadcast_task = asyncio.create_task(broadcast_loop())
+    app.state.ai_ecg_task = asyncio.create_task(ai_ecg_polling_loop())
 
     # Start gRPC server in a background thread
     t = threading.Thread(target=start_grpc_server, daemon=True)
     t.start()
     app.state.grpc_thread = t
+    ecg_thread = threading.Thread(
+        target=run_ai_ecg_stream,
+        daemon=True
+    )
+    ecg_thread.start()
 
 
 if __name__ == "__main__":
