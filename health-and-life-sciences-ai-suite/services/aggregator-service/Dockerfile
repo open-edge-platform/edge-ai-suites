@@ -20,9 +20,8 @@ COPY requirements.txt ./
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application source, protobuf stubs, and proto definitions
+# Copy the application source and proto package (including *_pb2*.py stubs)
 COPY aggregator ./aggregator
-COPY vital_pb2.py vital_pb2_grpc.py pose_pb2.py pose_pb2_grpc.py ./
 COPY proto ./proto
 
 # Expose gRPC port

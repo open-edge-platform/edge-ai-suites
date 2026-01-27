@@ -10,10 +10,7 @@ from fastapi import FastAPI, WebSocket
 import uvicorn
 from google.protobuf.empty_pb2 import Empty
 
-import vital_pb2
-import vital_pb2_grpc
-import pose_pb2
-import pose_pb2_grpc
+from proto import vital_pb2, vital_pb2_grpc, pose_pb2, pose_pb2_grpc
 from .consumer import VitalConsumer
 from .ws_broadcaster import WebSocketManager
 

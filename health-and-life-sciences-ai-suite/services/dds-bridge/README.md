@@ -10,7 +10,7 @@
 
 
 ## Build the Dockerfile
-docker build -t dds-bridge .
+docker build -t ai-hl-dds-bridge .
 
 
 ## Run Container
