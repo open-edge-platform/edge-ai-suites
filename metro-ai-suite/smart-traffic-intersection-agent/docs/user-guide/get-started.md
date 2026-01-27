@@ -132,7 +132,7 @@ Ensure each instance has their `deployment_instance.json` updated with:
 
 ### Deploying more instances
 
-There are no limits on number of instances which you can spin-up to simulate multi-node setup using the provided script. However, the machine on which the multiple deployment is being done, will likely start throttling these instances if resource limits are reached. Hence, deploy new instances only if you have the required resource bandwidth.
+There are functionally no limits on number of instances which you can spin-up to simulate multi-node setup using the provided script. However, the machine on which the multiple deployment is being done, will likely start throttling these instances if resource limits are reached. Hence, deploy new instances only if you have the required resource bandwidth.
 
 To spin-up more instances - say `n number of new instances`, repeat the steps mentioned to [Setting up Instance #2](#setting-up-instance-2), by changing to a new directory `n` times.
 
