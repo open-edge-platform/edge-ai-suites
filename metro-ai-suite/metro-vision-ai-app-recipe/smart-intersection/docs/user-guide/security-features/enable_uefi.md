@@ -44,13 +44,13 @@ sudo apt-get install sbsigntool openssl grub-efi-amd64-signed shim-signed
 sudo grub-install --uefi-secure-boot
 ```
 
-### Step 5: Configure Secure Boot**
+### Step 5: Configure Secure Boot
 
 1. Reboot the platform and enter the UEFI GUI menu
 2. Verify that Secure Boot is initially disabled
 3. Confirm the shim binary can boot to OS
 
-### Step 6: Enroll Microsoft Certificates**
+### Step 6: Enroll Microsoft Certificates
 
 1. Get the Secure Boot Microsoft keys and certificates:
 ```bash
@@ -66,7 +66,7 @@ sudo /tmp/sb-setup enroll microsoft
 
 > **Note:** If enrollment errors occur, reboot the platform, boot using `fs0:/efi/ubuntu/shimx64.efi`, and rerun the enroll command.
 
-### Step 7: Enable and Verify Secure Boot**
+### Step 7: Enable and Verify Secure Boot
 
 1. Reboot the platform and enter the BIOS menu
 2. Verify that Secure Boot is now enabled
