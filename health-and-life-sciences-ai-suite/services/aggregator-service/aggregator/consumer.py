@@ -10,36 +10,32 @@ class VitalConsumer:
     def consume(self, vital):
         key = (vital.device_id, vital.metric)
         ts_sec = vital.timestamp / 1000.0
-        # ---- ECG waveform handling (special case) ----
-        if vital.metric == "ECG" and vital.waveform:
+        # ---- Waveform handling (ECG / other waveforms) ----
+        if len(vital.waveform) > 0:
             result = {
                 "device_id": vital.device_id,
-                "metric": "ECG",
+                "metric": vital.metric,
                 "timestamp": vital.timestamp,
                 "waveform": list(vital.waveform),
                 "waveform_frequency_hz": vital.waveform_frequency_hz,
             }
+            print("[Aggregator] ECG/waveform forwarded:", {
+                "device_id": vital.device_id,
+                "metric": vital.metric,
+                "samples": len(vital.waveform),
+                "fs": vital.waveform_frequency_hz,
+            })
+            return result
 
-
-        print("[Aggregator] ECG waveform forwarded:", {
-            "device_id": vital.device_id,
-            "samples": len(vital.waveform),
-            "fs": vital.waveform_frequency_hz,
-        })
-        return result
-
-
-        # ---- Numeric vitals (HR, SPO2, BP, etc.) ----
+        # ---- Numeric vitals (HR, SPO2, RR, BP, etc.) ----
         self.buffer.add(key, ts_sec, vital.value)
         samples = self.buffer.get(key)
-
 
         result = self.processor.process(
             vital.device_id,
             vital.metric,
-            samples
+            samples,
         )
-
 
         if result:
             print("[Aggregator] Aggregated result:", {
@@ -48,6 +44,5 @@ class VitalConsumer:
                 "result": result,
             })
             return result
-
 
         return None

@@ -35,20 +35,6 @@ services:
       - aggregator-service
     network_mode: "host"
 
-
-  3dpose-service:
-      build:
-        context: ./services/3d-pose-estimation
-        dockerfile: src/Dockerfile
-      image: intel/hl-ai-3dpose:1.0.0
-      container_name: 3dpose-service
-      network_mode: "host"
-
-
-  # Placeholder entries for additional workloads that will send data to
-  # aggregator-service (ai-ecg, rppg-web, 3d-pose-estimation, ui-frontend).
-  # Their Dockerfiles and exact configs can be added once available.
-
   ai-ecg:
     build:
       context: ./services/ai-ecg/backend
@@ -57,14 +43,45 @@ services:
     container_name: ai-ecg
     network_mode: "host"
 
+  # 3dpose-service:
+  #     build:
+  #       context: ./services/3d-pose-estimation
+  #       dockerfile: src/Dockerfile
+  #     image: intel/hl-ai-3dpose:1.0.0
+  #     container_name: 3dpose-service
+  #     network_mode: "host"
+
+  metrics-service:
+    build:
+      context: ./services/metrics-service
+      dockerfile: Dockerfile
+    image: intel/hl-ai-metrics-service:1.0.0
+    container_name: metrics-service
+    privileged: true
+    pid: host
+    network_mode: "host"
+    environment:
+      - HTTP_PROXY=${HTTP_PROXY}
+      - NPU_LOG=/tmp/results/npu_usage.csv
+      - METRICS_DIR=/tmp/results
+    volumes:
+      - ./metrics:/tmp/results
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /sys/devices:/sys/devices
+      - /dev/dri:/dev/dri:rw
+      - /sys/class/drm:/sys/class/drm:ro
+      - /sys/kernel/debug:/sys/kernel/debug:ro
+    devices:
+      - "/sys:/sys"
+      - "/dev:/dev"
+      - "/run:/run"
+      - "/proc:/proc"
+
   # rppg-web:
   #   build:
   #     context: ./services/rppg-web
 
-  # pose3d:
-  #   build:
-  #     context: ./services/3d-pose-estimation
-
+ 
   # ui-frontend:
   #   build:
   #     context: ./services/ui-frontend

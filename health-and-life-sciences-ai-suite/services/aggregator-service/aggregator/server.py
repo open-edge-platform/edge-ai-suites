@@ -6,8 +6,9 @@ import time
 
 import grpc
 from concurrent import futures
-from fastapi import FastAPI, Request, Query
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, Request, Query, HTTPException
+from fastapi.responses import StreamingResponse, JSONResponse
+import requests
 import uvicorn
 from google.protobuf.empty_pb2 import Empty
 
@@ -25,6 +26,31 @@ event_loop: asyncio.AbstractEventLoop | None = None
 
 # Environment-configurable workload label for this instance
 WORKLOAD_TYPE = os.getenv("WORKLOAD_TYPE", "mdpnp")
+
+# Metrics service base URL (same host, different port, via host networking)
+METRICS_SERVICE_URL = os.getenv("METRICS_SERVICE_URL", "http://localhost:9000")
+
+
+def _proxy_metrics_get(path: str):
+    """Helper to proxy a GET request to the metrics-service.
+
+    Raises HTTPException if the downstream call fails.
+    """
+    url = f"{METRICS_SERVICE_URL}{path}"
+    try:
+        resp = requests.get(url, timeout=5)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"metrics-service unreachable: {exc}")
+
+    if resp.status_code != 200:
+        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+
+    try:
+        data = resp.json()
+    except Exception:
+        raise HTTPException(status_code=502, detail="Invalid JSON from metrics-service")
+
+    return JSONResponse(content=data, status_code=200)
 
 
 @app.get("/events")
@@ -67,6 +93,24 @@ async def stream_events(
             await sse_manager.disconnect(client_queue)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@app.get("/metrics")
+async def metrics_summary():
+    """Proxy for the metrics-service /metrics endpoint."""
+    return _proxy_metrics_get("/metrics")
+
+
+@app.get("/platform-info")
+async def platform_info():
+    """Proxy for the metrics-service /platform-info endpoint."""
+    return _proxy_metrics_get("/platform-info")
+
+
+@app.get("/memory")
+async def memory_usage():
+    """Proxy for the metrics-service /memory endpoint."""
+    return _proxy_metrics_get("/memory")
 
 
 class VitalService(vital_pb2_grpc.VitalServiceServicer):
