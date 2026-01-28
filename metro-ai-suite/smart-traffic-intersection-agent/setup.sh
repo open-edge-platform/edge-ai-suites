@@ -251,7 +251,10 @@ fi
 
 # Export required environment variables (HOST_IP already set above)
 export TAG=${TAG:-latest}
-export REGISTRY=${REGISTRY:-}
+# Construct registry path properly to avoid double slashes
+if [[ -n "$REGISTRY" ]]; then
+    export REGISTRY="${REGISTRY%/}/"
+fi
 
 # Traffic Intersection Agent Configuration
 export TRAFFIC_INTELLIGENCE_PORT=${TRAFFIC_INTELLIGENCE_PORT:-8081}

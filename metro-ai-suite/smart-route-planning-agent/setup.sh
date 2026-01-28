@@ -11,9 +11,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Setting variables for directories used as volume mounts
-SOURCE="src"
-SECRETS_DIR="${SOURCE}/secrets"
-DOCKER_DIR="docker"
+DOCKER_DIR="src"
 COMPOSE_MAIN="${DOCKER_DIR}/compose.yaml"
 
 # Function to show help
@@ -23,17 +21,17 @@ show_help() {
     echo -e "-----------------------------------------------------------------"
     echo ""
     echo -e "${BLUE}Available Commands:${NC}"
-    echo -e "  ${GREEN}setup${NC}         Build and start the Smart-Route-Planning-Agent container"
-    echo -e "  ${GREEN}build${NC}         Build the Smart-Route-Planning-Agent Docker container"
-    echo -e "  ${GREEN}up${NC}            Start the Smart-Route-Planning-Agent container"
-    echo -e "  ${GREEN}down${NC}          Stop the running container"
-    echo -e "  ${GREEN}restart${NC}       Restart the Smart-Route-Planning-Agent container"
-    echo -e "  ${GREEN}help${NC}          Show this help message"
+    echo -e "  ${GREEN}--setup${NC}       Build and start the Smart-Route-Planning-Agent container"
+    echo -e "  ${GREEN}--build${NC}       Build the Smart-Route-Planning-Agent Docker container"
+    echo -e "  ${GREEN}--run${NC}         Start the Smart-Route-Planning-Agent container"
+    echo -e "  ${GREEN}--stop${NC}        Stop the running container"
+    echo -e "  ${GREEN}--restart${NC}     Restart the Smart-Route-Planning-Agent container"
+    echo -e "  ${GREEN}--help${NC}        Show this help message"
     echo ""
     echo -e "${BLUE}Quick Start:${NC}"
-    echo -e "  ${YELLOW}source setup.sh setup${NC}    # Build and start the container"
-    echo -e "  ${YELLOW}source setup.sh build${NC}    # Build the container"
-    echo -e "  ${YELLOW}source setup.sh up${NC}       # Start the container"
+    echo -e "  ${YELLOW}source setup.sh --setup${NC}    # Build and start the container"
+    echo -e "  ${YELLOW}source setup.sh --build${NC}    # Build the container"
+    echo -e "  ${YELLOW}source setup.sh --run${NC}      # Start the container"
     echo -e "-----------------------------------------------------------------"
 }
 
@@ -50,8 +48,8 @@ check_docker_compose() {
     fi
 }
 
-# Handle help and argument validation
-if [ "$#" -eq 0 ] || [ "$1" = "help" ]; then
+# Handle --help and argument validation
+if [ "$#" -eq 0 ] || [ "$1" = "--help" ]; then
     show_help
     if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then exit 0; else return 0; fi
 fi
@@ -59,7 +57,7 @@ fi
 # Check for valid arguments
 if [ "$#" -gt 1 ]; then
     echo -e "${RED}ERROR: Too many arguments provided.${NC}"
-    echo -e "${YELLOW}Use 'help' for usage information${NC}"
+    echo -e "${YELLOW}Use '--help' for usage information${NC}"
     if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then exit 1; else return 1; fi
 fi
 
@@ -75,24 +73,14 @@ if [[ -z "$HOST_IP" ]]; then
 fi
 # Add HOST_IP to no_proxy only if not already present
 [[ $no_proxy != *"${HOST_IP}"* ]] && export no_proxy="${no_proxy},${HOST_IP}"
-export TAG=${TAG:-latest}
-export REGISTRY_URL=${REGISTRY_URL:-intel}
-export PROJECT_NAME=${PROJECT_NAME:-}
 
+export TAG=${TAG:-latest}
 # Construct registry path properly to avoid double slashes
-if [[ -n "$REGISTRY_URL" && -n "$PROJECT_NAME" ]]; then
-    # Both are set, combine with single slash
-    export REGISTRY="${REGISTRY_URL%/}/${PROJECT_NAME%/}/"
-elif [[ -n "$REGISTRY_URL" ]]; then
-    # Only registry URL is set
-    export REGISTRY="${REGISTRY_URL%/}/"
-elif [[ -n "$PROJECT_NAME" ]]; then
-    # Only project name is set
-    export REGISTRY="${PROJECT_NAME%/}/"
-else
-    # Neither is set, use empty registry
-    export REGISTRY=""
+if [[ -n "$REGISTRY" ]]; then
+    export REGISTRY="${REGISTRY%/}/"
 fi
+PROJECT_NAME="routeplanner"
+
 echo -e "${GREEN}Using registry: ${YELLOW}$REGISTRY ${NC}"
 
 # Traffic Analysis Configuration
@@ -100,15 +88,8 @@ export TRAFFIC_BUFFER_DURATION=${TRAFFIC_BUFFER_DURATION:-60}
 export LOG_LEVEL=${LOG_LEVEL:-INFO}
 export DATA_RETENTION_HOURS=${DATA_RETENTION_HOURS:-24}
 
-# Health Check Configuration
-export HEALTH_CHECK_INTERVAL=${HEALTH_CHECK_INTERVAL:-30s}
-export HEALTH_CHECK_TIMEOUT=${HEALTH_CHECK_TIMEOUT:-10s}
-export HEALTH_CHECK_RETRIES=${HEALTH_CHECK_RETRIES:-3}
-export HEALTH_CHECK_START_PERIOD=${HEALTH_CHECK_START_PERIOD:-10s}
-
 # AI Route Planner Configuration
 export AI_ROUTE_PLANNER_PORT=${AI_ROUTE_PLANNER_PORT:-7864}
-export AI_ROUTE_PLANNER_DIR=${AI_ROUTE_PLANNER_DIR:-ai-route-planner}
 
 echo -e "${GREEN}Environment variables set:${NC}"
 echo -e "  HOST_IP: ${YELLOW}$HOST_IP${NC}"
@@ -119,7 +100,7 @@ echo -e "  REGISTRY: ${YELLOW}$REGISTRY${NC}"
 build_images() {
     echo -e "${BLUE}==> Building Smart-Route-Planning-Agent Docker container...${NC}"
     
-    docker compose -f $COMPOSE_MAIN build
+    docker compose -f $COMPOSE_MAIN -p $PROJECT_NAME build
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Docker container built successfully${NC}"
     else
@@ -132,7 +113,7 @@ build_images() {
 start_service() {
     echo -e "${BLUE}==> Starting Smart-Route-Planning-Agent container...${NC}"
     
-    docker compose -f $COMPOSE_MAIN up -d
+    docker compose -f $COMPOSE_MAIN -p $PROJECT_NAME up -d
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Route-Planning-Agent container started successfully!${NC}"
@@ -155,7 +136,7 @@ fi
 
 # Main logic based on command
 case "$1" in
-    "setup")
+    "--setup")
         echo -e "${BLUE}==> Running full setup (build and start)...${NC}"
         build_images
         if [ $? -eq 0 ]; then
@@ -165,15 +146,15 @@ case "$1" in
             if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then exit 1; else return 1; fi
         fi
         ;;
-    "build")
+    "--build")
         build_images
         ;;
-    "up")
+    "--run")
         start_service
         ;;
-    "down")
+    "--stop")
         echo -e "${YELLOW}Stopping Smart-Route-Planning-Agent container...${NC}"
-        docker compose -f $COMPOSE_MAIN down
+        docker compose -f $COMPOSE_MAIN -p $PROJECT_NAME down
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}Smart-Route-Planning-Agent container stopped successfully.${NC}"
         else
@@ -181,9 +162,9 @@ case "$1" in
             if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then exit 1; else return 1; fi
         fi
         ;;
-    "restart")
+    "--restart")
         echo -e "${BLUE}==> Restarting Smart-Route-Planning-Agent container...${NC}"
-        docker compose -f $COMPOSE_MAIN down
+        docker compose -f $COMPOSE_MAIN -p $PROJECT_NAME down
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}Container stopped successfully${NC}"
             start_service
@@ -194,7 +175,7 @@ case "$1" in
         ;;
     *)
         echo -e "${RED}Unknown command: $1${NC}"
-        echo -e "${YELLOW}Use 'help' for usage information${NC}"
+        echo -e "${YELLOW}Use '--help' for usage information${NC}"
         if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then exit 1; else return 1; fi
         ;;
 esac
