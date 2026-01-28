@@ -2,56 +2,71 @@ import asyncio
 import json
 import os
 import threading
-import queue
 import time
 
 import grpc
 from concurrent import futures
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, Request, Query
+from fastapi.responses import StreamingResponse
 import uvicorn
 from google.protobuf.empty_pb2 import Empty
 
 from proto import vital_pb2, vital_pb2_grpc, pose_pb2, pose_pb2_grpc
 from .consumer import VitalConsumer
-from .ws_broadcaster import WebSocketManager
+from .ws_broadcaster import SSEManager
 from .ai_ecg_client import AIECGClient
 
 
 app = FastAPI(title="Aggregator Service")
-ws_manager = WebSocketManager()
+sse_manager = SSEManager()
 
-# Thread-safe queue used to pass messages from the gRPC thread
-# to the asyncio event loop that manages WebSocket broadcasts.
-message_queue: "queue.Queue[dict]" = queue.Queue()
+# Main asyncio event loop reference for cross-thread broadcasts
+event_loop: asyncio.AbstractEventLoop | None = None
 
 # Environment-configurable workload label for this instance
 WORKLOAD_TYPE = os.getenv("WORKLOAD_TYPE", "mdpnp")
 
 
-@app.websocket("/ws/stream")
-async def stream_ws(websocket: WebSocket):
-    await ws_manager.connect(websocket)
-    try:
-        while True:
-            msg = await websocket.receive_text()
-            data = json.loads(msg)
+@app.get("/events")
+async def stream_events(
+    request: Request,
+    workloads: str | None = Query(
+        None,
+        description=(
+            "Optional comma-separated list of workload types to subscribe to "
+            "(e.g., ai-ecg,mdpnp). If omitted, all workloads are sent."
+        ),
+    ),
+):
+    """SSE endpoint that streams aggregator events to connected clients.
 
-            # Subscription message from UI
-            if data.get("action") == "subscribe":
-                workloads = set(data.get("workloads", []))
-                await ws_manager.update_subscription(websocket, workloads)
-    except Exception:
-        pass
-    finally:
-        await ws_manager.disconnect(websocket)
+    If the "workloads" query param is provided, only those workloads are
+    delivered to the client; otherwise all four workloads are streamed.
+    """
+    if workloads:
+        workload_set = {w.strip() for w in workloads.split(",") if w.strip()}
+    else:
+        workload_set = None
 
+    client_queue = await sse_manager.connect(workload_set)
 
-async def broadcast_loop():
-    """Background task that forwards queued messages to all subscribers."""
-    while True:
-        # Block in a worker thread waiting for the next message
-        message = await asyncio.to_thread(message_queue.get)
-        await ws_manager.broadcast(message)
+    async def event_generator():
+        try:
+            while True:
+                # Exit cleanly if the client disconnects
+                if await request.is_disconnected():
+                    break
+
+                try:
+                    data = await asyncio.wait_for(client_queue.get(), timeout=1.0)
+                except asyncio.TimeoutError:
+                    continue
+
+                yield f"data: {data}\n\n"
+        finally:
+            await sse_manager.disconnect(client_queue)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 class VitalService(vital_pb2_grpc.VitalServiceServicer):
@@ -83,8 +98,11 @@ class VitalService(vital_pb2_grpc.VitalServiceServicer):
                     "timestamp": vital.timestamp,                    
                     "payload": result,
                 }
-                print("[Aggregator] Enqueuing message for WebSocket:", message)
-                message_queue.put(message)
+                print("[Aggregator] Broadcasting message to SSE clients:", message)
+                if event_loop is not None:
+                    asyncio.run_coroutine_threadsafe(
+                        sse_manager.broadcast(message), event_loop
+                    )
         return Empty()
 
 
@@ -127,7 +145,10 @@ class PoseService(pose_pb2_grpc.PoseServiceServicer):
             }
 
             print("[Aggregator] Received PoseFrame from gRPC:", message)
-            message_queue.put(message)
+            if event_loop is not None:
+                asyncio.run_coroutine_threadsafe(
+                    sse_manager.broadcast(message), event_loop
+                )
 
             return pose_pb2.Ack(ok=True)
         except Exception as exc:
@@ -149,7 +170,8 @@ async def ai_ecg_polling_loop():
                 "timestamp": int(time.time() * 1000),
                 "payload": result,
             }
-            message_queue.put(message)
+            if event_loop is not None:
+                await sse_manager.broadcast(message)
             print("[Aggregator] Broadcasted AI-ECG result", message)
         await asyncio.sleep(1.0)
 
@@ -170,8 +192,11 @@ def start_grpc_server():
 
 @app.on_event("startup")
 async def on_startup():
-    # Start background broadcaster task
-    app.state.broadcast_task = asyncio.create_task(broadcast_loop())
+    # Capture the running loop for cross-thread broadcasts
+    global event_loop
+    event_loop = asyncio.get_running_loop()
+
+    # Start background AI-ECG polling task
     app.state.ai_ecg_task = asyncio.create_task(ai_ecg_polling_loop())
 
     # Start gRPC server in a background thread
