@@ -19,31 +19,27 @@ This Get Started Guide explains how to install the Autonomous Mobile Robot.
 Intel recommends a fresh installation of the Ubuntu distribution of the Linux OS
 for your target system, but this is not mandatory.
 
-Install Ubuntu Ubuntu 24.04 (Noble Numat) or 22.04 (Jammy Jellyfish). Your choice of OS version determines the compatible ROS distribution (Jazzy Jalisco or Humble Hawksbill, respectively).
+Install Ubuntu Ubuntu 24.04 (Noble Numat) or 22.04 (Jammy Jellyfish) based on your processor type. Your choice of OS version determines the compatible ROS distribution (Jazzy Jalisco or Humble Hawksbill, respectively).
 
 ::::{tab-set}
 :::{tab-item} **Ubuntu 24.04**
 :sync: jazzy
 
-Depending on your processor type, select one of the following Canonical Ubuntu
-24.04 LTS variants:
+Depending on your processor type, select one of the following Canonical Ubuntu 24.04 LTS variants:
 
-|Processor type|Canonical Ubuntu 24.04 LTS variant|
-|-|-|
-|Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numat)](https://releases.ubuntu.com/24.04) Desktop image|
-|Other Intel® processors, including:<br>11-13th Generation Intel® Core™ Processors,<br>Intel® Processor N-series (products formerly Alder Lake-N)|24.04 LTS image for Intel IoT platforms, available at [Download Ubuntu image for Intel® IoT platforms](https://ubuntu.com/download/iot/intel-iot)|
+|Processor type|Canonical Ubuntu 24.04 LTS variant|ROS2 Compatibility|
+|-|-|-|
+|Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numat)](https://releases.ubuntu.com/24.04) Desktop image|Jazzy|
 
 :::
 :::{tab-item}  **Ubuntu 22.04**
 :sync: humble
 
-Depending on your processor type, select one of the following Canonical Ubuntu
-22.04 LTS variants:
+Depending on your processor type, select one of the following Canonical Ubuntu 22.04 LTS variants:
 
-|Processor type|Canonical Ubuntu 22.04 LTS variant|
-|-|-|
-|Intel® Core™ Ultra Processors|[Ubuntu OS version 22.04 LTS (Jammy Jellyfish)](https://releases.ubuntu.com/22.04) Desktop image|
-|Other Intel® processors, including:<br>11-13th Generation Intel® Core™ Processors,<br>Intel® Processor N-series (products formerly Alder Lake-N)|22.04 LTS image for Intel IoT platforms, available at [Download Ubuntu image for Intel® IoT platforms](https://ubuntu.com/download/iot/intel-iot)|
+|Processor type|Canonical Ubuntu 22.04 LTS variant|ROS2 Compatibility|
+|-|-|-|
+|11-13th Generation Intel® Core™ Processors,<br>Intel® Processor N-series (products formerly Alder Lake-N)|22.04 LTS image for Intel IoT platforms, available at [Download Ubuntu image for Intel® IoT platforms](https://ubuntu.com/download/iot/intel-iot)|Humble|
 
 :::
 ::::
@@ -168,7 +164,7 @@ This section explains the procedure to configure the APT package manager to use 
 2. Download the APT key to the system keyring:
 
    ```bash
-   sudo wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | sudo tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null
+   sudo -E wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | sudo tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null
    ```
 
 3. Add the signed entry to Autonomous Mobile Robot APT sources and configure the APT client to use the Autonomous Mobile Robot APT repositories:
@@ -237,7 +233,7 @@ The following steps will add the OpenVINO™ APT repository to your package mana
 1. Install the OpenVINO™ GPG key:
 
    ```bash
-   wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | sudo tee /usr/share/keyrings/openvino-archive-keyring.gpg
+   wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | sudo tee /usr/share/keyrings/openvino-archive-keyring.gpg > /dev/null
    ```
 
 2. Add the Deb package sources for OpenVINO™ 2025.
@@ -380,10 +376,10 @@ The following steps will install the OpenVINO™ packages:
    sudo apt install -y libze1 libze-intel-gpu1
    ```
 
-> **Note:** While you may encounter GPU driver installation guides that involve
-> downloading ``*.deb`` files for manual installation, this method does not support
-> automatic update. Therefore, it is advisable to install packages from an APT package
-> feed for easier updates, as described above.
+   > **Note:** While you may encounter GPU driver installation guides that involve
+   > downloading ``*.deb`` files for manual installation, this method does not support
+   > automatic update. Therefore, it is advisable to install packages from an APT package
+   > feed for easier updates, as described above.
 
 ### 4.2 OpenVINO™ Re-Installation and Troubleshooting
 
@@ -430,7 +426,25 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
 
    ![apt-update](../images/download/apt-update.png)
 
-2. Choose the Autonomous Mobile Robot Deb package to install.
+2. Follow the instructions on the following page to install Gazebo (if needed):
+
+
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
+
+[Install Gazebo](https://gazebosim.org/docs/harmonic/install_ubuntu/)
+
+:::
+:::{tab-item}  **Humble**
+:sync: humble
+
+> **Note:** No additional installation needed for ROS 2 Humble
+
+:::
+::::
+
+3. Choose the Autonomous Mobile Robot Deb package to install.
 
    ::::{tab-set}
    :::{tab-item} **Jazzy**
@@ -455,7 +469,7 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
    :::
    ::::
 
-3. Install the chosen Autonomous Mobile Robot Deb package
+4. Install the chosen Autonomous Mobile Robot Deb package
 
    Install command example:
 
@@ -496,7 +510,7 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
 
    ![apt-install-ros-pkt](../images/download/apt-install-ros-pkt.png)
 
-4. Install one of the following packages based upon your processor type:
+5. Install one of the following packages based upon your processor type:
 
    - Intel SSE-only CPU instruction accelerated package for Collaborative SLAM (installed by default):
 
@@ -663,10 +677,9 @@ website. The driver consists of the following packages:
 > as it is described in the following.
 
 The packages of the Intel® NPU driver are provided by the
-APT package feed, which you have added to your system when you followed
-the instructions on page :doc:`./apt-setup`.
-This APT package feed also provides all dependencies of the Intel® NPU
-driver packages.
+APT package feed, which you have added to your system when you setup
+the APT package repositories earlier. This APT package feed also provides
+all dependencies of the Intel® NPU driver packages.
 
 To install the Intel® NPU driver, complete the following steps:
 
