@@ -2,13 +2,9 @@
 
 This guide explains how to create a custom Docker image based on the Intel DL Streamer Pipeline Server, with pylon SDK and Gencamsrc support. It supports Basler camera that are connected over the USB and GigE.
 
----
-
 ## Prerequisites
 
-- [System Requirements](system-requirements.md)
-
----
+- [System Requirements](../get-started/system-requirements.md)
 
 ## Cloning and building the docker image
 
@@ -20,8 +16,6 @@ Download the edge-ai-libraries source and go to `dlstreamer-pipeline-server` fol
 git clone https://github.com/open-edge-platform/edge-ai-libraries.git
 cd edge-ai-libraries/microservices/dlstreamer-pipeline-server
 ```
-
----
 
 ### Step 2: Create the Docker Image
 
@@ -54,8 +48,6 @@ ENV GENICAM_GENTL64_PATH=/opt/pylon/lib/gentlproducer/gtl \
 USER intelmicroserviceuser
 ```
 
----
-
 ### Step 3: Build the Docker Image
 
 Run the following command to build the image:
@@ -66,8 +58,6 @@ docker build -t intel/dlstreamer-pipeline-server:3.1.0-ubuntu24-gencamsrc-basler
 
 This command builds your Docker image using the steps defined above.
 
----
-
 ### Step 4: Verify the Image
 
 After the build completes, update .env and start the container:
@@ -77,8 +67,6 @@ After the build completes, update .env and start the container:
 ```bash
 docker compose up -d
 ```
-
----
 
 ### Step 5: Run a test pipeline and dump the camera output into a file in the /tmp directory
 
@@ -91,14 +79,10 @@ $ gst-launch-1.0 gencamsrc serial=<basler-camera-serial> pixel-format=bayerrggb 
 
 Verify that the /tmp/gencam_basler_output.avi has the captured content
 
----
-
 ## Deploying the Pallet Defect Detection (PDD) Application Using live camera
 
 This guide provides detailed, step-by-step instructions for setting up and deploying the **Pallet Defect Detection (PDD)** pipeline to use the **Balluff** or **Basler** camera connected over USB or GigE.
 It covers environment setup, configuration updates, and validation steps to ensure a successful deployment.
-
----
 
 ### Step 1: Set Up the Environment
 
@@ -108,8 +92,6 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision
 cp .env_pallet_defect_detection .env
 ```
 
----
-
 ### Step 2: Configure the .env File
 
 Update the `.env` file with the newly created image as below and modify any other required variables.
@@ -118,8 +100,6 @@ Update the `.env` file with the newly created image as below and modify any othe
 DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:3.1.0-ubuntu24-gencamsrc-basler
 ```
 
----
-
 ### Step 3: Run the Setup Script
 
 Execute the setup script to initialize project directories and configurations.
@@ -127,8 +107,6 @@ Execute the setup script to initialize project directories and configurations.
 ```bash
 ./setup.sh
 ```
-
----
 
 ### Step 4: Update the Pipeline Configuration
 
@@ -144,8 +122,6 @@ Update the pipeline in `./apps/pallet-defect-detection/configs/pipeline-server-c
 ```
 
 Replace <camera id> with balser camera id connected over the USB or GigE
-
----
 
 ### Step 5: Configure docker-compose.yml (Optional, if testing with a GigE network camera)
 
@@ -178,8 +154,6 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 127.0.0.1       model_registry
 ```
 
----
-
 ### Step 6: Launch the Containers
 
 Start all required services using Docker Compose:
@@ -187,8 +161,6 @@ Start all required services using Docker Compose:
 ```bash
 docker compose up -d
 ```
-
----
 
 ### Step 7: Modify the Payload File
 
@@ -217,8 +189,6 @@ Edit `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps
 ]
 ```
 
----
-
 ### Step 8: Start the Sample Pipeline
 
 Run the sample script to start the pipeline:
@@ -226,8 +196,6 @@ Run the sample script to start the pipeline:
 ```bash
 ./sample_start.sh -p pallet_defect_detection
 ```
-
----
 
 ### Step 9: Access the Web Interface
 
@@ -242,5 +210,14 @@ Replace `<HOST_IP>` with the IP address configured in your `.env` file.
 ## Troubleshooting
 
 - For initial configuration and advanced configuration of the Basler camera, please use the company-provided visualization tool **pylonviewer**, which is part of the **pylon SDK**.
-- Instructions to install the **pylon SDK** on the host can be found in the [Pylon SDK Installation Guide](./how-to-install-pylon-sdk-on-host.md).
-- If you face any issues related to camera detection over USB, please refer to the [Pylon Troubleshooting Guide](./how-to-install-pylon-sdk-on-host.md#troubleshooting).
+- Instructions to install the **pylon SDK** on the host can be found in the [Pylon SDK Installation Guide](./install-pylon-sdk-on-host.md).
+- If you face any issues related to camera detection over USB, please refer to the [Pylon Troubleshooting Guide](./install-pylon-sdk-on-host.md#troubleshooting).
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Install pylon SDK <install-pylon-sdk-on-host>
+
+:::
+hide_directive-->

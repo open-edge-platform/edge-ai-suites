@@ -1,4 +1,4 @@
-# How to use an AI Model and Video File of your own
+# Use Your AI Model and Video
 
 You can bring your own model and run this sample application the same way as how we bring in the pallet defect detection model. You can also bring your own video file source. Please see below for details:
 

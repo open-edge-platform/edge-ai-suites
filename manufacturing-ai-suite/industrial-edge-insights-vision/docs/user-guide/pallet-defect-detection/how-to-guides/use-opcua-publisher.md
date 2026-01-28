@@ -1,4 +1,4 @@
-# How to use OPC UA publisher
+# Use OPC UA publisher
 
 Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing using the docker.
 
@@ -10,13 +10,13 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
       Download the [OPC UA C++ Demo Server (Windows)](https://www.unified-automation.com/downloads/opc-ua-servers.html) and install it on your Windows machine. Please note that this server is available only for Windows.
    2. **Starting the OPC UA Server**
 
-      * Open the Start menu on your Windows machine and search for **UaCPPServer**.
-      * Launch the application to start the server.
+      - Open the Start menu on your Windows machine and search for **UaCPPServer**.
+      - Launch the application to start the server.
 
 2. Update the following variables related to the OPC UA server in `.env`.
 
    ```sh
-   OPCUA_SERVER_IP= # <IP-Adress of the OPCUA server>
+   OPCUA_SERVER_IP= # <IP-Address of the OPC UA server>
    OPCUA_SERVER_PORT= # example: 48010
    OPCUA_SERVER_USERNAME= # example: root
    OPCUA_SERVER_PASSWORD= # example: secret
@@ -31,9 +31,9 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
        },
    ```
 
-4. To use an AI model of your own please follow the steps as mentioned in this [document](./how-to-use-an-ai-model-and-video-file-of-your-own.md)
+4. To use an AI model of your own please follow the steps as mentioned in this [document](./use-your-ai-model-and-video.md)
 
-5. Setup the application to use the docker based deployment following this [document](./get-started.md#setup-the-application).
+5. Setup the application to use the docker based deployment following this [document](../get-started.md#setup-the-application).
 
 6. Start the pipeline using the following cURL command. Update the `HOST_IP` and ensure the correct path to the model is provided as shown below. This example starts an AI pipeline.
 
