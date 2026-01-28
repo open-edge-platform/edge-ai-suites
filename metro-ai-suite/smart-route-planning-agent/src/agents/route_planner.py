@@ -202,7 +202,7 @@ class RoutePlanner:
         live_traffic_state = {}
 
         # If none of the routes are optimal, we store sub-optimal route here.
-        sub_optimal_route: dict[str, str] = {}
+        sub_optimal_route: dict[str, str | float] = {}
         sub_optimal_density: int = 0
 
         # fetch the available live traffic data
@@ -281,21 +281,21 @@ class RoutePlanner:
                         <= live_traffic_controller.proximity_factor
                     ):
                         # Count the number of intersections in the current route
-                        num_intersections_in_route += 1
+                        # num_intersections_in_route += 1
 
                         # Verify if traffic status from Intersection API reflects the actual recorded scenario at the intersection
-                        if (
-                            WEATHER_ISSUE_MAP.get(next_shortest_route_name)
-                            == traffic_status.weather_status
-                            or INCIDENT_ISSUE_MAP.get(next_shortest_route_name)
-                            == traffic_status.incident_status
-                        ):
-                            intersection_blocked_count_valid += 1
-                        elif (
-                            traffic_status.weather_status != WeatherStatus.CLEAR
-                            or traffic_status.incident_status != IncidentStatus.CLEAR
-                        ):
-                            intersection_blocked_count_invalid += 1
+                        # if (
+                        #     WEATHER_ISSUE_MAP.get(next_shortest_route_name)
+                        #     == traffic_status.weather_status
+                        #     or INCIDENT_ISSUE_MAP.get(next_shortest_route_name)
+                        #     == traffic_status.incident_status
+                        # ):
+                        #     intersection_blocked_count_valid += 1
+                        # elif (
+                        #     traffic_status.weather_status != WeatherStatus.CLEAR
+                        #     or traffic_status.incident_status != IncidentStatus.CLEAR
+                        # ):
+                        #     intersection_blocked_count_invalid += 1
 
                         logger.debug(
                             "Getting blocked routes when intersection is found to be in current route ..."
@@ -392,14 +392,14 @@ class RoutePlanner:
                 # blocked_route_invalid or blocked_route list required to :
                 # 1. Color the route yellow or red, respectively on map UI
                 # 2. Refrain the agent from taking this route again in current iteration
-                if intersection_blocked_count_valid == num_intersections_in_route:
-                    blocked_routes.append(next_shortest_route_name)
-                    if next_shortest_route_name in blocked_routes_invalid:
-                        blocked_routes_invalid.remove(next_shortest_route_name)
-                else:
-                    blocked_routes_invalid.append(next_shortest_route_name)
-                    if next_shortest_route_name in blocked_routes:
-                        blocked_routes.remove(next_shortest_route_name)
+                # if intersection_blocked_count_valid == num_intersections_in_route:
+                #     blocked_routes.append(next_shortest_route_name)
+                #     if next_shortest_route_name in blocked_routes_invalid:
+                #         blocked_routes_invalid.remove(next_shortest_route_name)
+                # else:
+                #     blocked_routes_invalid.append(next_shortest_route_name)
+                #     if next_shortest_route_name in blocked_routes:
+                #         blocked_routes.remove(next_shortest_route_name)
 
             else:
                 # If in some other iterations different intersection_blocked_count zero out, remove route from blocked states.

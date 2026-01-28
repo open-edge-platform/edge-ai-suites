@@ -62,6 +62,11 @@ class WeatherStatus(Enum):
     FIRE = "Roadside Fire"
     FLOOD = "Flash Floods"
 
+    # Add a generic handler here so that any unknown weather status maps to CLEAR
+    @classmethod
+    def _missing_(cls, value):
+        return cls.CLEAR
+
 
 # Weather conditions that trigger alternate route search
 ADVERSE_WEATHER_CONDITIONS = [
