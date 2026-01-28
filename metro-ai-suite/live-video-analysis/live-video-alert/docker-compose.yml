@@ -1,0 +1,21 @@
+services:
+  agentic-nvr:
+    build: .
+    container_name: agentic-nvr
+    restart: unless-stopped
+    ports:
+      - "${PORT:-9000}:${PORT:-9000}"
+    environment:
+      - no_proxy=${no_proxy}
+      - NO_PROXY=${no_proxy}
+      - http_proxy=$http_proxy
+      - HTTP_PROXY=$http_proxy
+      - https_proxy=$https_proxy
+      - HTTPS_PROXY=$https_proxy
+      - RTSP_URL=${RTSP_URL:-/app/resources/fire-hazard.mp4}
+      - VLM_URL=${VLM_URL:-http://localhost:8000/v3}
+      - MODEL_NAME=${MODEL_NAME:-Phi-3.5-Vision}
+      - PORT=${PORT:-9000}
+    volumes:
+      - ./resources:/app/resources
+    network_mode: host

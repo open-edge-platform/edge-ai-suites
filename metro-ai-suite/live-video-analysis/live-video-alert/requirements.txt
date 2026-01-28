@@ -1,0 +1,5 @@
+opencv-python
+openai
+pydantic
+numpy
+sse-starlette
