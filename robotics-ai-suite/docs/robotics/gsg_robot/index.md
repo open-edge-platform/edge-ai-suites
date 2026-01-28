@@ -207,6 +207,29 @@ This section explains the procedure to configure the APT package manager to use 
    > sudo -E gpg --no-default-keyring --keyring /usr/share/keyrings/realsense-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --keyserver-options http-proxy=http://<proxy-server>:<port> --recv-keys F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
    > ```
 
+7. For latest Intel silicon support, add the Canonical ``kisak`` and ``kobuk`` Private Package Archives (PPA):
+
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
+
+   ```bash
+   sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
+   sudo -E add-apt-repository -y ppa:kobuk-team/intel-graphics
+   ```
+
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
+
+   ```bash
+   sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
+   ```
+
+   :::
+   ::::
+
+
 ## 4. Install OpenVINO™ Packages
 
 The following steps will add the OpenVINO™ APT repository to your package management.
@@ -224,7 +247,7 @@ The following steps will add the OpenVINO™ APT repository to your package mana
    :::{tab-item} **Jazzy**
    :sync: jazzy
 
-    ```bash
+   ```bash
    echo "deb [signed-by=/usr/share/keyrings/openvino-archive-keyring.gpg] https://apt.repos.intel.com/openvino/2025 ubuntu24 main" | sudo tee /etc/apt/sources.list.d/intel-openvino-2025.list
    ```
 
@@ -232,7 +255,7 @@ The following steps will add the OpenVINO™ APT repository to your package mana
    :::{tab-item}  **Humble**
    :sync: humble
 
-    ```bash
+   ```bash
    echo "deb [signed-by=/usr/share/keyrings/openvino-archive-keyring.gpg] https://apt.repos.intel.com/openvino/2025 ubuntu22 main" | sudo tee /etc/apt/sources.list.d/intel-openvino-2025.list
    ```
 
@@ -576,7 +599,41 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
      Level-Zero accelerated package for Collaborative SLAM
      (``ros-jazzy-collab-slam-lze``) as described above.
 
-## 6. Install the Intel® NPU Driver on Intel® Core™ Ultra Processors
+
+## 6. Install Intel® GPU Driver on Intel® Core™ Ultra Processors
+
+If you want to run OpenVINO™ inferencing applications on the GPU device
+of Intel® Core™ Ultra processors, you need to install the Intel® GPU driver.
+If your system does not have an Intel® Core™ Ultra Processor, you should skip
+this step.
+
+1. Install mesa packages from ``kisak`` PPA:
+
+   ```bash
+   sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-libgallium mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
+   ```
+
+2. Install the latest Linux kernel:
+
+   ```bash
+   sudo apt install linux-intel-rt-experimental
+   ```
+
+3. Install the ``eci-customizations`` package to populate the GRUB menu
+   with the latest Linux kernel:
+
+   ```bash
+   sudo apt install eci-customizations
+   ```
+
+4. Install GuC and HuC Linux firmware package:
+
+   ```bash
+   sudo apt install linux-firmware
+   ```
+
+
+## 7. Install the Intel® NPU Driver on Intel® Core™ Ultra Processors
 
 If you want to run OpenVINO™ inferencing applications on the NPU device
 of Intel® Core™ Ultra processors, you need to install the Intel® NPU driver.
@@ -657,6 +714,14 @@ To install the Intel® NPU driver, complete the following steps:
    $ ls -lah /dev/accel/accel0
    crw-rw---- 1 root render 261, 0 Jul  1 13:10 /dev/accel/accel0
    ```
+
+
+## 8. Reboot to load latest Linux kernel and firmware
+
+```bash
+sudo reboot
+```
+
 
 ## Installation Troubleshooting
 
