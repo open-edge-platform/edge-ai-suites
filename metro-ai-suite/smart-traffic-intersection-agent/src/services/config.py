@@ -120,10 +120,10 @@ class ConfigService:
             if "vlm" not in config:
                 config["vlm"] = {}
             config["vlm"]["base_url"] = os.getenv("VLM_BASE_URL")
-        if os.getenv("VLM_MODEL"):
+        if os.getenv("VLM_MODEL_NAME"):
             if "vlm" not in config:
                 config["vlm"] = {}
-            config["vlm"]["model"] = os.getenv("VLM_MODEL")
+            config["vlm"]["model"] = os.getenv("VLM_MODEL_NAME")
         if os.getenv("VLM_TIMEOUT_SECONDS"):
             if "vlm" not in config:
                 config["vlm"] = {}
