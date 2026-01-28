@@ -607,7 +607,7 @@ Current Version: 3.0
 :hidden:
 
 Prerequisites <prerequisites.md>
-System REquirements <system-req.md>
+System Requirements <system-req.md>
 
 :::
 hide_directive-->
