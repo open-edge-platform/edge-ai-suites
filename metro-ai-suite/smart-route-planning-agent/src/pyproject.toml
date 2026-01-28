@@ -14,7 +14,7 @@ dependencies = [
     "isort",
     "langgraph>=0.6.6",
     "mypy",
-    "numpy",
+    "numpy>1.24.3",
     "pandas",
     "pillow>=10.4.0",
     "pydantic",
