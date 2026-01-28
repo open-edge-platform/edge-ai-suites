@@ -1,13 +1,15 @@
 import os
 import glob
+import csv
 import json
 import math
 import platform
 import shutil
 import subprocess
+from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 
 # The prebuilt intel/retail-benchmark image writes metrics under /tmp/results
@@ -15,6 +17,7 @@ METRICS_DIR = Path(os.getenv("METRICS_DIR", "/tmp/results"))
 CPU_LOG = METRICS_DIR / "cpu_usage.log"
 NPU_CSV = METRICS_DIR / "npu_usage.csv"
 MEM_LOG = METRICS_DIR / "memory_usage.log"
+PCM_CSV = METRICS_DIR / "pcm.csv"
 
 
 def read_last_nonempty_line(path: Path) -> Optional[str]:
@@ -119,46 +122,300 @@ def parse_memory_usage() -> Optional[Dict[str, Any]]:
         return {"raw": mem_line}
 
 
-def build_metrics_payload() -> Dict[str, Any]:
-    """Assemble a simplified metrics payload for the /metrics endpoint.
+def build_cpu_series() -> List[List[float]]:
+    """Build a time series for CPU utilization from cpu_usage.log.
 
-    Only include the key values needed by the UI, so the response stays
-    small and focused:
+    Each entry: [timestamp_iso, usage_percent]. Timestamps are
+    approximated assuming 1-second sampling (sar 1), counting backwards
+    from the current time.
+    """
+    try:
+        with CPU_LOG.open() as f:
+            lines = [line.strip() for line in f if line.strip()]
+    except FileNotFoundError:
+        return []
+    except Exception:
+        return []
 
-      - cpu.usage_percent
-      - npu.usage_percent (+ timestamp)
-      - gpu.source_file (omit the large raw JSON payload)
+    samples: List[float] = []
+    for line in lines:
+        parts = line.split()
+        if len(parts) < 2:
+            continue
+        try:
+            idle = float(parts[-1])
+            usage = max(0.0, min(100.0, 100.0 - idle))
+            samples.append(usage)
+        except Exception:
+            continue
+
+    if not samples:
+        return []
+
+    now = datetime.now()
+    start = now - timedelta(seconds=len(samples) - 1)
+    series: List[List[float]] = []
+    for idx, usage in enumerate(samples):
+        ts = (start + timedelta(seconds=idx)).isoformat()
+        series.append([ts, usage])
+    return series
+
+
+def build_npu_series() -> List[List[float]]:
+    """Build a time series for NPU utilization from npu_usage.csv.
+
+    Each entry: [timestamp_iso, usage_percent].
+    """
+    try:
+        with NPU_CSV.open() as f:
+            lines = [line.strip() for line in f if line.strip()]
+    except FileNotFoundError:
+        return []
+    except Exception:
+        return []
+
+    if len(lines) <= 1:
+        return []
+
+    series: List[List[float]] = []
+    for line in lines[1:]:  # skip header
+        try:
+            ts, usage = line.split(",", 1)
+            usage_val = float(usage)
+        except Exception:
+            continue
+        series.append([ts, usage_val])
+    return series
+
+
+def build_memory_series() -> List[List[float]]:
+    """Build a time series for memory usage from memory_usage.log.
+
+    Each entry: [timestamp_iso, total_gb, used_gb, free_gb, usage_percent].
+    Timestamps are approximated assuming 1-second sampling, counting
+    backwards from the current time.
+    """
+    try:
+        with MEM_LOG.open() as f:
+            lines = [line.rstrip() for line in f if line.strip()]
+    except FileNotFoundError:
+        return []
+    except Exception:
+        return []
+
+    mem_lines: List[str] = []
+    for line in lines:
+        if line.lstrip().startswith("Mem:"):
+            mem_lines.append(line)
+
+    if not mem_lines:
+        return []
+
+    samples: List[Dict[str, float]] = []
+    for mem_line in mem_lines:
+        parts = mem_line.split()
+        if len(parts) < 4:
+            continue
+        try:
+            total_kib = float(parts[1])
+            used_kib = float(parts[2])
+            free_kib = float(parts[3])
+            usage_percent = (used_kib / total_kib) * 100.0 if total_kib > 0 else 0.0
+            total_gb = total_kib / (1024 ** 2)
+            used_gb = used_kib / (1024 ** 2)
+            free_gb = free_kib / (1024 ** 2)
+            samples.append(
+                {
+                    "total_gb": total_gb,
+                    "used_gb": used_gb,
+                    "free_gb": free_gb,
+                    "usage_percent": usage_percent,
+                }
+            )
+        except Exception:
+            continue
+
+    if not samples:
+        return []
+
+    now = datetime.now()
+    start = now - timedelta(seconds=len(samples) - 1)
+    series: List[List[float]] = []
+    for idx, s in enumerate(samples):
+        ts = (start + timedelta(seconds=idx)).isoformat()
+        series.append(
+            [
+                ts,
+                s["total_gb"],
+                s["used_gb"],
+                s["free_gb"],
+                s["usage_percent"],
+            ]
+        )
+    return series
+
+
+def build_gpu_series() -> List[List[float]]:
+    """Build a time series for GPU utilization.
+
+    Placeholder implementation: returns an empty list until the exact
+    qmassa JSON schema and desired metrics are defined.
+    """
+    return []
+
+
+def build_power_series() -> List[List[float]]:
+    """Build a time series for power metrics from pcm.csv.
+
+    Each entry is a list of the form:
+
+        [timestamp, package0_watts, package1_watts, ...]
+
+    We approximate power in watts by differentiating the energy counters
+    (Joules) that PCM exports in the CSV. The Intel PCM CSV produced by
+    the collector uses a two-row header: the first row contains labels
+    like "Proc Energy (Joules)" and "Power Plane 0 Energy (Joules)",
+    and the second row contains generic labels like "SKT0".
+
+    This function:
+    - Uses the *first* header row to find energy columns (those whose
+      name contains both "energy" and "joule").
+    - Uses the *second* header row to locate the Date/Time columns.
+    - For each consecutive pair of samples, computes
+        power = (energy_now - energy_prev) / dt_seconds
+      for all detected energy columns.
     """
 
-    cpu_raw = parse_cpu_usage()
-    npu_raw = parse_npu_usage()
-    gpu_raw = parse_gpu_metrics()
+    try:
+        with PCM_CSV.open() as f:
+            reader = csv.reader(f)
 
-    cpu: Optional[Dict[str, Any]]
-    if cpu_raw and "usage_percent" in cpu_raw:
-        cpu = {"usage_percent": cpu_raw["usage_percent"]}
-    else:
-        cpu = None
+            # PCM CSV uses two header rows: first has long labels with
+            # "Energy (Joules)", second has short labels like "Date"/"Time".
+            header1 = next(reader, None)
+            header2 = next(reader, None)
+            if not header1 or not header2:
+                return []
 
-    npu: Optional[Dict[str, Any]]
-    if npu_raw:
-        npu = {
-            "timestamp": npu_raw.get("timestamp"),
-            "usage_percent": npu_raw.get("usage_percent"),
+            # Identify Date/Time columns from the second header row.
+            date_idx = None
+            time_idx = None
+            for idx, col in enumerate(header2):
+                col_l = col.lower()
+                if date_idx is None and col_l == "date":
+                    date_idx = idx
+                elif time_idx is None and col_l == "time":
+                    time_idx = idx
+
+            # Fallback to the first two columns if not explicitly labeled.
+            if date_idx is None:
+                date_idx = 0
+            if time_idx is None:
+                time_idx = 1 if len(header2) > 1 else 0
+
+            # Energy columns come from the first header row: look for
+            # entries like "... Energy (Joules)".
+            energy_indices: List[int] = []
+            for idx, col in enumerate(header1):
+                col_l = col.lower()
+                if "energy" in col_l and "joule" in col_l:
+                    energy_indices.append(idx)
+
+            if not energy_indices:
+                return []
+
+            # Read all remaining rows and keep only those that have all
+            # required columns present.
+            data_rows: List[List[str]] = []
+            max_idx = max(max(energy_indices), date_idx, time_idx)
+            for row in reader:
+                if not row or len(row) <= max_idx:
+                    continue
+                data_rows.append(row)
+
+            if len(data_rows) < 2:
+                return []
+
+            series: List[List[float]] = []
+
+            # Helper to parse timestamp
+            def parse_ts(d: str, t: str) -> Optional[datetime]:
+                ts_str = f"{d} {t}"
+                for fmt in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"):
+                    try:
+                        return datetime.strptime(ts_str, fmt)
+                    except Exception:
+                        continue
+                return None
+
+            # Prime with the first row's energies and timestamp
+            prev_row = data_rows[0]
+            prev_ts = parse_ts(prev_row[date_idx].strip(), prev_row[time_idx].strip())
+            try:
+                prev_energies = [float(prev_row[i]) for i in energy_indices]
+            except Exception:
+                # If the first row cannot be parsed, bail out
+                return []
+
+            for row in data_rows[1:]:
+                cur_ts = parse_ts(row[date_idx].strip(), row[time_idx].strip())
+                if cur_ts is None or prev_ts is None:
+                    prev_ts = cur_ts
+                    continue
+
+                dt = (cur_ts - prev_ts).total_seconds()
+                if dt <= 0:
+                    prev_ts = cur_ts
+                    continue
+
+                try:
+                    cur_energies = [float(row[i]) for i in energy_indices]
+                except Exception:
+                    prev_ts = cur_ts
+                    continue
+
+                # Compute power as delta energy / delta time
+                powers: List[float] = []
+                for e_prev, e_cur in zip(prev_energies, cur_energies):
+                    if e_cur >= e_prev:
+                        powers.append((e_cur - e_prev) / dt)
+                    else:
+                        # Counter wrapped or reset; skip negative deltas
+                        powers.append(0.0)
+
+                if powers:
+                    series.append([cur_ts.isoformat()] + powers)
+
+                prev_ts = cur_ts
+                prev_energies = cur_energies
+
+            return series
+    except FileNotFoundError:
+        return []
+    except Exception:
+        return []
+
+
+def build_metrics_payload() -> Dict[str, Any]:
+    """Assemble the metrics payload for the /metrics endpoint.
+
+    Matches the desired shape:
+
+        {
+            "cpu_utilization": [[ts, value], ...],
+            "gpu_utilization": [[ts, ...], ...],
+            "memory": [[ts, total_gb, used_gb, free_gb, usage%], ...],
+            "power": [],
+            "npu_utilization": [[ts, value], ...]
         }
-    else:
-        npu = None
-
-    gpu: Optional[Dict[str, Any]]
-    if gpu_raw:
-        gpu = {"source_file": gpu_raw.get("source_file")}
-    else:
-        gpu = None
+    """
 
     return {
-        "cpu": cpu,
-        "npu": npu,
-        "gpu": gpu,
+        "cpu_utilization": build_cpu_series(),
+        "gpu_utilization": build_gpu_series(),
+        "memory": build_memory_series(),
+        "power": build_power_series(),
+        "npu_utilization": build_npu_series(),
     }
 
 
