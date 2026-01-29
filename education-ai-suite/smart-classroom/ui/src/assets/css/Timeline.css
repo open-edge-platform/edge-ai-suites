@@ -1,0 +1,159 @@
+.timeline-container {
+  background: #f7f7f7;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.timeline-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.timeline-duration {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.timeline-placeholder {
+  text-align: center;
+  color: #999;
+  padding: 40px 20px;
+  font-size: 14px;
+}
+
+.timeline-ruler {
+  margin-bottom: 20px;
+  padding-left: 100px; 
+}
+
+.timeline-ruler-track {
+  position: relative;
+  height: 30px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.time-marker {
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+
+.time-marker-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #6c757d;
+  transform: translateX(-50%);
+}
+
+.time-marker-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #6c757d;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+.timeline-content {
+  position: relative;
+}
+
+.timeline-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  min-height: 32px;
+}
+
+.timeline-speaker-info {
+  width: 90px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-right: 10px;
+}
+
+.speaker-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.timeline-track {
+  flex: 1;
+  height: 24px;
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.timeline-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #f7f3f3;
+  border-radius: 4px;
+}
+
+.timeline-segment {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  min-width: 2px;
+}
+
+.timeline-segment:hover {
+  opacity: 0.8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .timeline-container {
+    padding: 12px;
+  }
+  
+  .timeline-ruler {
+    padding-left: 70px;
+  }
+  
+  .timeline-speaker-info {
+    width: 60px;
+    margin-right: 8px;
+  }
+  
+  .speaker-label {
+    font-size: 11px;
+  }
+  
+  .time-marker-label {
+    font-size: 10px;
+  }
+}
