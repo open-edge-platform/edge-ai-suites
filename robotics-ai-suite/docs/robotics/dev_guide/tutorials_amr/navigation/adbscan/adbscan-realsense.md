@@ -4,7 +4,7 @@ This tutorial describes how to run the ADBSCAN algorithm from IntelÂ® RealSenseâ
 
 ## Prerequisites
 
-Complete the [get started guide](../../../../gsg_robot/index.rst) before continuing.
+Complete the [get started guide](../../../../gsg_robot/index.md) before continuing.
 
 ## Install
 

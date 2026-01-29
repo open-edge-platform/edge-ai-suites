@@ -428,21 +428,20 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
 
 2. Follow the instructions on the following page to install Gazebo (if needed):
 
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+   [Install Gazebo](https://gazebosim.org/docs/harmonic/install_ubuntu/)
 
-[Install Gazebo](https://gazebosim.org/docs/harmonic/install_ubuntu/)
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
-:::
-:::{tab-item}  **Humble**
-:sync: humble
+   > **Note:** No additional installation needed for ROS 2 Humble
 
-> **Note:** No additional installation needed for ROS 2 Humble
-
-:::
-::::
+   :::
+   ::::
 
 3. Choose the Autonomous Mobile Robot Deb package to install.
 
