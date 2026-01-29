@@ -39,6 +39,7 @@ This guide is designed to help developers understand the architecture, setup, an
 
 <!--hide_directive
 :::{toctree}
+:hidden:
 
 get-started
 how-to-deploy-helm
