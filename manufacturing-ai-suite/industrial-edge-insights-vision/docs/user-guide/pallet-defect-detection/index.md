@@ -39,7 +39,7 @@ be seen on Prometheus UI. Any desired AI model from the Model Registry Microserv
 (which can interact with Postgres, Minio and Geti Server for getting the model) can be
 pulled into DL Streamer Pipeline Server and used for inference in the sample application.
 
-![architecture and high-level representation of the flow of data through the architecture](./images/industrial-edge-insights-vision-architecture.drawio.svg)
+![architecture and high-level representation of the flow of data through the architecture](./_assets/industrial-edge-insights-vision-architecture.drawio.svg)
 
 This sample application is built with the following Intel Edge AI Stack Microservices:
 

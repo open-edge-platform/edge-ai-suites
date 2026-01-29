@@ -160,7 +160,7 @@ For this demonstration we will be using Geti trained pallet defect detection mod
 
 4. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
-   ![WebRTC streaming](../images/webrtc-streaming.png)
+   ![WebRTC streaming](../_assets/webrtc-streaming.png)
 
 5. You can also stop any running pipeline by using the pipeline instance "id".
 

@@ -35,7 +35,7 @@ To deploy the **Pallet Defect Detection** Sample Application with the Edge Orche
 
 3. After you have imported the deployment package into Edge Orchestrator, you can see it in the list of deployment packages:
 
-   **![PDD Image](../images/pdd-dp.png)**
+   **![PDD Image](../_assets/pdd-dp.png)**
 
 See [Deployment Packages](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/package_software/deploy_packages.html#view-deployment-packages) for more information on deployment packages.
 

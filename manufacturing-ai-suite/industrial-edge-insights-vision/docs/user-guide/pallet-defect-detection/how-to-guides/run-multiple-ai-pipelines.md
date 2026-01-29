@@ -62,7 +62,7 @@ The following demonstrates running two AI pipelines.
 
 4. View the WebRTC streaming on `https://<HOST_IP>/mediamtx/<peer-str-id>/` and `https://<HOST_IP>/mediamtx/<different-peer-str-id>/`.
 
-   ![Example of WebRTC streaming using mediamtx](../images/webrtc-streaming.png)
+   ![Example of WebRTC streaming using mediamtx](../_assets/webrtc-streaming.png)
 
    Figure 1: WebRTC streaming
 

@@ -78,7 +78,7 @@ Follow this procedure to start the pipeline.
 
    Each pipeline has its **instance ID**. You will need the instance ID to stop the pipeline later.
 
-   ![Example of an instance ID for a pipeline](../images/instance-id.png)
+   ![Example of an instance ID for a pipeline](../_assets/instance-id.png)
 
    Figure 1: Example of a pipeline instance ID
 
