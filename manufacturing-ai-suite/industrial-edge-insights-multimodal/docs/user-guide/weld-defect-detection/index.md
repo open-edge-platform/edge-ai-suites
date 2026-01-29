@@ -17,11 +17,12 @@ image and time series sensor data.
 
 ## How It Works
 
-![MultiModal Weld Defect Detection Architecture Diagram](../_images/Multimodal-Weld-Defect-Detection-Architecture.png)
+![MultiModal Weld Defect Detection Architecture Diagram](../_assets/Multimodal-Weld-Defect-Detection-Architecture.png)
 
 ### Data flow explanation
 
-As seen in the architecture diagram above, the sample app at a high-level comprises of a data simulator, analytics and visualization components.
+As seen in the architecture diagram above, the sample app at a high-level comprises of a data
+simulator, analytics and visualization components.
 Below is an explanation of how this architecture translates to data flow in the weld defect
 detection use case.
 
@@ -40,7 +41,7 @@ Similarly, it ingests the .csv files as data points into **Telegraf** using the 
 The `DL Streamer Pipeline Server` microservice reads the frames/images from the MediaMTX server over RTSP protocol, runs the configured DL weld
 defect classification model, publishes the frame metadata results over MQTT and generates the WebRTC stream with bounded boxes for visualization in **Grafana**.
 
-###### **`DL Streamer Pipeline Server config.json`**
+###### **DL Streamer Pipeline Server `config.json`**
 
 **Pipeline Configuration**:
 
@@ -149,10 +150,3 @@ library.
 ## Next Steps
 
 Refer to the detailed instructions in [Get Started](../get-started.md).
-
-<!--hide_directive
-:::{toctree}
-:hidden:
-
-:::
-hide_directive-->

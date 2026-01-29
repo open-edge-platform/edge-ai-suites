@@ -59,19 +59,19 @@ and runs independently from the HMI application. The HMI application is responsi
 providing the required interface along with associated user experience to enable
 the operator to access this knowledge base.
 
-![HMI augmented worker architecture diagram](./_images/hmi-augmented-worker-architecture.png)
+![HMI augmented worker architecture diagram](./_assets/hmi-augmented-worker-architecture.png)
 
 ### Chat Question-and-Answer Core (ChatQnA Core)
 
 The 'ChatQnA Core' sample application serves as a basic Retrieval Augmented Generation
 (RAG) pipeline, allowing users to pose questions and obtain answers, even from their
 private data corpus. This sample application illustrates the construction of RAG pipelines.
-It is designed for minimal memory usage, being developed as a single, monolithic application
-with the complete RAG pipeline integrated into one microservice.
+Developed as a single, monolithic application
+with the complete RAG pipeline integrated into one microservice, it is designed for minimal memory usage.
 
 The `ChatQnA Core` application should be setup on the host system. For further details,
-visit [Chat Question-and-Answer Core Sample Application Overview](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/overview.md).
-The application is used as is without any changes.
+visit [Chat Question-and-Answer Core Sample Application Overview](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer-core/index.html).
+The application is used as is, without any changes.
 The configurable parameters like the LLM model, Embedding model, Reranker model, or
 Retriever model are setup based on the HMI application requirement.
 
@@ -80,11 +80,11 @@ Retriever model are setup based on the HMI application requirement.
 The File Watcher Service runs alongside with HMI application on the Windows environment,
 consistently observing file system activities like creation, modification, and deletion.
 When changes are detected, it sends the pertinent file data over the network to the
-'ChatQnA Core` service for ingestion and contextual processing, facilitating
+`ChatQnA Core` service for ingestion and contextual processing, facilitating
 Retrieval-Augmented Generation (RAG) workflows. The watcher service logic is shown in
 the following flow diagram:
 
-![file watcher service implementation logic flow](./_images/file-watcher-implementation-logic.png)
+![file watcher service implementation logic flow](./_assets/file-watcher-implementation-logic.png)
 
 ### Human Machine Interface(HMI) Application
 
@@ -100,17 +100,16 @@ to benefit from it.
 
 ## Supporting Resources
 
-For more comprehensive guidance on beginning, see the
-[Getting Started Guide](./get-started).
+For more comprehensive guidance on beginning, see the [Get Started Guide](./get-started.md).
+You can also check the [system requirements](./get-started/system-requirements.md).
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
-system-requirements
 get-started
-release-notes
 how-to-build-from-source
-Source Code <https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/hmi-augmented-worker>
+release-notes
+
 :::
 hide_directive-->

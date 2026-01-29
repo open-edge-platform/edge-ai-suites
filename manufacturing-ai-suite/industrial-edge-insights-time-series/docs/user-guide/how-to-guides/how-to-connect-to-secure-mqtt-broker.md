@@ -1,8 +1,9 @@
 
 # Configuration to connect to secure External MQTT broker
 
-This guide explains how to securely connect your application to an external MQTT broker using TLS/SSL encryption for both data ingestion and alert publishing, replacing the default built-in MQTT broker.
-
+This guide explains how to securely connect your application to an external MQTT broker using
+TLS/SSL encryption for both data ingestion and alert publishing, replacing the default built-in
+MQTT broker.
 
 ## Step 1: Generate TLS Certificates
 
@@ -26,6 +27,7 @@ EXTERNAL_MQTT_BROKER_HOST=<YOUR_MQTT_BROKER_IP>
 ```
 
 ### Generate CA Certificate
+
 ```bash
 # Generate CA private key (3072-bit for better security)
 openssl genrsa -out ca.key 3072
@@ -39,6 +41,7 @@ cp ca_cert.pem ca_certificate.pem
 ```
 
 ### Generate Server Certificate
+
 ```bash
 # Generate server private key
 openssl genrsa -out server.key 3072
@@ -245,4 +248,4 @@ sudo chmod 600 /etc/mosquitto/certs/*.key
 
 ## Step 5: Deploy and Verify
 
-Deploy the sample application following the steps as mentioned [here](../get-started.md#deploy-with-docker-compose)
+Deploy the sample application following the steps as mentioned [here](../get-started.md#deploy-with-docker-compose).

@@ -5,6 +5,9 @@
 
 This application uses AI Agent to analyze a route between given source and destination. It communicates with other agents to fetch live analysis reports for traffic intersections found along all feasible routes between the source and destination. Subsequently, the agent finds an optimum route in real-time which is likely to be free from any possible incidents (like congestion, weather, roadblocks, accidents etc.).
 
+<p align="center">
+    <img src="./_images/ITS_architecture.png" alt="Architecture" />
+</p>
 
 ## Supporting Resources
 

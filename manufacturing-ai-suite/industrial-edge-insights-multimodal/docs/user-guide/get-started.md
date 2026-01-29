@@ -69,14 +69,14 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
 2. Deploy the sample app, use only one of the following options.
 
-   > **NOTE**:
+   > **NOTE:**
    >
    > - The below `make up` fails if the above required fields are not populated
    >   as per the rules called out in `.env` file.
    > - The sample app is deployed by pulling the pre-built container images of the sample app
    >   from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY`
    >   env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal`)
-   > - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) is set to `true` by default, 
+   > - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) is set to `true` by default,
    >   enabling continuous looping of simulator data. To ingest the simulator data only once (without looping),
    >   set this variable to `false`.
    > - The update rate of the graph and table may lag by a few seconds and might not perfectly align with the video stream, since
@@ -104,13 +104,17 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
 1. Get into the InfluxDB* container.
 
+  > **Note:** Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
+  > where for <namespace> replace with namespace name where the application was deployed and
+  > for <influxdb-pod-name> replace with InfluxDB pod name.
+
    ``` bash
     docker exec -it ia-influxdb bash
    ```
 
 2. Run following commands to see the data in InfluxDB*.
 
-    > **NOTE**:
+    > **NOTE:**
     > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
     > This does not affect any functionality while working with the InfluxDB commands
 
@@ -122,6 +126,10 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
     # Run below query to check and output measurement processed
     # by Time Series Analytics microservice
     select * from "weld-sensor-anomaly-data"
+
+    # Run below query to check and output measurement processed
+    # by DL Streamer pipeline server microservice
+    select * from "vision-weld-classification-results"
     ```
 
 3. Check the output in Grafana.
@@ -131,17 +139,17 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
     - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
       in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.
 
-      ![Grafana login](./_images/login_wt.png)
+      ![Grafana login](./_assets/login_wt.png)
 
     - After login, click on Dashboard
-      ![Menu view](./_images/dashboard.png)
+      ![Menu view](./_assets/dashboard.png)
 
     - Select the `Multimodal Weld Defect Detection Dashboard`.
-      ![Multimodal Weld Defect Detection Dashboard](./_images/grafana_dashboard_selection.png)
+      ![Multimodal Weld Defect Detection Dashboard](./_assets/grafana_dashboard_selection.png)
 
     - One will see the below output.
 
-      ![Anomaly prediction for weld data](./_images/anomaly_prediction.png)
+      ![Anomaly prediction for weld data](./_assets/anomaly_prediction.png)
 
 ## Bring down the sample app
 
@@ -163,5 +171,15 @@ docker logs -f <container_name> | grep -i error
 ## Advanced setup
 
 - [How to build from source and deploy](./how-to-guides/how-to-build-from-source.md): Guide to build from source and docker compose deployment
+- [How to deploy with Helm](./docs/user-guide/how-to-guides/how-to-deploy-with-helm.md): Guide for deploying with Helm.
 - [How to configure MQTT alerts](./how-to-guides/how-to-configure-alerts.md): Guide for configuring the MQTT alerts in the Time Series Analytics microservice
 - [How to update config](./how-to-guides/how-to-update-config.md): Guide updating configuration of Time Series Analytics Microservice.
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+get-started/system-requirements.md
+
+:::
+hide_directive-->

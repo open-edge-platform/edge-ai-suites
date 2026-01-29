@@ -4,8 +4,7 @@
 
 .. requirements:
 
-Recommended Hardware |checklist_robot|
-=======================================
+Required Hardware |checklist_robot|
+===================================
 
-
-.. include:: ../shared/requirements_robot.rst
+.. include:: ../shared/requirements_robot.md

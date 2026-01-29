@@ -5,7 +5,7 @@
                 "name": "pallet_defect_detection_mlops",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/warehouse.avi name=source ! h264parse ! decodebin ! queue max-size-buffers=10 ! videoconvert ! gvadetect name=detection ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/warehouse.avi name=source ! h264parse ! decodebin3 ! gvadetect name=detection ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -23,7 +23,7 @@
                 "name": "pallet_defect_detection_mqtt",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -41,7 +41,7 @@
                 "name": "pallet_defect_detection_s3write",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -64,7 +64,7 @@
                 "name": "pallet_defect_detection_opcua",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -86,7 +86,7 @@
                 "name": "pallet_defect_detection_gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect device=GPU pre-process-backend=va-surface-sharing model-instance-id=instgpu0  inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=\"GPU_THROUGHPUT_STREAMS=2\" threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect device=GPU model-instance-id=instgpu0 inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=\"GPU_THROUGHPUT_STREAMS=2\" threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -104,7 +104,7 @@
                 "name": "pallet_defect_detection_npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect device=NPU pre-process-backend=va model-instance-id=instnpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=4 threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect device=NPU model-instance-id=instnpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=4 threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -122,7 +122,7 @@
                 "name": "pallet_defect_detection",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect device=CPU pre-process-backend=opencv model-instance-id=inst0 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect device=CPU model-instance-id=inst0 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {

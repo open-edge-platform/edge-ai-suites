@@ -6,6 +6,9 @@ The Scene Intelligence microservice is a comprehensive traffic analysis service 
 
 The microservice processes real-time traffic data from MQTT streams and provides advanced analytics including directional traffic density monitoring, VLM-powered traffic scene analysis, and comprehensive traffic summaries. It supports sliding window analysis, sustained traffic detection, and intelligent camera image management for enhanced traffic insights.
 
+<p align="center">
+    <img src="./_images/ITT_architecture.png" alt="Architecture" />
+</p>
 
 ## Supporting Resources
 

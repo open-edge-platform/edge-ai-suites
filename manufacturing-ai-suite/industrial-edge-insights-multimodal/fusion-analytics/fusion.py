@@ -69,6 +69,7 @@ logger.debug(type(FUSION_MODE), FUSION_MODE)
 if FUSION_MODE not in ["AND", "OR"]:
     raise ValueError(f"FUSION_MODE must be 'AND' or 'OR' given value is {FUSION_MODE}")
 
+influx_client = None
 # ===================== UTILITY FUNCTIONS =====================
 
 def find_nearest(buf, ts, type):
@@ -180,7 +181,34 @@ def on_message(client, userdata, msg):
             
             # Debug: uncomment to see incoming messages
             # logger.info(f"Received from Vision: {payload}")
-            
+
+            # Write vision weld classification results to InfluxDB
+            time = payload["metadata"]["time"]
+            json_body = [{
+                "measurement": "vision-weld-classification-results",
+                "time": pd.to_datetime(time, unit="ns").isoformat(),
+                "fields": {
+                    "frame_id": int(payload["metadata"]["frame_id"]),
+                    "height": int(payload["metadata"]["height"]),
+                    "width": int(payload["metadata"]["width"]),
+                    "channels": int(payload["metadata"]["channels"]),
+                    "caps": str(payload["metadata"]["caps"]),
+                    "img_handle": str(payload["metadata"]["img_handle"]),
+                    "objects": str(payload["metadata"]["objects"]),
+                    "img_format": str(payload["metadata"]["img_format"]),
+                    "pipeline": str(payload["metadata"]["pipeline"]),
+                    "gva_meta": str(payload["metadata"]["gva_meta"]),
+                    "resolution": str(payload["metadata"]["resolution"]),
+                    "tags": str(payload["metadata"]["tags"]),
+                    "metadata": str(payload["metadata"]),
+                    "timestamp": int(payload["metadata"]["timestamp"])
+                }
+            }]
+            try:
+                influx_client.write_points(json_body)
+            except Exception as e:
+                logger.error(f"Failed to write vision data to InfluxDB: {e}")
+
     except Exception as e:
         logger.error(f"Error processing message on topic {msg.topic}: {e}")
 
@@ -300,6 +328,7 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
 # ===================== MAIN EXECUTION =====================
 
 def main():
+    global influx_client
     # Initialize MQTT client and configure callbacks
     client = mqtt.Client()
     client.on_connect = on_connect

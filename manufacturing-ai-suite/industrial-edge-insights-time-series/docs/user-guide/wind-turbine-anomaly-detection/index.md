@@ -26,7 +26,7 @@ simulators (which can act as data destinations, if configured) - in the real wor
 be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising
 of Telegraf, InfluxDB, and the Time Series Analytics microservice using Kapacitor and Grafana.
 
-![Wind Turbine Anomaly Detection - Time Series AI Stack Architecture Diagram](../_images/wind-turbine-anomaly-detection-timeseries-ai-stack-architecture.png)
+![Wind Turbine Anomaly Detection - Time Series AI Stack Architecture Diagram](../_assets/wind-turbine-anomaly-detection-timeseries-ai-stack-architecture.png)
 
 ### Data flow explanation
 

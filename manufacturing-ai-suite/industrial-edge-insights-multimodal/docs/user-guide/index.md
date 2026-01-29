@@ -37,11 +37,11 @@ visual inspection and sensor data analysis to identify anomalies in welding data
 :::{toctree}
 :hidden:
 
-get-started
-system-requirements
-weld-defect-detection/index
-how-to-guides/index
-release_notes/Overview.md
-troubleshoot-guide
+get-started.md
+how-to-guides.md
+weld-defect-detection/index.md
+troubleshooting.md
+release-notes.md
+
 :::
 hide_directive-->

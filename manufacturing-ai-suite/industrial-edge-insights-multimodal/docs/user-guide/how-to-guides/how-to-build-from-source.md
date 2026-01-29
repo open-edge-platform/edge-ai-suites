@@ -2,9 +2,9 @@
 
 This guide provides step-by-step instructions for building the `Time Series Analytics`
 microservice and `industrial-edge-insights-multimodal` Sample Application from source.
-Please follow [prerequisites](../get-started.md#configure-docker) and understand
+Follow the [prerequisites](../get-started.md#configure-docker) and ensure you understand the
 [data flow explanation](../weld-defect-detection/index.md#data-flow-explanation)
-before proceeding with the below steps.
+before proceeding with the following steps.
 
 ## Steps to Build from Source
 
@@ -47,4 +47,3 @@ before proceeding with the below steps.
     Follow the remaining steps/sections starting from
 
     [docker compose deployment](../get-started.md#deploy-with-docker-compose)
-
