@@ -6,11 +6,10 @@ This guide provides step-by-step instructions for deploying the Industrial Edge 
 
 - [System Requirements](../system-requirements.md)
 -  K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
-  Refer to tutorials such as <https://adamtheautomator.com/installing-kubernetes-on-ubuntu> and many other
-  online tutorials to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
-- For Helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
+  Refer to online tutorials (such as <https://adamtheautomator.com/install-kubernetes-ubuntu>) to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04.
+- For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 
-> **Note**
+> **Note:**
 > If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop). The target system refers to the system where you are installing the application.
 
 ## Step 1: Generate or download the Helm charts
@@ -98,7 +97,7 @@ hide_directive-->
 
 ## Step 2: Configure and update the environment variables
 
-1. Update the following fields in `values.yaml` file of the helm chart
+1. Update the following fields in `values.yaml` file of the Helm chart
 
     ``` sh
     INFLUXDB_USERNAME:
@@ -166,7 +165,7 @@ helm install ts-weld-anomaly . -n ts-sample-app --create-namespace
 ::::
 hide_directive-->
 
-## Step 4: Copy the udf package for helm deployment to Time Series Analytics Microservice
+## Step 4: Copy the UDF package for Helm deployment to Time Series Analytics Microservice
 
 <!--hide_directive
 ::::{tab-set}

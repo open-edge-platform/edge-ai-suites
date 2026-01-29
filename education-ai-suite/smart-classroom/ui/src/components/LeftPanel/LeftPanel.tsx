@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import TranscriptsTab from "../Tabs/TranscriptsTab";
 import AISummaryTab from "../Tabs/AISummaryTab";
 import MindMapTab from "../Tabs/MindMapTab";

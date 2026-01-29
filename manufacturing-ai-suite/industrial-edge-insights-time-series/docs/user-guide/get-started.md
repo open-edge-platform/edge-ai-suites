@@ -79,7 +79,7 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
 
 <!--hide_directive
 ::::{tab-set}
-:::{tab-item} hide_directive--> **Wind Turbine Anomaly Detection** 
+:::{tab-item} hide_directive--> **Wind Turbine Anomaly Detection**
 <!--hide_directive
 :sync: tab1
 hide_directive-->
@@ -192,7 +192,7 @@ hide_directive-->
 
 1. Get into the InfluxDB* container:
 
-   > **Note**: Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
+   > **Note:** Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the Helm deployment
    > where for <namespace> replace with namespace name where the application was deployed and
    > for <influxdb-pod-name> replace with InfluxDB pod name.
 
@@ -200,9 +200,9 @@ hide_directive-->
     docker exec -it ia-influxdb bash
    ```
 
-2. Run following commands to see the data in InfluxDB*:
+2. Run the following commands to see the data in InfluxDB*:
 
-   > **NOTE**:
+   > **NOTE:**
    > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
    > This does not affect any functionality while working with the InfluxDB commands
 
@@ -219,24 +219,24 @@ hide_directive-->
 
 3. To check the output in Grafana:
 
-   - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably, chrome browser)
+   - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably Chrome browser)
 
-     > **Note**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
+     > **Note:**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
 
    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      in `.env` file.
 
-     ![Grafana login](./_images/login_wt.png)
+     ![Grafana login](./_assets/login_wt.png)
 
    - After login, click on Dashboard
-     ![Menu view](./_images/dashboard.png)
+     ![Menu view](./_assets/dashboard.png)
 
    - Select the `Wind Turbine Dashboard`.
-     ![Windturbine dashboard](./_images/wind_turbine_dashboard.png)
+     ![Windturbine dashboard](./_assets/wind_turbine_dashboard.png)
 
    - You will see the below output.
 
-     ![Anomaly prediction in grid active power](./_images/anomaly_power_prediction.png)
+     ![Anomaly prediction in grid active power](./_assets/anomaly_power_prediction.png)
 
 <!--hide_directive
 :::
@@ -247,7 +247,7 @@ hide_directive-->
 
 1. Get into the InfluxDB* container:
 
-   > **Note**: Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
+   > **Note:** Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the Helm deployment
    > where for <namespace> replace with namespace name where the application was deployed and
    > for <influxdb-pod-name> replace with InfluxDB pod name.
 
@@ -274,24 +274,24 @@ hide_directive-->
 
 3. To check the output in Grafana:
 
-   - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably, chrome browser)
+   - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably Chrome browser)
 
-     > **Note**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably, chrome browser) for the helm deployment
+     > **Note:** Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
 
    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      in `.env` file.
 
-     ![Grafana login](./_images/login_wt.png)
+     ![Grafana login](./_assets/login_wt.png)
 
    - After login, click on Dashboard
-     ![Menu view](./_images/dashboard.png)
+     ![Menu view](./_assets/dashboard.png)
 
    - Select the `Weld Anomaly Detection Dashboard`.
-     ![Weld Anomaly Detection dashboard](./_images/weld_anomaly_detection.png)
+     ![Weld Anomaly Detection dashboard](./_assets/weld_anomaly_detection.png)
 
    - One will see the below output.
 
-     ![Anomaly prediction in weld sensor data](./_images/anomaly_detection_weld.png)
+     ![Anomaly prediction in weld sensor data](./_assets/anomaly_detection_weld.png)
 
 <!--hide_directive
 :::
@@ -323,4 +323,13 @@ guide to learn how to deploy the sample application on a k8s cluster using Helm.
 
 - [How to build from source and deploy](./how-to-guides/how-to-build-from-source.md): Guide to build from source and docker compose deployment
 - [How to configure OPC-UA/MQTT alerts](./how-to-guides/how-to-configure-alerts.md): Guide for configuring the OPC-UA/MQTT alerts in the Time Series Analytics microservice
-- [How to configure custom UDF deployment package](./how-to-guides/how-to-configure-custom-udf.md): Guide for deploying a customized UDF deployment package (udfs/models/tick scripts)
+- [How to configure custom UDF deployment package](./how-to-guides/how-to-configure-custom-udf.md): Guide for deploying a customized UDF deployment package (UDFs/models/TICKscripts)
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+get-started/system-requirements
+
+:::
+hide_directive-->

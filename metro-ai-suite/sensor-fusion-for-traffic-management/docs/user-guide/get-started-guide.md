@@ -1,12 +1,16 @@
 # Get Started Guide
 
-## Run Metro AI Suite Sensor Fusion for Traffic Management Application on Bare Metal systems
-
-In this section, we describe how to run Metro AI Suite Sensor Fusion for Traffic Management application on Bare Metal systems.
-
-For prerequisites and system requirements, see [prerequisites.md](./prerequisites.md) and [system-req.md](./system-req.md).
+This article describes how to run Metro AI Suite Sensor Fusion for Traffic Management on
+Bare Metal systems. Before proceding, make sure to address the
+[prerequisites](./get-started-guide/prerequisites.md) and meet
+[system requirements](./get-started-guide/system-req.md).
 
 Metro AI Suite Sensor Fusion for Traffic Management application can support different pipeline using topology JSON files to describe the pipeline topology. The defined pipeline topology can be found at [Resources Summary](#resources-summary)
+
+
+
+## Run Metro AI Suite Sensor Fusion for Traffic Management Application on Bare Metal systems
+
 
 There are two steps required for running the sensor fusion application:
 - Start AI Inference service, more details can be found at [Start Service](#start-service)
@@ -197,7 +201,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_fusion 2C1L
     ```
 
-    ![Display type: media_fusion](_images/2C1L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](_assets/2C1L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -208,7 +212,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_lidar 2C1L
     ```
 
-    ![Display type: media_lidar](_images/2C1L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](_assets/2C1L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -219,7 +223,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 1 1 /path-to-dataset media 2C1L
     ```
 
-    ![Display type: media](_images/2C1L-Display-type-media.png)
+    ![Display type: media](_assets/2C1L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -230,7 +234,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 1 1 /path-to-dataset lidar 2C1L
     ```
 
-    ![Display type: lidar](_images/2C1L-Display-type-lidar.png)
+    ![Display type: lidar](_assets/2C1L-Display-type-lidar.png)
 
 #### 4C+2L
 
@@ -250,7 +254,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 2 1 /path-to-dataset media_fusion 4C2L
     ```
 
-    ![Display type: media_fusion](_images/4C2L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](_assets/4C2L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -261,7 +265,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 2 1 /path-to-dataset media_lidar 4C2L
     ```
 
-    ![Display type: media_lidar](_images/4C2L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](_assets/4C2L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -272,7 +276,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 2 1 /path-to-dataset media 4C2L
     ```
 
-    ![Display type: media](_images/4C2L-Display-type-media.png)
+    ![Display type: media](_assets/4C2L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -283,7 +287,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 2 1 /path-to-dataset lidar 4C2L
     ```
 
-    ![Display type: lidar](_images/4C2L-Display-type-lidar.png)
+    ![Display type: lidar](_assets/4C2L-Display-type-lidar.png)
 
 #### 12C+2L
 
@@ -303,7 +307,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json 2 1 /path-to-dataset media_fusion 12C2L
     ```
 
-    ![Display type: media_fusion](_images/12C2L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](_assets/12C2L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -314,7 +318,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json 2 1 /path-to-dataset media_lidar 12C2L
     ```
 
-    ![Display type: media_lidar](_images/12C2L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](_assets/12C2L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -325,7 +329,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localMediaPipeline.json 2 1 /path-to-dataset media 12C2L
     ```
 
-    ![Display type: media](_images/12C2L-Display-type-media.png)
+    ![Display type: media](_assets/12C2L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -336,7 +340,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localLidarPipeline.json 2 1 /path-to-dataset lidar 12C2L
     ```
 
-    ![Display type: lidar](_images/12C2L-Display-type-lidar.png)
+    ![Display type: lidar](_assets/12C2L-Display-type-lidar.png)
 
 #### 8C+4L
 
@@ -356,7 +360,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 8C4L
     ```
 
-    ![Display type: media_fusion](_images/8C4L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](_assets/8C4L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -367,7 +371,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 8C4L
     ```
 
-    ![Display type: media_lidar](_images/8C4L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](_assets/8C4L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -378,7 +382,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 4 1 /path-to-dataset media 8C4L
     ```
 
-    ![Display type: media](_images/8C4L-Display-type-media.png)
+    ![Display type: media](_assets/8C4L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -389,7 +393,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 8C4L
     ```
 
-    ![Display type: lidar](_images/8C4L-Display-type-lidar.png)
+    ![Display type: lidar](_assets/8C4L-Display-type-lidar.png)
 
 #### 12C+4L
 
@@ -409,7 +413,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 12C4L
     ```
 
-    ![Display type: media_fusion](_images/12C4L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](_assets/12C4L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -420,7 +424,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 12C4L
     ```
 
-    ![Display type: media_lidar](_images/12C4L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](_assets/12C4L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -431,7 +435,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localMediaPipeline.json 4 1 /path-to-dataset media 12C4L
     ```
 
-    ![Display type: media](_images/12C4L-Display-type-media.png)
+    ![Display type: media](_assets/12C4L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -442,7 +446,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 12C4L
     ```
 
-    ![Display type: lidar](_images/12C4L-Display-type-lidar.png)
+    ![Display type: lidar](_assets/12C4L-Display-type-lidar.png)
 
 
 ## Run Metro AI Suite Sensor Fusion for Traffic Management Application on Edge Microvisor Toolkit systems
@@ -517,7 +521,7 @@ Some of the code is referenced from the following projects:
 ## Troubleshooting
 
 1. If you run different pipelines in a short period of time, you may encounter the following error:
-    ![workload_error](./_images/workload_error.png)
+    ![workload_error](./_assets/workload_error.png)
 
     <center>Figure 1: Workload constraints error</center>
 
@@ -528,7 +532,7 @@ Some of the code is referenced from the following projects:
     ```
 
 2. If you encounter the following error during code compilation, it is because mkl is not installed successfully:
-    ![mkl_error](./_images/mkl_error.png)
+    ![mkl_error](./_assets/mkl_error.png)
 
     <center>Figure 2: Build failed due to mkl error</center>
 
@@ -543,7 +547,7 @@ Some of the code is referenced from the following projects:
     ```
 
 3. If the system time is incorrect, you may encounter the following errors during installation:
-    ![oneapi_time_error](./_images/oneapi_time_error.png)
+    ![oneapi_time_error](./_assets/oneapi_time_error.png)
 
     <center>Figure 3: System Time Error</center>
 
@@ -562,7 +566,7 @@ Some of the code is referenced from the following projects:
     ```
 
 4. If you encounter the following errors during running on B580 platform:
-    ![device_index_error](./_images/device_index_error.png)
+    ![device_index_error](./_assets/device_index_error.png)
 
     <center>Figure 4: Device Index Error</center>
 
@@ -573,7 +577,7 @@ Some of the code is referenced from the following projects:
     The solution is either enable iGPU in BIOS, or change the config of `Device=(STRING)GPU.1` to `Device=(STRING)GPU` in `VPLDecoderNode` and `VPLDecoderNode` in pipeline config file, for example: `ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json`.
 
 5. If you encounter the following backends mismatch errors during running pipeline:
-    ![backends_mismatch_error](./_images/backends_mismatch_error.png)
+    ![backends_mismatch_error](./_assets/backends_mismatch_error.png)
 
     <center>Figure 5: Backends Mismatch Error</center>
 
@@ -590,3 +594,20 @@ Current Version: 3.0
 - Support Pointpillar model
 - Updated OpenVINO to 2025.3
 - Updated oneAPI to 2025.3.0
+
+
+
+
+
+
+
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Prerequisites <prerequisites.md>
+System Requirements <system-req.md>
+
+:::
+hide_directive-->

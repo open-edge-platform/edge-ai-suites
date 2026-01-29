@@ -6,7 +6,7 @@ This chapter provides a list of OpenVINO™ tutorials.
 
 Before you can run these tutorials, you have to ensure that OpenVINO™ is properly installed.
 
-Follow the instructions on :doc:`../../../../gsg_robot/install-openvino`, to install OpenVINO™ and to troubleshoot potential issues with the OpenVINO™ installation.
+Follow the instructions on :doc:`../../../../gsg_robot/index`, to install OpenVINO™ and to troubleshoot potential issues with the OpenVINO™ installation.
 
 
 .. toctree::

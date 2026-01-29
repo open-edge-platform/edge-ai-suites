@@ -37,6 +37,12 @@ void runIntelGpuTop(const std::string &command, int interval)
             result += buffer.data();
         }
 
+        if (result.empty()) {
+            gpuBusyValue.store(-1.0);
+            std::this_thread::sleep_for(std::chrono::seconds(interval));
+            continue;
+        }
+
         if ('[' == result[0]) {
             // in ubnuntu24, result may have an extra '[' at the beginning, causing the following JSON parsing error
             result.erase(0, 1);
@@ -173,6 +179,9 @@ void runIntelGpuTop(const std::string &command, int interval)
             std::cerr << "JSON parsing error: " << e.what() << std::endl;
             gpuBusyValue.store(-1.0);
         }
+        catch (const boost::property_tree::ptree_error &e) {
+            gpuBusyValue.store(-1.0);
+        }
 
         std::this_thread::sleep_for(std::chrono::seconds(interval));
     }
@@ -191,6 +200,12 @@ void runXpuSmi(const std::string &command, int interval)
         }
         while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
             result += buffer.data();
+        }
+
+        if (result.empty()) {
+            gpuBusyValue.store(-1.0);
+            std::this_thread::sleep_for(std::chrono::seconds(interval));
+            continue;
         }
 
         try {
@@ -326,7 +341,12 @@ void runXpuSmi(const std::string &command, int interval)
             gpuBusyValue.store(newBusyValue);
         }
         catch (const boost::property_tree::json_parser_error &e) {
-            std::cerr << "JSON parsing error: " << e.what() << std::endl;
+            gpuBusyValue.store(-1.0);
+        }
+        catch (const boost::property_tree::ptree_bad_path &e) {
+            gpuBusyValue.store(-1.0);
+        }
+        catch (const boost::property_tree::ptree_error &e) {
             gpuBusyValue.store(-1.0);
         }
 

@@ -1,7 +1,7 @@
 # FAQ
 
 1. If you run different pipelines in a short period of time, you may encounter the following error:
-    ![workload_error](./_images/workload_error.png)
+    ![workload_error](./_assets/workload_error.png)
 
     <center>Figure 1: Workload constraints error</center>
 
@@ -12,7 +12,7 @@
     ```
 
 2. If you encounter the following error during code compilation, it is because mkl is not installed successfully:
-    ![mkl_error](./_images/mkl_error.png)
+    ![mkl_error](./_assets/mkl_error.png)
 
     <center>Figure 2: Build failed due to mkl error</center>
 
@@ -27,7 +27,7 @@
     ```
 
 3. If the system time is incorrect, you may encounter the following errors during installation:
-    ![oneapi_time_error](./_images/oneapi_time_error.png)
+    ![oneapi_time_error](./_assets/oneapi_time_error.png)
 
     <center>Figure 3: System Time Error</center>
 
@@ -46,18 +46,18 @@
     ```
 
 4. If you encounter the following errors during running on B580 platform:
-    ![device_index_error](./_images/device_index_error.png)
+    ![device_index_error](./_assets/device_index_error.png)
 
     <center>Figure 4: Device Index Error</center>
 
     It may be because the iGPU is not enabled, only the B580 is enabled.
 
     You can use `lspci | grep VGA` to view the number of GPU devices on the machine.
-    
+
     The solution is either enable iGPU in BIOS, or change the config of `Device=(STRING)GPU.1` to `Device=(STRING)GPU` in `VPLDecoderNode` and `VPLDecoderNode` in pipeline config file, for example: `ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json`.
-    
+
 5. If you encounter the following backends mismatch errors during running pipeline:
-    ![backends_mismatch_error](./_images/backends_mismatch_error.png)
+    ![backends_mismatch_error](./_assets/backends_mismatch_error.png)
 
     <center>Figure 5: Backends Mismatch Error</center>
 
