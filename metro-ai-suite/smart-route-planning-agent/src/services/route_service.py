@@ -31,7 +31,7 @@ class RouteService:
         self.alternate_route: Optional[Dict] = None
         self.alternate_route_names: List[str] = []  # Keeps track of all alt route names
         self.new_alt_route_idx: int = 0  # Needed to identify new alt route and color it differently than others in list
-        self.blocked_routes: Dict[str, List[Dict[str, Any]]] = {}
+        # self.blocked_routes: Dict[str, List[Dict[str, Any]]] = {}
         self.alt_route_trackpoints: list[list] = []
         self.route_state: Optional[RoutePlannerState] = None
 
@@ -111,31 +111,31 @@ class RouteService:
                 self.alternate_route = temp_parser.get_route_data()
 
             # Instantitate objects for blocked routes based on blocked route names recieved from route_state
-            blocked_route_names: list[str] = self.route_state.get("blocked_routes", [])
-            blocked_route_invalid_names: list[str] = self.route_state.get(
-                "blocked_routes_invalid", []
-            )
+            # blocked_route_names: list[str] = self.route_state.get("blocked_routes", [])
+            # blocked_route_invalid_names: list[str] = self.route_state.get(
+            #     "blocked_routes_invalid", []
+            # )
 
-            self.blocked_routes: Dict[str, List[Dict[str, Any]]] = {
-                "valid": [],
-                "invalid": [],
-            }
+            # self.blocked_routes: Dict[str, List[Dict[str, Any]]] = {
+            #     "valid": [],
+            #     "invalid": [],
+            # }
 
             # Update valid blocked routes. Valid because user set correct weather/incident data to block it.
-            for blocked_route in blocked_route_names:
-                logger.debug(
-                    f"Route blocked due to issues at intersection: {blocked_route}"
-                )
-                temp_parser = MapDataParser(GPX_DIR / blocked_route)
-                self.blocked_routes["valid"].append(temp_parser.get_route_data())
+            # for blocked_route in blocked_route_names:
+            #     logger.debug(
+            #         f"Route blocked due to issues at intersection: {blocked_route}"
+            #     )
+            #     temp_parser = MapDataParser(GPX_DIR / blocked_route)
+            #     self.blocked_routes["valid"].append(temp_parser.get_route_data())
 
-            # Update invalid blocked routes. Invalid because user set incorrect weather/incident data to block it.
-            for blocked_route in blocked_route_invalid_names:
-                logger.debug(
-                    f"Route blocked due to incorrect weather/incident setting by user at intersection: {blocked_route}"
-                )
-                temp_parser = MapDataParser(GPX_DIR / blocked_route)
-                self.blocked_routes["invalid"].append(temp_parser.get_route_data())
+            # # Update invalid blocked routes. Invalid because user set incorrect weather/incident data to block it.
+            # for blocked_route in blocked_route_invalid_names:
+            #     logger.debug(
+            #         f"Route blocked due to incorrect weather/incident setting by user at intersection: {blocked_route}"
+            #     )
+            #     temp_parser = MapDataParser(GPX_DIR / blocked_route)
+            #     self.blocked_routes["invalid"].append(temp_parser.get_route_data())
 
             logger.info(
                 f"Successfully loaded alternate route file: {alternate_route_name}"
