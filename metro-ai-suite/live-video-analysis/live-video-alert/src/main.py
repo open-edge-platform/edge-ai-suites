@@ -66,7 +66,6 @@ async def generate_frames(stream_id: str):
                     frame_bytes = buffer.tobytes()
                     yield (b'--frame\r\n'
                            b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-                # Yield control to allow other tasks to run
                 await asyncio.sleep(0.01)
             else:
                 await asyncio.sleep(0.05)
@@ -84,8 +83,6 @@ async def get_data():
         return JSONResponse(content=manager.latest_results)
     return JSONResponse(content={})
 
-
-# ============== SSE ENDPOINT ==============
 async def event_generator(request: Request):
     """
     SSE event generator with graceful disconnect handling.
@@ -175,7 +172,6 @@ async def remove_stream(stream_id: str):
         return JSONResponse(content={"status": "removed", "id": stream_id})
     raise HTTPException(status_code=503, detail="Manager not initialized")
 
-# --- AGENT CONFIG ENDPOINTS ---
 @app.get("/config/agents")
 async def get_agents_config():
     """Get current agent configuration"""
@@ -197,7 +193,6 @@ async def update_agents_config(data: list = Body(...)):
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
-    # Serve UI relative to src/ but logic allows running from root too
     ui_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui", "index.html")
     if not os.path.exists(ui_path):
         return HTMLResponse(content="<h1>UI Not Found</h1>")

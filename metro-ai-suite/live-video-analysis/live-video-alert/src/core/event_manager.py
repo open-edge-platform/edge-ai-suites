@@ -1,14 +1,4 @@
-"""
-EventManager - SSE Pub/Sub System
-
-This module handles Server-Sent Events subscriptions and broadcasting.
-It maintains a set of subscriber queues and distributes events to all connected clients.
-
-Key Design Decisions:
-1. Uses asyncio.Queue with maxsize to prevent memory leaks from slow clients
-2. Automatically removes slow/dead subscribers when their queue is full
-3. Thread-safe operations using asyncio.Lock
-"""
+"""EventManager - SSE Pub/Sub System for real-time event broadcasting."""
 
 import asyncio
 import logging

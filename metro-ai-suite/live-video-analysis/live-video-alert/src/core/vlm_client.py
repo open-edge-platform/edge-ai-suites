@@ -29,7 +29,6 @@ class VLMClient:
                 frame = cv2.resize(frame, (new_w, new_h))
 
             _, buffer = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
-            # Ensure no newlines in base64 string
             return base64.b64encode(buffer).decode("utf-8").replace("\n", "")
         except Exception as e:
             logger.error(f"Failed to encode image: {e}")

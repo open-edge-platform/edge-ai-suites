@@ -26,7 +26,6 @@ def setup_logging():
         format='%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
         datefmt='%H:%M:%S'
     )
-    # remove noise
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     logging.getLogger("multipart").setLevel(logging.WARNING)

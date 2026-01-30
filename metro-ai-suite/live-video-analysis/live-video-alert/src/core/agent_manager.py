@@ -31,7 +31,6 @@ class AgentManager:
         
         self._load_config()
 
-    # --- SSE SUBSCRIPTION METHODS ---
     async def subscribe(self) -> asyncio.Queue:
         """Subscribe to real-time SSE events."""
         return await self.events.subscribe()
@@ -40,7 +39,6 @@ class AgentManager:
         """Unsubscribe from SSE events."""
         await self.events.unsubscribe(queue)
 
-    # --- AGENT CONFIG MANAGEMENT ---
     def _load_agents_config(self) -> List[Dict]:
         """Load user-defined agents from JSON. Returns defaults if missing."""
         if os.path.exists(self.agents_config_file):

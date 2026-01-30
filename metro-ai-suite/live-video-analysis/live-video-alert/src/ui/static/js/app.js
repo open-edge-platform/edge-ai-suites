@@ -1,29 +1,23 @@
 /**
- * Agentic Alert NVR Dashboard - Main JavaScript
- * This file contains all client-side logic for the NVR dashboard
+ * Agentic Alert NVR Dashboard
  */
 
-// ============== GLOBAL STATE ==============
 const timestamp = document.getElementById('timestamp');
 const streamCount = document.getElementById('stream-count');
 
 let activeStreams = [];
-let cardStates = {}; // { streamId: selectedAgent }
-let agentConfig = []; // Dynamic agents
-let resultsCache = {}; // { streamId: { agentName: result } } - cache for instant UI updates
+let cardStates = {};
+let agentConfig = [];
+let resultsCache = {};
 
-// SSE State
 let eventSource = null;
 let pollingInterval = null;
 let sseConnected = false;
 
-// ============== UTILITY FUNCTIONS ==============
-// CSS-safe ID helper (spaces/special chars break querySelector)
 function cssSafeId(str) {
     return str.replace(/[^a-zA-Z0-9-_]/g, '_');
 }
 
-// Toast notification (non-blocking alternative to alert())
 function showToast(message, type = 'info') {
     const existing = document.getElementById('toast-notification');
     if (existing) existing.remove();
@@ -47,18 +41,14 @@ function showToast(message, type = 'info') {
     }, 2500);
 }
 
-// ============== INITIALIZATION ==============
 document.addEventListener('DOMContentLoaded', async () => {
-    // CRITICAL: Load config FIRST to avoid race conditions
     await loadAgentConfig();
     await loadStreams();
     
-    // Try SSE, fall back to polling if it fails
     initSSE();
     
     initResizer();
     
-    // Cleanup SSE on page unload to free browser connections
     window.addEventListener('beforeunload', () => {
         if (eventSource) {
             eventSource.close();
@@ -67,7 +57,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// ============== SSE (Server-Sent Events) ==============
 function initSSE() {
     if (eventSource) {
         eventSource.close();
@@ -79,7 +68,6 @@ function initSSE() {
     eventSource.onopen = () => {
         console.log('[SSE] Connected successfully');
         sseConnected = true;
-        // Stop polling if SSE is working
         if (pollingInterval) {
             clearInterval(pollingInterval);
             pollingInterval = null;
@@ -87,13 +75,11 @@ function initSSE() {
         }
     };
     
-    // Handle initial state from server
     eventSource.addEventListener('init', (e) => {
         try {
             const data = JSON.parse(e.data);
             console.log('[SSE] Received init:', data.streams?.length, 'streams');
             
-            // Only update streams if different (avoid flicker)
             if (data.streams && JSON.stringify(data.streams.sort()) !== JSON.stringify(activeStreams.sort())) {
                 activeStreams = data.streams;
                 streamCount.textContent = activeStreams.length;
@@ -101,7 +87,6 @@ function initSSE() {
                 renderStreamList();
             }
             
-            // Update results
             if (data.results) {
                 updateAllResults(data.results);
             }
@@ -110,28 +95,22 @@ function initSSE() {
         }
     });
     
-    // Handle real-time analysis results
     eventSource.addEventListener('analysis', (e) => {
         try {
             const data = JSON.parse(e.data);
             const { stream_id, results } = data;
             
-            // Update timestamp
             timestamp.textContent = new Date().toLocaleTimeString();
-            
-            // Update just this stream's results
             updateStreamResult(stream_id, results);
         } catch (err) {
             console.error('[SSE] Analysis parse error:', err);
         }
     });
     
-    // Handle keepalive (just log)
     eventSource.addEventListener('keepalive', () => {
         console.log('[SSE] Keepalive received');
     });
     
-    // Handle errors - fallback to polling
     eventSource.onerror = (e) => {
         console.error('[SSE] Connection error');
         sseConnected = false;
@@ -146,14 +125,12 @@ function initSSE() {
 }
 
 function startPollingFallback() {
-    if (pollingInterval) return; // Already polling
+    if (pollingInterval) return;
     console.log('[Polling] Starting fallback polling...');
     pollingInterval = setInterval(fetchData, 1000);
 }
 
-// Update results for a single stream (called by SSE)
 function updateStreamResult(streamId, results) {
-    // Cache the results for instant re-rendering when alerts change
     resultsCache[streamId] = results;
     
     const safeId = cssSafeId(streamId);
@@ -164,7 +141,6 @@ function updateStreamResult(streamId, results) {
     renderResultDiv(resultDiv, selectedAgent, results);
 }
 
-// Re-render all results using cached data (for instant UI updates when alerts change)
 function refreshAllResults() {
     activeStreams.forEach(id => {
         const safeId = cssSafeId(id);
@@ -177,7 +153,6 @@ function refreshAllResults() {
     });
 }
 
-// Update all results (called by SSE init or polling)
 function updateAllResults(allResults) {
     timestamp.textContent = new Date().toLocaleTimeString();
     
@@ -189,18 +164,14 @@ function updateAllResults(allResults) {
     });
 }
 
-// Render result content into a div
 function renderResultDiv(resultDiv, selectedAgent, streamData) {
     if (!streamData) {
         resultDiv.innerHTML = '<p class="text-xs text-gray-400 italic">Waiting for analysis...</p>';
         return;
     }
     
-    // Get list of currently enabled agent names for filtering
     const enabledAgentNames = agentConfig.filter(a => a.enabled).map(a => a.name);
     
-    // Handle "All Alerts" view - show only currently enabled agents
-    // Filter against agentConfig to ensure instant UI updates when alerts are deleted/disabled
     if (selectedAgent === '__ALL__') {
         if (enabledAgentNames.length === 0) {
             resultDiv.innerHTML = '<p class="text-xs text-gray-400 italic">No alerts enabled</p>';
@@ -215,14 +186,12 @@ function renderResultDiv(resultDiv, selectedAgent, streamData) {
         });
         resultDiv.innerHTML = allHtml || '<p class="text-xs text-gray-400 italic">Waiting for analysis...</p>';
     } else if (selectedAgent && streamData[selectedAgent] && enabledAgentNames.includes(selectedAgent)) {
-        // Single agent view - also verify agent is still enabled
         resultDiv.innerHTML = renderResultCard(streamData[selectedAgent], selectedAgent);
     } else {
         resultDiv.innerHTML = '<p class="text-xs text-gray-400 italic">Waiting for analysis...</p>';
     }
 }
 
-// Render a single result card
 function renderResultCard(result, agentName) {
     const isYes = result.answer === 'YES';
     const bgClass = isYes ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300';
@@ -269,7 +238,6 @@ function initResizer() {
     });
 }
 
-// ============== AGENT CONFIGURATION ==============
 async function loadAgentConfig() {
     try {
         const res = await fetch('/config/agents');
@@ -320,17 +288,14 @@ function renderAgentConfig() {
         container.appendChild(card);
     });
     
-    // Show/hide add button based on count
     addBtn.style.display = agentConfig.length >= 4 ? 'none' : 'flex';
     
-    // Update dropdowns and refresh results immediately
     updateAllDropdowns();
     refreshAllResults();
 }
 
 function addAgent() {
     if (agentConfig.length >= 4) return;
-    // Find next available unique name
     let num = 1;
     while (agentConfig.some(a => a.name === `Alert ${num}`)) {
         num++;
@@ -372,7 +337,6 @@ async function saveAgents() {
         return;
     }
     
-    // Check for duplicate names
     const names = agentConfig.map(a => a.name.trim().toLowerCase());
     if (new Set(names).size !== names.length) {
         showToast("Alert names must be unique", "error");
@@ -396,7 +360,6 @@ async function saveAgents() {
     }
 }
 
-// Update all dropdowns when agents change
 function updateAllDropdowns() {
     const enabledAgents = agentConfig.filter(a => a.enabled);
     let optionsHtml = '<option value="__ALL__">All Alerts</option>';
@@ -410,14 +373,12 @@ function updateAllDropdowns() {
         if (select) {
             const currentVal = select.value;
             select.innerHTML = optionsHtml;
-            // Preserve selection: __ALL__ or a valid agent name
             if (currentVal === '__ALL__') {
                 select.value = '__ALL__';
                 cardStates[id] = '__ALL__';
             } else if (enabledAgents.some(a => a.name === currentVal)) {
                 select.value = currentVal;
             } else {
-                // Current selection no longer valid, default to All Alerts
                 select.value = '__ALL__';
                 cardStates[id] = '__ALL__';
             }
@@ -425,7 +386,6 @@ function updateAllDropdowns() {
     });
 }
 
-// ============== STREAM MANAGEMENT ==============
 async function loadStreams() {
     try {
         const res = await fetch('/streams');
@@ -609,7 +569,6 @@ function renderGrid() {
     });
 }
 
-// ============== DATA FETCHING & DISPLAY (Polling Fallback) ==============
 async function fetchData() {
     try {
         const response = await fetch('/data');
@@ -633,7 +592,7 @@ async function fetchData() {
     }
 }
 
-// ============== UTILITY FUNCTIONS ==============
+
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/&/g, '&amp;')
