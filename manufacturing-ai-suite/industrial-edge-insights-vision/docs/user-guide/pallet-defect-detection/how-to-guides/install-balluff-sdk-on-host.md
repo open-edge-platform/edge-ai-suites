@@ -1,4 +1,4 @@
-# Impact Acquire Installation and Setup Guide
+# Install Balluff Impact Acquire
 
 The guide provides step-by-step instructions to install and configure the Balluff Impact Acquire software on a Linux system.
 
@@ -95,8 +95,6 @@ When the GUI opens:
 
 - Click **Action → Use Device**
 - Choose **mvBlueFOX3**
-
----
 
 **Reference:**
 [Balluff Impact Acquire Quick Start Guide](https://assets.balluff.com/documents/DRF_957345_AA_000/mvBC_page_quickstart.html)

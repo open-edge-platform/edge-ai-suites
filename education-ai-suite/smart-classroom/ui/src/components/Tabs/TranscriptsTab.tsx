@@ -4,7 +4,10 @@ import {
   appendTranscriptChunk,
   setFinalTranscript,
   finishTranscript,
-  completeSegmentTyping
+  completeSegmentTyping,
+  setTotalDuration,
+  updateSpeakerStats,
+  setDetectedLanguage
 } from "../../redux/slices/transcriptSlice";
 import {
   startTranscription,
@@ -50,9 +53,9 @@ const TranscriptsTab: React.FC = () => {
 
   const [segmentDisplayTexts, setSegmentDisplayTexts] = useState<string[]>([]);
   const [groupedSegments, setGroupedSegments] = useState<GroupedSegment[]>([]);
-  const [detectedLanguage, setDetectedLanguage] = useState<SupportedLanguage>("en");
 
-  const { segments, currentTypingIndex, teacherSpeaker} =
+  // ✅ Use Redux state for detectedLanguage, remove local state
+  const { segments, currentTypingIndex, teacherSpeaker, detectedLanguage } =
     useAppSelector(s => s.transcript);
   const { 
     aiProcessing, 
@@ -67,7 +70,8 @@ const TranscriptsTab: React.FC = () => {
   };
 
   const getSpeakerLabel = useCallback((speaker: string): string => {
-    const labels = SPEAKER_LABELS[detectedLanguage] || SPEAKER_LABELS.en;
+    const currentLanguage = detectedLanguage || "en";
+    const labels = SPEAKER_LABELS[currentLanguage] || SPEAKER_LABELS.en;
     
     if (!teacherSpeaker) {
       return speaker.toUpperCase(); 
@@ -75,6 +79,8 @@ const TranscriptsTab: React.FC = () => {
     
     if (speaker === teacherSpeaker) {
       return labels.teacher; 
+    } else if (speaker === "student") {
+      return labels.student;
     } else {
       const speakerMatch = speaker.match(/speaker_(\d+)/i);
       if (speakerMatch) {
@@ -106,17 +112,17 @@ const TranscriptsTab: React.FC = () => {
     }, 500);
   };
 
-
+  // ✅ Fixed language detection effect
   useEffect(() => {
     if (segments.length > 0) {
       const allText = segments.map(seg => seg.text).join(' ');
       const detected = detectLanguage(allText);
       if (detected !== detectedLanguage) {
-        setDetectedLanguage(detected);
+        dispatch(setDetectedLanguage(detected));
         console.log(`🌐 Language detected: ${detected}`);
       }
     }
-  }, [segments, detectedLanguage]);
+  }, [segments, detectedLanguage, dispatch]);
 
   useEffect(() => {
     if (segments.length === 0) {
@@ -270,7 +276,24 @@ const TranscriptsTab: React.FC = () => {
               transcriptionStartedRef.current = true;
               dispatch(startTranscription());
             }
-            dispatch(appendTranscriptChunk(ev.data));
+            
+            // ✅ Process chunk data with proper timing
+            const chunkData = ev.data;
+            if (chunkData.segments && Array.isArray(chunkData.segments)) {
+              // Convert relative timestamps to absolute timestamps
+              const processedSegments = chunkData.segments.map((segment: any) => ({
+                ...segment,
+                start: segment.start + (chunkData.start_time || 0),
+                end: segment.end + (chunkData.start_time || 0)
+              }));
+              
+              dispatch(appendTranscriptChunk({
+                ...chunkData,
+                segments: processedSegments
+              }));
+            } else {
+              dispatch(appendTranscriptChunk(chunkData));
+            }
           }
 
           else if (ev.type === "transcript" && typeof ev.token === "string") {
@@ -282,7 +305,18 @@ const TranscriptsTab: React.FC = () => {
           }
 
           else if (ev.type === "final") {
+            console.log('📋 Final transcript data received:', ev.data);
             dispatch(setFinalTranscript(ev.data));
+            
+            // ✅ Handle timeline data from final event
+            if (ev.data.teacher_speaker) {
+              console.log('👨‍🏫 Teacher speaker identified:', ev.data.teacher_speaker);
+            }
+            
+            if (ev.data.speaker_text_stats) {
+              console.log('📊 Speaker stats received:', ev.data.speaker_text_stats);
+              dispatch(updateSpeakerStats(ev.data.speaker_text_stats));
+            }
           }
 
           else if (ev.type === "error") {
@@ -293,6 +327,26 @@ const TranscriptsTab: React.FC = () => {
 
           else if (ev.type === "done") {
             console.log("📋 Transcript stream done");
+
+            if (segments.length > 0) {
+              const maxEnd = Math.max(...segments.map(s => s.end || 0).filter(end => end > 0));
+              if (maxEnd > 0) {
+                console.log('⏱️ Setting total duration from segments:', maxEnd);
+                dispatch(setTotalDuration(maxEnd));
+              }
+              
+              const speakerStats: { [speaker: string]: number } = {};
+              segments.forEach(segment => {
+                if (segment.start !== undefined && segment.end !== undefined) {
+                  const duration = segment.end - segment.start;
+                  speakerStats[segment.speaker] = (speakerStats[segment.speaker] || 0) + duration;
+                }
+              });
+              
+              if (Object.keys(speakerStats).length > 0) {
+                dispatch(updateSpeakerStats(speakerStats));
+              }
+            }
 
             finishTimeoutRef.current = window.setTimeout(() => {
               if (mountedRef.current) {
@@ -318,6 +372,7 @@ const TranscriptsTab: React.FC = () => {
     sessionId, 
     teacherSpeaker, 
     dispatch,
+    segments
   ]);
 
   useEffect(() => {
@@ -388,7 +443,8 @@ const TranscriptsTab: React.FC = () => {
       const showCursor = isGroupTyping(group);
       
       const speakerLabel = getSpeakerLabel(group.speaker);
-      const teacherLabel = SPEAKER_LABELS[detectedLanguage].teacher;
+      const currentLanguage = detectedLanguage || "en";
+      const teacherLabel = SPEAKER_LABELS[currentLanguage].teacher;
       const isTeacher = speakerLabel === teacherLabel;
 
       return {
@@ -401,7 +457,6 @@ const TranscriptsTab: React.FC = () => {
       };
     });
   }, [groupedSegments, isGroupVisible, getDisplayText, isGroupTyping, getSpeakerLabel, detectedLanguage]);
-
 
   return (
     <div className="transcripts-tab chat-ui-root">

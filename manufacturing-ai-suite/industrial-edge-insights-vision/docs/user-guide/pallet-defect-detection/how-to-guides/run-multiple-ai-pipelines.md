@@ -1,4 +1,4 @@
-# Run multiple AI pipelines
+# Run Multiple AI Pipelines
 
 In a typical deployment, multiple cameras deliver video streams that are connected to AI pipelines to improve the detection and recognition accuracy.
 
@@ -62,13 +62,13 @@ The following demonstrates running two AI pipelines.
 
 4. View the WebRTC streaming on `https://<HOST_IP>/mediamtx/<peer-str-id>/` and `https://<HOST_IP>/mediamtx/<different-peer-str-id>/`.
 
-   ![Example of WebRTC streaming using mediamtx](./images/webrtc-streaming.png)
+   ![Example of WebRTC streaming using mediamtx](../_assets/webrtc-streaming.png)
 
    Figure 1: WebRTC streaming
 
    You can see boxes, shipping labels, and defects being detected. You have successfully run the sample application.
 
-   > **Note:** You can also observe telemetry data from the Prometheus UI. Refer [this](./how-to-view-telemetry-data.md) document to learn more.
+   > **Note:** You can also observe telemetry data from the Prometheus UI. Refer to [the document](./view-telemetry-data.md) to learn more.
 
 5. Stop the 2nd pipeline using the instance ID noted in point #3 above, before proceeding with this documentation.
 

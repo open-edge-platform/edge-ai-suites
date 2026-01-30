@@ -586,8 +586,6 @@ Some of the code is referenced from the following projects:
     The solution is change config `Device=(STRING)GPU.4` to `Device=(STRING)GPU.2` in `LidarSignalProcessingNode` in pipeline config file, for example:  `ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json`.
 
 
-
-
 Current Version: 3.0
 - Support 2C+1L/4C+2L pipeline
 - Support 8C+4L/12C+2L pipeline
@@ -596,18 +594,12 @@ Current Version: 3.0
 - Updated oneAPI to 2025.3.0
 
 
-
-
-
-
-
-
 <!--hide_directive
 :::{toctree}
 :hidden:
 
-Prerequisites <prerequisites.md>
-System Requirements <system-req.md>
+Prerequisites <get-started-guide/prerequisites.md>
+System Requirements <get-started-guide/system-req.md>
 
 :::
 hide_directive-->

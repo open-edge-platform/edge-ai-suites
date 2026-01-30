@@ -1,4 +1,4 @@
-# How to Benchmark Pallet Defect Detection
+# Benchmark Pallet Defect Detection
 
 This guide demonstrates how to benchmark the pallet defect detection pipeline to determine optimal stream density and performance characteristics.
 
@@ -6,7 +6,7 @@ This guide demonstrates how to benchmark the pallet defect detection pipeline to
 
 ### Prerequisites
 
-> Ensure the application is set up and running. Refer to the [Get Started Guide](./get-started.md) for complete installation and configuration steps.
+> Ensure the application is set up and running. Refer to the [Get Started Guide](../get-started.md) for complete installation and configuration steps.
 
 - DL Streamer Pipeline Server (DLSPS) running and accessible
 - `curl`, `jq`, `gawk`, `ffmpeg`, and `bc` utilities installed

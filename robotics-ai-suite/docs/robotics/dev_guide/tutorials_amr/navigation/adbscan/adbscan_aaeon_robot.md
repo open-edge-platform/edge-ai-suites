@@ -9,7 +9,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
 - Assemble your robotic kit following the instructions provided by AAEON.
 - To control the robot remotely, you may need a Logitech\* F710 gamepad (to be purchased separately).
-- Complete the [get started guide](../../../../gsg_robot/index.rst) before continuing.
+- Complete the [get started guide](../../../../gsg_robot/index.md) before continuing.
 
 ## Run the ADBSCAN Algorithm Using the AAEON Robot Kit
 

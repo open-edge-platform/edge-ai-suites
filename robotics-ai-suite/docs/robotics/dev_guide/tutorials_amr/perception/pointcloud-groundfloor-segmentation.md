@@ -29,7 +29,7 @@ Autonomous Mobile Robot provides a ROS 2 Deb package for the application, suppor
 
 ## Prerequisites
 
-Complete the [GSG Robot Guide](../../../gsg_robot/index.rst)` before continuing.
+Complete the [GSG Robot Guide](../../../gsg_robot/index.md)` before continuing.
 
 ### Install Deb package
 

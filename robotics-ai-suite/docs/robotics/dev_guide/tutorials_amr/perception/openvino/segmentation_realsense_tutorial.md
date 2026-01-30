@@ -6,7 +6,7 @@ This tutorial uses the Intel® RealSense™ camera image as input and performs i
 
 ## Prerequisites
 
-Complete the [get started guide](../../../../gsg_robot/index.rst) before continuing.
+Complete the [get started guide](../../../../gsg_robot/index.md) before continuing.
 
 ## Install OpenVINO™ tutorial packages
 

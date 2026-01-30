@@ -1,4 +1,4 @@
-# How to Deploy with Edge Orchestrator
+# Deploy with Edge Orchestrator
 
 Edge Orchestrator, part of Intel’s Edge Software, simplifies edge application deployment and management, making it easier to deploy edge solutions at scale. Edge Orchestrator provides:
 
@@ -35,7 +35,7 @@ To deploy the **Pallet Defect Detection** Sample Application with the Edge Orche
 
 3. After you have imported the deployment package into Edge Orchestrator, you can see it in the list of deployment packages:
 
-   **![PDD Image](./images/pdd-dp.png)**
+   **![PDD Image](../_assets/pdd-dp.png)**
 
 See [Deployment Packages](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/package_software/deploy_packages.html#view-deployment-packages) for more information on deployment packages.
 
@@ -79,6 +79,6 @@ For more information on setting up a deployment, see [Set up a Deployment](https
 
 1. Download the kubeconfig file of the edge node cluster that contains the deployed application. See [Kubeconfig Download](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/clusters/accessing_clusters.html).
 
-1. Follow the steps in the **Pallet Defect Detection** [Documentation](how-to-deploy-using-helm-charts.md#deploy-the-application) on the usage of the application.
+1. Follow the steps in the **Pallet Defect Detection** [Documentation](./deploy-with-helm.md#deploy-the-application) on the usage of the application.
 
    > **Note:** Skip the Install the Helm chart step.

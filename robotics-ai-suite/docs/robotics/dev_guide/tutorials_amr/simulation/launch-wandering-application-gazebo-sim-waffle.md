@@ -7,12 +7,12 @@ For more information about TurtleBot3 Waffle robot, refer to
 
 ## Prerequisites
 
-Complete the [get started guide](../../../gsg_robot/index.rst) before continuing.
+Complete the [get started guide](../../../gsg_robot/index.md) before continuing.
 
 ## Run the Sample Application
 
 1. If your system has an Intel® GPU, follow the steps in the
-   [get started guide](../../../gsg_robot/index.rst) to enable the GPU for
+   [get started guide](../../../gsg_robot/index.md) to enable the GPU for
    simulation. This step improves Gazebo simulation performance.
 
 2. Install dependencies:

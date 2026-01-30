@@ -69,3 +69,11 @@
   padding: 0;
 }
 
+.left-panel-container .tabs {
+  margin-top: 0; 
+}
+
+.left-panel-container.fullscreen .timeline-container {
+  display: none; 
+}
+

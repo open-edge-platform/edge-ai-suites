@@ -52,7 +52,7 @@ supported by the following platform:
 
 ### Prerequisites
 
-Complete the [get started guide](../../../gsg_robot/index.rst) before continuing.
+Complete the [get started guide](../../../gsg_robot/index.md) before continuing.
 
 ### Install Deb package
 

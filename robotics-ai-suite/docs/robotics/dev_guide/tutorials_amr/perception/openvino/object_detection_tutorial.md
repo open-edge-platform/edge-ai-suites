@@ -12,7 +12,7 @@ The source code of this component can be found here:
 
 ## Prerequisites
 
-Complete the [GSG robot guide](../../../../gsg_robot/index.rst) before continuing.
+Complete the [GSG robot guide](../../../../gsg_robot/index.md) before continuing.
 
 ## Install OpenVINO™ toolkit tutorial packages
 
