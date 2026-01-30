@@ -106,7 +106,9 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
             docker volume ls | grep $PROJECT_NAME | awk '{ print $2 }' | xargs docker volume rm 2>/dev/null || true
         fi
         echo -e "${YELLOW}Removing secrets for Smart Intersection RI ... ${NC}"
-        rm -rf "$RI_DIR/src/secrets/browser.auth" "$RI_DIR/chart/files/secrets" 2>/dev/null || true
+        if [ -d "$RI_DIR" ]; then
+            rm -rf "$RI_DIR/src/secrets/browser.auth" "$RI_DIR/chart/files/secrets" 2>/dev/null || true
+        fi
         echo -e "${GREEN}Cleanup completed successfully. ${NC}"
     fi
 

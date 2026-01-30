@@ -48,7 +48,7 @@ services:
       - ov-models:/root/.cache/huggingface
       - ov-models:/app/ov-model
 
-  app:
+  traffic-agent:
     build:
       context: ${APP_DIR:-..}/src
       dockerfile: Dockerfile
