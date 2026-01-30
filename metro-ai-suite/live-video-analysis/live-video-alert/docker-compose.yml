@@ -17,7 +17,7 @@ services:
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
       - HTTPS_PROXY=$https_proxy
-      - RTSP_URL=${RTSP_URL:-/app/resources/fire-hazard.mp4}
+      - RTSP_URL=${RTSP_URL}
       - VLM_URL=${VLM_URL:-http://localhost:8000/v3}
       - MODEL_NAME=${MODEL_NAME:-Phi-3.5-Vision}
       - PORT=${PORT:-9000}
