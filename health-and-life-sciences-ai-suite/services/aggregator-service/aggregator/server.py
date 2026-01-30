@@ -140,6 +140,14 @@ async def start_workloads(target: str = Query("dds-bridge", description="Which w
     if "all" in targets or "mdpnp" in targets:
         results["dds-bridge"] = _call(f"{DDS_BRIDGE_CONTROL_URL}/start")
 
+    # AI-ECG 
+    if "all" in targets or "ai-ecg" in targets:
+        if app.state.ai_ecg_task is None:
+            app.state.ai_ecg_task = asyncio.create_task(ai_ecg_polling_loop())
+            results["ai-ecg"] = "started"
+        else:
+            results["ai-ecg"] = "already running"
+
     return {"status": "ok", "results": results}
 
 
@@ -163,6 +171,20 @@ async def stop_workloads(target: str = Query("dds-bridge", description="Which wo
 
     if "all" in targets or "mdpnp" in targets:
         results["dds-bridge"] = _call(f"{DDS_BRIDGE_CONTROL_URL}/stop")
+
+    # AI-ECG 
+    if "all" in targets or "ai-ecg" in targets:
+        task = app.state.ai_ecg_task
+        if task:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+            app.state.ai_ecg_task = None
+            results["ai-ecg"] = "stopped"
+        else:
+            results["ai-ecg"] = "not running"
 
     return {"status": "ok", "results": results}
 
@@ -259,19 +281,23 @@ class PoseService(pose_pb2_grpc.PoseServiceServicer):
 async def ai_ecg_polling_loop():
     """Poll AI-ECG backend and enqueue waveform + inference results."""
     client = AIECGClient()
-    while True:
-        result = await asyncio.to_thread(client.poll_next)
-        if result:
-            message = {
-                "workload_type": "ai-ecg",
-                "event_type": "waveform",
-                "timestamp": int(time.time() * 1000),
-                "payload": result,
-            }
-            if event_loop is not None:
-                await sse_manager.broadcast(message)
-            print("[Aggregator] Broadcasted AI-ECG result", message)
-        await asyncio.sleep(1.0)
+    try:
+        while True:
+            result = await asyncio.to_thread(client.poll_next)
+            if result:
+                message = {
+                    "workload_type": "ai-ecg",
+                    "event_type": "waveform",
+                    "timestamp": int(time.time() * 1000),
+                    "payload": result,
+                }
+                if event_loop is not None:
+                    await sse_manager.broadcast(message)
+                print("[Aggregator] Broadcasted AI-ECG result")
+            await asyncio.sleep(1.0)
+    except asyncio.CancelledError:
+        print("[Aggregator] AI-ECG polling stopped")
+        raise
 
 
 def start_grpc_server():
@@ -294,9 +320,7 @@ async def on_startup():
     global event_loop
     event_loop = asyncio.get_running_loop()
 
-    # Start background AI-ECG polling task
-    #app.state.ai_ecg_task = asyncio.create_task(ai_ecg_polling_loop())
-
+    app.state.ai_ecg_task = None 
     # Start gRPC server in a background thread
     t = threading.Thread(target=start_grpc_server, daemon=True)
     t.start()
