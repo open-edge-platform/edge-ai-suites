@@ -30,6 +30,9 @@ WORKLOAD_TYPE = os.getenv("WORKLOAD_TYPE", "mdpnp")
 # Metrics service base URL (same host, different port, via host networking)
 METRICS_SERVICE_URL = os.getenv("METRICS_SERVICE_URL", "http://localhost:9000")
 
+# DDS-Bridge control URL (host networking: use localhost inside containers)
+DDS_BRIDGE_CONTROL_URL = os.getenv("DDS_BRIDGE_CONTROL_URL", "http://localhost:8082")
+
 
 def _proxy_metrics_get(path: str):
     """Helper to proxy a GET request to the metrics-service.
@@ -111,6 +114,57 @@ async def platform_info():
 async def memory_usage():
     """Proxy for the metrics-service /memory endpoint."""
     return _proxy_metrics_get("/memory")
+
+
+@app.post("/start")
+async def start_workloads(target: str = Query("dds-bridge", description="Which workload to start (currently only dds-bridge is supported)")):
+    """Wrapper API for UI to start streaming from backend workloads.
+
+    For now this controls only the dds-bridge, which in turn
+    forwards vitals from the mdpnp DDS domain into this service
+    over gRPC when enabled.
+    """
+
+    # Currently we only support dds-bridge, but keep the signature
+    # flexible for future extension.
+    targets = {t.strip() for t in target.split(",")} if target else {"dds-bridge"}
+    results: dict[str, str] = {}
+
+    def _call(url: str) -> str:
+        try:
+            resp = requests.post(url, timeout=3)
+            return f"{resp.status_code}: {resp.text}"
+        except Exception as exc:
+            return f"error: {exc}"
+
+    if "all" in targets or "dds-bridge" in targets:
+        results["dds-bridge"] = _call(f"{DDS_BRIDGE_CONTROL_URL}/start")
+
+    return {"status": "ok", "results": results}
+
+
+@app.post("/stop")
+async def stop_workloads(target: str = Query("dds-bridge", description="Which workload to stop (currently only dds-bridge is supported)")):
+    """Wrapper API for UI to stop streaming from backend workloads.
+
+    This turns off forwarding in dds-bridge so that no new vitals
+    are sent into this aggregator over gRPC.
+    """
+
+    targets = {t.strip() for t in target.split(",")} if target else {"dds-bridge"}
+    results: dict[str, str] = {}
+
+    def _call(url: str) -> str:
+        try:
+            resp = requests.post(url, timeout=3)
+            return f"{resp.status_code}: {resp.text}"
+        except Exception as exc:
+            return f"error: {exc}"
+
+    if "all" in targets or "dds-bridge" in targets:
+        results["dds-bridge"] = _call(f"{DDS_BRIDGE_CONTROL_URL}/stop")
+
+    return {"status": "ok", "results": results}
 
 
 class VitalService(vital_pb2_grpc.VitalServiceServicer):
