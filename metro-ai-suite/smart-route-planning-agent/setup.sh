@@ -99,7 +99,7 @@ echo -e "  REGISTRY: ${YELLOW}$REGISTRY${NC}"
 build_images() {
     echo -e "${BLUE}==> Building Smart-Route-Planning-Agent Docker container...${NC}"
     
-    docker compose -f $COMPOSE_MAIN -p $PROJECT_NAME build
+    docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" build
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Docker container built successfully${NC}"
     else
@@ -112,7 +112,7 @@ build_images() {
 start_service() {
     echo -e "${BLUE}==> Starting Smart-Route-Planning-Agent container...${NC}"
     
-    docker compose -f $COMPOSE_MAIN -p $PROJECT_NAME up -d
+    docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" up -d
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Route-Planning-Agent container started successfully!${NC}"
@@ -153,7 +153,7 @@ case "$1" in
         ;;
     "--stop")
         echo -e "${YELLOW}Stopping Smart-Route-Planning-Agent container...${NC}"
-        docker compose -f $COMPOSE_MAIN -p $PROJECT_NAME down
+        docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}Smart-Route-Planning-Agent container stopped successfully.${NC}"
         else
@@ -163,7 +163,7 @@ case "$1" in
         ;;
     "--restart")
         echo -e "${BLUE}==> Restarting Smart-Route-Planning-Agent container...${NC}"
-        docker compose -f $COMPOSE_MAIN -p $PROJECT_NAME down
+        docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}Container stopped successfully${NC}"
             start_service
