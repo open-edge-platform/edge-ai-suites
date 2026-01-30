@@ -2,16 +2,13 @@
     "api_endpoint": "/api/v1/traffic/current?images=false",
     "api_hosts": [
         {
-            "name": "Intersection-X",
-            "host": "http://127.0.0.1:8081"
+            "host": "http://localhost:8081"
         },
         {
-            "name": "Intersection-X",
-            "host": "http://127.0.0.1:8082"
+            "host": "http://localhost:8082"
         },
         {
-            "name": "Intersection-X",
-            "host": "http://127.0.0.1:8083"
+            "host": "http://localhost:8083"
         }
     ]
 }
