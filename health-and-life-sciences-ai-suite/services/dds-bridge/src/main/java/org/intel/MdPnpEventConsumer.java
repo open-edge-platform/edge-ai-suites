@@ -17,10 +17,24 @@ import ice.SampleArraySeq;
 public class MdPnpEventConsumer {
 
     public static void main(String[] args) throws InterruptedException {
+        // Ensure GrpcPublisher is initialized so that the HTTP
+        // control server (/start, /stop) is available immediately.
+        GrpcPublisher.isStreamingEnabled();
 
         int domainId = Integer.parseInt(
                 System.getenv().getOrDefault("DDS_DOMAIN", "10")
         );
+
+        System.out.println(
+                "DDS-Bridge waiting for /start on control server before subscribing to DDS domain "
+                        + domainId
+        );
+
+        // Block here until /start is called on the control API,
+        // which flips streamingEnabled to true.
+        while (!GrpcPublisher.isStreamingEnabled()) {
+            Thread.sleep(500);
+        }
 
         System.out.println("🚀 Starting DDS Consumer on domain " + domainId);
 
@@ -112,23 +126,28 @@ public class MdPnpEventConsumer {
                         InstanceStateKind.ANY_INSTANCE_STATE
                 );
 
-                for (int i = 0; i < dataSeq.size(); i++) {
-                    SampleInfo info = infoSeq.get(i);
-                    if (info.valid_data) {
-                        Numeric n = dataSeq.get(i);
+                                for (int i = 0; i < dataSeq.size(); i++) {
+                                        SampleInfo info = infoSeq.get(i);
+                                        if (!info.valid_data) {
+                                                continue;
+                                        }
 
-                        VitalReading v = new VitalReading();
-                        v.deviceId = n.unique_device_identifier;
-                        v.metric = n.metric_id;
-                        v.value = n.value;
-                        v.unit = n.unit_id;
-                        v.timestamp = System.currentTimeMillis();
-                        System.out.println("🛑 Numeric Reading: " + v.toString());
+                                        Numeric n = dataSeq.get(i);
 
-                        // push to gRPC
-                        GrpcPublisher.publish(v);
-                    }
-                }
+                                        VitalReading v = new VitalReading();
+                                        v.deviceId = n.unique_device_identifier;
+                                        v.metric = n.metric_id;
+                                        v.value = n.value;
+                                        v.unit = n.unit_id;
+                                        v.timestamp = System.currentTimeMillis();
+
+                                        // Only log and forward when DDS-bridge streaming is enabled
+                                        if (GrpcPublisher.isStreamingEnabled()) {
+                                                System.out.println("f6d1 Numeric Reading: " + v.toString());
+                                                // push to gRPC (gated again inside GrpcPublisher)
+                                                GrpcPublisher.publish(v);
+                                        }
+                                }
             } finally {
                 numericReader.return_loan(dataSeq, infoSeq);
             }
@@ -162,44 +181,48 @@ public class MdPnpEventConsumer {
 
                 for (int i = 0; i < dataSeq.size(); i++) {
                     SampleInfo info = infoSeq.get(i);
-                    if (!info.valid_data) continue;
+                    if (!info.valid_data) {
+                        continue;
+                    }
 
-                        SampleArray w = dataSeq.get(i);
+                    SampleArray w = dataSeq.get(i);
 
-                        // Values is a wrapper around a FloatSeq called userData
-                        int sampleCount = (w.values != null && w.values.userData != null)
-                                        ? w.values.userData.size()
-                                        : 0;
+                                        // Values is a wrapper around a FloatSeq called userData
+                                        int sampleCount = (w.values != null && w.values.userData != null)
+                                                                        ? w.values.userData.size()
+                                                                        : 0;
 
-                        System.out.printf(
-                                        "📈 WAVEFORM | device=%s metric=%s freq=%dHz samples=%d%n",
-                                        w.unique_device_identifier,
-                                        w.metric_id,
-                                        w.frequency,
-                                        sampleCount
-                        );
+                                        // Only emit waveform logs (and forward) when streaming is enabled
+                                        if (GrpcPublisher.isStreamingEnabled()) {
+                                                System.out.printf(
+                                                                "📈 WAVEFORM | device=%s metric=%s freq=%dHz samples=%d%n",
+                                                                w.unique_device_identifier,
+                                                                w.metric_id,
+                                                                w.frequency,
+                                                                sampleCount
+                                                );
 
-                        // Build VitalReading with waveform payload
-                        VitalReading v = new VitalReading();
-                        v.deviceId = w.unique_device_identifier;
-                        v.metric = w.metric_id;
-                        v.value = 0; // scalar value not meaningful for waveform
-                        v.unit = w.unit_id;
-                        v.timestamp = System.currentTimeMillis();
-                        v.waveformFrequencyHz = (int) w.frequency;
+                                                // Build VitalReading with waveform payload
+                                                VitalReading v = new VitalReading();
+                                                v.deviceId = w.unique_device_identifier;
+                                                v.metric = w.metric_id;
+                                                v.value = 0; // scalar value not meaningful for waveform
+                                                v.unit = w.unit_id;
+                                                v.timestamp = System.currentTimeMillis();
+                                                v.waveformFrequencyHz = (int) w.frequency;
 
-                        if (sampleCount > 0) {
-                                java.util.List<Float> samples = new java.util.ArrayList<>(sampleCount);
-                                for (int j = 0; j < sampleCount; j++) {
-                                        samples.add((Float) w.values.userData.get(j));
-                                }
-                                v.waveform = samples;
-                        }
+                                                if (sampleCount > 0) {
+                                                        java.util.List<Float> samples = new java.util.ArrayList<>(sampleCount);
+                                                        for (int j = 0; j < sampleCount; j++) {
+                                                                samples.add((Float) w.values.userData.get(j));
+                                                        }
+                                                        v.waveform = samples;
+                                                }
 
-                        System.out.println("🛑 Waveform Reading: " + v.toString());
-
-                        // push to gRPC
-                        GrpcPublisher.publish(v);
+                                                System.out.println("🛑 Waveform Reading: " + v.toString());
+                                                // push to gRPC (gated again inside GrpcPublisher)
+                                                GrpcPublisher.publish(v);
+                                        }
                 }
             } finally {
                 waveformReader.return_loan(dataSeq, infoSeq);
