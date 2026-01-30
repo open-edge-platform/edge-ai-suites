@@ -1,5 +1,10 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: ${PROJECT_NAME:-live-video-alert}
 services:
   agentic-nvr:
+    image: ${REGISTRY:-}live-video-alert:${TAG:-latest}
     build: .
     container_name: agentic-nvr
     restart: unless-stopped

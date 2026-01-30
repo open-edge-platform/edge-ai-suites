@@ -25,4 +25,4 @@ Thumbs.db
 
 # Project specific
 *.log
-resources/streams_local.json
+resources/streams.json
