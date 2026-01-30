@@ -1,142 +1,218 @@
-import { createSlice } from '@reduxjs/toolkit'
-import type { PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export interface TranscriptSegment {
+  id: string;
   speaker: string;
   text: string;
   start?: number;
   end?: number;
-  isComplete?: boolean;
+  isComplete: boolean;
 }
 
-interface FinalEvent {
-  event: 'final';
-  teacher_speaker: string;
-  speaker_text_stats: Record<string, number>;
-}
+type SupportedLanguage = "en" | "zh";
 
 interface TranscriptState {
   segments: TranscriptSegment[];
-  status: 'idle' | 'streaming' | 'done';
-  teacherSpeaker: string | null;
-  speakerStats: Record<string, number>;
   currentTypingIndex: number;
-  isTyping: boolean;
-  shouldSwitchToSummary: boolean;
+  isFinished: boolean;
+  teacherSpeaker: string | null;
+  totalDuration: number | null;
+  speakerStats: { [speaker: string]: number };
+  detectedLanguage: SupportedLanguage | null;
 }
 
 const initialState: TranscriptState = {
   segments: [],
-  status: 'idle',
-  teacherSpeaker: null,
-  speakerStats: {},
   currentTypingIndex: -1,
-  isTyping: false,
-  shouldSwitchToSummary: false
-}
+  isFinished: false,
+  teacherSpeaker: null,
+  totalDuration: null,
+  speakerStats: {},
+  detectedLanguage: null,
+};
 
-const transcriptSlice = createSlice({
-  name: 'transcript',
+const normalizeSpeaker = (s?: string | null) =>
+  s?.trim().toUpperCase() || "";
+
+export const transcriptSlice = createSlice({
+  name: "transcript",
   initialState,
   reducers: {
-    resetTranscript: () => initialState,
+    appendTranscriptChunk: (state, action: PayloadAction<any>) => {
+      const chunk = action.payload;
 
-    startTranscript(state) {
-      state.status = 'streaming'
-      state.segments = []
-      state.teacherSpeaker = null
-      state.speakerStats = {}
-      state.currentTypingIndex = -1
-      state.isTyping = false
-      state.shouldSwitchToSummary = false
-    },
+      if (chunk.segments && Array.isArray(chunk.segments)) {
+        chunk.segments.forEach((segment: any) => {
+          const speaker = normalizeSpeaker(segment.speaker);
 
-    appendTranscriptChunk(state, action: PayloadAction<{ text?: string, segments?: any[] }>) {
-      if (action.payload.segments && action.payload.segments.length > 0) {
-        for (const s of action.payload.segments) {
-          state.segments.push({
-            speaker: s.speaker,
-            text: s.text,
-            start: s.start,
-            end: s.end,
-            isComplete: false
-          })
+          const newSegment: TranscriptSegment = {
+            id: `${speaker}-${Date.now()}-${Math.random()}`,
+            speaker,
+            text: segment.text,
+            start: segment.start ?? 0,
+            end: segment.end ?? 0,
+            isComplete: false,
+          };
+
+          state.segments.push(newSegment);
+        });
+
+        if (state.segments.length > 0 && state.currentTypingIndex < 0) {
+          state.currentTypingIndex = 0;
         }
-        if (state.currentTypingIndex === -1) {
-          state.currentTypingIndex = state.segments.length - action.payload.segments.length;
-          state.isTyping = true;
+
+        if (chunk.end_time) {
+          state.totalDuration = Math.max(
+            state.totalDuration || 0,
+            chunk.end_time
+          );
         }
-      } else if (action.payload.text) {
-        const lines = action.payload.text.split('\n')
-        for (const line of lines) {
-          const m = line.match(/^(SPEAKER_\d+):\s*(.*)$/)
-          if (m) {
-            state.segments.push({ 
-              speaker: m[1], 
-              text: m[2],
-              isComplete: false
-            })
+      }
+
+      else if (chunk.text) {
+        const speaker = normalizeSpeaker(
+          chunk.speaker || state.segments[state.segments.length - 1]?.speaker || "SPEAKER_00"
+        );
+
+        if (state.segments.length === 0) {
+          const newSegment: TranscriptSegment = {
+            id: `segment-${Date.now()}`,
+            speaker,
+            text: chunk.text,
+            start: chunk.start,
+            end: chunk.end,
+            isComplete: false,
+          };
+          state.segments.push(newSegment);
+          state.currentTypingIndex = 0;
+        } else {
+          const lastSegment = state.segments[state.segments.length - 1];
+
+          if (
+            normalizeSpeaker(lastSegment.speaker) === speaker &&
+            !lastSegment.isComplete
+          ) {
+            lastSegment.text += chunk.text;
+            if (chunk.end) lastSegment.end = chunk.end;
+          } else {
+            const newSegment: TranscriptSegment = {
+              id: `segment-${Date.now()}-${Math.random()}`,
+              speaker,
+              text: chunk.text,
+              start: chunk.start,
+              end: chunk.end,
+              isComplete: false,
+            };
+            state.segments.push(newSegment);
           }
         }
-        if (state.currentTypingIndex === -1 && state.segments.length > 0) {
-          state.currentTypingIndex = state.segments.length - lines.filter(line => 
-            line.match(/^(SPEAKER_\d+):\s*(.*)$/)
-          ).length;
-          state.isTyping = true;
-        }
       }
     },
 
-    completeSegmentTyping(state, action: PayloadAction<number>) {
-      const segmentIndex = action.payload;
-      if (state.segments[segmentIndex]) {
-        state.segments[segmentIndex].isComplete = true;
-        
-        const nextIndex = segmentIndex + 1;
-        if (nextIndex < state.segments.length) {
-          state.currentTypingIndex = nextIndex;
-          state.isTyping = true;
-        } else {
-          state.currentTypingIndex = -1;
-          state.isTyping = false;
+    setFinalTranscript: (state, action: PayloadAction<any>) => {
+      const finalData = action.payload;
+
+      if (finalData.teacher_speaker) {
+        state.teacherSpeaker = normalizeSpeaker(
+          finalData.teacher_speaker
+        );
+      }
+
+      if (finalData.speaker_text_stats) {
+        const normalizedStats: { [speaker: string]: number } = {};
+        Object.entries(finalData.speaker_text_stats).forEach(
+          ([speaker, value]) => {
+            normalizedStats[normalizeSpeaker(speaker)] = value as number;
+          }
+        );
+        state.speakerStats = normalizedStats;
+      }
+
+      if (state.segments.length > 0) {
+        const maxEnd = Math.max(
+          ...state.segments
+            .map(s => s.end || 0)
+            .filter(e => e > 0)
+        );
+
+        if (maxEnd > 0) {
+          state.totalDuration = Math.max(
+            state.totalDuration || 0,
+            maxEnd
+          );
         }
       }
+
+
+      state.segments.forEach(segment => {
+        segment.isComplete = true;
+      });
     },
 
-    setFinalTranscript(state, action: PayloadAction<FinalEvent>) {
-      const { teacher_speaker, speaker_text_stats } = action.payload
-      state.teacherSpeaker = teacher_speaker
-      state.speakerStats = speaker_text_stats
-
-      if (teacher_speaker) {
-        for (const seg of state.segments) {
-          if (seg.speaker === teacher_speaker) seg.speaker = 'TEACHER'
-        }
-      }
-    },
-
-    finishTranscript(state) {
-      state.status = 'done'
-      state.isTyping = false
-      state.segments.forEach(seg => seg.isComplete = true);
+    finishTranscript: (state) => {
+      state.isFinished = true;
       state.currentTypingIndex = -1;
-      state.shouldSwitchToSummary = true;
+      state.segments.forEach(segment => {
+        segment.isComplete = true;
+      });
     },
 
-    resetSwitchToSummary(state) {
-      state.shouldSwitchToSummary = false;
-    }
-  }
-})
+    completeSegmentTyping: (state, action: PayloadAction<number>) => {
+      const idx = action.payload;
+      if (idx >= 0 && idx < state.segments.length) {
+        state.segments[idx].isComplete = true;
+        const next = idx + 1;
+        state.currentTypingIndex =
+          next < state.segments.length ? next : -1;
+      }
+    },
+
+    setTotalDuration: (state, action: PayloadAction<number>) => {
+      state.totalDuration = Math.max(
+        state.totalDuration || 0,
+        action.payload
+      );
+    },
+
+    updateSpeakerStats: (
+      state,
+      action: PayloadAction<{ [speaker: string]: number }>
+    ) => {
+      const normalizedStats: { [speaker: string]: number } = {};
+      Object.entries(action.payload).forEach(([speaker, value]) => {
+        normalizedStats[normalizeSpeaker(speaker)] = value;
+      });
+      state.speakerStats = normalizedStats;
+    },
+
+    setDetectedLanguage: (
+      state,
+      action: PayloadAction<SupportedLanguage>
+    ) => {
+      state.detectedLanguage = action.payload;
+    },
+
+    resetTranscript: (state) => {
+      state.segments = [];
+      state.currentTypingIndex = -1;
+      state.isFinished = false;
+      state.teacherSpeaker = null;
+      state.totalDuration = null;
+      state.speakerStats = {};
+      state.detectedLanguage = null;
+    },
+  },
+});
 
 export const {
-  resetTranscript,
-  startTranscript,
   appendTranscriptChunk,
-  completeSegmentTyping,
   setFinalTranscript,
   finishTranscript,
-  resetSwitchToSummary
-} = transcriptSlice.actions
+  completeSegmentTyping,
+  setTotalDuration,
+  updateSpeakerStats,
+  setDetectedLanguage,
+  resetTranscript,
+} = transcriptSlice.actions;
 
-export default transcriptSlice.reducer
+export default transcriptSlice.reducer;

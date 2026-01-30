@@ -73,11 +73,11 @@ jobs:
           scan-scope: "all"  
           output-format: "txt" 
           fail-on-findings: "false"
-          paths: "microservices/multilevel-video-understanding"
-          report_suffix: "-bandit-multilevel-video-understanding-CT161"
+          paths: "education-ai-suite/smart-classroom"
+          report_suffix: "-bandit-education-ai-suite"
 
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
-          name: bandit-report-multilevel-video-understanding
+          name: bandit-education-ai-suite
           path: bandit-report-*.txt    

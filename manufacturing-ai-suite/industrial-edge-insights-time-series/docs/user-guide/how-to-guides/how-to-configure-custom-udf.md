@@ -1,6 +1,6 @@
 # Configure Time Series Analytics Microservice with Custom UDF deployment package
 
-This guide provides instructions for setting up custom UDF deployment package (UDFs, TICKscripts, models) and config.json in **Time Series Analytics Microservice**.
+This guide provides instructions for setting up custom UDF deployment package (UDFs, TICKscripts, models) and `config.json` in **Time Series Analytics Microservice**.
 
 ## Configuration
 
@@ -11,8 +11,8 @@ This guide provides instructions for setting up custom UDF deployment package (U
 - **`UDF Deployment package`**:
 
   1. **`udfs/`**:
-     - Contains python scripts for UDFs.
-     - If additional python packages are required, list them in `requirements.txt` using pinned versions.
+     - Contains Python scripts for UDFs.
+     - If additional Python packages are required, list them in `requirements.txt` using pinned versions.
 
   2. **`tick_scripts/`**:
      - Contains TICKscripts for data processing, analytics, and alerts.
@@ -53,15 +53,14 @@ This guide provides instructions for setting up custom UDF deployment package (U
           For more details, refer to the [Kapacitor TICK Script Documentation](https://docs.influxdata.com/kapacitor/v1/reference/tick/introduction/).
 
   3. **`models/`**:
-     - Contains model files (e.g., `.pkl`) used by UDF python scripts.
-
+     - Contains model files (e.g., `.pkl`) used by UDF Python scripts.
 
 ### Docker compose deployment
 
-> **Note**: Follow the [getting started](./get-started.md) to have the `Wind Turbine Anomaly Detection` and `Weld Anomaly Detection` sample apps deployed
+> **Note:** Follow the [Get started](../get-started.md) guide to deploy the `Wind Turbine Anomaly Detection` and `Weld Anomaly Detection` sample apps.
 
 The files at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config` for `Wind Turbine Anomaly Detection` sample app OR `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config` for `Weld Anomaly Detection` representing the UDF deployment package (UDFs, TICKscripts, models)
-and config.json has been volume mounted for the Time Series Analytics Microservice service in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and config.json, it has to be done at this location and the time series analytics microservice container needs to be restarted manually.
+and `config.json` have been volume mounted for the Time Series Analytics Microservice service in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and `config.json`, it has to be done at this location and the time series analytics microservice container needs to be restarted manually.
 
 ### Helm Deployment
 
@@ -99,4 +98,4 @@ and config.json has been volume mounted for the Time Series Analytics Microservi
     kubectl logs -f -n ts-sample-app $POD_NAME
     ```
 
-For more details, refer `Time Series Analytics` microservice API docs [here](./how-to-update-config.md#how-to-update-config-in-time-series-analytics-microservice).
+For more details, refer to `Time Series Analytics` microservice API documents on [updating the config](./how-to-update-config.md).

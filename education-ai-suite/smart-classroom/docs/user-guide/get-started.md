@@ -166,6 +166,45 @@ Use the IPv4 Address from your active network adapter.
 
 If you changed the port, adjust the URL accordingly.
 
+## Step 5: Speaker Diarization Setup (Pyannote)
+
+Speaker diarization is supported using Pyannote Audio models.
+To enable diarization, you must request access to the Pyannote pretrained models and provide a Hugging Face access token.
+
+### a. Request Model Access on Hugging Face
+
+Pyannote diarization models require gated access.
+
+Request access here:
+
+Pyannote Speaker Diarization v3.1
+https://huggingface.co/pyannote/speaker-diarization-3.1
+
+(Optional) Pyannote Speaker Diarization v3.0
+https://huggingface.co/pyannote/speaker-diarization-3.0
+
+Click "Request Access" on the model page and wait for approval.
+
+### b. Create a Hugging Face Access Token
+
+After approval:
+
+Go to https://huggingface.co/settings/tokens
+
+Create a Read access token
+
+Copy the generated token
+
+### c. Configure Hugging Face Token in Project Config
+
+Open your model configuration file `config/models.yaml` Add your Hugging Face token:
+```
+models:
+  asr:
+    diarization: true
+    hf_token: "hf_your_access_token_here"
+```
+
 ## Troubleshooting
 
 - **Frontend not opening:**  

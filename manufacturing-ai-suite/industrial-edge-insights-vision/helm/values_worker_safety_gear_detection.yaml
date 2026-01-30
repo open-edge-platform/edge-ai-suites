@@ -52,7 +52,7 @@ webrtcturnserver:
 images:
   minio: minio/minio:RELEASE.2020-12-12T08-39-07Z
   model_registry: intel/model-registry:1.0.3
-  dlstreamer_pipeline_server: intel/dlstreamer-pipeline-server:2025.2.0-ubuntu22
+  dlstreamer_pipeline_server: intel/dlstreamer-pipeline-server:2025.2.0-ubuntu24
   nginx: nginx:1.27-alpine
   mqtt_broker: eclipse-mosquitto:latest
 config:

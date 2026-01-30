@@ -8,7 +8,8 @@ This section provides instructions for setting up alerts in **Time Series Analyt
 
 #### Configure MQTT Alerts
 
-By default, the following MQTT alerts are configured in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/config.json` file.
+By default, the following MQTT alerts are configured in the
+`edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/config.json` file.
 
 ```json
   "alerts": {
@@ -23,7 +24,7 @@ By default, the following MQTT alerts are configured in `edge-ai-suites/manufact
 #### Configure MQTT Alert in TICK Script
 
 The following snippet shows how to add the MQTT if not
-already added. By default, the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick` TICK Script has the following configuration done by default.
+already added. By default, the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick` TICK Script has the following configuration.
 
 ```bash
 data0
@@ -36,7 +37,7 @@ data0
                 .qos(1)
 ```
 
-> **Note**: Setting **QoS** to `1` ensures messages are delivered at least once. Alerts are preserved and resent if the MQTT broker reconnects after downtime.
+> **Note:** Setting **QoS** to `1` ensures messages are delivered at least once. Alerts are preserved and resent if the MQTT broker reconnects after downtime.
 
 ### Docker - Subscribe to MQTT Alerts
 

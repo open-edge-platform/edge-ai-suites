@@ -1,0 +1,243 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: "[Smart Traffic Intersection Agent] SDLe Scans"
+run-name: "[Smart Traffic Intersection Agent] PR workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+
+
+# Only run at most 1 workflow concurrently per PR, unlimited for branches
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'metro-ai-suite/smart-traffic-intersection-agent/**'
+
+jobs:   
+
+  trivy-scan:
+    runs-on: ubuntu-22.04-32core-128GB
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      - name: Run Trivy Filesystem Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-fs
+        with:
+          scan_type: "fs"  
+          scan-scope: "all"  
+          severity: "HIGH,CRITICAL" 
+          format: "json"
+          scan_target: "metro-ai-suite/smart-traffic-intersection-agent/"
+          report_suffix: "-CT7"
+      
+      - name: Build Docker images
+        run: |
+          cd metro-ai-suite/smart-traffic-intersection-agent/src/
+          docker build -t smart-traffic-intersection-agent:latest -f Dockerfile .
+         
+      - name: Run trivy Scan - smart-traffic-intersection-agent
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: smart-traffic-intersection-agent
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "smart-traffic-intersection-agent:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"
+          report_suffix: "-CT248"
+      
+      - name: Scan Dockerfile with Trivy
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        with:
+          scan_type: "config"
+          scan_target: "edge-ai-suites-repo/metro-ai-suite/smart-traffic-intersection-agent/src"
+          severity: "HIGH,CRITICAL"
+          format: "json"
+          misconfig_scanners: "Dockerfile"
+          report_suffix: "-CT222"
+           
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: trivy-report
+          path: security-results/trivy*
+
+  bandit-scan:
+    runs-on: ubuntu-22.04-32core-128GB
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+      
+      - name: Run Bandit Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@27276444a9bcf247a27369406686b689933bd1ff
+        id: bandit
+        with:
+          scan-scope: "all"  
+          output-format: "txt" 
+          fail-on-findings: "false"
+          paths: "metro-ai-suite/smart-traffic-intersection-agent/"
+          report_suffix: "-CT161"
+          
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: bandit-report
+          path: bandit-report-*.txt
+        
+
+  clamav-scan:
+    runs-on: ubuntu-22.04-32core-128GB
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+      
+      - name: Run ClamAV Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/clamav@27276444a9bcf247a27369406686b689933bd1ff
+        id: clamav
+        with:
+          scan-scope: "all"  
+          output-format: "txt" 
+          fail-on-findings: "false"
+          paths: "metro-ai-suite/smart-traffic-intersection-agent/"
+          exclude_dirs: ".git,node_modules,venv,ui/test"
+          
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: clamav-report
+          path: security-results/clamav*
+
+# GitLeaks scanning job - matching your existing pattern
+  gitleaks-scan:
+    runs-on: ubuntu-22.04-32core-128GB
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+          
+      - name: Install gitleaks
+        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@5f1c7f544b235db6ded508b6b4c6a2d3a78a38be
+        with:
+          bootstrap_tools: "gitleaks"
+          
+      - name: Get current timestamp
+        id: timestamp
+        run: echo "time=$(date +%s)" >> "$GITHUB_OUTPUT"
+        
+      - name: Clone CI repo
+        uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
+          persist-credentials: false
+          
+      - name: Scan for secrets
+        run: |
+          gitleaks dir "metro-ai-suite/smart-traffic-intersection-agent/" -v -c ci/.gitleaks.toml --baseline-path ci/gitleaks_baselines/gitleaks-smart-traffic-intersection-agent.json -r gitleaks-smart-traffic-intersection-agent.json || true
+          
+      - name: Upload Gitleaks Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: gitleaks-report-smart-traffic-intersection-agent-${{ steps.timestamp.outputs.time }}
+          path: gitleaks-smart-traffic-intersection-agent.json
+
+# Python linting with pylint
+  pylint-scan:
+    runs-on: ubuntu-22.04-32core-128GB
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+      
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies and pylint
+        run: |
+          pip install pylint
+          # Install project dependencies if requirements.txt exists
+          if [ -f "metro-ai-suite/smart-traffic-intersection-agent/requirements.txt" ]; then
+            pip install -r metro-ai-suite/smart-traffic-intersection-agent/requirements.txt || true
+          fi
+      
+      - name: Run pylint
+        run: |
+          mkdir -p security-results
+          echo "=== Pylint Scan Results ===" > security-results/pylint-report-smart-traffic-intersection-agent.txt
+          echo "Scan Date: $(date)" >> security-results/pylint-report-smart-traffic-intersection-agent.txt
+          echo "" >> security-results/pylint-report-smart-traffic-intersection-agent.txt
+          
+          # Create a basic pylint config
+          cat > .pylintrc << EOF
+          [MESSAGES CONTROL]
+          disable=C0111,C0103,R0903,R0913,W0613,W0622,R0801,R0902,R0914,R0915,R0912,C0301,C0302
+          
+          [FORMAT]
+          max-line-length=120
+          
+          [REPORTS]
+          output-format=text
+          reports=yes
+          EOF
+          
+          # Find all Python files and lint them
+          find metro-ai-suite/smart-traffic-intersection-agent/ -type f -name "*.py" -exec pylint --rcfile=.pylintrc {} + >> security-results/pylint-report-smart-traffic-intersection-agent.txt 2>&1 || true
+          
+          echo "Pylint scan completed"
+      
+      - name: Upload pylint Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: pylint-report
+          path: security-results/pylint-report-smart-traffic-intersection-agent.txt
+
+# ShellCheck scanning job
+  shellcheck-scan:
+    runs-on: ubuntu-22.04-32core-128GB
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+      
+      - name: Setup environment with shellcheck
+        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@5f1c7f544b235db6ded508b6b4c6a2d3a78a38be
+        with:
+          bootstrap_tools: "shellcheck"
+      
+      - name: Run ShellCheck
+        run: |
+          mkdir -p security-results
+          echo "=== ShellCheck Scan Results ===" > security-results/shellcheck-report-smart-traffic-intersection-agent.txt
+          echo "Scan Date: $(date)" >> security-results/shellcheck-report-smart-traffic-intersection-agent.txt
+          echo "" >> security-results/shellcheck-report-smart-traffic-intersection-agent.txt
+          
+          # Find all shell scripts and check them
+          find metro-ai-suite/smart-traffic-intersection-agent/ -type f \( -name "*.sh" -o -name "*.bash" \) -print0 | while IFS= read -r -d '' file; do
+            echo "Checking: $file" >> security-results/shellcheck-report-smart-traffic-intersection-agent.txt
+            shellcheck "$file" >> security-results/shellcheck-report-smart-traffic-intersection-agent.txt 2>&1 || true
+            echo "---" >> security-results/shellcheck-report-smart-traffic-intersection-agent.txt
+          done
+          
+          echo "ShellCheck scan completed"
+      
+      - name: Upload ShellCheck Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: shellcheck-report
+          path: security-results/shellcheck-report-smart-traffic-intersection-agent.txt

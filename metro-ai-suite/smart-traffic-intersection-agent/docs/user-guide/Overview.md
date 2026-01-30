@@ -20,6 +20,12 @@ The Smart Traffic UI below shows how traffic, weather data is analyzed and summa
     <img src="./_images/traffic_agent_ui.png" alt="Architecture" />
 </p>
 
+### Architecture
+
+<p align="center">
+    <img src="./_images/ITT_architecture.png" alt="Architecture" />
+</p>
+
 ## Components
 
 The Smart Traffic Intelligence stack includes these containerized services:
@@ -39,6 +45,7 @@ The Smart Traffic Intelligence stack includes these containerized services:
 - **Shared Secrets**: TLS certificates and auth files mounted from `src/secrets/`
 - **Persistent Storage**: Traffic data stored in Docker volume `traffic-intelligence-data`
 - **Health Monitoring**: All services include health check endpoints
+
 
 ## Supporting Resources
 

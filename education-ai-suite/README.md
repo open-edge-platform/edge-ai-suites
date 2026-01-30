@@ -16,4 +16,4 @@ The main features are as follows:
 - Rear Camera Pipeline: **Re-Identification (ReID)** to track students consistently across camera views
 - Board Camera Pipeline: **Board content classification**
 
-For full setup, usage, and contribution guide, see [**Read the Detailed Documentation**](smart-classroom/README.md)
+For full setup, usage, and contribution guide, see [**Read the Detailed Documentation**](smart-classroom/README.md).
