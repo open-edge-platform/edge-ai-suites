@@ -242,7 +242,7 @@ print_all_service_host_endpoints() {
                 PORT=$(docker port "$CONTAINER_NAME" 443 | cut -d: -f2)
                 echo -e "${BLUE}Access $SERVICE_NAME at -> https://$HOST_IP:$PORT${NC}"
                 ;;
-            *app*)
+            *traffic-agent*)
                 BACKEND_SERVICE_NAME="Traffic Intersection Agent API Docs"
                 PORT=$(docker port "$CONTAINER_NAME" 8081 | cut -d: -f2)
                 echo -e "${CYAN}$BACKEND_SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
