@@ -16,7 +16,7 @@ by a robot-driver.
 ### Prerequisites
 
 - Assemble your robotic kit following the instructions provided by AAEON.
-- Complete the [get started guide](../../../../../gsg_robot/index.rst) before
+- Complete the [get started guide](../../../../../gsg_robot/index.md) before
   continuing.
 
 ### Install the Deb package

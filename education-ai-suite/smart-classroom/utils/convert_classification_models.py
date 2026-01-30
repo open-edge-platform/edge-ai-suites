@@ -52,7 +52,14 @@ def download_dataset(url, dataset_path):
         print(f"Downloading dataset from {url}...")
         urllib.request.urlretrieve(url, archive_path)
         with tarfile.open(archive_path, "r:gz") as tar:
-            tar.extractall(path=dataset_path)
+            def safe_extract(tar, path):
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not os.path.realpath(member_path).startswith(os.path.realpath(path)):
+                        raise Exception("Unsafe tar path")
+                tar.extractall(path)
+            safe_extract(tar, dataset_path)
+            
         os.remove(archive_path)
     return dataset_path
 

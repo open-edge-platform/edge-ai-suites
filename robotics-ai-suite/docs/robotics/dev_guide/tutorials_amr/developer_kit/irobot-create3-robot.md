@@ -11,7 +11,7 @@ perform the configuration changes needed for the tutorial.
 
 ## Prerequisites
 
-Complete the [GSG Robot Guide](../../../gsg_robot/index.rst) before continuing.
+Complete the [GSG Robot Guide](../../../gsg_robot/index.md) before continuing.
 
 ## iRobot Create 3 hardware extensions
 

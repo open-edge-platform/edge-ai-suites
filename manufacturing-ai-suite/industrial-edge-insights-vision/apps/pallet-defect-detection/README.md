@@ -11,14 +11,14 @@ models for video analysis. This sample application offers the following:
 
 ## Get Started
 
-- [System Requirements](../../docs/user-guide/pallet-defect-detection/system-requirements.md)
+- [System Requirements](../../docs/user-guide/pallet-defect-detection/get-started/system-requirements.md)
 - [Setup guide](../../docs/user-guide/pallet-defect-detection/get-started.md)
-- [Overview](../../docs/user-guide/pallet-defect-detection/Overview.md)
+- [Overview](../../docs/user-guide/pallet-defect-detection/index.md)
 
 
 ## How It Works
 
-You can read the overview of the architecture and logic of the application [here](../../docs/user-guide/pallet-defect-detection/overview-architecture.md)
+You can read the overview of [the architecture and logic of the application](../../docs/user-guide/pallet-defect-detection/index.md)
 
 The components and services are as follows:
 
@@ -46,13 +46,13 @@ It also consists of the following third-party microservices:
 
 ## Learn More
 
-- [Helm based deployment](how-to-deploy-using-helm-charts.md)
-- [MLOps using Model Registry](how-to-enable-mlops.md)
-- [Run multiple AI pipelines](how-to-run-multiple-ai-pipelines.md)
-- [Publish frames to S3 storage pipelines](how-to-run-store-frames-in-s3.md)
-- [View telemetry data in Open Telemetry](how-to-view-telemetry-data.md)
-- [Publish metadata to OPCUA](how-to-use-opcua-publisher.md)
+- [Helm based deployment](../../docs/user-guide/pallet-defect-detection/how-to-guides/deploy-with-helm.md)
+- [MLOps using Model Registry](../../docs/user-guide/pallet-defect-detection/how-to-guides/enable-mlops.md)
+- [Run multiple AI pipelines](../../docs/user-guide/pallet-defect-detection/how-to-guides/run-multiple-ai-pipelines.md)
+- [Publish frames to S3 storage pipelines](../../docs/user-guide/pallet-defect-detection/how-to-guides/store-frames-in-s3.md)
+- [View telemetry data in Open Telemetry](../../docs/user-guide/pallet-defect-detection/how-to-guides/view-telemetry-data.md)
+- [Publish metadata to OPCUA](../../docs/user-guide/pallet-defect-detection/how-to-guides/use-opcua-publisher.md)
 
 ## Troubleshooting
 
-- [Troubleshooting Guide](../../docs/user-guide/pallet-defect-detection/troubleshooting-guide.md)
+- [Troubleshooting Guide](../../docs/user-guide/pallet-defect-detection/troubleshooting.md)
