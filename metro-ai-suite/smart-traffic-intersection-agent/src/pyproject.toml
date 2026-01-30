@@ -7,18 +7,18 @@ version = "1.0.0"
 name="Smart-Traffic-Intersection-Agent"
 requires-python = ">=3.10"
 dependencies = [
-    "fastapi==0.104.1",
-    "uvicorn[standard]==0.24.0",
-    "paho-mqtt==1.6.1",
+    "fastapi==0.128.0",
+    "uvicorn[standard]==0.40.0",
+    "paho-mqtt==2.1.0",
     "aiohttp==3.13.3",
     "structlog==23.2.0",
-    "pydantic==2.5.0",
+    "pydantic==2.7.0",
     "python-dateutil==2.8.2",
     "python-dotenv==1.0.0",
-    "gradio>=4.0.0",
+    "gradio==5.49.1",
     "pillow>=9.0.0",
     "markdown>=3.4.0",
-    "requests>=2.25.0",
+    "requests==2.32.5",
     "huggingface_hub==0.36.0",
 ]
 
@@ -27,7 +27,7 @@ dev = [
     "pytest==7.4.3",
     "pytest-asyncio==0.21.1",
     "httpx==0.25.2",
-    "black==23.11.0",
+    "black==26.1.0",
     "flake8==6.1.0",
     "mypy==1.7.1",
 ]
