@@ -1,4 +1,4 @@
-# How to start MQTT publisher
+# Start MQTT Publisher
 
 Bring the services up.
 

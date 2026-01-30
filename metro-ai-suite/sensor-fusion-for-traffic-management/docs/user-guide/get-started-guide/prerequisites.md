@@ -61,7 +61,7 @@ gRPCPort=50052
 
 
 #### Demo Application
-![Demo-2C1L](./_assets/Demo-2C1L.png)
+![Demo-2C1L](../_assets/Demo-2C1L.png)
 <center>Figure 1. Visualization of 2C+1L results</center>
 
 Currently we support four display types: media, lidar, media_lidar, media_fusion.

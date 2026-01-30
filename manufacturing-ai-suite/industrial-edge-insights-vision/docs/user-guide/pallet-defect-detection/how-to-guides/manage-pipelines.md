@@ -1,12 +1,13 @@
-# How To Manage Pipeline
+# Manage Pipeline
 
 This section describes how to create custom AI pipelines for the sample application and the commands to manage these pipelines.
 
 ## Create Pipelines
 
-The AI pipelines are defined by the `pipeline-server-config.json` file present under the configs subdirectory of a particular application directory (for docker compose deployment) and similary inside the helm directory (for helm based deployment).
+The AI pipelines are defined by the `pipeline-server-config.json` file present under the configs subdirectory of a particular application directory (for docker compose deployment) and similarly inside the helm directory (for helm based deployment).
 
 The following is an example of the pallet defect detection pipeline, which is included in the `pipeline-server-config.json` file.
+
 ```sh
     "pipelines": [
     {
@@ -43,6 +44,7 @@ Follow this procedure to start the pipeline.
 
    The name of the pipeline is defined by the **name** parameter.
 
+   ```text
         "pipelines": [
             {
                   "name": "pipeline_name",
@@ -51,6 +53,7 @@ Follow this procedure to start the pipeline.
                   "..."
             }
          ]
+    ```
 
 2. You use a Client URL (cURL) command to start the pipeline.
 
@@ -75,7 +78,7 @@ Follow this procedure to start the pipeline.
 
    Each pipeline has its **instance ID**. You will need the instance ID to stop the pipeline later.
 
-   ![Example of an instance ID for a pipeline](./images/instance-id.png)
+   ![Example of an instance ID for a pipeline](../_assets/instance-id.png)
 
    Figure 1: Example of a pipeline instance ID
 

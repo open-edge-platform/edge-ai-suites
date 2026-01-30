@@ -39,7 +39,7 @@ one of the below stopping conditions holds true:
 ### Prerequisites
 
 - Assemble your robotic kit following the instructions provided by AAEON.
-- Complete the [get started guide](../../../../../gsg_robot/index.rst)
+- Complete the [get started guide](../../../../../gsg_robot/index.md)
   before continuing.
 
 ### Install the Deb package

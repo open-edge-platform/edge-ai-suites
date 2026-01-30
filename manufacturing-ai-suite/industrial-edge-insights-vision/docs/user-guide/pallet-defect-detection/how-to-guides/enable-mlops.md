@@ -1,4 +1,4 @@
-# MLOps using Model Registry
+# Enable MLOps
 
 Applications for industrial vision can also be used to demonstrate MLOps workflow using Model Registry microservice.
 With this feature, during runtime, you can download a new model from the registry and restart the pipeline with the new model.
@@ -128,7 +128,7 @@ For this demonstration we will be using Geti trained pallet defect detection mod
    curl -k 'https://<HOST_IP>/registry/models'
    ```
 
-   If you do not have a model available, follow the steps [here](#upload-a-model-to-model-registry) to upload a sample model in Model Registry.
+   If you do not have a model available, follow [the steps](#upload-a-model-to-model-registry) to upload a sample model in Model Registry.
 
 2. Check the instance ID of the currently running pipeline to use it for the next step.
 
@@ -160,7 +160,7 @@ For this demonstration we will be using Geti trained pallet defect detection mod
 
 4. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
-   ![WebRTC streaming](./images/webrtc-streaming.png)
+   ![WebRTC streaming](../_assets/webrtc-streaming.png)
 
 5. You can also stop any running pipeline by using the pipeline instance "id".
 

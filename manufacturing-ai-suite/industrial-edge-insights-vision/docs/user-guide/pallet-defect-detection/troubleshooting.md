@@ -2,7 +2,6 @@
 
 The following are options to help you resolve issues with the sample application.
 
----
 
 ## WebRTC Stream on web browser
 
@@ -12,7 +11,6 @@ The firewall may prevent you from viewing the video stream on web browser. Pleas
 sudo ufw disable
 ```
 
----
 
 ## Error Logs
 
@@ -22,7 +20,6 @@ View the container logs using this command.
 docker logs -f <CONTAINER_NAME>
 ```
 
----
 
 ## Resolving Time Sync Issues in Prometheus
 
@@ -73,13 +70,9 @@ You can following the below steps to synchronize system time using NTP.
 
 This should resolve the time discrepancy in Prometheus.
 
----
-
 ## Axis RTSP camera freezes or pipeline stops
 
 Restart the DL Streamer pipeline server container with the pipeline that has this rtsp source.
-
----
 
 ## Deploying with Intel GPU K8S Extension
 
@@ -92,8 +85,6 @@ gpu:
    count: 1
 ```
 
----
-
 ## Deploying without Intel GPU K8S Extension
 
 If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) without Intel GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
@@ -102,13 +93,9 @@ If you're deploying a GPU based pipeline (example: with VA-API elements like `va
 privileged_access_required: true
 ```
 
----
-
 ## Inferencing on NPU
 
-To perform inferencing on an NPU device (for platforms with NPU accelerators such as Ultra Core processors), ensure you have completed the required pre-requisites. Refer to the instructions [here](https://dlstreamer.github.io/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#prerequisite-2-install-intel-npu-drivers) to install Intel NPU drivers.
-
----
+To perform inferencing on an NPU device (for platforms with NPU accelerators such as Ultra Core processors), ensure you have completed the required pre-requisites. Refer to the instructions [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#prerequisite-2-install-intel-npu-drivers) to install Intel NPU drivers.
 
 ## Unable to parse JSON payload due to missing `jq` package
 
@@ -121,8 +108,6 @@ Use the commands below to install it.
 sudo apt update
 sudo apt install jq
 ```
-
----
 
 ## Unable to run GPU inference on some Arrow Lake machines with `resource allocation failed` errors
 

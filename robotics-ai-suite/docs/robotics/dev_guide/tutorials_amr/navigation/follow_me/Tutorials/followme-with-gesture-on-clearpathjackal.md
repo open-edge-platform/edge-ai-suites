@@ -40,7 +40,7 @@ one of the below stopping conditions are triggered:
 
 ### Prerequisites
 
-Complete the [get started guide](../../../../../gsg_robot/index.rst)
+Complete the [get started guide](../../../../../gsg_robot/index.md)
 before continuing.
 
 ### Install the Deb package
