@@ -1,0 +1,62 @@
+## Setup
+
+### Download for Windows
+
+Server at `https://dl.min.io/server/minio/release/windows-amd64/minio.exe`
+
+Client at `https://dl.minio.io/client/mc/release/windows-amd64/mc.exe`
+
+### Create a directory for minio data
+
+```cmd
+mkdir C:\minio\data
+```
+
+### Start minio service
+
+```cmd
+minio.exe server C:\minio\data --console-address ":9001"
+```
+
+By default:
+
+- RootUser: minioadmin
+
+- RootPass: minioadmin
+
+To change the root user name and password, set the environment variables before starting the service.
+
+```cmd
+set MINIO_ROOT_USER=minioadmin
+set MINIO_ROOT_PASSWORD=minioadmin123
+```
+
+### File management via MinIO Client (mc)
+
+Add your local MinIO as an alias
+
+```cmd
+mc.exe alias set local http://127.0.0.1:9000 minioadmin minioadmin
+```
+
+Create a bucket
+
+```
+mc.exe mb local/content-search
+```
+
+Upload files into the bucket
+
+```
+mc.exe cp C:\path\to\file.pdf local/content-search/
+
+mc.exe cp --recursive C:\path\to\docs local/content-search/docs
+```
+
+List the bucket files
+```
+mc.exe ls local/content-search
+```
+
+
+

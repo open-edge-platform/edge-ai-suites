@@ -13,3 +13,10 @@ chunks/
 
 #Ignore logs
 monitoring/executionlogs/
+
+*.exe
+*.whl
+
+*venv*
+
+chroma-data/
