@@ -11,6 +11,8 @@ Main responsibilities:
 - Consume 3D pose frames via gRPC.
 - Poll the AI‑ECG backend over HTTP.
 - Broadcast all events to UI clients over a single SSE endpoint.
+- Expose start/stop wrapper APIs that control backend streaming
+  (currently dds‑bridge) so the UI only talks to this service.
 - Proxy platform and utilization metrics from the metrics‑service.
 
 ---
@@ -55,10 +57,75 @@ Environment variables:
   - Label used in outgoing events for the MDPnP vital workload.
 - `METRICS_SERVICE_URL` (default: `http://localhost:9000`)
   - Base URL of the metrics‑service that aggregator proxies to.
+- `DDS_BRIDGE_CONTROL_URL` (default: `http://localhost:8082`)
+  - Base URL of the DDS‑Bridge control server that exposes `/start`
+    and `/stop` to toggle forwarding of DDS vitals into this service.
 
 ---
 
 ## HTTP / SSE API
+
+### `POST /start` — start backend streaming (wrapper)
+
+Turns on streaming from selected backend workloads. Currently the only
+supported target is `dds-bridge`, which controls whether the DDS‑Bridge
+forwards vitals from the MDPnP DDS domain into this aggregator over gRPC.
+
+- Method: `POST`
+- URL: `/start`
+- Query parameters:
+  - `target` (optional, default: `dds-bridge`)
+    - Accepted values: `dds-bridge` or `all` (reserved for future
+      multiple workloads).
+- Behavior:
+  - Sends `POST {DDS_BRIDGE_CONTROL_URL}/start` when `target` includes
+    `dds-bridge`.
+- Response:
+
+```json
+{
+  "status": "ok",
+  "results": {
+    "dds-bridge": "200: {\"status\":\"started\"}"
+  }
+}
+```
+
+Typical UI usage:
+
+- Call this endpoint when the user presses a **Start** button to begin
+  receiving vitals from MDPnP via DDS‑Bridge.
+
+### `POST /stop` — stop backend streaming (wrapper)
+
+Turns off streaming from selected backend workloads. For `dds-bridge`,
+this disables forwarding of new vitals into the aggregator; DDS itself
+may continue to run, but no new data is pushed over gRPC.
+
+- Method: `POST`
+- URL: `/stop`
+- Query parameters:
+  - `target` (optional, default: `dds-bridge`)
+    - Accepted values: `dds-bridge` or `all` (reserved for future
+      multiple workloads).
+- Behavior:
+  - Sends `POST {DDS_BRIDGE_CONTROL_URL}/stop` when `target` includes
+    `dds-bridge`.
+- Response:
+
+```json
+{
+  "status": "ok",
+  "results": {
+    "dds-bridge": "200: {\"status\":\"stopped\"}"
+  }
+}
+```
+
+Typical UI usage:
+
+- Call this endpoint when the user presses a **Stop** button to stop
+  receiving vitals from MDPnP via DDS‑Bridge.
 
 ### `GET /events` — Server‑Sent Events stream
 
