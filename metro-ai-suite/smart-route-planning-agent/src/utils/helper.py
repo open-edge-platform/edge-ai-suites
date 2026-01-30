@@ -9,7 +9,7 @@ from schema import GeoCoordinates, RouteCondition
 logger = get_logger(__name__)
 
 
-def get_all_available_route_files() -> list[Path]:
+def get_all_available_route_files() -> list[str]:
     """
     Get a list of all available GPX route files in the GPX_DIR.
 

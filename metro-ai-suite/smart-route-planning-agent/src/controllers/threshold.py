@@ -10,7 +10,7 @@ class ThresholdController:
     Controller for updating traffic threshold values via the Scene Intelligence API.
     """
 
-    TRAFFIC_DENSITY_THRESHOLD: int = 5
+    TRAFFIC_DENSITY_THRESHOLD: int = 10
 
     def __init__(self):
         # self.api_base = SCENE_INTELLIGENCE_API_BASE

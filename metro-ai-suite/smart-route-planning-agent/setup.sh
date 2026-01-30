@@ -63,7 +63,6 @@ fi
 
 
 
-# Export all environment variables
 # Base configuration
 export HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7}')  # Fetch the host IP
 # Fallback to localhost if HOST_IP is empty
