@@ -173,7 +173,7 @@ def get_summary_metrics(session_id: Optional[str] = Header(None, alias="session_
     except Exception as e:
         logger.error(f"Error reading performance metrics: {e}")
         return JSONResponse(
-            content={"error": str(e)},
+            content={"error": "Error reading performance metrics"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -208,7 +208,7 @@ def get_platform_info():
         return JSONResponse(content=info, status_code=200)
     except Exception as e:
         logger.error(f"Error fetching platform info: {e}")
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        return JSONResponse(content={"error": "Error fetching platform info"}, status_code=500)
 
 @router.post("/stop-monitoring")
 def stop_monitoring_endpoint():

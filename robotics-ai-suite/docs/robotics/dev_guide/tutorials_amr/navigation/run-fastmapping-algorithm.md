@@ -10,7 +10,7 @@ The source code of this component can be found here: [FastMapping](https://githu
 
 ## Prerequisites
 
-Complete the [get started guide](../../../gsg_robot/index.rst) before continuing.
+Complete the [get started guide](../../../gsg_robot/index.md) before continuing.
 
 ## Run the FastMapping Standalone Application
 

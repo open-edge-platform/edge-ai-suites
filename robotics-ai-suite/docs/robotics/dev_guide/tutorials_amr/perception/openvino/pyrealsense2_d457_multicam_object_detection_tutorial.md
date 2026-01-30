@@ -39,7 +39,7 @@ The source code of this component can be found here:
 
 ## Prerequisites
 
-Complete the [get started guide](../../../../gsg_robot/index.rst) before continuing.
+Complete the [get started guide](../../../../gsg_robot/index.md) before continuing.
 
 ## Axiomtek Robox500 ROS 2 AMR Controller Setup
 

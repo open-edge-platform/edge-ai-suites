@@ -5,6 +5,7 @@ The **Smart Classroom** project is a modular, extensible framework designed to p
 The main features are as follows:
 
 •	Audio transcription with ASR models (e.g., Whisper, Paraformer)\
+•	Speaker diarization is supported using Pyannote Audio models.
 •	Summarization using powerful LLMs (e.g., Qwen, LLaMA)\
 •	MindMap Generation using Mermaid.js for visual diagram rendering of the summary\
 •	Plug-and-play architecture for integrating new ASR and LLM models\
