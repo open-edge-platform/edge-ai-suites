@@ -39,7 +39,7 @@ Before running the application, you need to set several environment variables:
 
     ```bash
     export REGISTRY_URL=intel
-    export TAG=rc2026.1.3
+    export TAG=1.3.4-rc1
     ```
 
 2. **Set required credentials for some services**:
