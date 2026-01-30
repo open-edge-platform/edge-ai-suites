@@ -137,7 +137,7 @@ async def start_workloads(target: str = Query("dds-bridge", description="Which w
         except Exception as exc:
             return f"error: {exc}"
 
-    if "all" in targets or "dds-bridge" in targets:
+    if "all" in targets or "mdpnp" in targets:
         results["dds-bridge"] = _call(f"{DDS_BRIDGE_CONTROL_URL}/start")
 
     # AI-ECG 
@@ -169,7 +169,7 @@ async def stop_workloads(target: str = Query("dds-bridge", description="Which wo
         except Exception as exc:
             return f"error: {exc}"
 
-    if "all" in targets or "dds-bridge" in targets:
+    if "all" in targets or "mdpnp" in targets:
         results["dds-bridge"] = _call(f"{DDS_BRIDGE_CONTROL_URL}/stop")
 
     # AI-ECG 
