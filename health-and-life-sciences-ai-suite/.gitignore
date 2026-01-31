@@ -26,12 +26,7 @@ build/
 # services/*/proto/*_pb2_grpc.py
 # services/*/proto/*_pb2.pyi
 
-# Large data folders and files (auto-downloaded at runtime)
-metrics/
-models/
-videos/
-
-# File-level ignores (in case folders are partially checked in)
+# Large data files (auto-downloaded at runtime)
 models/*.bin
 models/*.onnx
 models/*.xml
@@ -67,4 +62,4 @@ scripts/test_*.py
 
 # Temporary files
 fix_*.py
-*.tmp
+*.tmp7y68 wseşw

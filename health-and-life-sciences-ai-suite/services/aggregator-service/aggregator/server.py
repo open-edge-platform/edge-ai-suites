@@ -258,7 +258,7 @@ async def start_workloads(target: str = Query("dds-bridge", description="Which w
 async def _stop_workloads_internal(targets: set[str]) -> dict[str, str]:
     """Shared implementation for stopping workloads (used by /stop and auto-stop)."""
     results: dict[str, str] = {}
-
+    
     def _call(url: str) -> str:
         try:
             resp = requests.post(url, timeout=3)
@@ -280,7 +280,6 @@ async def _stop_workloads_internal(targets: set[str]) -> dict[str, str]:
     # MDPNP / DDS-Bridge
     if "all" in targets or "mdpnp" in targets:
         results["dds-bridge"] = _call(f"{DDS_BRIDGE_CONTROL_URL}/stop")
-
     # AI-ECG
     if "all" in targets or "ai-ecg" in targets:
         task = getattr(app.state, "ai_ecg_task", None)
