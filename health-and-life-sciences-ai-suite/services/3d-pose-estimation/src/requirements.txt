@@ -1,9 +1,14 @@
-openvino>=2023.2
-opencv-python
-numpy
-scipy
-tqdm
-matplotlib
+# Core dependencies
+openvino>=2024.4.0
+opencv-python>=4.8.0
+numpy<2.0.0
+scipy>=1.10.0
+
+# Network communication - gRPC (matching aggregator)
 grpcio>=1.60.0
 grpcio-tools>=1.60.0
 protobuf>=4.25.0
+
+# Control server - FastAPI
+fastapi>=0.104.0
+uvicorn>=0.24.0
