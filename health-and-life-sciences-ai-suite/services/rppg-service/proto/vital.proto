@@ -2,21 +2,37 @@ syntax = "proto3";
 
 package vital;
 
-// Service definition for streaming vital signs
-service VitalService {
-  // Services call this to SEND vital data TO aggregator
-  rpc StreamVitals(Vital) returns (Empty);
-}
+// Import Google's Empty message
+import "google/protobuf/empty.proto";
 
-// Message format for vital signs data
+// Unified Vital message supporting both waveform and numeric data
 message Vital {
-  string device_id = 1;      // Service identifier (e.g., "rppg-service")
-  string metric = 2;         // Metric name (e.g., "HR", "RR", "PULSE_WAVE")
-  double value = 3;          // Numeric value (for metrics)
-  string unit = 4;           // Unit of measurement (e.g., "bpm", "brpm")
-  int64 timestamp = 5;       // Unix timestamp in milliseconds
-  repeated double samples = 6; // Array of samples (for waveforms)
+  string device_id = 1;
+  string metric    = 2;
+  double value     = 3;
+  string unit      = 4;
+  int64 timestamp  = 5;
+  
+  // Optional waveform data (for ECG, RPPG pulse/resp signals)
+  // If empty, this is a numeric-only vital
+  repeated float waveform = 6;
+  int32 waveform_frequency_hz = 7;
+  
+  // Additional metadata (optional)
+  map<string, string> metadata = 8;
 }
 
-// Empty response
-message Empty {}
+// Response message
+message VitalResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Service definition
+service VitalService {
+  // Bidirectional streaming: services send vitals TO aggregator
+  rpc StreamVitals(stream Vital) returns (google.protobuf.Empty);
+  
+  // Alternative: request-response for single vitals
+  rpc PublishVital(Vital) returns (VitalResponse);
+}
