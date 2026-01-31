@@ -11,6 +11,8 @@ services:
     container_name: aggregator-service
     environment:
       - WORKLOAD_TYPE=mdpnp
+      - GRPC_PORT=50051
+      - HTTP_PORT=8000
     network_mode: "host"
 
   mdpnp-service:
@@ -43,13 +45,20 @@ services:
     container_name: ai-ecg
     network_mode: "host"
 
-  # 3dpose-service:
-  #     build:
-  #       context: ./services/3d-pose-estimation
-  #       dockerfile: src/Dockerfile
-  #     image: intel/hl-ai-3dpose:1.0.0
-  #     container_name: 3dpose-service
-  #     network_mode: "host"
+  3dpose-service:
+      build:
+        context: ./services/3d-pose-estimation
+        dockerfile: src/Dockerfile
+      image: intel/hl-ai-3dpose:1.0.0
+      container_name: 3dpose-service
+      network_mode: "host"
+      environment:
+        - VIDEO_FILE=/app/videos/face-demographics-walking.mp4
+        - DEVICE=CPU
+        - AGGREGATOR_ADDRESS=localhost:50051
+        - CONTROL_PORT=8083
+      depends_on:
+        - aggregator-service
 
   metrics-service:
     build:

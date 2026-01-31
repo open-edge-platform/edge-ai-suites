@@ -28,12 +28,13 @@ message PoseFrame {
 
 message Ack {
   bool ok = 1;
+  string message = 2;
 }
 
-/**
- * Streaming-friendly service
- * matches DDS-bridge style
- */
 service PoseService {
+  // Unary call - send one frame at a time (more reliable)
   rpc PublishPose (PoseFrame) returns (Ack);
+  
+  // Streaming call - send multiple frames (kept for future use)
+  rpc StreamPoseData (stream PoseFrame) returns (Ack);
 }

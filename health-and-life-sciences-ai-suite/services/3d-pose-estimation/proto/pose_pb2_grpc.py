@@ -26,10 +26,7 @@ if _version_not_supported:
 
 
 class PoseServiceStub(object):
-    """*
-    Streaming-friendly service
-    matches DDS-bridge style
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -42,16 +39,26 @@ class PoseServiceStub(object):
                 request_serializer=pose__pb2.PoseFrame.SerializeToString,
                 response_deserializer=pose__pb2.Ack.FromString,
                 _registered_method=True)
+        self.StreamPoseData = channel.stream_unary(
+                '/pose.PoseService/StreamPoseData',
+                request_serializer=pose__pb2.PoseFrame.SerializeToString,
+                response_deserializer=pose__pb2.Ack.FromString,
+                _registered_method=True)
 
 
 class PoseServiceServicer(object):
-    """*
-    Streaming-friendly service
-    matches DDS-bridge style
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def PublishPose(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Unary call - send one frame at a time (more reliable)
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def StreamPoseData(self, request_iterator, context):
+        """Streaming call - send multiple frames (kept for future use)
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -64,6 +71,11 @@ def add_PoseServiceServicer_to_server(servicer, server):
                     request_deserializer=pose__pb2.PoseFrame.FromString,
                     response_serializer=pose__pb2.Ack.SerializeToString,
             ),
+            'StreamPoseData': grpc.stream_unary_rpc_method_handler(
+                    servicer.StreamPoseData,
+                    request_deserializer=pose__pb2.PoseFrame.FromString,
+                    response_serializer=pose__pb2.Ack.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'pose.PoseService', rpc_method_handlers)
@@ -73,10 +85,7 @@ def add_PoseServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class PoseService(object):
-    """*
-    Streaming-friendly service
-    matches DDS-bridge style
-    """
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def PublishPose(request,
@@ -93,6 +102,33 @@ class PoseService(object):
             request,
             target,
             '/pose.PoseService/PublishPose',
+            pose__pb2.PoseFrame.SerializeToString,
+            pose__pb2.Ack.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def StreamPoseData(request_iterator,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.stream_unary(
+            request_iterator,
+            target,
+            '/pose.PoseService/StreamPoseData',
             pose__pb2.PoseFrame.SerializeToString,
             pose__pb2.Ack.FromString,
             options,
