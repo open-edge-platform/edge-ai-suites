@@ -154,8 +154,8 @@ edge application deployment process.
 :hidden:
 
 get-started/system-requirements.md
-how-to-deploy-with-helm.md
-how-to-deploy-with-edge-orchestrator.md
+get-started/how-to-deploy-with-helm.md
+get-started/how-to-deploy-with-edge-orchestrator.md
 
 :::
 hide_directive-->
