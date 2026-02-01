@@ -6,16 +6,16 @@ This section provides a detailed walkthrough of building a complete object track
 
 The system follows a modular architecture:
 
-*   **Video Input:** Cameras or video streams provide the raw data.
-*   **Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server):** Processes video streams locally using AI models to detect and track objects.
-*   **Node-RED:** Consumes object tracking data from the DL Streamer Pipeline Server, performs further analysis (like calculating distances), and publishes results.
-*   **Grafana:** Visualizes the processed data from Node-RED (or a database fed by Node-RED), providing real-time dashboards.
+* **Video Input:** Cameras or video streams provide the raw data.
+* **Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server):** Processes video streams locally using AI models to detect and track objects.
+* **Node-RED:** Consumes object tracking data from the DL Streamer Pipeline Server, performs further analysis (like calculating distances), and publishes results.
+* **Grafana:** Visualizes the processed data from Node-RED (or a database fed by Node-RED), providing real-time dashboards.
 
 ## DL Streamer Pipeline Server
 
 > For detailed documentation on DL Streamer Pipeline Server, visit the [DL Streamer Pipeline Server Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 
-![Pipeline Architecture](_images/pipeline.png)
+![Pipeline Architecture](./_assets/pipeline.png)
 
 ### Overview of DL Streamer Pipeline Server
 
@@ -91,9 +91,9 @@ To share the results of the video analysis with other parts of your system, the 
 
 Node-RED is a flow-based programming tool that lets you visually wire together devices, APIs, and online services. This guide demonstrates how Node-RED can be used to process video analytics data from the DL Streamer Pipeline Server for tasks such as object tracking and smart parking. Using a drag-and-drop interface, you can build complex workflows with minimal coding, making it ideal for no-code/low-code environments.
 
-![Node-RED Flow 1](_images/node-red1.png)
+![Node-RED Flow 1](./_assets/node-red1.png)
 
-![Node-RED Flow 2](_images/node-red2.png)
+![Node-RED Flow 2](./_assets/node-red2.png)
 
 ### Overview of the Node-RED Flow
 
@@ -140,7 +140,8 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 
 #### Euclidean and IoR Nodes (Loitering Detection)
 
-*   **Purpose:** To perform advanced spatial analysis, crucial for determining object positions. We'll focus on a simplified Euclidean distance approach suitable for a low-code environment.
+*   **Purpose:** To perform advanced spatial analysis, crucial for determining object positions.
+We will focus on a simplified Euclidean distance approach suitable for a low-code environment.
 
 *   **Key Processes:**
 
@@ -160,7 +161,8 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
     ```
     B. **Bounding Box Calculation**
 
-    *   **Extracting Coordinates:** Retrieve bounding box coordinates to understand the object's location. Assume the bounding box is represented by x1, y1, x2, y2 in the `msg.payload`. We'll use the center point of the bounding box for distance calculations:
+    *   **Extracting Coordinates:** Retrieve bounding box coordinates to understand the object's location. Assume the bounding box is represented by x1, y1, x2, y2 in the `msg.payload`.
+    We will use the center point of the bounding box for distance calculations:
 
     ```javascript
     let x_center = (msg.payload.x1 + msg.payload.x2) / 2;
@@ -169,29 +171,27 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
     msg.object_position = { x: x_center, y: y_center };
     ```
 
-    Imagine the "smart box" for smart parking again. We said it needs to calculate the distance an object has moved. This is where a little bit of code comes in, but don't worry, it's not scary!
-
     **Calculating Distance**
 
     ```javascript
     let distance = Math.sqrt(Math.pow(msg.object_position.x - initialPosition.x, 2) + Math.pow(msg.object_position.y - initialPosition.y, 2));
     ```
 
-    *   `let distance = ...`: This line creates a "variable" called `distance`. A variable is just a named storage location, like labeling a box to put something in. The `distance` variable will store the calculated distance.
+    *   `let distance = ...`: This line creates a "variable" called `distance`. The `distance` variable will store the calculated distance.
 
-    *   `msg.object_position.x`: Remember, `msg` is the message containing the object's information. `msg.object_position.x` means "get the X coordinate from the object's position information". Imagine `msg.object_position` being like a form, and `x` being one of the fields on that form.
+    *   `msg.object_position.x`: This means "get the X coordinate from the object's position information".
 
     *   `initialPosition.x`: This is the X coordinate of the object's starting position, which the smart box remembered earlier.
 
     *   `msg.object_position.x - initialPosition.x`: This subtracts the starting X coordinate from the current X coordinate. It tells us how far the object has moved horizontally.
 
-    *   `Math.pow(..., 2)`: This part squares the result of the subtraction. "Squaring" a number just means multiplying it by itself (e.g., 3 squared is 3 \* 3 = 9). We do this to handle positive and negative movements the same way.
+    *   `Math.pow(..., 2)`: This part squares the result of the subtraction. We do this to handle positive and negative movements the same way.
 
     *   `+`: This adds the squared horizontal movement to the squared vertical movement (which is calculated in the same way using `msg.object_position.y - initialPosition.y`).
 
-    *   `Math.sqrt(...)`: This is short for "square root". It "undoes" the squaring we did earlier. The square root of a number is the value that, when multiplied by itself, equals the original number (e.g., the square root of 9 is 3).
+    *   `Math.sqrt(...)`: This is short for "square root". It "undoes" the squaring we did earlier.
 
-    Putting it all together: The entire line calculates the straight-line distance between the object's current position and its starting position. This formula is called the "Euclidean distance," but you don't need to remember that! Just think of it as a standard way to calculate distance on a map.
+    Putting it all together: The entire line calculates the straight-line distance between the object's current position and its starting position, i.e. the Euclidean distance.
 
     **Checking the Time Elapsed**
 
@@ -208,7 +208,7 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 
     *   `if (timeElapsed >= loiteringThresholdTime) { ... }`: This is a conditional statement. It checks if `timeElapsed` is greater than or equal to the `loiteringThresholdTime` that we configured.
 
-    *   `msg.loitering = true;`: If the time elapsed is long enough, this line sets the `loitering` flag to `true`. This tells the rest of the system that the object is loitering!
+    *   `msg.loitering = true;`: If the time elapsed is long enough, this line sets the `loitering` flag to `true`. This tells the rest of the system that the object is loitering.
 
 *   **Outcome:** Enhanced object data that includes spatial metrics and a `msg.loitering` flag.
 
@@ -251,10 +251,10 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 *   **Purpose:** To publish the final processed data, such as loitering status updates, back to an MQTT topic. This allows other systems (like dashboards) to subscribe and react to the data.
 *   **Configuration Details:**
     *   `Server Address: 0.0.0.0:1883`
-    *   `Topic: For example, loiter_status_1`
+    *   `Topic: loiter_status_1` (as an example)
     *   `QoS: 2`
-    *   `Retain Flag: Enabled, so that the last message is stored for new subscribers.`
-*   **Usage:** After all processing and formatting are complete, this node publishes the output data, ensuring that downstream services always receive up-to-date information on object status and loitering events.
+    *   `Retain Flag: Enabled` (so that the last message is stored for new subscribers)
+*   **Usage:** After all processing and formatting is complete, this node publishes the output data, ensuring that downstream services always receive up-to-date information on object status and loitering events.
 
 ### Node-RED Workflow
 
@@ -267,13 +267,16 @@ Node-RED is a flow-based programming tool that lets you visually wire together d
 
 ## Grafana Visualization
 
-> For detailed Grafana documentation, visit the [Official Grafana Documentation](https://grafana.com/docs/)
+> **Note:** For detailed Grafana documentation, visit the [Official Grafana Documentation](https://grafana.com/docs/)
 
-![Grafana Dashboard](_images/grafana-smart-parking.jpg)
+![Grafana Dashboard](./_assets/grafana-smart-parking.jpg)
 
 ### Overview of Grafana
 
-Grafana is a powerful, open-source visualization tool that helps you create dynamic dashboards for monitoring real-time data. With Grafana, you can easily visualize the outputs from your the DL Streamer Pipeline Server and Node-RED systems without deep coding skills. Here's how you can leverage Grafana in your analytics workflow.
+Grafana is a powerful, open-source visualization tool that helps you create dynamic dashboards
+for monitoring real-time data. With Grafana, you can easily visualize the outputs from your
+the DL Streamer Pipeline Server and Node-RED systems without deep coding skills. Here is how
+you can leverage Grafana in your analytics workflow.
 
 ### Key Grafana Components
 
@@ -317,21 +320,26 @@ Grafana is a powerful, open-source visualization tool that helps you create dyna
 
 ## End-to-End Integration
 
-![Integration Diagram](_images/integration.png)
+![Integration Diagram](./_assets/integration.png)
 
 The system operates as follows:
 
-1.  **Video Input:** A camera captures video and sends the stream to the DL Streamer Pipeline Server.
-2.  **DL Streamer Pipeline Server Processing:** The DL Streamer Pipeline Server processes the video, detects and tracks objects using its AI models. It publishes metadata about the detected objects (ID, bounding box coordinates, object type, timestamps) to MQTT.
-3.  **MQTT Bridging (DL Streamer Pipeline Server Configuration):** The DL Streamer Pipeline Server is configured to relay the MQTT messages to an MQTT broker. This broker acts as a central hub for the data.
-4.  **Node-RED Processing:** Node-RED subscribes to the relevant MQTT topics. It receives the object metadata, filters the data, calculates the Euclidean distance to determine loitering, and adds the loitering flag to the data.
-5.  **Grafana Visualization:** Grafana directly consumes MQTT topics through its MQTT datasource to create dashboards showing real-time object counts and events.
+1. **Video Input:** A camera captures video and sends the stream to the DL Streamer Pipeline Server.
+2. **DL Streamer Pipeline Server Processing:** The DL Streamer Pipeline Server processes the video, detects and tracks objects using its AI models. It publishes metadata about the detected objects (ID, bounding box coordinates, object type, timestamps) to MQTT.
+3. **MQTT Bridging (DL Streamer Pipeline Server Configuration):** The DL Streamer Pipeline Server is configured to relay the MQTT messages to an MQTT broker. This broker acts as a central hub for the data.
+4. **Node-RED Processing:** Node-RED subscribes to the relevant MQTT topics. It receives the object metadata, filters the data, calculates the Euclidean distance to determine loitering, and adds the loitering flag to the data.
+5. **Grafana Visualization:** Grafana directly consumes MQTT topics through its MQTT datasource to create dashboards showing real-time object counts and events.
 
 **Data at Each Step:**
 
-*   **DL Streamer Pipeline Server Output (MQTT):** JSON payload containing an array of detected objects. Each object has properties like `id`, `type`, `confidence`, `x1`, `y1`, `x2`, `y2`, and `timestamp`.
-*   **Node-RED Processed Data:** JSON payload with the same object properties as above, plus the calculated `object detection` flag and any other derived metrics.
+* **DL Streamer Pipeline Server Output (MQTT):** JSON payload containing an array of detected objects. Each object has properties like `id`, `type`, `confidence`, `x1`, `y1`, `x2`, `y2`, and `timestamp`.
+* **Node-RED Processed Data:** JSON payload with the same object properties as above, plus the calculated `object detection` flag and any other derived metrics.
 
 ## Conclusion
 
-This guide has demonstrated a complete object tracking and smart parking system using the DL Streamer Pipeline Server, Node-RED, and Grafana. The system provides a balance of edge processing, flexible data manipulation, and powerful visualization. The low-code nature of Node-RED and the user-friendly interface of Grafana make this solution accessible to users without extensive programming knowledge. This allows for quick deployment, easy customization for specific use cases, and scalability to handle multiple cameras and locations.
+This guide has demonstrated a complete object tracking and smart parking system using the DL
+Streamer Pipeline Server, Node-RED, and Grafana. The system provides a balance of edge
+processing, flexible data manipulation, and powerful visualization. The low-code nature of
+Node-RED and the user-friendly interface of Grafana make this solution accessible to users
+without extensive programming knowledge. This allows for quick deployment, easy customization
+for specific use cases, and scalability to handle multiple cameras and locations.
