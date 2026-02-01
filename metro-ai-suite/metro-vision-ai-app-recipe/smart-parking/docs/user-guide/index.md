@@ -51,7 +51,6 @@ It integrates various components such as MQTT, Node-RED, and Grafana to provide 
 :::{toctree}
 :hidden:
 
-Overview
 get-started
 how-to-customize-application
 how-to-generate-offline-package
