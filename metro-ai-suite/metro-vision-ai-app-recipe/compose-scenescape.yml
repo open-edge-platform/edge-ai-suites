@@ -399,6 +399,10 @@ secrets:
     file: ./${SAMPLE_APP}/src/secrets/browser.auth
   controller.auth:
     file: ./${SAMPLE_APP}/src/secrets/controller.auth
+  vdms-server-cert:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-vdms-s.crt
+  vdms-server-key:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-vdms-s.key
 
 configs:
   mosquitto-secure:
