@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Generated gRPC code (regenerated at build time)
+src/vital_pb2.py
+src/vital_pb2_grpc.py
+
+# Large data files (auto-downloaded at runtime)
+models/*.hdf5
+models/*.h5
+videos/*.mp4
+videos/*.avi
+
+# Keep directory structure
+!models/.gitkeep
+!videos/.gitkeep
+!cache/.gitkeep
+!logs/.gitkeep
+
+# Runtime files
+logs/*.log
+cache/*
+
+# Testing
+.pytest_cache/
+.coverage

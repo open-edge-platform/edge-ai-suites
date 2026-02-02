@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\npose.proto\x12\x04pose\"\x1f\n\x07Joint2D\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\"*\n\x07Joint3D\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\"w\n\nPersonPose\x12\x11\n\tperson_id\x18\x01 \x01(\x05\x12 \n\tjoints_2d\x18\x02 \x03(\x0b\x32\r.pose.Joint2D\x12 \n\tjoints_3d\x18\x03 \x03(\x0b\x32\r.pose.Joint3D\x12\x12\n\nconfidence\x18\x04 \x03(\x02\"V\n\tPoseFrame\x12\x14\n\x0ctimestamp_ms\x18\x01 \x01(\x03\x12\x11\n\tsource_id\x18\x02 \x01(\t\x12 \n\x06people\x18\x03 \x03(\x0b\x32\x10.pose.PersonPose\"\x11\n\x03\x41\x63k\x12\n\n\x02ok\x18\x01 \x01(\x08\x32\x38\n\x0bPoseService\x12)\n\x0bPublishPose\x12\x0f.pose.PoseFrame\x1a\t.pose.Ackb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\npose.proto\x12\x04pose\"\x1f\n\x07Joint2D\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\"*\n\x07Joint3D\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\"w\n\nPersonPose\x12\x11\n\tperson_id\x18\x01 \x01(\x05\x12 \n\tjoints_2d\x18\x02 \x03(\x0b\x32\r.pose.Joint2D\x12 \n\tjoints_3d\x18\x03 \x03(\x0b\x32\r.pose.Joint3D\x12\x12\n\nconfidence\x18\x04 \x03(\x02\"V\n\tPoseFrame\x12\x14\n\x0ctimestamp_ms\x18\x01 \x01(\x03\x12\x11\n\tsource_id\x18\x02 \x01(\t\x12 \n\x06people\x18\x03 \x03(\x0b\x32\x10.pose.PersonPose\"\"\n\x03\x41\x63k\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2h\n\x0bPoseService\x12)\n\x0bPublishPose\x12\x0f.pose.PoseFrame\x1a\t.pose.Ack\x12.\n\x0eStreamPoseData\x12\x0f.pose.PoseFrame\x1a\t.pose.Ack(\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -40,7 +40,7 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_POSEFRAME']._serialized_start=218
   _globals['_POSEFRAME']._serialized_end=304
   _globals['_ACK']._serialized_start=306
-  _globals['_ACK']._serialized_end=323
-  _globals['_POSESERVICE']._serialized_start=325
-  _globals['_POSESERVICE']._serialized_end=381
+  _globals['_ACK']._serialized_end=340
+  _globals['_POSESERVICE']._serialized_start=342
+  _globals['_POSESERVICE']._serialized_end=446
 # @@protoc_insertion_point(module_scope)

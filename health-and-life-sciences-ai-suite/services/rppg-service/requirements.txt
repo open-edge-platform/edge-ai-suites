@@ -1,0 +1,20 @@
+# Core ML/CV Dependencies
+tensorflow>=2.16.0
+opencv-python-headless==4.9.0.80
+numpy>=1.23.0,<2.0           # ← Must be <2.0 for compatibility
+scipy>=1.11.0
+
+# TensorFlow.js (optional, fallback works)
+tensorflowjs>=4.10.0
+
+# gRPC Dependencies
+grpcio>=1.60.0
+grpcio-tools>=1.60.0
+protobuf>=4.25.0
+
+# Configuration & Utilities
+pyyaml>=6.0.0
+colorlog>=6.8.0
+python-dateutil>=2.8.0
+requests>=2.31.0
+tqdm>=4.66.0
