@@ -186,4 +186,4 @@
 
 
 ## Troubleshooting
-- [Troubleshooting Guide](../../../docs/pallet-defect-detection/troubleshooting-guide.md)
+- [Troubleshooting Guide](../../../../industrial-edge-insights-vision/docs/user-guide/pallet-defect-detection/troubleshooting.md)

@@ -1,4 +1,4 @@
-#	System Requirements
+# System Requirements
 
 ## Hardware requirements
 
@@ -12,8 +12,8 @@ Platform
 
 | Software           | Version                |
 | ------------------ | ---------------------- |
-| Intel  OpenVINO    | 2025.3.0               |
-| Intel  oneAPI      | 2025.3.0               |
+| Intel OpenVINO     | 2025.3.0               |
+| Intel oneAPI       | 2025.3.0               |
 | NEO OpenCL         | 25.35.35096.9-0        |
 | cmake              | 3.22.1                 |
 | boost              | 1.83.0                 |
@@ -21,4 +21,4 @@ Platform
 | thrift             | 0.18.1                 |
 | gRPC               | 1.58.1                 |
 | zlib               | 1.3.1                  |
-| oneAPI Level  Zero | 1.22.4                 |
+| oneAPI Level Zero  | 1.22.4                 |

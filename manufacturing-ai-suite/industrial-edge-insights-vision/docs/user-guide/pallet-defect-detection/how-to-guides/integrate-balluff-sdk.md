@@ -4,13 +4,9 @@ This guide explains how to create a custom Docker image based on the Intel DL St
 
 Note: You may observe a watermark in the camera feed when testing with a non-Balluff camera, as it is the free version.
 
----
-
 ## Prerequisites
 
-- [System Requirements](system-requirements.md)
-
----
+- [System Requirements](../get-started/system-requirements.md)
 
 ## Cloning and building the docker image
 
@@ -22,8 +18,6 @@ Download the edge-ai-libraries source and go to `dlstreamer-pipeline-server` fol
 git clone https://github.com/open-edge-platform/edge-ai-libraries.git
 cd edge-ai-libraries/microservices/dlstreamer-pipeline-server
 ```
-
----
 
 ### Step 2: Create the Docker Image
 
@@ -68,8 +62,6 @@ ENV MVIMPACT_ACQUIRE_DIR="/opt/mvIMPACT_Acquire" \
 USER intelmicroserviceuser
 ```
 
----
-
 ### Step 3: Build the Docker Image
 
 Run the following command to build the image:
@@ -80,8 +72,6 @@ docker build -t intel/dlstreamer-pipeline-server:3.1.0-ubuntu24-gencamsrc-balluf
 
 This command builds your Docker image using the steps defined above.
 
----
-
 ### Step 4: Verify the Image
 
 After the build completes, update .env and start the container:
@@ -91,8 +81,6 @@ After the build completes, update .env and start the container:
 ```bash
 docker compose up -d
 ```
-
----
 
 ### Step 5: Run a test pipeline and dump the camera output into a file in the /tmp directory
 
@@ -105,14 +93,10 @@ $ gst-launch-1.0 gencamsrc serial=<balluff-camera-serial> pixel-format=bayerrggb
 
 Verify that the /tmp/gencam_balluff_output.avi has the captured content
 
----
-
 ## Deploying the Pallet Defect Detection (PDD) Application Using live camera
 
 This guide provides detailed, step-by-step instructions for setting up and deploying the **Pallet Defect Detection (PDD)** pipeline to use the **Balluff** or **Basler** camera connected over USB or GigE.
 It covers environment setup, configuration updates, and validation steps to ensure a successful deployment.
-
----
 
 ### Step 1: Set Up the Environment
 
@@ -122,8 +106,6 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision
 cp .env_pallet_defect_detection .env
 ```
 
----
-
 ### Step 2: Configure the .env File
 
 Update the `.env` file with the newly created image as below and modify any other required variables.
@@ -132,7 +114,6 @@ Update the `.env` file with the newly created image as below and modify any othe
 DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:3.1.0-ubuntu24-gencamsrc-balluff
 ```
 
----
 
 ### Step 3: Run the Setup Script
 
@@ -141,7 +122,6 @@ Execute the setup script to initialize project directories and configurations.
 ```bash
 ./setup.sh
 ```
----
 
 ### Step 4: Update the Pipeline Configuration
 
@@ -157,8 +137,6 @@ Update the pipeline in `./apps/pallet-defect-detection/configs/pipeline-server-c
 ```
 
 Replace <camera id> with balluff/balser camera id connected over the USB or GigE
-
----
 
 ### Step 5: Configure docker-compose.yml (Optional, if testing with a GigE network camera)
 
@@ -191,8 +169,6 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 127.0.0.1       model_registry
 ```
 
----
-
 ### Step 6: Launch the Containers
 
 Start all required services using Docker Compose:
@@ -200,8 +176,6 @@ Start all required services using Docker Compose:
 ```bash
 docker compose up -d
 ```
-
----
 
 ### Step 7: Modify the Payload File
 
@@ -230,8 +204,6 @@ Edit `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps
 ]
 ```
 
----
-
 ### Step 8: Start the Sample Pipeline
 
 Run the sample script to start the pipeline:
@@ -239,8 +211,6 @@ Run the sample script to start the pipeline:
 ```bash
 ./sample_start.sh -p pallet_defect_detection
 ```
-
----
 
 ### Step 9: Access the Web Interface
 
@@ -255,4 +225,13 @@ Replace `<HOST_IP>` with the IP address configured in your `.env` file.
 ## Troubleshooting
 
 - For initial configuration and advanced configuration of the Balluff camera, please use the company-provided visualization tool **ImpactAcquire**, which is part of the **Balluff SDK**.
-- Instructions to install the **Balluff SDK** on the host can be found in the [Balluff SDK Installation Guide](./how-to-install-balluff-sdk-on-host.md).
+- Instructions to install the **Balluff SDK** on the host can be found in the [Balluff SDK Installation Guide](./install-balluff-sdk-on-host.md).
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Install Balluff SDK <install-balluff-sdk-on-host>
+
+:::
+hide_directive-->

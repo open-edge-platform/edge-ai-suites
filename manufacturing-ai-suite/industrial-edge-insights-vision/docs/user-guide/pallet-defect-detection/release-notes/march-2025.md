@@ -15,8 +15,6 @@
 - Updated EVAM image to v2.4.0 and model-registry image to v1.0.3.
 - Updated documentation.
 
----
-
 ## v2.1.0
 
 ### Added in v2.1.0

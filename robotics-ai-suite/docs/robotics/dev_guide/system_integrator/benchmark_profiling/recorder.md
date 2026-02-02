@@ -9,7 +9,7 @@ store video topics using encode and decode.
 
 ## Prerequisites
 
-Complete the [get started guide](../../../gsg_robot/index.rst)
+Complete the [get started guide](../../../gsg_robot/index.md)
 before continuing.
 
 ## Installation

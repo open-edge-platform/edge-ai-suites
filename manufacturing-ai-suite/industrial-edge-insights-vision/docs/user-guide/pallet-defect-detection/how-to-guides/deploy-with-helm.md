@@ -1,8 +1,8 @@
-# Deploy using Helm charts
+# Deploy With Helm
 
 ## Prerequisites
 
-- [System Requirements](system-requirements.md)
+- [System Requirements](../get-started/system-requirements.md)
 - K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to tutorials online to setup kubernetes cluster on the web with host OS as ubuntu 22.04 and/or ubuntu 24.04.
 - For helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
@@ -243,7 +243,7 @@
 
 Applications can take advantage of S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
 
-1. Run all the steps mentioned in above [section](./how-to-deploy-using-helm-charts.md#setup-the-application) to setup the application.
+1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
 
 2. Install the helm chart.
 
@@ -339,7 +339,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 7. Go to MinIO console on `https://<HOST_IP>:30443/minio/` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
-   ![S3 minio image storage](./images/s3-minio-storage.png)
+   ![S3 minio image storage](../_assets/s3-minio-storage.png)
 
 8. Uninstall the helm chart.
 
@@ -349,7 +349,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 ## MLOps using Model Registry
 
-1. Run all the steps mentioned in above [section](./how-to-deploy-using-helm-charts.md#setup-the-application) to setup the application.
+1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
 
 2. Install the helm chart
 
@@ -464,8 +464,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 11. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
-    ![WebRTC streaming](./images/webrtc-streaming.png)
+    ![WebRTC streaming](../_assets/webrtc-streaming.png)
 
 ## Troubleshooting
 
-- [Troubleshooting Guide](troubleshooting-guide.md)
+- [Troubleshooting Guide](../troubleshooting.md)

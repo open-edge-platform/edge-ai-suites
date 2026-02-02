@@ -26,7 +26,6 @@ openvino==2025.3.0
 openvino-genai==2025.3.0.0
 pydantic==2.11.7
 pydub==0.25.1
-python-multipart==0.0.20
 pywin32==311
 PyYAML==6.0.2
 torch==2.8.0

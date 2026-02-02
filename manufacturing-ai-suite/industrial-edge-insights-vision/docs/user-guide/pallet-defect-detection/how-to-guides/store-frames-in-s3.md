@@ -1,4 +1,4 @@
-# Storing frames to S3 storage
+# Publish Frames To S3 Storage
 
 Applications can take advantage of S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
 
@@ -6,7 +6,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 > **Note** For the purpose of this demonstration, we'll be using MinIO as the S3 storage. The necessary compose configuration for MinIO microservice is already part of the docker compose file.
 
-1. Setup the application to use the docker based deployment following this [document](./get-started.md#setup-the-application).
+1. Setup the application to use the docker based deployment following this [document](../get-started.md#setup-the-application).
 
 2. Bring up the containers.
 
@@ -90,4 +90,4 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 6. Go to MinIO console on `https://<HOST_IP>/minio` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `.env` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
-   ![S3 minio image storage](./images/s3-minio-storage.png)
+   ![S3 minio image storage](../_assets/s3-minio-storage.png)
