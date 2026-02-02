@@ -7,9 +7,14 @@ from utils.storage_manager import StorageManager
 from utils.runtime_config_loader import RuntimeConfig
 from components.asr.openai.whisper import Whisper as OA_Whisper
 from components.asr.diarization.pyannote_diarizer import PyannoteDiarizer
-from components.asr.openvino.whisper import Whisper as OV_Whisper
 from components.asr.funasr.paraformer import Paraformer
 import logging
+
+if config.app.use_ov_genai:
+    from components.asr.openvino_genai.whisper import Whisper as OV_Whisper
+else:
+    from components.asr.openvino.whisper import Whisper as OV_Whisper
+    
 logger = logging.getLogger(__name__)
 
 ENABLE_DIARIZATION = config.models.asr.diarization

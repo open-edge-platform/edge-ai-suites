@@ -1,6 +1,7 @@
 app:
   name: Smart Classroom
   cleanup_on_exit: true
+  use_ov_genai: True # True or False, applicable for provider: openvino
 
 monitoring:
   logs_dir: ./monitoring/logs
