@@ -8,14 +8,16 @@ service:
   workload_type: "rppg"
 
 video:
-  input_path: "videos/sample.mp4"
+  # Use shared videos volume populated by assets-downloader
+  input_path: "/videos/rppg/sample.mp4"
   target_fps: 30
   loop: true
   auto_download: true
   sample_url: "https://github.com/opencv/opencv/raw/master/samples/data/vtest.avi"
 
 model:
-  path: "models/mtts_can.hdf5"
+  # Use shared models volume populated by assets-downloader
+  path: "/models/rppg/mtts_can.hdf5"
   batch_size: 10
   image_size: 36
 

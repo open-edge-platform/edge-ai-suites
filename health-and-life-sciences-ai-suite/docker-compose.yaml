@@ -3,25 +3,76 @@
 
 
 services:
+  assets-downloader:
+    build:
+      context: ./services/assets-downloader
+      dockerfile: Dockerfile
+      args:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        NO_PROXY: ${NO_PROXY}
+        http_proxy: ${HTTP_PROXY}
+        https_proxy: ${HTTPS_PROXY}
+        no_proxy: ${NO_PROXY}
+    image: intel/hl-ai-assets-downloader:1.0.0
+    container_name: assets-downloader
+    environment:
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
+      - http_proxy=${HTTP_PROXY}
+      - https_proxy=${HTTPS_PROXY}
+      - no_proxy=${NO_PROXY}
+    volumes:
+      - ./models:/models
+      - ./videos:/videos
+  
   aggregator-service:
     build:
       context: ./services/aggregator-service
       dockerfile: Dockerfile
+      args:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        NO_PROXY: ${NO_PROXY}
+        http_proxy: ${HTTP_PROXY}
+        https_proxy: ${HTTPS_PROXY}
+        no_proxy: ${NO_PROXY}
     image: intel/hl-ai-aggregator-service:1.0.0
     container_name: aggregator-service
     environment:
       - WORKLOAD_TYPE=mdpnp
       - GRPC_PORT=50051
       - HTTP_PORT=8000
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
+      - http_proxy=${HTTP_PROXY}
+      - https_proxy=${HTTPS_PROXY}
+      - no_proxy=${NO_PROXY}
     network_mode: "host"
 
   mdpnp-service:
     build:
       context: ./services/mdpnp-service
       dockerfile: Dockerfile
+      args:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        NO_PROXY: ${NO_PROXY}
+        http_proxy: ${HTTP_PROXY}
+        https_proxy: ${HTTPS_PROXY}
+        no_proxy: ${NO_PROXY}
     image: intel/hl-ai-mdpnp:1.0.0
     container_name: mdpnp-service
     network_mode: "host"
+    environment:
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
+      - http_proxy=${HTTP_PROXY}
+      - https_proxy=${HTTPS_PROXY}
+      - no_proxy=${NO_PROXY}
 
   dds-bridge:
     build:
@@ -41,29 +92,90 @@ services:
     build:
       context: ./services/ai-ecg/backend
       dockerfile: Dockerfile
+      args:
+          HTTP_PROXY: ${HTTP_PROXY}
+          HTTPS_PROXY: ${HTTPS_PROXY}
+          NO_PROXY: ${NO_PROXY}
+          http_proxy: ${HTTP_PROXY}
+          https_proxy: ${HTTPS_PROXY}
+          no_proxy: ${NO_PROXY}
     image: intel/hl-ai-ecg:1.0.0
     container_name: ai-ecg
     network_mode: "host"
+    depends_on:
+        - assets-downloader
+        - aggregator-service
+    volumes:
+      - ./models:/models
+      - ./videos:/videos
 
   3dpose-service:
       build:
         context: ./services/3d-pose-estimation
         dockerfile: src/Dockerfile
+        args:
+          HTTP_PROXY: ${HTTP_PROXY}
+          HTTPS_PROXY: ${HTTPS_PROXY}
+          NO_PROXY: ${NO_PROXY}
+          http_proxy: ${HTTP_PROXY}
+          https_proxy: ${HTTPS_PROXY}
+          no_proxy: ${NO_PROXY}
       image: intel/hl-ai-3dpose:1.0.0
       container_name: 3dpose-service
       network_mode: "host"
       environment:
-        - VIDEO_FILE=/app/videos/face-demographics-walking.mp4
+        - VIDEO_FILE=/videos/face-demographics-walking.mp4
         - DEVICE=CPU
         - AGGREGATOR_ADDRESS=localhost:50051
         - CONTROL_PORT=8083
       depends_on:
+        - assets-downloader
         - aggregator-service
+      volumes:
+      - ./models:/models
+      - ./videos:/videos  
+  
+
+  rppg-service:
+    build:
+      context: ./services/rppg-service
+      dockerfile: Dockerfile
+      args:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        NO_PROXY: ${NO_PROXY}
+        http_proxy: ${HTTP_PROXY}
+        https_proxy: ${HTTPS_PROXY}
+        no_proxy: ${NO_PROXY}
+    image: intel/hl-ai-rppg-service:1.0.0
+    container_name: rppg-service
+    network_mode: "host"
+    depends_on:
+      - assets-downloader
+      - aggregator-service
+    environment:
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
+      - http_proxy=${HTTP_PROXY}
+      - https_proxy=${HTTPS_PROXY}
+      - no_proxy=${NO_PROXY}
+    volumes:
+      - ./models:/models
+      - ./videos:/videos
+  
 
   metrics-service:
     build:
       context: ./services/metrics-service
       dockerfile: Dockerfile
+      args:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        NO_PROXY: ${NO_PROXY}
+        http_proxy: ${HTTP_PROXY}
+        https_proxy: ${HTTPS_PROXY}
+        no_proxy: ${NO_PROXY}
     image: intel/hl-ai-metrics-service:1.0.0
     container_name: metrics-service
     privileged: true
@@ -71,6 +183,11 @@ services:
     network_mode: "host"
     environment:
       - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
+      - http_proxy=${HTTP_PROXY}
+      - https_proxy=${HTTPS_PROXY}
+      - no_proxy=${NO_PROXY}
       - NPU_LOG=/tmp/results/npu_usage.csv
       - METRICS_DIR=/tmp/results
     volumes:
@@ -86,16 +203,23 @@ services:
       - "/run:/run"
       - "/proc:/proc"
 
-  # rppg-web:
-  #   build:
-  #     context: ./services/rppg-web
+  ui:
+    image: node:20-alpine
+    container_name: ui
+    working_dir: /app
+    volumes:
+      - ./services/ui:/app
+    environment:
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
+      - http_proxy=${HTTP_PROXY}
+      - https_proxy=${HTTPS_PROXY}
+      - no_proxy=${NO_PROXY}
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 3000"
+    ports:
+      - "3000:3000"
 
- 
-  # ui-frontend:
-  #   build:
-  #     context: ./services/ui-frontend
-  #   ports:
-  #     - "3000:3000"   # example UI port
 
 # no custom networks when using host networking mode
 

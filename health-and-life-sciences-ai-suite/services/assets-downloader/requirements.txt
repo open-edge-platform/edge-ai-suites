@@ -1,0 +1,20 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+tqdm
+requests
+
+# PyTorch (required for OMZ PyTorch→ONNX conversion)
+torch==2.8.0
+
+# Conversion deps
+onnx>=1.14.0
+onnxscript
+protobuf<5.0.0
+PyYAML
+
+# OpenVINO (model conversion)
+# Use a version that exists for both openvino and openvino-dev
+openvino>=2024.6.0,<2025.0
+openvino-dev>=2024.6.0,<2025.0
+
+
