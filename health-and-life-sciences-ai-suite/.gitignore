@@ -26,7 +26,12 @@ build/
 # services/*/proto/*_pb2_grpc.py
 # services/*/proto/*_pb2.pyi
 
-# Large data files (auto-downloaded at runtime)
+# Large data folders and files (auto-downloaded at runtime)
+metrics/
+models/
+videos/
+
+# File-level ignores (in case folders are partially checked in)
 models/*.bin
 models/*.onnx
 models/*.xml
