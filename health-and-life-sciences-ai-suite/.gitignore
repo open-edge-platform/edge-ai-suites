@@ -1,0 +1,65 @@
+ Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.bak
+*.backup
+
+# Generated gRPC code (keep for now, regenerate at build time later)
+# Uncomment these when we refactor to shared proto:
+# services/*/proto/*_pb2.py
+# services/*/proto/*_pb2_grpc.py
+# services/*/proto/*_pb2.pyi
+
+# Large data files (auto-downloaded at runtime)
+models/*.bin
+models/*.onnx
+models/*.xml
+models/*.pth
+models/*.hdf5
+models/*.h5
+videos/*.mp4
+videos/*.avi
+
+# Allow specific model and video files for testing
+!services/rppg-service/models/group1-shard1of1.bin
+!services/rppg-service/models/*.xml
+!services/rppg-service/videos/sample.mp4
+
+# Keep directory structure
+!models/.gitkeep
+!videos/.gitkeep
+!cache/.gitkeep
+!logs/.gitkeep
+
+# Runtime files
+logs/*.log
+cache/*
+*.json
+
+# Testing
+.pytest_cache/
+.coverage
+test_*.sh
+verify_*.sh
+check_*.sh
+scripts/test_*.py
+
+# Temporary files
+fix_*.py
+*.tmp
