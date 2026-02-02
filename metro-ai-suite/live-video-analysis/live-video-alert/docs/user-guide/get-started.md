@@ -57,9 +57,12 @@ This guide covers the rapid deployment of the Live Video Alert system using Dock
      docker compose up -d
      ```
    
-   **Note:** First run downloads the VLM model (~2GB, 5-10 minutes). Subsequent runs start instantly.
+   **Note:** 
+   - First run downloads the VLM model (~2GB, 5-10 minutes)
+   - An init container runs briefly to set up volume permissions.
+   - Subsequent runs start instantly
 
-5. **Verify Deployment**:
+6. **Verify Deployment**:
    Check that containers are running:
      ```bash
      docker ps
@@ -138,5 +141,34 @@ docker compose down -v
 
 # Set environment and start fresh
 export RTSP_URL=rtsp://<camera-ip>:<port>/stream
+docker compose up -d
+```
+
+## Troubleshooting
+
+### Permission Issues
+
+**Problem**: OVMS fails with "permission denied" on `/models`.
+
+**Solution**: An init container (`ovms-init`) automatically sets permissions. It will show as `Exited (0)` - this is normal.
+
+**Verify**:
+```bash
+docker ps -a --filter "name=ovms-init"  # Should show: Exited (0)
+docker exec ovms-vlm ls -lah /models    # Should be owned by ovms
+```
+
+### Other Issues
+
+```bash
+# Check status
+docker compose ps
+
+# View logs
+docker compose logs -f
+
+# Clean restart
+docker compose down -v
+export RTSP_URL=<your-url>
 docker compose up -d
 ```
