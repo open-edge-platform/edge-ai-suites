@@ -32,7 +32,7 @@ class Summarizer(BaseSummarizer):
                 
             except Exception as e:
                 error_msg = "Summary generation failed. Please ensure sufficient free resources are available to run this process."
-                logger.error(f"Exception occured in summary generation: {str(e)}")
+                logger.error(f"Exception occured in summary generation")
                 if "out of gpu resources" in str(e).lower():
                     error_msg = "Summary generation failed. Insufficient GPU resources available to run this process."
                 streamer._queue.put(f"[ERROR]: {error_msg}")
