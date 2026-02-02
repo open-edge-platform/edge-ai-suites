@@ -30,14 +30,14 @@ Deploy AI-powered alerting for live video streams with OpenVINO Vision Language 
 
 ## How the Application Works
 
-The application ingests an RTSP stream, captures frames for VLM inference at a defined interval, and sends the results to the dashboard via SSE.
+The application ingests RTSP streams, performs VLM inference, and delivers real-time alerts through a web dashboard.
 
 ### Data Flow
 
 ```
 RTSP Source → StreamManager (OpenCV/Circular Buffer)
             ↓
-       AgentManager (Orchestrator) ↔ VLMClient (FastAPI/OpenAI-compatible)
+       AgentManager (Orchestrator) ↔ VLM Service (OpenAI-compatible API)
             ↓
        EventManager (SSE Pub/Sub) → Dashboard UI
 ```

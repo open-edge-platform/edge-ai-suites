@@ -35,5 +35,5 @@ To build the Docker image for `Live Video Alert` application, follow these steps
 
 
 Notes:
-- Ensure your environment variables are configured, especially `RTSP_URL` and `VLM_URL`.
+- Ensure your environment variables are configured, especially `RTSP_URL`.
 - The default port is `9000`, but can be changed using the `PORT` environment variable.

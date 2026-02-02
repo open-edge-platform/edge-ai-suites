@@ -5,8 +5,7 @@ This guide covers the rapid deployment of the Live Video Alert system using Dock
 ## Prerequisites
 
 - Docker and Docker Compose
-- Intel® hardware (optional but recommended for OpenVINO performance)
-- **OpenVINO Model Server (OVMS) with VLM support**: Must be running before deploying this application. Follow the [OVMS VLM deployment guide](https://docs.openvino.ai/2025/model-server/ovms_demos_continuous_batching_vlm.html#fast-deployment-with-openvino-models-pulled-directly-from-huggingface-hub)
+- Internet connection (for initial VLM model download)
 
 ## Initial Setup
 
@@ -27,29 +26,29 @@ This guide covers the rapid deployment of the Live Video Alert system using Dock
 3. **Configure Image Registry and Tag**:
      ```bash
      export REGISTRY="intel/"
-     export TAG="rc2026.1.3"
+     export TAG="1.0.0-rc1"
      ```
     Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./how-to-build-source.md) guide for details.
 
 4. **Configure Environment**:
-   Create a `.env` file in the project root or set environment variables directly:
+   Set the required environment variable:
      ```bash
      # Required: Video stream source (RTSP URL or local file path)
-     RTSP_URL=rtsp://<camera-ip>:<port>/stream
-     
-     # Required: VLM inference endpoint (must be running before deployment)
-     VLM_URL=http://localhost:8000/v3
-     
-     # Optional: Model name for VLM service
-     MODEL_NAME=Phi-3.5-Vision
-     
-     # Optional: Application port (default: 9000)
-     PORT=9000
+     export RTSP_URL=rtsp://<camera-ip>:<port>/stream
      ```
    
-   Notes:
-   - For local video files, use absolute paths: `RTSP_URL=/app/resources/your-video.mp4`
-   - Ensure the VLM service at `VLM_URL` is accessible before starting
+   **Optional environment variables:**
+   ```bash
+   # Use a different VLM model
+   export OVMS_SOURCE_MODEL=<model-repo>
+   export MODEL_NAME=<model-name>
+   
+   # Change application port (default: 9000)
+   export PORT=9001
+   
+   # Enable debug logging
+   export LOG_LEVEL=DEBUG
+   ```
 
 5. **Start the Application**:
    Run the following command from the project root:
@@ -57,19 +56,21 @@ This guide covers the rapid deployment of the Live Video Alert system using Dock
      ```bash
      docker compose up -d
      ```
+   
+   **Note:** First run downloads the VLM model (~2GB, 5-10 minutes). Subsequent runs start instantly.
 
-6. **Verify Deployment**:
-   Check that the container is running:
+5. **Verify Deployment**:
+   Check that containers are running:
      ```bash
      docker ps
      ```
    
-   View logs to ensure successful startup:
+   View application logs:
      ```bash
      docker logs agentic-nvr
      ```
 
-7. **Access the Dashboard**:
+6. **Access the Dashboard**:
    Open your browser and navigate to:
      ```
      http://localhost:9000
@@ -89,17 +90,53 @@ This guide covers the rapid deployment of the Live Video Alert system using Dock
    - Click **Create New Alert** (up to 4 alerts supported)
    - Enter an **Alert Name** (e.g., "Person Detection")
    - Write a **Prompt** describing the condition (e.g., "Is there a person?")
-2. Click **Save** to apply changes
-3. Results will appear in real-time on the video cards
+2. Click **Save** to activate
 
-### Monitoring Results
-- Each video card shows the live stream with analysis results below
+### Viewing Results
+- The dashboard shows the live stream with analysis results below
 - Use the dropdown to filter alerts: "All Alerts" or individual alert types
 - Results update automatically via Server-Sent Events (SSE)
 
-## Stopping the Application
+## Managing the Application
+
+### Stopping Services
 
 To stop all services:
 ```bash
 docker compose down
+```
+
+### Restarting After Changes
+
+```bash
+# Restart both services
+docker compose restart
+
+# Restart only the application (VLM service keeps running)
+docker compose restart agentic-nvr
+```
+
+### Viewing Logs
+
+```bash
+# Follow all logs
+docker compose logs -f
+
+# VLM service logs
+docker logs -f ovms-vlm
+
+# Application logs
+docker logs -f agentic-nvr
+```
+
+### Clearing Model Cache
+
+If you need to re-download the model or switch models:
+```bash
+# Remove everything including model cache
+docker compose down -v
+
+# Set environment and start fresh
+export RTSP_URL=rtsp://<camera-ip>:<port>/stream
+docker compose up -d
 ```
