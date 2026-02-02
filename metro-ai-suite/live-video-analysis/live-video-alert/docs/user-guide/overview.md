@@ -6,7 +6,6 @@ Deploy AI-powered alerting for live video streams with OpenVINO Vision Language 
 
 1. [Overview and Features](#overview-and-features)
 2. [How the Application Works](#how-the-application-works)
-3. [Learn More](#learn-more)
 
 ## Overview and Features
 
