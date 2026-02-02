@@ -37,13 +37,11 @@ ENV PYTHONPATH="${PYTHONPATH}:/app/proto"
 # Copy application source
 COPY src/*.py ./
 
-# Copy models and videos
-COPY models ./models
-COPY videos ./videos
+# Models and videos are provided at runtime via shared volumes
 
-# Set environment variables
-ENV VIDEO_FILE=/app/videos/face-demographics-walking.mp4
-ENV MODEL_PATH=/app/models/human-pose-estimation-3d-0001.xml
+# Set default environment variables to match shared asset paths
+ENV VIDEO_FILE=/videos/3d-pose/face-demographics-walking.mp4
+ENV MODEL_PATH=/models/3d-pose/human-pose-estimation-3d-0001.xml
 ENV AGGREGATOR_ADDRESS=localhost:50051
 ENV SOURCE_ID=3d-pose-camera-1
 ENV DEVICE=CPU
