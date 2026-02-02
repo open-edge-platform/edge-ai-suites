@@ -1,5 +1,4 @@
 from components.base_component import PipelineComponent
-from components.llm.openvino.summarizer import Summarizer as OvSummarizer
 from components.llm.ipex.summarizer import Summarizer as IpexSummarizer
 from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
@@ -7,6 +6,11 @@ from utils.storage_manager import StorageManager
 import logging, os
 import time
 
+if config.app.use_ov_genai:
+    from components.llm.openvino_genai.summarizer import Summarizer as OvSummarizer
+else:
+    from components.llm.openvino.summarizer import Summarizer as OvSummarizer
+    
 logger = logging.getLogger(__name__)
 
 class SummarizerComponent(PipelineComponent):

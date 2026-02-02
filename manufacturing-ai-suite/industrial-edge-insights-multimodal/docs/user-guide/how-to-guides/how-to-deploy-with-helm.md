@@ -55,7 +55,6 @@ You can either generate or download the Helm charts.
 1. Update the following fields in the `values.yaml` file of the helm chart.
 
    ```bash
-   WORK_DIR: # Update with the absolute path to your industrial-edge-insights-multimodal directory
    INFLUXDB_USERNAME:
    INFLUXDB_PASSWORD:
    VISUALIZER_GRAFANA_USER:
