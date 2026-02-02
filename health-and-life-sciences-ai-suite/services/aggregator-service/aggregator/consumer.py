@@ -1,13 +1,29 @@
+"""
+VitalConsumer - Handles both waveform and numeric vitals.
+"""
+
 from .buffers import TimeWindowBuffer
 from .processor import VitalProcessor
 
 
 class VitalConsumer:
+    """
+    Consumes Vital messages and processes them based on type:
+    - Waveform vitals: Forward immediately with waveform data
+    - Numeric vitals: Aggregate over time window
+    """
+    
     def __init__(self, window_seconds=5):
         self.buffer = TimeWindowBuffer(window_seconds)
         self.processor = VitalProcessor()
 
     def consume(self, vital):
+        """
+        Process a Vital message.
+        
+        Returns:
+            dict: Processed result ready for WebSocket broadcast, or None
+        """
         key = (vital.device_id, vital.metric)
         ts_sec = vital.timestamp / 1000.0
         # ---- Waveform handling (ECG / other waveforms) ----
@@ -16,7 +32,7 @@ class VitalConsumer:
                 "device_id": vital.device_id,
                 "metric": vital.metric,
                 "timestamp": vital.timestamp,
-                "waveform": list(vital.waveform),
+                "waveform": list(vital.waveform),  # Raw waveform samples
                 "waveform_frequency_hz": vital.waveform_frequency_hz,
             }
             print("[Aggregator] ECG/waveform forwarded:", {
@@ -38,11 +54,8 @@ class VitalConsumer:
         )
 
         if result:
-            print("[Aggregator] Aggregated result:", {
-                "device_id": vital.device_id,
-                "metric": vital.metric,
-                "result": result,
-            })
+            print(f"[Consumer] Numeric aggregated: "
+                  f"{vital.device_id}/{vital.metric} = {result}")
             return result
 
         return None

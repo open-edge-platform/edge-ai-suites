@@ -42,12 +42,19 @@ class SSEManager:
         """Broadcast a message to all subscribers interested in its workload."""
         workload = message.get("workload") or message.get("workload_type")
         data = json.dumps(message)
+        
+        print(f"[SSEManager] Broadcasting to workload '{workload}', "
+            f"{len(self.subscribers)} subscribers")  # DEBUG
 
         async with self.lock:
+            sent_count = 0
             for q, subscriptions in list(self.subscribers.items()):
                 if workload in subscriptions:
                     try:
                         q.put_nowait(data)
+                        sent_count += 1
                     except asyncio.QueueFull:
-                        # If a client is too slow, drop the message for it.
+                        print(f"[SSEManager] Queue full for subscriber")  # DEBUG
                         pass
+            
+            print(f"[SSEManager] Sent to {sent_count} subscribers")  # DEBUG
