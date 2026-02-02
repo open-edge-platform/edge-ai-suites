@@ -51,7 +51,7 @@ services:
       - https_proxy=${HTTPS_PROXY}
       - no_proxy=${NO_PROXY}
     network_mode: "host"
-
+    
   mdpnp-service:
     build:
       context: ./services/mdpnp-service
@@ -73,6 +73,11 @@ services:
       - http_proxy=${HTTP_PROXY}
       - https_proxy=${HTTPS_PROXY}
       - no_proxy=${NO_PROXY}
+    depends_on:
+        assets-downloader:
+          condition: service_completed_successfully
+        aggregator-service:
+          condition: service_started  
 
   dds-bridge:
     build:
@@ -84,8 +89,12 @@ services:
       - GRPC_HOST=localhost
       - GRPC_PORT=50051
     depends_on:
-      - mdpnp-service
-      - aggregator-service
+      mdpnp-service:
+        condition: service_completed_successfully
+      aggregator-service:
+        condition: service_started
+      mdpnp-service:
+        condition: service_started
     network_mode: "host"
 
   ai-ecg:
@@ -103,8 +112,10 @@ services:
     container_name: ai-ecg
     network_mode: "host"
     depends_on:
-        - assets-downloader
-        - aggregator-service
+      assets-downloader:
+        condition: service_completed_successfully
+      aggregator-service:
+          condition: service_started  
     volumes:
       - ./models:/models
       - ./videos:/videos
@@ -124,18 +135,20 @@ services:
       container_name: 3dpose-service
       network_mode: "host"
       environment:
-        - VIDEO_FILE=/videos/face-demographics-walking.mp4
+        - VIDEO_FILE=/videos/3d-pose/face-demographics-walking.mp4
+        - MODEL_PATH=/models/3d-pose/human-pose-estimation-3d-0001.xml
         - DEVICE=CPU
         - AGGREGATOR_ADDRESS=localhost:50051
         - CONTROL_PORT=8083
       depends_on:
-        - assets-downloader
-        - aggregator-service
+        assets-downloader:
+          condition: service_completed_successfully
+        aggregator-service:
+          condition: service_started
       volumes:
       - ./models:/models
       - ./videos:/videos  
   
-
   rppg-service:
     build:
       context: ./services/rppg-service
@@ -151,8 +164,10 @@ services:
     container_name: rppg-service
     network_mode: "host"
     depends_on:
-      - assets-downloader
-      - aggregator-service
+      assets-downloader:
+        condition: service_completed_successfully
+      aggregator-service:
+          condition: service_started  
     environment:
       - HTTP_PROXY=${HTTP_PROXY}
       - HTTPS_PROXY=${HTTPS_PROXY}
@@ -164,7 +179,6 @@ services:
       - ./models:/models
       - ./videos:/videos
   
-
   metrics-service:
     build:
       context: ./services/metrics-service
@@ -204,11 +218,18 @@ services:
       - "/proc:/proc"
 
   ui:
-    image: node:20-alpine
+    build:
+      context: ./services/ui
+      dockerfile: Dockerfile
+      args:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        NO_PROXY: ${NO_PROXY}
+        http_proxy: ${HTTP_PROXY}
+        https_proxy: ${HTTPS_PROXY}
+        no_proxy: ${NO_PROXY}
+    image: intel/hl-ai-ui:1.0.0
     container_name: ui
-    working_dir: /app
-    volumes:
-      - ./services/ui:/app
     environment:
       - HTTP_PROXY=${HTTP_PROXY}
       - HTTPS_PROXY=${HTTPS_PROXY}
@@ -216,10 +237,6 @@ services:
       - http_proxy=${HTTP_PROXY}
       - https_proxy=${HTTPS_PROXY}
       - no_proxy=${NO_PROXY}
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 3000"
     ports:
       - "3000:3000"
-
-
-# no custom networks when using host networking mode
 
