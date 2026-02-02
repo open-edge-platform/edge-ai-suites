@@ -1,20 +1,19 @@
 # For directory watcher support
-watchdog==4.0.0
-fastapi==0.121.0  # Allows starlette >=0.49 for CVE-2025-62727
-starlette==0.49.3  # Patched release for CVE-2025-62727
-uvicorn[standard]==0.29.0  # Upgraded from 0.24.0
-requests==2.32.4  # Upgraded from 2.31.0 (fixes CVE-2024-35195 and CVE-2024-47081)
-aiofiles==23.2.1  # Latest is 23.2.1 (no update needed)
-pydantic>=2.0  # Latest is 2.7.1 (keep as >=2.0)
-python-dotenv==1.0.0  # Latest is 1.0.1 (minor update available)
-gradio==5.34.2  # Latest is 4.28.3 (your version seems higher than current)
-paho-mqtt==1.6.1  # Latest is 2.0.0 (consider upgrading)
-redis>=6.2.0  # Latest is 5.0.1 (keep as >=6.2.0)
-aiohttp==3.10.11   # Upgraded from 3.9.4 (fixes CVE-2024-52304)
-pytz==2023.3
-#setuptools>=70.0.0  # Added to address setuptools CVEs (CVE-2024-6345, etc.)
-pydantic-settings>=2.0.0
-pytest==8.2.2  # Added for test suite
-pytest-asyncio==0.23.7  # Async endpoint tests
-pytest-cov==5.0.0
-httpx==0.27.0
+watchdog==6.0.0  # Upgraded from 4.0.0
+fastapi==0.128.0  # Upgraded from 0.121.0 - Allows starlette >=0.49 for CVE-2025-62727
+starlette==0.49.3  # Patched release for CVE-2025-62727 (latest stable in 0.49.x series)
+uvicorn[standard]==0.40.0  # Upgraded from 0.29.0
+requests==2.32.5  # Upgraded from 2.32.4 (includes security fixes)
+aiofiles==24.1.0  # Upgraded from 23.2.1
+pydantic>=2.0  # Latest is 2.10.6 (keep as >=2.0)
+python-dotenv==1.1.1  # Upgraded from 1.0.0
+gradio==5.49.1  # Upgraded from 5.34.2
+paho-mqtt==2.1.0  # Upgraded from 1.6.1
+redis==6.2.0  # Fixed version from >=6.2.0
+aiohttp==3.13.3  # Upgraded from 3.10.11 (includes latest security fixes)
+pytz==2025.2  # Upgraded from 2023.3
+pydantic-settings>=2.0.0  # Latest is 2.8.2 (keep as >=2.0.0)
+pytest==9.0.2  # Upgraded from 8.2.2
+pytest-asyncio==1.3.0  # Upgraded from 0.23.7
+pytest-cov==6.0.0  # Upgraded from 5.0.0
+httpx==0.28.1  # Upgraded from 0.27.0
