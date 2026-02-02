@@ -23,6 +23,9 @@ services:
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
       NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
+    ports:
+      - "1883:1883"
+      - "1884:1884"
     volumes:
       - ./${SAMPLE_APP}/src/mosquitto/mosquitto-secure.conf:/mosquitto/config/mosquitto.conf
     secrets:
@@ -350,8 +353,8 @@ services:
     image: nginx:1.27-alpine
     container_name: nginx-reverse-proxy
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
+      - "8443:443"
     volumes:
       - "./${SAMPLE_APP}/src/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
       - "./${SAMPLE_APP}/src/nginx/ssl:/etc/nginx/ssl:ro"
