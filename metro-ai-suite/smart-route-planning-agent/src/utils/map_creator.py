@@ -256,48 +256,6 @@ class MapCreator:
             ).add_to(map_obj)
 
 
-    def add_game_mode_markers(self, map_obj: folium.Map, game_data: dict) -> None:
-        """Add fire and flood emoji markers for game mode"""
-        # Add fire emojis
-        for fire in game_data.get("fire_emojis", []):
-            fire_html = f"""
-            <div style="
-                font-size: 22px;
-                text-align: center;
-                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-            ">{fire["emoji"]}</div>
-            """
-            folium.Marker(
-                location=[fire["latitude"], fire["longitude"]],
-                popup=folium.Popup(
-                    f"<b>{fire['label']}</b><br>{fire['emoji']} Fire hazard area",
-                    max_width=200,
-                ),
-                icon=folium.DivIcon(
-                    html=fire_html, icon_size=(30, 30), icon_anchor=(15, 15)
-                ),
-            ).add_to(map_obj)
-
-        # Add flood emojis
-        for flood in game_data.get("flood_emojis", []):
-            flood_html = f"""
-            <div style="
-                font-size: 22px;
-                text-align: center;
-                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-            ">{flood["emoji"]}</div>
-            """
-            folium.Marker(
-                location=[flood["latitude"], flood["longitude"]],
-                popup=folium.Popup(
-                    f"<b>{flood['label']}</b><br>{flood['emoji']} Flood risk area",
-                    max_width=200,
-                ),
-                icon=folium.DivIcon(
-                    html=flood_html, icon_size=(30, 30), icon_anchor=(15, 15)
-                ),
-            ).add_to(map_obj)
-
     def add_location_markers(
         self,
         map_obj: folium.Map,

@@ -28,7 +28,6 @@ services:
       - PYTHONPATH=/app
     volumes:
       - ./data/config.json:/app/config.json:ro
-      - ./data/game.json:/app/game.json:ro
     networks:
       - routeplanner
     healthcheck:
