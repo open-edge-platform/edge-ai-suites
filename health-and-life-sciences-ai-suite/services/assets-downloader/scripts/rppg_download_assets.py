@@ -22,22 +22,15 @@ logger = logging.getLogger(__name__)
 
 
 def download_file(url: str, dest: Path, desc: str = "Downloading") -> None:
-    """
-    Download file with progress bar.
-    
-    Args:
-        url: URL to download from
-        dest: Destination file path
-        desc: Description for progress bar
-    """
+    """Download file with progress bar."""
     dest.parent.mkdir(parents=True, exist_ok=True)
-    
+
     class DownloadProgressBar(tqdm):
         def update_to(self, b=1, bsize=1, tsize=None):
             if tsize is not None:
                 self.total = tsize
             self.update(b * bsize - self.n)
-    
+
     with DownloadProgressBar(
         unit='B',
         unit_scale=True,
@@ -49,22 +42,22 @@ def download_file(url: str, dest: Path, desc: str = "Downloading") -> None:
 
 def download_model() -> None:
     """Download MTTS-CAN model weights."""
-    MODEL_URL = "https://github.com/xliucs/MTTS-CAN/releases/download/v1.0/mtts_can.hdf5"
-    model_path = Path("models/mtts_can.hdf5")
-    
+    MODEL_URL = "https://github.com/xliucs/MTTS-CAN/raw/main/mtts_can.hdf5"
+    model_path = Path("/models") / "rppg" / "mtts_can.hdf5"
+
     if model_path.exists():
         logger.info(f"Model already exists: {model_path}")
         size_mb = model_path.stat().st_size / (1024 * 1024)
         logger.info(f"  Size: {size_mb:.1f} MB")
         return
-    
+
     logger.info("Downloading MTTS-CAN model...")
     logger.info(f"  Source: {MODEL_URL}")
     logger.info(f"  Destination: {model_path}")
-    
+
     try:
         download_file(MODEL_URL, model_path, "Model")
-        logger.info(f"✓ Model downloaded successfully")
+        logger.info("✓ Model downloaded successfully")
         size_mb = model_path.stat().st_size / (1024 * 1024)
         logger.info(f"  Size: {size_mb:.1f} MB")
     except Exception as e:
@@ -75,21 +68,21 @@ def download_model() -> None:
 def download_video() -> None:
     """Download sample video."""
     VIDEO_URL = "https://github.com/opencv/opencv/raw/master/samples/data/vtest.avi"
-    video_path = Path("videos/sample.mp4")
-    
+    video_path = Path("/videos") / "rppg" / "sample.mp4"
+
     if video_path.exists():
         logger.info(f"Video already exists: {video_path}")
         size_mb = video_path.stat().st_size / (1024 * 1024)
         logger.info(f"  Size: {size_mb:.1f} MB")
         return
-    
+
     logger.info("Downloading sample video...")
     logger.info(f"  Source: {VIDEO_URL}")
     logger.info(f"  Destination: {video_path}")
-    
+
     try:
         download_file(VIDEO_URL, video_path, "Video")
-        logger.info(f"✓ Video downloaded successfully")
+        logger.info("✓ Video downloaded successfully")
         size_mb = video_path.stat().st_size / (1024 * 1024)
         logger.info(f"  Size: {size_mb:.1f} MB")
     except Exception as e:
@@ -100,24 +93,16 @@ def download_video() -> None:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Download RPPG service assets")
-    parser.add_argument(
-        '--model-only',
-        action='store_true',
-        help="Download only the model"
-    )
-    parser.add_argument(
-        '--video-only',
-        action='store_true',
-        help="Download only the video"
-    )
-    
+    parser.add_argument("--model-only", action="store_true", help="Download only the model")
+    parser.add_argument("--video-only", action="store_true", help="Download only the video")
+
     args = parser.parse_args()
-    
+
     logger.info("=" * 70)
     logger.info("RPPG Service Asset Downloader")
     logger.info("=" * 70)
     logger.info("")
-    
+
     try:
         if args.model_only:
             download_model()
@@ -127,23 +112,18 @@ def main():
             download_model()
             logger.info("")
             download_video()
-        
+
         logger.info("")
         logger.info("=" * 70)
         logger.info("✓ All assets ready!")
         logger.info("=" * 70)
         logger.info("")
-        logger.info("Next steps:")
-        logger.info("  1. Build Docker image: docker build -t rppg-service .")
-        logger.info("  2. Run service: docker-compose up rppg-service")
-        logger.info("")
-        
     except Exception as e:
         logger.error(f"Download failed: {e}")
         return 1
-    
+
     return 0
 
 
 if __name__ == "__main__":
-    exit(main())
+    raise SystemExit(main())
