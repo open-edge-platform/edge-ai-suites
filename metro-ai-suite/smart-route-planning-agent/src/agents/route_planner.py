@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import List, Optional
 
 from langgraph.graph import END, START, StateGraph
@@ -9,13 +8,9 @@ from config import (
     ADVERSE_WEATHER_CONDITIONS,
     GPX_DIR,
     IGNORED_ROUTES,
-    WEATHER_ISSUE_MAP,
-    INCIDENT_ISSUE_MAP,
     CongestionLevel,
-    IncidentStatus,
     PlannerNode,
     StaticOptimizerName,
-    WeatherStatus,
 )
 from controllers import (
     LiveTrafficController,
@@ -212,14 +207,6 @@ class RoutePlanner:
             live_traffic_controller.fetch_route_status()
         )
 
-        # Storage for valid blocked routes and invalid blocked routes
-        # Invalid blocked routes are those which are blocked due to incorrect game moves by user on intersections along the route
-        # blocked_routes: list[str] = []
-        # blocked_routes_invalid: list[str] = []
-        # logger.debug(f"Available Intersections: {intersection_list}")
-
-        # available_route_count: int = 0
-        # unique_route: bool = False
         # Iterate till no new routes are available
         while True:
             route_not_optimal: bool = False
@@ -233,10 +220,6 @@ class RoutePlanner:
             )
 
             if not next_shortest_route_name or not next_shortest_distance:
-                # total_blocked_routes = len(blocked_routes) + len(blocked_routes_invalid)
-                # if available_route_count - total_blocked_routes == 1:
-                #     unique_route = True
-                #     live_traffic_state = {}
                 logger.info("No more alternate routes available.")
                 break
 
@@ -252,13 +235,6 @@ class RoutePlanner:
                 route_data.get("tracks", [{}])[0].get("track_points", [])
             )
 
-            # num_intersections_in_route: int = 0
-            # intersection_blocked_count_valid: int = (
-            #     0  # Intersection blocked due to correct game move by user
-            # )
-            # intersection_blocked_count_invalid: int = (
-            #     0  # Intersection blocked due to incorrect game move by user
-            # )
             logger.debug(f"Analyzing route: {next_shortest_route_name}")
             for i, trackpoint in enumerate(trackpoints):
                 # If route has been found not to be optimal break out of loop
@@ -281,30 +257,6 @@ class RoutePlanner:
                         )
                         <= live_traffic_controller.proximity_factor
                     ):
-                        # Count the number of intersections in the current route
-                        # num_intersections_in_route += 1
-
-                        # Verify if traffic status from Intersection API reflects the actual recorded scenario at the intersection
-                        # if (
-                        #     WEATHER_ISSUE_MAP.get(next_shortest_route_name)
-                        #     == traffic_status.weather_status
-                        #     or INCIDENT_ISSUE_MAP.get(next_shortest_route_name)
-                        #     == traffic_status.incident_status
-                        # ):
-                        #     intersection_blocked_count_valid += 1
-                        # elif (
-                        #     traffic_status.weather_status != WeatherStatus.CLEAR
-                        #     or traffic_status.incident_status != IncidentStatus.CLEAR
-                        # ):
-                        #     intersection_blocked_count_invalid += 1
-
-                        # logger.debug(
-                        #     "Getting blocked routes when intersection is found to be in current route ..."
-                        # )
-                        # logger.debug(f"Blocked routes valid : {blocked_routes}")
-                        # logger.debug(
-                        #     f"Blocked routes invalid : {blocked_routes_invalid}"
-                        # )
 
                         # Do not try to update sub_optimal_route or live_traffic_state if route is already blocked
                         if (
@@ -357,61 +309,6 @@ class RoutePlanner:
                                 f"length of live_traffic_status_list: {len(self.live_traffic_status_list)}"
                             )
                             break
-
-            # if (
-            #     0
-            #     < intersection_blocked_count_valid + intersection_blocked_count_invalid
-            # ):
-            #     logger.info(
-            #         f"Some intersections in route {next_shortest_route_name} report issues. Considering route as non-optimal."
-            #     )
-            #     route_not_optimal = True
-
-            #     # Remove blocked route traffic details from live_traffic_status_list if present
-            #     self.live_traffic_status_list = [
-            #         t
-            #         for t in self.live_traffic_status_list
-            #         if t.get("route_name") != next_shortest_route_name
-            #     ]
-
-            #     # Discard sub-optimal ad optimal route if it is current route
-            #     if (
-            #         sub_optimal_route
-            #         and sub_optimal_route.get("route_name") == next_shortest_route_name
-            #     ):
-            #         sub_optimal_route = {}
-
-            #     if (
-            #         optimal_route_state
-            #         and optimal_route_state.get("route_name")
-            #         == next_shortest_route_name
-            #     ):
-            #         optimal_route_state = {}
-
-            #     # Keep it in blocked_route_invalid list, as long as at least one intersection is blocked due to incorrect game move by user.
-            #     # If all intersections in route are blocked due to correct game move by user, put it in blocked_routes list.
-            #     # blocked_route_invalid or blocked_route list required to :
-            #     # 1. Color the route yellow or red, respectively on map UI
-            #     # 2. Refrain the agent from taking this route again in current iteration
-            #     # if intersection_blocked_count_valid == num_intersections_in_route:
-            #     #     blocked_routes.append(next_shortest_route_name)
-            #     #     if next_shortest_route_name in blocked_routes_invalid:
-            #     #         blocked_routes_invalid.remove(next_shortest_route_name)
-            #     # else:
-            #     #     blocked_routes_invalid.append(next_shortest_route_name)
-            #     #     if next_shortest_route_name in blocked_routes:
-            #     #         blocked_routes.remove(next_shortest_route_name)
-
-            # else:
-            #     # If in some other iterations different intersection_blocked_count zero out, remove route from blocked states.
-            #     if next_shortest_route_name in blocked_routes:
-            #         blocked_routes.remove(next_shortest_route_name)
-            #     if next_shortest_route_name in blocked_routes_invalid:
-            #         blocked_routes_invalid.remove(next_shortest_route_name)
-
-            # logger.debug("getting blocked routes when current route analysis done ...")
-            # logger.debug(f"Blocked routes valid : {blocked_routes}")
-            # logger.debug(f"Blocked routes invalid : {blocked_routes_invalid}")
 
             if i == len(trackpoints) - 1 and not route_not_optimal:
                 # If we reached the last trackpoint without finding high traffic, consider route to be optimal
