@@ -58,12 +58,3 @@ spec:
           value: "{{ .Values.config.time_series_analytics_microservice.name }}"
         - name: TS_MS_PORT
           value: "{{ .Values.config.time_series_analytics_microservice.kapacitor_port }}"
-        volumeMounts:
-        - name: simulation-data
-          mountPath: /simulation-data
-          readOnly: true
-
-      volumes:
-      - name: simulation-data
-        persistentVolumeClaim:
-          claimName: simulation-data-pvc

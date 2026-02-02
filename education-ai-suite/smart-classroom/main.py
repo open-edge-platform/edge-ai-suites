@@ -39,7 +39,7 @@ def system_check():
 
 if __name__ == "__main__":
     
-    system_check()
+    #system_check()
     RuntimeConfig.ensure_config_exists()
     ensure_model()
     preload_models()
