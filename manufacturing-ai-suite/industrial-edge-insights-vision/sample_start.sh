@@ -94,8 +94,8 @@ parse_config_yml() {
     ' "$CONFIG_FILE"
 }
 
+# Function to get SAMPLE_APP for a given INSTANCE_NAME from config.yml
 get_sample_app() {
-    # Function to get SAMPLE_APP for a given INSTANCE_NAME from config.yml
     if [[ -z "$INSTANCE_NAME" ]]; then
         err "INSTANCE_NAME not set"
         exit 1
