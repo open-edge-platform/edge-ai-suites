@@ -257,7 +257,9 @@ export NVR_API_BASE_URL=${NVR_API_BASE_URL:-http://nvr-event-router:8000}
 
 if [ "$1" = "--start" ] || [ "$1" = "--start-rtsp-test" ] || [ "$1" = "--start-usb-camera" ]; then
     export HOST_IP=$(get_host_ip)
-    if [ "$1" = "--start-rtsp-test" ]; then
+    if [ "$1" = "--start" ]; then
+        cp "${CONFIG_DIR}/frigate-config/config-default.yml" "${CONFIG_DIR}/frigate-config/config.yml"
+    elif [ "$1" = "--start-rtsp-test" ]; then
         cp "${CONFIG_DIR}/frigate-config/config-rtsp.yml" "${CONFIG_DIR}/frigate-config/config.yml"
         if ! docker network inspect live-video-network >/dev/null 2>&1; then
             docker network create live-video-network

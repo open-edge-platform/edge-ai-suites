@@ -23,23 +23,14 @@ cameras:
         - path: /dev/video0
           input_args: -f v4l2 -input_format mjpeg -video_size 1280x720 -framerate 30
           roles:
-            - detect
             - record
       output_args:
         record:
           -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 50 -pix_fmt yuv420p -movflags +faststart
-    detect:
-      enabled: true
-      max_disappeared: 30
-      width: 1280
-      height: 720
-      fps: 10
     record:
       enabled: true
       retain:
         days: 0.5
-    objects:
-      track: [person, vehicle]
     snapshots:
       enabled: true
       retain:

@@ -23,17 +23,7 @@ cameras:
         - path: /videos/backyard.mp4
           input_args: -re -stream_loop -1 -fflags +genpts
           roles:
-            - detect
             - record
-    detect:
-      enabled: true
-      max_disappeared: 30
-    objects:
-      track: [bicycle, car, motorcycle, person, vehicle]
-      filters:
-        person:
-          min_score: 0.6
-          threshold: 0.80
     record:
       enabled: true
       retain:
@@ -55,21 +45,11 @@ cameras:
         - path: /videos/livingroom.mp4
           input_args: -re -stream_loop -1 -fflags +genpts
           roles:
-            - detect
             - record
-    detect:
-      enabled: true
-      max_disappeared: 30
     record:
       enabled: true
       retain:
         days: 0.5
-    objects:
-      track: [person, vehicle]
-      filters:
-        person:
-          min_score: 0.6
-          threshold: 0.80
     snapshots:
       enabled: true
       retain:
@@ -88,21 +68,11 @@ cameras:
         - path: /videos/garage.mp4
           input_args: -re -stream_loop -1 -fflags +genpts
           roles:
-            - detect
             - record
-    detect:
-      enabled: true
-      max_disappeared: 30
     record:
       enabled: true
       retain:
         days: 0.5
-    objects:
-      track: [person, vehicle]
-      filters:
-        person:
-          min_score: 0.6
-          threshold: 0.80
     snapshots:
       enabled: true
       retain:

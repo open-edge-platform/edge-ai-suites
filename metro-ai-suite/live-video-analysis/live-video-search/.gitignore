@@ -147,4 +147,3 @@ config/frigate-config/*
 !config/frigate-config/config-default.yml
 !config/frigate-config/config-rtsp.yml
 !config/frigate-config/config-usb.yml
-!config/frigate-config/config.yml
