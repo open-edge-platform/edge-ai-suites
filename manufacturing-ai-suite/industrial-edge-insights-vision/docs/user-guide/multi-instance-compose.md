@@ -36,25 +36,25 @@ This tutorial shows you how to deploy and run multiple IRD applications simultan
 
     Example:
 
-     ```bash
+    ```bash
     pallet-defect-detection:
-        pdd1:
-            NGINX_HTTP_PORT: 8080
-            NGINX_HTTPS_PORT: 8443
-            COTURN_UDP_PORT: 3478
-            MINIO_EXTERNAL_PORT: 8001
-        pdd2:
-            NGINX_HTTP_PORT: 9080
-            NGINX_HTTPS_PORT: 9443
-            COTURN_UDP_PORT: 3479
-            MINIO_EXTERNAL_PORT: 9001
+      pdd1:
+        NGINX_HTTP_PORT: 8080
+        NGINX_HTTPS_PORT: 8443
+        COTURN_UDP_PORT: 3478
+        MINIO_EXTERNAL_PORT: 8001
+      pdd2:
+        NGINX_HTTP_PORT: 9080
+        NGINX_HTTPS_PORT: 9443
+        COTURN_UDP_PORT: 3479
+        MINIO_EXTERNAL_PORT: 9001
 
     weld-porosity:
-        weld1:
-            NGINX_HTTP_PORT: 10080
-            NGINX_HTTPS_PORT: 10443
-            COTURN_UDP_PORT: 3480
-            MINIO_EXTERNAL_PORT: 10001
+      weld1:
+        NGINX_HTTP_PORT: 10080
+        NGINX_HTTPS_PORT: 10443
+        COTURN_UDP_PORT: 3480
+        MINIO_EXTERNAL_PORT: 10001
     ```
 
 2. Edit the below mentioned environment variables in all the .env_<SAMPLE_APP> files:
