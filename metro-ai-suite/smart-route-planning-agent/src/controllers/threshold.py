@@ -1,4 +1,5 @@
-from typing import Dict, Any
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
 from utils.logging_config import get_logger
 
