@@ -26,6 +26,7 @@ WORKLOAD_TYPE = os.getenv("WORKLOAD_TYPE", "mdpnp")
 METRICS_SERVICE_URL = os.getenv("METRICS_SERVICE_URL", "http://localhost:9000")
 DDS_BRIDGE_CONTROL_URL = os.getenv("DDS_BRIDGE_CONTROL_URL", "http://localhost:8082")
 POSE_3D_CONTROL_URL = os.getenv("POSE_3D_CONTROL_URL", "http://localhost:8083")
+RPPG_CONTROL_URL = os.getenv("RPPG_CONTROL_URL", "http://localhost:8084")
 
 
 def _proxy_metrics_get(path: str):
@@ -194,6 +195,14 @@ async def start_workloads(target: str = Query("dds-bridge", description="Which w
         else:
             results["3d-pose"] = _call(f"{POSE_3D_CONTROL_URL}/start")
 
+    # RPPG
+    if "all" in targets or "rppg" in targets:
+        is_running = _check_status(f"{RPPG_CONTROL_URL}/status")
+        if is_running:
+            results["rppg"] = "already running"
+        else:
+            results["rppg"] = _call(f"{RPPG_CONTROL_URL}/start")
+
     return {"status": "ok", "results": results}
 
 
@@ -246,6 +255,14 @@ async def stop_workloads(target: str = Query("dds-bridge", description="Which wo
             results["3d-pose"] = "not running"
         else:
             results["3d-pose"] = _call(f"{POSE_3D_CONTROL_URL}/stop")
+
+    # RPPG
+    if "all" in targets or "rppg" in targets:
+        is_running = _check_status(f"{RPPG_CONTROL_URL}/status")
+        if not is_running:
+            results["rppg"] = "not running"
+        else:
+            results["rppg"] = _call(f"{RPPG_CONTROL_URL}/stop")
 
     return {"status": "ok", "results": results}
 

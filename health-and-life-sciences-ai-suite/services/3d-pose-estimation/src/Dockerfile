@@ -1,10 +1,18 @@
 FROM python:3.12-slim
 
-ENV http_proxy=http://proxy-mu.intel.com:911
-ENV https_proxy=http://proxy-mu.intel.com:911
-ENV HTTP_PROXY=http://proxy-mu.intel.com:911
-ENV HTTPS_PROXY=http://proxy-mu.intel.com:911
-ENV no_proxy=localhost,127.0.0.0/8,::1,.intel.com,.intel.net,localhost
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+
+ENV http_proxy=${http_proxy:-$HTTP_PROXY} \
+    https_proxy=${https_proxy:-$HTTPS_PROXY} \
+    no_proxy=${no_proxy:-$NO_PROXY} \
+    HTTP_PROXY=${HTTP_PROXY:-$http_proxy} \
+    HTTPS_PROXY=${HTTPS_PROXY:-$https_proxy} \
+    NO_PROXY=${NO_PROXY:-$no_proxy}
 
 WORKDIR /app
 
@@ -29,13 +37,11 @@ ENV PYTHONPATH="${PYTHONPATH}:/app/proto"
 # Copy application source
 COPY src/*.py ./
 
-# Copy models and videos
-COPY models ./models
-COPY videos ./videos
+# Models and videos are provided at runtime via shared volumes
 
-# Set environment variables
-ENV VIDEO_FILE=/app/videos/face-demographics-walking.mp4
-ENV MODEL_PATH=/app/models/human-pose-estimation-3d-0001.xml
+# Set default environment variables to match shared asset paths
+ENV VIDEO_FILE=/videos/3d-pose/face-demographics-walking.mp4
+ENV MODEL_PATH=/models/3d-pose/human-pose-estimation-3d-0001.xml
 ENV AGGREGATOR_ADDRESS=localhost:50051
 ENV SOURCE_ID=3d-pose-camera-1
 ENV DEVICE=CPU

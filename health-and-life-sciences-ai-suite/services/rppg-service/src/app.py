@@ -5,16 +5,19 @@
 import sys
 import signal
 import time
+import os
 import yaml
 import logging
 from pathlib import Path
 from typing import Generator
+import threading
 
 from .video_handler import VideoHandler
 from .preprocessor import Preprocessor
 from .inference_engine import InferenceEngine
 from .postprocessor import SignalPostprocessor
 from .grpc_client import RPPGGRPCClient
+from .controller_start_stop import start_control_server, is_streaming_enabled
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
 logger = logging.getLogger(__name__)
@@ -72,6 +75,14 @@ class RPPGService:
     
     def vital_generator(self):
         """Generate vitals."""
+        # Wait for /start signal from control API
+        logger.info("Waiting for /start control signal before streaming...")
+        while self.running and not is_streaming_enabled():
+            time.sleep(0.5)
+
+        if not self.running:
+            return
+
         self.video.start_stream()
         logger.info("✓ Video stream started")
         
@@ -80,6 +91,17 @@ class RPPGService:
         
         try:
             while self.running:
+                # Handle dynamic /start and /stop control
+                if not is_streaming_enabled():
+                    logger.info("Streaming paused via /stop; waiting for /start...")
+                    self.video.stop_stream()
+                    while self.running and not is_streaming_enabled():
+                        time.sleep(0.5)
+                    if not self.running:
+                        break
+                    logger.info("Streaming resumed via /start")
+                    self.video.start_stream()
+
                 for _ in range(self.config['model']['batch_size']):
                     frame = self.video.get_frame()
                     if frame is None:
@@ -129,10 +151,16 @@ class RPPGService:
 
 
 def main():
-        config_path = sys.argv[1] if len(sys.argv) > 1 else "config.yaml"
-        service = RPPGService(config_path)
-        service.run()
-        return 0
+    # Start control server in background thread
+    control_thread = threading.Thread(target=start_control_server, daemon=True)
+    control_thread.start()
+    control_port = os.getenv("RPPG_CONTROL_PORT", "8084")
+    logger.info(f"RPPG control server started on port {control_port}")
+
+    config_path = sys.argv[1] if len(sys.argv) > 1 else "config.yaml"
+    service = RPPGService(config_path)
+    service.run()
+    return 0
 
 
 if __name__ == "__main__":

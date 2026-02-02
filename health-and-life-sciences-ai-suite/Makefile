@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-.PHONY: init-mdpnp build-mdpnp run
+.PHONY: init-mdpnp build-mdpnp build-dds-bridge run down download-rppg-assets
 
 MDPNP_PATH := services/mdpnp-service/mdpnp
 DDS_BRIDGE_PATH := services/dds-bridge
@@ -33,4 +33,9 @@ run:
 down:
 	@echo "Tearing down the services..."
 	docker compose -f $(DOCKER_COMPOSE) down
+
+download-rppg-assets:
+	@echo "Downloading RPPG model and sample video assets..."
+	cd services/rppg-service && python3 scripts/download_assets.py
+	@echo "RPPG assets download complete."
 
