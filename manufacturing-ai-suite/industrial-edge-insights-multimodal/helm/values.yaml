@@ -34,9 +34,6 @@ env:
   HTTP_PROXY: 
   HTTPS_PROXY: 
   
-  # Update with the absolute path to your industrial-edge-insights-multimodal directory
-  # Example: /home/user/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
-  WORK_DIR: ""
   # If CONTINUOUS_SIMULATOR_INGESTION is set to true (default), continuous looping of simulator data is enabled.
   # To ingest the simulator data only once (without looping), set this variable to false.
   CONTINUOUS_SIMULATOR_INGESTION: true
