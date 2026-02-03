@@ -49,7 +49,9 @@ class RouteService:
             # Running the agent for first time - finds direct trivial route.
             self.route_state = self.route_planner.plan_route(source, destination)
 
-            direct_route_name = self.route_state["direct_route"]["route_name"]
+            direct_route_name = self.route_state.get("direct_route", {}).get(
+                "route_name", ""
+            )
             map_data_parser = MapDataParser(GPX_DIR / direct_route_name)
             self.main_route = map_data_parser.get_route_data()
 
@@ -95,7 +97,7 @@ class RouteService:
 
             # Instantiate object for alternate route based on optimal route name recieved from route_state
             alternate_route_name = self.route_state.get("optimal_route", {}).get(
-                "route_name"
+                "route_name", ""
             )
             if alternate_route_name:
                 # Push the new route name to list if not already present. Get index of new route anyway.
@@ -182,7 +184,10 @@ class RouteService:
         else:
             if event_name := optimal_route_data.get("event_name"):
                 congestion_level = optimal_route_data.get("traffic_history")
-                route_issue = f"planned event '{event_name}' with expected {congestion_level.value} traffic congestion on the route."
+                if congestion_level is not None:
+                    route_issue = f"planned event '{event_name}' with expected {congestion_level.value} traffic congestion on the route."
+                else:
+                    route_issue = f"planned event '{event_name}' on the route."
             elif congestion_level := optimal_route_data.get("traffic_history"):
                 route_issue = f"'{congestion_level.value}' historical traffic trends on the route."
             elif weather_condition := optimal_route_data.get("weather_status"):
@@ -196,10 +201,9 @@ class RouteService:
 
                     route_issue = f"high traffic density of {live_traffic.get('traffic_density')} at {live_traffic.get('intersection_name')}"
 
-                    if live_traffic.get("traffic_description"):
-                        route_issue += (
-                            f" - {live_traffic.get('traffic_description')[:900]} ..."
-                        )
+                    traffic_description = live_traffic.get("traffic_description")
+                    if traffic_description:
+                        route_issue += f" - {traffic_description[:900]} ..."
         return route_issue
 
     def _get_next_data_source(self) -> str:
@@ -210,7 +214,9 @@ class RouteService:
 
         if self.route_state and self.route_state.get("static_optimizers"):
             # If any static optimizer is available, it will be used as next data source to optimize route
-            optimizer: StaticOptimizerName = self.route_state["static_optimizers"][-1]
+            optimizer: StaticOptimizerName = self.route_state.get(
+                "static_optimizers", []
+            )[-1]
             # Get description respective to the StaticOptimizerName
             return optimizer.get_description()
         else:
@@ -240,7 +246,9 @@ class RouteService:
         next_data_source = self._get_next_data_source()
         direct_route_map = self.create_route_map(start_location, end_location)
         distance = (
-            self.route_state["optimal_route"]["distance"] if self.route_state else 0.0
+            self.route_state.get("optimal_route", {}).get("distance", 0.0)
+            if self.route_state
+            else 0.0
         )
         return next_data_source, distance, direct_route_map
 

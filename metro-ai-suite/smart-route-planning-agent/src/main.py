@@ -25,7 +25,7 @@ UI_UPDATE_INTERVAL = 8  # Poll interval for new updates from data_queue used by 
 OPTIMIZATION_INTERVAL = 12  # Seconds between agent invocations
 
 # Queue for passing data between agent thread and UI
-data_queue = queue.Queue()
+data_queue: queue.Queue[dict] = queue.Queue()
 
 # Lock for thread-safe access to shared variables
 thread_lock = threading.Lock()
