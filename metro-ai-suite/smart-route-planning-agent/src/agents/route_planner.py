@@ -7,6 +7,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
 from agents import RoutePlannerState as State
+from agents.planner_state import LiveTrafficState, OptimalRouteState, RouteState
 from config import (
     ADVERSE_WEATHER_CONDITIONS,
     GPX_DIR,
@@ -18,7 +19,6 @@ from config import (
 from controllers import (
     LiveTrafficController,
     StaticRouteOptimizerFactory,
-    RouteStatusInterface,
     ThresholdController,
 )
 from schema import LiveTrafficData, RouteCondition
@@ -44,7 +44,7 @@ class RoutePlanner:
         # Construct all required nodes and edges and compile the graph
         self.compiled_graph = self._build_graph()
 
-        self.live_traffic_status_list: list[dict] = []
+        self.live_traffic_status_list: list[LiveTrafficState] = []
 
     def _find_new_shortest_available_route(
         self, source: str, destination: str, no_fly_list: list[str]
@@ -89,13 +89,18 @@ class RoutePlanner:
         logger.info("Finding direct shortest route ...")
         logger.debug(f"============= State of the state : {state} =============")
         shortest_route, shortest_distance = self._find_new_shortest_available_route(
-            state["source"],
-            state["destination"],
+            state.get("source", ""),
+            state.get("destination", ""),
             state.get("no_fly_list", IGNORED_ROUTES),
         )
 
         # Update the direct_route dict with required information
-        direct_route_state = {
+        direct_route_state: RouteState = {
+            "route_name": shortest_route,
+            "distance": shortest_distance,
+        }
+        # For optimal_route, use OptimalRouteState (which extends RouteState)
+        initial_optimal_route: OptimalRouteState = {
             "route_name": shortest_route,
             "distance": shortest_distance,
         }
@@ -103,7 +108,7 @@ class RoutePlanner:
 
         return {
             "direct_route": direct_route_state,
-            "optimal_route": direct_route_state,  # Initially, optimal route is same as direct route
+            "optimal_route": initial_optimal_route,  # Initially, optimal route is same as direct route
             # "static_optimizers": STATIC_ROUTE_OPTIMIZER_STACK, Disabled static optimizers for now
             "no_fly_list": [*IGNORED_ROUTES],
         }
@@ -116,11 +121,13 @@ class RoutePlanner:
         logger.info("Finding optimal routes based on static data ...")
         route_status: RouteCondition | None = None
 
-        if state.get("static_optimizers"):
-            optimizer_name: StaticOptimizerName = state.get("static_optimizers").pop()
-            route_optimizer: RouteStatusInterface = StaticRouteOptimizerFactory[
-                optimizer_name
-            ]
+        static_optimizers = state.get("static_optimizers")
+        if static_optimizers:
+            optimizer_name: StaticOptimizerName = static_optimizers.pop()
+            # Get the controller constructor from factory
+            route_optimizer_constructor = (
+                StaticRouteOptimizerFactory.get_optimizer_class(optimizer_name)
+            )
         else:
             logger.error(
                 "Optimal route node invoked when no static optimizers are available!"
@@ -128,25 +135,42 @@ class RoutePlanner:
             return state
 
         current_optimal_route = state.get("optimal_route", {})
-        optimal_route_name = current_optimal_route.get("route_name")
-        optimal_distance = current_optimal_route.get("distance")
+        optimal_route_name: str = current_optimal_route.get("route_name", "")
+        optimal_distance: float = current_optimal_route.get("distance", 0.0)
+
+        if not optimal_route_name:
+            logger.error("No optimal route name found in state")
+            return state
+
+        # Initialize optimal_route_state with current values
+        optimal_route_state: OptimalRouteState = {
+            "route_name": optimal_route_name,
+            "distance": optimal_distance,
+        }
 
         temp_parser = MapDataParser(GPX_DIR / optimal_route_name)
         route_data = temp_parser.get_route_data()
 
         for track in route_data["tracks"]:
             for track_point in track["track_points"]:
-                route_status = route_optimizer(
+                # Instantiate the controller and call fetch_route_status
+                controller_instance = route_optimizer_constructor(
                     track_point["lat"], track_point["lon"]
-                ).fetch_route_status()
+                )
+                fetched_status = controller_instance.fetch_route_status()
+                # Handle different return types from fetch_route_status
+                if isinstance(fetched_status, list):
+                    route_status = fetched_status[0] if fetched_status else None
+                else:
+                    route_status = fetched_status
                 if route_status:
                     # check if route_status has a required attributes and proceed accordingly
                     if hasattr(route_status, "weather_condition"):
                         if route_status.weather_condition in ADVERSE_WEATHER_CONDITIONS:
                             optimal_route_name, optimal_distance = (
                                 self._find_new_shortest_available_route(
-                                    state["source"],
-                                    state["destination"],
+                                    state.get("source", ""),
+                                    state.get("destination", ""),
                                     state.get("no_fly_list", []),
                                 )
                             )
@@ -163,8 +187,8 @@ class RoutePlanner:
                         ]:
                             optimal_route_name, optimal_distance = (
                                 self._find_new_shortest_available_route(
-                                    state["source"],
-                                    state["destination"],
+                                    state.get("source", ""),
+                                    state.get("destination", ""),
                                     state.get("no_fly_list", []),
                                 )
                             )
@@ -181,7 +205,7 @@ class RoutePlanner:
 
         return {
             "optimal_route": optimal_route_state,
-            "no_fly_list": [optimal_route_name],
+            "no_fly_list": [optimal_route_name] if optimal_route_name else [],
         }
 
     def update_optimal_route_realtime(self, state: State) -> State:
@@ -197,11 +221,18 @@ class RoutePlanner:
         local_no_fly_list = state.get("no_fly_list", []).copy()
 
         # Default values for graph state to be returned if no traffic issues or new optimal routes are found
-        optimal_route_state = state.get("optimal_route", {})
-        live_traffic_state = {}
+        current_optimal = state.get("optimal_route", {})
+        optimal_route_state: OptimalRouteState = {
+            "route_name": current_optimal.get("route_name", ""),
+            "distance": current_optimal.get("distance", 0.0),
+        }
+        live_traffic_state: LiveTrafficState = {
+            "route_name": "",
+            "distance": 0.0,
+        }
 
         # If none of the routes are optimal, we store sub-optimal route here.
-        sub_optimal_route: dict[str, str | float] = {}
+        sub_optimal_route: OptimalRouteState | None = None
         sub_optimal_density: int = 0
 
         # fetch the available live traffic data
@@ -218,7 +249,9 @@ class RoutePlanner:
             # Get next available shortest route
             next_shortest_route_name, next_shortest_distance = (
                 self._find_new_shortest_available_route(
-                    state["source"], state["destination"], local_no_fly_list
+                    state.get("source", ""),
+                    state.get("destination", ""),
+                    local_no_fly_list,
                 )
             )
 
@@ -262,11 +295,7 @@ class RoutePlanner:
                     ):
                         # Do not try to update sub_optimal_route or live_traffic_state if route is already blocked
                         if (
-                            next_shortest_route_name
-                            not in state.get("blocked_routes", [])
-                            and next_shortest_route_name
-                            not in state.get("blocked_routes_invalid", [])
-                            and traffic_status.traffic_density
+                            traffic_status.traffic_density
                             > ThresholdController.TRAFFIC_DENSITY_THRESHOLD
                         ):
                             # If traffic is above threshold, stop looking for more trackpoints in current route
@@ -317,7 +346,7 @@ class RoutePlanner:
                 logger.info(f"Route {next_shortest_route_name} is optimal.")
 
                 # Potential (Sub-Optimal Route) Wasted. Go for the best route, when you have it. Get rid of the second best.
-                sub_optimal_route = {}
+                sub_optimal_route = None
 
                 # Update the optimal_route_state for the graph state
                 optimal_route_state = {
@@ -335,18 +364,33 @@ class RoutePlanner:
         if (
             sub_optimal_route
             and self.live_traffic_status_list
-            and sub_optimal_route["route_name"] == live_traffic_state.get("route_name")
+            and sub_optimal_route.get("route_name")
+            == live_traffic_state.get("route_name")
         ):
             logger.info(
                 "Picking previous live traffic status as current optimal route is sub-optimal"
             )
             # Picks second last entry from list if num of entries > 1 else picks the only entry available.
-            live_traffic_state = self.live_traffic_status_list[
+            prev_traffic = self.live_traffic_status_list[
                 len(self.live_traffic_status_list) - 2
             ]
+            # Update live_traffic_state with previous traffic data
+            prev_location = prev_traffic.get("location_coordinates")
+            live_traffic_state = {
+                "route_name": prev_traffic.get("route_name", ""),
+                "distance": prev_traffic.get("distance", 0.0),
+                "intersection_name": prev_traffic.get("intersection_name", ""),
+                "timestamp": prev_traffic.get("timestamp", ""),
+                "traffic_density": prev_traffic.get("traffic_density", 0),
+            }
+            # Only add location_coordinates if it exists
+            if prev_location is not None:
+                live_traffic_state["location_coordinates"] = prev_location
 
         return {
-            "optimal_route": sub_optimal_route or optimal_route_state,
+            "optimal_route": sub_optimal_route
+            if sub_optimal_route
+            else optimal_route_state,
             "live_traffic": live_traffic_state,
             "is_sub_optimal": bool(sub_optimal_route),
             "all_routes_data": all_routes_data,
@@ -354,7 +398,7 @@ class RoutePlanner:
 
     def _should_rerun_static_route_optimizers(self, state: State) -> bool:
         """Re-run static route optimizers until optimizer stack is empty"""
-        return len(state["static_optimizers"]) > 0
+        return len(state.get("static_optimizers", [])) > 0
 
     def _route_optimizers_selector(self, state: State) -> str:
         """
@@ -364,7 +408,7 @@ class RoutePlanner:
         if not state.get("direct_route"):
             return PlannerNode.DIRECT.value
         # if static optimizers are available, run static optimization node
-        elif state.get("static_optimizers"):
+        elif state.get("static_optimizers", []):
             return PlannerNode.OPTIMAL.value
         # Otherwise run realtime route optimization node
         else:
@@ -414,10 +458,10 @@ class RoutePlanner:
 
         logger.info(f"Planning route from {source} to {destination}")
 
-        current_state = {"source": source, "destination": destination}
+        current_state: State = {"source": source, "destination": destination}
 
         if previous_state:
-            current_state.update(previous_state)
+            current_state = {**current_state, **previous_state}
 
         # Execute the graph to find the best route
         route_detail = self.compiled_graph.invoke(current_state)

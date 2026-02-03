@@ -176,7 +176,7 @@ class MapCreator:
         """
 
         # Iterate through all intersections and add location markers/popup based on weather, incident and traffic
-        for intersection in all_routes:
+        for intersection in all_routes or []:
             intersection_name = intersection.intersection_name
             latitude = intersection.location_coordinates.latitude
             longitude = intersection.location_coordinates.longitude
@@ -447,7 +447,7 @@ class MapCreator:
         if len(route_points) <= 1:
             return 0.0
 
-        total_distance = 0
+        total_distance = 0.0
         for i in range(len(route_points) - 1):
             lat1, lon1 = route_points[i]
             lat2, lon2 = route_points[i + 1]
