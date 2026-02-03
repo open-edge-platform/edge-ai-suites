@@ -12,9 +12,9 @@ DL Streamer Pipeline Server supports gathering metrics over Open Telemetry. The 
   - `memory_usage_bytes`
   - `fps_per_pipeline{}`
 
-    - If you are starting multiple pipelines, then it can also be queried per pipeline ID. Example: `fps_per_pipeline{pipeline_id="658a5260f37d11ef94fc0242ac160005"}`
+    - If you are starting multiple pipelines, then it can also be queried per pipeline ID. Example: `fps_per_pipeline{pipeline_id="c731392200b311f1a51c825a92225a05"}`
 
-    ![Open telemetry fps_per_pipeline example in prometheus](../_assets/prometheus_fps_per_pipeline.png)
+    ![Open telemetry fps_per_pipeline example in prometheus](images/prometheus.png)
 
 ## End the demonstration
 
