@@ -1,0 +1,6 @@
+apiVersion: v2
+name: health-ai-suite
+description: Helm chart for Health & Life Sciences AI Suite
+type: application
+version: 0.1.0
+appVersion: "1.0"

@@ -8,4 +8,4 @@ services:
       - "8000:8000"
     volumes:
       - ./backend/data:/app/data
-      - ./backend/models:/app/models
+      - ../../models/ai-ecg:/models/ai-ecg

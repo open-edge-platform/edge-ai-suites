@@ -91,8 +91,8 @@ services:
     depends_on:
       aggregator-service:
         condition: service_started
-      mdpnp-service:
-        condition: service_started
+      # mdpnp-service:
+      #   condition: service_started
     network_mode: "host"
 
   ai-ecg:
@@ -215,26 +215,26 @@ services:
       - "/run:/run"
       - "/proc:/proc"
 
-  ui:
-    build:
-      context: ./services/ui
-      dockerfile: Dockerfile
-      args:
-        HTTP_PROXY: ${HTTP_PROXY}
-        HTTPS_PROXY: ${HTTPS_PROXY}
-        NO_PROXY: ${NO_PROXY}
-        http_proxy: ${HTTP_PROXY}
-        https_proxy: ${HTTPS_PROXY}
-        no_proxy: ${NO_PROXY}
-    image: intel/hl-ai-ui:1.0.0
-    container_name: ui
-    environment:
-      - HTTP_PROXY=${HTTP_PROXY}
-      - HTTPS_PROXY=${HTTPS_PROXY}
-      - NO_PROXY=${NO_PROXY}
-      - http_proxy=${HTTP_PROXY}
-      - https_proxy=${HTTPS_PROXY}
-      - no_proxy=${NO_PROXY}
-    ports:
-      - "3000:3000"
+  # ui:
+  #   build:
+  #     context: ./services/ui
+  #     dockerfile: Dockerfile
+  #     args:
+  #       HTTP_PROXY: ${HTTP_PROXY}
+  #       HTTPS_PROXY: ${HTTPS_PROXY}
+  #       NO_PROXY: ${NO_PROXY}
+  #       http_proxy: ${HTTP_PROXY}
+  #       https_proxy: ${HTTPS_PROXY}
+  #       no_proxy: ${NO_PROXY}
+  #   image: intel/hl-ai-ui:1.0.0
+  #   container_name: ui
+  #   environment:
+  #     - HTTP_PROXY=${HTTP_PROXY}
+  #     - HTTPS_PROXY=${HTTPS_PROXY}
+  #     - NO_PROXY=${NO_PROXY}
+  #     - http_proxy=${HTTP_PROXY}
+  #     - https_proxy=${HTTPS_PROXY}
+  #     - no_proxy=${NO_PROXY}
+  #   ports:
+  #     - "3000:3000"
 
