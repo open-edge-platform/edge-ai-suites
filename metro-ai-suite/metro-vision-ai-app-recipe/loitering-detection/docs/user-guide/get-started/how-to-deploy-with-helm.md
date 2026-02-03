@@ -1,29 +1,34 @@
 # How to Deploy with Helm
 
-This section provides step-by-step instructions for deploying the Loitering Detection application using Helm.
+This section provides step-by-step instructions for deploying the Loitering Detection
+application using Helm.
 
 The estimated time to complete this procedure is **30 minutes**.
 
 ## Get Started
 
-Complete this section to confirm that your setup is working correctly and try out workflows in the sample application.
+Complete this section to confirm that your setup is working correctly and try out workflows
+in the sample application.
 
-## Prerequisites
+### Prerequisites
 
-- [System Requirements](system-requirements.md)
--  K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
-  Refer to tutorials such as <https://adamtheautomator.com/installing-kubernetes-on-ubuntu> and many other
-  online tutorials to setup kubernetes cluster on the web with host OS as ubuntu 22.04.
-- For Helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
+- [System Requirements](./system-requirements.md)
+- K8s installation on single or multi node must be done as pre-requisite to continue the
+following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and
+`kubelet` packages on single and multi nodes with `v1.30.2`.
+Refer to online tutorials (such as <https://adamtheautomator.com/install-kubernetes-ubuntu>)
+to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
+- For Helm installation, refer to the [Helm website](https://helm.sh/docs/intro/install/)
 
-> **Note**
-> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
+> **Note:**
+> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu
+> to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
 
-## Step 1: Download the Helm chart
+### Step 1: Download the Helm chart
 
 Follow this procedure on the target system to download the package.
 
-**Note**: Skip this step if you have already followed the steps as part of the [Get Started guide](./get-started.md).
+> **Note:** Skip this step if you have already followed the steps as part of the [Get Started guide](../get-started.md).
 
 Before you can deploy with Helm, you must clone the repository and download the helm chart:
 
@@ -37,7 +42,9 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ```
 
 Optional: Pull the helm chart and replace the existing helm-chart folder with it
-    - Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/helm-chart`
+
+> **Note:** The helm chart should be downloaded when you are not using the helm chart provided
+> in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/helm-chart`.
 
 ```bash
 #Navigate to Loitering Detection directory
@@ -55,7 +62,7 @@ rm -rf helm-chart && mv loitering-detection helm-chart
 cd ..
 ```
 
-## Step 2: Configure and update the environment variables
+### Step 2: Configure and update the environment variables
 
 1. Update the following fields in `values.yaml` file in the Helm chart:
 
@@ -73,9 +80,12 @@ cd ..
         password: # example: password: mypassword
     ```
 
-## Step 3: Deploy the application and Run multiple AI pipelines
+### Step 3: Deploy the application and Run multiple AI pipelines
 
-Follow this procedure to run the sample application. In a typical deployment, multiple cameras deliver video streams that are connected to AI pipelines to improve the classification and recognition accuracy. The following demonstrates running multiple AI pipelines and visualization in the Grafana.
+Follow this procedure to run the sample application. In a typical deployment, multiple cameras
+deliver video streams that are connected to AI pipelines to improve the classification and
+recognition accuracy. The following demonstrates running multiple AI pipelines and
+visualization in the Grafana.
 
 1. Deploy Helm chart
 
@@ -89,7 +99,8 @@ Follow this procedure to run the sample application. In a typical deployment, mu
     kubectl wait --for=condition=ready pod --all -n ld --timeout=300s
     ```
 
-3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)
+3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with
+the Node IP. (Total 8 places)
 
 ``` sh
 curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
@@ -185,13 +196,13 @@ curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_trac
     - Log in with the following credentials:
         - **Username:** `admin`
         - **Password:** `admin`
-    - Check under the Dashboards section for the default dashboard named "Video Analytics Dashboard".
+    - Check under the Dashboards section for the default dashboard named "Video Analytics
+    Dashboard".
 
-   ![Example of Grafana and WebRTC streaming](_images/grafana.png)
+![Example of Grafana and WebRTC streaming](../_assets/grafana.png)
+*Figure 1: Grafana and WebRTC streaming*
 
-   Figure 1: Grafana and WebRTC streaming
-
-## Step 4: End the demonstration
+### Step 4: End the demonstration
 
 Follow this procedure to stop the sample application and end this demonstration.
 
@@ -208,35 +219,13 @@ Follow this procedure to stop the sample application and end this demonstration.
     kubectl get pods -n ld
     ```
 
-
-## Summary
-
-In this guide, you installed and validated Loitering Detection sample application. You also completed a demonstration where multiple pipelines run on a single system with near real-time classification.
-
-
-## Troubleshooting
-
-The following are options to help you resolve issues with the sample application.
-
-### Deploying with Intel GPU K8S Extension on Intel® Tiber™ Edge Platform
-
-If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) with Intel GPU k8s Extension on Intel® Tiber™ Edge Platform, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
-```sh
-gpu:
-  enabled: true
-  type: "gpu.intel.com/i915"
-  count: 1
-```
-
-### Deploying without Intel GPU K8S Extension
-
-If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) without Intel GPU k8s Extension, ensure to set the following details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
-```sh
-privileged_access_required: true
-```
-
-### Error Logs
+## Error Logs
 
 View the container logs using the following command:
 
          kubectl logs -f <pod_name> -n ld
+
+## Troubleshooting
+
+Refer to [Troubleshooting Helm Deployments](../troubleshooting.md#troubleshooting-helm-deployments)
+for troubleshooting.
