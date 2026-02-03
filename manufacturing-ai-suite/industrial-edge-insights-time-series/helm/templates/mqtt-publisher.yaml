@@ -34,7 +34,7 @@ spec:
       {{- end }}
       containers:
       - name: mqtt-publisher
-        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.mqtt_publisher_image }}{{ if .Values.images.image_suffix }}-{{ .Values.images.image_suffix }}{{ end }}
+        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.mqtt_publisher_image }}:{{ .Values.images.image_suffix | default "latest" }}{{ if .Values.images.weekly_build_date }}-{{ .Values.images.weekly_build_date }}-weekly{{ end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           runAsUser: {{ $.Values.env.TIMESERIES_UID }}

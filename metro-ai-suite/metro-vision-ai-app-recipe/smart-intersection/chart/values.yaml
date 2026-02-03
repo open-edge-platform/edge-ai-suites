@@ -47,6 +47,7 @@ nodered:
   tag: "latest"
   # Overrides the storage class name
   storageClassName: "standard"
+  storageSize: "1Gi"
 
 broker:
   repository: eclipse-mosquitto
