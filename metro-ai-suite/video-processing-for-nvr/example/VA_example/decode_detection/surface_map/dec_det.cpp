@@ -24,13 +24,10 @@ using namespace cv;
 using namespace dnn;
 using namespace ov::preprocess;
 
-const size_t NUM_STREAMS = 8;
-const size_t NUM_STREAMS_INFER = 8;
+const size_t NUM_STREAMS = 16;
+const size_t NUM_STREAMS_INFER = 16;
 
-const std::string DEV_DET= "GPU";
-
-std::map<std::thread::id, std::deque<int>> thread_deques;
-std::vector<int> current_ids(NUM_STREAMS, 0);
+const std::string DEV_DET= "GPU.0";
 
 std::shared_ptr<ov::Model> loadAndPreprocessModel(std::string model_path) {
     ov::Core core;
@@ -116,14 +113,14 @@ int main(int argc, char* argv[])
     
     ov::Core core;
     // ov::CompiledModel compiled_model_det = core.compile_model(det_model, DEV_DET);
-    std::vector<ov::CompiledModel> vec_compiled_model_det(NUM_STREAMS_INFER);
+    const size_t num_compiled_models = 1;
+    std::vector<ov::CompiledModel> vec_compiled_model_det(num_compiled_models);
     std::vector<ov::InferRequest> infer_requests_det(NUM_STREAMS_INFER);
-
-    for(int i = 0; i < 4&&i<NUM_STREAMS_INFER; i++) {
+    for(int i = 0; i < num_compiled_models&&i<NUM_STREAMS_INFER; i++) {
         vec_compiled_model_det[i] = core.compile_model(det_model, DEV_DET);
     }
     for(int i = 0; i < NUM_STREAMS_INFER; i++) {
-        infer_requests_det[i] = vec_compiled_model_det[i * 4 / NUM_STREAMS_INFER].create_infer_request();
+        infer_requests_det[i] = vec_compiled_model_det[i * num_compiled_models / NUM_STREAMS_INFER].create_infer_request();
     }
 
     VPP_Init();
@@ -146,7 +143,7 @@ int main(int argc, char* argv[])
         usleep(1'000'000);
         int i = 0;
         int frame_counter = 0;
-        int skip_frames = 6;
+        int skip_frames = 3;
         bool isFirstRun = true;
         while (1) {
             VPP_SURFACE_HDL hdl;
@@ -180,14 +177,15 @@ int main(int argc, char* argv[])
                 // Convert NV12 to RGB for classification
                 cv::Mat nv12(origin_height + origin_height / 2, origin_width, CV_8UC1, vppSurfData.Y);
                 cv::Mat rgb_image;
-                cv::Mat input_image;
+                auto input_tensor = infer_requests_det[id].get_input_tensor(0);
+                cv::Mat input_image(640, 640, CV_8UC3, input_tensor.data<uint8_t>());
                 cv::cvtColor(nv12, rgb_image, cv::COLOR_YUV2BGR_NV12);
                 cv::resize(rgb_image, input_image, cv::Size(640, 640));
 
                 // Detection on GPU
-                ov::Tensor input_det_tensor{ov::element::u8, {batch, 640, 640, 3}, input_image.data};
-                std::vector<ov::Tensor> input_det_tensors = {input_det_tensor};
-                infer_requests_det[id].set_input_tensors(0, input_det_tensors);            
+                // ov::Tensor input_det_tensor{ov::element::u8, {batch, 640, 640, 3}, input_image.data};
+                // std::vector<ov::Tensor> input_det_tensors = {input_det_tensor};
+                // infer_requests_det[id].set_input_tensors(0, input_det_tensors);            
                 
                 if (id == 0) {
                     printWithTimestamp("Detection ...");
