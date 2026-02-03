@@ -403,7 +403,6 @@ class VitalService(vital_pb2_grpc.VitalServiceServicer):
         # definition; the Empty type is imported directly.
         return Empty()
 
-
 class PoseServicer(pose_pb2_grpc.PoseServiceServicer):
     """Receives pose data from 3D pose workloads"""
 
@@ -436,18 +435,25 @@ class PoseServicer(pose_pb2_grpc.PoseServiceServicer):
                       f"3D={len(person.joints_3d)} joints, "
                       f"Conf={avg_conf:.1f}%")
             
+            # Convert frame_data (bytes) to base64 string for JSON transmission
+            import base64
+            frame_base64 = base64.b64encode(request.frame_data).decode('utf-8') if request.frame_data else ""
+            
             message = {
                 "workload_type": "3d-pose",
                 "event_type": "pose3d",
                 "timestamp": request.timestamp_ms,
                 "payload": {
                     "source_id": request.source_id,
+                    "frame_number": request.frame_number,
+                    "frame_base64": frame_base64,  # Add frame data
                     "people": people_payload,
                 },
             }
             
-            print(f"[POSE] Frame from {request.source_id} @ {request.timestamp_ms}ms - "
-                  f"{len(request.people)} people broadcasted")
+            frame_size_kb = len(request.frame_data) / 1024 if request.frame_data else 0
+            print(f"[POSE] Frame {request.frame_number} from {request.source_id} @ {request.timestamp_ms}ms - "
+                  f"{len(request.people)} people, {frame_size_kb:.1f}KB")
             
             if event_loop is not None:
                 asyncio.run_coroutine_threadsafe(
@@ -465,6 +471,7 @@ class PoseServicer(pose_pb2_grpc.PoseServiceServicer):
 
     def StreamPoseData(self, request_iterator, context):
         """Handle streaming pose frames (kept for backward compatibility)"""
+        import base64
         frame_count = 0
         try:
             for pose_frame in request_iterator:
@@ -480,12 +487,17 @@ class PoseServicer(pose_pb2_grpc.PoseServiceServicer):
                     }
                     people_payload.append(person_dict)
                 
+                # Convert frame_data to base64
+                frame_base64 = base64.b64encode(pose_frame.frame_data).decode('utf-8') if pose_frame.frame_data else ""
+                
                 message = {
                     "workload_type": "3d-pose",
                     "event_type": "pose3d",
                     "timestamp": pose_frame.timestamp_ms,
                     "payload": {
                         "source_id": pose_frame.source_id,
+                        "frame_number": pose_frame.frame_number,
+                        "frame_base64": frame_base64,  # Add frame data
                         "people": people_payload,
                     },
                 }

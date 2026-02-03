@@ -4,6 +4,7 @@ Sends pose estimation results frame-by-frame (unary calls)
 """
 
 import grpc
+import base64
 from typing import Dict
 from proto import pose_pb2, pose_pb2_grpc
 
@@ -28,7 +29,8 @@ class GrpcPosePublisher:
         self.stats = {
             'total_sent': 0,
             'total_failed': 0,
-            'last_error': None
+            'last_error': None,
+            'total_bytes_sent': 0
         }
         
         # Connect
@@ -74,10 +76,13 @@ class GrpcPosePublisher:
             pose_frame = self._create_pose_frame(data_packet)
             
             # Send immediately (unary call)
-            response = self.stub.PublishPose(pose_frame, timeout=2.0)
+            response = self.stub.PublishPose(pose_frame, timeout=5.0)
             
             if response.ok:
                 self.stats['total_sent'] += 1
+                # Track bytes sent (approximate)
+                if 'frame_base64' in data_packet:
+                    self.stats['total_bytes_sent'] += len(data_packet['frame_base64'])
                 return True
             else:
                 self.stats['total_failed'] += 1
@@ -110,14 +115,21 @@ class GrpcPosePublisher:
         # Extract data from packet
         timestamp_ms = data_packet.get("timestamp", 0)
         source_id = data_packet.get("source_id", self.source_id)
+        frame_number = data_packet.get("frame_number", 0)
         
         poses_3d = data_packet.get("poses_3d", [])
         poses_2d = data_packet.get("poses_2d", [])
         
+        # Extract and decode frame data
+        frame_base64 = data_packet.get("frame_base64", "")
+        frame_data = base64.b64decode(frame_base64) if frame_base64 else b""
+        
         # Create PoseFrame message
         pose_frame = pose_pb2.PoseFrame(
             timestamp_ms=timestamp_ms,
-            source_id=source_id
+            source_id=source_id,
+            frame_data=frame_data,
+            frame_number=frame_number
         )
         
         # Merge 2D and 3D poses by person_id
@@ -207,10 +219,12 @@ class GrpcPosePublisher:
         """Print publishing statistics"""
         total = self.stats['total_sent'] + self.stats['total_failed']
         success_rate = (self.stats['total_sent'] / total * 100) if total > 0 else 0
+        total_mb = self.stats['total_bytes_sent'] / (1024 * 1024)
         
         print("\n[STATS] Publisher Statistics:")
         print(f"  Total sent: {self.stats['total_sent']}")
         print(f"  Total failed: {self.stats['total_failed']}")
         print(f"  Success rate: {success_rate:.1f}%")
+        print(f"  Total data sent: {total_mb:.2f} MB")
         if self.stats['last_error']:
             print(f"  Last error: {self.stats['last_error']}")
