@@ -204,5 +204,4 @@ script. This will delete all running pipeline instances.
 ```
 
 ---
-> Intel, the Intel logo, OpenVINO, and the OpenVINO logo are trademarks of Intel Corporation
-> or its subsidiaries.
+> *Intel, the Intel logo, OpenVINO, and the OpenVINO logo are trademarks of Intel Corporation or its subsidiaries.*
