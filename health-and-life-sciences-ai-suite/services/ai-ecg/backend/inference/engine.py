@@ -7,8 +7,8 @@ import load
 from inference.preprocess import ECGPreprocessor
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, "models")
 DATA_DIR = os.path.join(BASE_DIR, "data")
+MODEL_DIR = "/models/ai-ecg"
 
 MODEL_MAP = {
     8960: os.path.join(MODEL_DIR, "ecg_8960_ir10_fp16.xml"),
