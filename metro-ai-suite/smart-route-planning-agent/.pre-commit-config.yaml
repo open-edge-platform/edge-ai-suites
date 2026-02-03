@@ -24,7 +24,8 @@ repos:
   rev: v1.19.1
   hooks:
   - id: mypy
-    additional_dependencies: [types-pyyaml]
+    additional_dependencies: [types-pyyaml, types-requests]
+    args: [ --ignore-missing-imports ]
     exclude: ^metro-ai-suite/smart-route-planning-agent/testing/resources/
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.14.14
