@@ -1,9 +1,10 @@
-# How to use OPC UA publisher
+# Use OPC UA Publisher
 
 Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing using the docker.
 
 1. Configure and start the OPC UA Server
    If you already have a functioning OPC UA server, you can skip this step. Otherwise, this section provides instructions for using the OPC UA server provided by [Unified Automation](https://www.unified-automation.com).
+
    1. **Download and Install the OPC UA Server**
       Download the [OPC UA C++ Demo Server (Windows)](https://www.unified-automation.com/downloads/opc-ua-servers.html) and install it on your Windows machine. Please note that this server is available only for Windows.
    2. **Starting the OPC UA Server**
@@ -11,6 +12,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
       * Launch the application to start the server.
 
 2. Update the following variables related to the OPC UA server in `.env`.
+
     ``` sh
     OPCUA_SERVER_IP= # <IP-Adress of the OPCUA server>
     OPCUA_SERVER_PORT= # example: 48010
@@ -27,9 +29,9 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
         },
     ```
 
-4. To use an AI model of your own please follow the steps as mentioned in this [document](./how-to-use-an-ai-model-and-video-file-of-your-own.md)
+4. To use an AI model of your own please follow the steps as mentioned in this [document](./use-your-ai-model-and-video.md)
 
-5. Setup the application to use the docker based deployment following this [document](./get-started.md#setup-the-application).
+5. Setup the application to use the docker based deployment following this [document](../get-started.md#setup-the-application).
 
 6. Start the pipeline using the following cURL command. Update the `HOST_IP` and ensure the correct path to the model is provided as shown below. This example starts an AI pipeline.
 
@@ -63,6 +65,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
    ```
 
 7. Run the following sample OPC UA subscriber on the different machine by updating the `<IP-Address of OPCUA Server>` to read the meta-data written to server variable from DL Streamer Pipeline Server.
+
    ```python
    import asyncio
    from asyncua import Client, Node
@@ -84,7 +87,9 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
    if __name__ == "__main__":
       asyncio.run(main())
    ```
+
    Install asyncua before running the above script (if not already installed):
+
    ```sh
    pip3 install asyncua
    ```

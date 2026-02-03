@@ -1,4 +1,4 @@
-# Run multiple AI pipelines
+# Run Multiple AI Pipelines
 
 In a typical deployment, multiple cameras deliver video streams that are connected to AI pipelines to improve the detection and recognition accuracy.
 
@@ -10,27 +10,29 @@ The DL Streamer Pipeline Server config supports multiple pipelines that you can 
 > **Note** We assume that the model and sample video is already available in the application directory under `resources/`.
 
 1. Bring up the containers.
-    ```sh
-    docker compose up -d
-    ```
+
+   ```sh
+   docker compose up -d
+   ```
+
 2. Start the PCB anomaly detection pipeline with the following Client URL (cURL) command by replacing the `<peer-str-id>` with a string id eg: `anomaly1` and `<HOST_IP>` with the system IP. This pipeline is configured to run in a loop forever. This REST/cURL request will return a pipeline instance ID, which can be used as an identifier to query later the pipeline status or stop the pipeline instance. For example, a6d67224eacc11ec9f360242c0a86003.
 
-    ``` sh
-    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_mlops -X POST -H 'Content-Type: application/json' -d '{
-        "destination": {
-            "frame": {
-                "type": "webrtc",
-                "peer-id": "<peer-str-id>"
-            }
-        },
-        "parameters": {
-            "classification-properties": {
-                "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
-                "device": "CPU"
-            }
-        }
-    }'
-    ```
+   ``` sh
+   curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_mlops -X POST -H 'Content-Type: application/json' -d '{
+       "destination": {
+           "frame": {
+               "type": "webrtc",
+               "peer-id": "<peer-str-id>"
+           }
+       },
+       "parameters": {
+           "classification-properties": {
+               "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
+               "device": "CPU"
+           }
+       }
+   }'
+   ```
 
 3. Start another PCB anomaly detection pipeline with the following Client URL (cURL) command by replacing the `<different-peer-str-id>` with a different string id than the one in above step. eg: `anomaly2` and `<HOST_IP>` with the system IP. This pipeline is not configured to run in a loop forever. This REST/cURL request will return a pipeline instance ID, which can be used as an identifier to query later the pipeline status or stop the pipeline instance. For example, a6d67224eacc11ec9f360242c0a86003.
 
@@ -54,17 +56,19 @@ The DL Streamer Pipeline Server config supports multiple pipelines that you can 
         }
     }'
     ```
+
     **Note the instance ID of this pipeline**
 
 4. View the WebRTC streaming on `https://<HOST_IP>/mediamtx/<peer-str-id>/` and `https://<HOST_IP>/mediamtx/<different-peer-str-id>/`.
 
-   ![Example of WebRTC streaming using mediamtx](./images/webrtc-streaming.png)
+   ![Example of WebRTC streaming using mediamtx](../_assets/webrtc-streaming.png)
 
    Figure 1: WebRTC streaming
 
-   > NOTE: You can also observe telemetry data from the Prometheus UI. Refer [this](./how-to-view-telemetry-data.md) document to learn more.
+   > **Note:** You can also observe telemetry data from the Prometheus UI. Refer to [this](./view-telemetry-data.md) document to learn more.
 
 5. Stop the 2nd pipeline using the instance ID noted in point #3 above, before proceeding with this documentation.
+
    ```shell
    curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
    ```

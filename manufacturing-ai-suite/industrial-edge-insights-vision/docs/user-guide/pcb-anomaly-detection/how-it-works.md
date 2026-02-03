@@ -1,4 +1,4 @@
-# Overview and Architecture
+# How It Works
 
 This Sample Application enables real-time anomaly detection in printed circuit boards (PCB) by running inference workflows across multiple AI models. It connects multiple video streams from different cameras to AI-powered pipelines, all operating efficiently on a single industrial PC. This solution improves PCB production and compliance by anomalies before they can impact operations.
 
@@ -6,7 +6,7 @@ This Sample Application enables real-time anomaly detection in printed circuit b
 
 ### High-Level Architecture Diagram
 
-![Architecture Diagram](./images/industrial-edge-insights-vision-architecture.drawio.svg)
+![Architecture Diagram](./_assets/industrial-edge-insights-vision-architecture.drawio.svg)
 *Figure 1: Architecture Diagram for PCB Anomaly Detection Reference Impementation.*
 
 ## Supporting Resources

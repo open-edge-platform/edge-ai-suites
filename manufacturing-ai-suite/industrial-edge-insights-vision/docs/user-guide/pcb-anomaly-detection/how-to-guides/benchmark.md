@@ -1,10 +1,12 @@
-# How to Benchmark PCB Anomaly Detection
+# Benchmark PCB Anomaly Detection
+
 This guide demonstrates how to benchmark the PCB anomaly detection pipeline to determine optimal stream density and performance characteristics.
 
 ## Contents
 
 ### Prerequisites
-> Ensure the application is set up and running. Refer to the [Get Started Guide](./get-started.md) for complete installation and configuration steps.
+
+> **Note:** Ensure the application is set up and running. Refer to the [Get Started Guide](../get-started.md) for complete installation and configuration steps.
 
 - DL Streamer Pipeline Server (DLSPS) running and accessible
 - `curl`, `jq`, `gawk`, `ffmpeg`, and `bc` utilities installed
@@ -20,7 +22,7 @@ Navigate to the `[WORKDIR]/edge-ai-suites/manufacturing-ai-suite/industrial-edge
 **Arguments:**
 - `-p <pipeline_name>` : **(Required)** The name of the pipeline to benchmark (e.g., pcb_anomaly_classification)
 - `-l <lower_bound>` : **(Required)** Starting lower bound for number of streams
-- `-u <upper_bound>` : **(Required)** Starting upper bound for number of streams  
+- `-u <upper_bound>` : **(Required)** Starting upper bound for number of streams
 - `-t <target_fps>` : Target FPS threshold (default: 14.95)
 - `-i <interval>` : Monitoring duration in seconds per test run (default: 60)
 
@@ -72,7 +74,7 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 The benchmark uses binary search to find optimal stream density. Key metrics include:
 
 - **Stream Density**: Maximum concurrent streams achieving target FPS
-- **Throughput Median**: Median FPS across all streams  
+- **Throughput Median**: Median FPS across all streams
 - **Throughput Cumulative**: Total FPS sum of all streams
 
 **Sample Output:**
@@ -99,7 +101,7 @@ throughput cumulative: 173.8
 
 2. **Pipeline Startup Failures**
    - Check model file paths in payload.json
-   - Verify video file accessibility  
+   - Verify video file accessibility
    - Monitor system resources (CPU, memory, GPU)
    - Ensure the correct SAMPLE_APP is set in .env file
 
