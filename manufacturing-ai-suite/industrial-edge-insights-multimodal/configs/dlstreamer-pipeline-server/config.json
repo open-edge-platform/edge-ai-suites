@@ -5,7 +5,7 @@
                 "name": "weld_defect_classification",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "rtspsrc location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "rtspsrc location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! video/x-raw,format=BGR ! gvaclassify inference-region=full-frame name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -24,10 +24,16 @@
                             "type": "mqtt",
                             "topic": "vision_weld_defect_classification"
                         },
-                        "frame": {
+                        "frame": [{
                             "type": "webrtc",
                             "peer-id": "samplestream"
-                        }
+                        },
+                        {
+                            "type": "s3_write",
+                            "bucket": "dlstreamer-pipeline-results",
+                            "folder_prefix": "weld-defect-classification",
+                            "block": false
+                        }]
                     },
                     "parameters": {
                         "classification-properties": {
