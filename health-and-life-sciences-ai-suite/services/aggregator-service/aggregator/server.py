@@ -151,11 +151,44 @@ async def memory_usage():
     return _proxy_metrics_get("/memory")
 
 
+@app.get("/streaming-status")
+async def stream_window_state():
+    """Return current streaming window state for UI (lock + remaining time)."""
+    now = time.time()
+    lock_until = getattr(app.state, "streaming_lock_until", None)
+
+    if lock_until is None or now >= lock_until:
+        return {
+            "locked": False,
+            "remaining_seconds": 0,
+        }
+
+    remaining = int(lock_until - now)
+    return {
+        "locked": True,
+        "remaining_seconds": max(0, remaining),
+    }
+
+
 @app.post("/start")
 async def start_workloads(target: str = Query("dds-bridge", description="Which workload to start (e.g., mdpnp, ai-ecg, 3d-pose, rppg, or all)")):
     """Wrapper API for UI to start streaming from backend workloads."""
     targets = {t.strip() for t in target.split(",")} if target else {"dds-bridge"}
     results: dict[str, str] = {}
+
+    # Enforce a global streaming window so that when the UI calls
+    # /start, workloads run for a fixed duration (e.g., 60 seconds)
+    # and then are automatically stopped. During this window,
+    # additional /start calls are rejected so the UI can keep the
+    # "Start" button disabled.
+    now = time.time()
+    lock_until = getattr(app.state, "streaming_lock_until", None)
+    if lock_until is not None and now < lock_until:
+        remaining = int(lock_until - now)
+        return {
+            "status": "locked",
+            "remaining_seconds": max(0, remaining),
+        }
     
     def _call(url: str) -> str:
         try:
@@ -202,23 +235,37 @@ async def start_workloads(target: str = Query("dds-bridge", description="Which w
             results["rppg"] = "already running"
         else:
             results["rppg"] = _call(f"{RPPG_CONTROL_URL}/start")
+    # Schedule automatic stop after a fixed window (60 seconds).
+    window_seconds = 60.0
+    app.state.streaming_lock_until = now + window_seconds
 
-    return {"status": "ok", "results": results}
+    # Cancel any previous auto-stop task before creating a new one.
+    existing_task = getattr(app.state, "auto_stop_task", None)
+    if existing_task is not None:
+        existing_task.cancel()
+
+    app.state.auto_stop_task = asyncio.create_task(
+        _auto_stop_after(window_seconds, targets)
+    )
+
+    return {
+        "status": "ok",
+        "results": results,
+        "auto_stop_in_seconds": int(window_seconds),
+    }
 
 
-@app.post("/stop")
-async def stop_workloads(target: str = Query("dds-bridge", description="Which workload to stop (e.g., mdpnp, ai-ecg, 3d-pose, rppg, or all)")):
-    """Wrapper API for UI to stop streaming from backend workloads."""
-    targets = {t.strip() for t in target.split(",")} if target else {"dds-bridge"}
+async def _stop_workloads_internal(targets: set[str]) -> dict[str, str]:
+    """Shared implementation for stopping workloads (used by /stop and auto-stop)."""
     results: dict[str, str] = {}
-    
+
     def _call(url: str) -> str:
         try:
             resp = requests.post(url, timeout=3)
             return f"{resp.status_code}: {resp.text}"
         except Exception as exc:
             return f"error: {exc}"
-        
+
     def _check_status(url: str) -> bool:
         """Check if service is running"""
         try:
@@ -233,10 +280,10 @@ async def stop_workloads(target: str = Query("dds-bridge", description="Which wo
     # MDPNP / DDS-Bridge
     if "all" in targets or "mdpnp" in targets:
         results["dds-bridge"] = _call(f"{DDS_BRIDGE_CONTROL_URL}/stop")
-    
+
     # AI-ECG
     if "all" in targets or "ai-ecg" in targets:
-        task = app.state.ai_ecg_task
+        task = getattr(app.state, "ai_ecg_task", None)
         if task:
             task.cancel()
             try:
@@ -264,7 +311,38 @@ async def stop_workloads(target: str = Query("dds-bridge", description="Which wo
         else:
             results["rppg"] = _call(f"{RPPG_CONTROL_URL}/stop")
 
+    return results
+
+
+@app.post("/stop")
+async def stop_workloads(target: str = Query("dds-bridge", description="Which workload to stop (e.g., mdpnp, ai-ecg, 3d-pose, rppg, or all)")):
+    """Wrapper API for UI to stop streaming from backend workloads."""
+    targets = {t.strip() for t in target.split(",")} if target else {"dds-bridge"}
+
+    # Manual stop clears any scheduled auto-stop and lock.
+    existing_task = getattr(app.state, "auto_stop_task", None)
+    if existing_task is not None:
+        existing_task.cancel()
+        app.state.auto_stop_task = None
+    app.state.streaming_lock_until = None
+
+    results = await _stop_workloads_internal(targets)
     return {"status": "ok", "results": results}
+
+
+async def _auto_stop_after(delay_seconds: float, targets: set[str]) -> None:
+    """Background task that waits for the window then stops workloads."""
+    try:
+        await asyncio.sleep(delay_seconds)
+        print(f"[AutoStop] Stopping workloads after {delay_seconds} seconds: {targets}")
+        await _stop_workloads_internal(targets)
+    except asyncio.CancelledError:
+        print("[AutoStop] Cancelled before completion")
+        raise
+    finally:
+        # Clear lock and task reference when done.
+        app.state.streaming_lock_until = None
+        app.state.auto_stop_task = None
 
 
 class VitalService(vital_pb2_grpc.VitalServiceServicer):
@@ -468,6 +546,8 @@ async def on_startup():
     print(f"✓ Event loop initialized: {event_loop}")
     
     app.state.ai_ecg_task = None
+    app.state.auto_stop_task = None
+    app.state.streaming_lock_until = None
 
     await asyncio.sleep(0.5)
     

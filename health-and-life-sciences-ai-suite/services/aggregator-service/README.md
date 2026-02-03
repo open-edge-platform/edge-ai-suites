@@ -65,67 +65,102 @@ Environment variables:
 
 ## HTTP / SSE API
 
-### `POST /start` — start backend streaming (wrapper)
+### `POST /start` — start backend streaming (wrapper + timed window)
 
-Turns on streaming from selected backend workloads. Currently the only
-supported target is `dds-bridge`, which controls whether the DDS‑Bridge
-forwards vitals from the MDPnP DDS domain into this aggregator over gRPC.
+Turns on streaming from selected backend workloads for a fixed time window
+(currently 60 seconds). After the window elapses, the aggregator
+automatically stops the selected workloads.
 
 - Method: `POST`
 - URL: `/start`
 - Query parameters:
   - `target` (optional, default: `dds-bridge`)
-    - Accepted values: `dds-bridge` or `all` (reserved for future
-      multiple workloads).
+    - Accepted values: `mdpnp`, `ai-ecg`, `3d-pose`, `rppg`, any
+      comma‑separated combination (e.g. `mdpnp,ai-ecg,3d-pose,rppg`), or
+      `all`.
 - Behavior:
-  - Sends `POST {DDS_BRIDGE_CONTROL_URL}/start` when `target` includes
-    `dds-bridge`.
-- Response:
+  - For `mdpnp`: sends `POST {DDS_BRIDGE_CONTROL_URL}/start` (controls DDS‑Bridge).
+  - For `ai-ecg`: starts an internal polling task if not already running.
+  - For `3d-pose`: calls `{POSE_3D_CONTROL_URL}/status` and, if not enabled,
+    sends `POST {POSE_3D_CONTROL_URL}/start`.
+  - For `rppg`: calls `{RPPG_CONTROL_URL}/status` and, if not enabled,
+    sends `POST {RPPG_CONTROL_URL}/start`.
+  - Enforces a single global streaming window:
+    - On first `/start`, schedules an automatic stop after 60 seconds.
+    - Additional `/start` calls during this window are rejected with
+      `status: "locked"` so the UI can keep the **Start** button disabled.
+- Responses:
+
+If a new window is successfully started:
 
 ```json
 {
   "status": "ok",
   "results": {
-    "dds-bridge": "200: {\"status\":\"started\"}"
-  }
+    "dds-bridge": "200: {\"status\":\"started\"}",
+    "ai-ecg": "started",
+    "3d-pose": "200: {\"status\":\"started\"}",
+    "rppg": "200: {\"status\":\"started\"}"
+  },
+  "auto_stop_in_seconds": 60
+}
+```
+
+If a window is already active when `/start` is called:
+
+```json
+{
+  "status": "locked",
+  "remaining_seconds": 23
 }
 ```
 
 Typical UI usage:
 
-- Call this endpoint when the user presses a **Start** button to begin
-  receiving vitals from MDPnP via DDS‑Bridge.
+- When the user presses **Start**, call `POST /start?target=all`.
+- If `status == "ok"`, disable the Start button and either start a local
+  countdown using `auto_stop_in_seconds` or poll `/streaming-status`.
+- If `status == "locked"`, keep the Start button disabled and use
+  `remaining_seconds` for a countdown.
 
 ### `POST /stop` — stop backend streaming (wrapper)
 
-Turns off streaming from selected backend workloads. For `dds-bridge`,
-this disables forwarding of new vitals into the aggregator; DDS itself
-may continue to run, but no new data is pushed over gRPC.
+Manually stops streaming from selected backend workloads and clears any
+scheduled auto‑stop. This immediately ends the current streaming window
+and re‑enables `/start`.
 
 - Method: `POST`
 - URL: `/stop`
 - Query parameters:
   - `target` (optional, default: `dds-bridge`)
-    - Accepted values: `dds-bridge` or `all` (reserved for future
-      multiple workloads).
+    - Accepted values: `mdpnp`, `ai-ecg`, `3d-pose`, `rppg`, any
+      comma‑separated combination, or `all`.
 - Behavior:
-  - Sends `POST {DDS_BRIDGE_CONTROL_URL}/stop` when `target` includes
-    `dds-bridge`.
+  - Cancels any pending auto‑stop task and clears the internal lock.
+  - For `mdpnp`: sends `POST {DDS_BRIDGE_CONTROL_URL}/stop`.
+  - For `ai-ecg`: cancels the internal polling task if running.
+  - For `3d-pose`: calls `{POSE_3D_CONTROL_URL}/status` and, if enabled,
+    sends `POST {POSE_3D_CONTROL_URL}/stop`.
+  - For `rppg`: calls `{RPPG_CONTROL_URL}/status` and, if enabled,
+    sends `POST {RPPG_CONTROL_URL}/stop`.
 - Response:
 
 ```json
 {
   "status": "ok",
   "results": {
-    "dds-bridge": "200: {\"status\":\"stopped\"}"
+    "dds-bridge": "200: {\"status\":\"stopped\"}",
+    "ai-ecg": "stopped",
+    "3d-pose": "200: {\"status\":\"stopped\"}",
+    "rppg": "200: {\"status\":\"stopped\"}"
   }
 }
 ```
 
 Typical UI usage:
 
-- Call this endpoint when the user presses a **Stop** button to stop
-  receiving vitals from MDPnP via DDS‑Bridge.
+- Call this endpoint when the user presses a **Stop** button to
+  immediately end streaming and re‑enable **Start**.
 
 ### `GET /events` — Server‑Sent Events stream
 
@@ -161,6 +196,7 @@ Common envelope for all events:
   "timestamp": 1769354498005,
   "payload": {
     "device_id": "LRnWdqwkmuZWcKcJR3tG71yZtRkpWNMgy6SV",
+    "device_type": "ECG_Simulator",
     "metric": "MDC_ECG_LEAD_II",
     "value": 0.0,
     "waveform": [0.12, 0.15, 0.10],
@@ -178,11 +214,15 @@ Common envelope for all events:
   "timestamp": 1769354500456,
   "payload": {
     "device_id": "DwJR5TAbuoL48uiytUWFffIg972gkpzxpHza",
+    "device_type": "IBP_Simulator",
     "metric": "MDC_ECG_HEART_RATE",
     "value": 72.0
   }
 }
 ```
+
+The `device_type` field is optional and, when present, is inferred by the
+backend (e.g., different MDPnP simulators such as IBP, ECG, CO2).
 
 #### Example: AI‑ECG waveform
 
@@ -224,6 +264,29 @@ Common envelope for all events:
   }
 }
 ```
+
+### `GET /streaming-status` — current streaming window status
+
+Returns whether a timed streaming window is currently active and how many
+seconds remain before automatic stop.
+
+- Method: `GET`
+- URL: `/streaming-status`
+- Response:
+
+```json
+{
+  "locked": true,
+  "remaining_seconds": 17
+}
+```
+
+Notes:
+
+- `locked == true` means `/start` will return `status = "locked"` if
+  called now; the UI should keep the **Start** button disabled.
+- When `locked == false` and `remaining_seconds == 0`, the previous
+  window is over and the UI may re‑enable **Start**.
 
 ---
 
