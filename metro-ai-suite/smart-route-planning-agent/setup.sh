@@ -41,7 +41,7 @@ check_docker_compose() {
         echo -e "${RED}Error: Docker is not installed or not in PATH${NC}"
         return 1
     fi
-    
+
     if ! docker compose version &> /dev/null; then
         echo -e "${RED}Error: Docker Compose is not available${NC}"
         return 1
@@ -64,12 +64,15 @@ fi
 
 
 # Base configuration
-export HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7}')  # Fetch the host IP
+HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7}')  # Fetch the host IP
+
 # Fallback to localhost if HOST_IP is empty
 if [[ -z "$HOST_IP" ]]; then
-    export HOST_IP="127.0.0.1"
+    HOST_IP="127.0.0.1"
     echo -e "${YELLOW}Warning: Could not detect host IP, using fallback: ${HOST_IP}${NC}"
 fi
+
+export HOST_IP
 # Add HOST_IP to no_proxy only if not already present
 [[ $no_proxy != *"${HOST_IP}"* ]] && export no_proxy="${no_proxy},${HOST_IP}"
 
@@ -98,12 +101,11 @@ echo -e "  REGISTRY: ${YELLOW}$REGISTRY${NC}"
 # Function to build Docker images
 build_images() {
     echo -e "${BLUE}==> Building Smart-Route-Planning-Agent Docker container...${NC}"
-    
-    docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" build
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}Docker container built successfully${NC}"
+
+    if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" build; then
+        echo -e "${GREEN}Docker container built successfully!${NC}"
     else
-        echo -e "${RED}Failed to build Docker container${NC}"
+        echo -e "${RED}Failed to build Docker container!${NC}"
         return 1
     fi
 }
@@ -111,25 +113,22 @@ build_images() {
 # Function to start the service
 start_service() {
     echo -e "${BLUE}==> Starting Smart-Route-Planning-Agent container...${NC}"
-    
-    docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" up -d
-    
-    if [ $? -eq 0 ]; then
+
+    if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" up -d; then
         echo -e "${GREEN}Smart-Route-Planning-Agent container started successfully!${NC}"
         echo -e "${BLUE}AI Route Planner UI: ${YELLOW}http://${HOST_IP}:${AI_ROUTE_PLANNER_PORT}${NC}"
         echo ""
         echo -e "${BLUE}To follow logs in real-time, run:${NC}"
         echo -e "${YELLOW}docker compose -f docker/compose.yaml logs -f${NC}"
     else
-        echo -e "${RED}Failed to start Smart-Route-Planning-Agent container${NC}"
+        echo -e "${RED}Failed to start Smart-Route-Planning-Agent container!${NC}"
         return 1
     fi
 }
 
 
 # Check Docker Compose availability
-check_docker_compose
-if [ $? -ne 0 ]; then
+if ! check_docker_compose; then
     if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then exit 1; else return 1; fi
 fi
 
@@ -138,7 +137,7 @@ case "$1" in
     "--setup")
         echo -e "${BLUE}==> Running full setup (build and start)...${NC}"
         build_images
-        if [ $? -eq 0 ]; then
+        if build_images; then
             start_service
         else
             echo -e "${RED}Setup failed during build step${NC}"
@@ -153,8 +152,7 @@ case "$1" in
         ;;
     "--stop")
         echo -e "${YELLOW}Stopping Smart-Route-Planning-Agent container...${NC}"
-        docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down
-        if [ $? -eq 0 ]; then
+        if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down; then
             echo -e "${GREEN}Smart-Route-Planning-Agent container stopped successfully.${NC}"
         else
             echo -e "${RED}Failed to stop container${NC}"
@@ -163,8 +161,7 @@ case "$1" in
         ;;
     "--restart")
         echo -e "${BLUE}==> Restarting Smart-Route-Planning-Agent container...${NC}"
-        docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down
-        if [ $? -eq 0 ]; then
+        if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down; then
             echo -e "${GREEN}Container stopped successfully${NC}"
             start_service
         else
@@ -178,10 +175,3 @@ case "$1" in
         if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then exit 1; else return 1; fi
         ;;
 esac
-
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}Done!${NC}"
-else
-    echo -e "${RED}Operation failed. Check the logs above for details.${NC}"
-    if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then exit 1; else return 1; fi
-fi
