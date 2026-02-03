@@ -14,7 +14,43 @@ import ice.SampleArray;
 import ice.SampleArrayDataReader;
 import ice.SampleArraySeq;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class MdPnpEventConsumer {
+
+        // Cache mapping device_id -> device_type so all metrics from the same
+        // physical simulator report a consistent type to the UI.
+        private static final Map<String, String> DEVICE_TYPE_CACHE = new ConcurrentHashMap<>();
+
+        private static String inferDeviceType(String deviceId, String metricId) {
+                if (deviceId == null || metricId == null) {
+                        return null;
+                }
+
+                String cached = DEVICE_TYPE_CACHE.get(deviceId);
+                if (cached != null) {
+                        return cached;
+                }
+
+                String deviceType = null;
+
+                // Heuristic mapping based on metric prefixes.
+                // Adjust these rules to match your three MDPNP devices.
+                if (metricId.startsWith("MDC_PRESS_BLD_ART_")) {
+                        deviceType = "IBP_Simulator";
+                } else if (metricId.startsWith("MDC_ECG_")) {
+                        deviceType = "ECG_Simulator";
+                } else if (metricId.startsWith("MDC_CO2_") || metricId.startsWith("MDC_TTHOR_")) {
+                        deviceType = "CO2_Simulator";
+                }
+
+                if (deviceType != null) {
+                        DEVICE_TYPE_CACHE.put(deviceId, deviceType);
+                }
+
+                return deviceType;
+        }
 
     public static void main(String[] args) throws InterruptedException {
         // Ensure GrpcPublisher is initialized so that the HTTP
@@ -136,10 +172,11 @@ public class MdPnpEventConsumer {
 
                                         VitalReading v = new VitalReading();
                                         v.deviceId = n.unique_device_identifier;
+                                        v.deviceType = inferDeviceType(v.deviceId, v.metric);
                                         v.metric = n.metric_id;
                                         v.value = n.value;
                                         v.unit = n.unit_id;
-                                        v.timestamp = System.currentTimeMillis();
+                                        v.timestamp = System.currentTimeMillis();                                       
 
                                         // Only log and forward when DDS-bridge streaming is enabled
                                         if (GrpcPublisher.isStreamingEnabled()) {
@@ -209,6 +246,7 @@ public class MdPnpEventConsumer {
                                                 v.value = 0; // scalar value not meaningful for waveform
                                                 v.unit = w.unit_id;
                                                 v.timestamp = System.currentTimeMillis();
+                                                v.deviceType = inferDeviceType(v.deviceId, v.metric);
                                                 v.waveformFrequencyHz = (int) w.frequency;
 
                                                 if (sampleCount > 0) {

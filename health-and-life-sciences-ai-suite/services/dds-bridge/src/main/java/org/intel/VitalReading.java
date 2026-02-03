@@ -10,6 +10,10 @@ class VitalReading {
     public String unit;
     public long timestamp;
 
+    // Logical device type (e.g., IBP_Simulator, ECG_Simulator);
+    // inferred in MdPnpEventConsumer from metric / device id.
+    public String deviceType;
+
     // Optional waveform payload (for SampleArray / ECG etc.)
     public List<Float> waveform;          // samples in acquisition order
     public int waveformFrequencyHz;       // sampling rate associated with waveform
@@ -70,6 +74,14 @@ class VitalReading {
         this.timestamp = timestamp;
     }
 
+    public String getDeviceType() {
+        return deviceType;
+    }
+
+    public void setDeviceType(String deviceType) {
+        this.deviceType = deviceType;
+    }
+
     public List<Float> getWaveform() {
         return waveform;
     }
@@ -89,12 +101,13 @@ class VitalReading {
     @Override
     public String toString() {
         return "VitalReading [deviceId=" + deviceId +
-                ", metric=" + metric +
-                ", value=" + value +
-                ", unit=" + unit +
-                ", timestamp=" + timestamp +
-                ", waveformSamples=" + (waveform == null ? 0 : waveform.size()) +
-                ", waveformFrequencyHz=" + waveformFrequencyHz +
-                "]";
+            ", metric=" + metric +
+            ", value=" + value +
+            ", unit=" + unit +
+            ", timestamp=" + timestamp +
+            ", deviceType=" + deviceType +
+            ", waveformSamples=" + (waveform == null ? 0 : waveform.size()) +
+            ", waveformFrequencyHz=" + waveformFrequencyHz +
+            "]";
     }
 }
