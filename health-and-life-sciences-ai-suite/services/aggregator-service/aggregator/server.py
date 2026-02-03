@@ -321,7 +321,9 @@ class VitalService(vital_pb2_grpc.VitalServiceServicer):
                 else:
                     print("[Broadcast] WARNING: event_loop is None!")
         
-        return vital_pb2.Empty()
+        # StreamVitals returns google.protobuf.Empty per the proto
+        # definition; the Empty type is imported directly.
+        return Empty()
 
 
 class PoseServicer(pose_pb2_grpc.PoseServiceServicer):

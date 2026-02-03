@@ -2,7 +2,7 @@
 set -e
 
 DOMAIN=${DOMAIN:-10}
-DEVICES=${DEVICES:-"ECG_Simulator,CO2_Simulator"}
+DEVICES=${DEVICES:-"ECG_Simulator,CO2_Simulator,IBP_Simulator"}
 
 echo "Starting devices: $DEVICES"
 
