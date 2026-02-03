@@ -260,7 +260,6 @@ class RoutePlanner:
                         )
                         <= live_traffic_controller.proximity_factor
                     ):
-
                         # Do not try to update sub_optimal_route or live_traffic_state if route is already blocked
                         if (
                             next_shortest_route_name

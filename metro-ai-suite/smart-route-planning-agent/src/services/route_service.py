@@ -47,9 +47,7 @@ class RouteService:
 
         try:
             # Running the agent for first time - finds direct trivial route.
-            self.route_state = self.route_planner.plan_route(
-                source, destination
-            )
+            self.route_state = self.route_planner.plan_route(source, destination)
 
             direct_route_name = self.route_state["direct_route"]["route_name"]
             map_data_parser = MapDataParser(GPX_DIR / direct_route_name)
@@ -262,7 +260,9 @@ class RouteService:
         # Get intersection images and lat and long for route incidents (if any) from live traffic data
         incident_location: Optional[dict[str, Any]] = None
         # intersection_images: Optional[dict[str, str]] = None
-        if self.route_state and (live_traffic := self.route_state.get("live_traffic", {})):
+        if self.route_state and (
+            live_traffic := self.route_state.get("live_traffic", {})
+        ):
             # intersection_images = live_traffic.get("intersection_images")
             incident_location = {
                 "name": live_traffic.get("intersection_name"),
@@ -270,14 +270,22 @@ class RouteService:
             }
 
         # Get the complete live traffic data for all intersections
-        all_routes: List[LiveTrafficData] = self.route_state.get("all_routes_data", []) if self.route_state else []
+        all_routes: List[LiveTrafficData] = (
+            self.route_state.get("all_routes_data", []) if self.route_state else []
+        )
 
         # Create alternate route map for the alternate route
         alternate_map = self.create_route_map(
             start_location, end_location, incident_location, all_routes
         )
-        distance = self.route_state.get("optimal_route", {}).get("distance", 0.0) if self.route_state else 0.0
-        is_sub_optimal = self.route_state.get("is_sub_optimal", False) if self.route_state else False
+        distance = (
+            self.route_state.get("optimal_route", {}).get("distance", 0.0)
+            if self.route_state
+            else 0.0
+        )
+        is_sub_optimal = (
+            self.route_state.get("is_sub_optimal", False) if self.route_state else False
+        )
 
         return (
             next_data_source,
