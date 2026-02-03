@@ -5,7 +5,9 @@ import os
 import time
 import threading
 import requests
+import base64 
 from concurrent import futures
+from typing import Optional
 
 from fastapi import FastAPI, Request, Query, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -15,7 +17,11 @@ import uvicorn
 from proto import vital_pb2, vital_pb2_grpc, pose_pb2, pose_pb2_grpc
 from .consumer import VitalConsumer
 from .ws_broadcaster import SSEManager
+from .frame_streamer import FrameStreamManager
 from .ai_ecg_client import AIECGClient
+
+# Add frame streaming manager initialization
+frame_manager = FrameStreamManager()
 
 app = FastAPI(title="Aggregator Service")
 sse_manager = SSEManager()
@@ -73,6 +79,7 @@ async def root():
             "GET /health - Service health",
             "GET / - This info",
             "GET /events - SSE stream",
+            "GET /video-stream - Video frames stream", 
             "GET /metrics - System metrics",
             "GET /platform-info - Platform info",
             "GET /memory - Memory usage",
@@ -125,6 +132,55 @@ async def stream_events(
     return StreamingResponse(
         event_generator(), 
         media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
+    )
+
+
+
+@app.get("/video-stream")
+async def stream_video_frames(request: Request):
+    """Stream video frames from 3D pose detection as MJPEG."""
+    print("[VIDEO] Client connected to video stream")
+    
+    client_queue = await frame_manager.connect()
+    
+    async def frame_generator():
+        frame_count = 0
+        try:
+            while True:
+                if await request.is_disconnected():
+                    print(f"[VIDEO] Client disconnected after {frame_count} frames")
+                    break
+                
+                try:
+                    # Wait for next frame with timeout
+                    frame_data = await asyncio.wait_for(client_queue.get(), timeout=5.0)
+                    frame_count += 1
+                    
+                    # MJPEG format: each frame is a separate JPEG with multipart boundary
+                    yield (
+                        b'--frame\r\n'
+                        b'Content-Type: image/jpeg\r\n\r\n' +
+                        frame_data + b'\r\n'
+                    )
+                    
+                except asyncio.TimeoutError:
+                    # Send a small keepalive frame or continue waiting
+                    continue
+                    
+        except Exception as e:
+            print(f"[VIDEO] Error in frame generator: {e}")
+        finally:
+            await frame_manager.disconnect(client_queue)
+            print(f"[VIDEO] Client cleanup complete, sent {frame_count} frames")
+    
+    return StreamingResponse(
+        frame_generator(),
+        media_type="multipart/x-mixed-replace; boundary=frame",
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
@@ -436,7 +492,6 @@ class PoseServicer(pose_pb2_grpc.PoseServiceServicer):
                       f"Conf={avg_conf:.1f}%")
             
             # Convert frame_data (bytes) to base64 string for JSON transmission
-            import base64
             frame_base64 = base64.b64encode(request.frame_data).decode('utf-8') if request.frame_data else ""
             
             message = {
@@ -446,10 +501,16 @@ class PoseServicer(pose_pb2_grpc.PoseServiceServicer):
                 "payload": {
                     "source_id": request.source_id,
                     "frame_number": request.frame_number,
-                    "frame_base64": frame_base64,  # Add frame data
+                    "frame_base64": frame_base64,
                     "people": people_payload,
                 },
             }
+            
+            # Stream raw frame data to video endpoint - ADD THIS BLOCK
+            if request.frame_data and event_loop is not None:
+                asyncio.run_coroutine_threadsafe(
+                    frame_manager.broadcast_frame(request.frame_data), event_loop
+                )
             
             frame_size_kb = len(request.frame_data) / 1024 if request.frame_data else 0
             print(f"[POSE] Frame {request.frame_number} from {request.source_id} @ {request.timestamp_ms}ms - "
