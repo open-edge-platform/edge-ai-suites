@@ -24,6 +24,8 @@ message PoseFrame {
   int64 timestamp_ms = 1;
   string source_id = 2;
   repeated PersonPose people = 3;
+  bytes frame_data = 4;
+  int32 frame_number = 5;
 }
 
 message Ack {
