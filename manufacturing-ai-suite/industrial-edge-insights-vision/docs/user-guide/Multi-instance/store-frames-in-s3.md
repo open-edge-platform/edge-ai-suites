@@ -39,11 +39,11 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 4. Create a S3 bucket using the following script.
 
-   Update the `HOST_IP`, `NGINX_HTTPS_PORT` and credentials with that of the running MinIO server. Name the file as `create_bucket_instance_name.py`for each instance.
+   Update the `HOST_IP`, `MINIO_EXTERNAL_PORT` and credentials with that of the running MinIO server. Name the file as `create_bucket_instance_name.py`for each instance.
 
    ```python
    import boto3
-   url = "http://<HOST_IP>:<NGINX_HTTPS_PORT>"
+   url = "http://<HOST_IP>:<MINIO_EXTERNAL_PORT>"
    user = "<value of MR_MINIO_ACCESS_KEY used in .env>"
    password = "<value of MR_MINIO_SECRET_KEY used in .env>"
    bucket_name = "ecgdemo"
