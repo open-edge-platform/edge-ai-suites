@@ -54,7 +54,7 @@ CMD ["sh", "-c", "\
     echo '[INFO] Downloading rPPG assets...' && \
     python /app/scripts/rppg_download_assets.py && \
     echo '[INFO] Downloading 3D pose assets via OMZ script...' && \
-    /app/scripts/omz-model-download.sh && \
+    python /app/scripts/3d_pose_model_convert.py  && \
     echo '[INFO] Downloading ECG assets...' && \
     /app/scripts/ecg_download_assets.sh && \
     echo '[INFO] All asset downloads complete. Exiting container.'\
