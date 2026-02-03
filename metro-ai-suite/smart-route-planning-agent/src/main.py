@@ -39,8 +39,12 @@ def get_direct_route(source: str, destination: str) -> tuple[str, str, str]:
     # Validate input
     is_valid, error_message = route_service.validate_route_request(source, destination)
     if not is_valid:
-        return error_message, "", route_service.get_fallback_map_html(
-            "Select locations to see the route map"
+        return (
+            error_message,
+            "",
+            route_service.get_fallback_map_html(
+                "Select locations to see the route map"
+            ),
         )
 
     # Start planning the route
@@ -60,9 +64,7 @@ def get_direct_route(source: str, destination: str) -> tuple[str, str, str]:
     return agent_status_msg, thinking_message, main_route_map
 
 
-def get_optimal_route(
-    source: str, destination: str
-) -> tuple[str, str, str]:
+def get_optimal_route(source: str, destination: str) -> tuple[str, str, str]:
     """
     Uses RouteService to trigger RoutePlanner agent and gets optimized route.
     """
@@ -310,17 +312,17 @@ def create_gradio_interface() -> gr.Blocks:
     css = """
     /* Modern Font Import */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
+
     /* Global Font Styles */
     body, .gradio-container, .gradio-container *, .gradio-container label, .gradio-container input, .gradio-container textarea, .gradio-container select, .gradio-container button {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
     }
-    
+
     h1, h2, h3, h4, h5, h6 {
         font-family: 'Inter', sans-serif !important;
         font-weight: 600;
     }
-    
+
     .map-container {
         border-radius: 12px;
         overflow: hidden;
@@ -399,7 +401,7 @@ def create_gradio_interface() -> gr.Blocks:
     .settings-panel .block {
         width: 100%;
     }
-    
+
     /* Styling for the thinking output markdown component */
     .thinking-output {
         border-radius: 10px;
@@ -410,7 +412,7 @@ def create_gradio_interface() -> gr.Blocks:
         max-height: 50vh;
         line-height: 1.6;
     }
-    
+
     .thinking-output h1, .thinking-output h2, .thinking-output h3 {
         color: #b112cd;
         margin-top: 1em;
@@ -427,7 +429,7 @@ def create_gradio_interface() -> gr.Blocks:
     .thinking-output h4 {
         color: #950d85
     }
-    
+
     .thinking-output h5, .thinking-output h6 {
         color: #b942ab;
     }
@@ -439,7 +441,7 @@ def create_gradio_interface() -> gr.Blocks:
         font-family: 'Roboto Mono', monospace;
         font-size: 0.9em;
     }
-    
+
     .thinking-output pre {
         background-color: #f8fafc;
         padding: 12px;
@@ -447,15 +449,15 @@ def create_gradio_interface() -> gr.Blocks:
         border-left: 3px solid #4f46e5;
         overflow-x: auto;
     }
-    
+
     .thinking-output em, .thinking-output i {
         color: #8d3419;
     }
-    
+
     .thinking-output strong, .thinking-output b {
         color: #262E9E;
     }
-    
+
     .status-indicator {
         padding: 10px 16px;
         border-radius: 4px;
@@ -643,9 +645,7 @@ if __name__ == "__main__":
 
     # Get configuration from environment variables
     server_name = os.getenv("GRADIO_SERVER_NAME", "0.0.0.0")
-    server_port = int(
-        os.getenv("GRADIO_SERVER_PORT", "7860")
-    )
+    server_port = int(os.getenv("GRADIO_SERVER_PORT", "7860"))
 
     server_config = {
         "server_name": server_name,

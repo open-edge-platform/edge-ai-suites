@@ -52,7 +52,7 @@ For advanced users who need more control over the configuration, you can manuall
 
 ### Manual Environment Configuration
 
-If you prefer to manually configure environment variables instead of using the setup script, see the [Environment Variables Guide](./environment-variables.md) for complete details. 
+If you prefer to manually configure environment variables instead of using the setup script, see the [Environment Variables Guide](./environment-variables.md) for complete details.
 
 ### Manual Docker Compose Deployment
 

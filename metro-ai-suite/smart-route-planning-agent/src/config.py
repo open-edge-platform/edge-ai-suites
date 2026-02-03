@@ -29,6 +29,7 @@ IGNORED_ROUTES: list[str] = [
 ROUTE_STATUS_DIR: Path = Path(__file__).parent / "data" / "csv"
 CONFIG_FILE: Path = Path(__file__).parent / "data" / "config.json"
 
+
 class CongestionLevel(Enum):
     LOW = "Low"
     MODERATE = "Moderate"
@@ -77,8 +78,9 @@ WEATHER_ISSUE_MAP: dict[str, WeatherStatus] = {
 }
 
 INCIDENT_ISSUE_MAP: dict[str, IncidentStatus] = {
- "berkeley-sanbruno.gpx": IncidentStatus.MAINTENANCE,
+    "berkeley-sanbruno.gpx": IncidentStatus.MAINTENANCE,
 }
+
 
 class StaticOptimizerName(Enum):
     """
