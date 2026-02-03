@@ -119,6 +119,12 @@ public final class GrpcPublisher {
             builder.setWaveformFrequencyHz(v.waveformFrequencyHz);
         }
 
+        // Attach device_type as metadata so the aggregator/UI can
+        // distinguish between different MDPNP simulators.
+        if (v.deviceType != null && !v.deviceType.isEmpty()) {
+            builder.putMetadata("device_type", v.deviceType);
+        }
+
         Vital msg = builder.build();
         try {
             observer.onNext(msg);
