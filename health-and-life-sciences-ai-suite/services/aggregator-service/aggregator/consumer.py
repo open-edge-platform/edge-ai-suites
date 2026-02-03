@@ -25,6 +25,15 @@ class VitalConsumer:
             dict: Processed result ready for WebSocket broadcast, or None
         """
         key = (vital.device_id, vital.metric)
+        # If the producer (e.g., DDS-bridge) provided a logical device_type
+        # via the Vital.metadata map, propagate it into the payload so the
+        # UI can easily distinguish different simulators/devices.
+        device_type = None
+        try:
+            # vital.metadata is a dict-like mapping (string -> string)
+            device_type = vital.metadata.get("device_type")
+        except Exception:
+            device_type = None
         ts_sec = vital.timestamp / 1000.0
         # ---- Waveform handling (ECG / other waveforms) ----
         if len(vital.waveform) > 0:
@@ -35,6 +44,8 @@ class VitalConsumer:
                 "waveform": list(vital.waveform),  # Raw waveform samples
                 "waveform_frequency_hz": vital.waveform_frequency_hz,
             }
+            if device_type:
+                result["device_type"] = device_type
             print("[Aggregator] ECG/waveform forwarded:", {
                 "device_id": vital.device_id,
                 "metric": vital.metric,
@@ -54,6 +65,8 @@ class VitalConsumer:
         )
 
         if result:
+            if device_type and isinstance(result, dict):
+                result.setdefault("device_type", device_type)
             print(f"[Consumer] Numeric aggregated: "
                   f"{vital.device_id}/{vital.metric} = {result}")
             return result
