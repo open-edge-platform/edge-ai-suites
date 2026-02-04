@@ -259,8 +259,6 @@ class RoutePlanner:
                 logger.info("No more alternate routes available.")
                 break
 
-            # available_route_count += 1
-
             # Parse the next available shortest route
             map_parser = MapDataParser(GPX_DIR / next_shortest_route_name)
             route_data = map_parser.get_route_data()
@@ -274,7 +272,6 @@ class RoutePlanner:
             logger.debug(f"Analyzing route: {next_shortest_route_name}")
             for i, trackpoint in enumerate(trackpoints):
                 # If route has been found not to be optimal break out of loop
-                # UPDATE: Disabling for finding all intersections along route irrespective of traffic density
                 if route_not_optimal:
                     break
 
@@ -293,7 +290,6 @@ class RoutePlanner:
                         )
                         <= live_traffic_controller.proximity_factor
                     ):
-                        # Do not try to update sub_optimal_route or live_traffic_state if route is already blocked
                         if (
                             traffic_status.traffic_density
                             > ThresholdController.TRAFFIC_DENSITY_THRESHOLD
@@ -304,7 +300,7 @@ class RoutePlanner:
                             )
                             route_not_optimal = True
 
-                            # Every route having density greater than threshold and  is a "potential" sub-optimal route.
+                            # Every route having density greater than threshold and is a "potential" sub-optimal route.
                             if (
                                 not sub_optimal_route
                                 or sub_optimal_density > traffic_status.traffic_density
@@ -359,8 +355,8 @@ class RoutePlanner:
                 # Add current route to local no_fly_list and try next shortest route if any
                 local_no_fly_list.append(next_shortest_route_name)
 
-        # If live traffic status (the issues in traffic) is for same route as that of sub_optimal_route
-        # pick the live traffic status of previous route
+        # If live traffic status (the issues in traffic) is for same route as that of sub_optimal_route, then pick the live
+        # traffic status of previous route. (Makes sure, the intersection marked red is never present in the current route selected)
         if (
             sub_optimal_route
             and self.live_traffic_status_list
