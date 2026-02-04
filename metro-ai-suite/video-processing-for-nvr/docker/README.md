@@ -23,7 +23,7 @@ To exit the program, you need to open another terminal window and stop the conta
 
 ## Run docker compose 
 1. Run sudo init 3 switch to non-GUI mode
-2. Run bash ./startup.sh <path_to_model.xml>
+2. Run bash ./startup.sh yolov8n_with_preprocess.xml
 
 ## Uninstall docker image
 1. Run `docker rmi -f $(docker images --format "{{.Repository}}:{{.Tag}}" | grep 'vppsample')` remove all vppsample docker images
