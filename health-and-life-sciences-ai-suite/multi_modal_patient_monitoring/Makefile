@@ -4,7 +4,7 @@
 
 .PHONY: init-mdpnp build-mdpnp build-dds-bridge run down download-rppg-assets
 
-MDPNP_PATH := services/mdpnp-service/mdpnp
+MDPNP_PATH := services/mdpnp/mdpnp
 DDS_BRIDGE_PATH := services/dds-bridge
 DOCKER_COMPOSE := docker-compose.yaml
 REGISTRY ?= true
