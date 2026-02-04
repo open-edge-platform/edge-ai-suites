@@ -6,17 +6,14 @@
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
-from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
-_runtime_version.ValidateProtobufRuntimeVersion(
-    _runtime_version.Domain.PUBLIC,
-    5,
-    29,
-    0,
-    '',
-    'vital.proto'
-)
+"""Note: runtime_version validation removed for compatibility with protobuf 4.x.
+
+The original generated code expected Protobuf Python 5.29.0 and imported
+google.protobuf.runtime_version. To remain compatible with tensorflow-cpu
+2.16.x (which requires protobuf<5), we skip this runtime version check.
+"""
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
