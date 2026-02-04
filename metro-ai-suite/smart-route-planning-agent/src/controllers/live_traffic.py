@@ -79,7 +79,7 @@ class LiveTrafficController(RouteStatusInterface):
                         )
 
             # List to store the final response as list of LiveTrafficData
-            live_traffic_intersection_records = []
+            live_traffic_intersection_records: list[LiveTrafficData] = []
 
             # Look for intersections that match our current coordinates
             for response_data in api_responses:
