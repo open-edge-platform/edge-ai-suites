@@ -5,7 +5,7 @@
 
 ## Prerequisites
 
-- [System Requirements](system-requirements.md)
+- [System Requirements](./get-started/system-requirements.md)
 
 ## Setup the application
 
@@ -108,7 +108,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
     > **IMPORTANT**: Before you run `sample_start.sh` script, make sure that
     > `jq` is installed on your system. See the
-    > [troubleshooting guide](./troubleshooting-guide.md#unable-to-parse-json-payload-due-to-missing-jq-package)
+    > [troubleshooting guide](./troubleshooting.md#unable-to-parse-json-payload-due-to-missing-jq-package)
     > for more details.
 
     Output:
@@ -203,15 +203,24 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
     This will bring down the services in the application and remove any volumes.
 
-
 ## Further Reading
 
-- [Helm based deployment](how-to-deploy-using-helm-charts.md)
-- [MLOps using Model Registry](how-to-enable-mlops.md)
-- [Run multiple AI pipelines](how-to-run-multiple-ai-pipelines.md)
-- [Publish frames to S3 storage pipelines](how-to-run-store-frames-in-s3.md)
-- [View telemetry data in Open Telemetry](how-to-view-telemetry-data.md)
-- [Publish metadata to OPCUA](how-to-use-opcua-publisher.md)
+- [Helm based deployment](./get-started/deploy-with-helm.md)
+- [MLOps using Model Registry](./how-to-guides/enable-mlops.md)
+- [Run multiple AI pipelines](./how-to-guides/run-multiple-ai-pipelines.md)
+- [Publish frames to S3 storage pipelines](./how-to-guides/store-frames-in-s3.md)
+- [View telemetry data in Open Telemetry](./how-to-guides/view-telemetry-data.md)
+- [Publish metadata to OPCUA](./how-to-guides/use-opcua-publisher.md)
+- [Troubleshooting](./troubleshooting.md)
 
-## Troubleshooting
-- [Troubleshooting Guide](troubleshooting-guide.md)
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./get-started/system-requirements.md
+./get-started/environment-variables
+./get-started/deploy-with-helm
+./get-started/deploy-with-edge-orchestrator
+
+:::
+hide_directive-->
