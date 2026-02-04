@@ -16,6 +16,10 @@ Make sure docker is corrently installed and configured.
 1. Run `sudo init 3` switch to non-GUI mode
 2. Run a sample test in docker container : `bash run.sh <path_to_model.xml>`  
 
+## Run docker compose 
+1. Run sudo init 3 switch to non-GUI mode
+2. Run bash ./startup.sh <path_to_model.xml>
+
 ## Uninstall docker image
 1. Run `docker rmi -f $(docker images --format "{{.Repository}}:{{.Tag}}" | grep 'vppsample')` remove all vppsample docker images
 

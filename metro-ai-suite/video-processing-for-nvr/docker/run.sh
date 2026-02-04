@@ -17,13 +17,11 @@ fi
 USER_GROUP_ID=$(id -g)
 echo $EXTRA_PARAMS
 
-# 确保 MODEL_PATH 已定义（假设你已加：MODEL_PATH=${3}）
 if [[ -z "${MODEL_PATH}" ]]; then
-    echo "Error: MODEL_PATH (3rd argument) is required."
+    echo "Error: MODEL_PATH (1rd argument) is required."
     exit 1
 fi
 
-# 获取绝对路径并拆分
 ABS_MODEL_PATH=$(realpath "$MODEL_PATH")
 if [[ ! -f "$ABS_MODEL_PATH" ]]; then
     echo "Error: Model file not found: $MODEL_PATH"
@@ -89,5 +87,5 @@ else
     #     -w /home/vpp \
     #     -v "$MODEL_DIR:/models:ro" \
     #     "$DOCKER_IMAGE" \
-    #     bash    # ← 关键：启动交互式 shell
+    #     bash
 fi
