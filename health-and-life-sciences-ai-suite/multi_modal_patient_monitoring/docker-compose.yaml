@@ -117,6 +117,8 @@ services:
         patient-monitoring-aggregator:
           condition: service_started  
 
+    
+  
   dds-bridge:
     build:
       context: ./services/dds-bridge
@@ -129,65 +131,13 @@ services:
     depends_on:
       patient-monitoring-aggregator:
         condition: service_started
-      # mdpnp:
-      #   condition: service_started
+      mdpnp:
+        condition: service_started
     network_mode: "host"
-
-  ai-ecg:
+   
+  ui:
     build:
-      context: ./services/ai-ecg/backend
-      dockerfile: Dockerfile
-      args:
-          HTTP_PROXY: ${HTTP_PROXY}
-          HTTPS_PROXY: ${HTTPS_PROXY}
-          NO_PROXY: ${NO_PROXY}
-          http_proxy: ${HTTP_PROXY}
-          https_proxy: ${HTTPS_PROXY}
-          no_proxy: ${NO_PROXY}
-    image: intel/hl-ai-ecg:1.0.0
-    container_name: ai-ecg
-    network_mode: "host"
-    depends_on:
-      patient-monitoring-assets:
-        condition: service_completed_successfully
-      patient-monitoring-aggregator:
-          condition: service_started  
-    volumes:
-      - ./models:/models
-      - ./videos:/videos
-
-  3dpose-estimation:
-      build:
-        context: ./services/3d-pose-estimation
-        dockerfile: src/Dockerfile
-        args:
-          HTTP_PROXY: ${HTTP_PROXY}
-          HTTPS_PROXY: ${HTTPS_PROXY}
-          NO_PROXY: ${NO_PROXY}
-          http_proxy: ${HTTP_PROXY}
-          https_proxy: ${HTTPS_PROXY}
-          no_proxy: ${NO_PROXY}
-      image: intel/hl-ai-3dpose:1.0.0
-      container_name: 3dpose-estimation
-      network_mode: "host"
-      environment:
-        - VIDEO_FILE=/videos/3d-pose/face-demographics-walking.mp4
-        - MODEL_PATH=/models/3d-pose/human-pose-estimation-3d-0001.xml
-        - DEVICE=CPU
-        - AGGREGATOR_ADDRESS=localhost:50051
-        - CONTROL_PORT=8083
-      depends_on:
-        patient-monitoring-assets:
-          condition: service_completed_successfully
-        patient-monitoring-aggregator:
-          condition: service_started
-      volumes:
-      - ./models:/models
-      - ./videos:/videos  
-  
-  rppg:
-    build:
-      context: ./services/rppg
+      context: ./services/ui
       dockerfile: Dockerfile
       args:
         HTTP_PROXY: ${HTTP_PROXY}
@@ -196,14 +146,8 @@ services:
         http_proxy: ${HTTP_PROXY}
         https_proxy: ${HTTPS_PROXY}
         no_proxy: ${NO_PROXY}
-    image: intel/hl-ai-rppg:1.0.0
-    container_name: rppg
-    network_mode: "host"
-    depends_on:
-      patient-monitoring-assets:
-        condition: service_completed_successfully
-      patient-monitoring-aggregator:
-          condition: service_started  
+    image: intel/hl-ai-ui:1.0.0
+    container_name: ui
     environment:
       - HTTP_PROXY=${HTTP_PROXY}
       - HTTPS_PROXY=${HTTPS_PROXY}
@@ -211,30 +155,6 @@ services:
       - http_proxy=${HTTP_PROXY}
       - https_proxy=${HTTPS_PROXY}
       - no_proxy=${NO_PROXY}
-    volumes:
-      - ./models:/models
-      - ./videos:/videos
-   
-  # ui:
-  #   build:
-  #     context: ./services/ui
-  #     dockerfile: Dockerfile
-  #     args:
-  #       HTTP_PROXY: ${HTTP_PROXY}
-  #       HTTPS_PROXY: ${HTTPS_PROXY}
-  #       NO_PROXY: ${NO_PROXY}
-  #       http_proxy: ${HTTP_PROXY}
-  #       https_proxy: ${HTTPS_PROXY}
-  #       no_proxy: ${NO_PROXY}
-  #   image: intel/hl-ai-ui:1.0.0
-  #   container_name: ui
-  #   environment:
-  #     - HTTP_PROXY=${HTTP_PROXY}
-  #     - HTTPS_PROXY=${HTTPS_PROXY}
-  #     - NO_PROXY=${NO_PROXY}
-  #     - http_proxy=${HTTP_PROXY}
-  #     - https_proxy=${HTTPS_PROXY}
-  #     - no_proxy=${NO_PROXY}
-  #   ports:
-  #     - "3000:3000"
+    ports:
+      - "3000:3000"
 

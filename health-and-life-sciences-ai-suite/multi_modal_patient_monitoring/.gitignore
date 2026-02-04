@@ -41,6 +41,12 @@ models/*.h5
 videos/*.mp4
 videos/*.avi
 
+# Allow DDS native RTI libraries to be tracked
+!services/dds-bridge/native/libs/linux/libnddsc.so
+!services/dds-bridge/native/libs/linux/libnddscore.so
+!services/dds-bridge/native/libs/linux/libnddsjava.so
+!services/dds-bridge/native/libs/linux/libnddssecurity.so
+
 # Allow specific model and video files for testing
 !services/rppg-service/models/group1-shard1of1.bin
 !services/rppg-service/models/*.xml
@@ -56,6 +62,7 @@ videos/*.avi
 logs/*.log
 cache/*
 *.json
+!services/ui/package.json
 
 # Testing
 .pytest_cache/
