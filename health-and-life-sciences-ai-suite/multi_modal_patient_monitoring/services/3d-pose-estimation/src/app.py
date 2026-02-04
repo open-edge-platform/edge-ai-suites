@@ -90,7 +90,7 @@ class PoseEstimationService:
 
     def process_video(self, video_source, flip: bool = False, max_frames: int = None):
         """
-        Main processing loop - loops video until stop command
+        Main processing loop - keeps service alive and restartable
         
         Args:
             video_source: Path to video file or webcam index (0)
@@ -98,122 +98,125 @@ class PoseEstimationService:
             max_frames: Maximum frames to process (None for unlimited)
         """
         print(f"[INFO] Video source: {video_source}")
-        print(f"[INFO] Waiting for start command...")
-
-        # Wait for start command
-        while not is_processing_enabled():
-            time.sleep(0.5)
-
-        print(f"[INFO] Processing enabled! Starting pose estimation...")
-        print(f"[INFO] Press Ctrl+C or send stop command to stop")
-
+        print(f"[INFO] Service ready - waiting for commands...")
+    
         try:
-            # Main loop - keeps running until stop command
-            while is_processing_enabled():
-                # Open video source
-                cap = cv2.VideoCapture(video_source)
-
-                if not cap.isOpened():
-                    print(f"[ERROR] Cannot open video source: {video_source}")
-                    time.sleep(2)  # Wait before retrying
-                    continue
-
-                # Get video properties
-                fps = int(cap.get(cv2.CAP_PROP_FPS))
-                total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-                width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            # Main service loop - never exits, waits for start/stop commands
+            while True:
+                # Wait for start command
+                print(f"[INFO] Waiting for start command...")
+                while not is_processing_enabled():
+                    time.sleep(0.5)
+    
+                print(f"[INFO] Processing enabled! Starting pose estimation...")
                 
-                is_webcam = isinstance(video_source, int) or video_source == '0'
+                # Reset frame count for new session
+                session_frame_count = 0
                 
-                if not is_webcam:
-                    print(f"[INFO] Video: {width}x{height} @ {fps}fps, {total_frames} frames")
-                    print(f"[INFO] Starting video loop (will restart when finished)")
-                else:
-                    print(f"[INFO] Webcam: {width}x{height} @ {fps}fps")
-
-                # Process frames from this video iteration
+                # Processing loop - continues until stop command
                 while is_processing_enabled():
-                    ret, frame = cap.read()
+                    # Open video source (fresh connection each time)
+                    cap = cv2.VideoCapture(video_source)
+    
+                    if not cap.isOpened():
+                        print(f"[ERROR] Cannot open video source: {video_source}")
+                        time.sleep(2)
+                        continue
+    
+                    # Get video properties
+                    fps = int(cap.get(cv2.CAP_PROP_FPS))
+                    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                     
-                    if not ret:
-                        if is_webcam:
-                            print("[WARNING] Failed to read from webcam")
-                            break
-                        else:
-                            print(f"[INFO] Video ended at frame {self.frame_count}. Restarting...")
-                            break  # Will restart video in outer loop
-
-                    if flip:
-                        frame = cv2.flip(frame, 1)
-
-                    self.frame_count += 1
-
-                    # Process frame
-                    start_time = time.perf_counter()
+                    is_webcam = isinstance(video_source, int) or video_source == '0'
                     
-                    annotated_frame, poses_3d, poses_2d = self.inference.process_frame(frame)
-                    
-                    inference_time = time.perf_counter() - start_time
-                    self.fps_tracker.append(inference_time)
-
-                    # Filter poses
-                    filtered_poses_2d, filtered_poses_3d = self.filter_valid_poses(poses_2d, poses_3d)
-
-                    # Log filtering results
-                    if self.frame_count % 30 == 0:
-                        print(f"[DEBUG] Frame {self.frame_count}: "
-                              f"Raw detections={len(poses_3d)}, "
-                              f"After filtering={len(filtered_poses_3d)}")
-
-                    # Encode data with filtered poses
-                    data_packet = self.encoder.encode_data(
-                        annotated_frame,
-                        filtered_poses_3d,
-                        filtered_poses_2d,
-                        frame_number=self.frame_count
-                    )
-
-                    # Publish to aggregator via gRPC
-                    success = self.publisher.publish(data_packet)
-
-                    # Calculate metrics
-                    avg_time_ms = np.mean(self.fps_tracker) * 1000
-                    current_fps = 1000 / avg_time_ms if avg_time_ms > 0 else 0
-
-                    # Log progress every 30 frames
-                    if self.frame_count % 30 == 0:
-                        person_count = len(filtered_poses_3d)
-                        if person_count > 0:
-                            print(f"[INFO] Frame {self.frame_count}: "
+                    if not is_webcam:
+                        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                        print(f"[INFO] Video: {width}x{height} @ {fps}fps, {total_frames} frames")
+                    else:
+                        print(f"[INFO] Webcam: {width}x{height} @ {fps}fps")
+    
+                    # Process frames from this video iteration
+                    while is_processing_enabled():
+                        ret, frame = cap.read()
+                        
+                        if not ret:
+                            if is_webcam:
+                                print("[WARNING] Failed to read from webcam")
+                                break
+                            else:
+                                print(f"[INFO] Video ended at frame {session_frame_count}. Restarting...")
+                                break
+    
+                        if flip:
+                            frame = cv2.flip(frame, 1)
+    
+                        self.frame_count += 1
+                        session_frame_count += 1
+    
+                        # Process frame
+                        start_time = time.perf_counter()
+                        
+                        annotated_frame, poses_3d, poses_2d = self.inference.process_frame(frame)
+                        
+                        inference_time = time.perf_counter() - start_time
+                        self.fps_tracker.append(inference_time)
+    
+                        # Filter poses
+                        filtered_poses_2d, filtered_poses_3d = self.filter_valid_poses(poses_2d, poses_3d)
+    
+                        # Encode data with filtered poses
+                        data_packet = self.encoder.encode_data(
+                            annotated_frame,
+                            filtered_poses_3d,
+                            filtered_poses_2d,
+                            frame_number=self.frame_count
+                        )
+    
+                        # Publish to aggregator via gRPC
+                        success = self.publisher.publish(data_packet)
+    
+                        # Calculate metrics
+                        avg_time_ms = np.mean(self.fps_tracker) * 1000
+                        current_fps = 1000 / avg_time_ms if avg_time_ms > 0 else 0
+    
+                        # Log progress every 30 frames
+                        if session_frame_count % 30 == 0:
+                            person_count = len(filtered_poses_3d)
+                            status_msg = f"✓ {person_count} persons" if person_count > 0 else "No persons detected"
+                            print(f"[INFO] Session frame {session_frame_count}: "
                                   f"{avg_time_ms:.1f}ms | {current_fps:.1f} FPS | "
-                                  f"Persons: {person_count} | "
-                                  f"Published: {'✓' if success else '✗'}")
-                        else:
-                            print(f"[INFO] Frame {self.frame_count}: "
-                                  f"{avg_time_ms:.1f}ms | {current_fps:.1f} FPS | "
-                                  f"No persons detected | "
-                                  f"Published: {'✓' if success else '✗'}")
-
-                    # Check max frames limit
-                    if max_frames and self.frame_count >= max_frames:
-                        print(f"[INFO] Reached max frames limit: {max_frames}")
-                        cap.release()
-                        return
-
-                # Release this video capture instance
-                cap.release()
-                
-                # Small delay before restarting (only for video files)
-                if not is_webcam and is_processing_enabled():
-                    print("[INFO] Restarting video in 1 second...")
-                    time.sleep(1)
-
-            print("[INFO] Stop command received - stopping processing")
-
+                                  f"{status_msg} | Published: {'✓' if success else '✗'}")
+    
+                        # Check max frames limit (optional)
+                        if max_frames and session_frame_count >= max_frames:
+                            print(f"[INFO] Reached max frames limit: {max_frames}")
+                            cap.release()
+                            return
+    
+                    # Release video capture for this iteration
+                    cap.release()
+                    
+                    # Small delay before restarting video (only for video files)
+                    if not is_webcam and is_processing_enabled():
+                        time.sleep(0.5)
+    
+                # Processing stopped - cleanup and wait for next start
+                print(f"[INFO] Processing stopped after {session_frame_count} frames")
+                print(f"[INFO] Service remains active, waiting for next start command...")
+    
         except KeyboardInterrupt:
-            print("\n[INFO] Interrupted by user")
-
+            print("\n[INFO] Service interrupted by user")
+            return
+    
+        except Exception as e:
+            print(f"[ERROR] Unexpected error: {e}")
+            import traceback
+            traceback.print_exc()
+            # Don't exit - stay alive for restart
+            print("[INFO] Service will continue running...")
+            time.sleep(1)
+    
         finally:
             # Cleanup
             try:
@@ -221,9 +224,7 @@ class PoseEstimationService:
             except:
                 pass
             
-            self.publisher.close()
-            print(f"\n[INFO] Total frames processed: {self.frame_count}")
-            self.publisher.print_stats()
+            print(f"[INFO] Total frames processed in this session: {self.frame_count}")
 
 
 def main():

@@ -225,18 +225,13 @@ async def stream_window_state():
         "remaining_seconds": max(0, remaining),
     }
 
-
 @app.post("/start")
 async def start_workloads(target: str = Query("dds-bridge", description="Which workload to start (e.g., mdpnp, ai-ecg, 3d-pose, rppg, or all)")):
     """Wrapper API for UI to start streaming from backend workloads."""
     targets = {t.strip() for t in target.split(",")} if target else {"dds-bridge"}
     results: dict[str, str] = {}
 
-    # Enforce a global streaming window so that when the UI calls
-    # /start, workloads run for a fixed duration (e.g., 60 seconds)
-    # and then are automatically stopped. During this window,
-    # additional /start calls are rejected so the UI can keep the
-    # "Start" button disabled.
+    # Enforce a streaming window but allow restart after stop
     now = time.time()
     lock_until = getattr(app.state, "streaming_lock_until", None)
     if lock_until is not None and now < lock_until:
@@ -291,11 +286,12 @@ async def start_workloads(target: str = Query("dds-bridge", description="Which w
             results["rppg"] = "already running"
         else:
             results["rppg"] = _call(f"{RPPG_CONTROL_URL}/start")
-    # Schedule automatic stop after a fixed window (60 seconds).
+
+    # Schedule automatic stop after 60 seconds (instead of 300)
     window_seconds = 60.0
     app.state.streaming_lock_until = now + window_seconds
 
-    # Cancel any previous auto-stop task before creating a new one.
+    # Cancel any previous auto-stop task before creating a new one
     existing_task = getattr(app.state, "auto_stop_task", None)
     if existing_task is not None:
         existing_task.cancel()
@@ -308,6 +304,7 @@ async def start_workloads(target: str = Query("dds-bridge", description="Which w
         "status": "ok",
         "results": results,
         "auto_stop_in_seconds": int(window_seconds),
+        "message": f"Services will auto-stop after {window_seconds} seconds"
     }
 
 
