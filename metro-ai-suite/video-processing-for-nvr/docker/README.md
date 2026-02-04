@@ -18,7 +18,7 @@ https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/yolo
 
 ## Run docker container  
 1. Run `sudo init 3` switch to non-GUI mode
-2. Run a sample test in docker container : `bash run.sh <path_to_model.xml>`  
+2. Run a sample test in docker container : `bash run.sh yolov8n_with_preprocess.xml`  
 To exit the program, you need to open another terminal window and stop the container using docker stop.
 
 ## Run docker compose 
