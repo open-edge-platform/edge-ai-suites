@@ -17,8 +17,7 @@ services:
       LD_LIBRARY_PATH: /usr/local/lib
       # DISPLAY: ${DISPLAY}
       DISPLAY_NEW_PLATFORM: "1"
-    volumes:
-      - ${MODEL_DIR}:/models:ro
+    # volumes:
       # - /tmp/.X11-unix:/tmp/.X11-unix
       # - ${HOME}/.Xauthority:/root/.Xauthority:rw
     working_dir: /home/vpp
@@ -27,5 +26,4 @@ services:
     devices:
       - "/dev/dri:/dev/dri"
     user: root
-    entrypoint: /home/vpp/vppsample/docker/run_dec_det.sh
-    command: ["/models/${MODEL_FILE}"]
+    entrypoint: /home/vpp/vppsample/docker/svet.sh

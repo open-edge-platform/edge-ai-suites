@@ -3,12 +3,9 @@
 This section provides detailed hardware, software, and platform requirements to help you set up and run the application efficiently.
 
 ## Supported Platforms
-<!--
-**Guidelines**:
-- Include supported operating systems, versions, and platform-specific notes.
--->
+
 **Operating Systems**
-- Ubuntu 24.04 LTS 
+- Ubuntu 24.04 LTS
 
 **Hardware Platforms**
 - Intel® Core™ processors (i5 or higher)
@@ -25,7 +22,7 @@ This section provides detailed hardware, software, and platform requirements to 
 ## Software Requirements
 
 **Required Software**:
-- Docker 24.0 or higher 
+- Docker 24.0 or higher
 - Python 3.10+
 - Git, jq, unzip
 
@@ -35,4 +32,4 @@ This section provides detailed hardware, software, and platform requirements to 
 - GPU optimizations require Intel® Integrated/Discrete graphics or compatible accelerators.
 
 ## Validation
-- Ensure all dependencies are installed and configured before proceeding to [Get Started](./get-started.md).
+- Ensure all dependencies are installed and configured before proceeding to [Get Started](../get-started.md).

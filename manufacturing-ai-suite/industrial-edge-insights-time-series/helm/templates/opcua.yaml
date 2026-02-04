@@ -51,7 +51,7 @@ spec:
       {{- end }}
       containers:
       - name: ia-opcua-server
-        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.opcua_server_image }}{{ if .Values.images.image_suffix }}-{{ .Values.images.image_suffix }}{{ end }}
+        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.opcua_server_image }}:{{ .Values.images.image_suffix | default "latest" }}{{ if .Values.images.weekly_build_date }}-{{ .Values.images.weekly_build_date }}-weekly{{ end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           runAsNonRoot: true

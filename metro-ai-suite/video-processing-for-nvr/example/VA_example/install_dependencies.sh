@@ -44,15 +44,15 @@ then
 	cd $WORKING_DIR;
 	sudo mkdir neo
 	cd neo
-	sudo wget --no-check-certificate https://github.com/intel/intel-graphics-compiler/releases/download/v2.24.8/intel-igc-core-2_2.24.8+20344_amd64.deb
-	sudo wget --no-check-certificate https://github.com/intel/intel-graphics-compiler/releases/download/v2.24.8/intel-igc-opencl-2_2.24.8+20344_amd64.deb
-	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/intel-ocloc-dbgsym_25.48.36300.8-0_amd64.ddeb
-	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/intel-ocloc_25.48.36300.8-0_amd64.deb
-	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/intel-opencl-icd-dbgsym_25.48.36300.8-0_amd64.ddeb
-	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/intel-opencl-icd_25.48.36300.8-0_amd64.deb
-	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/libigdgmm12_22.8.2_amd64.deb
-	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/libze-intel-gpu1-dbgsym_25.48.36300.8-0_amd64.ddeb
-	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/25.48.36300.8/libze-intel-gpu1_25.48.36300.8-0_amd64.deb
+	sudo wget --no-check-certificate https://github.com/intel/intel-graphics-compiler/releases/download/v2.27.10/intel-igc-core-2_2.27.10+20617_amd64.deb
+	sudo wget --no-check-certificate https://github.com/intel/intel-graphics-compiler/releases/download/v2.27.10/intel-igc-opencl-2_2.27.10+20617_amd64.deb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/26.01.36711.4/intel-ocloc-dbgsym_26.01.36711.4-0_amd64.ddeb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/26.01.36711.4/intel-ocloc_26.01.36711.4-0_amd64.deb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/26.01.36711.4/intel-opencl-icd-dbgsym_26.01.36711.4-0_amd64.ddeb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/26.01.36711.4/intel-opencl-icd_26.01.36711.4-0_amd64.deb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/26.01.36711.4/libigdgmm12_22.9.0_amd64.deb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/26.01.36711.4/libze-intel-gpu1-dbgsym_26.01.36711.4-0_amd64.ddeb
+	sudo wget --no-check-certificate https://github.com/intel/compute-runtime/releases/download/26.01.36711.4/libze-intel-gpu1_26.01.36711.4-0_amd64.deb
 fi
 
 # Install openvino
