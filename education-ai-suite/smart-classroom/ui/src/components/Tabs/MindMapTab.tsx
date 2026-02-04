@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import "../../assets/css/MindMap.css";
+import jsMind from "jsmind";
+import "jsmind/style/jsmind.css";
 import {
   clearMindmapStartRequest,
   mindmapStart as uiMindmapStart,
@@ -19,7 +21,6 @@ import {
 } from "../../redux/slices/mindmapSlice";
 
 import { fetchMindmap } from "../../services/api";
-import "../../assets/css/MindMap.css";
 import { useTranslation } from "react-i18next";
 
 declare global {
@@ -125,24 +126,9 @@ const MindMapTab: React.FC = () => {
   }, [sessionId]);
 
   useEffect(() => {
-    const loadJsMind = async () => {
-      if (window.jsMind) return;
-      const cssLink = document.createElement('link');
-      cssLink.rel = 'stylesheet';
-      cssLink.href = '//cdn.jsdelivr.net/npm/jsmind@0.8.5/style/jsmind.css';
-      document.head.appendChild(cssLink);
-      const script = document.createElement('script');
-      script.src = '//cdn.jsdelivr.net/npm/jsmind@0.8.5/es6/jsmind.js';
-      script.onload = () => {
-        console.log('jsMind loaded successfully');
-      };
-      script.onerror = () => {
-        console.error('Failed to load jsMind');
-      };
-      document.head.appendChild(script);
-    };
-
-    loadJsMind();
+    if (!window.jsMind) {
+      window.jsMind = jsMind;
+    }
   }, []);
 
   useEffect(() => {
