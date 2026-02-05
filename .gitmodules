@@ -37,3 +37,8 @@
 [submodule "robotics-ai-suite/pipelines/mpc-demo/ocs2/ocs2"]
 	path = robotics-ai-suite/pipelines/mpc-demo/ocs2/ocs2
 	url = https://github.com/leggedrobotics/ocs2.git
+[submodule "metro-ai-suite/smart-traffic-intersection-agent/deps/metro-vision"]
+	path = metro-ai-suite/smart-traffic-intersection-agent/deps/metro-vision
+	url = https://github.com/open-edge-platform/edge-ai-suites.git
+	branch = exp/smart-traffic-adapter
+  	shallow = true

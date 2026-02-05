@@ -55,19 +55,18 @@ def safe_extract(tar: tarfile.TarFile, path: str):
         if not is_within_directory(path, member_path):
             raise Exception(f"Unsafe tar path detected: {member.name}")
 
-    tar.extractall(path=path)
+        # ✅ extract ONE member at a time
+        tar.extract(member, path=path)
 
 def download_dataset(url, dataset_path):
-    """Download and extract dataset."""
-    import tarfile
-    import os
-
     archive_path = dataset_path / "imagenette2-320.tgz"
+
     if not (dataset_path / "imagenette2-320/val").exists():
         print(f"Downloading dataset from {url}...")
         urllib.request.urlretrieve(url, archive_path)
-        with tarfile.open(archive_path, "r:gz") as tar:
-            safe_extract(tar, dataset_path)     
+
+        with tarfile.open(archive_path, "r:*") as tar:
+            safe_extract(tar, dataset_path)   
         os.remove(archive_path)
     return dataset_path
 
