@@ -426,24 +426,28 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
    :::{tab-item} **Jazzy**
    :sync: jazzy
 
-   sudo apt-get update
-   sudo apt-get install curl lsb-release gnupg
-
-   sudo curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
-   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
-   sudo apt-get update
-   sudo apt-get install gz-harmonic
-
-   :::
-   :::{tab-item}  **Humble**
-   :sync: humble
-
+   ```bash
    sudo apt-get update
    sudo apt-get install curl lsb-release gnupg
 
    sudo -E curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
    sudo apt-get update
+   sudo apt-get install gz-harmonic
+   ```
+
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
+
+   ```bash
+   sudo apt-get update
+   sudo apt-get install curl lsb-release gnupg
+
+   sudo -E curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+   sudo apt-get update
+   ```
 
    :::
    ::::
@@ -611,13 +615,13 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
 
 ## 6. Install RealSense™ Camera SDK
 
-Intel® RealSense™ SDK is a cross-platform library for Intel® RealSense™
+RealSense™ SDK is a cross-platform library for Intel® RealSense™
 depth cameras. The SDK allows depth and color streaming, and provides
 intrinsic and extrinsic calibration information. The library also offers
 synthetic streams (pointcloud, depth aligned to color and vise-versa), and a
 built-in support for record and playback of streaming sessions.
 
-Intel® RealSense™ SDK includes support for ROS and ROS 2, allowing you
+RealSense™ SDK includes support for ROS and ROS 2, allowing you
 access to commonly used robotic functionality with ease.
 
 1. Register the server’s public key:
@@ -647,10 +651,27 @@ access to commonly used robotic functionality with ease.
 
 5. Install the RealSense drivers and libraries:
 
+
+   :::::{tab-set}
+   ::::{tab-item} **Jazzy**
+   :sync: jazzy
+
+   ```bash
+   sudo apt install librealsense2-dkms
+   sudo apt install librealsense2
+   ```
+
+   ::::
+   ::::{tab-item} **Humble**
+   :sync: humble
+
    ```bash
    sudo apt install librealsense2-dkms
    sudo apt install librealsense2=2.55.1-0~realsense.12474
    ```
+
+   ::::
+   :::::
 
 
 ## 7. Install Intel® GPU Driver on Intel® Core™ Ultra Processors
