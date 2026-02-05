@@ -1,4 +1,4 @@
-# How to use OPC UA publisher
+# Use OPC UA publisher
 
 Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing using the docker.
 
@@ -11,58 +11,60 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
       * Launch the application to start the server.
 
 2. Update the following variables related to the OPC UA server in `.env`.
-    ``` sh
-    OPCUA_SERVER_IP= # <IP-Adress of the OPCUA server>
-    OPCUA_SERVER_PORT= # example: 48010
-    OPCUA_SERVER_USERNAME= # example: root
-    OPCUA_SERVER_PASSWORD= # example: secret
-    ```
+
+   ```sh
+   OPCUA_SERVER_IP= # <IP-Adress of the OPCUA server>
+   OPCUA_SERVER_PORT= # example: 48010
+   OPCUA_SERVER_USERNAME= # example: root
+   OPCUA_SERVER_PASSWORD= # example: secret
+   ```
 
 3. Update the OPC UA `variable` to appropriate value for the pipeline `worker_safety_gear_detection_opcua` in `apps/worker-safety-gear-detection/configs/pipeline-server-config.json`.
 
-    ```shell
-        "opcua_publisher": {
-            "publish_frame" : true,
-            "variable" : "ns=3;s=Demo.Static.Scalar.String"
-        },
-    ```
+   ```shell
+       "opcua_publisher": {
+           "publish_frame" : true,
+           "variable" : "ns=3;s=Demo.Static.Scalar.String"
+       },
+   ```
 
-4. To use an AI model of your own please follow the steps as mentioned in this [document](./how-to-use-an-ai-model-and-video-file-of-your-own.md)
+4. To use an AI model of your own please follow the steps as mentioned in this [document](./use-your-ai-model-and-video.md)
 
-5. Setup the application to use the docker based deployment following this [document](./get-started.md#setup-the-application).
+5. Setup the application to use the docker based deployment following this [document](../get-started.md#setup-the-application).
 
 6. Start the pipeline using the following cURL command. Update the `HOST_IP` and ensure the correct path to the model is provided as shown below. This example starts an AI pipeline.
 
    ```sh
-    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/worker_safety_gear_detection_opcua -X POST -H 'Content-Type: application/json' -d '{
-        "source": {
-            "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
-            "type": "uri"
-        },
-        "destination": {
-            "metadata": [
-                {
-                    "type": "opcua",
-                    "publish_frame": true,
-                    "variable": "ns=3;s=Demo.Static.Scalar.String"
-                }
-            ],
-            "frame": {
-                "type": "webrtc",
-                "peer-id": "worker_safety_gear_detection_opcua",
-                "overlay": false
-            }
-        },
-        "parameters": {
-            "detection-properties": {
-                "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
-                "device": "CPU"
-            }
-        }
-    }'
+   curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/worker_safety_gear_detection_opcua -X POST -H 'Content-Type: application/json' -d '{
+       "source": {
+           "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
+           "type": "uri"
+       },
+       "destination": {
+           "metadata": [
+               {
+                   "type": "opcua",
+                   "publish_frame": true,
+                   "variable": "ns=3;s=Demo.Static.Scalar.String"
+               }
+           ],
+           "frame": {
+               "type": "webrtc",
+               "peer-id": "worker_safety_gear_detection_opcua",
+               "overlay": false
+           }
+       },
+       "parameters": {
+           "detection-properties": {
+               "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
+               "device": "CPU"
+           }
+       }
+   }'
    ```
 
 7. Run the following sample OPC UA subscriber on the different machine by updating the `<IP-Address of OPCUA Server>` to read the meta-data written to server variable from DL Streamer Pipeline Server.
+
    ```python
    import asyncio
    from asyncua import Client, Node
@@ -84,7 +86,9 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
    if __name__ == "__main__":
       asyncio.run(main())
    ```
+
    Install asyncua before running the above script (if not already installed):
+
    ```sh
    pip3 install asyncua
    ```

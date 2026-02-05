@@ -1,6 +1,6 @@
 # How-to Guides
 
-This section collects guides for Weld Porosity sample application.
+This section collects guides for Worker Safety Gear Detection sample application.
 
 - [Manage pipelines](./how-to-guides/manage-pipelines.md)
 - [Run multiple AI pipelines](./how-to-guides/run-multiple-ai-pipelines.md)
@@ -8,6 +8,8 @@ This section collects guides for Weld Porosity sample application.
 - [Use Your AI Model and Video](./how-to-guides/use-your-ai-model-and-video.md)
 - [Change the Input Video Source](./how-to-guides/change-input-video-source.md)
 - [Scale Video Resolution](./how-to-guides/scale-video-resolution.md)
+- [Integrate Balluff SDK with supported cameras](./how-to-guides/integrate-balluff-sdk.md)
+- [Integrate pylon SDK for Basler camera support](./how-to-guides/integrate-pylon-sdk.md)
 - [Publish frames to S3 storage](./how-to-guides/store-frames-in-s3.md)
 - [Publish metadata to OPC UA](./how-to-guides/use-opcua-publisher.md)
 - [Enable MLOps](./how-to-guides/enable-mlops.md)
@@ -25,6 +27,8 @@ This section collects guides for Weld Porosity sample application.
 ./how-to-guides/use-your-ai-model-and-video
 ./how-to-guides/change-input-video-source
 ./how-to-guides/scale-video-resolution
+Integrate Balluff SDK <./how-to-guides/integrate-balluff-sdk>
+Integrate pylon SDK <./how-to-guides/integrate-pylon-sdk>
 ./how-to-guides/store-frames-in-s3
 ./how-to-guides/use-opcua-publisher
 ./how-to-guides/enable-mlops

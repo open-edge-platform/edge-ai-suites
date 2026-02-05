@@ -6,7 +6,7 @@ This guide explains how to create a custom Docker image based on the Intel DL St
 
 ## Prerequisites
 
-- [System Requirements](system-requirements.md)
+- [System Requirements](../get-started/system-requirements.md)
 
 ---
 
@@ -93,7 +93,7 @@ Verify that the /tmp/gencam_basler_output.avi has the captured content
 
 ## Deploying the Worker Safety Gear Detection Application Using live camera
 
-This guide provides detailed, step-by-step instructions for setting up and deploying the **Worker Safety Gear Detection** pipeline to use the **Balluff** or **Basler** camera connected over USB or GigE.  
+This guide provides detailed, step-by-step instructions for setting up and deploying the **Worker Safety Gear Detection** pipeline to use the **Balluff** or **Basler** camera connected over USB or GigE.
 It covers environment setup, configuration updates, and validation steps to ensure a successful deployment.
 
 ---
@@ -236,5 +236,14 @@ Replace `<HOST_IP>` with the IP address configured in your `.env` file.
 ## Troubleshooting
 
 - For initial configuration and advanced configuration of the Basler camera, please use the company-provided visualization tool **pylonviewer**, which is part of the **pylon SDK**.
-- Instructions to install the **pylon SDK** on the host can be found in the [Pylon SDK Installation Guide](./how-to-install-pylon-sdk-on-host.md).
-- If you face any issues related to camera detection over USB, please refer to the [Pylon Troubleshooting Guide](./how-to-install-pylon-sdk-on-host.md#troubleshooting).
+- Instructions to install the **pylon SDK** on the host can be found in the [Pylon SDK Installation Guide](./install-pylon-sdk-on-host.md).
+- If you face any issues related to camera detection over USB, please refer to the [Pylon Troubleshooting Guide](./install-pylon-sdk-on-host.md#troubleshooting).
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./install-pylon-sdk-on-host
+
+:::
+hide_directive-->

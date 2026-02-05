@@ -1,10 +1,12 @@
-# MLOps using Model Registry
+# Enable MLOps
+
 Applications for industrial vision can also be used to demonstrate MLOps workflow using Model Registry microservice.
 With this feature, during runtime, you can download a new model from the registry and restart the pipeline with the new model.
 
 ## Contents
 
 ### Launch a pipeline in DL Streamer Pipeline Server
+
 1.  Set up the sample application to start a pipeline. A pipeline named `worker_safety_gear_detection_mlops` is already provided in the `pipeline-server-config.json` for this demonstration with the Worker Safety Gear Detection sample app.
 
     > Ensure that the pipeline inference element such as gvadetect/gvaclassify/gvainference should not have a `model-instance-id` property set. If set, this would not allow the new model to be run with the same value provided in the model-instance-id.
@@ -138,7 +140,7 @@ With this feature, during runtime, you can download a new model from the registr
 
 4. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
-    ![WebRTC streaming](./images/webrtc-streaming.png)
+    ![WebRTC streaming](../_assets/webrtc-streaming.png)
 
 5. You can also stop any running pipeline by using the pipeline instance "id"
    ```sh

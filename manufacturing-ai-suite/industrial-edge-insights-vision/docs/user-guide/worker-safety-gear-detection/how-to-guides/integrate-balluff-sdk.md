@@ -8,7 +8,7 @@ Note: You may observe a watermark in the camera feed when testing with a non-Bal
 
 ## Prerequisites
 
-- [System Requirements](system-requirements.md)
+- [System Requirements](../get-started/system-requirements.md)
 
 ---
 
@@ -107,7 +107,7 @@ Verify that the /tmp/gencam_balluff_output.avi has the captured content
 
 ## Deploying the Worker Safety Gear Detection Application Using live camera
 
-This guide provides detailed, step-by-step instructions for setting up and deploying the **Worker Safety Gear Detection** pipeline to use the **Balluff** or **Basler** camera connected over USB or GigE.  
+This guide provides detailed, step-by-step instructions for setting up and deploying the **Worker Safety Gear Detection** pipeline to use the **Balluff** or **Basler** camera connected over USB or GigE.
 It covers environment setup, configuration updates, and validation steps to ensure a successful deployment.
 
 ---
@@ -250,4 +250,13 @@ Replace `<HOST_IP>` with the IP address configured in your `.env` file.
 ## Troubleshooting
 
 - For initial configuration and advanced configuration of the Balluff camera, please use the company-provided visualization tool **ImpactAcquire**, which is part of the **Balluff SDK**.
-- Instructions to install the **Balluff SDK** on the host can be found in the [Balluff SDK Installation Guide](./how-to-install-balluff-sdk-on-host.md).
+- Instructions to install the **Balluff SDK** on the host can be found in the [Balluff SDK Installation Guide](./install-balluff-sdk-on-host.md).
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./install-balluff-sdk-on-host
+
+:::
+hide_directive-->
