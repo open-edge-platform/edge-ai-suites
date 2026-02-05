@@ -1,25 +1,22 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-name: scene-intelligence
-
 secrets:
   root-cert:
-    file: ../edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs/scenescape-ca.pem
+    file: ${RI_DIR}/src/secrets/certs/scenescape-ca.pem
 
 services:
-  # VLM OpenVINO Serving Service
   vlm-openvino-serving:
-    image: intel/vlm-openvino-serving:1.3.1
+    image: intel/vlm-openvino-serving:1.3.2
     ports:
-      - "${VLM_SERVICE_PORT:-9764}:8000"
+      - "8000"
     ipc: host
     networks:
       - scenescape
     environment:
       # Proxy settings
-      no_proxy_env: ${no_proxy_env},${HOST_IP}
-      no_proxy: ${no_proxy_env},${HOST_IP}
+      no_proxy_env: ${no_proxy:-${NO_PROXY:-}},${HOST_IP}
+      no_proxy: ${no_proxy:-${NO_PROXY:-}},${HOST_IP}
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       # VLM Model configuration
@@ -30,7 +27,7 @@ services:
       WORKERS: ${VLM_WORKERS:-1}
       VLM_MAX_COMPLETION_TOKENS: ${VLM_MAX_COMPLETION_TOKENS:-1500}
       HUGGINGFACE_TOKEN: ${HUGGINGFACE_TOKEN}
-      OV_CONFIG: ${OV_CONFIG}
+      OV_CONFIG: ${OV_CONFIG:-}
       VLM_LOG_LEVEL: ${VLM_LOG_LEVEL:-info}
       OPENVINO_LOG_LEVEL: ${VLM_OPENVINO_LOG_LEVEL:-1}
       VLM_ACCESS_LOG_FILE: ${VLM_ACCESS_LOG_FILE:-/dev/null}
@@ -51,62 +48,59 @@ services:
       - ov-models:/root/.cache/huggingface
       - ov-models:/app/ov-model
 
-  # Smart Traffic Intersection Agent Service
-  traffic-intersection-agent:
+  traffic-agent:
     build:
-      context: ../src
+      context: ${APP_DIR:-..}/src
       dockerfile: Dockerfile
-    image: ${REGISTRY:-}traffic-intersection-agent:${TAG:-latest}
+    image: ${REGISTRY:-}smart-traffic-intersection-agent:${TAG:-latest}
     ports:
-      - "${TRAFFIC_INTERSECTION_AGENT_PORT:-8081}:8081"
-      - "${TRAFFIC_INTERSECTION_AGENT_UI_PORT:-7860}:7860"
+      - "${AGENT_BACKEND_PORT:-}:8081"
+      - "${AGENT_UI_PORT:-}:7860"
     networks:
       - scenescape
     depends_on:
       vlm-openvino-serving:
         condition: service_healthy
     environment:
-      # Service configuration
-      TRAFFIC_INTERSECTION_AGENT_HOST: 0.0.0.0
-      TRAFFIC_INTERSECTION_AGENT_PORT: ${TRAFFIC_INTERSECTION_AGENT_PORT:-8081}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      
-      # UI configuration
-      TRAFFIC_INTERSECTION_AGENT_UI_PORT: ${TRAFFIC_INTERSECTION_AGENT_UI_PORT:-7860}
       USE_API: "true"
-      API_URL: http://localhost:${TRAFFIC_INTERSECTION_AGENT_PORT:-8081}/api/v1/traffic/current
       REFRESH_INTERVAL: ${REFRESH_INTERVAL:-15}
       
       # Proxy settings
       http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy_env},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving
-      NO_PROXY: ${no_proxy_env},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving
       HTTP_PROXY: ${http_proxy}
+      https_proxy: ${https_proxy}
       HTTPS_PROXY: ${https_proxy}
+      no_proxy: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving
+      NO_PROXY: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving
       
       # MQTT configuration (connects to broker service)
       MQTT_HOST: ${MQTT_HOST:-broker.scenescape.intel.com}
       MQTT_PORT: ${MQTT_PORT:-1883}
 
-      # Intersection configuration (overrides config/traffic_agent.json)
-      INTERSECTION_NAME: ${INTERSECTION_NAME:-Intersection-1}
-      INTERSECTION_LATITUDE: ${INTERSECTION_LATITUDE:-37.7049108}
-      INTERSECTION_LONGITUDE: ${INTERSECTION_LONGITUDE:--121.9096158}
+      # Intersection configuration (overrides src/config/deployment_instance.json)
+      INTERSECTION_NAME: ${INTERSECTION_NAME:-}
+      INTERSECTION_LATITUDE: ${INTERSECTION_LATITUDE:-}
+      INTERSECTION_LONGITUDE: ${INTERSECTION_LONGITUDE:-}
       
-      # Weather configuration (overrides config/traffic_agent.json)
+      # Weather configuration (overrides src/config/traffic_agent.json)
       WEATHER_MOCK: ${WEATHER_MOCK:-false}
       
-      # VLM configuration (overrides config/traffic_agent.json)
-      VLM_MODEL: ${VLM_MODEL_NAME:-Qwen/Qwen2.5-VL-3B-Instruct}
+      # VLM configuration (overrides src/config/traffic_agent.json)
+      VLM_MODEL_NAME: ${VLM_MODEL_NAME:-Qwen/Qwen2.5-VL-3B-Instruct}
+      VLM_TIMEOUT_SECONDS: ${VLM_TIMEOUT_SECONDS:-}
+      VLM_MAX_COMPLETION_TOKENS: ${VLM_MAX_COMPLETION_TOKENS:-}
+      VLM_TEMPERATURE: ${VLM_TEMPERATURE:-}
+      VLM_TOP_P: ${VLM_TOP_P:-}
       
-      # Traffic analysis configuration (overrides config/traffic_agent.json)
+      # Traffic analysis configuration (overrides src/config/traffic_agent.json)
       HIGH_DENSITY_THRESHOLD: ${HIGH_DENSITY_THRESHOLD:-10}
-      MODERATE_DENSITY_THRESHOLD: ${MODERATE_DENSITY_THRESHOLD:-5}
+      MODERATE_DENSITY_THRESHOLD: ${MODERATE_DENSITY_THRESHOLD:-}
+      TRAFFIC_BUFFER_DURATION: ${TRAFFIC_BUFFER_DURATION:-}
 
     volumes:
-      - ../src/config:/app/config:ro
-      - traffic-intelligence-data:/app/data
+      - ${APP_DIR:-..}/src/config:/app/config:ro
+      - traffic-agent-data:/app/data
     secrets:
       - source: root-cert
         target: /app/secrets/certs/scenescape-ca.pem
@@ -120,9 +114,7 @@ services:
 
 volumes:
   ov-models:
-  traffic-intelligence-data:
+  traffic-agent-data:
 
 networks:
   scenescape:
-    external: true
-    name: metro-vision-ai-app-recipe_scenescape

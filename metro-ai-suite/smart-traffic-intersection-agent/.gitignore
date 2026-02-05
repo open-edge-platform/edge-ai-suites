@@ -86,4 +86,4 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-**/edge-ai-suites/
+**/docker/ri-compose.yaml
