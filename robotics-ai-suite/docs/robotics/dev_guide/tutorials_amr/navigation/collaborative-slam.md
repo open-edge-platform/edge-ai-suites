@@ -17,24 +17,72 @@ Complete the [get started guide](../../../gsg_robot/index.md) before continuing.
 
 - Intel SSE-only CPU instruction accelerated package for Collaborative SLAM (installed by default):
 
-  ```bash
-  # Required for Intel® Atom® processor-based systems
-  sudo apt-get install ros-humble-collab-slam-sse
-  ```
+   <!--hide_directive::::{tab-set}
+   :::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
+
+   ```bash
+   # Required for Intel® Atom® processor-based systems
+   sudo apt-get install ros-jazzy-collab-slam-sse
+   ```
+
+   <!--hide_directive:::
+   :::{tab-item}hide_directive-->  **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
+
+   ```bash
+   # Required for Intel® Atom® processor-based systems
+   sudo apt-get install ros-humble-collab-slam-sse
+   ```
+
+   <!--hide_directive:::
+   ::::hide_directive-->
 
 - Intel AVX2 CPU instruction accelerated package for Collaborative SLAM:
+
+   <!--hide_directive::::{tab-set}
+   :::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
+
+   ```bash
+   # Works only on Intel® Core™ processor-based systems
+   sudo apt-get install ros-jazzy-collab-slam-avx2
+   ```
+
+   <!--hide_directive:::
+   :::{tab-item}hide_directive-->  **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    # Works only on Intel® Core™ processor-based systems
    sudo apt-get install ros-humble-collab-slam-avx2
    ```
 
+   <!--hide_directive:::
+   ::::hide_directive-->
+
 - Intel GPU Level-Zero accelerated package for Collaborative SLAM:
+
+   <!--hide_directive::::{tab-set}
+   :::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
+
+   ```bash
+   # Works only on 9th, 11th or 12th Generation Intel® Core™ processors with Intel® Iris® Xe Integrated Graphics or Intel® UHD Graphics
+   sudo apt-get install ros-jazzy-collab-slam-lze
+   ```
+
+   <!--hide_directive:::
+   :::{tab-item}hide_directive-->  **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    # Works only on 9th, 11th or 12th Generation Intel® Core™ processors with Intel® Iris® Xe Integrated Graphics or Intel® UHD Graphics
    sudo apt-get install ros-humble-collab-slam-lze
    ```
+
+   <!--hide_directive:::
+   ::::hide_directive-->
 
 The tutorials below should work for any compatible version of Collaborative Visual SLAM that is installed.
 Use the instructions above to switch between version to experiment with different accelerations.
