@@ -1,18 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""
-Traffic Intersection Agent - Lightweight traffic analysis for a single intersection
- 
-This agent reads camera data from a single intersection via MQTT topics and provides
-real-time traffic analysis with weather-enriched insights and VLM-powered alerts.
-
-Key Features:
-- MQTT subscription to scenescape/data/camera/camera<1,2,3> topics
-- Weather-aware traffic analysis
-- Structured VLM prompts for traffic and alert analysis
-- Camera image synchronization with data readings
-- Modular, well-documented codebase
-"""
 
 import asyncio
 import logging
@@ -52,7 +39,6 @@ structlog.configure(
 )
 
 logger = structlog.get_logger(__name__)
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -161,9 +147,9 @@ def main():
     # Create FastAPI app
     app = create_app()
     
-    # Get configuration
-    port = int(os.getenv("TRAFFIC_INTERSECTION_AGENT_PORT", "8081"))
-    host = os.getenv("TRAFFIC_INTERSECTION_AGENT_HOST", "0.0.0.0")
+    # When running application on host we can override host and port via env variables
+    port = int(os.getenv("AGENT_BACKEND_HOSTPORT", "8081"))
+    host = os.getenv("AGENT_BACKEND_HOST", "0.0.0.0")
     
     logger.info("Starting Traffic Intersection Agent", 
                host=host, port=port, log_level=log_level)

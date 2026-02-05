@@ -17,7 +17,7 @@ Before You Begin, ensure the following:
 
 - **Kubernetes Cluster**: Ensure you have a properly installed and
 configured Kubernetes cluster.
-- **System Requirements**: Verify that your system meets the [minimum requirements](./system-requirements.md).
+- **System Requirements**: Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
 - **Tools Installed**: Install the required tools:
   - Kubernetes CLI (kubectl)
   - Helm 3 or later
@@ -26,7 +26,6 @@ configured Kubernetes cluster.
 ## Steps to Deploy
 
 To deploy the Smart Intersection Sample Application, copy and paste the entire block of following commands into your terminal and run them:
-
 
 ### Step 1: Clone the Repository
 
@@ -40,8 +39,8 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ```
 
-Optional: Pull the helm chart and replace the existing helm-chart folder with it
-    - Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/chart`
+**Optional:** Pull the helm chart and replace the existing helm-chart folder with it.
+> **Note:** The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/chart`
 
 ```bash
 # Navigate to Smart Intersection directory
@@ -63,7 +62,7 @@ cd ..
 
 #### Set Admin and Postgress Passwords
 
-These passwords need to be set before deployment. You can set them in the values.yaml file.
+These passwords need to be set before deployment. You can set them in the `values.yaml` file.
 ```bash
 # Edit the values.yaml file to set your external IP
 nano ./smart-intersection/chart/values.yaml
@@ -79,7 +78,9 @@ pgpass: <YOUR_POSTGRES_PASSWORD>  # Postgres password for Smart Intersection
 
 #### Configure External IP (Required)
 
-The Smart Intersection application needs to know your cluster's external IP address for proper certificate generation and CSRF security configuration. Update the external IP in the values.yaml file:
+The Smart Intersection application needs to know your cluster's external IP address for proper
+certificate generation and CSRF security configuration. Update the external IP in the
+`values.yaml` file:
 
 ```bash
 # Edit the values.yaml file to set your external IP
@@ -99,7 +100,8 @@ Replace `YOUR_EXTERNAL_IP_HERE` with your actual external IP address where the a
 
 #### Configure Proxy Settings (If behind a proxy)
 
-If you are deploying in a proxy environment, also update the proxy settings in the same values.yaml file:
+If you are deploying in a proxy environment, also update the proxy settings in the same
+`values.yaml` file:
 
 ```yaml
 http_proxy: "http://your-proxy-server:port"
@@ -109,11 +111,10 @@ no_proxy: "localhost,127.0.0.1,.local,.cluster.local"
 
 Replace `your-proxy-server:port` with your actual proxy server details.
 
-
-
 ### Step 3: Setup Storage Provisioner (For Single-Node Clusters)
 
-Check if your cluster has a default storage class with dynamic provisioning. If not, install a storage provisioner:
+Check if your cluster has a default storage class with dynamic provisioning. If not, install
+a storage provisioner:
 
 ```bash
 # Check for existing storage classes
@@ -135,7 +136,8 @@ kubectl get storageclass
 
 ### Step 4: Deploy the application
 
-Now you're ready to deploy the Smart Intersection application with nginx reverse proxy and self-signed certificates:
+Now you are ready to deploy the Smart Intersection application with nginx reverse proxy and
+self-signed certificates:
 
 ```bash
 # Install the chart (works on both single-node and multi-node clusters)
@@ -148,14 +150,15 @@ helm upgrade --install smart-intersection ./smart-intersection/chart \
 kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300s
 ```
 
-> **Note**: Using `global.storageClassName=""` makes the deployment use whatever default storage class exists on your cluster.
+> **Note:** Using `global.storageClassName=""` makes the deployment use whatever default
+> storage class exists on your cluster.
 
 ## Access Application Services
 
 ### Smart Intersection Application UI
 - **URL**: `https://<HOST_IP>:30443/`
 - **Username**: `admin`
-- **Password**: <YOUR_ADMIN_PASSWORD> (set in values.yaml)
+- **Password**: <YOUR_ADMIN_PASSWORD> (set in `values.yaml`)
 
 ### Grafana Dashboard
 - **URL**: `https://<HOST_IP>:30443/grafana/`
@@ -178,10 +181,9 @@ kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300
 - **URL**: `https://<HOST_IP>:30443/api/pipelines/status`
 - **API Access**: No authentication required for status endpoints
 
-> **Note**: For InfluxDB, use the direct access on port 30086 (`http://<HOST_IP>:30086/`) for login and full functionality. The proxy access through nginx (`https://<HOST_IP>:30443/influxdb/`) provides basic functionality and API access but is not recommended for the web UI login.
+> **Note:** For InfluxDB, use the direct access on port 30086 (`http://<HOST_IP>:30086/`) for login and full functionality. The proxy access through nginx (`https://<HOST_IP>:30443/influxdb/`) provides basic functionality and API access but is not recommended for the web UI login.
 
-> **Security Note**: The application uses self-signed certificates for HTTPS. Your browser will show a security warning when first accessing the site. Click "Advanced" and "Proceed to site" (or equivalent) to continue. This is safe for local deployments.
-
+> **Security Note:** The application uses self-signed certificates for HTTPS. Your browser will show a security warning when first accessing the site. Click "Advanced" and "Proceed to site" (or equivalent) to continue. This is safe for local deployments.
 
 ## Uninstall the Application
 
@@ -220,15 +222,15 @@ kubectl get pvc -n smart-intersection --no-headers | awk '{print $1}' | xargs -I
 kubectl delete storageclass hostpath local-storage standard
 ```
 
-> **Note**: This complete cleanup will remove storage provisioning from your cluster. You'll need to reinstall the storage provisioner for future deployments that require persistent volumes.
+> **Note:** This complete cleanup will remove storage provisioning from your cluster. You will
+> need to reinstall the storage provisioner for future deployments that require persistent volumes.
 
-> **Run workload on GPU**: Set `gpuWorkload: true` in values.yaml file before deploying the helm chart.
+> **Run workload on GPU**: Set `gpuWorkload: true` in `values.yaml` file before deploying the Helm chart.
 
+## Next Steps
 
-## What to Do Next
-
-- **[Troubleshooting Helm Deployments](./support.md#troubleshooting-helm-deployments)**: Consolidated troubleshooting steps for resolving issues during Helm deployments.
 - **[Get Started](./get-started.md)**: Ensure you have completed the initial setup steps before proceeding.
+- **[Troubleshooting Helm Deployments](./troubleshooting.md#troubleshooting-helm-deployments)**: Consolidated troubleshooting steps for resolving issues during Helm deployments.
 
 ## Supporting Resources
 

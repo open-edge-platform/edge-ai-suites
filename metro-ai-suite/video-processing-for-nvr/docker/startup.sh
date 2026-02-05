@@ -1,10 +1,23 @@
 #!/bin/bash
 
 # Check for NPU parameter
-NPU_ON=${1:-false}
+MODEL_PATH=${1-/home/vpp/yolov8n_int8/yolov8n_with_preprocess.xml}
+NPU_ON=${2:-false}
 
-#build
-#bash build_sample.sh
+#modelpath
+if [[ -z "${MODEL_PATH}" ]]; then
+    echo "Error: MODEL_PATH (3rd argument) is required."
+    exit 1
+fi
+
+ABS_MODEL_PATH=$(realpath "$MODEL_PATH")
+if [[ ! -f "$ABS_MODEL_PATH" ]]; then
+    echo "Error: Model file not found: $MODEL_PATH"
+    exit 1
+fi
+export MODEL_DIR=$(dirname "$ABS_MODEL_PATH")
+export MODEL_FILE=$(basename "$ABS_MODEL_PATH")
+
 
 # Get group IDs
 VIDEO_GROUP_ID=$(getent group video | awk -F: '{printf "%s\n", $3}')

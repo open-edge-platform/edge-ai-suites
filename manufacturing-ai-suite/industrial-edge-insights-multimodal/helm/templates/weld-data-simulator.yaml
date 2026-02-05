@@ -27,7 +27,7 @@ spec:
       {{- end }}
       containers:
       - name: ia-weld-data-simulator
-        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.weld_data_simulator_image }}{{ if .Values.images.image_suffix }}-{{ .Values.images.image_suffix }}{{ end }}
+        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.weld_data_simulator_image }}:{{ .Values.images.image_suffix | default "latest" }}{{ if .Values.images.weekly_build_date }}-{{ .Values.images.weekly_build_date }}-weekly{{ end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           readOnlyRootFilesystem: true

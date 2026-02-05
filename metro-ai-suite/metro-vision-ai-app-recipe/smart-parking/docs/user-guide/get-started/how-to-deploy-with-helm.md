@@ -1,0 +1,220 @@
+# How to Deploy with Helm
+
+This section provides step-by-step instructions for deploying the Smart Parking sample application using Helm.
+
+The estimated time to complete this procedure is **30 minutes**.
+
+## Get Started
+
+Complete this section to confirm that your setup is working correctly and try out workflows in the sample application.
+
+## Prerequisites
+
+- [System Requirements](./system-requirements.md)
+- K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
+  Refer to online tutorials (such as <https://adamtheautomator.com/install-kubernetes-ubuntu>) to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
+- For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
+
+> **Note:**
+> If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).The target system refers to the system where you are installing the application.
+
+## Step 1: Download the Helm chart
+
+Follow this procedure on the target system to download the package.
+
+> **Note:** Skip this step if you have already followed the steps as part of the [Get Started guide](../get-started.md).
+
+Before you can deploy with Helm, you must clone the repository and download the helm chart:
+
+```bash
+# Clone the repository
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+
+# Navigate to the Metro AI Suite directory
+cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
+
+```
+
+Optional: Pull the Helm chart and replace the existing `helm-chart` folder with it.
+
+> **Note:** The Helm chart should be downloaded when you are not using the Helm chart provided
+> in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/helm-chart`.
+
+```bash
+#Navigate to Smart Parking directory
+cd smart-parking
+
+#Download helm chart with the following command
+helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.3.0
+
+#unzip the package using the following command
+tar -xvf smart-parking-1.3.0.tgz
+
+#Replace the helm directory
+rm -rf helm-chart && mv smart-parking helm-chart
+
+cd ..
+```
+
+## Step 2: Configure and update the environment variables
+
+1. Update the below fields in `values.yaml` file in the Helm chart
+
+    ```bash
+        # Edit the values.yml file to add proxy configuration
+        nano ./smart-parking/helm-chart/values.yaml
+    ```
+
+    ``` sh
+    HOST_IP: # replace localhost with system IP example: HOST_IP: 10.100.100.100
+    http_proxy: # example: http_proxy: http://proxy.example.com:891
+    https_proxy: # example: http_proxy: http://proxy.example.com:891
+    webrtcturnserver:
+        username: # example: username: myuser
+        password: # example: password: mypassword
+    ```
+
+## Step 3: Deploy the application and Run multiple AI pipelines
+
+Follow this procedure to run the sample application. In a typical deployment, multiple cameras deliver video streams that are connected to AI pipelines to improve the classification and recognition accuracy. The following demonstrates running multiple AI pipelines and visualization in the Grafana.
+
+1. Deploy Helm chart
+
+    ```sh
+    helm install smart-parking ./smart-parking/helm-chart -n sp  --create-namespace
+    ```
+
+2. Wait for all pods to be ready:
+
+    ```sh
+    kubectl wait --for=condition=ready pod --all -n sp --timeout=300s
+    ```
+
+3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)
+
+``` sh
+#!/bin/bash
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
+{
+    "source": {
+        "uri": "file:///home/pipeline-server/videos/new_video_1.mp4",
+        "type": "uri"
+    },
+    "destination": {
+        "metadata": {
+            "type": "mqtt",
+            "topic": "object_detection_1",
+            "publish_frame":false
+        },
+        "frame": {
+            "type": "webrtc",
+            "peer-id": "object_detection_1"
+        }
+    },
+    "parameters": {
+        "detection-device": "CPU"
+    }
+}'
+
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
+{
+    "source": {
+        "uri": "file:///home/pipeline-server/videos/new_video_2.mp4",
+        "type": "uri"
+    },
+    "destination": {
+        "metadata": {
+            "type": "mqtt",
+            "topic": "object_detection_2",
+            "publish_frame":false
+        },
+        "frame": {
+            "type": "webrtc",
+            "peer-id": "object_detection_2"
+        }
+    },
+    "parameters": {
+        "detection-device": "CPU"
+    }
+}'
+
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
+{
+    "source": {
+        "uri": "file:///home/pipeline-server/videos/new_video_3.mp4",
+        "type": "uri"
+    },
+    "destination": {
+        "metadata": {
+            "type": "mqtt",
+            "topic": "object_detection_3",
+            "publish_frame":false
+        },
+        "frame": {
+            "type": "webrtc",
+            "peer-id": "object_detection_3"
+        }
+    },
+    "parameters": {
+        "detection-device": "CPU"
+    }
+}'
+
+curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
+{
+    "source": {
+        "uri": "file:///home/pipeline-server/videos/new_video_4.mp4",
+        "type": "uri"
+    },
+    "destination": {
+        "metadata": {
+            "type": "mqtt",
+            "topic": "object_detection_4",
+            "publish_frame":false
+        },
+        "frame": {
+            "type": "webrtc",
+            "peer-id": "object_detection_4"
+        }
+    },
+    "parameters": {
+        "detection-device": "CPU"
+    }
+}'
+```
+
+4. View the Grafana and WebRTC streaming on `https://<HOST_IP>:30443/grafana/`.
+    - Log in with the following credentials:
+        - **Username:** `admin`
+        - **Password:** `admin`
+    - Check under the Dashboards section for the default dashboard named "Video Analytics Dashboard".
+
+   ![Example of Grafana and WebRTC streaming](../_assets/grafana-smart-parking.jpg)
+
+   Figure 1: Grafana and WebRTC streaming
+
+## Step 4: End the demonstration
+
+Follow this procedure to stop the sample application and end this demonstration.
+
+1. Stop the sample application with the following command that uninstalls the release smart-parking.
+
+    ```sh
+    helm uninstall smart-parking -n sp
+    ```
+
+2. Confirm the pods are no longer running.
+
+    ```sh
+    kubectl get pods -n sp
+    ```
+
+## Error Logs
+
+View the container logs using the following command:
+
+         kubectl logs -f <pod_name> -n sp
+
+## Troubleshooting
+
+For troubleshooting, refer to [Troubleshooting Helm Deployments](../troubleshooting.md#troubleshooting-helm-deployments).
