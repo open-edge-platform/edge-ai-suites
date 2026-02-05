@@ -37,6 +37,7 @@
 [submodule "robotics-ai-suite/pipelines/mpc-demo/ocs2/ocs2"]
 	path = robotics-ai-suite/pipelines/mpc-demo/ocs2/ocs2
 	url = https://github.com/leggedrobotics/ocs2.git
-[submodule "health-and-life-sciences-ai-suite/services/mdpnp-service/mdpnp"]
-	path = health-and-life-sciences-ai-suite/services/mdpnp-service/mdpnp
+
+[submodule "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/mdpnp"]
+	path = health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/mdpnp
 	url = https://github.com/mdpnp/mdpnp.git
