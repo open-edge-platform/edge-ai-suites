@@ -14,22 +14,21 @@ coding or deep learning expertise. Its key features are:
   real-time monitoring, and insightful data visualization.
 - **User-Friendly:** prebuilt scripts and configuration files facilitate ease of use.
 
-![Grafana Dashboard](./docs/user-guide/_images/grafana-smart-parking.jpg)
-
+![Grafana Dashboard](./docs/user-guide/_assets/grafana-smart-parking.jpg)
 
 ## Get Started
 
-- [System Requirements](./docs/user-guide/system-requirements.md)
-- [Deploy with Docker Compose](./docs/user-guide/get-started.md)
-- [Deploy with Helm](./docs/user-guide/how-to-deploy-with-helm.md)
-
+- [Get Started](./docs/user-guide/get-started.md)
+- [System Requirements](./docs/user-guide/get-started/system-requirements.md)
+- [Deploy with Docker Compose](./docs/user-guide/get-started.md#run-the-application)
+- [Deploy with Helm](./docs/user-guide/get-started/how-to-deploy-with-helm.md)
+- [Deploy with Edge Orchestrator](./docs/user-guide/get-started/how-to-deploy-with-edge-orchestrator.md)
 
 ## How It Works
 
 Here is an overview of the architecture and logic of the application.
 
-![Architecture Diagram](./docs/user-guide/_images/smart-parking-architecture.drawio.svg)
-
+![Architecture Diagram](./docs/user-guide/_assets/smart-parking-architecture.drawio.svg)
 
 - **DL Streamer Pipeline Server** is a core component of the app. It receives video feed from
 multiple cameras (four by default, simulated with a video recording). With pre-trained deep
@@ -53,6 +52,6 @@ for display in Grafana.
 
 ## Learn More
 
-- [Release Notes](./docs/user-guide/release-notes.md)
 - [How to customize the application](./docs/user-guide/how-to-customize-application.md)
-- [Support and Troubleshooting](./docs/user-guide/support.md)
+- [Troubleshooting](./docs/user-guide/troubleshooting.md)
+- [Release Notes](./docs/user-guide/release-notes.md)

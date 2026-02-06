@@ -207,7 +207,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 ## Further Reading
 
-- [Helm based deployment](./how-to-guides/deploy-with-helm.md)
+- [Deploy with Helm](./get-started/deploy-with-helm.md)
+- [Deploy with Edge Orchestrator](./get-started/deploy-with-edge-orchestrator.md)
 - [MLOps using Model Registry](./how-to-guides/enable-mlops.md)
 - [Run multiple AI pipelines](./how-to-guides/run-multiple-ai-pipelines.md)
 - [Publish frames to S3 storage pipelines](./how-to-guides/store-frames-in-s3.md)
@@ -226,6 +227,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 ./get-started/system-requirements
 ./get-started/environment-variables
+./get-started/deploy-with-helm
+./get-started/deploy-with-edge-orchestrator
 
 :::
 hide_directive-->

@@ -6,7 +6,7 @@ UI Components for the RSU Monitoring System
 import base64
 import io
 from PIL import Image
-from typing import Optional, List, Tuple
+from typing import Any, Optional, List, Tuple
 
 from models import MonitoringData
 from config import Config
@@ -18,7 +18,7 @@ class ThemeColors:
     @staticmethod
     def get_colors():
         """Get theme colors based on UI_THEME setting"""
-        is_light = Config.UI_THEME == "light"
+        is_light = Config.get_ui_theme() == "light"
         
         return {
             'bg_primary': '#ffffff' if is_light else '#1f2937',
@@ -38,14 +38,18 @@ class UIComponents:
     @staticmethod
     def _render_markdown(md_text: str) -> str:
         """Render markdown text to HTML. Falls back to simple replacements if markdown package not installed."""
-        if md_text is None:
+
+        if not md_text:
             return ""
+
+        md_text = "<span style='color:#000000;'>" + md_text + "</span>"
 
         try:
             import markdown 
             return markdown.markdown(md_text, extensions=["extra", "sane_lists", "tables"])
         except Exception:
-            pass
+            return "No VLM Analysis Available!"
+
     
     @staticmethod
     def _get_traffic_density_color(density: int) -> str:
@@ -57,9 +61,9 @@ class UIComponents:
         Returns:
             CSS background color string
         """
-        if density >= Config.HIGH_DENSITY_THRESHOLD:
+        if density >= Config.get_high_density_threshold():
             return "#ecb3b3"  # Light red for high density
-        elif density >= Config.MODERATE_DENSITY_THRESHOLD:
+        elif density >= Config.get_moderate_density_threshold():
             return "#ffff99"  # Yellow for moderate density
         else:
             return "#ffffff"  # Default white for low density
@@ -80,7 +84,7 @@ class UIComponents:
         return f"""
         <div style="text-align: center; background: {colors['header_bg']}; 
                     padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: {colors['shadow']};">
-            <p style="color: white; margin: 0; font-size: 26px; font-weight: 600;">🚦 {Config.APP_TITLE} | {monitoring_data.data.intersection_name}</p> 
+            <p style="color: white; margin: 0; font-size: 26px; font-weight: 600;">🚦 {Config.get_app_title()} | {monitoring_data.data.intersection_name}</p> 
         </div>
         """
 

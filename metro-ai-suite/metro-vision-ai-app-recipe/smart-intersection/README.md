@@ -15,42 +15,43 @@ The key benefits are as follows:
 
 - **Multi-camera multi-object tracking**: Enables tracking of objects across multiple camera views.
 - **Scene based analytics**: Regions of interest that span multiple views can be easily defined on the map rather than independently on each camera view. This greatly simplifies business logic, enables more flexibility in defining regions, and allows various types of sensors to be used to track vehicles and people such as lidar and radar in addition to cameras.
-- **Improved Urban Management**: Object tracks and analytics are available near-real-time on the MQTT broker to enable actionable insights for traffic monitoring and safety applications.
+- **Improved Urban Management**: Object tracking and analytics are available near-real-time on the MQTT broker to enable actionable insights for traffic monitoring and safety applications.
 - **Reduced TCO**: Works with existing cameras, simplifies business logic development, and future-proofs the solution by enabling additional sensors and cameras as needed without changing the business logic.
 
 ## Get Started
 
 To see the system requirements and other installations, see the following guides:
 
-- [System Requirements](./docs/user-guide/system-requirements.md): Check the hardware and software requirements for deploying the application.
 - [Get Started](./docs/user-guide/get-started.md): Follow step-by-step instructions to set up the application.
+- [System Requirements](./docs/user-guide/get-started/system-requirements.md): Check the hardware and software requirements for deploying the application.
 
 ## How It Works
 This section provides a high-level view of how the application integrates with a typical system architecture.
 
-![High-Level System Diagram](./docs/user-guide/_images/smart-intersection-architecture.drawio.svg)
+![High-Level System Diagram](./docs/user-guide/_assets/smart-intersection-architecture.drawio.svg)
 
-### Example Content for Diagram Description
+### Diagram Description
+
 - **Inputs**:
   - **Video Files** - Four traffic intersection cameras that capture videos simultaneously.
   - **Scene Database** - Pre-configured intersection scene with satellite view of intersection, calibrated cameras, and regions of interest.
-
-  The video recordings are used to simulate the live feed from cameras deployed at a traffic intersection. The application can be configured to work with live cameras.
+  Video recordings are used to simulate a live feed from cameras deployed at a traffic intersection. The application can be configured to work with live cameras.
 - **Processing**:
-  - **Video Analytics** - Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server) utilizes a pre-trained object detection model to generate object detection metadata and and a local NTP server for synchronized timestamps. This metadata is published to the MQTT broker
+  - **Video Analytics** - Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server) utilizes a pre-trained object detection model to generate object detection metadata and and a local NTP server for synchronized timestamps. This metadata is published to the MQTT broker.
   - **Sensor Fusion** - Scene Controller Microservice fuses the metadata from video analytics utilizing scene data obtained through the Scene Management API. It uses the fused tracks and the configured analytics (regions of interest) to generate events that are published to the MQTT broker.
   - **Aggregate Scene Analytics** - Region of interest analytics are read from the MQTT broker and stored in an InfluxDB bucket which enables time series analysis through Flux queries.
 - **Outputs**:
   - Fused object tracks are available on the MQTT broker and visualized through the Scene Management UI.
   - Aggregate scene analytics are visualized through a Grafana dashboard.
 
-For more details, see [Overview ](./docs/user-guide/Overview.md)
+For more details, see [Overview](./docs/user-guide/index.md)
 
 ## Learn More
 
 - [How to Deploy with Helm](./docs/user-guide/how-to-deploy-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
-- [Support and Troubleshooting](./docs/user-guide/support.md): Find solutions to common issues and troubleshooting steps.
+- [Application Security Enablements](./docs/user-guide/application-security-enablement.md): Learn how to enable the various security features.
+- [Support and Troubleshooting](./docs/user-guide/troubleshooting.md): Find solutions to common issues and troubleshooting steps.
 
 ## License
 
-The application is licensed under the [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](LICENSE.txt).
+The application is licensed under the [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](./LICENSE.txt).
