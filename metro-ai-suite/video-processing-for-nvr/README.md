@@ -8,7 +8,7 @@ This sample application is built on the VPP SDK and can serve as a reference for
 * Programming Language: C++  
 
 ## Dependencies
-The sample application depends on VPP SDK, OpenVINO and [live555](http://www.live555.com/)
+The sample application depends on VPP SDK, OpenVINO and live555
 
 ## Table of contents
 

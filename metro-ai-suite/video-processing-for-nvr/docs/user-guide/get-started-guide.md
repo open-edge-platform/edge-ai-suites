@@ -64,7 +64,7 @@ vainfo: Supported profile and entrypoints
   
 Then you can try to run one VPP SDK API test.  
   
-Note:	Make sure there is at least one display connected to the device and switch to `root` and `init 3` before running the command below:  
+Note:	Make sure to switch to `root` and `init 3` before running the command below:  
   
 ```
 # sudo init 3
@@ -91,7 +91,7 @@ There is a `example/VA_example/install_dependencies.sh` under VA example folder.
 #### 2.3	Install the live555 library
 There is a `svet2/live555_install.sh` under the root directory of svet_app source code package. Make sure the network connection is good on your system, then run this script, and it will download, build, and install live555 libraries. The libraries will be installed to /usr/local/lib/.  
   
-### 3	Build sample application svet_app
+### 3	Build sample application
 If you have not run the commands below in the current terminal, run them first to set up the correct environment variables:  
   
 ```
@@ -110,12 +110,12 @@ If the build.sh runs successfully, you can find `dec_det` binary under the build
   
 ## Run Sample Application
 ### 1	Download and convert model
-You can download and convert yolo model with openvino notebook, you will get `yolov8n_with_preprocess.xml` after the model successfully downloaded and converted  
+You can download and convert yolo model with [openvino notebook](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/yolov8-optimization/yolov8-object-detection.ipynb), you will get `yolov8n_with_preprocess.xml` after the model successfully downloaded and converted  
 ```
 https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/yolov8-optimization/yolov8-object-detection.ipynb  
 ```
   
-### 2	Switch to root and Set Environment Variables
+### 2	Switch to root and set environment variables
 Before running the sample application, make sure the environment variables are set correctly in the current bash:  
   
 ```
@@ -127,7 +127,7 @@ Before running the sample application, make sure the environment variables are s
   
 Note:	VPP SDK uses drm display, which requires that there is no X server running and with root privileges.  
   
-### 3	Run Basic Video Analytic Pipeline
+### 3	Run basic video analytic pipeline
 Run video decode + detection with yolo detection model
 ```
 ./dec_det yolov8n_with_preprocess.xml
@@ -135,7 +135,7 @@ Run video decode + detection with yolo detection model
 
 ## Uninstall 
 
-### Uninstall svet_app
+### Uninstall application
 `sudo rm -rf build`
 
 ### Uninstall live555

@@ -12,9 +12,8 @@
 1. Build docker image for reference application `bash build_sample.sh`  
 Make sure docker is corrently installed and configured. 
 
-## Download the yolov8n_int8 model  
-1. Download and convert yolo and resnet models from
-https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/yolov8-optimization/yolov8-object-detection.ipynb
+## Download the yolov8n_with_preprocess.xml model  
+1. Download and convert yolo model with [openvino notebook](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/yolov8-optimization/yolov8-object-detection.ipynb)
 
 ## Run docker container  
 1. Run `sudo init 3` switch to non-GUI mode
@@ -22,7 +21,7 @@ https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/yolo
 To exit the program, you need to open another terminal window and stop the container using docker stop.
 
 ## Run docker compose 
-1. Run sudo init 3 switch to non-GUI mode
+1. Run `sudo init 3` switch to non-GUI mode
 2. Run bash ./startup.sh yolov8n_with_preprocess.xml
 
 ## Uninstall docker image
