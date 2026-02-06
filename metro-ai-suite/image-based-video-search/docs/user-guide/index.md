@@ -84,7 +84,6 @@ get-started
 how-to-deploy-helm
 how-to-deploy-with-edge-orchestrator
 how-to-use-gpu-for-inference
-how-to-use-npu-for-inference
 GitHub <https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search>
 support
 :::
