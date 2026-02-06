@@ -3,6 +3,9 @@
 tqdm
 requests
 
+# TensorFlow (needed to load Keras HDF5 rPPG model for conversion)
+tensorflow-cpu==2.16.1
+
 # PyTorch (required for OMZ PyTorch→ONNX conversion)
 torch==2.8.0
 
