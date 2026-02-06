@@ -1,8 +1,4 @@
-# Video Processing for NVR
-This sample application allows users to evaluate and optimize video processing workflows for NVR. Users can configure concurrent video processing, including video decode, post-processing, and concurrent display, utilizing the integrated GPUs. Users can also utilize application multiview to evaluate runtime performance or debug core video processing workload.
-
 # Overview
-This sample application is built on the VPP SDK and can serve as a reference for various video processing use cases.
 `SVET2` (Smart Video Evaluation Tool 2) is a subcomponent designed for the NVR scenario. With `SVET2`, users can configure NVR workloads (such as decode, composition, and display) through a configuration file. The application reads this file and executes the user-defined workload accordingly.
 Programming Language: C++  
 
@@ -15,7 +11,7 @@ Sample config files can be found in ./sample_config directory.
 * Dynamic add one input stream in runtime 
 
 ## Dependencies
-The sample application depends on VPP SDK, OpenVINO and [live555](http://www.live555.com/)
+The sample application depends on VPP SDK and [live555](http://www.live555.com/)
 
 ## Table of contents
 
@@ -53,14 +49,15 @@ sudo apt install intel-vppsdk
 sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
 source /opt/intel/vppsdk/env.sh
 ```
-3. Run `build.sh` to build each component
+3. Run `build.sh`
+4. Add `/usr/local/lib` to `$LD_LIBRARY_PATH`:  
+`export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH`  
+You shall add this export command to your .bashrc or need to run it before running svet_app
+5. Basic test:
+```
+./build/svet_app load sample_config/basic/1dec1disp.txt
+```
 
 ## Known limitations
 
-The sample application has been validated on Intel® platforms Arrow Lake, Meteor Lake, Raptor Lake, Adler Lake, Tiger Lake and Panther Lake
-
-
-# Learn More  
-- Get started with basic workloads [Get Started Guide](./docs/user-guide/get-started-guide.md)
-- VPP SDK Overview [VPP SDK Overview](./docs/user-guide/Overview.md)
-- [Release Notes](./docs/user-guide/release-notes.md)
+The sample application has been validated on Intel® platforms Arrow Lake, Meteor Lake, Raptor Lake, Adler Lake and Tiger Lake 
