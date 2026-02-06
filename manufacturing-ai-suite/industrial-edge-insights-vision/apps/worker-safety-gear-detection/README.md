@@ -14,13 +14,13 @@ models for video analysis. This sample application offers the following:
 
 To see the system requirements and other installation procedures, see the following guides:
 
-- [System Requirements](../../docs/user-guide/worker-safety-gear-detection/system-requirements.md)
+- [System Requirements](../../docs/user-guide/worker-safety-gear-detection/get-started/system-requirements.md)
 - [Setup guide](../../docs/user-guide/worker-safety-gear-detection/get-started.md)
-- [Overview](../../docs/user-guide/worker-safety-gear-detection/Overview.md)
+- [Overview](../../docs/user-guide/worker-safety-gear-detection/index.md)
 
 ## How It Works
 
-You can read the overview of the architecture and logic of the application [here](../../docs/user-guide/worker-safety-gear-detection/overview-architecture.md)
+You can read the overview of the [architecture and logic of the application](../../docs/user-guide/worker-safety-gear-detection/index.md#how-it-works)
 
 The components and services are as follows:
 

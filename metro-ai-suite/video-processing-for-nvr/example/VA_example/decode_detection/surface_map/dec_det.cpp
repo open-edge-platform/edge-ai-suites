@@ -24,6 +24,8 @@ using namespace cv;
 using namespace dnn;
 using namespace ov::preprocess;
 
+const size_t duration = 30;
+
 const size_t NUM_STREAMS = 16;
 const size_t NUM_STREAMS_INFER = 16;
 
@@ -123,6 +125,9 @@ int main(int argc, char* argv[])
         infer_requests_det[i] = vec_compiled_model_det[i * num_compiled_models / NUM_STREAMS_INFER].create_infer_request();
     }
 
+    volatile bool feedRunning = true;
+    volatile bool inferRunning = true;
+
     VPP_Init();
     for (int32_t id = 0; id < NUM_STREAMS; ++id) {
         VPP_DECODE_STREAM_Attr attr;
@@ -145,7 +150,7 @@ int main(int argc, char* argv[])
         int frame_counter = 0;
         int skip_frames = 3;
         bool isFirstRun = true;
-        while (1) {
+        while (inferRunning) {
             VPP_SURFACE_HDL hdl;
             if (id == 0) {
                 printWithTimestamp("Waiting for frame...");
@@ -226,51 +231,63 @@ int main(int argc, char* argv[])
     for (int i = 0; i < NUM_STREAMS; i++) {
         threads.push_back(std::thread(getSurface, i));
     }
-    FILE* fp = fopen("/opt/video/car_1080p.h265", "rb");
+    auto feed = [&]() {
+        FILE* fp = fopen("/opt/video/car_1080p.h265", "rb");
 
-    const uint64_t size = 1 * 1024 * 1024;
-    void* addr = malloc(size);
-    while (true) {
-        uint64_t sizeTemp = fread(addr, 1, size, fp);
-        VPP_DECODE_STREAM_InputBuffer buffer;
-        buffer.pAddr = (uint8_t*)addr;
-        buffer.Length = sizeTemp;
-        buffer.BasePts = 0;
-        buffer.FlagEOStream = false;
+        const uint64_t size = 1 * 1024 * 1024;
+        void* addr = malloc(size);
+        while (feedRunning) {
+            uint64_t sizeTemp = fread(addr, 1, size, fp);
+            VPP_DECODE_STREAM_InputBuffer buffer;
+            buffer.pAddr = (uint8_t*)addr;
+            buffer.Length = sizeTemp;
+            buffer.BasePts = 0;
+            buffer.FlagEOStream = false;
 
-        if(sizeTemp < size) {
-            //buffer.FlagEOStream = true;
+            if(sizeTemp < size) {
+                //buffer.FlagEOStream = true;
+            }
+
+            std::thread* arrThread[NUM_STREAMS];
+            for (int32_t id = 0; id < NUM_STREAMS; ++id) {
+                auto feed = [=]() {VPP_DECODE_STREAM_FeedInput(id, &buffer, -1);};
+                arrThread[id] = new std::thread(feed);
+            }
+            for (int32_t id = 0; id < NUM_STREAMS; ++id) {
+                arrThread[id]->join();
+                delete(arrThread[id]);
+            }
+
+
+            //for (int32_t id = 0; id < NUM_STREAMS; ++id) {
+            //VPP_DECODE_STREAM_FeedInput(id, &buffer, -1);
+            //}
+            if(sizeTemp < size) {
+                //break;
+            fseek(fp, 0, SEEK_SET);
+            }
         }
+        fclose(fp);
+        free(addr);
+    };
+    std::thread feed_thread(feed);
 
-    	std::thread* arrThread[NUM_STREAMS];
-        for (int32_t id = 0; id < NUM_STREAMS; ++id) {
-            auto feed = [=]() {VPP_DECODE_STREAM_FeedInput(id, &buffer, -1);};
-            arrThread[id] = new std::thread(feed);
-        }
-        for (int32_t id = 0; id < NUM_STREAMS; ++id) {
-            arrThread[id]->join();
-            delete(arrThread[id]);
-        }
+    usleep(duration * 1'000'000);
 
-
-        //for (int32_t id = 0; id < NUM_STREAMS; ++id) {
-        //VPP_DECODE_STREAM_FeedInput(id, &buffer, -1);
-        //}
-        if(sizeTemp < size) {
-            //break;
-	    fseek(fp, 0, SEEK_SET);
-        }
-    }
-
-    usleep(10000000);
+    feedRunning = false;
+    feed_thread.join();
+    
+    inferRunning = false;
     for (auto& th : threads) {
         th.join();
     }
-    free(addr);
     for (int32_t id = 0; id < NUM_STREAMS; ++id) {
         VPP_DECODE_STREAM_Stop(id);
+    }
+    for (int32_t id = 0; id < NUM_STREAMS; ++id) {
         VPP_DECODE_STREAM_Destroy(id);
     }
-    fclose(fp);
     VPP_DeInit();
+    
+    printf("Decode and detection finished.\n");
 }

@@ -40,7 +40,7 @@ Model Registry Microservice (which can interact with Postgres, Minio and Geti Se
 getting the model) can be pulled into DL Streamer Pipeline Server and used for inference
 in the sample application.
 
-![architecture and high-level representation of the flow of data through the architecture](./images/industrial-edge-insights-vision-architecture.drawio.svg)
+![architecture and high-level representation of the flow of data through the architecture](./_assets/industrial-edge-insights-vision-architecture.drawio.svg)
 
 This sample application is built with the following Intel Edge AI Stack Microservices:
 
@@ -78,31 +78,21 @@ This sample application offers the following features:
 - Interconnected welding setups deliver analytics for quick and informed tracking and
   decision making.
 
+## Supporting Resources
+
+- [Get Started](./get-started.md)
+- [API Reference](./api-reference.md)
+- [System Requirements](./get-started/system-requirements.md)
+
 <!--hide_directive
 :::{toctree}
 :hidden:
 
-overview-architecture
-system-requirements
 get-started
-troubleshooting-guide
-how-to-change-input-video-source
-how-to-deploy-using-helm-charts
-how-to-deploy-with-edge-orchestrator
-how-to-enable-mlops
-how-to-manage-pipelines
-how-to-run-multiple-ai-pipelines
-how-to-scale-video-resolution
-how-to-use-an-ai-model-and-video-file-of-your-own
-how-to-run-store-frames-in-s3
-how-to-view-telemetry-data
-how-to-start-mqtt-publisher
-how-to-use-gpu-for-inference
-how-to-use-opcua-publisher
-how-to-benchmark
+how-to-guides
 api-reference
-environment-variables
-release_notes/Overview
+troubleshooting
+release-notes
 
 :::
 hide_directive-->
