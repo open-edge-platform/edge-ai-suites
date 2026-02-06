@@ -17,8 +17,8 @@ The DL Streamer Pipeline Server generates vision metadata for each processed fra
     ```bash
     docker exec -it ia-influxdb bash
     ```
-   
-    > **NOTE:** 
+
+    > **NOTE:**
     > Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
     > where for <namespace> replace with namespace name where the application was deployed and
     > for <influxdb-pod-name> replace with InfluxDB pod name.
@@ -41,7 +41,7 @@ The DL Streamer Pipeline Server generates vision metadata for each processed fra
 
 Access the SeaweedFS Filer interface in your web browser:
 
-```
+```text
 https://<host_ip>:3000/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/
 ```
 
@@ -54,6 +54,7 @@ Images are organized by their `img_handle` identifier. Browse the directory to l
 Follow these steps to correlate detection events in InfluxDB with stored images:
 
 1. Query InfluxDB to retrieve vision metadata:
+
    ```sql
    SELECT * FROM "vision-weld-classification-results"
    ```
@@ -61,7 +62,8 @@ Follow these steps to correlate detection events in InfluxDB with stored images:
 2. Note the `img_handle` from the query results (e.g., `X7TINNVPNX`).
 
 3. Navigate to the Filer interface:
-   ```
+
+   ```text
    http://<host_ip>:8887/buckets/dlstreamer-pipeline-results/weld-defect-classification/
    ```
 
