@@ -1,8 +1,17 @@
+// src/App.tsx
+import Header from './components/Header/Header';
+import TopPanel from './components/TopPanel/TopPanel';
+import Body from './components/common/Body';
+import Footer from './components/Footer/Footer';
+import './App.css';
+
 function App() {
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Health Monitoring Dashboard</h1>
-      <p>Waiting for vitals data...</p>
+    <div className="app">
+      <Header />
+      <TopPanel />
+      <Body />
+      <Footer />
     </div>
   );
 }

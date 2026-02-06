@@ -1,0 +1,55 @@
+/* src/assets/css/LeftPanel.css */
+.left-panel {
+  flex: 1;
+  background: #f8f9fa;
+  padding: 16px;
+  overflow: hidden; /* Changed from overflow-x: auto */
+  position: relative;
+  z-index: 1;
+}
+
+.workload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 16px;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+/* When expanded: First row spans full width, second row has 3 equal cards */
+.workload-grid.has-expanded {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto 1fr;
+  gap: 16px;
+}
+
+/* Expanded card takes full width of first row */
+.workload-grid.has-expanded .workload-card.expanded {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  min-height: 50%;
+}
+
+/* Non-expanded cards fill second row equally */
+.workload-grid.has-expanded .workload-card:not(.expanded) {
+  grid-column: span 1;
+  grid-row: 2;
+}
+
+@media (max-width: 900px) {
+  .workload-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .workload-grid.has-expanded {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .workload-grid.has-expanded .workload-card:not(.expanded) {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}

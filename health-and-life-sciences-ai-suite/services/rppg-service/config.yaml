@@ -44,6 +44,7 @@ postprocessing:
   waveform_samples: 150
 
 aggregator:
+  grpc_endpoint: "10.23.223.206:50051" 
   host: "localhost"           # Change to "aggregator-service" in Docker
   port: 50051
   retry_interval: 5
