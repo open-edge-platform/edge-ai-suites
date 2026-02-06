@@ -35,6 +35,25 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+
+# GPU support (if using OpenVINO with GPU plugin, ensure the base image has necessary drivers/libraries)
+ARG INSTALL_DRIVER_VERSION="25.31.34666"
+ARG USER_ID=1000
+ARG USER_GROUP_ID=1000
+
+RUN groupadd -g ${USER_GROUP_ID} appuser && useradd -m -s /bin/bash -u ${USER_ID} -g ${USER_GROUP_ID} appuser
+
+RUN apt-get update -y && apt-get install -y --no-install-recommends --fix-missing \
+    curl \
+    && rm -rf /var/lib/apt/lists/* 
+
+COPY ./scripts/install_ubuntu_gpu_drivers.sh /tmp/install_gpu_drivers.sh
+RUN chmod +x /tmp/install_gpu_drivers.sh
+RUN /tmp/install_gpu_drivers.sh
+
+RUN apt-get clean && rm -rf /tmp/install_gpu_drivers.sh && rm -rf /var/lib/apt/lists/* && rm -rf /tmp/* && rm -rf /root/.cachetmp/*
+
+
 # Copy proto definition
 COPY proto/ ./proto/
 
