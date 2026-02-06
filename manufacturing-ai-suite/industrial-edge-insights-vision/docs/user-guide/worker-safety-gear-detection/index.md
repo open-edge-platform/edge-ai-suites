@@ -90,9 +90,9 @@ This sample application offers the following features:
 :hidden:
 
 get-started
-troubleshooting
 how-to-guides
 api-reference
+troubleshooting
 release-notes
 
 :::

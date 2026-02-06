@@ -1,5 +1,5 @@
 
-# Configuration to connect to secure External MQTT broker
+# Configure Secure MQTT Broker Connection
 
 This guide explains how to securely connect your application to an external MQTT broker using
 TLS/SSL encryption for both data ingestion and alert publishing, replacing the default built-in

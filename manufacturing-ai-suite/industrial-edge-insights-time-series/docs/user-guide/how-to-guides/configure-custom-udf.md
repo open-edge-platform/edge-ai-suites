@@ -1,4 +1,4 @@
-# Configure Time Series Analytics Microservice with Custom UDF deployment package
+# Deploy with Custom UDF
 
 This guide provides instructions for setting up custom UDF deployment package (UDFs, TICKscripts, models) and `config.json` in **Time Series Analytics Microservice**.
 
@@ -46,7 +46,7 @@ This guide provides instructions for setting up custom UDF deployment package (U
        - Key sections:
          - **Input**: Fetch data from Telegraf (stream).
          - **Processing**: Apply UDFs for analytics.
-         - **Alerts**: Configuration for publishing alerts (e.g., MQTT). Refer [link](./how-to-configure-alerts.md#publish-mqtt-alerts)
+         - **Alerts**: Configuration for publishing alerts (e.g., MQTT). Refer to the [document](./configure-alerts.md#helm---publish-mqtt-alerts)
          - **Logging**: Set log levels (`INFO`, `DEBUG`, `WARN`, `ERROR`).
          - **Output**: Publish processed data.
 
@@ -66,36 +66,38 @@ and `config.json` have been volume mounted for the Time Series Analytics Microse
 
 > **Note:** This method does not use a volume mount. Instead, the `kubectl cp` command is used to copy the UDF deployment package into the container, which serves the same purpose.
 
-1. Update the UDF deployment package by following the instructions in [Configure Time Series Analytics Microservice with Custom UDF Deployment Package](./how-to-configure-custom-udf.md#configuration).
+1. Update the UDF deployment package by following the instructions in [Configure Time Series Analytics Microservice with Custom UDF Deployment Package](./configure-custom-udf.md#configuration).
 
-2. Copy the updated UDF deployment package using the [steps](./how-to-deploy-with-helm.md#step-4-copy-the-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
+2. Copy the updated UDF deployment package using the [steps](../get-started/deploy-with-helm.md#step-4-copy-the-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
 
 3. Make the following REST API call to the Time Series Analytics microservice for the updated custom UDF:
-    ```sh
-    curl -k -X 'POST' \
-    'https://<HOST_IP>:30001/ts-api/config' \
-    -H 'accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -d '{
-      "udfs": {
-          "name": "<custom_UDF>",
-          "models": "<custom_UDF>.pkl|<custom_UDF>.cb",
-          "device"": "cpu|gpu"
-      },
-      "alerts": {
-          "mqtt": {
-              "mqtt_broker_host": "ia-mqtt-broker",
-              "mqtt_broker_port": 1883,
-              "name": "my_mqtt_broker"
-          }
-      }
-    }'
-    ```
+
+   ```sh
+   curl -k -X 'POST' \
+   'https://<HOST_IP>:30001/ts-api/config' \
+   -H 'accept: application/json' \
+   -H 'Content-Type: application/json' \
+   -d '{
+     "udfs": {
+         "name": "<custom_UDF>",
+         "models": "<custom_UDF>.pkl|<custom_UDF>.cb",
+         "device"": "cpu|gpu"
+     },
+     "alerts": {
+         "mqtt": {
+             "mqtt_broker_host": "ia-mqtt-broker",
+             "mqtt_broker_port": 1883,
+             "name": "my_mqtt_broker"
+         }
+     }
+   }'
+   ```
 
 4. Verify the logs of the Time Series Analytics Microservice:
-    ```sh
-    POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
-    kubectl logs -f -n ts-sample-app $POD_NAME
-    ```
 
-For more details, refer to `Time Series Analytics` microservice API documents on [updating the config](./how-to-update-config.md).
+   ```sh
+   POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
+   kubectl logs -f -n ts-sample-app $POD_NAME
+   ```
+
+For more details, refer to `Time Series Analytics` microservice API documents on [updating the config](./update-config.md).

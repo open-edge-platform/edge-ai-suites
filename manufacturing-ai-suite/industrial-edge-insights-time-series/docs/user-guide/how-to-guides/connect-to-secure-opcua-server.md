@@ -1,5 +1,5 @@
 
-# Configuration to connect to secure External OPC UA server
+# Configure Secure OPC UA Server Connection
 
 This guide explains how to securely connect your application to an external OPC UA server using
 TLS/SSL encryption for both data ingestion and alert publishing, replacing the default built-in
