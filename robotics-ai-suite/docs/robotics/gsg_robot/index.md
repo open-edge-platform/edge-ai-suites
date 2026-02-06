@@ -664,16 +664,16 @@ access to commonly used robotic functionality with ease.
    sudo apt update
    ```
 
-4. Install the RealSense drivers and libraries:
+4. Configure APT preferences to pin the RealSense version:
 
+   This step pins the RealSense SDK to validated versions that ensure compatibility with ROS 2 and the tutorials in this documentation. This prevents automatic upgrades during ``apt upgrade`` that could introduce compatibility issues.
 
    :::::{tab-set}
    ::::{tab-item} **Jazzy**
    :sync: jazzy
 
    ```bash
-   sudo apt install librealsense2-dkms
-   sudo apt install librealsense2
+   echo -e "Package: librealsense2*\nPin: version 2.56.5-0~realsense.17055\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense
    ```
 
    ::::
@@ -681,12 +681,20 @@ access to commonly used robotic functionality with ease.
    :sync: humble
 
    ```bash
-   sudo apt install librealsense2-dkms
-   sudo apt install librealsense2=2.55.1-0~realsense.12474
+   echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense
    ```
 
    ::::
    :::::
+
+5. Install the RealSense drivers and libraries:
+
+   ```bash
+   sudo apt install librealsense2-dkms
+   sudo apt install librealsense2
+   ```
+
+   > **Note:** The pinned version ensures stability across tutorials. To upgrade in the future, update the version in `/etc/apt/preferences.d/librealsense` before installing.
 
 
 ## 7. Install Intel® GPU Driver on Intel® Core™ Ultra Processors
@@ -704,11 +712,6 @@ this step.
 
    ```bash
    sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-libgallium mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
-   ```
-
-   ```bash
-   sudo apt install librealsense2-dkms
-   sudo apt install librealsense2
    ```
 
    ::::
