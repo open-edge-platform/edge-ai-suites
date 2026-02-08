@@ -432,12 +432,26 @@ class VitalService(vital_pb2_grpc.VitalServiceServicer):
             result = self.consumer.consume(vital)
             
             if result:
+                # Build base message first so we can control JSON key order.
                 message = {
                     "workload_type": workload_type,
                     "event_type": event_type,
                     "timestamp": vital.timestamp,
-                    "payload": result,
                 }
+
+                # For MDPNP vitals, also expose device_type at the root level
+                # (immediately after timestamp) in addition to inside payload,
+                # so the UI can more easily filter/group by simulator/device type.
+                if (
+                    workload_type == "mdpnp"
+                    and isinstance(result, dict)
+                    and "device_type" in result
+                ):
+                    message["device_type"] = result["device_type"]
+
+                # Payload comes last so JSON appears as:
+                # {workload_type, event_type, timestamp, device_type?, payload}
+                message["payload"] = result
                 
                 if event_loop is not None:
                     print(f"[Broadcast] Sending to SSE: {workload_type}/{event_type}")
