@@ -4,11 +4,20 @@
 # Multi-stage build for production-ready container
 
 FROM python:3.12-slim
-ENV http_proxy=http://proxy-mu.intel.com:911
-ENV https_proxy=http://proxy-mu.intel.com:911
-ENV HTTP_PROXY=http://proxy-mu.intel.com:911
-ENV HTTPS_PROXY=http://proxy-mu.intel.com:911
-ENV no_proxy=localhost,127.0.0.0/8,::1,.intel.com,.intel.net,localhost
+
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+
+ENV http_proxy=${http_proxy:-$HTTP_PROXY} \
+	https_proxy=${https_proxy:-$HTTPS_PROXY} \
+	no_proxy=${no_proxy:-$NO_PROXY} \
+	HTTP_PROXY=${HTTP_PROXY:-$http_proxy} \
+	HTTPS_PROXY=${HTTPS_PROXY:-$https_proxy} \
+	NO_PROXY=${NO_PROXY:-$no_proxy}
 # Install system dependencies for OpenCV
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
@@ -25,6 +34,25 @@ WORKDIR /app
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+
+# GPU support (if using OpenVINO with GPU plugin, ensure the base image has necessary drivers/libraries)
+ARG INSTALL_DRIVER_VERSION="25.31.34666"
+ARG USER_ID=1000
+ARG USER_GROUP_ID=1000
+
+RUN groupadd -g ${USER_GROUP_ID} appuser && useradd -m -s /bin/bash -u ${USER_ID} -g ${USER_GROUP_ID} appuser
+
+RUN apt-get update -y && apt-get install -y --no-install-recommends --fix-missing \
+    curl \
+    && rm -rf /var/lib/apt/lists/* 
+
+COPY ./scripts/install_ubuntu_gpu_drivers.sh /tmp/install_gpu_drivers.sh
+RUN chmod +x /tmp/install_gpu_drivers.sh
+RUN /tmp/install_gpu_drivers.sh
+
+RUN apt-get clean && rm -rf /tmp/install_gpu_drivers.sh && rm -rf /var/lib/apt/lists/* && rm -rf /tmp/* && rm -rf /root/.cachetmp/*
+
 
 # Copy proto definition
 COPY proto/ ./proto/

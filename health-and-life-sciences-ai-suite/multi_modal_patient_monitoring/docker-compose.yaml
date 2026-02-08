@@ -129,8 +129,8 @@ services:
     depends_on:
       patient-monitoring-aggregator:
         condition: service_started
-      # mdpnp:
-      #   condition: service_started
+      mdpnp:
+        condition: service_started
     network_mode: "host"
 
   ai-ecg:
@@ -211,30 +211,32 @@ services:
       - http_proxy=${HTTP_PROXY}
       - https_proxy=${HTTPS_PROXY}
       - no_proxy=${NO_PROXY}
+      - RPPG_DEVICE=${RPPG_DEVICE:-GPU}
     volumes:
       - ./models:/models
       - ./videos:/videos
+    devices:
+      - "/dev/dri:/dev/dri"  
    
-  # ui:
-  #   build:
-  #     context: ./services/ui
-  #     dockerfile: Dockerfile
-  #     args:
-  #       HTTP_PROXY: ${HTTP_PROXY}
-  #       HTTPS_PROXY: ${HTTPS_PROXY}
-  #       NO_PROXY: ${NO_PROXY}
-  #       http_proxy: ${HTTP_PROXY}
-  #       https_proxy: ${HTTPS_PROXY}
-  #       no_proxy: ${NO_PROXY}
-  #   image: intel/hl-ai-ui:1.0.0
-  #   container_name: ui
-  #   environment:
-  #     - HTTP_PROXY=${HTTP_PROXY}
-  #     - HTTPS_PROXY=${HTTPS_PROXY}
-  #     - NO_PROXY=${NO_PROXY}
-  #     - http_proxy=${HTTP_PROXY}
-  #     - https_proxy=${HTTPS_PROXY}
-  #     - no_proxy=${NO_PROXY}
-  #   ports:
-  #     - "3000:3000"
-
+  ui:
+    build:
+      context: ./services/ui
+      dockerfile: Dockerfile
+      args:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        NO_PROXY: ${NO_PROXY}
+        http_proxy: ${HTTP_PROXY}
+        https_proxy: ${HTTPS_PROXY}
+        no_proxy: ${NO_PROXY}
+    image: intel/hl-ai-ui:1.0.0
+    container_name: ui
+    environment:
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
+      - http_proxy=${HTTP_PROXY}
+      - https_proxy=${HTTPS_PROXY}
+      - no_proxy=${NO_PROXY}
+    ports:
+      - "3000:3000"
