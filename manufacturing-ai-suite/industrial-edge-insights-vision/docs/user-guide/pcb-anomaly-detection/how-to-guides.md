@@ -2,8 +2,6 @@
 
 This section collects guides for PCB Anomaly Detection sample application.
 
-- [Deploy with Helm](./get-started/deploy-with-helm.md)
-- [Deploy with Edge Orchestrator](./how-to-guides/deploy-with-edge-orchestrator.md)
 - [Manage pipelines](./how-to-guides/manage-pipelines.md)
 - [Run multiple AI pipelines](./how-to-guides/run-multiple-ai-pipelines.md)
 - [Use GPU For Inference](./how-to-guides/use-gpu-for-inference.md)

@@ -70,7 +70,7 @@ if [ ! -d "$VENV_DIR" ]; then
   python3 -m venv "$VENV_DIR"
 fi
 
-# shellcheck disable=SC1090
+# shellcheck disable=SC1090,SC1091
 source "$VENV_DIR/bin/activate"
 python -m pip install --upgrade pip
 python -m pip install -r "$REQUIREMENTS_URL"
@@ -85,6 +85,6 @@ if [ -d "$OUTPUT_PATH" ]; then
 fi
 
 echo "Exporting $MODEL_ID to $OUTPUT_PATH"
-optimum-cli export openvino --model "$MODEL_ID" "${EXTRA_ARGS[@]}" "$OUTPUT_PATH" --trust-remote-code 
+optimum-cli export openvino --model "$MODEL_ID" "${EXTRA_ARGS[@]}" "$OUTPUT_PATH" --trust-remote-code
 
 echo "Model saved to $OUTPUT_PATH"

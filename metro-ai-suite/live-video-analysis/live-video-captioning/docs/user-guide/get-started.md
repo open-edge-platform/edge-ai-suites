@@ -34,8 +34,8 @@ By following this guide, you will learn how to:
 
 3. **Configure Image Registry and Tag**:
      ```bash
-     export REGISTRY="intel/"
-     export TAG="rc2026.1.3"
+        export REGISTRY="intel/"
+        export TAG="1.0.0-rc.0"
      ```
     Skip this step if you prefer to build the sample applciation from source. For detailed instructions, refer to [How to Build from Source](./how-to-build-source.md) guide for details.
 
@@ -52,7 +52,6 @@ By following this guide, you will learn how to:
      DASHBOARD_PORT=4173
      WEBRTC_PEER_ID=stream
      WEBRTC_BITRATE=5000
-     METADATA_POLL_SECONDS=0.5
      AGENT_MODE=False
      ENABLE_DETECTION_PIPELINE=False
      ```
@@ -75,7 +74,7 @@ By following this guide, you will learn how to:
     ```
 
     For gated models, please export you HF_TOKEN before running the scripts above:
-    
+
      ```bash
      export HF_TOKEN=<YOUR_HUGGING_FACE_TOKEN>
      ```
@@ -87,17 +86,16 @@ By following this guide, you will learn how to:
      ```
 
 7. **Access the Application**:
-    Following are the exposed services with their default ports:
-     - Pipeline API: `http://<HOST_IP>:8040`
-     - WebRTC signaling: `ws://<HOST_IP>:8889`
-     - Dashboard UI: `http://<HOST_IP>:4173`
 
-    Run a captioning pipeline
-     1. Open the dashboard at `http://<HOST_IP>:4173`.
-     2. Enter an RTSP URL.
-     3. Select a VLM model.
-     4. Edit prompt/max tokens as needed.
-     5. Click **Start**.
+    To start processing video with live captioning:
+
+    1. Open the dashboard at `http://<HOST_IP>:4173`.
+    2. Enter an RTSP URL for your video stream.
+    3. Select a VLM model from the dropdown.
+    4. Customize the prompt and maximum tokens as needed.
+    5. Click **Start** to begin captioning.
+
+    > **Note**: If running in a proxy network, ensure that your RTSP stream URLs or IPs are added to the `no_proxy` environment variable to allow direct connections to the stream source without going through the proxy.
 
 8. **Stop the Services**:
     Stop the sample application services using below:

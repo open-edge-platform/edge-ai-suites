@@ -41,23 +41,33 @@ ROS is a set of open-source software libraries and tools that help you build rob
    sudo apt update
    ```
 
-5. Install the RealSense drivers and libraries:
+5. Configure APT preferences to pin the librealsense2 version:
+
+   This step pins the RealSense SDK to version 2.55.1-0~realsense.12474, which has been validated with
+   the ROS 2 Humble integration and the tutorials in this documentation. This prevents
+   automatic upgrades during ``apt upgrade`` that could introduce compatibility issues.
+
+   ```bash
+   echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense
+   ```
+
+6. Install the RealSense drivers and libraries:
 
    ```bash
    sudo apt install librealsense2-dkms
-   sudo apt install librealsense2=2.55.1-0~realsense.12474
+   sudo apt install librealsense2
    ```
 
->  **Attention:**
-   The command above has fixed the ``librealsense2`` package version; therefore, you need to install dependent packages, for example ``librealsense2-utils``, ``librealsense2-dev``, and ``librealsense2-gl``.
+   >  **Note:**
+   The pinned version ensures stability across tutorials. If you need to upgrade to a newer version in the future, update the pin configuration in `/etc/apt/preferences.d/librealsense` before running `apt install`.
 
-6. (Optional) Install the ROS wrappers for Intel RealSense depth cameras:
+7. (Optional) Install the ROS wrappers for Intel RealSense depth cameras:
 
    ```bash
    sudo apt install ros-humble-realsense2-camera
    ```
 
-#. (Optional) Install other tools or packages of Intel RealSense depth cameras:
+8. (Optional) Install other tools or packages of Intel RealSense depth cameras:
 
     See the [installation link](https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md)>
     to install librealsense packages and more other tools from Intel® RealSense™ depth camera sources.
