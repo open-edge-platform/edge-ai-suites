@@ -16,8 +16,7 @@ protobuf<5.0.0
 PyYAML
 
 # OpenVINO (model conversion)
-# Use a version that exists for both openvino and openvino-dev
+# Use the runtime package; dev tools are not needed for these scripts
 openvino>=2024.6.0,<2025.0
-openvino-dev>=2024.6.0,<2025.0
 
 
