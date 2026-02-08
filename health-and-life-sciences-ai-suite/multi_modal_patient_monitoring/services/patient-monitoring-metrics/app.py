@@ -257,11 +257,105 @@ def build_memory_series() -> List[List[float]]:
 
 def build_gpu_series() -> List[List[float]]:
     """Build a time series for GPU utilization.
+    Data source: qmassa JSON files named
+    "qmassa1-*-tool-generated.json" under METRICS_DIR. Each file has
+    a top-level structure like:
 
-    Placeholder implementation: returns an empty list until the exact
-    qmassa JSON schema and desired metrics are defined.
+        {
+            "args": {"ms_interval": 1500, ...},
+            "states": [
+                {
+                    "timestamps": [...],
+                    "devs_state": [
+                        {
+                            "dev_stats": {
+                                "eng_usage": {
+                                    "compute": [...],
+                                    "render": [...],
+                                    ...
+                                }
+                            }
+                        }
+                    ]
+                },
+                ...
+            ]
+        }
+
+    For each state we aggregate engine utilizations (compute, render,
+    copy, video, video-enhance, ...) by taking the maximum value across
+    engines as a single "GPU busy" percentage. Timestamps are
+    approximated using the sampling interval (args.ms_interval, in
+    milliseconds), counting backwards from the current time, similar to
+    how CPU and memory series are built.
     """
-    return []
+
+    pattern = str(METRICS_DIR / "qmassa1-*-tool-generated.json")
+    candidates = glob.glob(pattern)
+    if not candidates:
+        return []
+
+    latest_path = max(candidates, key=os.path.getmtime)
+    try:
+        with open(latest_path) as f:
+            data = json.load(f)
+    except Exception:
+        return []
+
+    states = data.get("states") or []
+    if not isinstance(states, list) or not states:
+        return []
+
+    # Sampling interval in seconds (default 1.5s if missing)
+    ms_interval = 1500
+    try:
+        ms_interval = int(data.get("args", {}).get("ms_interval", ms_interval))
+    except Exception:
+        pass
+    dt_seconds = max(ms_interval / 1000.0, 0.1)
+
+    samples: List[float] = []
+    for state in states:
+        try:
+            devs_state = state.get("devs_state") or []
+            if not devs_state:
+                continue
+            dev = devs_state[0]
+            dev_stats = dev.get("dev_stats") or {}
+            eng_usage = dev_stats.get("eng_usage") or {}
+            if not isinstance(eng_usage, dict) or not eng_usage:
+                continue
+
+            values: List[float] = []
+            for _, arr in eng_usage.items():
+                if not arr:
+                    continue
+                try:
+                    values.append(float(arr[-1]))
+                except Exception:
+                    continue
+
+            if not values:
+                continue
+
+            # Single utilization value for this sample: max across engines
+            gpu_busy = max(values)
+            samples.append(max(0.0, min(100.0, gpu_busy)))
+        except Exception:
+            continue
+
+    if not samples:
+        return []
+
+    now = datetime.now()
+    # Approximate timestamps backwards from "now" using dt_seconds
+    start = now - timedelta(seconds=dt_seconds * (len(samples) - 1))
+    series: List[List[float]] = []
+    for idx, usage in enumerate(samples):
+        ts = (start + timedelta(seconds=dt_seconds * idx)).isoformat()
+        series.append([ts, usage])
+
+    return series
 
 
 def build_power_series() -> List[List[float]]:
