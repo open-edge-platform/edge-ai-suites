@@ -28,6 +28,6 @@ This section provides a high-level view of how the application integrates with a
 
 - [Get Started](./get-started.md): Follow step-by-step instructions to set up the application.
 - [System Requirements](./get-started/system-requirements.md): Check the hardware and software requirements for deploying the application.
-- [How to Deploy with Helm](./how-to-deploy-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
-- [Application Security Enablements](./docs/user-guide/application-security-enablement.md): Learn how to enable the various security features.
+- [How to Deploy with Helm](./get-started/deploy-with-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
+- [Application Security Enablements](./application-security-enablement.md): Learn how to enable the various security features.
 - [Support and Troubleshooting](./troubleshooting.md): Find solutions to common issues and troubleshooting steps.
