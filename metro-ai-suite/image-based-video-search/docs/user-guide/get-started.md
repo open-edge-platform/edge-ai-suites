@@ -29,8 +29,8 @@ By following this guide, you will learn how to:
         git clone https://github.com/open-edge-platform/edge-ai-suites.git
         cd edge-ai-suites/metro-ai-suite/image-based-video-search
       ```
-    
-    > Note: The below step is required for deployment with certain pre-release images
+
+    > **Note:** The below step is required for deployment with certain pre-release images
     - Update `DOCKER_REGISTRY` variable in `.env` file present at `edge-ai-suites/metro-ai-suite/image-based-video-search/`. The recommended setting to use pre-release images is: `DOCKER_REGISTRY=docker.io/`
       Please remember to include `/` at the end.
 <!--
@@ -42,7 +42,7 @@ a pre-step to prepare models may be needed
       ```bash
         docker compose build
       ```
-    > Note: You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
+    > **Note:** You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
 
 3. **Download the Models**:
     - Download the models
@@ -133,8 +133,8 @@ a pre-step to prepare models may be needed
       - App UI: `https://<ip-addr>/`
       - Search UI: `https://<ip-addr>/docs`
       - MilvusDB UI: `https://<ip-addr>/ibvs-milvus-ui`
-      - Stream UI: You can access https stream at `https://<ip-addr>/stream` and RTSP stream at `rtsp://<ip-addr>:8554/stream`. 
-    > Note: Replace `<ip-addr>` with your host IP address
+      - Stream UI: You can access https stream at `https://<ip-addr>/stream` and RTSP stream at `rtsp://<ip-addr>:8554/stream`.
+    > **Note:** Replace `<ip-addr>` with your host IP address
 
 
 7. **Run the Application**:
@@ -145,7 +145,7 @@ a pre-step to prepare models may be needed
     - **Expected Results**:
       - Matched search results, including metadata, timestamps, distance to show the confidence rate of the prediction, and frames that include detected objects (e.g., vehicles, pedestrians, bikes).
 
-   | ![image1](./_images/imagesearch1.png) | ![image2](./_images/imagesearch2.png) |
+   | ![image1](./_assets/imagesearch1.png) | ![image2](./_assets/imagesearch2.png) |
     |--------------------------------|--------------------------------|
 
 8. **Stop the Application**:
