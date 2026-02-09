@@ -15,7 +15,7 @@ Select and integrate your own ML models with our time-series analytics infrastru
 ## Application Context
 
 **Problem**: Detect anomalies in wind turbine operations using real-time SCADA data
-- **Input**: Wind Speed (m/s)
+- **Input**: Wind Speed (m/s), Grid Active Power (kW)
 - **Output**: Expected Grid Active Power (kW)
 - **Deployment**: Edge devices with GPU support
 - **Framework**: Kapacitor UDF (User Defined Function)
@@ -34,41 +34,6 @@ Select and integrate your own ML models with our time-series analytics infrastru
 **You can replace this with any model** - see integration section below.
 
 ---
-
-## Model Selection Criteria
-
-| Criterion | Requirement | Target | Excellent |
-|-----------|-------------|--------|----------|
-| **MAE** | < 100 kW | < 50 kW | < 30 kW |
-| **RMSE** | < 150 kW | < 100 kW | < 70 kW |
-| **R² Score** | > 0.90 | > 0.95 | > 0.97 |
-| **Inference Latency** | < 50ms | < 10ms | < 5ms |
-| **Model Size** | < 100 MB | < 50 MB | < 20 MB |
-| **Memory Usage** | < 1 GB | < 500 MB | < 200 MB |
-| **False Positive Rate** | < 10% | < 5% | < 2% |
-| **False Negative Rate** | < 5% | < 2% | < 1% |
-
-**Additional Considerations**:
-- Wind speed range: 3-14 m/s operational
-- Training data: 10k-50k samples minimum
-- Handle missing/NaN values
-- Support single-point predictions
-- Compatible with Python UDF framework
-
----
-
-## Model Comparison
-
-| Model | Accuracy | Speed | Size | GPU | Use Case |
-|-------|----------|-------|------|-----|----------|
-| **Random Forest** ⭐ | High | Medium | 5-20 MB | ❌ | **Balanced choice** - Current implementation |
-| **XGBoost/LightGBM** | Highest | Fast | 5-30 MB | ✅ | Maximum accuracy with GPU |
-| **Polynomial Reg** | Medium | Fastest | <1 MB | ❌ | Simple curves, minimal resources |
-| **SVR** | Medium-High | Medium | 2-10 MB | ❌ | Limited data (<10k samples) |
-| **Neural Networks** | Highest | Fast* | 10-50 MB | ✅ | Temporal patterns, large datasets |
-| **Decision Tree** | Low-Medium | Fastest | <1 MB | ❌ | Baseline only (not production) |
-
-*With GPU
 
 ### Quick Start Code
 
@@ -181,18 +146,6 @@ patch_sklearn()
 ---
 
 ## Model Performance Requirements
-
-### Minimum Acceptable Performance
-
-| Metric | Minimum | Target | Excellent |
-|--------|---------|--------|-----------|
-| MAE | < 100 kW | < 50 kW | < 30 kW |
-| RMSE | < 150 kW | < 100 kW | < 70 kW |
-| R² Score | > 0.90 | > 0.95 | > 0.97 |
-| Inference Time | < 50ms | < 10ms | < 5ms |
-| Model Size | < 100 MB | < 50 MB | < 20 MB |
-| False Positive Rate | < 10% | < 5% | < 2% |
-| False Negative Rate | < 5% | < 2% | < 1% |
 
 ### Performance Testing Protocol
 
@@ -470,19 +423,3 @@ GridSearchCV(RandomForestRegressor(), param_grid, cv=5,
 - Edge AI deployment best practices
 - Intel optimization guides for ML inference
 - Time series anomaly detection methods
-
----
-
-## Changelog
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2026-02-09 | System | Initial model selection guidelines document |
-
----
-
-## Contact and Support
-
-For questions or updates to these guidelines, please refer to the project documentation or contact the development team.
-
-**Last Updated**: February 9, 2026
