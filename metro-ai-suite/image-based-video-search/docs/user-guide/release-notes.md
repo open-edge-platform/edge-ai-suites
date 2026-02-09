@@ -1,8 +1,8 @@
 # Release Notes
 
-[Version 1.1.0](#version-110)
-[Version 1.0.1](#version-101)
-[Version 1.0.0](#version-100)
+- [Version 1.1.0](#version-110)
+- [Version 1.0.1](#version-101)
+- [Version 1.0.0](#version-100)
 
 Details about the changes, improvements, and known issues in this release of the
 application.
