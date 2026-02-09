@@ -73,33 +73,8 @@ Before You Begin, ensure the following:
     helm uninstall -n ibvs ibvs
     ```
 
-## Troubleshooting
-
-1. **Helm Chart Not Found**:
-
-   - Check if the Helm repository was added:
-
-     ```bash
-     helm repo list
-     ```
-
-1. **Pods Not Running**:
-
-   - Review pod logs:
-
-     ```bash
-     kubectl logs {{pod-name}} -n {{namespace}}
-     ```
-
-1. **Service Unreachable**:
-
-   - Confirm the service configuration:
-
-     ```bash
-     kubectl get svc -n {{namespace}}
-     ```
-
 ## Supporting Resources
 
+- [Troubleshooting Helm Deployments](../troubleshooting.md#troubleshooting-helm-deployments)
 - [Kubernetes Documentation](https://kubernetes.io/docs/home/)
 - [Helm Documentation](https://helm.sh/docs/)

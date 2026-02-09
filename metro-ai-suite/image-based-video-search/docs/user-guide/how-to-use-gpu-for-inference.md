@@ -24,7 +24,7 @@ After the above changes to docker compose file, follow from step 3 as mentioned 
 
 ## Helm deployment
 ### Prerequisites
-Follow step 1 mentioned in this [document](./how-to-deploy-helm.md#steps-to-deploy) if not already done.
+Follow step 1 mentioned in this [document](./get-started/deploy-with-helm.md#steps-to-deploy) if not already done.
 
 ### Update values.yaml
 
@@ -49,4 +49,4 @@ dlstreamerpipelineserver:
 
 ### Start the application
 
-After above changes to `values.yaml` file, follow from step 2 as mentioned in this [document](./how-to-deploy-helm.md#steps-to-deploy).
+After above changes to `values.yaml` file, follow from step 2 as mentioned in this [document](./get-started/deploy-with-helm.md#steps-to-deploy).

@@ -75,7 +75,7 @@ continuously and appears in the UI as soon as the application starts.
 
 ## Learn More
 - [Get Started](./get-started.md)
-- [System Requirements](./system-requirements.md)
+- [System Requirements](./get-started/system-requirements.md)
 - [Release Notes](./release-notes.md)
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 
@@ -84,9 +84,6 @@ continuously and appears in the UI as soon as the application starts.
 :hidden:
 
 get-started
-system-requirements
-how-to-deploy-helm
-how-to-deploy-with-edge-orchestrator
 how-it-works
 how-to-use-gpu-for-inference
 troubleshooting
