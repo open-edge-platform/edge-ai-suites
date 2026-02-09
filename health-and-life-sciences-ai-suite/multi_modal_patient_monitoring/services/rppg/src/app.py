@@ -1,6 +1,4 @@
-"""RPPG Service - Streams both waveform and numeric vitals."""
-
-"""RPPG Service."""
+"""RPPG Service - Streams vitals via HTTP polling."""
 
 import sys
 import signal
@@ -9,22 +7,27 @@ import os
 import yaml
 import logging
 from pathlib import Path
-from typing import Generator
 import threading
 
 from .video_handler import VideoHandler
 from .preprocessor import Preprocessor
 from .inference_engine import InferenceEngine
 from .postprocessor import SignalPostprocessor
-from .grpc_client import RPPGGRPCClient
-from .controller_start_stop import start_control_server, is_streaming_enabled
+from .controller_start_stop import (
+    start_control_server,
+    is_streaming_enabled,
+    update_latest_data
+)
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 
 class RPPGService:
-    """RPPG Service."""
+    """RPPG Service - HTTP-based streaming (no gRPC)."""
     
     def __init__(self, config_path: str = "config.yaml"):
         with open(config_path) as f:
@@ -60,40 +63,37 @@ class RPPGService:
             resp_highcut=self.config['postprocessing']['resp_highcut']
         )
         
-        self.grpc_client = RPPGGRPCClient(
-            aggregator_host=self.config['aggregator']['host'],
-            aggregator_port=self.config['aggregator']['port'],
-            device_id="rppg-001"
-        )
+        # ❌ REMOVED: self.grpc_client = RPPGGRPCClient(...)
+        # ✅ Now using HTTP polling via /stream_next endpoint
         
         self.running = True
         signal.signal(signal.SIGINT, self._signal_handler)
+        signal.signal(signal.SIGTERM, self._signal_handler)
     
     def _signal_handler(self, signum, frame):
         logger.info("Shutting down...")
         self.running = False
     
-    def vital_generator(self):
-        """Generate vitals."""
-        # Wait for /start signal from control API
-        logger.info("Waiting for /start control signal before streaming...")
+    def process_loop(self):
+        """Main processing loop - pushes data to /stream_next buffer."""
+        # Wait for /start signal
+        logger.info("Waiting for /start control signal...")
         while self.running and not is_streaming_enabled():
             time.sleep(0.5)
-
+        
         if not self.running:
             return
-
+        
         self.video.start_stream()
         logger.info("✓ Video stream started")
         
         batch_count = 0
-        numeric_interval = self.config['streaming'].get('numeric_interval', 5)
         
         try:
             while self.running:
-                # Handle dynamic /start and /stop control
+                # Check if streaming still enabled
                 if not is_streaming_enabled():
-                    logger.info("Streaming paused via /stop; waiting for /start...")
+                    logger.info("Streaming paused via /stop")
                     self.video.stop_stream()
                     while self.running and not is_streaming_enabled():
                         time.sleep(0.5)
@@ -101,7 +101,8 @@ class RPPGService:
                         break
                     logger.info("Streaming resumed via /start")
                     self.video.start_stream()
-
+                
+                # Collect batch
                 for _ in range(self.config['model']['batch_size']):
                     frame = self.video.get_frame()
                     if frame is None:
@@ -115,39 +116,58 @@ class RPPGService:
                 if not self.preprocessor.has_batch():
                     continue
                 
+                # Process batch
                 diff_batch, app_batch = self.preprocessor.get_batch()
                 raw_output = self.inference.infer(diff_batch, app_batch)
                 
+                # Extract signals
                 pulse_waveform = self.postprocessor.process_signal(raw_output, kind="pulse")
                 resp_waveform = self.postprocessor.process_signal(raw_output, kind="resp")
                 
+                # Compute metrics
                 hr = self.postprocessor.compute_hr_from_fft(pulse_waveform)
                 rr = self.postprocessor.compute_rr_from_fft(resp_waveform)
+                
+                # Simulate SpO2 (placeholder)
+                spo2 = 98.0
                 
                 batch_count += 1
                 logger.info(f"Batch {batch_count}: HR={hr:.1f} BPM, RR={rr:.1f} BrPM")
                 
-                yield self.grpc_client.create_waveform_vital("HEART_RATE", hr, pulse_waveform, "BPM", self.config['postprocessing']['sampling_rate'])
-                yield self.grpc_client.create_waveform_vital("RESP_RATE", rr, resp_waveform, "BrPM", self.config['postprocessing']['sampling_rate'])
+                # ============================================================
+                # PUSH DATA TO /stream_next BUFFER
+                # ============================================================
+                data = {
+                    "device_id": "rppg-001",
+                    "metric": "RESP_RATE",
+                    "timestamp": int(time.time() * 1000),
+                    "HR": hr,
+                    "RR": rr,
+                    "SpO2": spo2,
+                    "waveform": resp_waveform,
+                    "waveform_frequency_hz": int(self.config['postprocessing']['sampling_rate'])
+                }
                 
-                if batch_count % numeric_interval == 0:
-                    yield self.grpc_client.create_numeric_vital("HEART_RATE_AVG", hr, "BPM")
-                    yield self.grpc_client.create_numeric_vital("RESP_RATE_AVG", rr, "BrPM")
+                # Update buffer (consumed by /stream_next endpoint)
+                update_latest_data(data)
                 
+                # Rate limiting
                 time.sleep(self.config['streaming'].get('update_interval', 1.0))
+        
+        except Exception as e:
+            logger.error(f"Processing error: {e}", exc_info=True)
         finally:
             self.video.stop_stream()
+            logger.info("Processing loop stopped")
     
     def run(self):
         """Run service."""
         try:
-            self.grpc_client.stream_vitals(self.vital_generator())
+            self.process_loop()
         except KeyboardInterrupt:
-            logger.info("Interrupted")
+            logger.info("Interrupted by user")
         except Exception as e:
-            logger.error(f"Error: {e}", exc_info=True)
-        finally:
-            self.grpc_client.close()
+            logger.error(f"Service error: {e}", exc_info=True)
 
 
 def main():
@@ -155,13 +175,17 @@ def main():
     control_thread = threading.Thread(target=start_control_server, daemon=True)
     control_thread.start()
     control_port = os.getenv("RPPG_CONTROL_PORT", "8084")
-    logger.info(f"RPPG control server started on port {control_port}")
-
+    logger.info(f"✓ RPPG control server started on port {control_port}")
+    
+    # Wait for server to start
+    time.sleep(2)
+    
     config_path = sys.argv[1] if len(sys.argv) > 1 else "config.yaml"
     service = RPPGService(config_path)
     service.run()
+    
     return 0
 
 
 if __name__ == "__main__":
-        sys.exit(main())
+    sys.exit(main())

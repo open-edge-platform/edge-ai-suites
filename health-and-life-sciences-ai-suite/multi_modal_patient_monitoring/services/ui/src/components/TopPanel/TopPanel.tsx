@@ -1,5 +1,5 @@
 // src/components/TopPanel/TopPanel.tsx
-import { useState } from 'react';
+import { useState , useEffect} from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { startProcessing, stopProcessing } from '../../redux/slices/appSlice';
 import { api } from '../../services/api';
@@ -9,59 +9,95 @@ const TopPanel = () => {
   const dispatch = useAppDispatch();
   const { isProcessing } = useAppSelector((state) => state.app);
   const [notification, setNotification] = useState<string>('');
+  const [isBackendReady, setIsBackendReady] = useState(true);
+
+  // useEffect(() => {
+  //   const checkBackend = async () => {
+  //     const isHealthy = await api.pingBackend();
+  //     setIsBackendReady(isHealthy);
+  //     if (!isHealthy) {
+  //       setNotification('⚠️ Backend unavailable');
+  //     } else if (notification.includes('unavailable')) {
+  //       setNotification('');
+  //     }
+  //   };
+  //   checkBackend();
+  //   const interval = setInterval(checkBackend, 10000); // Check every 10s
+  //   return () => clearInterval(interval);
+  // }, []);
 
   const handleStart = async () => {
+    if (!isBackendReady) {
+      setNotification('❌ Backend is not ready');
+      setTimeout(() => setNotification(''), 5000);
+      return;
+    }
+  
     try {
-      setNotification('Starting workloads...');
-      dispatch(startProcessing()); // Enable Stop, Disable Start
+      setNotification('🚀 Starting workloads...');
+      dispatch(startProcessing());
       
+      console.log('[TopPanel] 🔵 Calling API start...');
       const response = await api.start('all');
+      console.log('[TopPanel] 🟢 API response:', response);
       
       if (response.status === 'ok') {
-        setNotification('Workloads started successfully');
-        dispatch({ type: 'sse/connect' });
+        const autoStopTime = response.auto_stop_in_seconds || 60;
+        setNotification(`✅ Started (auto-stop in ${autoStopTime}s)`);
         
-        // Clear notification after 3 seconds
+        // Connect SSE
+        const eventsUrl = api.getEventsUrl(['rppg', 'ai-ecg', 'mdpnp', '3d-pose']);
+        console.log('[TopPanel] 🟡 SSE URL:', eventsUrl);
+        console.log('[TopPanel] 🟡 Dispatching sse/connect...');
+        
+        dispatch({ type: 'sse/connect', payload: { url: eventsUrl } });
+        
+        console.log('[TopPanel] ✅ SSE connect dispatched');
+        
+        setTimeout(() => setNotification(''), 5000);
+      } else {
+        setNotification('❌ Failed to start');
         setTimeout(() => setNotification(''), 3000);
-      } else if (response.status === 'locked') {
-        setNotification(`Already running (${response.remaining_seconds}s remaining)`);
       }
     } catch (error) {
-      console.error('Start failed:', error);
-      setNotification('Failed to start workloads');
-      dispatch(stopProcessing()); // Revert on error
+      console.error('[TopPanel] ❌ Start failed:', error);
+      setNotification('❌ Error starting workloads');
+      dispatch(stopProcessing());
+      setTimeout(() => setNotification(''), 5000);
     }
   };
-
   const handleStop = async () => {
     try {
-      setNotification('Stopping workloads...');
-      dispatch(stopProcessing()); // Enable Start, Disable Stop
+      setNotification('⏹️ Stopping...');
+      dispatch(stopProcessing());
       
       await api.stop('all');
       dispatch({ type: 'sse/disconnect' });
-      setNotification('Workloads stopped successfully');
       
-      // Clear notification after 3 seconds
+      setNotification('✅ Stopped successfully');
       setTimeout(() => setNotification(''), 3000);
     } catch (error) {
-      console.error('Stop failed:', error);
-      setNotification('Failed to stop workloads');
-      dispatch(startProcessing()); // Revert on error
+      console.error('[TopPanel] Stop failed:', error);
+      setNotification('❌ Failed to stop');
+      dispatch(startProcessing()); // Revert
+      setTimeout(() => setNotification(''), 3000);
     }
   };
 
   return (
     <div className="top-panel">
       <div className="action-buttons">
-        <button
-          onClick={handleStart}
-          disabled={isProcessing}
-          className="start-button"
-          title={isProcessing ? 'Workloads are running' : 'Start all workloads'}
-        >
-          Start
-        </button>
+      <button
+        onClick={handleStart}
+        disabled={isProcessing || !isBackendReady}
+        className="start-button"
+        style={{
+          opacity: isBackendReady && !isProcessing ? 1 : 0.5,
+          cursor: isBackendReady && !isProcessing ? 'pointer' : 'not-allowed'
+        }}
+      >
+        {!isBackendReady ? '⚠️ Offline' : isProcessing ? '▶️ Running' : '▶️ Start'}
+      </button>
 
         <button
           onClick={handleStop}
@@ -74,7 +110,17 @@ const TopPanel = () => {
       </div>
 
       <div className="notification-center">
-        {notification && <span>{notification}</span>}
+        {notification && (
+          <span style={{
+            padding: '8px 16px',
+            background: notification.includes('❌') ? '#fee' : notification.includes('⚠️') ? '#ffc' : '#efe',
+            borderRadius: '4px',
+            fontSize: '13px',
+            border: `1px solid ${notification.includes('❌') ? '#fcc' : notification.includes('⚠️') ? '#fc6' : '#cfc'}`,
+          }}>
+            {notification}
+          </span>
+        )}
       </div>
 
       <div className="spacer"></div>

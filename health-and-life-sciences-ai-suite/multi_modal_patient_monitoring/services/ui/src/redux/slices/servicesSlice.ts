@@ -1,73 +1,30 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { WORKLOADS } from '../../constants';
+import type { WorkloadId } from '../../constants';
 
 interface WorkloadState {
-  status: 'idle' | 'running' | 'stopped' | 'error';
+  status: 'idle' | 'running' | 'error';
   eventCount: number;
-  latestData: any;
   lastEventTime: number | null;
-}
-
-interface MetricsState {
-  total_events: number;
-  events_per_sec: number;
-  cpu_usage: number;
-  gpu_usage: number;
-  memory_usage: number;
-  power_usage: number;
-  uptime: number;
+  latestData: Record<string, any>;
+  waveform?: number[];
 }
 
 interface ServicesState {
   aggregator: {
-    status: 'disconnected' | 'connecting' | 'connected' | 'error';
+    status: 'stopped' | 'connecting' | 'connected' | 'error';
   };
-  workloads: Record<string, WorkloadState>;
-  metrics: MetricsState;
-  platform: any;
-  platformInfo: any;
+  workloads: Record<WorkloadId, WorkloadState>;
 }
 
-// Helper function to create workload state with mock data
-const createWorkloadState = (workloadId: string): WorkloadState => {
-  const workloadConfig = WORKLOADS.find(w => w.id === workloadId);
-  
-  return {
-    status: 'idle',
-    eventCount: Math.floor(Math.random() * 200) + 50, // Random 50-250
-    latestData: workloadConfig?.mockVitals || {},
-    lastEventTime: Date.now(),
-  };
-};
-
 const initialState: ServicesState = {
-  aggregator: { 
-    status: 'connected' // Change to 'connected' for Phase 1 mock
-  },
+  aggregator: { status: 'stopped' },
   workloads: {
-    rppg: createWorkloadState('rppg'),
-    'ai-ecg': createWorkloadState('ai-ecg'),
-    mdpnp: createWorkloadState('mdpnp'),
-    '3d-pose': createWorkloadState('3d-pose'),
+    'rppg': { status: 'idle', eventCount: 0, lastEventTime: null, latestData: {} },
+    'ai-ecg': { status: 'idle', eventCount: 0, lastEventTime: null, latestData: {} },
+    'mdpnp': { status: 'idle', eventCount: 0, lastEventTime: null, latestData: {} },
+    '3d-pose': { status: 'idle', eventCount: 0, lastEventTime: null, latestData: {} },
   },
-  metrics: {
-    total_events: 450,
-    events_per_sec: 15,
-    cpu_usage: 45,
-    gpu_usage: 60,
-    memory_usage: 8500, // MB
-    power_usage: 28, // Watts
-    uptime: 930, // seconds
-  },
-  platform: {
-    Processor: 'Intel Core Ultra 7',
-    NPU: 'Intel AI Boost',
-    iGPU: 'Intel Arc Graphics',
-    Memory: '32GB DDR5',
-    Storage: '1TB NVMe SSD',
-  },
-  platformInfo: null,
 };
 
 const servicesSlice = createSlice({
@@ -77,49 +34,121 @@ const servicesSlice = createSlice({
     setAggregatorStatus: (state, action: PayloadAction<ServicesState['aggregator']['status']>) => {
       state.aggregator.status = action.payload;
     },
-    updateWorkloadStatus: (
-      state,
-      action: PayloadAction<{ workloadId: string; status: WorkloadState['status'] }>
-    ) => {
-      const { workloadId, status } = action.payload;
-      if (state.workloads[workloadId]) {
-        state.workloads[workloadId].status = status;
-      }
-    },
+
     updateWorkloadData: (
       state,
-      action: PayloadAction<{ workloadId: string; data: any }>
+      action: PayloadAction<{
+        workloadId: WorkloadId;
+        payload: any;
+        timestamp: number;
+      }>
     ) => {
-      const { workloadId, data } = action.payload;
-      if (state.workloads[workloadId]) {
-        state.workloads[workloadId].latestData = data;
-        state.workloads[workloadId].eventCount += 1;
-        state.workloads[workloadId].lastEventTime = Date.now();
+      const { workloadId, payload, timestamp } = action.payload;
+      const workload = state.workloads[workloadId];
+
+      if (!workload) {
+        console.warn(`[Redux] ⚠️ Unknown workload: ${workloadId}`);
+        return;
       }
-    },
-    updateMetrics: (state, action: PayloadAction<Partial<MetricsState>>) => {
-      state.metrics = { ...state.metrics, ...action.payload };
-    },
-    setPlatformInfo: (state, action: PayloadAction<any>) => {
-      state.platformInfo = action.payload;
-    },
-    resetWorkloads: (state) => {
-      Object.keys(state.workloads).forEach((key) => {
-        state.workloads[key].status = 'idle';
-        state.workloads[key].eventCount = 0;
-        state.workloads[key].lastEventTime = null;
+
+      workload.status = 'running';
+      workload.eventCount += 1;
+      workload.lastEventTime = timestamp;
+
+      console.log(`[Redux] Processing ${workloadId}:`, {
+        keys: Object.keys(payload),
+        hasWaveform: !!payload.waveform
       });
+
+      // ✅ Handle waveform data
+      if (payload.waveform && Array.isArray(payload.waveform)) {
+        workload.waveform = payload.waveform;
+        console.log(`[Redux] Stored waveform for ${workloadId}: ${payload.waveform.length} samples`);
+      }
+
+      // ✅ Extract vitals based on workload type
+      if (workloadId === 'rppg') {
+        // rPPG sends: HR, RR, SpO2
+        if (payload.HR !== undefined) workload.latestData.HR = payload.HR;
+        if (payload.RR !== undefined) workload.latestData.RR = payload.RR;
+        if (payload.SpO2 !== undefined) workload.latestData.SpO2 = payload.SpO2;
+        
+        console.log(`[Redux] ✓ rPPG data: HR=${payload.HR}, RR=${payload.RR}, SpO2=${payload.SpO2}`);
+        
+      } else if (workloadId === 'ai-ecg') {
+        // AI-ECG sends: inference object
+        console.log('[Redux] 🔬 AI-ECG raw payload:', JSON.stringify(payload, null, 2));
+        
+        if (payload.inference) {
+          workload.latestData.prediction = payload.inference.prediction || payload.inference.label || 'Unknown';
+          workload.latestData.confidence = payload.inference.confidence ?? 0;
+          
+          console.log(`[Redux] ✓ AI-ECG stored:`, {
+            prediction: workload.latestData.prediction,
+            confidence: workload.latestData.confidence,
+            latestDataKeys: Object.keys(workload.latestData)
+          });
+        } 
+        // Fallback: check if inference data is directly in payload
+        else if (payload.prediction !== undefined) {
+          workload.latestData.prediction = payload.prediction;
+          workload.latestData.confidence = payload.confidence ?? 0;
+          
+          console.log(`[Redux] ✓ AI-ECG stored (direct):`, {
+            prediction: workload.latestData.prediction,
+            confidence: workload.latestData.confidence
+          });
+        } 
+        else {
+          console.warn('[Redux] ⚠️ AI-ECG payload missing inference:', payload);
+        }
+      } else if (workloadId === 'mdpnp') {
+        // MDPNP sends: metric + value (numeric) or waveform
+        console.log('[Redux] 🏥 MDPNP raw payload:', JSON.stringify(payload, null, 2));
+        
+        // Store vitals
+        if (payload.HR !== undefined) workload.latestData.HR = payload.HR;
+        if (payload.CO2_ET !== undefined) workload.latestData.CO2_ET = payload.CO2_ET;
+        if (payload.BP_DIA !== undefined) workload.latestData.BP_DIA = payload.BP_DIA;
+        
+        // Store waveform (prioritize ECG_LEAD_II for display)
+        if (payload.waveform && Array.isArray(payload.waveform)) {
+          workload.waveform = payload.waveform;
+          console.log(`[Redux] ✓ MDPNP waveform (${payload.waveformType}):`, payload.waveform.length, 'samples');
+        }
+        
+        console.log(`[Redux] ✓ MDPNP stored:`, {
+          vitals: { HR: workload.latestData.HR, CO2_ET: workload.latestData.CO2_ET, BP_DIA: workload.latestData.BP_DIA },
+          hasWaveform: !!workload.waveform
+        });
+      }else if (workloadId === '3d-pose') {
+        // 3D Pose sends: joints array
+        if (payload.joints) {
+          workload.latestData.joints = Array.isArray(payload.joints) ? payload.joints.length : payload.joints;
+          workload.latestData.confidence = payload.confidence || 0;
+          console.log(`[Redux] ✓ 3D Pose joints: ${workload.latestData.joints}`);
+        }
+      }
+
+      console.log(`[Redux] ✅ Updated ${workloadId}:`, {
+        eventCount: workload.eventCount,
+        status: workload.status,
+        latestData: workload.latestData,
+        hasWaveform: !!workload.waveform
+      });
+    },
+
+    resetWorkloadData: (state, action: PayloadAction<WorkloadId>) => {
+      const workloadId = action.payload;
+      state.workloads[workloadId] = {
+        status: 'idle',
+        eventCount: 0,
+        lastEventTime: null,
+        latestData: {},
+      };
     },
   },
 });
 
-export const {
-  setAggregatorStatus,
-  updateWorkloadStatus,
-  updateWorkloadData,
-  updateMetrics,
-  setPlatformInfo,
-  resetWorkloads,
-} = servicesSlice.actions;
-
+export const { setAggregatorStatus, updateWorkloadData, resetWorkloadData } = servicesSlice.actions;
 export default servicesSlice.reducer;

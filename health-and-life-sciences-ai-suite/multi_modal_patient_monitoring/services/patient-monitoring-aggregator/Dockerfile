@@ -36,4 +36,5 @@ COPY proto ./proto
 EXPOSE 50051
 
 # Start the aggregator gRPC server as a module so top-level stubs are importable
-CMD ["python", "-m", "aggregator.server"]
+# CMD ["python", "-m", "aggregator.server"]
+CMD ["python", "-m", "aggregator.server", "--host", "0.0.0.0", "--port", "8001"]

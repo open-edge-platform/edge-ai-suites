@@ -1,7 +1,3 @@
-# Copyright © 2026 Intel Corporation. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-
 services:
   patient-monitoring-assets:
     build:
@@ -43,10 +39,15 @@ services:
     environment:
       - WORKLOAD_TYPE=mdpnp
       - GRPC_PORT=50051
-      - HTTP_PORT=8000
+      - HTTP_PORT=8001
+      - METRICS_SERVICE_URL=http://metrics-service:9000
+      - DDS_BRIDGE_CONTROL_URL=http://dds-bridge:8082
+      - POSE_3D_CONTROL_URL=http://3dpose-service:8083
+      - RPPG_CONTROL_URL=http://rppg-service:8084
+      - AI_ECG_URL=http://ai-ecg:8000
       - HTTP_PROXY=${HTTP_PROXY}
       - HTTPS_PROXY=${HTTPS_PROXY}
-      - NO_PROXY=${NO_PROXY}
+      - NO_PROXY=localhost,127.0.0.1,metrics-service,dds-bridge,3dpose-service,rppg-service,ai-ecg,${NO_PROXY}
       - http_proxy=${HTTP_PROXY}
       - https_proxy=${HTTPS_PROXY}
       - no_proxy=${NO_PROXY}

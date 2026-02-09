@@ -2,28 +2,26 @@ import time
 import requests
 import grpc
 from proto import vital_pb2, vital_pb2_grpc
+import os
 
-
-AI_ECG_URL = "http://localhost:8000/predict_stream_next"
+# Remove this line - don't compute URL at module level
+# AI_ECG_URL = os.getenv("AI_ECG_URL", "http://ai-ecg:8000") + "/predict_stream_next"
 AGGREGATOR_GRPC = "localhost:50051"
 
 
 class AIECGClient:
-    """Simple HTTP client for the AI-ECG backend.
+    """Simple HTTP client for the AI-ECG backend."""
 
-    The client polls the AI-ECG service for the next prediction and returns
-    a JSON-serializable dictionary that can be pushed directly to the
-    aggregator's WebSocket message queue.
-    """
-
-    def __init__(self, url: str = AI_ECG_URL):
-        self.url = url
+    def __init__(self, url: str = None):
+        # Compute URL at runtime, not module load time
+        if url is None:
+            base_url = os.getenv("AI_ECG_URL", "http://ai-ecg:8000")
+            self.url = f"{base_url}/predict_stream_next"
+        else:
+            self.url = url
 
     def poll_next(self):
-        """Fetch the next ECG sample and inference result.
-
-        Returns a dict with waveform and metadata or None on error.
-        """
+        """Fetch the next ECG sample and inference result."""
         try:
             resp = requests.get(self.url, timeout=5)
             resp.raise_for_status()
@@ -46,15 +44,14 @@ class AIECGClient:
 
 
 def run_ai_ecg_stream():
-    """Legacy helper that streams Vital messages to the gRPC server.
-
-    Kept for compatibility with existing callers that expect a continuous
-    gRPC stream of Vital protos.
-    """
+    """Legacy helper that streams Vital messages to the gRPC server."""
     channel = grpc.insecure_channel(AGGREGATOR_GRPC)
     stub = vital_pb2_grpc.VitalServiceStub(channel)
 
     def ecg_generator():
+        base_url = os.getenv("AI_ECG_URL", "http://ai-ecg:8000")
+        AI_ECG_URL = f"{base_url}/predict_stream_next"
+        
         while True:
             try:
                 resp = requests.get(AI_ECG_URL, timeout=5)

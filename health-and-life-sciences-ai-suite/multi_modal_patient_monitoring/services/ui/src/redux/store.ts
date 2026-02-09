@@ -4,19 +4,17 @@ import appReducer from './slices/appSlice';
 import servicesReducer from './slices/servicesSlice';
 import eventsReducer from './slices/eventsSlice';
 import { sseMiddleware } from './middleware/sseMiddleware';
+import metricsReducer from './slices/metricsSlics';
 
 export const store = configureStore({
   reducer: {
     app: appReducer,
     services: servicesReducer,
     events: eventsReducer,
+    metrics: metricsReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: ['sse/connect', 'sse/disconnect'],
-      },
-    }).concat(sseMiddleware),
+    getDefaultMiddleware().concat(sseMiddleware), // ← Should be here
 });
 
 export type RootState = ReturnType<typeof store.getState>;

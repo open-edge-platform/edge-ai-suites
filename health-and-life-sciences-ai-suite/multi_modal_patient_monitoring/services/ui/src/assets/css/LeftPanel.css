@@ -1,55 +1,71 @@
 /* src/assets/css/LeftPanel.css */
-.left-panel {
-  flex: 1;
-  background: #f8f9fa;
+.left-panel-content {
+  width: 100%;
+  height: 100%;
   padding: 16px;
-  overflow: hidden; /* Changed from overflow-x: auto */
-  position: relative;
-  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .workload-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
   gap: 16px;
   height: 100%;
   transition: all 0.3s ease;
 }
 
-/* When expanded: First row spans full width, second row has 3 equal cards */
+/* Default: 2x2 grid when nothing is expanded */
+.workload-grid:not(.has-expanded) {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  grid-auto-flow: row;
+}
+
+/* When one card is expanded: Vertical layout */
 .workload-grid.has-expanded {
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: auto 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+  height: auto;
 }
 
-/* Expanded card takes full width of first row */
-.workload-grid.has-expanded .workload-card.expanded {
-  grid-column: 1 / -1;
-  grid-row: 1;
-  min-height: 50%;
+/* Expanded card takes most vertical space */
+.workload-grid.has-expanded > .workload-card.expanded {
+  flex: 1 1 auto;
+  min-height: 450px; /* Taller card */
+  max-height: 65vh; /* Max 65% of viewport height */
 }
 
-/* Non-expanded cards fill second row equally */
-.workload-grid.has-expanded .workload-card:not(.expanded) {
-  grid-column: span 1;
-  grid-row: 2;
+/* Container for other 3 cards below expanded card */
+.collapsed-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  flex-shrink: 0;
 }
 
+.collapsed-cards-row .workload-card {
+  min-height: 150px;
+  max-height: 200px;
+}
+
+/* Responsive: mobile view */
 @media (max-width: 900px) {
-  .workload-grid {
+  .workload-grid:not(.has-expanded) {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
   }
 
-  .workload-grid.has-expanded {
+  .collapsed-cards-row {
     grid-template-columns: 1fr;
-    grid-template-rows: auto;
   }
 
-  .workload-grid.has-expanded .workload-card:not(.expanded) {
-    grid-column: 1;
-    grid-row: auto;
+  .collapsed-cards-row .workload-card {
+    min-height: 160px;
+  }
+
+  .workload-grid.has-expanded > .workload-card.expanded {
+    min-height: 350px;
+    max-height: none;
   }
 }

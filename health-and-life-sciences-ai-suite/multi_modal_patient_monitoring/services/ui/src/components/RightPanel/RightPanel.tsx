@@ -1,5 +1,4 @@
 import React from 'react';
-import WorkloadStatusAccordion from './WorkloadStatusAccordian';
 import ConfigurationMetricsAccordion from './ConfigurationMetricsAccordion';
 import ResourceUtilizationAccordion from './ResourceUtilizationAccordion';
 import '../../assets/css/RightPanel.css';
@@ -7,7 +6,7 @@ import '../../assets/css/RightPanel.css';
 const RightPanel: React.FC = () => {
   return (
     <div className="right-panel">
-      <WorkloadStatusAccordion />
+      {/* <WorkloadStatusAccordion /> */}
       <ConfigurationMetricsAccordion />
       <ResourceUtilizationAccordion />
     </div>

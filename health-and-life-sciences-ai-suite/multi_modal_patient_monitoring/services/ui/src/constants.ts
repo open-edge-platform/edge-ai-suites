@@ -6,39 +6,46 @@ export const constants = {
   VERSION: 'v1.0.0',
 };
 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+
 export const WORKLOADS = [
-  { 
-    id: 'rppg', 
-    name: 'RPPG', 
-    icon: '❤️', 
-    color: '#e74c3c',
-    description: 'Remote Photoplethysmography',
-    mockVitals: { HR: 72, RR: 14 }
+  {
+    id: 'rppg',
+    name: 'RPPG',
+    color: '#0071c5',
+    description: 'Remote Photoplethysmography - Heart Rate & Respiratory Rate',
+    dataKeys: ['HR', 'RR'] as const, // Expected vital keys
+    hasWaveform: true,
   },
-  { 
-    id: 'ai-ecg', 
-    name: 'AI-ECG', 
-    icon: '📊', 
-    color: '#3498db',
-    description: 'AI-powered ECG Analysis',
-    mockVitals: { QRS: 90, PR: 160 }
+  {
+    id: 'ai-ecg',
+    name: 'AI-ECG',
+    color: '#0071c5',
+    description: 'AI-powered ECG Analysis with 12-lead classification',
+    dataKeys: ['prediction', 'confidence'] as const, // AI prediction keys
+    hasWaveform: true,
   },
-  { 
-    id: 'mdpnp', 
-    name: 'MDPNP', 
-    icon: '🩺', 
-    color: '#f39c12',
-    description: 'Medical Device Integration',
-    mockVitals: { BP_SYS: 120, BP_DIA: 80 }
+  {
+    id: 'mdpnp',
+    name: 'MDPNP',
+    color: '#0071c5',
+    description: 'Medical Device Plug-and-Play Integration',
+    dataKeys: ['HR', 'CO2_ET', 'BP_DIA'] as const, // Medical device vitals
+    hasWaveform: true,
   },
-  { 
-    id: '3d-pose', 
-    name: '3D Pose', 
-    icon: '🧍', 
-    color: '#9b59b6',
-    description: '3D Body Pose Estimation',
-    mockVitals: { joints: 25, confidence: 0.92 }
+  {
+    id: '3d-pose',
+    name: '3D Pose',
+    color: '#0071c5',
+    description: '3D Body Pose Estimation with joint tracking',
+    dataKeys: ['joints', 'confidence', 'activity'] as const, // Pose estimation keys
+    hasWaveform: false,
   },
 ] as const;
 
 export type WorkloadId = typeof WORKLOADS[number]['id'];
+
+export const WORKLOAD_CONFIG = WORKLOADS.reduce((acc, w) => {
+  acc[w.id] = w;
+  return acc;
+}, {} as Record<WorkloadId, typeof WORKLOADS[number]>);
