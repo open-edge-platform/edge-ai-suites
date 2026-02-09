@@ -1,14 +1,19 @@
 # Core dependencies
-openvino>=2024.4.0
-opencv-python>=4.8.0
-numpy<2.0.0
+# openvino>=2024.4.0
+# opencv-python>=4.8.0
+openvino>=2024.6.0,<2025.0
+opencv-python-headless>=4.8.0
+numpy>=1.23.0,<2.0
 scipy>=1.10.0
 
-# Network communication - gRPC (matching aggregator)
+# gRPC runtime
 grpcio>=1.60.0
 grpcio-tools>=1.60.0
-protobuf>=4.25.0
+protobuf>=4.25.0,<5.0.0
 
-# Control server - FastAPI
+# Control server
 fastapi>=0.104.0
 uvicorn>=0.24.0
+
+# Configuration
+pyyaml>=6.0.0
