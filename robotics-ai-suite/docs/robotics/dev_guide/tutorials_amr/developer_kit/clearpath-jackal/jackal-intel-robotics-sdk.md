@@ -22,7 +22,7 @@ before continuing with the next steps.
 
 1. To install the ROS 2 Humble distribution and the Autonomous Mobile Robot on the
 Clearpath Robotics Jackal robot, see the
-[GSG Robot Guide](../../../../gsg_robot/index.rst)` of the Autonomous Mobile Robot.
+[GSG Robot Guide](../../../../gsg_robot/index.md)` of the Autonomous Mobile Robot.
 
 1. Create an account with the username ``administrator``when
 installing the Canonical Ubuntu OS, or create and set its group membership

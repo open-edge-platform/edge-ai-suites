@@ -18,12 +18,12 @@ The script uses a binary search algorithm to efficiently find the optimal stream
 1.  **Initialization:** The script starts with a lower bound (`lns`) and an upper bound (`uns`) for the number of streams. The current number of streams to test (`ns`) is initialized to the lower bound. A variable (`tns`) tracks the highest successful stream count found so far.
 
 2.  **Binary Search Loop:** The script iterates until the range between the lower and upper bounds is 1, and both bounds have been tested. In each iteration:
-    *   It runs a workload with the current number of streams (`ns`).
-    *   It measures the `throughput min` (the lowest FPS achieved among all streams) and compares it to the `target_fps`.
+    -   It runs a workload with the current number of streams (`ns`).
+    -   It measures the `throughput min` (the lowest FPS achieved among all streams) and compares it to the `target_fps`.
 
 3.  **Adjusting the Range:**
-    *   **If Performance Target is NOT Met** (`throughput min` < `target_fps`): The current stream count (`ns`) is too high. It becomes the new upper bound (`uns = ns`). The next stream count to test is calculated as the midpoint between the old lower bound and this new upper bound.
-    *   **If Performance Target is Met** (`throughput min` >= `target_fps`): The system can handle this workload. The current stream count (`ns`) becomes the new lower bound (`lns = ns`), and the highest successful stream count (`tns`) is updated. The next stream count to test is calculated as the midpoint between this new lower bound and the old upper bound.
+    -   **If Performance Target is NOT Met** (`throughput min` < `target_fps`): The current stream count (`ns`) is too high. It becomes the new upper bound (`uns = ns`). The next stream count to test is calculated as the midpoint between the old lower bound and this new upper bound.
+    -   **If Performance Target is Met** (`throughput min` >= `target_fps`): The system can handle this workload. The current stream count (`ns`) becomes the new lower bound (`lns = ns`), and the highest successful stream count (`tns`) is updated. The next stream count to test is calculated as the midpoint between this new lower bound and the old upper bound.
 
 4.  **Convergence:** This process of testing midpoints and narrowing the search range continues until the loop condition is met. The final value of `tns` represents the highest number of streams that successfully met the performance target, which is reported as the final stream density.
 
@@ -39,7 +39,7 @@ During each test run, the script logs the `avg_fps` for every active pipeline in
 
 ### Recommended Pipeline Parameters
 
-These are the recommended parameters by Edge Benchmarking and Workloads team for workload with similar characteristics. These are configurable parameters that can be adjusted based on your specific requirements:
+These are the recommended parameters by Edge Benchmarking and Workloads team for a workload with similar characteristics. These are configurable parameters that can be adjusted based on your specific requirements:
 
 ```
 inference-region=1 inference-interval=3 batch-size=8 nireq=2 ie-config="GPU_THROUGHPUT_STREAMS=2" threshold=0.7
@@ -71,7 +71,7 @@ inference-region=1 inference-interval=3 batch-size=8 nireq=2 ie-config="GPU_THRO
 
 ## Step 3: Run the Benchmark
 
-> **Note:** The default parameters are set based on best know methods recommended by Edge Workloads and Benchamarks group for workload with similar characteristics. These parameters can be modified when starting the pipelines.
+> **Note:** The default parameters are set based on best know methods recommended by Edge Workloads and Benchamarks group for a workload with similar characteristics. These parameters can be modified when starting the pipelines.
 
 The `benchmark_start.sh` script requires a pipeline name and stream count boundaries to run. The available pipelines are defined in the `benchmark_app_payload.json` file located within each application's directory (e.g., `smart-parking/`).
 
@@ -136,7 +136,7 @@ This example will find the maximum number of smart parking streams that can run 
 
     ```bash
     # Usage: ./benchmark_start.sh -p <pipeline_name> -l <lower_bound> -u <upper_bound> -t <target_fps>
-    
+
     ./benchmark_start.sh -p yolov11s_gpu -l 1 -u 16 -t 15
     ```
 
@@ -146,7 +146,7 @@ This example will find the maximum number of smart parking streams that can run 
     ✅ FINAL RESULT: Stream-Density Benchmark Completed!
     stream density: 8
     ======================================================
-    
+
     KPIs for the optimal configuration (8 streams):
     throughput #1: 29.98
     throughput #2: 29.98

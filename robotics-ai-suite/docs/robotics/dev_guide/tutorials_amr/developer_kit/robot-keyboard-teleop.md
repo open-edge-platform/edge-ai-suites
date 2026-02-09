@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-Complete the [GSG Robot Get Started guide](../../../gsg_robot/index.rst) before continuing.
+Complete the [GSG Robot Get Started guide](../../../gsg_robot/index.md) before continuing.
 
 ## Hardware Prerequisites
 

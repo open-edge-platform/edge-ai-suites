@@ -27,16 +27,17 @@ hide_directive-->
 
 1. Download Helm chart:
    ```bash
-   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-weekly
-   ```
+   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.0.0-<date>-weekly
+    ```
+
+    Replace `<date>` with the actual patch version date (e.g., `20260120` for January 20th, 2026).
+    `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.0.0-20260120-weekly`
 
 2. Extract the Helm chart:
    ```bash
-   tar -xvzf wind-turbine-anomaly-detection-sample-app-1.1.0-weekly.tgz
+   tar -xvzf wind-turbine-anomaly-detection-sample-app-2026.0.0-<date>-weekly.tgz
    cd wind-turbine-anomaly-detection-sample-app
    ```
-
-    `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 1.1.0-weekly`
 
 **Option B: Generate Helm charts**
 
@@ -47,7 +48,7 @@ hide_directive-->
 
 2. Generate the charts:
    ```bash
-   make gen_helm_charts app=wind-turbine-anomaly-detection version=1.1.0-weekly
+   make gen_helm_charts app=wind-turbine-anomaly-detection
    cd helm/
    ```
 
@@ -64,12 +65,15 @@ hide_directive-->
 
 1. Download Helm chart:
    ```bash
-   helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 1.0.0-weekly
-   ```
+   helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 2026.0.0-<date>-weekly
+     ```
+
+    Replace `<date>` with the actual patch version date (e.g., `20260120` for January 20th, 2026).
+    `helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 2026.0.0-20260120-weekly`
 
 2. Extract the Helm chart:
    ```bash
-   tar -xvzf weld-anomaly-detection-sample-app-1.0.0-weekly.tgz
+   tar -xvzf weld-anomaly-detection-sample-app-2026.0.0-<date>-weekly.tgz
    cd weld-anomaly-detection-sample-app
    ```
 
@@ -84,7 +88,7 @@ hide_directive-->
 
 2. Generate the charts:
     ```bash
-    make gen_helm_charts app=weld-anomaly-detection version=1.0.0-weekly
+    make gen_helm_charts app=weld-anomaly-detection
     cd helm/
     ```
 
@@ -178,16 +182,16 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 
 1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config`.
 
-    ```
-    - time-series-analytics-config/
-        - models/
-            - windturbine_anomaly_detector.pkl
-        - tick_scripts/
-            - windturbine_anomaly_detector.tick
-        - udfs/
-            - requirements.txt
-            - windturbine_anomaly_detector.py
-    ```
+    >
+    > - time-series-analytics-config/
+    >     - models/
+    >         - windturbine_anomaly_detector.pkl
+    >     - tick_scripts/
+    >         - windturbine_anomaly_detector.tick
+    >     - udfs/
+    >         - requirements.txt
+    >         - windturbine_anomaly_detector.py
+    >
 
 2. Copy your new UDF package (using the wind turbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
     ```sh
@@ -213,16 +217,16 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 
 1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config`.
 
-    ```
-    - time-series-analytics-config/
-        - models/
-            - weld_anomaly_detector.cb
-        - tick_scripts/
-            - weld_anomaly_detector.tick
-        - udfs/
-            - requirements.txt
-            - weld_anomaly_detector.py
-    ```
+    >
+    > - time-series-analytics-config/
+    >     - models/
+    >         - weld_anomaly_detector.cb
+    >     - tick_scripts/
+    >         - weld_anomaly_detector.tick
+    >     - udfs/
+    >         - requirements.txt
+    >         - weld_anomaly_detector.py
+    >
 
 2. Copy your new UDF package (using the weld anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
 

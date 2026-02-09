@@ -6,7 +6,7 @@ by running inference workflows across multiple AI models on video feeds from
 visual monitoring systems located on-site, all operating efficiently on a single
 industrial PC.
 
-[Pallet Defect Detection](./pallet-defect-detection/index.rst), [PCB Anomaly Detection](./pcb-anomaly-detection/index.rst), [Weld Porosity](./weld-porosity/index.rst) and [Worker Safety Gear Detection](./worker-safety-gear-detection/index.rst) seamlessly combine multiple microservices to provide real-time video analysis
+[Pallet Defect Detection](./pallet-defect-detection/index.md), [PCB Anomaly Detection](./pcb-anomaly-detection/index.md), [Weld Porosity](./weld-porosity/index.md) and [Worker Safety Gear Detection](./worker-safety-gear-detection/index.md) seamlessly combine multiple microservices to provide real-time video analysis
 enhancing quality control and compliance of manufacturing processes. Using AI-driven
 real-time analytics, edge devices can detect manufacturing defects, safety risks and
 worker compliance issues, that could impact quality, efficiency and safety of

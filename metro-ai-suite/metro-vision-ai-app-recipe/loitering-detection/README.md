@@ -17,7 +17,7 @@ By utilizing cutting-edge technologies and pre-trained deep learning models, thi
 
 The architecture is designed to facilitate seamless integration and operation of various components involved in AI-driven video analytics.
 
-![Architecture Diagram](./docs/user-guide/_images/loitering-detection-architecture.drawio.svg)
+![Architecture Diagram](./docs/user-guide/_assets/loitering-detection-architecture.drawio.svg)
 
 ### Components
 
@@ -34,7 +34,8 @@ The DL Streamer Pipeline Server is a core component, designed to handle video an
 It integrates various components such as MQTT, Node-RED, and Grafana to provide a robust and flexible solution for real-time video inference pipelines. The tool is built to be user-friendly, allowing customization without the need for extensive coding knowledge. Validate your ideas by developing an end-to-end solution faster.
 
 ## Learn More
-- [System Requirements](./docs/user-guide/system-requirements.md): Check the hardware and software requirements for deploying the application.
 - [Get Started](./docs/user-guide/get-started.md): Follow step-by-step instructions to set up the application.
-- [How to Deploy with Helm](./docs/user-guide/how-to-deploy-with-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
-- [Support and Troubleshooting](./docs/user-guide/support.md): Find solutions to common issues and troubleshooting steps.
+- [System Requirements](./docs/user-guide/get-started/system-requirements.md): Check the hardware and software requirements for deploying the application.
+- [How to Deploy with Helm](./docs/user-guide/get-started/how-to-deploy-with-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
+- [How to Deploy with Edge Orchestrator](./docs/user-guide/get-started/how-to-deploy-with-edge-orchestrator.md): How to deploy the application with Edge Orchestrator.
+- [Support and Troubleshooting](./docs/user-guide/troubleshooting.md): Find solutions to common issues and troubleshooting steps.

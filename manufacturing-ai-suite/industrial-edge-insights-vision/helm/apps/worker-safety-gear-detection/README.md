@@ -184,6 +184,6 @@
      helm uninstall app-deploy -n apps
      ```
 
-
 ## Troubleshooting
-- [Troubleshooting Guide](../../../docs/user-guide/worker-safety-gear-detection/troubleshooting-guide.md)
+
+- [Troubleshooting](../../../docs/user-guide/worker-safety-gear-detection/troubleshooting.md)

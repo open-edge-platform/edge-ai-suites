@@ -112,6 +112,8 @@ jobs:
         MTX_WEBRTCICESERVERS2_0_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
         MTX_WEBRTCICESERVERS2_0_PASSWORD=$(openssl rand -hex 10)
         HOST_IP=$(hostname -I | awk '{print $1}')
+        S3_STORAGE_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+        S3_STORAGE_PASSWORD=$(openssl rand -hex 10)
 
         sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
         sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
@@ -119,6 +121,8 @@ jobs:
         sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
         sed -i "s/MTX_WEBRTCICESERVERS2_0_USERNAME=.*/MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME}/g" .env
         sed -i "s/MTX_WEBRTCICESERVERS2_0_PASSWORD=.*/MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}/g" .env
+        sed -i "s/S3_STORAGE_USERNAME=.*/S3_STORAGE_USERNAME=${S3_STORAGE_USERNAME}/g" .env
+        sed -i "s/S3_STORAGE_PASSWORD=.*/S3_STORAGE_PASSWORD=${S3_STORAGE_PASSWORD}/g" .env
         sed -i "s/HOST_IP=.*/HOST_IP=${HOST_IP}/g" .env
         make build
     - name: Deploying Multimodal Weld Defect Detection Sample App

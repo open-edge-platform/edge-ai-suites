@@ -2,7 +2,10 @@
 
 ## Overview
 
-The Offline Package Generator creates self-contained deployment packages for Metro Vision AI applications that can be deployed in environments without internet connectivity. This tool is specifically designed for environments with no internet connectivity where traditional cloud-dependent deployments are not feasible.
+The Offline Package Generator creates self-contained deployment packages for Metro Vision AI
+applications that can be deployed in environments without internet connectivity. This tool is
+specifically designed for environments with no internet connectivity where traditional
+cloud-dependent deployments are not feasible.
 
 ## Prerequisites
 
@@ -14,11 +17,11 @@ The Offline Package Generator creates self-contained deployment packages for Met
 - **Memory**: 8 GB RAM recommended
 - **Internet Connection**: Required for package generation only
 
-> **Important**: This process requires two environments - a connected system for package generation and an offline target system for deployment.
+> **Important:** This process requires two environments - a connected system for package generation and an offline target system for deployment.
 
 ## Step 1: Generate Offline Package
 
-*Perform this step on a system with internet connectivity*
+> **Note:** Perform this step on a system with internet connectivity.
 
 **Objective**: Create a complete offline deployment package containing all necessary components for the Smart Parking application.
 
@@ -34,7 +37,6 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking
 - Gathers Grafana plugins and configurations (~100 MB)
 - Prepares deployment scripts and documentation
 - Creates a complete `offline-package/` directory
-
 
 ## Step 2: Prepare Package for Transfer
 
@@ -97,7 +99,6 @@ docker compose up -d
 docker ps
 ```
 
-
 ## Step 4: Run the Application
 
 ### 4.1 Start Video Streams
@@ -121,11 +122,12 @@ To check the status of the pipelines:
 
 To stop the pipelines without waiting for video streams to finish replay:
 
-> **NOTE**: This will stop all the pipelines and the streams. DO NOT run this if you want to see smart parking detection.
-
 ```bash
 ./sample_stop.sh
 ```
+
+> **NOTE:** This will stop all the pipelines and the streams. **DO NOT** run this if you want to see smart parking detection.
+
 </details>
 
 ### 4.3 View Application Output
@@ -138,32 +140,30 @@ To stop the pipelines without waiting for video streams to finish replay:
 3. Check under the Dashboards section for the application-specific preloaded dashboard.
 4. **Expected Results**: The dashboard displays real-time video streams with AI overlays and detection metrics.
 
-
 ## Access Application Components
 
 ### Nginx Dashboard
-- **URL**: [https://127.0.0.1](https://127.0.0.1)
+- **URL**: `https://127.0.0.1`
 
 ### Grafana UI
-- **URL**: [https://127.0.0.1/grafana](https://127.0.0.1/grafana)
+- **URL**: `https://127.0.0.1/grafana`
 - **Credentials**:
   - **Username**: `admin`
   - **Password**: `admin` (You will be prompted to change it on first login)
 - The dashboard displays detected cars in the parking lot.
 
-  ![Grafana Dashboard](_images/grafana-smart-parking.jpg)
+  ![Grafana Dashboard](_assets/grafana-smart-parking.jpg)
 
 ### NodeRED UI
-- **URL**: [https://127.0.0.1/nodered/](https://127.0.0.1/nodered/)
+- **URL**: `https://127.0.0.1/nodered/`
 
 ### DL Streamer Pipeline Server
-- **REST API**: [https://127.0.0.1/api/pipelines](https://127.0.0.1/api/pipelines)
+- **REST API**: https://127.0.0.1/api/pipelines](https://127.0.0.1/api/pipelines)
 - **Check Pipeline Status**:
   ```bash
   curl -k https://127.0.0.1/api/pipelines
   ```
-- **WebRTC**: [https://127.0.0.1/mediamtx/object_detection_1/](https://127.0.0.1/mediamtx/object_detection_1/)
-
+- **WebRTC**: `https://127.0.0.1/mediamtx/object_detection_1/`
 
 ## Stop the Application
 

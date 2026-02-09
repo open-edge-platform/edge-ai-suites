@@ -25,13 +25,16 @@ You can either generate or download the Helm charts.
   1. Download Helm chart with the following command:
 
      ```bash
-     helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 1.0.0-weekly
+     helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.0.0-<date>-weekly
      ```
+
+    Replace `<date>` with the actual patch version date (e.g., `20260120` for January 20th, 2026).
+    `helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.0.0-20260120-weekly`
 
   2. Unzip the package using the following command:
 
      ```bash
-     tar -xvzf multimodal-weld-defect-detection-sample-app-1.0.0-weekly.tgz
+     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.0.0-<date>-weekly.tgz
      ```
 
 - Get into the Helm directory:
@@ -55,7 +58,6 @@ You can either generate or download the Helm charts.
 1. Update the following fields in the `values.yaml` file of the helm chart.
 
    ```bash
-   WORK_DIR: # Update with the absolute path to your industrial-edge-insights-multimodal directory
    INFLUXDB_USERNAME:
    INFLUXDB_PASSWORD:
    VISUALIZER_GRAFANA_USER:
@@ -118,16 +120,16 @@ this sample application in Kubernetes environment:
 
 1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice`.
 
-   ```text
-   - time-series-analytics-microservice/
-       - models/
-           - weld_anomaly_detector.cb
-       - tick_scripts/
-           - weld_anomaly_detector.tick
-       - udfs/
-           - requirements.txt
-           - weld_anomaly_detector.py
-   ```
+   >
+   > - time-series-analytics-microservice/
+   >     - models/
+   >         - weld_anomaly_detector.cb
+   >     - tick_scripts/
+   >         - weld_anomaly_detector.tick
+   >     - udfs/
+   >         - requirements.txt
+   >         - weld_anomaly_detector.py
+   >
 
 2. Copy your new UDF package to the `time-series-analytics-microservice` pod:
 
@@ -144,7 +146,7 @@ this sample application in Kubernetes environment:
 > **Note:**
 > Run the commands only after performing the Helm install.
 
-## Step 5: Activate the Pipeline/UDF Deployment Package
+## Step 5: Activate the Pipeline and UDF Deployment Package
 
 
 **DL Streamer Pipeline Server**

@@ -12,8 +12,6 @@ from fastapi.responses import StreamingResponse
 from ..config import (
     PIPELINE_NAME,
     PIPELINE_SERVER_URL,
-    MQTT_BROKER_HOST,
-    MQTT_BROKER_PORT,
     MQTT_TOPIC_PREFIX,
     WEBRTC_BITRATE,
 )
@@ -25,6 +23,7 @@ from ..state import RUNS
 router = APIRouter(prefix="/api", tags=["runs"])
 logger = logging.getLogger("app.runs")
 
+
 @router.post("/runs")
 async def start_run(req: StartRunRequest) -> RunInfo:
     """Start a new video captioning run."""
@@ -32,8 +31,8 @@ async def start_run(req: StartRunRequest) -> RunInfo:
     run_name = None
     if req.runName and req.runName.strip():
         # Sanitize: replace spaces with underscores, remove special chars
-        sanitized = re.sub(r'\s+', '_', req.runName.strip())
-        sanitized = re.sub(r'[^a-zA-Z0-9_-]', '', sanitized)
+        sanitized = re.sub(r"\s+", "_", req.runName.strip())
+        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "", sanitized)
         if sanitized:
             run_name = sanitized
             # Check for duplicates and append suffix if needed
@@ -50,7 +49,7 @@ async def start_run(req: StartRunRequest) -> RunInfo:
         run_id = uuid.uuid4().hex[:10]
 
     peer_id = f"stream-{run_id[:10] if len(run_id) > 10 else run_id}"
-    
+
     # MQTT topic for this run's metadata
     mqtt_topic = f"{MQTT_TOPIC_PREFIX}"
 
@@ -63,13 +62,11 @@ async def start_run(req: StartRunRequest) -> RunInfo:
             "frame": {"type": "webrtc", "peer-id": peer_id, "bitrate": WEBRTC_BITRATE},
         },
         "parameters": {
-            "captioner-prompt": (req.prompt or "").strip()
-            or DEFAULT_PROMPT,
+            "captioner-prompt": (req.prompt or "").strip() or DEFAULT_PROMPT,
             "captioner_model_name": (req.modelName or "").strip()
             or "OpenGVLab/InternVL2-2B",
             "captioner_max_new_tokens": req.maxNewTokens,
-            "detection_model_name": (req.detectionModelName or "").strip()
-            or "yolov8s",
+            "detection_model_name": (req.detectionModelName or "").strip() or "yolov8s",
             "detection_threshold": req.detectionThreshold,
             "mqtt_publisher": {
                 "topic": f"{MQTT_TOPIC_PREFIX}/{run_id}",
@@ -118,45 +115,44 @@ async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
     """Generator that receives metadata from MQTT and multiplexes into a single SSE stream."""
     message_queue: asyncio.Queue = asyncio.Queue()
     subscribed_runs: set[str] = set()
-    
+
     def on_message(run_id: str, data: dict, received_at: float):
         """Callback for MQTT messages - puts them into the async queue."""
         try:
             asyncio.get_event_loop().call_soon_threadsafe(
-                message_queue.put_nowait,
-                (run_id, data, received_at)
+                message_queue.put_nowait, (run_id, data, received_at)
             )
         except Exception as e:
             logger.error(f"Error queueing MQTT message: {e}")
 
     try:
         mqtt_subscriber = await get_mqtt_subscriber()
-        
+
         while True:
             try:
                 # Update subscriptions based on current active runs
                 current_runs = set(RUNS.keys())
-                
+
                 # Subscribe to new runs
                 new_runs = current_runs - subscribed_runs
                 for run_id in new_runs:
                     mqtt_subscriber.subscribe_to_run(run_id, on_message)
                     subscribed_runs.add(run_id)
                     logger.info(f"Subscribed to MQTT topic for run {run_id}")
-                
+
                 # Unsubscribe from stopped runs
                 stopped_runs = subscribed_runs - current_runs
                 for run_id in stopped_runs:
                     mqtt_subscriber.unsubscribe_from_run(run_id)
                     subscribed_runs.discard(run_id)
                     logger.info(f"Unsubscribed from MQTT topic for run {run_id}")
-                
+
                 # Process any messages in the queue with a short timeout
                 try:
                     run_id, data, received_at = await asyncio.wait_for(
                         message_queue.get(), timeout=1.0
                     )
-                    
+
                     # Wrap the data with runId for client-side demultiplexing
                     envelope = {
                         "runId": run_id,
@@ -164,16 +160,16 @@ async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
                         "received_at": received_at,
                     }
                     yield f"data: {json.dumps(envelope)}\n\n"
-                    
+
                 except asyncio.TimeoutError:
                     # No message received, send heartbeat
-                    yield f": heartbeat\n\n"
-                    
+                    yield ": heartbeat\n\n"
+
             except Exception as e:
                 logger.error(f"Error in multiplexed metadata generator: {e}")
                 yield f": error - {e}\n\n"
                 await asyncio.sleep(1)
-                
+
     finally:
         # Cleanup subscriptions when generator is closed
         mqtt_subscriber = await get_mqtt_subscriber()

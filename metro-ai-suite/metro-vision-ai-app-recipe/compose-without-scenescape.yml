@@ -49,9 +49,9 @@ services:
       - "110"
       - "992"
     device_cgroup_rules:
-      - 'c 189:* rmw'
-      - 'c 209:* rmw'
-      - 'a 189:* rwm'
+      - "c 189:* rmw"
+      - "c 209:* rmw"
+      - "a 189:* rwm"
     devices:
       - "/dev:/dev"
     networks:
@@ -139,8 +139,14 @@ services:
     volumes:
       - "./${SAMPLE_APP}/src/node-red:/data"
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/videos:/data/public/videos"
+      - node-red-node-modules:/usr/src/node-red/node_modules
     ipc: "none"
-    entrypoint: [ "/bin/bash", "-c", "/data/install_package.sh && /usr/src/node-red/entrypoint.sh" ]
+    entrypoint:
+      [
+        "/bin/bash",
+        "-c",
+        "/data/install_package.sh && /usr/src/node-red/entrypoint.sh",
+      ]
     user: root
     networks:
       - app_network
@@ -171,7 +177,7 @@ services:
       HTTPS_PROXY: ${https_proxy}
       NO_PROXY: $no_proxy,prometheus,dlstreamer-pipeline-server,localhost,127.0.0.1
     volumes:
-      - ./${SAMPLE_APP}/configs/open_telemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml  # OpenTelemetry Collector config
+      - ./${SAMPLE_APP}/configs/open_telemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml # OpenTelemetry Collector config
     restart: always
     networks:
       - app_network
@@ -188,3 +194,4 @@ volumes:
       device: tmpfs
   prometheus_data:
     driver: local
+  node-red-node-modules:

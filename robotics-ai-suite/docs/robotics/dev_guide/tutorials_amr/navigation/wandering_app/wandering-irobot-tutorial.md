@@ -21,7 +21,7 @@ in a testing playground:
 ### Prerequisites
 
 - Assemble your robotic kit following the instructions for [irobot-create3](../../developer_kit/irobot-create3-robot.md)
-- Complete the [get started guide](../../../../gsg_robot/index.rst) before continuing.
+- Complete the [get started guide](../../../../gsg_robot/index.md) before continuing.
 
 ### Intel® board connected to iRobot Create 3
 

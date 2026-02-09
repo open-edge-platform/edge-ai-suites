@@ -22,7 +22,7 @@ This tutorial describes how to launch the demo in the `Gazebo` simulator.
 
 ### Prerequisites
 
-Complete the [get started guide](../../../../../gsg_robot/index.rst) before continuing.
+Complete the [get started guide](../../../../../gsg_robot/index.md) before continuing.
 
 ### Install the Deb packages
 

@@ -66,6 +66,8 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    - `MTX_WEBRTCICESERVERS2_0_USERNAME`
    - `MTX_WEBRTCICESERVERS2_0_PASSWORD`
    - `HOST_IP`
+   - `S3_STORAGE_USERNAME`
+   - `S3_STORAGE_PASSWORD`
 
 2. Deploy the sample app, use only one of the following options.
 
