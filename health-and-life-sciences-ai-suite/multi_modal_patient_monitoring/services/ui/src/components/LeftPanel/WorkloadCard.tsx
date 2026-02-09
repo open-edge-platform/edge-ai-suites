@@ -1,0 +1,264 @@
+import React from 'react';
+import fullscreenIcon from '../../assets/images/fullScreenIcon.svg';
+import minimizeIcon from '../../assets/images/minimize.svg';
+import '../../assets/css/WorkloadCard.css';
+
+interface WorkloadConfig {
+  id: string;
+  name: string;
+  // icon: string;
+  color: string;
+  description: string;
+  dataKeys: readonly string[];
+  hasWaveform: boolean;
+}
+
+interface WorkloadCardProps {
+  config: WorkloadConfig;
+  status: 'idle' | 'running' | 'stopped' | 'error';
+  eventCount: number;
+  latestVitals: Record<string, any>;
+  lastEventTime: number | null;
+  isExpanded: boolean;
+  onExpand: () => void;
+  waveform?: number[];
+}
+
+const WorkloadCard: React.FC<WorkloadCardProps> = ({
+  config,
+  status,
+  eventCount,
+  latestVitals,
+  lastEventTime,
+  isExpanded,
+  onExpand,
+  waveform,
+}) => {
+  const statusColors = {
+    idle: '#6c757d',
+    running: '#28a745',
+    stopped: '#6c757d',
+    error: '#dc3545',
+  };
+
+  const formatValue = (key: string, value: any) => {
+    if (value === undefined || value === null) return '--';
+    
+    // ✅ AI-ECG: Handle prediction/confidence
+    if (key === 'prediction') {
+      return String(value);
+    }
+    
+    if (key === 'confidence') {
+      return typeof value === 'number' ? (value * 100).toFixed(1) + '%' : '--';
+    }
+    
+    // ✅ rPPG: Handle vitals
+    if (key === 'HR' || key === 'RR' || key === 'SpO2' || key === 'CO2_ET' || key === 'BP_DIA') {
+      return typeof value === 'number' ? value.toFixed(1) : '--';
+    }
+    
+    if (typeof value === 'number') {
+      return value.toFixed(1);
+    }
+    
+    return String(value);
+  };
+
+  const getUnit = (key: string) => {
+    const units: Record<string, string> = {
+      HR: 'bpm',
+      RR: 'rpm',
+      SpO2: '%',
+      CO2_ET: 'mmHg',      // ← Add this
+      BP_DIA: 'mmHg',      // ← Add this
+      BP_SYS: 'mmHg',
+      confidence: '',
+      prediction: '',
+      joints: '',
+    };
+    return units[key] || '';
+  };
+
+  const handleCardClick = () => {
+    if (!isExpanded) {
+      onExpand();
+    }
+  };
+
+  const handleIconClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onExpand();
+  };
+
+  // ✅ Render waveform with proper scaling
+  const renderWaveform = (canvas: HTMLCanvasElement | null) => {
+    if (!canvas || !waveform || waveform.length === 0) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const width = canvas.width;
+    const height = canvas.height;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+
+    // Draw baseline
+    ctx.strokeStyle = '#e0e0e0';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, height / 2);
+    ctx.lineTo(width, height / 2);
+    ctx.stroke();
+
+    // ✅ Calculate scaling based on workload type
+    let min = Math.min(...waveform);
+    let max = Math.max(...waveform);
+    let range = max - min || 1;
+
+    // ✅ AI-ECG: Use full range (-200 to 1400)
+    if (config.id === 'ai-ecg') {
+      min = -200;
+      max = 1400;
+      range = max - min;
+    }
+    // ✅ rPPG: Use normalized range
+    else if (config.id === 'rppg') {
+      // Already good, keep as-is
+    }
+    else if (config.id === 'mdpnp') {
+      // ECG_LEAD_II: range ~100-600
+      // CO2: range ~0-15
+      // BP: range ~350-600
+      // Auto-scaling works well for all
+    }
+
+    // Draw waveform
+    ctx.strokeStyle = config.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    waveform.forEach((value, i) => {
+      const x = (i / waveform.length) * width;
+      const y = height - ((value - min) / range) * height;
+      
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    });
+
+    ctx.stroke();
+  };
+
+  return (
+    <div
+      className={`workload-card ${isExpanded ? 'expanded' : ''} ${status}`}
+      style={{ borderLeftColor: config.color }}
+      onClick={handleCardClick}
+    >
+      {/* Header */}
+      <div className="workload-card-header">
+        {/* <div className="workload-icon" style={{ backgroundColor: config.color }}>
+          {config.icon}
+        </div> */}
+        <div className="workload-info">
+          <h3 className="workload-name">{config.name}</h3>
+          <p className="workload-description">{config.description}</p>
+        </div>
+        <img
+          src={isExpanded ? minimizeIcon : fullscreenIcon}
+          alt={isExpanded ? 'Minimize' : 'Expand'}
+          className="fullscreen-icon"
+          onClick={handleIconClick}
+        />
+      </div>
+
+      {/* Status */}
+      <div className="workload-status">
+        <span className="status-dot" style={{ backgroundColor: statusColors[status] }} />
+        <span className="status-text">{status}</span>
+      </div>
+
+      {/* Vitals */}
+      <div className="workload-vitals">
+        {Object.keys(latestVitals).length > 0 ? (
+          <div className="vitals-list">
+            {config.dataKeys.map((key) => {
+              const value = latestVitals[key];
+              
+              // ✅ Debug log to see what we're getting
+              if (config.id === 'ai-ecg') {
+                console.log(`[WorkloadCard] AI-ECG rendering ${key}:`, value);
+              }
+              
+              // ✅ Skip undefined values
+              if (value === undefined || value === null) {
+                console.warn(`[WorkloadCard] ${config.id} missing key: ${key}`);
+                return null; // Skip this row instead of showing '--'
+              }
+              
+              return (
+                <div key={key} className="vital-item">
+                  <span className="vital-label">{key}:</span>
+                  <span className="vital-value">{formatValue(key, value)}</span>
+                  <span className="vital-unit">{getUnit(key)}</span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="no-vitals">
+            Waiting for data...
+            {config.id === 'ai-ecg' && (
+              <div style={{ fontSize: '10px', color: '#999', marginTop: '4px' }}>
+                Debug: {JSON.stringify(latestVitals)}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ✅ Waveform (show in both collapsed and expanded views) */}
+      {config.hasWaveform && waveform && waveform.length > 0 && (
+        <div className="waveform-preview" style={{ marginTop: '12px' }}>
+          <h4 style={{ fontSize: '12px', marginBottom: '8px', color: '#6A6D75' }}>
+            {config.id === 'rppg' ? `Respiratory Waveform (${waveform.length} samples @ 30Hz)` : 
+             config.id === 'ai-ecg' ? `ECG Waveform (${waveform.length} samples @ 360Hz)` : 
+             'Waveform'}
+          </h4>
+          <canvas
+            ref={renderWaveform}
+            width={600}
+            height={isExpanded ? 150 : 100}
+            style={{
+              width: '100%',
+              height: isExpanded ? '150px' : '100px',
+              background: '#f8f9fa',
+              borderRadius: '4px',
+              border: '1px solid #e0e0e0'
+            }}
+          />
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="workload-footer">
+        <div className="event-count">
+          <span className="label">Events:</span>
+          <span className="value">{eventCount}</span>
+        </div>
+        {lastEventTime && (
+          <div className="last-update">
+            <span className="label">Last:</span>
+            <span className="value">{new Date(lastEventTime).toLocaleTimeString()}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default WorkloadCard;
