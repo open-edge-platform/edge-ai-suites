@@ -22,8 +22,6 @@ app = FastAPI(title="Aggregator Service")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://10.23.223.206:5173",  # Vite dev server
-        "http://localhost:5173",       # Local development
         "*"                             # Allow all (for development only)
     ],
     allow_credentials=True,
@@ -571,18 +569,16 @@ async def on_startup():
 
 
 if __name__ == "__main__":
-    
     print("=" * 70)
     print("Starting Aggregator Service")
     print("=" * 70)
-    print(f"  gRPC port: 50051")
-    print(f"  HTTP/SSE: http://0.0.0.0:8001")  # Binds to all interfaces
-    print(f"  Access from Mac: http://10.23.223.206:8001")
+    print(f"  gRPC port: {os.getenv('GRPC_PORT', '50051')}")
+    print("  HTTP/SSE: http://0.0.0.0:8001")
     print("=" * 70)
     
     uvicorn.run(
-        app,
-        host="0.0.0.0",  # Must be 0.0.0.0 to accept external connections
+        "aggregator.server:app",
+        host="0.0.0.0",
         port=8001,
-        log_level="info"
+        log_level="info",
     )

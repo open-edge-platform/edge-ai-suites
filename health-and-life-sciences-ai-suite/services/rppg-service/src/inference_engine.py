@@ -20,14 +20,7 @@ class TSM(keras.layers.Layer):
         self.n_frame = n_frame
         self.fold_div = fold_div
     
-    def call(self, inputs, *args, **kwargs):
-        """Pass-through temporal shift module.
-
-        The original serialized MTTS-CAN model may pass keyword arguments
-        like `n_frame` or `fold_div` into this layer's call. Accept
-        *args/**kwargs to remain compatible with the saved HDF5 config
-        and safely ignore any extra call-time arguments.
-        """
+    def call(self, inputs):
         return inputs
     
     def get_config(self):
@@ -41,7 +34,7 @@ class Attention_mask(keras.layers.Layer):
     def __init__(self, **kwargs):
         super(Attention_mask, self).__init__(**kwargs)
     
-    def call(self, inputs, *args, **kwargs):
+    def call(self, inputs):
         if isinstance(inputs, list) and len(inputs) == 2:
             attention, features = inputs
             attention = tf.repeat(attention, features.shape[-1], axis=-1)
@@ -55,7 +48,7 @@ class Attention_mask(keras.layers.Layer):
 class InferenceEngine:
     """MTTS-CAN inference engine."""
     
-    def __init__(self, model_path: str = "/models/rppg/mtts_can.hdf5"):
+    def __init__(self, model_path: str = "models/mtts_can.hdf5"):
         """Initialize inference engine."""
         self.model_path = Path(model_path)
         self.model = None
