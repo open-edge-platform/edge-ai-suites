@@ -106,54 +106,54 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
 1. Get into the InfluxDB* container.
 
-  > **Note:** Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
-  > where for <namespace> replace with namespace name where the application was deployed and
-  > for <influxdb-pod-name> replace with InfluxDB pod name.
+   > **Note:** Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
+   > where for \<namespace> replace with namespace name where the application was deployed and
+   > for \<influxdb-pod-name> replace with InfluxDB pod name.
 
-   ``` bash
-    docker exec -it ia-influxdb bash
-   ```
+    ```bash
+     docker exec -it ia-influxdb bash
+    ```
 
 2. Run following commands to see the data in InfluxDB*.
 
-    > **NOTE:**
-    > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
-    > This does not affect any functionality while working with the InfluxDB commands
+   > **NOTE:**
+   > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
+   > This does not affect any functionality while working with the InfluxDB commands
 
-    ``` bash
-    # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
-    influx -username <username> -password <passwd>
-    use datain # database access
-    show measurements
-    # Run below query to check and output measurement processed
-    # by Time Series Analytics microservice
-    select * from "weld-sensor-anomaly-data"
+   ``` bash
+   # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
+   influx -username <username> -password <passwd>
+   use datain # database access
+   show measurements
+   # Run below query to check and output measurement processed
+   # by Time Series Analytics microservice
+   select * from "weld-sensor-anomaly-data"
 
-    # Run below query to check and output measurement processed
-    # by DL Streamer pipeline server microservice
-    select * from "vision-weld-classification-results"
-    ```
+   # Run below query to check and output measurement processed
+   # by DL Streamer pipeline server microservice
+   select * from "vision-weld-classification-results"
+   ```
 
 3. Check the output in Grafana.
 
-    - Use link `https://<host_ip>:3000` to launch Grafana from browser (preferably, chrome browser)
+   - Use link `https://<host_ip>:3000` to launch Grafana from browser (preferably, chrome browser)
 
-    > **Note:** Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
+   > **Note:** Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
 
-    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-      in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.
+   - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
+     in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.
 
-      ![Grafana login](./_assets/login_wt.png)
+     ![Grafana login](./_assets/login_wt.png)
 
-    - After login, click on Dashboard
-      ![Menu view](./_assets/dashboard.png)
+   - After login, click on Dashboard
+     ![Menu view](./_assets/dashboard.png)
 
-    - Select the `Multimodal Weld Defect Detection Dashboard`.
-      ![Multimodal Weld Defect Detection Dashboard](./_assets/grafana_dashboard_selection.png)
+   - Select the `Multimodal Weld Defect Detection Dashboard`.
+     ![Multimodal Weld Defect Detection Dashboard](./_assets/grafana_dashboard_selection.png)
 
-    - One will see the below output.
+   - One will see the below output.
 
-      ![Anomaly prediction for weld data](./_assets/anomaly_prediction.png)
+     ![Anomaly prediction for weld data](./_assets/anomaly_prediction.png)
 
 ## Bring down the sample app
 
@@ -174,8 +174,8 @@ docker logs -f <container_name> | grep -i error
 
 ## Advanced setup
 
-- [How to build from source and deploy](./how-to-guides/how-to-build-from-source.md): Guide to build from source and docker compose deployment
-- [How to deploy with Helm](./docs/user-guide/how-to-guides/how-to-deploy-with-helm.md): Guide for deploying with Helm.
+- [How to build from source and deploy](./get-started/build-from-source.md): Guide to build from source and docker compose deployment
+- [How to deploy with Helm](./get-started/deploy-with-helm.md): Guide for deploying with Helm.
 - [How to configure MQTT alerts](./how-to-guides/how-to-configure-alerts.md): Guide for configuring the MQTT alerts in the Time Series Analytics microservice
 - [How to update config](./how-to-guides/how-to-update-config.md): Guide updating configuration of Time Series Analytics Microservice.
 
@@ -183,7 +183,9 @@ docker logs -f <container_name> | grep -i error
 :::{toctree}
 :hidden:
 
-get-started/system-requirements.md
+./get-started/system-requirements
+./get-started/build-from-source
+./get-started/deploy-with-helm
 
 :::
 hide_directive-->

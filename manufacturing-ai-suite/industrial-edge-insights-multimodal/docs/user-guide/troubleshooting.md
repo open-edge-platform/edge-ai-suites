@@ -1,4 +1,4 @@
-# Troubleshoot Guide
+# Troubleshooting
 
 This article contains troubleshooting steps for known issues. If you encounter any problems
 with the application not addressed here, check the [GitHub Issues](https://github.com/open-edge-platform/edge-ai-suites/issues)

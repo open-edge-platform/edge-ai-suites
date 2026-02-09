@@ -122,16 +122,16 @@ this sample application in Kubernetes environment:
 
 1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice`.
 
-   >
-   > - time-series-analytics-microservice/
-   >     - models/
-   >         - weld_anomaly_detector.cb
-   >     - tick_scripts/
-   >         - weld_anomaly_detector.tick
-   >     - udfs/
-   >         - requirements.txt
-   >         - weld_anomaly_detector.py
-   >
+   ```text
+   - time-series-analytics-microservice/
+       - models/
+           - weld_anomaly_detector.cb
+       - tick_scripts/
+           - weld_anomaly_detector.tick
+       - udfs/
+           - requirements.txt
+           - weld_anomaly_detector.py
+   ```
 
 2. Copy your new UDF package to the `time-series-analytics-microservice` pod:
 
@@ -149,7 +149,6 @@ this sample application in Kubernetes environment:
 > Run the commands only after performing the Helm install.
 
 ## Step 5: Activate the Pipeline and UDF Deployment Package
-
 
 **DL Streamer Pipeline Server**
 
@@ -210,7 +209,7 @@ kubectl get all -n multimodal-sample-app # It may take a few minutes for all app
 
 ## Configure Alerts in Time Series Analytics Microservice
 
-To configure alerts in Time Series Analytics Microservice, follow [the steps](./how-to-configure-alerts.md#helm-deployment).
+To configure alerts in Time Series Analytics Microservice, follow [the steps](../how-to-guides/how-to-configure-alerts.md#helm-deployment).
 
 ## Troubleshooting
 
