@@ -1,11 +1,11 @@
-# How to Build from Source
+# How It Works
 
-Build the Scene Intelligence microservice from source to customize or extend its functionality. This guide covers building the containerized Traffic Intersection Agent.
+This section shows how to build the Smart Traffic Intersection Agent from source to customize or extend its functionality.
 
 ## Prerequisites
 
-- **System Requirements**: Verify your system meets the [minimum requirements](./system-requirements.md).
-- **Docker**: Install Docker from [Get Docker](https://docs.docker.com/get-docker/).
+- **System Requirements**: Verify that your system meets the [minimum requirements](./system-requirements.md).
+- **Docker platform**: Install Docker platform from [Get Docker](https://docs.docker.com/get-docker/).
 - Basic familiarity with Git and Docker commands.
 
 ## Build Traffic Intersection Agent
@@ -60,7 +60,7 @@ curl http://localhost:8081/api/v1/traffic/current
 
 ## Rebuild After Changes
 
-When you modify code:
+After you have edited the code, rebuild:
 
 ```bash
 # Rebuild the image
@@ -74,7 +74,7 @@ docker compose -f docker/compose.yaml logs traffic-intersection-agent
 ```
 
 
-## Supporting Resources
+## Learn More
 
 - [Get Started Guide](get-started.md)
 - [Environment Variables](environment-variables.md)
