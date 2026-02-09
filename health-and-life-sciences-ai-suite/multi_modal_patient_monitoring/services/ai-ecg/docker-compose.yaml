@@ -9,4 +9,3 @@ services:
     volumes:
       - ./backend/data:/app/data
       - ../../models/ai-ecg:/models/ai-ecg
-

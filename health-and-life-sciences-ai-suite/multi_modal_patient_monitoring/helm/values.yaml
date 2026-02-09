@@ -1,111 +1,60 @@
 namespace: health-ai
 
-global:
-  imageRegistry: intel
-  imageTag: "1.0.0"
-  imagePullPolicy: Never
-
-assetsDownloader:
-  enabled: true
-  image:
-    registry: intel
-    name: hl-ai-assets-downloader
-    tag: "1.0.0"
-    pullPolicy: Never
-
 services:
-  aiEcg:
-    enabled: true
-    service:
-      enabled: true
-
-  pose:
-    enabled: true
-    service:
-      enabled: false
-
-  rppg:
-    enabled: true
-    service:
-      enabled: false
 
   mdpnp:
     enabled: true
+    image: intel/hl-ai-mdpnp:1.0.0
+    replicas: 1
+    hostNetwork: true
+    containerPort: 7400
     service:
       enabled: false
 
+  dds-bridge:
+    enabled: true
+    image: intel/hl-ai-dds-bridge:1.0.0
+    replicas: 1
+    containerPort: 8082
+    service:
+      enabled: true
+      type: ClusterIP
+      port: 8082
+
   aggregator:
     enabled: true
+    image: intel/hl-ai-aggregator-service:1.0.0
+    replicas: 1
+    containerPort: 50051        # gRPC
     service:
       enabled: true
+      type: ClusterIP
+      port: 50051
 
-  ddsBridge:
+  ai-ecg:
     enabled: true
+    image: intel/hl-ai-ecg:1.0.0
+    replicas: 1
+    containerPort: 8000
     service:
       enabled: true
+      type: ClusterIP
+      port: 8000
+
+  pose:
+    enabled: true
+    image: intel/hl-ai-3dpose:1.0.0
+    replicas: 1
+    containerPort: 50051
+    service:
+      enabled: false
 
   metrics:
     enabled: true
+    image: intel/hl-ai-metrics-service:1.0.0
+    replicas: 1
+    containerPort: 9000
     service:
       enabled: true
-
-aiEcg:
-  image:
-    registry: intel
-    name: hl-ai-ecg
-    tag: "1.0.0"
-    pullPolicy: Never
-  replicas: 1
-  servicePort: 8000
-
-pose:
-  image:
-    registry: intel
-    name: hl-ai-3dpose
-    tag: "1.0.0"
-    pullPolicy: Never
-  replicas: 1
-
-rppg:
-  image:
-    registry: intel
-    name: hl-ai-rppg-service
-    tag: "1.0.0"
-    pullPolicy: Never
-  replicas: 1
-
-mdpnp:
-  image:
-    registry: intel
-    name: hl-ai-mdpnp
-    tag: "1.0.0"
-    pullPolicy: Never
-  replicas: 1
-  hostNetwork: true
-
-aggregator:
-  image:
-    registry: intel
-    name: hl-ai-aggregator-service
-    tag: "1.0.0"
-    pullPolicy: Never
-  replicas: 1
-  servicePort: 50051
-
-ddsBridge:
-  image:
-    registry: intel
-    name: hl-ai-dds-bridge
-    tag: "1.0.0"
-    pullPolicy: Never
-  replicas: 1
-  servicePort: 8082
-
-metrics:
-  image:
-    registry: intel
-    name: hl-ai-metrics-service
-    tag: "1.0.0"
-    pullPolicy: Never
-  replicas: 1
-  servicePort: 9000
+      type: ClusterIP
+      port: 9000

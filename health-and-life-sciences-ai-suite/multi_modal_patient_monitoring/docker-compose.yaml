@@ -169,36 +169,6 @@ services:
       - "/dev/dri:/dev/dri"
     group_add:
       - video
-  
-  # ai-ecg:
-  #   build:
-  #     context: ./services/ai-ecg/backend
-  #     args:
-  #       HTTP_PROXY: ${HTTP_PROXY}
-  #       HTTPS_PROXY: ${HTTPS_PROXY}
-  #       NO_PROXY: ${NO_PROXY}
-  #       http_proxy: ${HTTP_PROXY}
-  #       https_proxy: ${HTTPS_PROXY}
-  #       no_proxy: ${NO_PROXY}
-
-  #   image: intel/hl-ai-ecg:1.0.0
-  #   container_name: ai-ecg
-  #   network_mode: "host"
-
-  #   environment:
-  #     - ECG_DEVICE=NPU
-  #     - LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu
-
-  #   volumes:
-  #     - ./models:/models
-  #     - ./videos:/videos
-
-  #     # 🔥 ADD THESE
-  #     - /usr/lib/x86_64-linux-gnu/libze_loader.so.1:/usr/lib/x86_64-linux-gnu/libze_loader.so.1
-  #     - /usr/lib/x86_64-linux-gnu/libze_intel_gpu.so.1:/usr/lib/x86_64-linux-gnu/libze_intel_gpu.so.1
-
-  #   devices:
-  #     - "/dev/accel:/dev/accel"
 
 
   3dpose-estimation:
