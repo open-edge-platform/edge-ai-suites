@@ -60,7 +60,7 @@ The File Watcher service will need to be built and deployed. There is no pre-bui
 provided currently. It runs in the Windows® VM and is responsible for watching the configured
 folder for new contents. The new contents are added to the RAG context database which is then
 used by the RAG pipeline when responding to user queries. Refer to
-[Build File Watcher Service from Source](./how-to-build-from-source.md#build-file-watcher-service-from-source) to compile the file watcher service executable
+[Build File Watcher Service from Source](./get-started/build-from-source.md#build-file-watcher-service-from-source) to compile the file watcher service executable
 binary from source.
 
 In addition to the File Watcher service, the WebUI interface to access the RAG functionality
@@ -88,7 +88,7 @@ To use the application effectively, make sure that all the steps mentioned in th
 
   The File Watcher service must be compiled from source and deployed on the Windows® VM. It
   monitors a configured folder for new files and updates the RAG context database accordingly.
-  Refer to [Build File Watcher Service from Source](./how-to-build-from-source.md) for build
+  Refer to [Build File Watcher Service from Source](./get-started/build-from-source.md) for build
   instructions. Start the service on the Windows® VM after deployment.
 
 - Access the WebUI
@@ -110,7 +110,7 @@ To use the application effectively, make sure that all the steps mentioned in th
 
 ## Advanced Setup
 
-- [How to Build from Source and Deploy](./how-to-build-from-source.md): Guide to build the
+- [How to Build from Source and Deploy](./get-started/build-from-source.md): Guide to build the
   sample application services from source and docker compose deployment
 
 ## Other Documentation
