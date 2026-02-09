@@ -18,6 +18,7 @@ MODEL_MAP = {
 
 class ECGInferenceEngine:
     def __init__(self):
+        self.device = os.getenv("ECG_DEVICE", "GPU")
         self.core = Core()
         self.compiled_models = {}
         self.preproc = ECGPreprocessor()
@@ -42,7 +43,7 @@ class ECGInferenceEngine:
 
         if length not in self.compiled_models:
             model = self.core.read_model(MODEL_MAP[length])
-            self.compiled_models[length] = self.core.compile_model(model, "CPU")
+            self.compiled_models[length] = self.core.compile_model(model, self.device)
 
         return self.compiled_models[length]
 
