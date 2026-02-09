@@ -3,7 +3,7 @@
 ## Docker deployment
 ### Prerequisites
 
-Follow steps 1 and 2 mentioned in [Get-started](./get-started.md#set-up-and-first-use) guide if not already done.
+Follow steps 1 and 2 mentioned in [Get Started](./get-started.md#set-up-and-first-use) guide if not already done.
 
 ### Volume mount GPU config
 

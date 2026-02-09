@@ -1,4 +1,4 @@
-# Architecture Overview
+# How It Works
 
 The Image-Based Video Search Application is a modular reference implementation
 designed to help developers create vision-based search systems utilizing Vision
