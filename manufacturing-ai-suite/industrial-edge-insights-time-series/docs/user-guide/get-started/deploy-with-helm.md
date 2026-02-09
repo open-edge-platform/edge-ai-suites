@@ -4,8 +4,8 @@ This guide provides step-by-step instructions for deploying the Industrial Edge 
 
 ## Prerequisites
 
-- [System Requirements](../system-requirements.md)
--  K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
+- [System Requirements](./system-requirements.md)
+- K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to online tutorials (such as <https://adamtheautomator.com/install-kubernetes-ubuntu>) to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04.
 - For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 
@@ -16,16 +16,14 @@ This guide provides step-by-step instructions for deploying the Industrial Edge 
 
 Choose **one** of the following approaches to get the Helm charts:
 
-<!--hide_directive
-::::{tab-set}
-:::{tab-item} hide_directive--> **Wind Turbine Anomaly Detection**
-<!--hide_directive
-:sync: tab1
-hide_directive-->
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
+<!--hide_directive:sync: tab1hide_directive-->
 
 **Option A: Download the Helm charts**
 
 1. Download Helm chart:
+
    ```bash
    helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.0.0-<date>-weekly
     ```
@@ -34,6 +32,7 @@ hide_directive-->
     `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.0.0-20260120-weekly`
 
 2. Extract the Helm chart:
+
    ```bash
    tar -xvzf wind-turbine-anomaly-detection-sample-app-2026.0.0-<date>-weekly.tgz
    cd wind-turbine-anomaly-detection-sample-app
@@ -42,11 +41,13 @@ hide_directive-->
 **Option B: Generate Helm charts**
 
 1. Navigate to the source directory:
+
    ```bash
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series  # path relative to git clone folder
    ```
 
 2. Generate the charts:
+
    ```bash
    make gen_helm_charts app=wind-turbine-anomaly-detection
    cd helm/
@@ -54,16 +55,14 @@ hide_directive-->
 
 3. Proceed to Step 2 to configure your `values.yaml` file present in the current directory.
 
-<!--hide_directive
-:::
-:::{tab-item} hide_directive--> **Weld Anomaly Detection**
-<!--hide_directive
-:sync: tab2
-hide_directive-->
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+<!--hide_directive:sync: tab2hide_directive-->
 
 **Option A: Download the Helm charts**
 
 1. Download Helm chart:
+
    ```bash
    helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 2026.0.0-<date>-weekly
      ```
@@ -72,6 +71,7 @@ hide_directive-->
     `helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 2026.0.0-20260120-weekly`
 
 2. Extract the Helm chart:
+
    ```bash
    tar -xvzf weld-anomaly-detection-sample-app-2026.0.0-<date>-weekly.tgz
    cd weld-anomaly-detection-sample-app
@@ -82,11 +82,13 @@ hide_directive-->
 **Option B: Generate Helm charts**
 
 1. Navigate to the source directory:
+
     ```bash
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series  # path relative to git clone folder
     ```
 
 2. Generate the charts:
+
     ```bash
     make gen_helm_charts app=weld-anomaly-detection
     cd helm/
@@ -94,37 +96,33 @@ hide_directive-->
 
 3. Proceed to Step 2 to configure your `values.yaml` file present in the current directory.
 
-<!--hide_directive
-:::
-::::
-hide_directive-->
+<!--hide_directive:::
+::::hide_directive-->
 
 ## Step 2: Configure and update the environment variables
 
 1. Update the following fields in `values.yaml` file of the Helm chart
 
-    ``` sh
-    INFLUXDB_USERNAME:
-    INFLUXDB_PASSWORD:
-    VISUALIZER_GRAFANA_USER:
-    VISUALIZER_GRAFANA_PASSWORD:
-    HTTP_PROXY: # example: http_proxy: http://proxy.example.com:891
-    HTTPS_PROXY: # example: http_proxy: http://proxy.example.com:891
-    ```
+   ``` sh
+   INFLUXDB_USERNAME:
+   INFLUXDB_PASSWORD:
+   VISUALIZER_GRAFANA_USER:
+   VISUALIZER_GRAFANA_PASSWORD:
+   HTTP_PROXY: # example: http_proxy: http://proxy.example.com:891
+   HTTPS_PROXY: # example: http_proxy: http://proxy.example.com:891
+   ```
 
 ## Step 3: Install Helm charts
 
 > **Note:**
+>
 > 1. Uninstall the Helm charts if already installed.
 > 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in `values.yaml` file.
 
-<!--hide_directive
-::::{tab-set}
-:::{tab-item} hide_directive--> **Wind Turbine Anomaly Detection**
-<!--hide_directive
-:sync: tab1
-hide_directive-->
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
+<!--hide_directive:sync: tab1hide_directive-->
 
 To install Helm charts, use one of the following options:
 
@@ -142,21 +140,19 @@ To install Helm charts, use one of the following options:
 
 > **Note:**
 > To deploy with GPU support for inferencing, use the following command:
+>
 > ```bash
 > helm install ts-wind-turbine-anomaly \
 >   --set privileged_access_required=true \
 >   --set env.TELEGRAF_INPUT_PLUGIN=<input_plugin> \
 >   . -n ts-sample-app --create-namespace
 > ```
+>
 > The `privileged_access_required=true` setting enables Time Series Analytics Microservice access to GPU device through `/dev/dri`.
 
-<!--hide_directive
-:::
-:::{tab-item} hide_directive--> **Weld Anomaly Detection**
-<!--hide_directive
-:sync: tab2
-hide_directive-->
-
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+<!--hide_directive:sync: tab2hide_directive-->
 
 To install Helm charts, run the following command:
 
@@ -164,87 +160,77 @@ To install Helm charts, run the following command:
 helm install ts-weld-anomaly . -n ts-sample-app --create-namespace
 ```
 
-<!--hide_directive
-:::
-::::
-hide_directive-->
+<!--hide_directive:::
+::::hide_directive-->
 
 ## Step 4: Copy the UDF package for Helm deployment to Time Series Analytics Microservice
 
-<!--hide_directive
-::::{tab-set}
-:::{tab-item} hide_directive--> **Wind Turbine Anomaly Detection**
-<!--hide_directive
-:sync: tab
-hide_directive-->
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
+<!--hide_directive:sync: tab1hide_directive-->
 
 To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
 1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config`.
 
-    >
-    > - time-series-analytics-config/
-    >     - models/
-    >         - windturbine_anomaly_detector.pkl
-    >     - tick_scripts/
-    >         - windturbine_anomaly_detector.tick
-    >     - udfs/
-    >         - requirements.txt
-    >         - windturbine_anomaly_detector.py
-    >
+   ```text
+   - time-series-analytics-config/
+       - models/
+           - windturbine_anomaly_detector.pkl
+       - tick_scripts/
+           - windturbine_anomaly_detector.tick
+       - udfs/
+           - requirements.txt
+           - windturbine_anomaly_detector.py
+   ```
 
 2. Copy your new UDF package (using the wind turbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
-    ```sh
-    export SAMPLE_APP="wind-turbine-anomaly-detection"
-    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config # path relative to git clone folder
-    mkdir -p $SAMPLE_APP
-    cp -r models tick_scripts udfs $SAMPLE_APP/.
 
-    POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
+   ```sh
+   export SAMPLE_APP="wind-turbine-anomaly-detection"
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config # path relative to git clone folder
+   mkdir -p $SAMPLE_APP
+   cp -r models tick_scripts udfs $SAMPLE_APP/.
 
-    kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
-    ```
+   POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
 
-<!--hide_directive
+   kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
+   ```
 
-:::
-:::{tab-item} hide_directive--> **Weld Anomaly Detection**
-<!--hide_directive
-:sync: tab2
-hide_directive-->
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+<!--hide_directive:sync: tab2hide_directive-->
 
 To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
 1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config`.
 
-    >
-    > - time-series-analytics-config/
-    >     - models/
-    >         - weld_anomaly_detector.cb
-    >     - tick_scripts/
-    >         - weld_anomaly_detector.tick
-    >     - udfs/
-    >         - requirements.txt
-    >         - weld_anomaly_detector.py
-    >
+   ```text
+   - time-series-analytics-config/
+       - models/
+           - weld_anomaly_detector.cb
+       - tick_scripts/
+           - weld_anomaly_detector.tick
+       - udfs/
+           - requirements.txt
+           - weld_anomaly_detector.py
+   ```
 
 2. Copy your new UDF package (using the weld anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
 
-    ```sh
-    export SAMPLE_APP="weld-anomaly-detection"
-    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config # path relative to git clone folder
-    mkdir -p $SAMPLE_APP
-    cp -r models tick_scripts udfs $SAMPLE_APP/.
+   ```sh
+   export SAMPLE_APP="weld-anomaly-detection"
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config # path relative to git clone folder
+   mkdir -p $SAMPLE_APP
+   cp -r models tick_scripts udfs $SAMPLE_APP/.
 
-    POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
+   POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
 
-    kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
-    ```
+   kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
+   ```
 
-<!--hide_directive
-:::
-::::
-hide_directive-->
+<!--hide_directive:::
+::::hide_directive-->
 
 > **Note:**
 > Run the commands only after performing the Helm install.
@@ -252,6 +238,7 @@ hide_directive-->
 ## Step 5: Activate the New UDF Deployment Package
 
 > **NOTE**: To activate the UDF inferencing on GPU, additionally run the following command as a prerequisite before activating the UDF deployment package:
+>
 > ```sh
 > curl -k -X 'POST' \
 > 'https://<HOST_IP>:30001/ts-api/config' \
@@ -260,9 +247,11 @@ hide_directive-->
 > -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json with device
 >     value updated to gpu from cpu>'
 > ```
+>
 > GPU Inferencing is supported only for `Wind Turbine Anomaly Detection` sample app
 
 Run the following command to activate the UDF deployment package:
+
 ```sh
 curl -k -X 'GET' \
   'https://<HOST_IP>:30001/ts-api/config?restart=true' \
@@ -273,51 +262,43 @@ curl -k -X 'GET' \
 
 Follow the verification steps in the [Get Started guide](../get-started.md#verify-the-output-results).
 
-
 ## Uninstall Helm Charts
 
-<!--hide_directive
-::::{tab-set}
-:::{tab-item} hide_directive--> **Wind Turbine Anomaly Detection**
-<!--hide_directive
-:sync: tab1
-hide_directive-->
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
+<!--hide_directive:sync: tab1hide_directive-->
 
 ```sh
 helm uninstall ts-wind-turbine-anomaly -n ts-sample-app
 kubectl get all -n ts-sample-app # It may take a few minutes for all application resources to be cleaned up.
 ```
 
-<!--hide_directive
-:::
-:::{tab-item} hide_directive--> **Weld Anomaly Detection**
-<!--hide_directive
-:sync: tab2
-hide_directive-->
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+<!--hide_directive:sync: tab2hide_directive-->
 
 ```sh
 helm uninstall ts-weld-anomaly -n ts-sample-app
 kubectl get all -n ts-sample-app # It may take a few minutes for all application resources to be cleaned up.
 ```
 
-<!--hide_directive
-:::
-::::
-hide_directive-->
+<!--hide_directive:::
+::::hide_directive-->
 
 ## Configure Alerts in Time Series Analytics Microservice
 
-To configure alerts in Time Series Analytics Microservice, follow the steps in [Time Series Analytics Helm Deployment](./how-to-configure-alerts.md#helm-deployment).
+To configure alerts in Time Series Analytics Microservice, follow the steps in [Time Series Analytics Helm Deployment](../how-to-guides/configure-alerts.md#helm-deployment).
 
 ## Deploy the Application with a Custom UDF
 
-To deploy the application with a custom UDF, follow the steps in [Custom UDF Helm Deployment](./how-to-configure-custom-udf.md#helm-deployment).
+To deploy the application with a custom UDF, follow the steps in [Custom UDF Helm Deployment](../how-to-guides/configure-custom-udf.md#helm-deployment).
 
 ## Troubleshooting
 
 - Check pod details or container logs to diagnose failures:
-    ```sh
-    kubectl get pods -n ts-sample-app
-    kubectl describe pod <pod_name> -n ts-sample-app # Shows details of the pod
-    kubectl logs -f <pod_name> -n ts-sample-app # Shows logs of the container in the pod
-    ```
+
+  ```sh
+  kubectl get pods -n ts-sample-app
+  kubectl describe pod <pod_name> -n ts-sample-app # Shows details of the pod
+  kubectl logs -f <pod_name> -n ts-sample-app # Shows logs of the container in the pod
+  ```

@@ -67,6 +67,8 @@ You can either generate or download the Helm charts.
    MTX_WEBRTCICESERVERS2_0_USERNAME:
    MTX_WEBRTCICESERVERS2_0_PASSWORD:
    HOST_IP:  # IP address of server where DL Streamer Pipeline Server is running
+   S3_STORAGE_USERNAME:
+   S3_STORAGE_PASSWORD:
    ```
 
 ## Step 3: Install Helm charts
@@ -161,10 +163,16 @@ curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_d
             "type": "mqtt",
             "topic": "vision_weld_defect_classification"
         },
-        "frame": {
-            "type": "webrtc",
-            "peer-id": "samplestream"
-        }
+        "frame": [{
+                            "type": "webrtc",
+                            "peer-id": "samplestream"
+                        },
+                        {
+                            "type": "s3_write",
+                            "bucket": "dlstreamer-pipeline-results",
+                            "folder_prefix": "weld-defect-classification",
+                            "block": false
+                        }]
     },
     "parameters": {
         "classification-properties": {

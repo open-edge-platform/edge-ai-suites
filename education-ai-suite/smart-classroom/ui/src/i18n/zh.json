@@ -16,7 +16,7 @@
     "uploading": "正在上传转录…",
     "generatingSummary": "正在生成摘要",
     "generatingMindmap": "正在生成思维导图",
-    "streamingSummary": "正在传输摘要…",
+    "streamingSummary": "正在传输摘要",
     "loadingTranscript": "正在加载转录",
     "analyzingAudio": "正在分析音频",
     "summaryReady": "摘要准备就绪",
@@ -162,8 +162,8 @@
   },
   "classStatistics": {
     "studentCount": "学生人数",
-    "standCount": "汇总的样地数量",
-    "raiseUpCount": "汇总举手次数",
+    "standCount": "累计站立次数",
+    "raiseUpCount": "累计举手次数",
     "standReIdData": "站立 ReID 数据",
     "studentId": "学生 ID",
     "count": "次数"

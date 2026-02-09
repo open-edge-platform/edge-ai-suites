@@ -138,6 +138,8 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
     - Use link `https://<host_ip>:3000` to launch Grafana from browser (preferably, chrome browser)
 
+    > **Note:** Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
+
     - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
       in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.
 
