@@ -9,6 +9,10 @@ DDS_BRIDGE_PATH := services/dds-bridge
 DOCKER_COMPOSE := docker-compose.yaml
 REGISTRY ?= true
 
+# Detect host IP for UI/backend communication (first non-loopback address)
+HOST_IP ?= $(shell hostname -I | awk '{print $$1}')
+export HOST_IP
+
 
 init-mdpnp:
 	@echo "Initializing mdpnp submodule..."
@@ -25,10 +29,16 @@ build-dds-bridge:
 run:
 	@if [ "$(REGISTRY)" = "true" ]; then \
 		echo "##############Using registry mode - fetching all images..."; \
+		echo "Using HOST_IP=$(HOST_IP) for UI backend"; \
 		docker compose -f $(DOCKER_COMPOSE) --env-file configs/device.env up -d; \
 	else \
+		echo "Using HOST_IP=$(HOST_IP) for UI backend"; \
 		docker compose -f $(DOCKER_COMPOSE) --env-file configs/device.env up --build -d; \
 	fi
+	@echo "==============================================="
+	@echo "Multi-modal patient monitoring application is starting up."
+	@echo "Please access the UI at:       http://$(HOST_IP):3000"
+	@echo "==============================================="
 
 down:
 	@echo "Tearing down the services..."
