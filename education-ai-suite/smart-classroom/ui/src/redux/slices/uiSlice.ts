@@ -3,7 +3,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 export type Tab = 'transcripts' | 'summary' | 'mindmap';
 export type ProcessingMode = 'audio' | 'video-only' | 'microphone' | null;
 export type AudioStatus = 'idle' | 'checking' | 'ready' | 'recording' | 'processing' | 'transcribing' | 'summarizing' | 'mindmapping' | 'complete' | 'error' | 'no-devices';
-export type VideoStatus = 'idle' | 'ready' | 'starting' | 'streaming' | 'stopping' | 'failed' | 'complete' | 'no-config';
+export type VideoStatus = 'idle' | 'ready' | 'starting' | 'streaming' | 'stopping' | 'failed' | 'completed' | 'no-config';
  
 export interface UIState {
   aiProcessing: boolean;
@@ -39,6 +39,8 @@ export interface UIState {
   justStoppedRecording: boolean;
   videoAnalyticsStopping: boolean;
   hasUploadedVideoFiles: boolean;
+  monitoringActive: boolean;
+  videoPlaybackMode: boolean;
 }
  
 const initialState: UIState = {
@@ -75,6 +77,8 @@ const initialState: UIState = {
   justStoppedRecording: false,
   videoAnalyticsStopping: false,
   hasUploadedVideoFiles: false,
+  monitoringActive: false,
+  videoPlaybackMode: false,
 };
  
 const uiSlice = createSlice({
@@ -246,7 +250,7 @@ const uiSlice = createSlice({
  
     stopStream(state) {
       state.activeStream = null;
-      state.videoStatus = 'complete';
+      state.videoStatus = 'completed';
     },
  
     setVideoAnalyticsLoading(state, action: PayloadAction<boolean>) {
@@ -261,7 +265,7 @@ const uiSlice = createSlice({
       if (action.payload) {
         state.videoStatus = 'streaming';
         state.videoAnalyticsLoading = false;
-      } else if (!state.videoAnalyticsLoading) {
+      } else if (!state.videoAnalyticsLoading && state.videoStatus !== 'completed') {
         state.videoStatus = 'ready';
       }
     },
@@ -339,7 +343,15 @@ const uiSlice = createSlice({
         state.videoStatus = 'ready';
       }
     },
-    
+
+    setMonitoringActive: (state, action) => {
+      state.monitoringActive = action.payload;
+    },
+    setVideoPlaybackMode(state, action: PayloadAction<boolean>) {
+      state.videoPlaybackMode = action.payload;
+    },
+
+
     resetFlow(state) {
       const preservedAudioDevices = state.hasAudioDevices;
       const preservedAudioDevicesLoading = state.audioDevicesLoading;
@@ -407,6 +419,8 @@ export const {
   setVideoAnalyticsStopping,
   startTranscription,
   setHasUploadedVideoFiles,
+  setMonitoringActive,
+  setVideoPlaybackMode
 } = uiSlice.actions;
  
 export default uiSlice.reducer;

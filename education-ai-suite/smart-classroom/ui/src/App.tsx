@@ -9,13 +9,13 @@ import SettingsForm from './components/Modals/SettingsForm'; // Import your exis
 import './App.css';
 import MetricsPoller from './components/common/MetricsPoller';
 import { getSettings, pingBackend } from './services/api';
+import { useVideoPipelineMonitor } from "../src/redux/videoMonitor";
 
 const App: React.FC = () => {
   const [projectName, setProjectName] = useState<string>('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
   const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
-
+  useVideoPipelineMonitor();
   const checkBackendHealth = async () => {
     try {
       const isHealthy = await pingBackend();
