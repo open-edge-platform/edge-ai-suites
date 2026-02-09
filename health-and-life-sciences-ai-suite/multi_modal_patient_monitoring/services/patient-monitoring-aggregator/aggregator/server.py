@@ -294,6 +294,20 @@ async def start_workloads(target: str = Query("dds-bridge", description="Which w
         else:
             results["rppg"] = _call(f"{RPPG_CONTROL_URL}/start")
 
+    # Schedule automatic stop after 60 seconds (instead of 300)
+    window_seconds = 300.0
+    now = time.time()
+    app.state.streaming_lock_until = now + window_seconds
+
+    # Cancel any previous auto-stop task before creating a new one
+    existing_task = getattr(app.state, "auto_stop_task", None)
+    if existing_task is not None:
+        existing_task.cancel()
+
+    app.state.auto_stop_task = asyncio.create_task(
+        _auto_stop_after(window_seconds, targets)
+    )
+
     return {
         "status": "ok",
         "results": results,

@@ -182,26 +182,39 @@ services:
           http_proxy: ${HTTP_PROXY}
           https_proxy: ${HTTPS_PROXY}
           no_proxy: ${NO_PROXY}
+          INSTALL_DRIVER_VERSION: "25.31.34666"
       image: intel/hl-ai-3dpose:1.0.0
       container_name: 3dpose-estimation
       network_mode: "host"
       environment:
         - VIDEO_FILE=/videos/3d-pose/face-demographics-walking.mp4
         - MODEL_PATH=/models/3d-pose/human-pose-estimation-3d-0001.xml
-        - DEVICE=CPU
-        #- POSE_3D_DEVICE=${POSE_3D_DEVICE}
         - AGGREGATOR_ADDRESS=localhost:50051
+        - SOURCE_ID=3d-pose-camera-1
+        - DEVICE_CONFIG_PATH=/app/configs/device.yaml
+        - DEPLOYMENT_ENV=production
+        - POSE_3D_DEVICE=${POSE_3D_DEVICE:-GPU}
         - CONTROL_PORT=8083
+        - HTTP_PROXY=${HTTP_PROXY}
+        - HTTPS_PROXY=${HTTPS_PROXY}
+        - NO_PROXY=${NO_PROXY}
+        - http_proxy=${HTTP_PROXY}
+        - https_proxy=${HTTPS_PROXY}
+        - no_proxy=${NO_PROXY}
       env_file:
-        - ./configs/device.env  
+        - ./configs/device.env
       depends_on:
         patient-monitoring-assets:
           condition: service_completed_successfully
         patient-monitoring-aggregator:
           condition: service_started
       volumes:
-      - ./models:/models
-      - ./videos:/videos  
+        - ./models:/models
+        - ./videos:/videos 
+      devices:
+        - "/dev/dri:/dev/dri"
+      group_add:
+        - video
   
   rppg:
     build:
