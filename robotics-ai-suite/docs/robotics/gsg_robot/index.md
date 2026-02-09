@@ -197,12 +197,6 @@ This section explains the procedure to configure the APT package manager to use 
    echo -e "Package: intel-oneapi-runtime-*\nPin: version 2025.3.*\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/oneapi > /dev/null
    ```
 
-   > **Note:** When operating behind a proxy you will need to add the proxy details to the ``gpg`` command.
-   > For Example:
-   > ```bash
-   > sudo -E gpg --no-default-keyring --keyring /usr/share/keyrings/realsense-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --keyserver-options http-proxy=http://<proxy-server>:<port> --recv-keys F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
-   > ```
-
 7. For latest Intel silicon support, add the Canonical ``kisak`` and ``kobuk`` Private Package Archives (PPA):
 
    ::::{tab-set}
@@ -302,13 +296,45 @@ The following steps will install the OpenVINO™ packages:
    sudo apt update
    ```
 
-2. Install the ``debconf-utilities``:
+2. Several Autonomous Mobile Robot tutorials allow you to perform OpenVINO™ inference
+   on the integrated GPU device of Intel® processors. To enable this feature, install
+   the Intel® Graphics Compute Runtime with the following command:
+
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
+
+   ```bash
+   sudo apt install -y libze1 libze-intel-gpu1
+   ```
+
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
+
+   Download and install Intel® Graphics Compute Runtime and Level Zero packages:
+
+   ```bash
+   cd "${HOME}"
+   wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.10.8/intel-igc-core-2_2.10.8+18926_amd64.deb
+   wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.10.8/intel-igc-opencl-2_2.10.8+18926_amd64.deb
+   wget https://github.com/oneapi-src/level-zero/releases/download/v1.22.4/level-zero_1.22.4+u22.04_amd64.deb
+   sudo apt install -y libze-intel-gpu1
+   sudo apt install -y ./intel-igc-core-2_2.10.8+18926_amd64.deb
+   sudo apt install -y ./intel-igc-opencl-2_2.10.8+18926_amd64.deb
+   sudo apt install -y ./level-zero_1.22.4+u22.04_amd64.deb
+   ```
+
+   :::
+   ::::
+
+3. Install the ``debconf-utilities``:
 
    ```bash
    sudo apt install debconf-utils
    ```
 
-3. Clear any previous installation configurations:
+4. Clear any previous installation configurations:
 
    ::::{tab-set}
    :::{tab-item} **Jazzy**
@@ -333,13 +359,13 @@ The following steps will install the OpenVINO™ packages:
    :::
    ::::
 
-4. Install the OpenVINO™ Runtime:
+5. Install the OpenVINO™ Runtime:
 
    ```bash
    sudo apt install openvino
    ```
 
-5. Install the the ROS 2 OpenVINO™ Toolkit:
+6. Install the the ROS 2 OpenVINO™ Toolkit:
 
    ::::{tab-set}
    :::{tab-item} **Jazzy**
@@ -368,18 +394,6 @@ The following steps will install the OpenVINO™ packages:
 
    ![configure_ros-2-openvino-node](../images/configure_ros-humble-openvino-node.png)
 
-6. Several Autonomous Mobile Robot tutorials allow you to perform OpenVINO™ inference
-   on the integrated GPU device of Intel® processors. To enable this feature, install
-   the Intel® Graphics Compute Runtime with the following command:
-
-   ```bash
-   sudo apt install -y libze1 libze-intel-gpu1
-   ```
-
-   > **Note:** While you may encounter GPU driver installation guides that involve
-   > downloading ``*.deb`` files for manual installation, this method does not support
-   > automatic update. Therefore, it is advisable to install packages from an APT package
-   > feed for easier updates, as described above.
 
 ### 4.2 OpenVINO™ Re-Installation and Troubleshooting
 
@@ -426,19 +440,35 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
 
    ![apt-update](../images/download/apt-update.png)
 
-2. Follow the instructions on the following page to install Gazebo (if needed):
+2. Follow the instructions to install Gazebo:
 
    ::::{tab-set}
    :::{tab-item} **Jazzy**
    :sync: jazzy
 
-   [Install Gazebo](https://gazebosim.org/docs/harmonic/install_ubuntu/)
+   ```bash
+   sudo apt-get update
+   sudo apt-get install curl lsb-release gnupg
+
+   sudo -E curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+   sudo apt-get update
+   sudo apt-get install gz-harmonic
+   ```
 
    :::
    :::{tab-item}  **Humble**
    :sync: humble
 
-   > **Note:** No additional installation needed for ROS 2 Humble
+   ```bash
+   sudo apt-get update
+   sudo apt-get install curl lsb-release gnupg
+
+   sudo -E add-apt-repository ppa:openrobotics/gazebo11-gz-cli
+   sudo -E curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+   sudo apt-get update
+   ```
 
    :::
    ::::
@@ -483,15 +513,6 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
    :::
    :::{tab-item} **Humble**
    :sync: humble
-
-   To install Robotics SDK on ROS Humble, you have to install Gazebo 11 from OpenRobotics PPA first:
-
-   ```bash
-   sudo add-apt-repository ppa:openrobotics/gazebo11-gz-cli
-   sudo apt update
-   ```
-
-   Then, install Robotics SDK:
 
    ```bash
    sudo apt install ros-humble-robotics-sdk
@@ -613,7 +634,70 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
      (``ros-jazzy-collab-slam-lze``) as described above.
 
 
-## 6. Install Intel® GPU Driver on Intel® Core™ Ultra Processors
+## 6. Install RealSense™ Camera SDK
+
+RealSense™ SDK is a cross-platform library for RealSense™
+depth cameras. The SDK allows depth and color streaming, and provides
+intrinsic and extrinsic calibration information. The library also offers
+synthetic streams (pointcloud, depth aligned to color and vise-versa), and a
+built-in support for record and playback of streaming sessions.
+
+RealSense™ SDK includes support for ROS and ROS 2, allowing you
+access to commonly used robotic functionality with ease.
+
+1. Register the server’s public key:
+
+   ```bash
+   sudo mkdir -p /etc/apt/keyrings
+   curl -sSf https://librealsense.intel.com/Debian/librealsense.pgp | sudo tee /etc/apt/keyrings/librealsense.pgp > /dev/null
+   ```
+
+2. Add RealSense to the list of repositories:
+
+   ```bash
+   echo "deb [signed-by=/etc/apt/keyrings/librealsense.pgp] https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/librealsense.list
+   ```
+
+3. Update your APT repository caches after setting up the repository:
+
+   ```bash
+   sudo apt update
+   ```
+
+4. Configure APT preferences to pin the RealSense version:
+
+   This step pins the RealSense SDK to validated versions that ensure compatibility with ROS 2 and the tutorials in this documentation. This prevents automatic upgrades during ``apt upgrade`` that could introduce compatibility issues.
+
+   :::::{tab-set}
+   ::::{tab-item} **Jazzy**
+   :sync: jazzy
+
+   ```bash
+   echo -e "Package: librealsense2*\nPin: version 2.56.5-0~realsense.17055\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense
+   ```
+
+   ::::
+   ::::{tab-item} **Humble**
+   :sync: humble
+
+   ```bash
+   echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense
+   ```
+
+   ::::
+   :::::
+
+5. Install the RealSense drivers and libraries:
+
+   ```bash
+   sudo apt install librealsense2-dkms
+   sudo apt install librealsense2
+   ```
+
+   > **Note:** The pinned version ensures stability across tutorials. To upgrade in the future, update the version in `/etc/apt/preferences.d/librealsense` before installing.
+
+
+## 7. Install Intel® GPU Driver on Intel® Core™ Ultra Processors
 
 If you want to run OpenVINO™ inferencing applications on the GPU device
 of Intel® Core™ Ultra processors, you need to install the Intel® GPU driver.
@@ -622,9 +706,24 @@ this step.
 
 1. Install mesa packages from ``kisak`` PPA:
 
+   :::::{tab-set}
+   ::::{tab-item} **Jazzy**
+   :sync: jazzy
+
    ```bash
    sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-libgallium mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
    ```
+
+   ::::
+   ::::{tab-item} **Humble**
+   :sync: humble
+
+   ```bash
+   sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
+   ```
+
+   ::::
+   :::::
 
 2. Install the latest Linux kernel:
 
@@ -646,7 +745,7 @@ this step.
    ```
 
 
-## 7. Install the Intel® NPU Driver on Intel® Core™ Ultra Processors
+## 8. Install the Intel® NPU Driver on Intel® Core™ Ultra Processors
 
 If you want to run OpenVINO™ inferencing applications on the NPU device
 of Intel® Core™ Ultra processors, you need to install the Intel® NPU driver.
@@ -728,7 +827,7 @@ To install the Intel® NPU driver, complete the following steps:
    ```
 
 
-## 8. Reboot to load latest Linux kernel and firmware
+## 9. Reboot to load latest Linux kernel and firmware
 
 ```bash
 sudo reboot

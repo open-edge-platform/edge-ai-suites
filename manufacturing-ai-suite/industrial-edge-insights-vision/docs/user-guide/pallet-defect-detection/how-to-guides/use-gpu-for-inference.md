@@ -52,4 +52,4 @@ The pipeline `pallet_defect_detection_gpu` contains GPU specific elements and us
 ./sample_start.sh -p pallet_defect_detection_gpu
 ```
 
-Go to grafana as explained in [get-started](./get-started.md) to view the dashboard.
+Go to grafana as explained in [get-started](../get-started.md) to view the dashboard.

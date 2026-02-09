@@ -11,7 +11,6 @@ import json
 import logging
 import time
 from typing import Callable, Optional
-from contextlib import asynccontextmanager
 
 import paho.mqtt.client as mqtt
 
@@ -50,7 +49,9 @@ class MQTTSubscriber:
     def _on_connect(self, client, userdata, flags, rc, properties=None):
         """Callback when connected to MQTT broker."""
         if rc == 0:
-            logger.info(f"Connected to MQTT broker at {self.broker_host}:{self.broker_port}")
+            logger.info(
+                f"Connected to MQTT broker at {self.broker_host}:{self.broker_port}"
+            )
             self._connected = True
             self._reconnect_delay = 1
             # Re-subscribe to all registered topics
@@ -71,12 +72,11 @@ class MQTTSubscriber:
         try:
             topic = msg.topic
             payload = msg.payload.decode("utf-8")
-            
+
             # Put message in queue for async processing
             if self._loop:
                 asyncio.run_coroutine_threadsafe(
-                    self._message_queue.put((topic, payload, time.time())),
-                    self._loop
+                    self._message_queue.put((topic, payload, time.time())), self._loop
                 )
         except Exception as e:
             logger.error(f"Error processing MQTT message: {e}")
@@ -92,22 +92,24 @@ class MQTTSubscriber:
             protocol=mqtt.MQTTv311,
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
         )
-        
+
         self._client.on_connect = self._on_connect
         self._client.on_disconnect = self._on_disconnect
         self._client.on_message = self._on_message
 
         try:
-            logger.info(f"Connecting to MQTT broker at {self.broker_host}:{self.broker_port}")
+            logger.info(
+                f"Connecting to MQTT broker at {self.broker_host}:{self.broker_port}"
+            )
             self._client.connect_async(self.broker_host, self.broker_port, keepalive=60)
             self._client.loop_start()
-            
+
             # Wait for connection with timeout
             for _ in range(50):  # 5 seconds timeout
                 if self._connected:
                     break
                 await asyncio.sleep(0.1)
-            
+
             if not self._connected:
                 logger.warning("MQTT connection timeout, will retry in background")
         except Exception as e:
@@ -123,29 +125,31 @@ class MQTTSubscriber:
             self._connected = False
             logger.info("Disconnected from MQTT broker")
 
-    def subscribe_to_run(self, run_id: str, callback: Callable[[str, dict, float], None]):
+    def subscribe_to_run(
+        self, run_id: str, callback: Callable[[str, dict, float], None]
+    ):
         """
         Subscribe to metadata for a specific run.
-        
+
         Args:
             run_id: The run identifier
             callback: Function to call with (run_id, data, received_at) when message arrives
         """
         topic = self._get_topic_for_run(run_id)
-        
+
         if topic not in self._callbacks:
             self._callbacks[topic] = []
             if self._client and self._connected:
                 self._client.subscribe(topic)
                 logger.info(f"Subscribed to topic: {topic}")
-        
+
         self._callbacks[topic].append(callback)
         logger.info(f"Registered callback for run {run_id}")
 
     def unsubscribe_from_run(self, run_id: str):
         """Unsubscribe from metadata for a specific run."""
         topic = self._get_topic_for_run(run_id)
-        
+
         if topic in self._callbacks:
             del self._callbacks[topic]
             if self._client and self._connected:
@@ -160,13 +164,13 @@ class MQTTSubscriber:
         while True:
             try:
                 topic, payload, received_at = await self._message_queue.get()
-                
+
                 # Parse the payload
                 try:
                     raw_data = json.loads(payload)
                 except json.JSONDecodeError:
                     raw_data = {"raw": payload}
-                
+
                 # Extract the metadata field if present (pipeline server wraps data in metadata)
                 # Expected format: {"metadata": {...}, "blob": ""}
                 # We want to send the contents of metadata to the frontend
@@ -174,12 +178,12 @@ class MQTTSubscriber:
                     data = raw_data["metadata"]
                 else:
                     data = raw_data
-                
+
                 # Extract run_id from topic
                 # Topic format: {prefix}/{run_id}
                 parts = topic.split("/")
                 run_id = parts[-1] if len(parts) > 1 else topic
-                
+
                 # Dispatch to callbacks
                 callbacks = self._callbacks.get(topic, [])
                 for callback in callbacks:
@@ -187,7 +191,7 @@ class MQTTSubscriber:
                         callback(run_id, data, received_at)
                     except Exception as e:
                         logger.error(f"Error in callback for topic {topic}: {e}")
-                
+
             except asyncio.CancelledError:
                 break
             except Exception as e:
@@ -208,21 +212,23 @@ _message_processor_task: Optional[asyncio.Task] = None
 async def get_mqtt_subscriber() -> MQTTSubscriber:
     """Get or create the global MQTT subscriber instance."""
     global _mqtt_subscriber, _message_processor_task
-    
+
     if _mqtt_subscriber is None:
         _mqtt_subscriber = MQTTSubscriber()
         await _mqtt_subscriber.connect()
-        
+
         # Start the message processor
-        _message_processor_task = asyncio.create_task(_mqtt_subscriber.process_messages())
-    
+        _message_processor_task = asyncio.create_task(
+            _mqtt_subscriber.process_messages()
+        )
+
     return _mqtt_subscriber
 
 
 async def shutdown_mqtt_subscriber():
     """Shutdown the global MQTT subscriber."""
     global _mqtt_subscriber, _message_processor_task
-    
+
     if _message_processor_task:
         _message_processor_task.cancel()
         try:
@@ -230,7 +236,7 @@ async def shutdown_mqtt_subscriber():
         except asyncio.CancelledError:
             pass
         _message_processor_task = None
-    
+
     if _mqtt_subscriber:
         await _mqtt_subscriber.disconnect()
         _mqtt_subscriber = None

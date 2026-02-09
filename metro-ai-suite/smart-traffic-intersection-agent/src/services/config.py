@@ -6,6 +6,7 @@ import os
 import json
 import hashlib
 from typing import Dict, List, Optional
+from pathlib import Path
 import structlog
 
 logger = structlog.get_logger(__name__)
@@ -27,6 +28,7 @@ class ConfigService:
     
     def __init__(self):
         """Initialize configuration service."""
+        self._config_dir = Path(__file__).resolve().parent.parent / "config"
         self.config = self._load_config()
         logger.info("Configuration service initialized", 
                    intersection_id=self.get_intersection_id())
@@ -34,32 +36,53 @@ class ConfigService:
     def _load_config(self) -> dict:
         """Load configuration from environment and file."""
         config = {}
-        
-        # Load from config file if specified
-        config_file = os.getenv("TRAFFIC_INTELLIGENCE_CONFIG", "config/traffic_agent.json")
-        if os.path.exists(config_file):
-            try:
-                with open(config_file, 'r') as f:
+
+        agent_config_file = self._config_dir / "traffic_agent.json"
+        deployment_config_file = self._config_dir / "deployment_instance.json"
+
+        logger.info("Loading configuration files",
+                    agent_config_path=str(agent_config_file),
+                    deployment_config_path=str(deployment_config_file))
+
+        try:
+            if agent_config_file.exists():
+                with open(agent_config_file, 'r') as f:
                     file_config = json.load(f)
                 config.update(file_config)
-                logger.info("Loaded configuration from file", path=config_file)
-            except Exception as e:
-                logger.warning("Failed to load config file", path=config_file, error=str(e))
+                logger.info("Loaded configuration from file", path=agent_config_file)
+            else:
+                logger.error("Traffic agent config file does not exist", path=agent_config_file)
+                raise FileNotFoundError(f"Config file not found: {agent_config_file}")
+
+            # Create key for storing intersection/instance deployments specific configs
+            if "intersection" not in config:
+                    config["intersection"] = {}
+            
+            # Load deployment specific configuration from deployment_instance.json
+            if deployment_config_file.exists():
+                with open(deployment_config_file, 'r') as f:
+                    deployment_config = json.load(f)
+                config["intersection"].update(deployment_config)
+                logger.info("Loaded deployment configuration from file", path=deployment_config_file)
+            else:
+                logger.error("Deployment instance config file does not exist", path=deployment_config_file)
+                raise FileNotFoundError(f"Config file not found: {deployment_config_file}")
+            
+            # Override the deployment configs with environment variables if set
+            if os.getenv("INTERSECTION_NAME"):
+                config["intersection"]["name"] = os.getenv("INTERSECTION_NAME")
+            if os.getenv("INTERSECTION_LATITUDE"):
+                config["intersection"]["latitude"] = float(os.getenv("INTERSECTION_LATITUDE", 0.0))
+            if os.getenv("INTERSECTION_LONGITUDE"):
+                config["intersection"]["longitude"] = float(os.getenv("INTERSECTION_LONGITUDE", 0.0))
         
-        # Override with environment variables
-        # Intersection configuration
-        if os.getenv("INTERSECTION_NAME"):
-            if "intersection" not in config:
-                config["intersection"] = {}
-            config["intersection"]["name"] = os.getenv("INTERSECTION_NAME")
-        if os.getenv("INTERSECTION_LATITUDE"):
-            if "intersection" not in config:
-                config["intersection"] = {}
-            config["intersection"]["latitude"] = float(os.getenv("INTERSECTION_LATITUDE"))
-        if os.getenv("INTERSECTION_LONGITUDE"):
-            if "intersection" not in config:
-                config["intersection"] = {}
-            config["intersection"]["longitude"] = float(os.getenv("INTERSECTION_LONGITUDE"))
+        # handle error while typecasting to float or some generic error
+        except ValueError as e:
+            logger.error("Invalid value in config file(s) or environment variables", error=str(e))
+            raise e
+        except Exception as e:
+            logger.error("Error occurred while handling config file(s) or environment variables", error=str(e))
+            raise e
         
         # MQTT configuration
         if os.getenv("MQTT_HOST"):
@@ -97,10 +120,10 @@ class ConfigService:
             if "vlm" not in config:
                 config["vlm"] = {}
             config["vlm"]["base_url"] = os.getenv("VLM_BASE_URL")
-        if os.getenv("VLM_MODEL"):
+        if os.getenv("VLM_MODEL_NAME"):
             if "vlm" not in config:
                 config["vlm"] = {}
-            config["vlm"]["model"] = os.getenv("VLM_MODEL")
+            config["vlm"]["model"] = os.getenv("VLM_MODEL_NAME")
         if os.getenv("VLM_TIMEOUT_SECONDS"):
             if "vlm" not in config:
                 config["vlm"] = {}
@@ -137,14 +160,17 @@ class ConfigService:
         """Get the intersection name."""
         return self.config.get("intersection", {}).get("name", "Intersection-1")
     
-    def get_intersection_coordinates(self) -> tuple:
+    def get_intersection_coordinates(self) -> tuple[float, float]:
         """Get intersection coordinates (lat, lon)."""
         intersection = self.config.get("intersection", {})
-        return (
-            intersection.get("latitude", 33.3091336),
-            intersection.get("longitude", -111.9353095)
-        )
-    
+        try:
+            lat = float(intersection.get("latitude", 33.3091336))
+            lon = float(intersection.get("longitude", -111.9353095))
+            return (lat, lon)
+        except (TypeError, ValueError) as e:
+            logger.error("Invalid value in deployment configuration or environment variables for intersection coordinates", error=str(e))
+            raise e
+        
     def get_camera_topics(self) -> List[str]:
         """Get MQTT camera topics."""
         return self.config.get("mqtt", {}).get("camera_topics", [

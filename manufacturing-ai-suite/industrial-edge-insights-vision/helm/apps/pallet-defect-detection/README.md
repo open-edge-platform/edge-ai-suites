@@ -184,6 +184,7 @@
      helm uninstall app-deploy -n apps
      ```
 
-
 ## Troubleshooting
-- [Troubleshooting Guide](../../../../industrial-edge-insights-vision/docs/user-guide/pallet-defect-detection/troubleshooting.md)
+
+- [Troubleshooting](../../../../industrial-edge-insights-vision/docs/user-guide/pallet-defect-detection/troubleshooting.md)
+
