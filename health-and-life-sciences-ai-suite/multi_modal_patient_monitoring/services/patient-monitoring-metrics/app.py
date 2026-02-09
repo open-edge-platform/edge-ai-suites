@@ -592,8 +592,6 @@ def build_device_config_payload() -> Dict[str, Any]:
         info["resolved_detail"] = resolve_detail(configured)
 
     return {
-        "device_env_path": str(DEVICE_ENV_PATH),
-        "device_env_found": env_data is not None,
         "workloads": workloads,
     }
 

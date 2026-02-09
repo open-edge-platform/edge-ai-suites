@@ -128,6 +128,9 @@ services:
     environment:
       - GRPC_HOST=localhost
       - GRPC_PORT=50051
+      - MDPNP_DEVICE=${MDPNP_DEVICE}
+    env_file:
+        - ./configs/device.env   
     depends_on:
       patient-monitoring-aggregator:
         condition: service_started
@@ -156,7 +159,7 @@ services:
       patient-monitoring-aggregator:
         condition: service_started
     environment:
-      - ECG_DEVICE=${ECG_DEVICE:-GPU}
+      - ECG_DEVICE=${ECG_DEVICE}     
     env_file:
       - ./configs/device.env  
     volumes:
@@ -186,8 +189,11 @@ services:
         - VIDEO_FILE=/videos/3d-pose/face-demographics-walking.mp4
         - MODEL_PATH=/models/3d-pose/human-pose-estimation-3d-0001.xml
         - DEVICE=CPU
+        #- POSE_3D_DEVICE=${POSE_3D_DEVICE}
         - AGGREGATOR_ADDRESS=localhost:50051
         - CONTROL_PORT=8083
+      env_file:
+        - ./configs/device.env  
       depends_on:
         patient-monitoring-assets:
           condition: service_completed_successfully
@@ -217,7 +223,7 @@ services:
       patient-monitoring-aggregator:
           condition: service_started  
     environment:
-      - RPPG_DEVICE=${RPPG_DEVICE:-GPU}
+      - RPPG_DEVICE=${RPPG_DEVICE}      
     env_file:
       - ./configs/device.env  
     volumes:

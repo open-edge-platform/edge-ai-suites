@@ -208,7 +208,7 @@ async def memory_usage():
     return _proxy_metrics_get("/memory")
 
 
-@app.get("/woworkload-devices")
+@app.get("/workload-devices")
 async def device_config():
     """Proxy for device configuration summary."""
     return _proxy_metrics_get("/device-config")
