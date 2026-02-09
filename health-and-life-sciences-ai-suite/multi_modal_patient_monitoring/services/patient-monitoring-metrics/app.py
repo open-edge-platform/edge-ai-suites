@@ -19,6 +19,9 @@ NPU_CSV = METRICS_DIR / "npu_usage.csv"
 MEM_LOG = METRICS_DIR / "memory_usage.log"
 PCM_CSV = METRICS_DIR / "pcm.csv"
 
+# Path to device configuration env file (mounted from host)
+DEVICE_ENV_PATH = Path(os.getenv("DEVICE_ENV_PATH", "/configs/device.env"))
+
 
 def read_last_nonempty_line(path: Path) -> Optional[str]:
     try:
@@ -513,6 +516,88 @@ def build_metrics_payload() -> Dict[str, Any]:
     }
 
 
+def _load_device_env(path: Path = DEVICE_ENV_PATH) -> Optional[Dict[str, str]]:
+    """Load key=value pairs from the device env file.
+
+    Lines starting with '#' and blank lines are ignored. Values are
+    stripped of surrounding quotes.
+    """
+
+    try:
+        with path.open() as f:
+            result: Dict[str, str] = {}
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip().strip("'\"")
+                if not key:
+                    continue
+                result[key] = value
+        return result
+    except FileNotFoundError:
+        return None
+    except Exception:
+        return None
+
+
+def build_device_config_payload() -> Dict[str, Any]:
+    """Build a summary of device configuration per workload.
+
+    Reads DEVICE_ENV_PATH (defaults to /configs/device.env) and maps
+    configured devices (CPU/GPU/NPU/AUTO) to platform details from
+    get_platform_info().
+    """
+
+    env_data = _load_device_env()
+    platform_info = get_platform_info()
+
+    def resolve_detail(device_code: Optional[str]) -> str:
+        if not device_code:
+            return "Unknown"
+        code = device_code.strip().upper()
+        if code == "CPU":
+            return platform_info.get("Processor", "CPU")
+        if code == "GPU":
+            return platform_info.get("iGPU", "GPU")
+        if code == "NPU":
+            return platform_info.get("NPU", "NPU")
+        if code == "AUTO":
+            return "AUTO (platform decides: CPU/GPU/NPU)"
+        return code
+
+    workloads = {
+        "rppg": {
+            "env_key": "RPPG_DEVICE",
+        },
+        "ai_ecg": {
+            "env_key": "ECG_DEVICE",
+        },
+        "mdpnp": {
+            "env_key": "MDPNP_DEVICE",
+        },
+        "pose_3d": {
+            "env_key": "POSE_3D_DEVICE",
+        },
+    }
+
+    for name, info in workloads.items():
+        key = info["env_key"]
+        configured = env_data.get(key) if env_data is not None else None
+        info["configured_device"] = configured
+        info["resolved_detail"] = resolve_detail(configured)
+
+    return {
+        "device_env_path": str(DEVICE_ENV_PATH),
+        "device_env_found": env_data is not None,
+        "workloads": workloads,
+    }
+
+
 def get_platform_info() -> Dict[str, Any]:
     """Return a high-level platform configuration summary.
 
@@ -620,6 +705,9 @@ class MetricsHandler(BaseHTTPRequestHandler):
         elif self.path.startswith("/memory"):
             payload = parse_memory_usage()
             status = 200 if payload is not None else 404
+        elif self.path.startswith("/device-config"):
+            payload = build_device_config_payload()
+            status = 200
         else:
             self.send_response(404)
             self.end_headers()

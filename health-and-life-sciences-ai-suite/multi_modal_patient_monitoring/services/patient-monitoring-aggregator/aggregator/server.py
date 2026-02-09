@@ -83,6 +83,7 @@ async def root():
             "GET /metrics - System metrics",
             "GET /platform-info - Platform info",
             "GET /memory - Memory usage",
+            "GET /device-config - Device configuration summary",
             "POST /start - Start streaming",
             "POST /stop - Stop streaming"
         ]
@@ -205,6 +206,12 @@ async def platform_info():
 async def memory_usage():
     """Proxy for memory usage."""
     return _proxy_metrics_get("/memory")
+
+
+@app.get("/woworkload-devices")
+async def device_config():
+    """Proxy for device configuration summary."""
+    return _proxy_metrics_get("/device-config")
 
 
 @app.get("/streaming-status")
