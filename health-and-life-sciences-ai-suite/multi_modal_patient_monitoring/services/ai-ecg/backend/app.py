@@ -54,6 +54,7 @@ def predict_ecg(filename: str):
     try:
         pred = engine.predict(filename)
         return {
+            "file": filename, 
             "signal": pred["signal"],
             "result": pred["result"],
             "inference_ms": pred["inference_ms"],
