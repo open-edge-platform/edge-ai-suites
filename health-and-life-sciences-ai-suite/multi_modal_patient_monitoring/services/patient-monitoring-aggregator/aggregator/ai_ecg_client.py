@@ -31,6 +31,7 @@ class AIECGClient:
 
             signal = data.get("signal", [])
             result = data.get("result", {})
+            filename = data.get("file")
 
             return {
                 "device_id": "ai-ecg-001",
@@ -39,6 +40,7 @@ class AIECGClient:
                 "waveform": signal,
                 "waveform_frequency_hz": 360,
                 "inference": result,
+                "file": filename, 
             }
         except Exception as e:
             print("[AI-ECG] poll_next error:", e)

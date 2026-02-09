@@ -77,8 +77,10 @@ services:
       - no_proxy=${NO_PROXY}
       - NPU_LOG=/tmp/results/npu_usage.csv
       - METRICS_DIR=/tmp/results
+      - DEVICE_ENV_PATH=/configs/device.env
     volumes:
       - ./metrics:/tmp/results
+      - ./configs:/configs
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /sys/devices:/sys/devices
       - /dev/dri:/dev/dri:rw
@@ -126,6 +128,9 @@ services:
     environment:
       - GRPC_HOST=localhost
       - GRPC_PORT=50051
+      - MDPNP_DEVICE=${MDPNP_DEVICE}
+    env_file:
+        - ./configs/device.env   
     depends_on:
       patient-monitoring-aggregator:
         condition: service_started
@@ -138,12 +143,13 @@ services:
       context: ./services/ai-ecg/backend
       dockerfile: Dockerfile
       args:
-          HTTP_PROXY: ${HTTP_PROXY}
-          HTTPS_PROXY: ${HTTPS_PROXY}
-          NO_PROXY: ${NO_PROXY}
-          http_proxy: ${HTTP_PROXY}
-          https_proxy: ${HTTPS_PROXY}
-          no_proxy: ${NO_PROXY}
+        INSTALL_DRIVER_VERSION: "25.31.34666"
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        NO_PROXY: ${NO_PROXY}
+        http_proxy: ${HTTP_PROXY}
+        https_proxy: ${HTTPS_PROXY}
+        no_proxy: ${NO_PROXY}
     image: intel/hl-ai-ecg:1.0.0
     container_name: ai-ecg
     network_mode: "host"
@@ -151,10 +157,19 @@ services:
       patient-monitoring-assets:
         condition: service_completed_successfully
       patient-monitoring-aggregator:
-          condition: service_started  
+        condition: service_started
+    environment:
+      - ECG_DEVICE=${ECG_DEVICE}     
+    env_file:
+      - ./configs/device.env  
     volumes:
       - ./models:/models
       - ./videos:/videos
+    devices:
+      - "/dev/dri:/dev/dri"
+    group_add:
+      - video
+
 
   3dpose-estimation:
       build:
@@ -174,8 +189,11 @@ services:
         - VIDEO_FILE=/videos/3d-pose/face-demographics-walking.mp4
         - MODEL_PATH=/models/3d-pose/human-pose-estimation-3d-0001.xml
         - DEVICE=CPU
+        #- POSE_3D_DEVICE=${POSE_3D_DEVICE}
         - AGGREGATOR_ADDRESS=localhost:50051
         - CONTROL_PORT=8083
+      env_file:
+        - ./configs/device.env  
       depends_on:
         patient-monitoring-assets:
           condition: service_completed_successfully
@@ -205,13 +223,9 @@ services:
       patient-monitoring-aggregator:
           condition: service_started  
     environment:
-      - HTTP_PROXY=${HTTP_PROXY}
-      - HTTPS_PROXY=${HTTPS_PROXY}
-      - NO_PROXY=${NO_PROXY}
-      - http_proxy=${HTTP_PROXY}
-      - https_proxy=${HTTPS_PROXY}
-      - no_proxy=${NO_PROXY}
-      - RPPG_DEVICE=${RPPG_DEVICE:-GPU}
+      - RPPG_DEVICE=${RPPG_DEVICE}      
+    env_file:
+      - ./configs/device.env  
     volumes:
       - ./models:/models
       - ./videos:/videos
