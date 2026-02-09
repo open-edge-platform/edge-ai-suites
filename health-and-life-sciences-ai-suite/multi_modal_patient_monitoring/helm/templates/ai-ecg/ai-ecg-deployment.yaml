@@ -1,0 +1,31 @@
+{{- $svc := .Values.services.aiEcg | default dict }}
+{{- if $svc.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-ecg
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.aiEcg.replicas }}
+  selector:
+    matchLabels:
+      app: ai-ecg
+  template:
+    metadata:
+      labels:
+        app: ai-ecg
+    spec:
+      volumes:
+        - name: ai-ecg-assets
+          persistentVolumeClaim:
+            claimName: pvc-ai-ecg
+      containers:
+        - name: ai-ecg
+          image: {{ include "health-ai.image" (dict "image" .Values.aiEcg.image) }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: ai-ecg-assets
+              mountPath: /data
+{{- end }}

@@ -1,0 +1,22 @@
+{{- if .Values.assetsDownloader.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: assets-downloader-pose
+  namespace: {{ .Values.namespace }}
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: downloader
+          image: {{ include "health-ai.image" (dict "image" .Values.assetsDownloader.image) }}
+          volumeMounts:
+            - name: assets
+              mountPath: /data
+      volumes:
+        - name: assets
+          persistentVolumeClaim:
+            claimName: pvc-pose
+{{- end }}

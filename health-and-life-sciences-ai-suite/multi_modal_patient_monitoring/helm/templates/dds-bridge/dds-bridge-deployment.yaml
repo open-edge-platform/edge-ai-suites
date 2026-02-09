@@ -1,0 +1,24 @@
+{{- $svc := .Values.services.ddsBridge | default dict }}
+{{- if ($svc.enabled | default false) }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dds-bridge
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.ddsBridge.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: dds-bridge
+  template:
+    metadata:
+      labels:
+        app: dds-bridge
+    spec:
+      containers:
+        - name: dds-bridge
+          image: {{ include "health-ai.image" (dict "image" .Values.ddsBridge.image) }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.ddsBridge.servicePort }}
+{{- end }}

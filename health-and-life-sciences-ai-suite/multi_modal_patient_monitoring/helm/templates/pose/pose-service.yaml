@@ -1,0 +1,17 @@
+{{- $svc := .Values.services.pose | default dict }}
+{{- if and $svc.enabled ($svc.service | default dict).enabled }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: pose
+  namespace: {{ $.Values.namespace }}
+spec:
+  type: {{ $svc.service.type | default "ClusterIP" }}
+  selector:
+    app: pose
+  ports:
+    - port: {{ $svc.service.port }}
+      targetPort: {{ $svc.containerPort }}
+
+{{- end }}

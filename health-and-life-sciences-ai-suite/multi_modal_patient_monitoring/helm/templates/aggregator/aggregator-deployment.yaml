@@ -1,0 +1,24 @@
+{{- $svc := .Values.services.aggregator | default dict }}
+{{- if $svc.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aggregator
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.aggregator.replicas }}
+  selector:
+    matchLabels:
+      app: aggregator
+  template:
+    metadata:
+      labels:
+        app: aggregator
+    spec:
+      containers:
+        - name: aggregator
+          image: {{ include "health-ai.image" (dict "image" .Values.aggregator.image) }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.aggregator.servicePort }}
+{{- end }}

@@ -72,3 +72,75 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Run app
 # ----------------------------------------------------------------------------
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# # ----------------------------------------------------------------------------
+# # Base Image
+# # ----------------------------------------------------------------------------
+# FROM python:3.12-slim
+
+# # ----------------------------------------------------------------------------
+# # Proxy Support (Required for corporate networks)
+# # ----------------------------------------------------------------------------
+# ARG HTTP_PROXY
+# ARG HTTPS_PROXY
+# ARG NO_PROXY
+# ARG http_proxy
+# ARG https_proxy
+# ARG no_proxy
+
+# ENV http_proxy=${http_proxy:-$HTTP_PROXY} \
+#     https_proxy=${https_proxy:-$HTTPS_PROXY} \
+#     no_proxy=${no_proxy:-$NO_PROXY} \
+#     HTTP_PROXY=${HTTP_PROXY:-$http_proxy} \
+#     HTTPS_PROXY=${HTTPS_PROXY:-$https_proxy} \
+#     NO_PROXY=${NO_PROXY:-$no_proxy}
+
+# # ----------------------------------------------------------------------------
+# # Working Directory
+# # ----------------------------------------------------------------------------
+# WORKDIR /app
+
+# # ----------------------------------------------------------------------------
+# # Install System + OpenVINO NPU Runtime Dependencies
+# # ----------------------------------------------------------------------------
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     libglib2.0-0 \
+#     libsm6 \
+#     libxext6 \
+#     libxrender1 \
+#     libgomp1 \
+#     libgl1 \
+#     libnuma1 \
+#     libze1 \
+#     curl \
+#     ca-certificates \
+#     && rm -rf /var/lib/apt/lists/*
+
+# # ----------------------------------------------------------------------------
+# # Install Python Dependencies
+# # ----------------------------------------------------------------------------
+# COPY requirements.txt .
+# RUN pip install --no-cache-dir -r requirements.txt
+
+# # ----------------------------------------------------------------------------
+# # Copy Application Code
+# # ----------------------------------------------------------------------------
+# COPY . .
+
+# ENV PYTHONPATH=/app
+
+# # ----------------------------------------------------------------------------
+# # Expose Port
+# # ----------------------------------------------------------------------------
+# EXPOSE 8000
+
+# # ----------------------------------------------------------------------------
+# # Healthcheck
+# # ----------------------------------------------------------------------------
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#     CMD curl -f http://localhost:8000/health || exit 1
+
+# # ----------------------------------------------------------------------------
+# # Start Service
+# # ----------------------------------------------------------------------------
+# CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
