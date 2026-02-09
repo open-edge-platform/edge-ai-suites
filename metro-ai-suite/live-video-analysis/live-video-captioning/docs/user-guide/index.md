@@ -1,4 +1,4 @@
-** Live Video Captioning** deploys AI-powered captioning for live video streams with Intel DLStreamer and OpenVINO Vision Language Models. You can process RTSP streams, generate real-time captions, and monitor performance metrics on a dashboard.
+** Live Video Captioning** deploys AI-powered captioning for live video streams with Deep Learning Streamer (DL Streamer) and OpenVINO™ Vision Language Models. You can process RTSP streams, generate real-time captions, and monitor performance metrics on a dashboard.
 
 The key features are as follows:
 
