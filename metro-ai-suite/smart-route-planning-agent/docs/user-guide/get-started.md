@@ -95,12 +95,17 @@ Edit `src/data/config.json` to add the IP addresses of your Smart Traffic Inters
     "api_endpoint": "/api/v1/traffic/current?images=false",
     "api_hosts": [
         {
+            "name": "Intersection-1",
             "host": "http://<edge-node-1-ip>:8081"
         },
         {
+
+            "name": "Intersection-2",
             "host": "http://<edge-node-2-ip>:8082"
         },
         {
+
+            "name": "Intersection-3",
             "host": "http://<edge-node-3-ip>:8083"
         }
     ]
