@@ -77,8 +77,10 @@ services:
       - no_proxy=${NO_PROXY}
       - NPU_LOG=/tmp/results/npu_usage.csv
       - METRICS_DIR=/tmp/results
+      - DEVICE_ENV_PATH=/configs/device.env
     volumes:
       - ./metrics:/tmp/results
+      - ./configs:/configs
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /sys/devices:/sys/devices
       - /dev/dri:/dev/dri:rw
@@ -154,7 +156,9 @@ services:
       patient-monitoring-aggregator:
         condition: service_started
     environment:
-      - ECG_DEVICE=GPU
+      - ECG_DEVICE=${ECG_DEVICE:-GPU}
+    env_file:
+      - ./configs/device.env  
     volumes:
       - ./models:/models
       - ./videos:/videos
@@ -213,13 +217,9 @@ services:
       patient-monitoring-aggregator:
           condition: service_started  
     environment:
-      - HTTP_PROXY=${HTTP_PROXY}
-      - HTTPS_PROXY=${HTTPS_PROXY}
-      - NO_PROXY=${NO_PROXY}
-      - http_proxy=${HTTP_PROXY}
-      - https_proxy=${HTTPS_PROXY}
-      - no_proxy=${NO_PROXY}
       - RPPG_DEVICE=${RPPG_DEVICE:-GPU}
+    env_file:
+      - ./configs/device.env  
     volumes:
       - ./models:/models
       - ./videos:/videos
