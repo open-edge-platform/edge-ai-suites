@@ -17,9 +17,10 @@ Select and integrate your own ML models with our time-series analytics infrastru
 **Problem**: Detect anomalies in wind turbine operations using real-time SCADA data
 - **Input**: Wind Speed (m/s), Grid Active Power (kW)
 - **Output**: Expected Grid Active Power (kW)
-- **Deployment**: Edge devices with GPU support
+- **Deployment**: Edge infrastructure (CPU or GPU accelerated)
 - **Framework**: Kapacitor UDF (User Defined Function)
-- **Mode**: Single-point streaming inference
+- **Mode**: Single-point streaming only (live data, point-by-point)
+- **No batch processing**: Each data point processed individually as it arrives
 - **Latency**: < 10ms per prediction
 
 ---
@@ -114,10 +115,12 @@ def load_model(filename):
     # model.load_state_dict(torch.load(filename))
     # return model.eval()
 
-# 2. Update inference
-y_pred = self.model.predict(np.reshape(x, (-1, 1)))  # sklearn
-# y_pred = self.model.run(None, {'input': x})[0]  # ONNX
-# y_pred = self.model(torch.tensor([[x]])).item()  # PyTorch
+# 2. Update inference (single point only)
+y_pred = self.model.predict(np.reshape(x, (-1, 1)))  # sklearn - single point
+# y_pred = self.model.run(None, {'input': x})[0]  # ONNX - single point
+# y_pred = self.model(torch.tensor([[x]])).item()  # PyTorch - single point
+
+# Note: Batch inference NOT supported - process one point at a time
 ```
 
 ### Update config.json
@@ -153,15 +156,15 @@ patch_sklearn()
 2. **Cross-Validation**: 5-fold CV on training set
 3. **Test Set**: Never used during training/tuning
 4. **Hardware Testing**: Profile on target edge device (both CPU and GPU)
-5. **Load Testing**: Simulate 10+ concurrent turbine streams
+5. **Load Testing**: Simulate 10+ concurrent turbine streams (each processing single points)
 6. **GPU Efficiency**: Measure GPU memory usage and utilization
-7. **Batch vs Single**: Test both single-point and batch inference for GPU models
+7. **Single-Point Latency**: Verify inference time per point meets < 10ms requirement
 
 **GPU-Specific Tests**:
-- Measure inference time with different batch sizes (1, 8, 16, 32)
-- Monitor VRAM consumption
+- Monitor VRAM consumption during streaming inference
 - Test CPU fallback behavior if GPU unavailable
-- Benchmark against CPU baseline
+- Benchmark GPU vs CPU for single-point inference
+- Verify multi-stream concurrent processing (10+ turbines)
 
 ---
 
@@ -185,6 +188,162 @@ def preprocess(df):
 ```
 
 **Additional Features** (optional): wind direction, temperature, blade pitch, rotor speed
+
+---
+
+## Using Your Own Dataset
+
+### Dataset Requirements
+
+Your dataset should contain:
+- **Required columns**: `wind_speed`, `grid_activepower` (or equivalent power output column)
+- **Optional columns**: `timestamp`, `wind_direction`, `temperature`, blade pitch, rotor speed
+- **Format**: CSV, Parquet, or any pandas-readable format
+- **Size**: 10k-50k samples minimum for training
+
+### Example Dataset Formats
+
+**Current reference dataset** (`T1.csv`):
+```csv
+timestamp,grid_activepower,wind_speed,Theoretical_Power_Curve,Wind Direction (°)
+01 01 2018 00:00,380.05,5.31,416.33,259.99
+01 01 2018 00:10,453.77,5.67,519.92,268.64
+```
+
+**Your dataset** - adapt column names:
+```csv
+time,power_output,wind_speed_ms,temperature
+2024-01-01 00:00:00,385.2,5.3,15.2
+2024-01-01 00:10:00,448.1,5.6,15.4
+```
+
+### Changes Required for Your Dataset
+
+**1. Update column names in training notebook**:
+
+Edit `training/windturbine_anomaly_detection.ipynb`:
+
+```python
+# Original
+X = df[['wind_speed']]
+y = df[['Theoretical_Power_Curve']]  # or 'grid_activepower'
+
+# Your dataset - update to match your column names
+X = df[['wind_speed_ms']]  # or whatever your wind speed column is called
+y = df[['power_output']]    # or your power column name
+```
+
+**2. Update preprocessing function**:
+
+```python
+def preprocess(df):
+    # Map your column names to expected names
+    df = df.rename(columns={
+        'power_output': 'grid_activepower',
+        'wind_speed_ms': 'wind_speed'
+    })
+    
+    df = df.dropna()
+    return df[
+        (df['wind_speed'] >= 3) & (df['wind_speed'] <= 14) &
+        (df['grid_activepower'] >= 50)
+    ]
+```
+
+**3. Update data loading**:
+
+```python
+# Load your dataset
+df = pd.read_csv('path/to/your_dataset.csv')
+
+# If using different time format
+df['timestamp'] = pd.to_datetime(df['time'])
+
+# If you have multiple turbines, filter for specific one
+df = df[df['turbine_id'] == 'T1']
+```
+
+**4. Adjust operational parameters** (if your turbine specs differ):
+
+```python
+# In training notebook and UDF (windturbine_anomaly_detector.py)
+cut_in_speed = 3      # Your turbine's cut-in speed (m/s)
+cut_out_speed = 14    # Your turbine's cut-out speed (m/s)
+min_power_th = 50     # Minimum power threshold (kW)
+error_threshold = 0.15  # Adjust based on your data
+```
+
+**5. Update simulation data** (optional):
+
+Place your dataset in `simulation-data/`:
+```bash
+cp your_dataset.csv simulation-data/wind-turbine-anomaly-detection.csv
+```
+
+Update Telegraf config to read from your file:
+```toml
+# telegraf-config/Telegraf.conf
+[[inputs.file]]
+  files = ["simulation-data/your_dataset.csv"]
+  data_format = "csv"
+  csv_column_names = ["wind_speed", "grid_activepower"]  # Your columns
+```
+
+### Dataset Validation Checklist
+
+Before training:
+- [ ] Verify column names match expected format (or update code)
+- [ ] Check data types (numeric for wind_speed and power)
+- [ ] Validate wind speed range (typically 0-25 m/s)
+- [ ] Check for missing values (< 5% recommended)
+- [ ] Verify timestamp format if using temporal features
+- [ ] Confirm power values are in kW (or convert to kW)
+- [ ] Remove or separate known anomalies for validation
+- [ ] Ensure sufficient samples in operational range (3-14 m/s)
+
+### Multi-Turbine Datasets
+
+If your dataset contains multiple turbines:
+
+```python
+# Option 1: Train separate models per turbine
+for turbine_id in df['turbine_id'].unique():
+    turbine_df = df[df['turbine_id'] == turbine_id]
+    model = train_model(turbine_df)
+    save_model(model, f'windturbine_{turbine_id}_v1.0.pkl')
+
+# Option 2: Train single model with turbine as feature
+X = df[['wind_speed', 'turbine_id_encoded']]
+y = df['grid_activepower']
+model = train_model(X, y)
+
+# Option 3: Use shared model (assumes similar turbines)
+df_combined = df  # Use all turbines together
+model = train_model(df_combined)
+```
+
+### External Datasets
+
+**Public datasets you can use**:
+1. **Kaggle Wind Turbine SCADA** (current): https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset
+2. **NREL Wind Dataset**: https://www.nrel.gov/grid/wind-toolkit.html
+3. **Penmanshiel Wind Farm**: https://zenodo.org/record/2325548
+4. **EDP Open Data**: https://opendata.edp.com/
+
+**Using external datasets**:
+```bash
+# 1. Download dataset
+cd training/
+wget your-dataset-url -O external_dataset.csv
+
+# 2. Update notebook to load it
+df = pd.read_csv('external_dataset.csv')
+
+# 3. Inspect and adapt
+print(df.columns)
+print(df.head())
+print(df.describe())
+```
 
 ---
 
@@ -212,6 +371,7 @@ Before deploying:
 - [ ] Handles NaN/missing values
 - [ ] Out-of-range inputs don't crash
 - [ ] Memory usage acceptable
+
 
 **Evaluation Script**:
 ```python
