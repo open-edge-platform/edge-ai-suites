@@ -7,7 +7,7 @@ Follow steps 1 and 2 mentioned in [Get Started](./get-started.md#set-up-and-firs
 
 ### Volume mount GPU config
 
-Comment out CPU and NPU config and uncomment the GPU config present in `compose.yml` file
+Comment out CPU and NPU config and uncomment the GPU config present in [`compose.yml`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/image-based-video-search/compose.yml) file
 under `volumes` section as shown below:
 
 ```sh
