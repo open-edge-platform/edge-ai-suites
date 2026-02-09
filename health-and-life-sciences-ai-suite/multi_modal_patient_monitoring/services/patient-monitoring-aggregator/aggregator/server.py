@@ -231,16 +231,6 @@ async def start_workloads(target: str = Query("dds-bridge", description="Which w
     targets = {t.strip() for t in target.split(",")} if target else {"dds-bridge"}
     results: dict[str, str] = {}
 
-    # Enforce a streaming window but allow restart after stop
-    now = time.time()
-    lock_until = getattr(app.state, "streaming_lock_until", None)
-    if lock_until is not None and now < lock_until:
-        remaining = int(lock_until - now)
-        return {
-            "status": "locked",
-            "remaining_seconds": max(0, remaining),
-        }
-    
     def _call(url: str) -> str:
         try:
             resp = requests.post(url, timeout=3)
@@ -287,24 +277,11 @@ async def start_workloads(target: str = Query("dds-bridge", description="Which w
         else:
             results["rppg"] = _call(f"{RPPG_CONTROL_URL}/start")
 
-    # Schedule automatic stop after 60 seconds (instead of 300)
-    window_seconds = 60.0
-    app.state.streaming_lock_until = now + window_seconds
-
-    # Cancel any previous auto-stop task before creating a new one
-    existing_task = getattr(app.state, "auto_stop_task", None)
-    if existing_task is not None:
-        existing_task.cancel()
-
-    app.state.auto_stop_task = asyncio.create_task(
-        _auto_stop_after(window_seconds, targets)
-    )
-
     return {
         "status": "ok",
         "results": results,
-        "auto_stop_in_seconds": int(window_seconds),
-        "message": f"Services will auto-stop after {window_seconds} seconds"
+        "auto_stop_in_seconds": 0,
+        "message": "Auto-stop disabled; workloads will continue until manually stopped."
     }
 
 
