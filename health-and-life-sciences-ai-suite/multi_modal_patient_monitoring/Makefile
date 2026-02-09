@@ -25,9 +25,9 @@ build-dds-bridge:
 run:
 	@if [ "$(REGISTRY)" = "true" ]; then \
 		echo "##############Using registry mode - fetching all images..."; \
-		docker compose -f $(DOCKER_COMPOSE) up -d; \
+		docker compose -f $(DOCKER_COMPOSE) --env-file configs/device.env up -d; \
 	else \
-		docker compose -f $(DOCKER_COMPOSE) up --build -d; \
+		docker compose -f $(DOCKER_COMPOSE) --env-file configs/device.env up --build -d; \
 	fi
 
 down:
