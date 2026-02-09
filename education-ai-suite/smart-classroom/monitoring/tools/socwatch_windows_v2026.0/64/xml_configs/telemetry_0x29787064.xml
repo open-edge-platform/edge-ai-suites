@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "nvl_soc_pmc_lpm_res_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>NVL</TELEM:name>
+	<TELEM:description>NVL SOC PMC LPM RES</TELEM:description>
+	<TELEM:uniqueid>0x29787064</TELEM:uniqueid>
+	<TELEM:productid>NVL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x1a20</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LPM_0_S0_RES" datatypeIDREF="tpch_time_s" sampleID="LPM_0_S0_RES">
+			<TELC:description>Low Power Mode 0 S0 Residency Counter</TELC:description>
+			<TELC:sampleSubGroup>LPM_0_S0_RES</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LPM_1_S0_RES" datatypeIDREF="tpch_time_s" sampleID="LPM_1_S0_RES">
+			<TELC:description>Low Power Mode 1 S0 Residency Counter</TELC:description>
+			<TELC:sampleSubGroup>LPM_1_S0_RES</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x1a28</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LPM_2_S0_RES" datatypeIDREF="tpch_time_s" sampleID="LPM_2_S0_RES">
+			<TELC:description>Low Power Mode 2 S0 Residency Counter</TELC:description>
+			<TELC:sampleSubGroup>LPM_2_S0_RES</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LPM_0_SX_RES" datatypeIDREF="tpch_time_s" sampleID="LPM_0_SX_RES">
+			<TELC:description>Low Power Mode 0 SX Residency Counter</TELC:description>
+			<TELC:sampleSubGroup>LPM_0_SX_RES</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x1a30</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LPM_1_SX_RES" datatypeIDREF="tpch_time_s" sampleID="LPM_1_SX_RES">
+			<TELC:description>Low Power Mode 1 SX Residency Counter</TELC:description>
+			<TELC:sampleSubGroup>LPM_1_SX_RES</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LPM_2_SX_RES" datatypeIDREF="tpch_time_s" sampleID="LPM_2_SX_RES">
+			<TELC:description>Low Power Mode 2 SX Residency Counter</TELC:description>
+			<TELC:sampleSubGroup>LPM_2_SX_RES</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

@@ -1,0 +1,1553 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "mtl_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>MTL</TELEM:name>
+	<TELEM:description>MTL M/P PMT Fixed telemetry in Punit samples definition and transformation rules</TELEM:description>
+	<TELEM:uniqueid>0x130671B2</TELEM:uniqueid>
+	<TELEM:productid>MTL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x6000</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="EXTENDED_TELE_ID_SPECIFIC_HEADER" datatypeIDREF="tgeneric_counter" sampleID="EXTENDED_TELE_ID_SPECIFIC_HEADER">
+			<TELC:description>NOT a counter. Indicates the format of extended fixed telemetry regionBits 7:0 - NUM_RAW_BLOCK_REASONS - Number of counters in &quot;raw block reasons&quot; sub-categoryBits 15:8 - NUM_RAW_WAKE_REASONS_PC6_PC10Bits 23:16 - NUM_DEMOTION_CAUSES_PC6_PC10Bits 31:24 - NUM_BLOCK_CAUSES_PC6_PC10</TELC:description>
+			<TELC:sampleSubGroup>EXTENDED_TELE_ID_SPECIFIC_HEADER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x6008</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="XTAL" datatypeIDREF="txtal_time" sampleID="XTAL">
+			<TELC:description>Crystal clock count. Used as a reference count in converting many of the counters presented in this telemetry space.</TELC:description>
+			<TELC:sampleSubGroup>XTAL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x6010</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_BLOCK_REFCNT" datatypeIDREF="tevent_counter" sampleID="PACKAGE_CSTATE_BLOCK_REFCNT">
+			<TELC:description>Reference count for block cause counters. Counts the number of 10us intervals during which PkgC entry was blocked at least once by any reason. To calculate percent blocked by a specific reason, divide corresponding block reason counter by this counter value.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_BLOCK_REFCNT</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_REFCNT" datatypeIDREF="tevent_counter" sampleID="PACKAGE_CSTATE_WAKE_REFCNT">
+			<TELC:description>Reference count for wake cause counters. To calculate percent for each wake reason, divide by this number.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_REFCNT</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_3" sampleID="3" sampleGroupID="Container_3">
+		<TELC:description>Groupname 0x6018</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_UNKNOWN" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_UNKNOWN">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by an unknown device.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_UNKNOWN</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_CDIE" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_CDIE">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by the CDIE</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_CDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_4" sampleID="4" sampleGroupID="Container_4">
+		<TELC:description>Groupname 0x6020</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_GDIE" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_GDIE">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by the GDIE.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_GDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_SOC_CORE" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_SOC_CORE">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by the SoCN CORE.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_SOC_CORE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_5" sampleID="5" sampleGroupID="Container_5">
+		<TELC:description>Groupname 0x6028</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_PCH" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_PCH">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by PCH.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_PCH</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_DISPLAY" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_DISPLAY">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by DISPLAY.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_DISPLAY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_6" sampleID="6" sampleGroupID="Container_6">
+		<TELC:description>Groupname 0x6030</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_IPU" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_IPU">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by IPU.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_IPU</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_MEDIA" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_MEDIA">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by MEDIA.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_MEDIA</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_7" sampleID="7" sampleGroupID="Container_7">
+		<TELC:description>Groupname 0x6038</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_VPU" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_VPU">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by VPU.- ** NOT IMPLEMENTED**</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_VPU</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_MEMORY" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_MEMORY">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by MEMORY.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_MEMORY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_8" sampleID="8" sampleGroupID="Container_8">
+		<TELC:description>Groupname 0x6040</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_PUNIT" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_PUNIT">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by PUNIT.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_PUNIT</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_PSF" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_PSF">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by PSF fabric.- **NOT IMPLEMENTED**</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_PSF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_9" sampleID="9" sampleGroupID="Container_9">
+		<TELC:description>Groupname 0x6048</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_DFX" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_DFX">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by DFX.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_DFX</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_DTS" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_DTS">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by DTS.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_DEVICE_BLOCK_CAUSE_DTS</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_10" sampleID="10" sampleGroupID="Container_10">
+		<TELC:description>Groupname 0x6050</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_BLOCK_CATEGORY_TIMER" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_BLOCK_CATEGORY_TIMER">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by TIMER.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_BLOCK_CATEGORY_TIMER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_BLOCK_CATEGORY_LATENCY" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_BLOCK_CATEGORY_LATENCY">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by LATENCY.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_BLOCK_CATEGORY_LATENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_11" sampleID="11" sampleGroupID="Container_11">
+		<TELC:description>Groupname 0x6058</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_BLOCK_CATEGORY_IP_BUSY" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_BLOCK_CATEGORY_IP_BUSY">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by IP_BUSY.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_BLOCK_CATEGORY_IP_BUSY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_BLOCK_CATEGORY_HYSTERESIS" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_BLOCK_CATEGORY_HYSTERESIS">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by HYSTERESIS.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_BLOCK_CATEGORY_HYSTERESIS</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_12" sampleID="12" sampleGroupID="Container_12">
+		<TELC:description>Groupname 0x6060</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_BLOCK_CATEGORY_TRANSIENT" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_BLOCK_CATEGORY_TRANSIENT">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by TRANSIENT.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_BLOCK_CATEGORY_TRANSIENT</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_BLOCK_CATEGORY_DEMOTION" datatypeIDREF="tpkgc_block_cause" sampleID="PACKAGE_CSTATE_BLOCK_CATEGORY_DEMOTION">
+			<TELC:description>Counts the number of 10us intervals during which PkgC entry was blocked at least once by DEMOTION.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_BLOCK_CATEGORY_DEMOTION</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_13" sampleID="13" sampleGroupID="Container_13">
+		<TELC:description>Groupname 0x6068</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_MEM_RSRC" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_MEM_RSRC">
+			<TELC:description>Package C-state wake from NONSNOOP.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_MEM_RSRC</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_RING_RSRC" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_RING_RSRC">
+			<TELC:description>Package C-state wake from RING_CF.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_RING_RSRC</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_14" sampleID="14" sampleGroupID="Container_14">
+		<TELC:description>Groupname 0x6070</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_UNDEMOTE" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_UNDEMOTE">
+			<TELC:description>Package C-state wake due to undemotion</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_UNDEMOTE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_TIMER" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_TIMER">
+			<TELC:description>Package C-state wake from TIMER- **NOT IMPLEMENTED**</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_TIMER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_15" sampleID="15" sampleGroupID="Container_15">
+		<TELC:description>Groupname 0x6078</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_DFX" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_DFX">
+			<TELC:description>Package C-state wake from DFX- **NOT IMPLEMENTED**</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_DFX</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_PUNIT" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_PUNIT">
+			<TELC:description>Package C-state wake from TIMER.- **NOT IMPLEMENTED**</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_PUNIT</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_16" sampleID="16" sampleGroupID="Container_16">
+		<TELC:description>Groupname 0x6080</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_IOC" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_IOC">
+			<TELC:description>Package C-state wake from IOC- **NOT IMPLEMENTED**</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_IOC</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_SOC_CORE" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_SOC_CORE">
+			<TELC:description>Package C-state wake from SoC Atoms</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_SOC_CORE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_17" sampleID="17" sampleGroupID="Container_17">
+		<TELC:description>Groupname 0x6088</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_CDIE" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_CDIE">
+			<TELC:description>Package C-state wake from CDie</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_CDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_GDIE" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_GDIE">
+			<TELC:description>Package C-state wake from GCD</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_GDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_18" sampleID="18" sampleGroupID="Container_18">
+		<TELC:description>Groupname 0x6090</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_MEDIA" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_MEDIA">
+			<TELC:description>Package C-state wake from Media</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_MEDIA</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_IPU" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_IPU">
+			<TELC:description>Package C-state wake from IPU</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_IPU</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_19" sampleID="19" sampleGroupID="Container_19">
+		<TELC:description>Groupname 0x6098</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_DISPLAY" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_DISPLAY">
+			<TELC:description>Package C-state wake from Display</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_DISPLAY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_PKGS_PENDING" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_PKGS_PENDING">
+			<TELC:description>Package C-state wake from pkgs pending</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_PKGS_PENDING</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_20" sampleID="20" sampleGroupID="Container_20">
+		<TELC:description>Groupname 0x60a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_LTR_IPU" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_LTR_IPU">
+			<TELC:description>Package C-state wake from IPU LTR.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_LTR_IPU</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_LTR_DISPLAY" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_LTR_DISPLAY">
+			<TELC:description>Package C-state wake from DISPLAY LTR.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_LTR_DISPLAY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_21" sampleID="21" sampleGroupID="Container_21">
+		<TELC:description>Groupname 0x60a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_LTR_IA_DOMAIN" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_LTR_IA_DOMAIN">
+			<TELC:description>Package C-state wake from IA DOMAIN LTR.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_LTR_IA_DOMAIN</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_LTR_CDIE" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_LTR_CDIE">
+			<TELC:description>Package C-state wake from CDIE LTR.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_LTR_CDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_22" sampleID="22" sampleGroupID="Container_22">
+		<TELC:description>Groupname 0x60b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_LTR_GDIE" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_LTR_GDIE">
+			<TELC:description>Package C-state wake from GDIE LTR.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_LTR_GDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_LTR_PCH" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_LTR_PCH">
+			<TELC:description>Package C-state wake from PCH LTR.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_LTR_PCH</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_23" sampleID="23" sampleGroupID="Container_23">
+		<TELC:description>Groupname 0x60b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_TNTE_IPU" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_TNTE_IPU">
+			<TELC:description>Package C-state wake from IPU TNTE.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_TNTE_IPU</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_TNTE_DISPLAY" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_TNTE_DISPLAY">
+			<TELC:description>Package C-state wake from DISPLAY TNTE.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_TNTE_DISPLAY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_24" sampleID="24" sampleGroupID="Container_24">
+		<TELC:description>Groupname 0x60c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_TNTE_CDIE" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_TNTE_CDIE">
+			<TELC:description>Package C-state wake from CDIE TNTE.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_TNTE_CDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_TNTE_GDIE" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_TNTE_GDIE">
+			<TELC:description>Package C-state wake from GDIE TNTE.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_TNTE_GDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_25" sampleID="25" sampleGroupID="Container_25">
+		<TELC:description>Groupname 0x60c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_TNTE_MEDIA" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_TNTE_MEDIA">
+			<TELC:description>Package C-state wake from MEDIA TNTE.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_TNTE_MEDIA</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_TNTE_IA_DOMAIN" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_TNTE_IA_DOMAIN">
+			<TELC:description>Package C-state wake from IA DOMAIN TNTE.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_TNTE_IA_DOMAIN</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_26" sampleID="26" sampleGroupID="Container_26">
+		<TELC:description>Groupname 0x60d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_WAKE_TNTE_PCH" datatypeIDREF="tpkgc_wake_cause" sampleID="PACKAGE_CSTATE_WAKE_TNTE_PCH">
+			<TELC:description>Package C-state wake from PCH TNTE.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_WAKE_TNTE_PCH</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_LTR_THRESHOLDS_C2" datatypeIDREF="tltr" sampleID="PACKAGE_CSTATE_LTR_THRESHOLDS_C2">
+			<TELC:description>Package C2 State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_LTR_THRESHOLDS_C2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_LTR_THRESHOLDS_C2R" datatypeIDREF="tltr" sampleID="PACKAGE_CSTATE_LTR_THRESHOLDS_C2R">
+			<TELC:description>Package C State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_LTR_THRESHOLDS_C2R</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_27" sampleID="27" sampleGroupID="Container_27">
+		<TELC:description>Groupname 0x60d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_LTR_THRESHOLDS_C3" datatypeIDREF="tltr" sampleID="PACKAGE_CSTATE_LTR_THRESHOLDS_C3">
+			<TELC:description>Package C State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_LTR_THRESHOLDS_C3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_LTR_THRESHOLDS_C6" datatypeIDREF="tltr" sampleID="PACKAGE_CSTATE_LTR_THRESHOLDS_C6">
+			<TELC:description>Package C State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_LTR_THRESHOLDS_C6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_LTR_THRESHOLDS_C7" datatypeIDREF="tltr" sampleID="PACKAGE_CSTATE_LTR_THRESHOLDS_C7">
+			<TELC:description>Package C State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_LTR_THRESHOLDS_C7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_LTR_THRESHOLDS_C8" datatypeIDREF="tltr" sampleID="PACKAGE_CSTATE_LTR_THRESHOLDS_C8">
+			<TELC:description>Package C State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_LTR_THRESHOLDS_C8</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_28" sampleID="28" sampleGroupID="Container_28">
+		<TELC:description>Groupname 0x60e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_LTR_THRESHOLDS_C9" datatypeIDREF="tltr" sampleID="PACKAGE_CSTATE_LTR_THRESHOLDS_C9">
+			<TELC:description>Package C State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_LTR_THRESHOLDS_C9</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_LTR_THRESHOLDS_C10" datatypeIDREF="tltr" sampleID="PACKAGE_CSTATE_LTR_THRESHOLDS_C10">
+			<TELC:description>Package C10 State LTR thresholds.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_LTR_THRESHOLDS_C10</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_LTR_VALUES_DISPLAY" datatypeIDREF="tltr" sampleID="PACKAGE_CSTATE_LTR_VALUES_DISPLAY">
+			<TELC:description>Current display latency tolerance</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_LTR_VALUES_DISPLAY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>47</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_LTR_VALUES_IPU" datatypeIDREF="tltr" sampleID="PACKAGE_CSTATE_LTR_VALUES_IPU">
+			<TELC:description>Current IPU latency tolerance</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_LTR_VALUES_IPU</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>48</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_29" sampleID="29" sampleGroupID="Container_29">
+		<TELC:description>Groupname 0x60e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_LTR_VALUES_PCH" datatypeIDREF="tltr" sampleID="PACKAGE_CSTATE_LTR_VALUES_PCH">
+			<TELC:description>Current PCH latency tolerance</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_LTR_VALUES_PCH</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>15</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PACKAGE_CSTATE_LTR_VALUES_CDIE" datatypeIDREF="tltr" sampleID="PACKAGE_CSTATE_LTR_VALUES_CDIE">
+			<TELC:description>Current CDIE latency tolerance</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_LTR_VALUES_CDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>16</TELC:size>
+			<TELC:lsb>16</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_30" sampleID="30" sampleGroupID="Container_30">
+		<TELC:description>Groupname 0x60f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_C2_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_C2_RESIDENCY">
+			<TELC:description>Measures the residency in Package C-state C2. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_C2_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_31" sampleID="31" sampleGroupID="Container_31">
+		<TELC:description>Groupname 0x60f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_C2R_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_C2R_RESIDENCY">
+			<TELC:description>Measures the residency in Package C-state C2R. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_C2R_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_32" sampleID="32" sampleGroupID="Container_32">
+		<TELC:description>Groupname 0x6100</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_C3_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_C3_RESIDENCY">
+			<TELC:description>Measures the residency in Package C-state C3. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_C3_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_33" sampleID="33" sampleGroupID="Container_33">
+		<TELC:description>Groupname 0x6108</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_C6_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_C6_RESIDENCY">
+			<TELC:description>Measures the residency in Package C-state C6. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_C6_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_34" sampleID="34" sampleGroupID="Container_34">
+		<TELC:description>Groupname 0x6110</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_C7_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_C7_RESIDENCY">
+			<TELC:description>Measures the residency in Package C-state C8. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_C7_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_35" sampleID="35" sampleGroupID="Container_35">
+		<TELC:description>Groupname 0x6118</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_C8_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_C8_RESIDENCY">
+			<TELC:description>Measures the residency in Package C-state C8. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_C8_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_36" sampleID="36" sampleGroupID="Container_36">
+		<TELC:description>Groupname 0x6120</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_C9_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_C9_RESIDENCY">
+			<TELC:description>Measures the residency in Package C-state C8. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_C9_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_37" sampleID="37" sampleGroupID="Container_37">
+		<TELC:description>Groupname 0x6128</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_C10_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_C10_RESIDENCY">
+			<TELC:description>Measures the residency in Package C-state C10. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_C10_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_38" sampleID="38" sampleGroupID="Container_38">
+		<TELC:description>Groupname 0x6130</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="OS_REQUESTED_CSTATE_PC6_RESIDENCY" datatypeIDREF="txtal_time" sampleID="OS_REQUESTED_CSTATE_PC6_RESIDENCY">
+			<TELC:description>Measures the time that the OS requested C-state is PC6. Units in XTAL clocks</TELC:description>
+			<TELC:sampleSubGroup>OS_REQUESTED_CSTATE_PC6_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_39" sampleID="39" sampleGroupID="Container_39">
+		<TELC:description>Groupname 0x6138</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="OS_REQUESTED_CSTATE_PC7_RESIDENCY" datatypeIDREF="txtal_time" sampleID="OS_REQUESTED_CSTATE_PC7_RESIDENCY">
+			<TELC:description>Measures the time that the OS requested C-state is PC7. Units in XTAL clocks</TELC:description>
+			<TELC:sampleSubGroup>OS_REQUESTED_CSTATE_PC7_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_40" sampleID="40" sampleGroupID="Container_40">
+		<TELC:description>Groupname 0x6140</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="OS_REQUESTED_CSTATE_PC8_RESIDENCY" datatypeIDREF="txtal_time" sampleID="OS_REQUESTED_CSTATE_PC8_RESIDENCY">
+			<TELC:description>Measures the time that the OS requested C-state is PC8. Units in XTAL clocks</TELC:description>
+			<TELC:sampleSubGroup>OS_REQUESTED_CSTATE_PC8_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_41" sampleID="41" sampleGroupID="Container_41">
+		<TELC:description>Groupname 0x6148</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="OS_REQUESTED_CSTATE_PC9_RESIDENCY" datatypeIDREF="txtal_time" sampleID="OS_REQUESTED_CSTATE_PC9_RESIDENCY">
+			<TELC:description>Measures the time that the OS requested C-state is PC9. Units in XTAL clocks</TELC:description>
+			<TELC:sampleSubGroup>OS_REQUESTED_CSTATE_PC9_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_42" sampleID="42" sampleGroupID="Container_42">
+		<TELC:description>Groupname 0x6150</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="OS_REQUESTED_CSTATE_PC10_RESIDENCY" datatypeIDREF="txtal_time" sampleID="OS_REQUESTED_CSTATE_PC10_RESIDENCY">
+			<TELC:description>Measures the time that the OS requested C-state is PC10. Units in XTAL clocks</TELC:description>
+			<TELC:sampleSubGroup>OS_REQUESTED_CSTATE_PC10_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_43" sampleID="43" sampleGroupID="Container_43">
+		<TELC:description>Groupname 0x6158</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_BLOCKED_PC6_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_BLOCKED_PC6_RESIDENCY">
+			<TELC:description>Measures the time that the OS requested C-state of PC6 is blocked. Units in XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_BLOCKED_PC6_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_44" sampleID="44" sampleGroupID="Container_44">
+		<TELC:description>Groupname 0x6160</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_BLOCKED_PC7_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_BLOCKED_PC7_RESIDENCY">
+			<TELC:description>Measures the time that the OS requested C-state of PC7 is blocked. Units in XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_BLOCKED_PC7_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_45" sampleID="45" sampleGroupID="Container_45">
+		<TELC:description>Groupname 0x6168</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_BLOCKED_PC8_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_BLOCKED_PC8_RESIDENCY">
+			<TELC:description>Measures the time that the OS requested C-state of PC8 is blocked. Units in XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_BLOCKED_PC8_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_46" sampleID="46" sampleGroupID="Container_46">
+		<TELC:description>Groupname 0x6170</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_BLOCKED_PC9_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_BLOCKED_PC9_RESIDENCY">
+			<TELC:description>Measures the time that the OS requested C-state of PC9 is blocked. Units in XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_BLOCKED_PC9_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_47" sampleID="47" sampleGroupID="Container_47">
+		<TELC:description>Groupname 0x6178</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PACKAGE_CSTATE_BLOCKED_PC10_RESIDENCY" datatypeIDREF="txtal_time" sampleID="PACKAGE_CSTATE_BLOCKED_PC10_RESIDENCY">
+			<TELC:description>Measures the time that the OS requested C-state of PC10 is blocked. Units in XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PACKAGE_CSTATE_BLOCKED_PC10_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_48" sampleID="48" sampleGroupID="Container_48">
+		<TELC:description>Groupname 0x6180</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_DFX" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_DFX">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: DFX preventing entry to PC2R or deeper</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_DFX</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_TARGET_ACTIONS" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_TARGET_ACTIONS">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: Target Actions preventing entry to PC2R or deeper</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_TARGET_ACTIONS</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_49" sampleID="49" sampleGroupID="Container_49">
+		<TELC:description>Groupname 0x6188</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_GVFSM" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_GVFSM">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: GVFSM preventing PC2R or deeper</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_GVFSM</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_IP_MEMORY" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_IP_MEMORY">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: waiting for IP rsp for entry to PC3 or deeper</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_IP_MEMORY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_50" sampleID="50" sampleGroupID="Container_50">
+		<TELC:description>Groupname 0x6190</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_MEM_RSRC" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_MEM_RSRC">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: IP Memory timer preventing entry to PC3 or deeper</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_MEM_RSRC</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_RING_RSRC" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_RING_RSRC">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: Ring</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_RING_RSRC</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_51" sampleID="51" sampleGroupID="Container_51">
+		<TELC:description>Groupname 0x6198</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_IP_RSRC" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_IP_RSRC">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason:Ips cannot go deeper</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_IP_RSRC</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_PKG_DEMOTION" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_PKG_DEMOTION">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: Package Demotion</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_PKG_DEMOTION</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_52" sampleID="52" sampleGroupID="Container_52">
+		<TELC:description>Groupname 0x61a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_SLOWLOOP_TIMER" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_SLOWLOOP_TIMER">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: Slowloop timer</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_SLOWLOOP_TIMER</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_PCH_MC" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_PCH_MC">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: resouce busy prevents memory block</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_PCH_MC</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_53" sampleID="53" sampleGroupID="Container_53">
+		<TELC:description>Groupname 0x61a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_STALE_TEMPS" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_STALE_TEMPS">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: Waiting for fresh thermal sensors reading</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_STALE_TEMPS</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_MEDIA" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_MEDIA">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: Media preventing entry to PC3 or deeper</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_MEDIA</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_54" sampleID="54" sampleGroupID="Container_54">
+		<TELC:description>Groupname 0x61b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_IPU_ALIVE_RING" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_IPU_ALIVE_RING">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: Periodic maintenance action pending</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_IPU_ALIVE_RING</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_DISP_PMDMD" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_DISP_PMDMD">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: Cannot close memory controller because it is currently needed</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_DISP_PMDMD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_55" sampleID="55" sampleGroupID="Container_55">
+		<TELC:description>Groupname 0x61b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_LTR_IPU" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_LTR_IPU">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason:  LTR from IPU</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_LTR_IPU</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_LTR_DISPLAY" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_LTR_DISPLAY">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: LTR from Display</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_LTR_DISPLAY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_56" sampleID="56" sampleGroupID="Container_56">
+		<TELC:description>Groupname 0x61c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_LTR_IA_DOMAIN" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_LTR_IA_DOMAIN">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason:  LTR from IA Domain</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_LTR_IA_DOMAIN</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_LTR_CDIE" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_LTR_CDIE">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason:  LTR from CDIE</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_LTR_CDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_57" sampleID="57" sampleGroupID="Container_57">
+		<TELC:description>Groupname 0x61c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_LTR_GDIE" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_LTR_GDIE">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason:  LTR from GDIE</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_LTR_GDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_LTR_PCH" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_LTR_PCH">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason:  LTR from PCH</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_LTR_PCH</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_58" sampleID="58" sampleGroupID="Container_58">
+		<TELC:description>Groupname 0x61d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_TNTE_IPU" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_TNTE_IPU">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: TNTE from IPU</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_TNTE_IPU</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_TNTE_DISPLAY" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_TNTE_DISPLAY">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason:  TNTE from Display</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_TNTE_DISPLAY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_59" sampleID="59" sampleGroupID="Container_59">
+		<TELC:description>Groupname 0x61d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_TNTE_CDIE" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_TNTE_CDIE">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason:  TNTE from GDIE</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_TNTE_CDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_TNTE_GDIE" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_TNTE_GDIE">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason:  TNTE from GDIE</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_TNTE_GDIE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_60" sampleID="60" sampleGroupID="Container_60">
+		<TELC:description>Groupname 0x61e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_CANNOT_KILL_TNTE_IA_DOMAIN" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_TNTE_IA_DOMAIN">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason:  TNTE from IA Domain</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_TNTE_IA_DOMAIN</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_CANNOT_KILL_TNTE_PCH" datatypeIDREF="tevent_counter" sampleID="PKGC_CANNOT_KILL_TNTE_PCH">
+			<TELC:description>Count the number of times deeper PkgC3 or deeper state is blocked due to reason: TNTE from PCH</TELC:description>
+			<TELC:sampleSubGroup>PKGC_CANNOT_KILL_TNTE_PCH</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_61" sampleID="61" sampleGroupID="Container_61">
+		<TELC:description>Groupname 0x61e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_NS" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_NS">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason: PCH originating Memory access pending</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_NS</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_RING" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_RING">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  PCH Originating LLC Access</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_RING</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_62" sampleID="62" sampleGroupID="Container_62">
+		<TELC:description>Groupname 0x61f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_RING_CF" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_RING_CF">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  PCH Originating Core access, need ring up</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_RING_CF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_DISP_INT" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_DISP_INT">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  Display Interrupt</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_DISP_INT</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_63" sampleID="63" sampleGroupID="Container_63">
+		<TELC:description>Groupname 0x61f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_MBOX" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_MBOX">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  Wakeup due to pending PMSync Mailbox request</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_MBOX</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_RSVD" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_RSVD">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  PMC Reserved</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PMSYNC_RSVD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_64" sampleID="64" sampleGroupID="Container_64">
+		<TELC:description>Groupname 0x6200</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_EC2PCH_WAKE" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_EC2PCH_WAKE">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  PECI wake</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_EC2PCH_WAKE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_BCLK_TIMER_EXPIRED" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_BCLK_TIMER_EXPIRED">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  Pcode Pop-up, TNTE timer expired</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_BCLK_TIMER_EXPIRED</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_65" sampleID="65" sampleGroupID="Container_65">
+		<TELC:description>Groupname 0x6208</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PECI_WAKE" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PECI_WAKE">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  PECI requires wake to service request</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PECI_WAKE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_XXRESET_ASSERTED" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_XXRESET_ASSERTED">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  xxReset asserted</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_XXRESET_ASSERTED</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_66" sampleID="66" sampleGroupID="Container_66">
+		<TELC:description>Groupname 0x6210</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_DISPLAYSS_PMA_WAKE" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_DISPLAYSS_PMA_WAKE">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  Display wake (buffer refresh)</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_DISPLAYSS_PMA_WAKE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PCODE_REQ" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PCODE_REQ">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  Wakeup due to Pcode request due to SB NACK</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_PCODE_REQ</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_67" sampleID="67" sampleGroupID="Container_67">
+		<TELC:description>Groupname 0x6218</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_TAP_REQ" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_TAP_REQ">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  Wakeup due to TAP request</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_TAP_REQ</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_IPU_WAKE" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_IPU_WAKE">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  IPU wake request</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_IPU_WAKE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_68" sampleID="68" sampleGroupID="Container_68">
+		<TELC:description>Groupname 0x6220</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_SBB_WAKE" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_SBB_WAKE">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  SBB wake request</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_SBB_WAKE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_SVID_DIELET_ALERT_WAKE" datatypeIDREF="tevent_counter" sampleID="PKGC_BOOT_FSM_LAST_WAKE_CAUSE_SVID_DIELET_ALERT_WAKE">
+			<TELC:description>PC6 to PC10 WAKE - Count the number of times exited from PkgC state due to the reason:  SVID alert wake</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BOOT_FSM_LAST_WAKE_CAUSE_SVID_DIELET_ALERT_WAKE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_69" sampleID="69" sampleGroupID="Container_69">
+		<TELC:description>Groupname 0x6228</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BLCK_RESOLVE_ACCORDING_TO_TARGET" datatypeIDREF="tevent_counter" sampleID="PKGC_BLCK_RESOLVE_ACCORDING_TO_TARGET">
+			<TELC:description>Demotion cause within PC6 to PC10 - Count the number of times a deeper state within PC6 - PC10 is not achieved due to reason: All is fine, target c-state was set according to request</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BLCK_RESOLVE_ACCORDING_TO_TARGET</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BLCK_RESOLVE_NO_TIME_FOR_ACTIONS" datatypeIDREF="tevent_counter" sampleID="PKGC_BLCK_RESOLVE_NO_TIME_FOR_ACTIONS">
+			<TELC:description>Demotion cause within PC6 to PC10 - Count the number of times a deeper state within PC6 - PC10 is not achieved due to reason: Cannot go to target C-state since LTR is too close</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BLCK_RESOLVE_NO_TIME_FOR_ACTIONS</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_70" sampleID="70" sampleGroupID="Container_70">
+		<TELC:description>Groupname 0x6230</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BLCK_RESOLVE_NO_TIME_FOR_TNTE" datatypeIDREF="tevent_counter" sampleID="PKGC_BLCK_RESOLVE_NO_TIME_FOR_TNTE">
+			<TELC:description>Demotion cause within PC6 to PC10 - Count the number of times a deeper state within PC6 - PC10 is not achieved due to reason: Cannot go to target C-state since TNTE is too close</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BLCK_RESOLVE_NO_TIME_FOR_TNTE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BLCK_RESOLVE_DE_NOT_IN_DC6" datatypeIDREF="tevent_counter" sampleID="PKGC_BLCK_RESOLVE_DE_NOT_IN_DC6">
+			<TELC:description>Demotion cause within PC6 to PC10 - Count the number of times a deeper state within PC6 - PC10 is not achieved due to reason: Cannot go to target C-state since DE is not in DC6, therefore system agent needs to be on - can go up to pkgc8</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BLCK_RESOLVE_DE_NOT_IN_DC6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_71" sampleID="71" sampleGroupID="Container_71">
+		<TELC:description>Groupname 0x6238</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BLCK_RESOLVE_DEMOTED" datatypeIDREF="tevent_counter" sampleID="PKGC_BLCK_RESOLVE_DEMOTED">
+			<TELC:description>Demotion cause within PC6 to PC10 - Count the number of times a deeper state within PC6 - PC10 is not achieved due to reason: Internal demotion</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BLCK_RESOLVE_DEMOTED</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BLCK_RESOLVE_NOT_RING_C7" datatypeIDREF="tevent_counter" sampleID="PKGC_BLCK_RESOLVE_NOT_RING_C7">
+			<TELC:description>Demotion cause within PC6 to PC10 - Count the number of times a deeper state within PC6 - PC10 is not achieved due to reason: Cannot go to target C-state since ring is not in C7, hence in retention - cannot go beyond pkgc7</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BLCK_RESOLVE_NOT_RING_C7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_72" sampleID="72" sampleGroupID="Container_72">
+		<TELC:description>Groupname 0x6240</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BLCK_MODE_DEMOTE_CAUSE_ACCORDING_TO_TARGET" datatypeIDREF="tevent_counter" sampleID="PKGC_BLCK_MODE_DEMOTE_CAUSE_ACCORDING_TO_TARGET">
+			<TELC:description>PC6 to PC10 BLOCK_CAUSE - Counter number of times blocked to enter PkgC6 or deeper due to the reason:  All is fine, target c-state was set according to request</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BLCK_MODE_DEMOTE_CAUSE_ACCORDING_TO_TARGET</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BLCK_MODE_DEMOTE_CAUSE_IOSF_NOT_IDLE" datatypeIDREF="tevent_counter" sampleID="PKGC_BLCK_MODE_DEMOTE_CAUSE_IOSF_NOT_IDLE">
+			<TELC:description>PC6 to PC10 BLOCK_CAUSE - Counter number of times blocked to enter PkgC6 or deeper due to the reason:  PSF/SB_BRIDGE are not idle</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BLCK_MODE_DEMOTE_CAUSE_IOSF_NOT_IDLE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_73" sampleID="73" sampleGroupID="Container_73">
+		<TELC:description>Groupname 0x6248</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BLCK_MODE_DEMOTE_CAUSE_FLOWPEND" datatypeIDREF="tevent_counter" sampleID="PKGC_BLCK_MODE_DEMOTE_CAUSE_FLOWPEND">
+			<TELC:description>PC6 to PC10 BLOCK_CAUSE - Counter number of times blocked to enter PkgC6 or deeper due to the reason: Pcode has pending transactions</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BLCK_MODE_DEMOTE_CAUSE_FLOWPEND</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BLCK_MODE_DEMOTE_CAUSE_NOT_ENOUGH_TIME" datatypeIDREF="tevent_counter" sampleID="PKGC_BLCK_MODE_DEMOTE_CAUSE_NOT_ENOUGH_TIME">
+			<TELC:description>PC6 to PC10 BLOCK_CAUSE - Counter number of times blocked to enter PkgC6 or deeper due to the reason:  TNTE is too low, or latency is too high</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BLCK_MODE_DEMOTE_CAUSE_NOT_ENOUGH_TIME</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_74" sampleID="74" sampleGroupID="Container_74">
+		<TELC:description>Groupname 0x6250</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PKGC_BLCK_MODE_DEMOTE_CAUSE_PCU_NOT_DRAINED" datatypeIDREF="tevent_counter" sampleID="PKGC_BLCK_MODE_DEMOTE_CAUSE_PCU_NOT_DRAINED">
+			<TELC:description>PC6 to PC10 BLOCK_CAUSE - Counter number of times blocked to enter PkgC6 or deeper due to the reason:  Pcode has no pending transactions</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BLCK_MODE_DEMOTE_CAUSE_PCU_NOT_DRAINED</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PKGC_BLCK_MODE_DEMOTE_CAUSE_SB_BRIDGE_NOT_BLOCKED" datatypeIDREF="tevent_counter" sampleID="PKGC_BLCK_MODE_DEMOTE_CAUSE_SB_BRIDGE_NOT_BLOCKED">
+			<TELC:description>PC6 to PC10 BLOCK_CAUSE - Counter number of times blocked to enter PkgC6 or deeper due to the reason:  SB Bridge not blocked</TELC:description>
+			<TELC:sampleSubGroup>PKGC_BLCK_MODE_DEMOTE_CAUSE_SB_BRIDGE_NOT_BLOCKED</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_75" sampleID="75" sampleGroupID="Container_75">
+		<TELC:description>Groupname 0x6258</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_0" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_0">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_76" sampleID="76" sampleGroupID="Container_76">
+		<TELC:description>Groupname 0x6260</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_1" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_1">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_77" sampleID="77" sampleGroupID="Container_77">
+		<TELC:description>Groupname 0x6268</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_2" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_2">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_78" sampleID="78" sampleGroupID="Container_78">
+		<TELC:description>Groupname 0x6270</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_3" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_3">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_79" sampleID="79" sampleGroupID="Container_79">
+		<TELC:description>Groupname 0x6278</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_4" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_4">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_80" sampleID="80" sampleGroupID="Container_80">
+		<TELC:description>Groupname 0x6280</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_5" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_5">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_81" sampleID="81" sampleGroupID="Container_81">
+		<TELC:description>Groupname 0x6288</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_6" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_6">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_82" sampleID="82" sampleGroupID="Container_82">
+		<TELC:description>Groupname 0x6290</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_7" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_7">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_83" sampleID="83" sampleGroupID="Container_83">
+		<TELC:description>Groupname 0x6298</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_8" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_8">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_8</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_84" sampleID="84" sampleGroupID="Container_84">
+		<TELC:description>Groupname 0x62a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_9" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_9">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_9</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_85" sampleID="85" sampleGroupID="Container_85">
+		<TELC:description>Groupname 0x62a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_10" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_10">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_10</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_86" sampleID="86" sampleGroupID="Container_86">
+		<TELC:description>Groupname 0x62b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_11" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_11">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_11</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_87" sampleID="87" sampleGroupID="Container_87">
+		<TELC:description>Groupname 0x62b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIXED_BLOCK_SPARE_12" datatypeIDREF="tgeneric_counter" sampleID="FIXED_BLOCK_SPARE_12">
+			<TELC:description>Spare fixed block counters.</TELC:description>
+			<TELC:sampleSubGroup>FIXED_BLOCK_SPARE_12</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

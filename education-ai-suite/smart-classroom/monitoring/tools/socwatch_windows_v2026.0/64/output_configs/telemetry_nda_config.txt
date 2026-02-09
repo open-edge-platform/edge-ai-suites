@@ -1,0 +1,46 @@
+# ********************************************************************************
+# INTEL CONFIDENTIAL
+# Copyright 2017 Intel Corporation.
+
+# This software and the related documents are Intel copyrighted materials, and
+# your use of them is governed by the express license under which they were
+# provided to you (License). Unless the License provides otherwise, you may not
+# use, modify, copy, publish, distribute, disclose or transmit this software or
+# the related documents without Intel's prior written permission.
+
+# This software and the related documents are provided as is, with no express
+# or implied warranties, other than those that are expressly stated in the
+# License.
+# ********************************************************************************
+
+# S0i3 Residency
+ALL_S0I3-SSTATE_TAG_TABLE_ORDER=RESIDENCY-S0i3,OCCURRENCES-S0i3
+
+ALL_S0I3-SSTATE_RESIDENCY-S0i3_RESIDENCY-PERCENTAGE_TABLE=NO
+ALL_S0I3-SSTATE_RESIDENCY-S0i3_RESIDENCY-PERCENTAGE_TITLE=System S0i3 State
+ALL_S0I3-SSTATE_RESIDENCY-S0i3_RESIDENCY-PERCENTAGE_TRANSPOSE=NO
+
+ALL_S0I3-SSTATE_RESIDENCY-S0i3_RESIDENCY-MILLISECOND_TABLE=NO
+ALL_S0I3-SSTATE_RESIDENCY-S0i3_RESIDENCY-MILLISECOND_TITLE=System S0i3 State
+ALL_S0I3-SSTATE_RESIDENCY-S0i3_RESIDENCY-MILLISECOND_TRANSPOSE=NO
+
+ALL_S0I3-SSTATE_RESIDENCY-S0i3_RESIDENCY-COMBINED_TABLE=YES
+ALL_S0I3-SSTATE_RESIDENCY-S0i3_RESIDENCY-COMBINED_TITLE=System S0i3 State
+ALL_S0I3-SSTATE_RESIDENCY-S0i3_RESIDENCY-COMBINED_TRANSPOSE=NO
+
+ALL_S0I3-SSTATE_RESIDENCY-S0i3_SAMPLE-COUNT_TABLE=NO
+ALL_S0I3-SSTATE_RESIDENCY-S0i3_SAMPLE-COUNT_TITLE=System S0i3 State
+ALL_S0I3-SSTATE_RESIDENCY-S0i3_SAMPLE-COUNT_TRANSPOSE=NO
+
+# S0i3 Occurrences
+ALL_S0I3-SSTATE_OCCURRENCES-S0i3_AVERAGE-RATE-TOTAL_TABLE=YES
+ALL_S0I3-SSTATE_OCCURRENCES-S0i3_AVERAGE-RATE-TOTAL_TITLE=System S0i3 State Entry
+ALL_S0I3-SSTATE_OCCURRENCES-S0i3_AVERAGE-RATE-TOTAL_TRANSPOSE=YES
+
+ALL_S0I3-SSTATE_OCCURRENCES-S0i3_SAMPLE-COUNT_TABLE=YES
+ALL_S0I3-SSTATE_OCCURRENCES-S0i3_SAMPLE-COUNT_TITLE=System S0i3 State Entry
+ALL_S0I3-SSTATE_OCCURRENCES-S0i3_SAMPLE-COUNT_TRANSPOSE=NO
+
+ALL_S0I3-SSTATE_OCCURRENCES-S0i3_TOTAL-DELTA_TABLE=NO
+ALL_S0I3-SSTATE_OCCURRENCES-S0i3_TOTAL-DELTA_TITLE=System S0i3 State Entry
+ALL_S0I3-SSTATE_OCCURRENCES-S0i3_TOTAL-DELTA_TRANSPOSE=NO

@@ -1,0 +1,41 @@
+# ********************************************************************************
+# Copyright 2017 Intel Corporation.
+
+# This software and the related documents are Intel copyrighted materials, and
+# your use of them is governed by the express license under which they were
+# provided to you (License). Unless the License provides otherwise, you may not
+# use, modify, copy, publish, distribute, disclose or transmit this software or
+# the related documents without Intel's prior written permission.
+
+# This software and the related documents are provided as is, with no express
+# or implied warranties, other than those that are expressly stated in the
+# License.
+# ********************************************************************************
+
+#
+#  CENTRAL-THERMAL-SAMPLES is already configured in CORE-TEMP
+#  Leave it for now in case future writer config requires "feature" + "tag" combinaiton
+#
+#ALL_SOC-TEMP_ALL-THERMAL-DATA_MIN-MAX-AVG_TABLE=YES
+#ALL_SOC-TEMP_ALL-THERMAL-DATA_MIN-MAX-AVG_TRANSPOSE=NO
+#ALL_SOC-TEMP_ALL-THERMAL-DATA_MIN-MAX_TABLE=NO
+#ALL_SOC-TEMP_ALL-THERMAL-DATA_MIN-MAX_TRANSPOSE=NO
+#ALL_SOC-TEMP_ALL-THERMAL-DATA_NUMBER-OF-OCCURENCES_TABLE=YES
+#ALL_SOC-TEMP_ALL-THERMAL-DATA_NUMBER-OF-OCCURENCES_TRANSPOSE=NO
+#ALL_SOC-TEMP_ALL-THERMAL-DATA_RELATIVE-FREQUENCY-PERCENTAGE_TABLE=NO
+#ALL_SOC-TEMP_ALL-THERMAL-DATA_RELATIVE-FREQUENCY-PERCENTAGE_TRANSPOSE=NO
+#ALL_SOC-TEMP_ALL-THERMAL-DATA_SAMPLE-COUNT_TABLE=YES
+#ALL_SOC-TEMP_ALL-THERMAL-DATA_SAMPLE-COUNT_TRANSPOSE=NO
+
+ALL_SOC-TEMP_TAG_TABLE_ORDER=SOC-THERMAL-DATA
+
+ALL_SOC-TEMP_SOC-THERMAL-DATA_MIN-MAX-AVG_TABLE=YES
+ALL_SOC-TEMP_SOC-THERMAL-DATA_MIN-MAX-AVG_TRANSPOSE=NO
+ALL_SOC-TEMP_SOC-THERMAL-DATA_MIN-MAX_TABLE=NO
+ALL_SOC-TEMP_SOC-THERMAL-DATA_MIN-MAX_TRANSPOSE=NO
+ALL_SOC-TEMP_SOC-THERMAL-DATA_NUMBER-OF-OCCURENCES_TABLE=YES
+ALL_SOC-TEMP_SOC-THERMAL-DATA_NUMBER-OF-OCCURENCES_TRANSPOSE=NO
+ALL_SOC-TEMP_SOC-THERMAL-DATA_RELATIVE-FREQUENCY-PERCENTAGE_TABLE=NO
+ALL_SOC-TEMP_SOC-THERMAL-DATA_RELATIVE-FREQUENCY-PERCENTAGE_TRANSPOSE=NO
+ALL_SOC-TEMP_SOC-THERMAL-DATA_SAMPLE-COUNT_TABLE=YES
+ALL_SOC-TEMP_SOC-THERMAL-DATA_SAMPLE-COUNT_TRANSPOSE=NO

@@ -1,0 +1,1301 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "nvl_soc_pma_ert_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>NVL</TELEM:name>
+	<TELEM:description>NVL SOC PMA ERT PCD-H</TELEM:description>
+	<TELEM:uniqueid>0x01093401</TELEM:uniqueid>
+	<TELEM:productid>NVL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x9c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_PRIM_CLK_ACK" datatypeIDREF="tpch_time_s" sampleID="PXPC_PRIM_CLK_ACK">
+			<TELC:description>PXPC PRIM Clock Ack</TELC:description>
+			<TELC:sampleSubGroup>PXPC_PRIM_CLK_ACK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x9c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_OSC_CLK_ACK" datatypeIDREF="tpch_time_s" sampleID="PXPC_OSC_CLK_ACK">
+			<TELC:description>PXPC OSC Clock Ack</TELC:description>
+			<TELC:sampleSubGroup>PXPC_OSC_CLK_ACK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x9d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_XTAL_CLK_ACK" datatypeIDREF="tpch_time_s" sampleID="PXPC_XTAL_CLK_ACK">
+			<TELC:description>PXPC XTAL Clock Ack</TELC:description>
+			<TELC:sampleSubGroup>PXPC_XTAL_CLK_ACK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_3" sampleID="3" sampleGroupID="Container_3">
+		<TELC:description>Groupname 0x9d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_FIA_OSC_CLK_ACK" datatypeIDREF="tpch_time_s" sampleID="PXPC_FIA_OSC_CLK_ACK">
+			<TELC:description>PXPC FIA OSC Clock Ack</TELC:description>
+			<TELC:sampleSubGroup>PXPC_FIA_OSC_CLK_ACK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_4" sampleID="4" sampleGroupID="Container_4">
+		<TELC:description>Groupname 0x9e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_G5FPW_0_PLL_A" datatypeIDREF="tpch_time_s" sampleID="PXPC_G5FPW_0_PLL_A">
+			<TELC:description>PXPC Gen5 PLL A Active</TELC:description>
+			<TELC:sampleSubGroup>PXPC_G5FPW_0_PLL_A</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_5" sampleID="5" sampleGroupID="Container_5">
+		<TELC:description>Groupname 0x9e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_G5FPW_0_PLL_B" datatypeIDREF="tpch_time_s" sampleID="PXPC_G5FPW_0_PLL_B">
+			<TELC:description>PXPC Gen5 PLL B Active</TELC:description>
+			<TELC:sampleSubGroup>PXPC_G5FPW_0_PLL_B</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_6" sampleID="6" sampleGroupID="Container_6">
+		<TELC:description>Groupname 0x9f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L0_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L0_TXON_RXON">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 0 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L0_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_7" sampleID="7" sampleGroupID="Container_7">
+		<TELC:description>Groupname 0x9f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L0_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L0_TXON_RXOFF">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 0 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L0_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_8" sampleID="8" sampleGroupID="Container_8">
+		<TELC:description>Groupname 0xa00</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L0_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L0_TXOFF_RXON">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 0 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L0_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_9" sampleID="9" sampleGroupID="Container_9">
+		<TELC:description>Groupname 0xa08</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L0_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L0_TXOFF_RXOFF">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 0 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L0_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_10" sampleID="10" sampleGroupID="Container_10">
+		<TELC:description>Groupname 0xa10</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L1_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L1_TXON_RXON">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 1 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L1_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_11" sampleID="11" sampleGroupID="Container_11">
+		<TELC:description>Groupname 0xa18</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L1_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L1_TXON_RXOFF">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 1 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L1_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_12" sampleID="12" sampleGroupID="Container_12">
+		<TELC:description>Groupname 0xa20</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L1_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L1_TXOFF_RXON">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 1 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L1_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_13" sampleID="13" sampleGroupID="Container_13">
+		<TELC:description>Groupname 0xa28</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L1_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L1_TXOFF_RXOFF">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 1 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L1_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_14" sampleID="14" sampleGroupID="Container_14">
+		<TELC:description>Groupname 0xa30</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L2_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L2_TXON_RXON">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 2 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L2_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_15" sampleID="15" sampleGroupID="Container_15">
+		<TELC:description>Groupname 0xa38</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L2_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L2_TXON_RXOFF">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 2 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L2_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_16" sampleID="16" sampleGroupID="Container_16">
+		<TELC:description>Groupname 0xa40</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L2_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L2_TXOFF_RXON">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 2 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L2_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_17" sampleID="17" sampleGroupID="Container_17">
+		<TELC:description>Groupname 0xa48</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L2_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L2_TXOFF_RXOFF">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 2 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L2_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_18" sampleID="18" sampleGroupID="Container_18">
+		<TELC:description>Groupname 0xa50</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L3_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L3_TXON_RXON">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 3 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L3_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_19" sampleID="19" sampleGroupID="Container_19">
+		<TELC:description>Groupname 0xa58</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L3_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L3_TXON_RXOFF">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 3 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L3_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_20" sampleID="20" sampleGroupID="Container_20">
+		<TELC:description>Groupname 0xa60</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L3_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L3_TXOFF_RXON">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 3 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L3_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_21" sampleID="21" sampleGroupID="Container_21">
+		<TELC:description>Groupname 0xa68</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_MPHY_L3_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPC_MPHY_L3_TXOFF_RXOFF">
+			<TELC:description>PXPC Gen5 PHY PCIe Lane 3 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPC_MPHY_L3_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_22" sampleID="22" sampleGroupID="Container_22">
+		<TELC:description>Groupname 0xa70</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_LDO_Enable_0" datatypeIDREF="tpch_time_s" sampleID="PXPC_LDO_Enable_0">
+			<TELC:description>PXPC Gen5 PHY PHY LDO Active</TELC:description>
+			<TELC:sampleSubGroup>PXPC_LDO_Enable_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_23" sampleID="23" sampleGroupID="Container_23">
+		<TELC:description>Groupname 0xa78</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_PGD" datatypeIDREF="tpch_time_s" sampleID="PXPC_PGD">
+			<TELC:description>PXPC PGD ON</TELC:description>
+			<TELC:sampleSubGroup>PXPC_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_24" sampleID="24" sampleGroupID="Container_24">
+		<TELC:description>Groupname 0xa80</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_FIA_PGD" datatypeIDREF="tpch_time_s" sampleID="PXPC_FIA_PGD">
+			<TELC:description>PXPC FIA PGD ON</TELC:description>
+			<TELC:sampleSubGroup>PXPC_FIA_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_25" sampleID="25" sampleGroupID="Container_25">
+		<TELC:description>Groupname 0xa88</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_FIACPCB_PGD" datatypeIDREF="tpch_time_s" sampleID="PXPC_FIACPCB_PGD">
+			<TELC:description>PXPC FIACPCB PGD ON</TELC:description>
+			<TELC:sampleSubGroup>PXPC_FIACPCB_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_26" sampleID="26" sampleGroupID="Container_26">
+		<TELC:description>Groupname 0xa90</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_G5PFPW_0_PGD" datatypeIDREF="tpch_time_s" sampleID="PXPC_G5PFPW_0_PGD">
+			<TELC:description>PXPC Gen5 PHY PGD ON</TELC:description>
+			<TELC:sampleSubGroup>PXPC_G5PFPW_0_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_27" sampleID="27" sampleGroupID="Container_27">
+		<TELC:description>Groupname 0xa98</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_FIA_LOS0" datatypeIDREF="tgeneric_sample" sampleID="PXPC_FIA_LOS0">
+			<TELC:description>PXPC FIA Lane Ownership Status 0</TELC:description>
+			<TELC:sampleSubGroup>FIA_P5x4_LANE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PXPC_FIA_LRSTS0" datatypeIDREF="tgeneric_sample" sampleID="PXPC_FIA_LRSTS0">
+			<TELC:description>PXPC FIA Lane Rate Status 0</TELC:description>
+			<TELC:sampleSubGroup>FIA_P5x4_LANE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_28" sampleID="28" sampleGroupID="Container_28">
+		<TELC:description>Groupname 0xaa0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_FIA_LOS1" datatypeIDREF="tgeneric_sample" sampleID="PXPC_FIA_LOS1">
+			<TELC:description>PXPC FIA Lane Ownership Status 1</TELC:description>
+			<TELC:sampleSubGroup>FIA_P5x4_LANE_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PXPC_FIA_LRSTS1" datatypeIDREF="tgeneric_sample" sampleID="PXPC_FIA_LRSTS1">
+			<TELC:description>PXPC FIA Lane Rate Status 1</TELC:description>
+			<TELC:sampleSubGroup>FIA_P5x4_LANE_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_29" sampleID="29" sampleGroupID="Container_29">
+		<TELC:description>Groupname 0xaa8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_PRIM_CLK_ACK" datatypeIDREF="tpch_time_s" sampleID="PXPD_PRIM_CLK_ACK">
+			<TELC:description>PXPD PRIM Clock Ack</TELC:description>
+			<TELC:sampleSubGroup>PXPD_PRIM_CLK_ACK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_30" sampleID="30" sampleGroupID="Container_30">
+		<TELC:description>Groupname 0xab0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_OSC_CLK_ACK" datatypeIDREF="tpch_time_s" sampleID="PXPD_OSC_CLK_ACK">
+			<TELC:description>PXPD OSC Clock Ack</TELC:description>
+			<TELC:sampleSubGroup>PXPD_OSC_CLK_ACK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_31" sampleID="31" sampleGroupID="Container_31">
+		<TELC:description>Groupname 0xab8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_XTAL_CLK_ACK" datatypeIDREF="tpch_time_s" sampleID="PXPD_XTAL_CLK_ACK">
+			<TELC:description>PXPD XTAL Clock Ack</TELC:description>
+			<TELC:sampleSubGroup>PXPD_XTAL_CLK_ACK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_32" sampleID="32" sampleGroupID="Container_32">
+		<TELC:description>Groupname 0xac0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_FIA_OSC_CLK_ACK" datatypeIDREF="tpch_time_s" sampleID="PXPD_FIA_OSC_CLK_ACK">
+			<TELC:description>PXPD FIA OSC Clock Ack</TELC:description>
+			<TELC:sampleSubGroup>PXPD_FIA_OSC_CLK_ACK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_33" sampleID="33" sampleGroupID="Container_33">
+		<TELC:description>Groupname 0xac8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_G5FPW_0_PLL_A" datatypeIDREF="tpch_time_s" sampleID="PXPD_G5FPW_0_PLL_A">
+			<TELC:description>PXPD Gen5 PLL A Active</TELC:description>
+			<TELC:sampleSubGroup>PXPD_G5FPW_0_PLL_A</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_34" sampleID="34" sampleGroupID="Container_34">
+		<TELC:description>Groupname 0xad0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_G5FPW_0_PLL_B" datatypeIDREF="tpch_time_s" sampleID="PXPD_G5FPW_0_PLL_B">
+			<TELC:description>PXPD Gen5 PLL B Active</TELC:description>
+			<TELC:sampleSubGroup>PXPD_G5FPW_0_PLL_B</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_35" sampleID="35" sampleGroupID="Container_35">
+		<TELC:description>Groupname 0xad8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L0_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L0_TXON_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 0 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L0_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_36" sampleID="36" sampleGroupID="Container_36">
+		<TELC:description>Groupname 0xae0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L0_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L0_TXON_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 0 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L0_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_37" sampleID="37" sampleGroupID="Container_37">
+		<TELC:description>Groupname 0xae8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L0_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L0_TXOFF_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 0 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L0_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_38" sampleID="38" sampleGroupID="Container_38">
+		<TELC:description>Groupname 0xaf0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L0_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L0_TXOFF_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 0 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L0_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_39" sampleID="39" sampleGroupID="Container_39">
+		<TELC:description>Groupname 0xaf8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L1_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L1_TXON_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 1 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L1_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_40" sampleID="40" sampleGroupID="Container_40">
+		<TELC:description>Groupname 0xb00</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L1_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L1_TXON_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 1 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L1_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_41" sampleID="41" sampleGroupID="Container_41">
+		<TELC:description>Groupname 0xb08</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L1_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L1_TXOFF_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 1 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L1_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_42" sampleID="42" sampleGroupID="Container_42">
+		<TELC:description>Groupname 0xb10</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L1_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L1_TXOFF_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 1 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L1_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_43" sampleID="43" sampleGroupID="Container_43">
+		<TELC:description>Groupname 0xb18</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L2_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L2_TXON_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 2 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L2_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_44" sampleID="44" sampleGroupID="Container_44">
+		<TELC:description>Groupname 0xb20</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L2_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L2_TXON_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 2 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L2_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_45" sampleID="45" sampleGroupID="Container_45">
+		<TELC:description>Groupname 0xb28</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L2_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L2_TXOFF_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 2 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L2_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_46" sampleID="46" sampleGroupID="Container_46">
+		<TELC:description>Groupname 0xb30</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L2_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L2_TXOFF_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 2 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L2_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_47" sampleID="47" sampleGroupID="Container_47">
+		<TELC:description>Groupname 0xb38</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L3_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L3_TXON_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 3 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L3_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_48" sampleID="48" sampleGroupID="Container_48">
+		<TELC:description>Groupname 0xb40</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L3_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L3_TXON_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 3 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L3_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_49" sampleID="49" sampleGroupID="Container_49">
+		<TELC:description>Groupname 0xb48</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L3_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L3_TXOFF_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 3 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L3_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_50" sampleID="50" sampleGroupID="Container_50">
+		<TELC:description>Groupname 0xb50</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L3_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L3_TXOFF_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 3 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L3_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_51" sampleID="51" sampleGroupID="Container_51">
+		<TELC:description>Groupname 0xb58</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L4_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L4_TXON_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 4 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L4_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_52" sampleID="52" sampleGroupID="Container_52">
+		<TELC:description>Groupname 0xb60</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L4_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L4_TXON_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 4 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L4_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_53" sampleID="53" sampleGroupID="Container_53">
+		<TELC:description>Groupname 0xb68</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L4_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L4_TXOFF_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 4 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L4_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_54" sampleID="54" sampleGroupID="Container_54">
+		<TELC:description>Groupname 0xb70</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L4_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L4_TXOFF_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 4 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L4_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_55" sampleID="55" sampleGroupID="Container_55">
+		<TELC:description>Groupname 0xb78</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L5_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L5_TXON_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 5 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L5_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_56" sampleID="56" sampleGroupID="Container_56">
+		<TELC:description>Groupname 0xb80</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L5_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L5_TXON_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 5 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L5_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_57" sampleID="57" sampleGroupID="Container_57">
+		<TELC:description>Groupname 0xb88</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L5_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L5_TXOFF_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 5 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L5_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_58" sampleID="58" sampleGroupID="Container_58">
+		<TELC:description>Groupname 0xb90</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L5_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L5_TXOFF_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 5 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L5_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_59" sampleID="59" sampleGroupID="Container_59">
+		<TELC:description>Groupname 0xb98</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L6_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L6_TXON_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 6 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L6_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_60" sampleID="60" sampleGroupID="Container_60">
+		<TELC:description>Groupname 0xba0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L6_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L6_TXON_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 6 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L6_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_61" sampleID="61" sampleGroupID="Container_61">
+		<TELC:description>Groupname 0xba8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L6_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L6_TXOFF_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 6 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L6_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_62" sampleID="62" sampleGroupID="Container_62">
+		<TELC:description>Groupname 0xbb0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L6_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L6_TXOFF_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 6 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L6_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_63" sampleID="63" sampleGroupID="Container_63">
+		<TELC:description>Groupname 0xbb8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L7_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L7_TXON_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 7 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L7_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_64" sampleID="64" sampleGroupID="Container_64">
+		<TELC:description>Groupname 0xbc0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L7_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L7_TXON_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 7 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L7_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_65" sampleID="65" sampleGroupID="Container_65">
+		<TELC:description>Groupname 0xbc8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L7_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L7_TXOFF_RXON">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 7 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L7_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_66" sampleID="66" sampleGroupID="Container_66">
+		<TELC:description>Groupname 0xbd0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_MPHY_L7_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPD_MPHY_L7_TXOFF_RXOFF">
+			<TELC:description>PXPD Gen5 PHY PCIe Lane 7 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPD_MPHY_L7_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_67" sampleID="67" sampleGroupID="Container_67">
+		<TELC:description>Groupname 0xbd8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_LDO_Enable_0" datatypeIDREF="tpch_time_s" sampleID="PXPD_LDO_Enable_0">
+			<TELC:description>PXPD Gen5 PHY PHY LDO Active</TELC:description>
+			<TELC:sampleSubGroup>PXPD_LDO_Enable_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_68" sampleID="68" sampleGroupID="Container_68">
+		<TELC:description>Groupname 0xbe0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_PGD" datatypeIDREF="tpch_time_s" sampleID="PXPD_PGD">
+			<TELC:description>PXPD PGD ON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_69" sampleID="69" sampleGroupID="Container_69">
+		<TELC:description>Groupname 0xbe8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_FIA_PGD" datatypeIDREF="tpch_time_s" sampleID="PXPD_FIA_PGD">
+			<TELC:description>PXPD FIA PGD ON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_FIA_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_70" sampleID="70" sampleGroupID="Container_70">
+		<TELC:description>Groupname 0xbf0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_FIACPCB_PGD" datatypeIDREF="tpch_time_s" sampleID="PXPD_FIACPCB_PGD">
+			<TELC:description>PXPD FIACPCB PGD ON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_FIACPCB_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_71" sampleID="71" sampleGroupID="Container_71">
+		<TELC:description>Groupname 0xbf8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_G5PFPW_0_PGD" datatypeIDREF="tpch_time_s" sampleID="PXPD_G5PFPW_0_PGD">
+			<TELC:description>PXPD Gen5 PHY PGD ON</TELC:description>
+			<TELC:sampleSubGroup>PXPD_G5PFPW_0_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_72" sampleID="72" sampleGroupID="Container_72">
+		<TELC:description>Groupname 0xc00</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_FIA_LOS0" datatypeIDREF="tgeneric_sample" sampleID="PXPD_FIA_LOS0">
+			<TELC:description>PXPD FIA Lane Ownership Status 0</TELC:description>
+			<TELC:sampleSubGroup>FIA_P5x8_LANE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PXPD_FIA_LRSTS0" datatypeIDREF="tgeneric_sample" sampleID="PXPD_FIA_LRSTS0">
+			<TELC:description>PXPD FIA Lane Rate Status 0</TELC:description>
+			<TELC:sampleSubGroup>FIA_P5x8_LANE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_73" sampleID="73" sampleGroupID="Container_73">
+		<TELC:description>Groupname 0xc08</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPD_FIA_LOS1" datatypeIDREF="tgeneric_sample" sampleID="PXPD_FIA_LOS1">
+			<TELC:description>PXPD FIA Lane Ownership Status 1</TELC:description>
+			<TELC:sampleSubGroup>FIA_P5x8_LANE_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PXPD_FIA_LRSTS1" datatypeIDREF="tgeneric_sample" sampleID="PXPD_FIA_LRSTS1">
+			<TELC:description>PXPD FIA Lane Rate Status 1</TELC:description>
+			<TELC:sampleSubGroup>FIA_P5x8_LANE_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_74" sampleID="74" sampleGroupID="Container_74">
+		<TELC:description>Groupname 0xc10</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_PRIM_CLK_ACK" datatypeIDREF="tpch_time_s" sampleID="PXPE_PRIM_CLK_ACK">
+			<TELC:description>PXPE PRIM Clock Ack</TELC:description>
+			<TELC:sampleSubGroup>PXPE_PRIM_CLK_ACK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_75" sampleID="75" sampleGroupID="Container_75">
+		<TELC:description>Groupname 0xc18</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_OSC_CLK_ACK" datatypeIDREF="tpch_time_s" sampleID="PXPE_OSC_CLK_ACK">
+			<TELC:description>PXPE OSC Clock Ack</TELC:description>
+			<TELC:sampleSubGroup>PXPE_OSC_CLK_ACK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_76" sampleID="76" sampleGroupID="Container_76">
+		<TELC:description>Groupname 0xc20</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_XTAL_CLK_ACK" datatypeIDREF="tpch_time_s" sampleID="PXPE_XTAL_CLK_ACK">
+			<TELC:description>PXPE XTAL Clock Ack</TELC:description>
+			<TELC:sampleSubGroup>PXPE_XTAL_CLK_ACK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_77" sampleID="77" sampleGroupID="Container_77">
+		<TELC:description>Groupname 0xc28</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_FIA_OSC_CLK_ACK" datatypeIDREF="tpch_time_s" sampleID="PXPE_FIA_OSC_CLK_ACK">
+			<TELC:description>PXPE FIA OSC Clock Ack</TELC:description>
+			<TELC:sampleSubGroup>PXPE_FIA_OSC_CLK_ACK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_78" sampleID="78" sampleGroupID="Container_78">
+		<TELC:description>Groupname 0xc30</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_G5FPW_0_PLL_A" datatypeIDREF="tpch_time_s" sampleID="PXPE_G5FPW_0_PLL_A">
+			<TELC:description>PXPE Gen5 PLL A Active</TELC:description>
+			<TELC:sampleSubGroup>PXPE_G5FPW_0_PLL_A</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_79" sampleID="79" sampleGroupID="Container_79">
+		<TELC:description>Groupname 0xc38</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_G5FPW_0_PLL_B" datatypeIDREF="tpch_time_s" sampleID="PXPE_G5FPW_0_PLL_B">
+			<TELC:description>PXPE Gen5 PLL B Active</TELC:description>
+			<TELC:sampleSubGroup>PXPE_G5FPW_0_PLL_B</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_80" sampleID="80" sampleGroupID="Container_80">
+		<TELC:description>Groupname 0xc40</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L0_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L0_TXON_RXON">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 0 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L0_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_81" sampleID="81" sampleGroupID="Container_81">
+		<TELC:description>Groupname 0xc48</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L0_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L0_TXON_RXOFF">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 0 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L0_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_82" sampleID="82" sampleGroupID="Container_82">
+		<TELC:description>Groupname 0xc50</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L0_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L0_TXOFF_RXON">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 0 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L0_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_83" sampleID="83" sampleGroupID="Container_83">
+		<TELC:description>Groupname 0xc58</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L0_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L0_TXOFF_RXOFF">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 0 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L0_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_84" sampleID="84" sampleGroupID="Container_84">
+		<TELC:description>Groupname 0xc60</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L1_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L1_TXON_RXON">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 1 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L1_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_85" sampleID="85" sampleGroupID="Container_85">
+		<TELC:description>Groupname 0xc68</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L1_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L1_TXON_RXOFF">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 1 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L1_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_86" sampleID="86" sampleGroupID="Container_86">
+		<TELC:description>Groupname 0xc70</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L1_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L1_TXOFF_RXON">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 1 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L1_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_87" sampleID="87" sampleGroupID="Container_87">
+		<TELC:description>Groupname 0xc78</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L1_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L1_TXOFF_RXOFF">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 1 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L1_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_88" sampleID="88" sampleGroupID="Container_88">
+		<TELC:description>Groupname 0xc80</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L2_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L2_TXON_RXON">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 2 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L2_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_89" sampleID="89" sampleGroupID="Container_89">
+		<TELC:description>Groupname 0xc88</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L2_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L2_TXON_RXOFF">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 2 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L2_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_90" sampleID="90" sampleGroupID="Container_90">
+		<TELC:description>Groupname 0xc90</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L2_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L2_TXOFF_RXON">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 2 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L2_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_91" sampleID="91" sampleGroupID="Container_91">
+		<TELC:description>Groupname 0xc98</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L2_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L2_TXOFF_RXOFF">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 2 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L2_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_92" sampleID="92" sampleGroupID="Container_92">
+		<TELC:description>Groupname 0xca0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L3_TXON_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L3_TXON_RXON">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 3 TxON RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L3_TXON_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_93" sampleID="93" sampleGroupID="Container_93">
+		<TELC:description>Groupname 0xca8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L3_TXON_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L3_TXON_RXOFF">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 3 TxON RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L3_TXON_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_94" sampleID="94" sampleGroupID="Container_94">
+		<TELC:description>Groupname 0xcb0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L3_TXOFF_RXON" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L3_TXOFF_RXON">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 3 TxOFF RxON</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L3_TXOFF_RXON</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_95" sampleID="95" sampleGroupID="Container_95">
+		<TELC:description>Groupname 0xcb8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_MPHY_L3_TXOFF_RXOFF" datatypeIDREF="tpch_time_s" sampleID="PXPE_MPHY_L3_TXOFF_RXOFF">
+			<TELC:description>PXPE Gen5 PHY PCIe Lane 3 TxOFF RxOFF</TELC:description>
+			<TELC:sampleSubGroup>PXPE_MPHY_L3_TXOFF_RXOFF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_96" sampleID="96" sampleGroupID="Container_96">
+		<TELC:description>Groupname 0xcc0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_LDO_Enable_0" datatypeIDREF="tpch_time_s" sampleID="PXPE_LDO_Enable_0">
+			<TELC:description>PXPE Gen5 PHY PHY LDO Active</TELC:description>
+			<TELC:sampleSubGroup>PXPE_LDO_Enable_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_97" sampleID="97" sampleGroupID="Container_97">
+		<TELC:description>Groupname 0xcc8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_PGD" datatypeIDREF="tpch_time_s" sampleID="PXPE_PGD">
+			<TELC:description>PXPE PGD ON</TELC:description>
+			<TELC:sampleSubGroup>PXPE_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_98" sampleID="98" sampleGroupID="Container_98">
+		<TELC:description>Groupname 0xcd0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_FIA_PGD" datatypeIDREF="tpch_time_s" sampleID="PXPE_FIA_PGD">
+			<TELC:description>PXPE FIA PGD ON</TELC:description>
+			<TELC:sampleSubGroup>PXPE_FIA_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_99" sampleID="99" sampleGroupID="Container_99">
+		<TELC:description>Groupname 0xcd8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_FIACPCB_PGD" datatypeIDREF="tpch_time_s" sampleID="PXPE_FIACPCB_PGD">
+			<TELC:description>PXPE FIACPCB PGD ON</TELC:description>
+			<TELC:sampleSubGroup>PXPE_FIACPCB_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_100" sampleID="100" sampleGroupID="Container_100">
+		<TELC:description>Groupname 0xce0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_G5PFPW_0_PGD" datatypeIDREF="tpch_time_s" sampleID="PXPE_G5PFPW_0_PGD">
+			<TELC:description>PXPE Gen5 PHY PGD ON</TELC:description>
+			<TELC:sampleSubGroup>PXPE_G5PFPW_0_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_101" sampleID="101" sampleGroupID="Container_101">
+		<TELC:description>Groupname 0xce8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_FIA_LOS0" datatypeIDREF="tgeneric_sample" sampleID="PXPE_FIA_LOS0">
+			<TELC:description>PXPE FIA Lane Ownership Status 0</TELC:description>
+			<TELC:sampleSubGroup>FIA_P5x4_LANE_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PXPE_FIA_LRSTS0" datatypeIDREF="tgeneric_sample" sampleID="PXPE_FIA_LRSTS0">
+			<TELC:description>PXPE FIA Lane Rate Status 0</TELC:description>
+			<TELC:sampleSubGroup>FIA_P5x4_LANE_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_102" sampleID="102" sampleGroupID="Container_102">
+		<TELC:description>Groupname 0xcf0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPE_FIA_LOS1" datatypeIDREF="tgeneric_sample" sampleID="PXPE_FIA_LOS1">
+			<TELC:description>PXPE FIA Lane Ownership Status 1</TELC:description>
+			<TELC:sampleSubGroup>FIA_P5x4_LANE_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PXPE_FIA_LRSTS1" datatypeIDREF="tgeneric_sample" sampleID="PXPE_FIA_LRSTS1">
+			<TELC:description>PXPE FIA Lane Rate Status 1</TELC:description>
+			<TELC:sampleSubGroup>FIA_P5x4_LANE_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>
