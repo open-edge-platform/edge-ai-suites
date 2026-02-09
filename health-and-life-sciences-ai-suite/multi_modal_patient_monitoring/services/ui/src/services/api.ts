@@ -9,11 +9,11 @@ export type StartResponse = {
 };
 export type StopResponse = { status: string; message: string };
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
-// Line 13
-//const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+// Derive API base URL from env or the host the UI is served from
+const API_HOST = import.meta.env.VITE_API_HOST || window.location.hostname;
+const API_PORT = import.meta.env.VITE_API_PORT || '8001';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || `http://${API_HOST}:${API_PORT}`;
 
-// ADD THIS RIGHT AFTER:
 console.log('[API] BASE_URL configured as:', BASE_URL);
 console.log('[API] Environment variables:', import.meta.env);
 const HEALTH_TIMEOUT_MS = 10000;
@@ -140,7 +140,7 @@ export function getEventsUrl(workloads: WorkloadType[]): string {
   const params = workloads.map(w => `workload=${w}`).join('&');
   return `${BASE_URL}/events?${params}`;
   
-  // Example: http://10.223.23.206:8001/events?workload=rppg&workload=ai-ecg&workload=mdpnp&workload=3d-pose
+  // Example: http://<HOST_IP>:8001/events?workload=rppg&workload=ai-ecg&workload=mdpnp&workload=3d-pose
 }
 
 export const api = {

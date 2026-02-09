@@ -11,6 +11,7 @@ from typing import Optional
 
 from fastapi import FastAPI, Request, Query, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from google.protobuf.empty_pb2 import Empty
 import uvicorn
 
@@ -24,6 +25,15 @@ from .ai_ecg_client import AIECGClient
 frame_manager = FrameStreamManager()
 
 app = FastAPI(title="Aggregator Service")
+
+# CORS middleware so UI (on a different port) can call the API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # For dev; narrow to specific origins if desired
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 sse_manager = SSEManager()
 
 event_loop: asyncio.AbstractEventLoop | None = None
