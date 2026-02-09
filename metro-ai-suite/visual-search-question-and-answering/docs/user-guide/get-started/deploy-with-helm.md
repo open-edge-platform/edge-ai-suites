@@ -1,16 +1,18 @@
-# How to deploy with Helm Chart
+# Deploy with Helm
 
 This section shows how to deploy the Visual Search and QA Application using Helm chart.
 
 ## Prerequisites
+
 Before you begin, ensure that you have the following:
+
 - Kubernetes\* cluster set up and running.
 - The cluster must support **dynamic provisioning of Persistent Volumes (PV)**. Refer to the [Kubernetes Dynamic Provisioning Guide](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) for more details.
 - Install `kubectl` on your system. See the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster.
 - Helm chart installed on your system. See the [Installation Guide](https://helm.sh/docs/intro/install/).
 
-
 ## Steps to deploy with Helm
+
 Do the following to deploy VSQA using Helm chart.
 
 ### Step 1: Acquire the helm chart
@@ -66,7 +68,6 @@ Edit the `values.yaml` file to set the necessary environment variables. At minim
 | `global.registry` | Remote registry to pull images from. Default as blank | `intel/` |
 | `global.env.keeppvc` | Set to true to persist the storage. Default is false | false |
 
-
 ### Step 3: Build Helm Dependencies
 
 Navigate to the chart directory and build the Helm dependencies using the following command:
@@ -102,7 +103,7 @@ Check the pods status with `kubectl get po -n milvus`. `RESTARTS` are possible, 
 
 ### Step 5: Prepare host directories for models and data
 
-```
+```sh
 mkdir -p $HOME/data
 ```
 
@@ -123,7 +124,6 @@ Install
 ```bash
 helm install vsqa . --values values.yaml -n vsqa
 ```
-
 
 ### Step 7: Verify the Deployment
 
@@ -146,7 +146,6 @@ kubectl port-forward -n vsqa svc/visual-search-qa-app 17580:17580
 
 Leave the session alive, then access `http://localhost:17580` to view the application.
 
-
 ### Step 9: Uninstall the Application
 
 To uninstall, use the following command:
@@ -163,6 +162,7 @@ helm uninstall my-milvus -n milvus
 ## Troubleshooting
 
 - If you encounter any issues during the deployment process, check the Kubernetes logs for errors:
+
   ```bash
   kubectl logs <pod-name> -n <your-namespace>
   ```
@@ -170,4 +170,5 @@ helm uninstall my-milvus -n milvus
 - If the data preparation pod shows error while loading a large dataset, it might be caused by too large of the dataset size. Try breaking the dataset into smaller subsets and ingest each of them instead.
 
 ## Related links
-- [Get started with docker-compose](./get-started.md)
+
+- [Get started with docker-compose](../get-started.md)
