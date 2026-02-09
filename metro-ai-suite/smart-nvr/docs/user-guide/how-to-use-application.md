@@ -1,4 +1,4 @@
-# How to Use the Smart NVR Application
+# How to Use Smart NVR
 
 This guide helps you verify deployment, access the application features, and interact with the Smart NVR components.
 
@@ -43,8 +43,6 @@ The application intelligently fetches video clips from the Frigate NVR system an
 
 ![AI-events](./_images/summary_final.png)
 
----
-
 #### 2. **AI-Powered Event Viewer**
 
 The AI-Powered Event Viewer tab visibility is controlled by the NVR_GENAI environment variable (default: false). When enabled (NVR_GENAI=true), the application internally uses the Frigate genai configuration (genai.enabled: true) to power the AI features.
@@ -64,8 +62,6 @@ The system leverages the NVR's built-in detection capabilities and enhances them
 
 ![AI-events](./_images/AI-events.png)
 
----
-
 #### 3. **Automated Event Routing**
 
 Create custom rules and workflows for event handling and notifications.
@@ -83,8 +79,6 @@ This powerful automation feature enables intelligent event management and workfl
 
 ![Event-router](./_images/summary_event_response.png)
 
----
-
 #### 4. **Configure Camera Streaming (Continuous Ingestion)**
 
 Enable or disable continuous background processing ("watchers") per camera to automatically stream new video segments into the Video Search pipeline.
@@ -97,12 +91,10 @@ This feature allows selected cameras to be continuously monitored so their foota
 - **Persistent State Management**: Retains watcher settings across restarts when Redis persistence is active.
 
 **Example Use Case**: Enable continuous ingestion for frequently used cameras to keep their footage always indexed for fast video search, while disabling low-priority ones to conserve resources.
-![Continous-Streaming](./_images/configure_camera_streaming.png)
-
----
+![Continuous-Streaming](./_images/configure_camera_streaming.png)
 
 ## Additional Resources
 
 - **[Troubleshooting Guide](./troubleshooting.md)** - Resolve common deployment and runtime issues
 - **[Getting Started](./get-started.md)** - Complete initial setup requirements
-- **[Build from Source](./how-to-build-from-source.md)** - Build and deploy the application manually
+- **[Build from Source](./get-started/build-from-source.md)** - Build and deploy the application manually

@@ -1,4 +1,4 @@
-# How to deploy with Helm\* Chart
+# Deploy with Helm
 
 This section shows how to deploy the Video Search and Summary Sample Application using Helm chart.
 
@@ -21,16 +21,16 @@ Deploy these on separate devices:
 - **VSS Search**: Handles video search functionality
 - **VSS Summary**: Provides video summarization capabilities
 
-📖 [VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
+[VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
 
 ### 2. VLM Microservice (Optional)
 
 Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 
-- Runs the VLM model defined in the frigate [config file](../../resources/frigate-config/config.yml)
+- Runs the VLM model defined in the frigate [config file](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-nvr/resources/frigate-config/config.yml)
 - Use `VLM_MAX_COMPLETION_TOKENS` to limit response length during deployment
 
-📖 [VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
+[VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
 
 ## Helm Chart Installation
 
@@ -154,9 +154,17 @@ kubectl get pods -n $my_namespace
 
 2. Ensure all containers in each pod are _Ready_. As all pods are running single container only, this is typically denoted by mentioning **1/1** in the **READY** column.
 
-> **_IMPORTANT NOTE :_** When deployed for first time, it may take up-to around 5 Mins to bring all the pods/containers in running and ready state, as several containers try to download models which can take a while. The time to bring up all the pods depends on several factors including but not limited to node availability, node load average, network speed, compute availability etc.
-
-> **_IMPORTANT NOTE :_** If you want to persist the downloaded models and avoid delays pertaining to model downloads when re-installing the charts, please set the `global.keepPvc` value to `true` in `user_value_override.yaml` file before installing the chart.
+> **Important:**
+>
+> - When deployed for first time, it may take up-to around 5 Mins to bring all the
+>   pods/containers in running and ready state, as several containers try to download
+>   models which can take a while. The time to bring up all the pods depends on
+>   several factors including but not limited to node availability, node load average,
+>   network speed, compute availability etc.
+>
+> - If you want to persist the downloaded models and avoid delays pertaining to
+>   model downloads when re-installing the charts, please set the `global.keepPvc`
+>   value to `true` in `user_value_override.yaml` file before installing the chart.
 
 ### Step 7: Accessing the application
 
@@ -226,4 +234,4 @@ helm uninstall smart-nvr -n $my_namespace
 
 ## Related links
 
-- [How to Build from Source](./how-to-build-from-source.md)
+- [How to Build from Source](./build-from-source.md)

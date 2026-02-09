@@ -1,4 +1,4 @@
-# How to Build from Source
+# Build from Source
 
 This comprehensive guide provides detailed instructions for building the Smart NVR application container images from source code. Whether you're a developer looking to customize the application or troubleshoot issues, this guide will walk you through the complete build and deployment process.
 
@@ -11,7 +11,6 @@ The Smart NVR application consists of multiple components that work together to 
 - [**Frigate NVR**](https://frigate.video/): Network Video Recorder for object detection and video processing.
 - **MQTT Broker**: Message broker for inter-service communication.
 - **Redis**: In-memory data store for caching and managing rules.
-
 
 ## Step 1: Clone the Repository
 
@@ -52,7 +51,7 @@ export PROJECT_NAME=<your-project-name>              # e.g. "metro-ai-suite"
 export TAG=<your-tag>                                # e.g. "rc4" or "latest"
 ```
 
-> **_IMPORTANT:_** These variables control how image names are constructed. If `REGISTRY_URL` is **docker.io/username/** and `PROJECT_NAME` is **metro-ai-suite**, an image would be pulled or built as **docker.io/username/metro-ai-suite/<application-name>:tag**. The `<application-name>` is hardcoded in _image_ field of each service in all docker compose files. If `REGISTRY_URL` or `PROJECT_NAME` are not set, blank string will be used to construct the image name. If `TAG` is not set, **latest** will be used by default.
+> **_IMPORTANT:_** These variables control how image names are constructed. If `REGISTRY_URL` is **docker.io/username/** and `PROJECT_NAME` is **metro-ai-suite**, an image would be pulled or built as **docker.io/username/metro-ai-suite/\<application-name>:tag**. The `<application-name>` is hardcoded in _image_ field of each service in all docker compose files. If `REGISTRY_URL` or `PROJECT_NAME` are not set, blank string will be used to construct the image name. If `TAG` is not set, **latest** will be used by default.
 
 ```bash
 # Run the build script that takes the build values
@@ -71,9 +70,8 @@ When this environment variable is set to `true`, it allows the Dockerfiles to co
 
 ## What to Do Next
 
-- **[Get Started](./get-started.md)**: Complete the initial setup and configuration steps
-- **[How to Use the Application](./how-to-use-application.md)**: Learn about the application's features and functionality
-- **[API Reference](./api-reference.md)**: Explore the available REST API endpoints
-- **[Troubleshooting](./troubleshooting.md#troubleshooting-docker-deployments)**: Find solutions to common deployment issues
-- **[System Requirements](./system-requirements.md)**: Review hardware and software requirements
-
+- [Get Started](../get-started.md): Complete the initial setup and configuration steps
+- [How to Use the Application](../how-to-use-application.md): Learn about the application's features and functionality
+- [API Reference](../api-reference.md): Explore the available REST API endpoints
+- [Troubleshooting](../troubleshooting.md#troubleshooting-docker-containers): Find solutions to common deployment issues
+- [System Requirements](./system-requirements.md): Review hardware and software requirements
