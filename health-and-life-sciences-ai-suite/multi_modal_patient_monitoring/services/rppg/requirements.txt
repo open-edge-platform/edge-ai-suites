@@ -1,8 +1,10 @@
-# Core ML/CV Dependencies
-tensorflow-cpu==2.16.1
+# Core ML/CV & Inference Dependencies
 opencv-python-headless==4.9.0.80
 numpy>=1.23.0,<2.0           # Must be <2.0 for compatibility
 scipy>=1.11.0
+
+# OpenVINO runtime for GPU inference
+openvino>=2024.6.0,<2025.0
 
 # gRPC runtime (protos are pre-generated)
 grpcio>=1.60.0

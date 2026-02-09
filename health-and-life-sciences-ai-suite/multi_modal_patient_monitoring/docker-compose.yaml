@@ -211,9 +211,12 @@ services:
       - http_proxy=${HTTP_PROXY}
       - https_proxy=${HTTPS_PROXY}
       - no_proxy=${NO_PROXY}
+      - RPPG_DEVICE=${RPPG_DEVICE:-GPU}
     volumes:
       - ./models:/models
       - ./videos:/videos
+    devices:
+      - "/dev/dri:/dev/dri"  
    
   ui:
     build:
@@ -237,4 +240,3 @@ services:
       - no_proxy=${NO_PROXY}
     ports:
       - "3000:3000"
-

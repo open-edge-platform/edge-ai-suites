@@ -33,15 +33,19 @@ public class MdPnpEventConsumer {
                         return cached;
                 }
 
+                // Normalize metric id to reduce issues with whitespace
+                String normalizedMetric = metricId.trim();
+
                 String deviceType = null;
 
                 // Heuristic mapping based on metric prefixes.
                 // Adjust these rules to match your three MDPNP devices.
-                if (metricId.startsWith("MDC_PRESS_BLD_ART_")) {
+                if (normalizedMetric.startsWith("MDC_PRESS_BLD")) {
+                        // Covers MDC_PRESS_BLD, MDC_PRESS_BLD_ART_ABP_SYS/DIA, etc.
                         deviceType = "IBP_Simulator";
-                } else if (metricId.startsWith("MDC_ECG_")) {
+                } else if (normalizedMetric.startsWith("MDC_ECG_")) {
                         deviceType = "ECG_Simulator";
-                } else if (metricId.startsWith("MDC_CO2_") || metricId.startsWith("MDC_TTHOR_")) {
+                } else if (normalizedMetric.startsWith("MDC_CO2_") || normalizedMetric.startsWith("MDC_TTHOR_")) {
                         deviceType = "CO2_Simulator";
                 }
 
@@ -172,8 +176,10 @@ public class MdPnpEventConsumer {
 
                                         VitalReading v = new VitalReading();
                                         v.deviceId = n.unique_device_identifier;
-                                        v.deviceType = inferDeviceType(v.deviceId, v.metric);
+                                        // Set metric before inferring device type so the
+                                        // heuristic has the correct metric_id value.
                                         v.metric = n.metric_id;
+                                        v.deviceType = inferDeviceType(v.deviceId, v.metric);
                                         v.value = n.value;
                                         v.unit = n.unit_id;
                                         v.timestamp = System.currentTimeMillis();                                       
