@@ -119,9 +119,7 @@ async def collector_websocket(websocket: WebSocket):
                     await client.send_json(wrapped_data, mode="text")
                     logger.debug("Forwarded metrics to client %s", client.client)
                 except Exception as e:
-                    logger.error(
-                        "Error sending to client %s: %s", client.client, e
-                    )
+                    logger.error("Error sending to client %s: %s", client.client, e)
                     disconnects.append(client)
 
             # Cleanup disconnected clients
@@ -129,9 +127,7 @@ async def collector_websocket(websocket: WebSocket):
                 async with clients_lock:
                     for client in disconnects:
                         client_connections.discard(client)
-                logger.debug(
-                    "Cleaned up %d disconnected clients", len(disconnects)
-                )
+                logger.debug("Cleaned up %d disconnected clients", len(disconnects))
 
     except WebSocketDisconnect:
         logger.info("Collector disconnected: %s", websocket.client)
@@ -179,9 +175,7 @@ async def clients_websocket(websocket: WebSocket):
 
     async with clients_lock:
         client_connections.add(websocket)
-        logger.debug(
-            "Total clients connected: %d", len(client_connections)
-        )
+        logger.debug("Total clients connected: %d", len(client_connections))
 
     try:
         while True:
@@ -204,9 +198,7 @@ async def clients_websocket(websocket: WebSocket):
     finally:
         async with clients_lock:
             client_connections.discard(websocket)
-            logger.debug(
-                "Client removed. Total clients: %d", len(client_connections)
-            )
+            logger.debug("Client removed. Total clients: %d", len(client_connections))
 
 
 @router.get("/api/metrics/status")

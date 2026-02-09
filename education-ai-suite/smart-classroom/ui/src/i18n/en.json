@@ -162,8 +162,8 @@
   },
   "classStatistics": {
     "studentCount": "Student Count",
-    "standCount": "Stand Count",
-    "raiseUpCount": "Raise Up Count",
+    "standCount": "Aggregated Stand Count",
+    "raiseUpCount": "Aggregated Raise Up Count",
     "standReIdData": "Stand Re-ID Data",
     "studentId": "Student ID",
     "count": "Count"

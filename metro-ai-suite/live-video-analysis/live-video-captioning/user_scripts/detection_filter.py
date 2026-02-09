@@ -3,13 +3,14 @@
 
 from gstgva import VideoFrame
 
+
 class DetectionFilter:
     def __init__(self, *args, **kwargs):
         # gvapython passes arg=[...] as positional args to __init__(self, *args)
         # so we accept one optional arg for skip_n_frames
         print("DetectionFilter initialized.")
 
-    def process(self, frame:VideoFrame) -> bool:
+    def process(self, frame: VideoFrame) -> bool:
         """
         Called for each frame. Skips processing for the first N frames
         as specified by skip_n_frames.

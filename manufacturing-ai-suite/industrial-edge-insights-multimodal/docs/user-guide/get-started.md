@@ -66,6 +66,8 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    - `MTX_WEBRTCICESERVERS2_0_USERNAME`
    - `MTX_WEBRTCICESERVERS2_0_PASSWORD`
    - `HOST_IP`
+   - `S3_STORAGE_USERNAME`
+   - `S3_STORAGE_PASSWORD`
 
 2. Deploy the sample app, use only one of the following options.
 
@@ -135,6 +137,8 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 3. Check the output in Grafana.
 
     - Use link `https://<host_ip>:3000` to launch Grafana from browser (preferably, chrome browser)
+
+    > **Note:** Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
 
     - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
       in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.

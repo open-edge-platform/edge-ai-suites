@@ -1,5 +1,10 @@
 import { typewriterStream } from '../utils/typewriterStream';
 import type { StreamEvent, StreamOptions, Segment, TranscriptChunk, FinalEvent } from './streamSimulator';
+import { store } from "../redux/store";
+import { 
+  setVideoStatus,
+  setVideoAnalyticsActive
+} from "../redux/slices/uiSlice";
 
 export type ProjectConfig = { 
   name: string; 
@@ -332,7 +337,6 @@ export async function getConfigurationMetrics(sessionId: string): Promise<any> {
   });
 }
 
-// Updated video analytics functions to match backend API structure
 export const startVideoAnalytics = async (
   requests: Array<{
     pipeline_name: string;
@@ -385,17 +389,20 @@ export const stopVideoAnalytics = async (
   });
 };
 
-// Backward compatibility aliases
 export const startVideoAnalyticsPipeline = startVideoAnalytics;
 
-export async function getClassStatistics(sessionId: string): Promise<{
-  student_count: number;
-  stand_count: number;
-  raise_up_count: number;
-  stand_reid: { student_id: number; count: number }[];
-}> {
+export async function getClassStatistics(
+  sessionId: string,
+  onData: (data: {
+    student_count: number;
+    stand_count: number;
+    raise_up_count: number;
+    stand_reid: { student_id: number; count: number }[];
+  }) => void,
+  onError?: (error: Error) => void
+): Promise<() => void> {
   return safeApiCall(async () => {
-    const res = await fetch(`${BASE_URL}/class-statistics`, {
+    const response = await fetch(`${BASE_URL}/class-statistics`, {
       method: 'GET',
       headers: {
         'x-session-id': sessionId,
@@ -403,26 +410,103 @@ export async function getClassStatistics(sessionId: string): Promise<{
       },
     });
 
-    if (!res.ok) {
-      console.warn(`Class statistics endpoint returned ${res.status}`);
-      return {
-        student_count: 0,
-        stand_count: 0,
-        raise_up_count: 0,
-        stand_reid: [],
-      };
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const text = await res.text();
-    return text
-      ? JSON.parse(text)
-      : {
-          student_count: 0,
-          stand_count: 0,
-          raise_up_count: 0,
-          stand_reid: [],
-        };
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No reader available');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    const processStream = async () => {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            break;
+          }
+
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Process complete JSON objects
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
+          
+          for (const line of lines) {
+            if (line.trim()) {
+              try {
+                const data = JSON.parse(line);
+                if (data.error) {
+                  onError?.(new Error(data.error));
+                } else {
+                  onData(data);
+                }
+              } catch (parseError) {
+                console.warn('Failed to parse JSON:', line, parseError);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        onError?.(error as Error);
+      } finally {
+        reader.releaseLock();
+      }
+    };
+
+    processStream();
+
+    // Return cleanup function
+    return () => {
+      reader.cancel();
+    };
   });
+}
+
+export async function* monitorVideoAnalyticsPipelines(
+  sessionId: string,
+  signal?: AbortSignal
+): AsyncGenerator<any, void, unknown> {
+
+  console.log("🎥 Starting video pipeline monitor:", sessionId);
+
+  const response = await fetch(
+    `${BASE_URL}/monitor-video-analytics-pipeline`,
+    {
+      method: "GET",
+      headers: {
+        "x-session-id": sessionId
+      },
+      signal
+    }
+  );
+
+  if (!response.ok || !response.body) {
+    throw new Error(`Monitor failed: ${response.status}`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) return;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      yield JSON.parse(line);
+    }
+  }
 }
 
 export async function getPlatformInfo(): Promise<any> {

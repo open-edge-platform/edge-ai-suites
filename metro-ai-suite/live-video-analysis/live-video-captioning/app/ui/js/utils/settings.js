@@ -33,7 +33,7 @@ const SettingsManager = (function() {
     function restoreSettings(els, cfg) {
         const settings = loadSettings();
         if (!settings) return;
-        
+
         // Only restore RTSP URL if it's different from the current runtime config default
         // This allows runtime config to take precedence for fresh sessions
         if (settings.rtspUrl && els.rtspInput) {
@@ -63,7 +63,7 @@ const SettingsManager = (function() {
     function restoreSelectValues(els) {
         const settings = loadSettings();
         if (!settings) return;
-        
+
         if (settings.modelName && els.modelNameSelect) {
             const options = Array.from(els.modelNameSelect.options).map(o => o.value);
             if (options.includes(settings.modelName)) {

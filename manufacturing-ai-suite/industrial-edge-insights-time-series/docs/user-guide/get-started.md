@@ -77,12 +77,9 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
 >   logs for OPC-UA ingestion after a single data ingestion loop. This message can be ignored.
 > - `make up_opcua_ingestion` is supported only for `Wind Turbine Anomaly Detection` sample app
 
-<!--hide_directive
-::::{tab-set}
-:::{tab-item} hide_directive--> **Wind Turbine Anomaly Detection**
-<!--hide_directive
-:sync: tab1
-hide_directive-->
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
+<!--hide_directive:sync: tab1hide_directive-->
 
 - **Using OPC-UA ingestion**:
 
@@ -96,21 +93,16 @@ hide_directive-->
    make up_mqtt_ingestion app="wind-turbine-anomaly-detection"
    ```
 
-<!--hide_directive
-:::
-:::{tab-item} hide_directive--> **Weld Anomaly Detection**
-<!--hide_directive
-:sync: tab2
-hide_directive-->
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+<!--hide_directive:sync: tab2hide_directive-->
 
 ```bash
 make up_mqtt_ingestion app="weld-anomaly-detection"
 ```
 
-<!--hide_directive
-:::
-::::
-hide_directive-->
+<!--hide_directive:::
+::::hide_directive-->
 
 ### Multi-Stream Ingestion support
 
@@ -119,12 +111,9 @@ Multi-stream ingestion enables the simultaneous processing of multiple data stre
 To activate multi-stream ingestion, set the `num_of_streams` parameter to the required number of parallel streams when deploying the application.
 `<NUMBER_OF_STREAMS>`: Specify the number of parallel streams to run (e.g., `3` for three concurrent streams).
 
-<!--hide_directive
-::::{tab-set}
-:::{tab-item} hide_directive-->**Wind Turbine Anomaly Detection**
-<!--hide_directive
-:sync: tab1
-hide_directive-->
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
+<!--hide_directive:sync: tab1hide_directive-->
 
 ```bash
 # Deploy with OPC-UA Multi-Stream Ingestion
@@ -134,22 +123,17 @@ make up_opcua_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUM
 make up_mqtt_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
 ```
 
-<!--hide_directive
-:::
-:::{tab-item} hide_directive-->**Weld Anomaly Detection**
-<!--hide_directive
-:sync: tab2
-hide_directive-->
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+<!--hide_directive:sync: tab2hide_directive-->
 
 ```bash
 # Deploy with MQTT Multi-Stream Ingestion
 make up_mqtt_ingestion app="weld-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
 ```
 
-<!--hide_directive
-:::
-::::
-hide_directive-->
+<!--hide_directive:::
+::::hide_directive-->
 
 #### Notes
 
@@ -183,12 +167,9 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
 
 ## Verify the Output Results
 
-<!--hide_directive
-::::{tab-set}
-:::{tab-item} hide_directive-->**Wind Turbine Anomaly Detection**
-<!--hide_directive
-:sync: tab1
-hide_directive-->
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
+<!--hide_directive:sync: tab1hide_directive-->
 
 1. Get into the InfluxDB* container:
 
@@ -238,12 +219,9 @@ hide_directive-->
 
      ![Anomaly prediction in grid active power](./_assets/anomaly_power_prediction.png)
 
-<!--hide_directive
-:::
-:::{tab-item} hide_directive-->**Weld Anomaly Detection**
-<!--hide_directive
-:sync: tab2
-hide_directive-->
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+<!--hide_directive:sync: tab2hide_directive-->
 
 1. Get into the InfluxDB* container:
 
@@ -293,10 +271,8 @@ hide_directive-->
 
      ![Anomaly prediction in weld sensor data](./_assets/anomaly_detection_weld.png)
 
-<!--hide_directive
-:::
-::::
-hide_directive-->
+<!--hide_directive:::
+::::hide_directive-->
 
 ## Bring down the sample app
 
@@ -316,20 +292,23 @@ docker logs -f <container_name> | grep -i error
 
 ## Other Deployment options
 
-See [How to Deploy with Helm](./how-to-guides/how-to-deploy-with-helm.md)
+See [How to Deploy with Helm](./get-started/deploy-with-helm.md)
 guide to learn how to deploy the sample application on a k8s cluster using Helm.
 
 ## Advanced setup
 
-- [How to build from source and deploy](./how-to-guides/how-to-build-from-source.md): Guide to build from source and docker compose deployment
-- [How to configure OPC-UA/MQTT alerts](./how-to-guides/how-to-configure-alerts.md): Guide for configuring the OPC-UA/MQTT alerts in the Time Series Analytics microservice
-- [How to configure custom UDF deployment package](./how-to-guides/how-to-configure-custom-udf.md): Guide for deploying a customized UDF deployment package (UDFs/models/TICKscripts)
+- [How to build from source and deploy](./get-started/build-from-source.md): Guide to build from source and docker compose deployment
+- [Deploy with Helm](./get-started/deploy-with-helm.md)
+- [How to configure OPC-UA/MQTT alerts](./how-to-guides/configure-alerts.md): Guide for configuring the OPC-UA/MQTT alerts in the Time Series Analytics microservice
+- [How to configure custom UDF deployment package](./how-to-guides/configure-custom-udf.md): Guide for deploying a customized UDF deployment package (UDFs/models/TICKscripts)
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
 get-started/system-requirements
+get-started/build-from-source
+get-started/deploy-with-helm
 
 :::
 hide_directive-->

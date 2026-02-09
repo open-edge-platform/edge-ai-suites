@@ -148,6 +148,11 @@ a pre-step to prepare models may be needed
    | ![image1](./_images/imagesearch1.png) | ![image2](./_images/imagesearch2.png) |
     |--------------------------------|--------------------------------|
 
+8. **Stop the Application**:
+    - Brind down the dockers along with volumes:
+      ```bash
+      docker compose down -v
+      ```
 
 <!--
 

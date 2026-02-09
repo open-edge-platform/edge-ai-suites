@@ -6,7 +6,7 @@ Deploy AI-powered captioning for live RTSP video streams with Intel DLStreamer a
 
 ## Learn More
 
-- [Overview](docs/user-guide/Overview.md)
+- [Overview](docs/user-guide/overview.md)
 - [System Requirements](docs/user-guide/system-requirements.md)
 - [Get Started](docs/user-guide/get-started.md)
 - [API Reference](docs/user-guide/api-reference.md)

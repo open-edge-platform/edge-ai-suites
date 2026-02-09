@@ -6,6 +6,6 @@ paho-mqtt==2.1.0
 fastapi==0.121.0
 uvicorn==0.32.1
 numpy==2.2.1
-python-multipart==0.0.19
+python-multipart==0.0.22
 certifi==2024.8.30
 requests==2.32.4

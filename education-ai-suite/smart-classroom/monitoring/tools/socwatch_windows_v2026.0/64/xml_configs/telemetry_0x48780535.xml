@@ -1,0 +1,1125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "nvl_tcss_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>NVL</TELEM:name>
+	<TELEM:description>NVL SOC TCSS</TELEM:description>
+	<TELEM:uniqueid>0x48780535</TELEM:uniqueid>
+	<TELEM:productid>NVL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x1400</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_RESIDENCY_TC0B" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_RESIDENCY_TC0B">
+			<TELC:description>Accumulated residency in TC0B state. TC0B residency includes summarized residency in all remaining TCStates.Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_RESIDENCY_TC0B</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x1408</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_RESIDENCY_TC0GB" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_RESIDENCY_TC0GB">
+			<TELC:description>Accumulated residency in TC0GB state. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_RESIDENCY_TC0GB</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x1410</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_RESIDENCY_TC1" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_RESIDENCY_TC1">
+			<TELC:description>Accumulated residency in TC1 state. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_RESIDENCY_TC1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_3" sampleID="3" sampleGroupID="Container_3">
+		<TELC:description>Groupname 0x1418</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_RESIDENCY_TC7" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_RESIDENCY_TC7">
+			<TELC:description>Accumulated residency in TC7 state. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_RESIDENCY_TC7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_4" sampleID="4" sampleGroupID="Container_4">
+		<TELC:description>Groupname 0x1420</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_RESIDENCY_TC10" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_RESIDENCY_TC10">
+			<TELC:description>Accumulated residency in TC10 state. Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_RESIDENCY_TC10</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_5" sampleID="5" sampleGroupID="Container_5">
+		<TELC:description>Groupname 0x1428</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_TIME_0" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_TIME_0">
+			<TELC:description>General purpose 8-byte entries sufficient for measuring time. Content depends on a chosen extension</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_TIME_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_6" sampleID="6" sampleGroupID="Container_6">
+		<TELC:description>Groupname 0x1430</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_TIME_1" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_TIME_1">
+			<TELC:description>General purpose 8-byte entries sufficient for measuring time. Content depends on a chosen extension</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_TIME_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_7" sampleID="7" sampleGroupID="Container_7">
+		<TELC:description>Groupname 0x1438</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_TIME_2" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_TIME_2">
+			<TELC:description>General purpose 8-byte entries sufficient for measuring time. Content depends on a chosen extension</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_TIME_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_8" sampleID="8" sampleGroupID="Container_8">
+		<TELC:description>Groupname 0x1440</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_TIME_3" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_TIME_3">
+			<TELC:description>General purpose 8-byte entries sufficient for measuring time. Content depends on a chosen extension</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_TIME_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_9" sampleID="9" sampleGroupID="Container_9">
+		<TELC:description>Groupname 0x1448</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_TIME_4" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_TIME_4">
+			<TELC:description>General purpose 8-byte entries sufficient for measuring time. Content depends on a chosen extension</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_TIME_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_10" sampleID="10" sampleGroupID="Container_10">
+		<TELC:description>Groupname 0x1450</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_TIME_5" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_TIME_5">
+			<TELC:description>General purpose 8-byte entries sufficient for measuring time. Content depends on a chosen extension</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_TIME_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_11" sampleID="11" sampleGroupID="Container_11">
+		<TELC:description>Groupname 0x1458</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_TIME_6" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_TIME_6">
+			<TELC:description>General purpose 8-byte entries sufficient for measuring time. Content depends on a chosen extension</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_TIME_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_12" sampleID="12" sampleGroupID="Container_12">
+		<TELC:description>Groupname 0x1460</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_TIME_7" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_TIME_7">
+			<TELC:description>General purpose 8-byte entries sufficient for measuring time. Content depends on a chosen extension</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_TIME_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_13" sampleID="13" sampleGroupID="Container_13">
+		<TELC:description>Groupname 0x1468</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_TIME_8" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_TIME_8">
+			<TELC:description>General purpose 8-byte entries sufficient for measuring time. Content depends on a chosen extension</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_TIME_8</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>64</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_14" sampleID="14" sampleGroupID="Container_14">
+		<TELC:description>Groupname 0x1470</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_COUNT_0" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_COUNT_0">
+			<TELC:description>General purpose 4-byte entries sufficient for counting occurrences. Content depends on chosen extension.</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_COUNT_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GENERIC_COUNT_1" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_COUNT_1">
+			<TELC:description>General purpose 4-byte entries sufficient for counting occurrences. Content depends on chosen extension.</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_COUNT_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_15" sampleID="15" sampleGroupID="Container_15">
+		<TELC:description>Groupname 0x1478</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_COUNT_2" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_COUNT_2">
+			<TELC:description>General purpose 4-byte entries sufficient for counting occurrences. Content depends on chosen extension.</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_COUNT_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GENERIC_COUNT_3" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_COUNT_3">
+			<TELC:description>General purpose 4-byte entries sufficient for counting occurrences. Content depends on chosen extension.</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_COUNT_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_16" sampleID="16" sampleGroupID="Container_16">
+		<TELC:description>Groupname 0x1480</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_COUNT_4" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_COUNT_4">
+			<TELC:description>General purpose 4-byte entries sufficient for counting occurrences. Content depends on chosen extension.</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_COUNT_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GENERIC_COUNT_5" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_COUNT_5">
+			<TELC:description>General purpose 4-byte entries sufficient for counting occurrences. Content depends on chosen extension.</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_COUNT_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_17" sampleID="17" sampleGroupID="Container_17">
+		<TELC:description>Groupname 0x1488</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_COUNT_6" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_COUNT_6">
+			<TELC:description>General purpose 4-byte entries sufficient for counting occurrences. Content depends on chosen extension.</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_COUNT_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GENERIC_COUNT_7" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_COUNT_7">
+			<TELC:description>General purpose 4-byte entries sufficient for counting occurrences. Content depends on chosen extension.</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_COUNT_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_18" sampleID="18" sampleGroupID="Container_18">
+		<TELC:description>Groupname 0x1490</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENERIC_COUNT_8" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_COUNT_8">
+			<TELC:description>General purpose 4-byte entries sufficient for counting occurrences. Content depends on chosen extension.</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_COUNT_8</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GENERIC_COUNT_9" datatypeIDREF="tgeneric_counter" sampleID="GENERIC_COUNT_9">
+			<TELC:description>General purpose 4-byte entries sufficient for counting occurrences. Content depends on chosen extension.</TELC:description>
+			<TELC:sampleSubGroup>GENERIC_COUNT_9</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_19" sampleID="19" sampleGroupID="Container_19">
+		<TELC:description>Groupname 0x1498</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMREQ_COUNT_REQ_SERIES" datatypeIDREF="tgeneric_sample" sampleID="PMREQ_COUNT_REQ_SERIES">
+			<TELC:description>Number of series of PMReqs issued by IOM towards TCSS IPs. Each series targets all configured TSS IPs at once.</TELC:description>
+			<TELC:sampleSubGroup>PMREQ_PMRSP_CNT_REQ_SERIES_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_LIMITING_LTR_PCIE_0" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LIMITING_LTR_PCIE_0">
+			<TELC:description>Number of times a given TCSS IP responded with a valid LTR value that meets the following criteria:1.	The LTR value is too low for the deepest TCState, and thus contributes to TCState demotion2.	The LTR value is minimal among the LTR values received from all TCSS IPs for a given PMReq/Rsp seriesThe purpose is to determine the most problematic TCSS IP with respect to LTR.</TELC:description>
+			<TELC:sampleSubGroup>PMREQ_PMRSP_CNT_REQ_SERIES_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_20" sampleID="20" sampleGroupID="Container_20">
+		<TELC:description>Groupname 0x14a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_LIMITING_LTR_PCIE_1" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LIMITING_LTR_PCIE_1">
+			<TELC:description>Number of times a given TCSS IP responded with a valid LTR value that meets the following criteria:1.	The LTR value is too low for the deepest TCState, and thus contributes to TCState demotion2.	The LTR value is minimal among the LTR values received from all TCSS IPs for a given PMReq/Rsp seriesThe purpose is to determine the most problematic TCSS IP with respect to LTR.</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_LIMIT_LTR_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_LIMITING_LTR_PCIE_2" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LIMITING_LTR_PCIE_2">
+			<TELC:description>Number of times a given TCSS IP responded with a valid LTR value that meets the following criteria:1.	The LTR value is too low for the deepest TCState, and thus contributes to TCState demotion2.	The LTR value is minimal among the LTR values received from all TCSS IPs for a given PMReq/Rsp seriesThe purpose is to determine the most problematic TCSS IP with respect to LTR.</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_LIMIT_LTR_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_21" sampleID="21" sampleGroupID="Container_21">
+		<TELC:description>Groupname 0x14a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_LIMITING_LTR_PCIE_3" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LIMITING_LTR_PCIE_3">
+			<TELC:description>Number of times a given TCSS IP responded with a valid LTR value that meets the following criteria:1.	The LTR value is too low for the deepest TCState, and thus contributes to TCState demotion2.	The LTR value is minimal among the LTR values received from all TCSS IPs for a given PMReq/Rsp seriesThe purpose is to determine the most problematic TCSS IP with respect to LTR.</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_LIMIT_LTR_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_LIMITING_LTR_GENX" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LIMITING_LTR_GENX">
+			<TELC:description>Number of times a given TCSS IP responded with a valid LTR value that meets the following criteria:1.	The LTR value is too low for the deepest TCState, and thus contributes to TCState demotion2.	The LTR value is minimal among the LTR values received from all TCSS IPs for a given PMReq/Rsp seriesThe purpose is to determine the most problematic TCSS IP with respect to LTR.</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_LIMIT_LTR_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_22" sampleID="22" sampleGroupID="Container_22">
+		<TELC:description>Groupname 0x14b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_LIMITING_LTR_GENT" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LIMITING_LTR_GENT">
+			<TELC:description>Number of times a given TCSS IP responded with a valid LTR value that meets the following criteria:1.	The LTR value is too low for the deepest TCState, and thus contributes to TCState demotion2.	The LTR value is minimal among the LTR values received from all TCSS IPs for a given PMReq/Rsp seriesThe purpose is to determine the most problematic TCSS IP with respect to LTR.</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_LIMIT_LTR_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_LIMITING_LTR_USB4HR" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LIMITING_LTR_USB4HR">
+			<TELC:description>Number of times a given TCSS IP responded with a valid LTR value that meets the following criteria:1.	The LTR value is too low for the deepest TCState, and thus contributes to TCState demotion2.	The LTR value is minimal among the LTR values received from all TCSS IPs for a given PMReq/Rsp seriesThe purpose is to determine the most problematic TCSS IP with respect to LTR.</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_LIMIT_LTR_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_23" sampleID="23" sampleGroupID="Container_23">
+		<TELC:description>Groupname 0x14b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_LTR_HIT_THRESHOLD_TC0B" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LTR_HIT_THRESHOLD_TC0B">
+			<TELC:description>Number of times an aggregated LTR value hit the threshold for a given TCState, and thus contributed to TCState demotion.The aggregated LTR value is a minimal valid LTR within a given PMReq/Rsp series</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_LTR_TRESHOLD_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_LTR_HIT_THRESHOLD_TC0GB" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LTR_HIT_THRESHOLD_TC0GB">
+			<TELC:description>Number of times an aggregated LTR value hit the threshold for a given TCState, and thus contributed to TCState demotion.The aggregated LTR value is a minimal valid LTR within a given PMReq/Rsp series</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_LTR_TRESHOLD_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_24" sampleID="24" sampleGroupID="Container_24">
+		<TELC:description>Groupname 0x14c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_LTR_HIT_THRESHOLD_TC01" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LTR_HIT_THRESHOLD_TC01">
+			<TELC:description>Number of times an aggregated LTR value hit the threshold for a given TCState, and thus contributed to TCState demotion.The aggregated LTR value is a minimal valid LTR within a given PMReq/Rsp series</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_LTR_TRESHOLD_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_LTR_HIT_THRESHOLD_TC07" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LTR_HIT_THRESHOLD_TC07">
+			<TELC:description>Number of times an aggregated LTR value hit the threshold for a given TCState, and thus contributed to TCState demotion.The aggregated LTR value is a minimal valid LTR within a given PMReq/Rsp series</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_LTR_TRESHOLD_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_25" sampleID="25" sampleGroupID="Container_25">
+		<TELC:description>Groupname 0x14c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_VALID_NDE_GENX" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VALID_NDE_GENX">
+			<TELC:description>Number of times a given TCSS IP responded with a valid/deterministic NDE value.</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VALID_NDE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_VALID_NDE_GENT" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VALID_NDE_GENT">
+			<TELC:description>Number of times a given TCSS IP responded with a valid/deterministic NDE value.</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VALID_NDE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_26" sampleID="26" sampleGroupID="Container_26">
+		<TELC:description>Groupname 0x14d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_LIMITING_NDE_GENX" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LIMITING_NDE_GENX">
+			<TELC:description>Number of times a given TCSS IP responded with a a valid/deterministic NDE value that meets the following criteria:1. The NDE value is too low for the deepest TCState, and thus contributes to TCState demotion2. The NDE value is minimal among the NDE values received from all TCSS IPs for a given PMReq/Rsp seriesThe purpose is to determine the most problematic TCSS IP with respect to NDE.</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VALID_NDE_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_LIMITING_NDE_GENT" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_LIMITING_NDE_GENT">
+			<TELC:description>Number of times a given TCSS IP responded with a a valid/deterministic NDE value that meets the following criteria:1. The NDE value is too low for the deepest TCState, and thus contributes to TCState demotion2. The NDE value is minimal among the NDE values received from all TCSS IPs for a given PMReq/Rsp seriesThe purpose is to determine the most problematic TCSS IP with respect to NDE.</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VALID_NDE_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_27" sampleID="27" sampleGroupID="Container_27">
+		<TELC:description>Groupname 0x14d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_NDE_HIT_THRESHOLD_TC0B" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_NDE_HIT_THRESHOLD_TC0B">
+			<TELC:description>Number of times an aggregated NDE value hit the threshold for a given TCState, and thus contributed to TCState demotion.The aggregated NDE value is a minimal valid NDE within a given PMReq/Rsp series</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_NDE_HIT_TRESHOLD_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_NDE_HIT_THRESHOLD_TC0GB" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_NDE_HIT_THRESHOLD_TC0GB">
+			<TELC:description>Number of times an aggregated NDE value hit the threshold for a given TCState, and thus contributed to TCState demotion.The aggregated NDE value is a minimal valid NDE within a given PMReq/Rsp series</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_NDE_HIT_TRESHOLD_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_28" sampleID="28" sampleGroupID="Container_28">
+		<TELC:description>Groupname 0x14e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_NDE_HIT_THRESHOLD_TC01" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_NDE_HIT_THRESHOLD_TC01">
+			<TELC:description>Number of times an aggregated NDE value hit the threshold for a given TCState, and thus contributed to TCState demotion.The aggregated NDE value is a minimal valid NDE within a given PMReq/Rsp series</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_NDE_HIT_TRESHOLD_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_NDE_HIT_THRESHOLD_TC07" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_NDE_HIT_THRESHOLD_TC07">
+			<TELC:description>Number of times an aggregated NDE value hit the threshold for a given TCState, and thus contributed to TCState demotion.The aggregated NDE value is a minimal valid NDE within a given PMReq/Rsp series</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_NDE_HIT_TRESHOLD_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_29" sampleID="29" sampleGroupID="Container_29">
+		<TELC:description>Groupname 0x14e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_PCIE_0" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_PCIE_0">
+			<TELC:description>Number of times a given TCSS IP rejected VccTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_PCIE_1" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_PCIE_1">
+			<TELC:description>Number of times a given TCSS IP rejected VccTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_30" sampleID="30" sampleGroupID="Container_30">
+		<TELC:description>Groupname 0x14f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_PCIE_2" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_PCIE_2">
+			<TELC:description>Number of times a given TCSS IP rejected VccTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_PCIE_3" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_PCIE_3">
+			<TELC:description>Number of times a given TCSS IP rejected VccTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_31" sampleID="31" sampleGroupID="Container_31">
+		<TELC:description>Groupname 0x14f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_GENX" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_GENX">
+			<TELC:description>Number of times a given TCSS IP rejected VccTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_GENT" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_GENT">
+			<TELC:description>Number of times a given TCSS IP rejected VccTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_32" sampleID="32" sampleGroupID="Container_32">
+		<TELC:description>Groupname 0x1500</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_USB4HR" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCTPC_REMOVAL_NACK_USB4HR">
+			<TELC:description>Number of times a given TCSS IP rejected VccTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_PCIE_0" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_PCIE_0">
+			<TELC:description>Number of times a given TCSS IP rejected VccSTTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_33" sampleID="33" sampleGroupID="Container_33">
+		<TELC:description>Groupname 0x1508</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_PCIE_1" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_PCIE_1">
+			<TELC:description>Number of times a given TCSS IP rejected VccSTTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_PCIE_2" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_PCIE_2">
+			<TELC:description>Number of times a given TCSS IP rejected VccSTTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_34" sampleID="34" sampleGroupID="Container_34">
+		<TELC:description>Groupname 0x1510</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_PCIE_3" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_PCIE_3">
+			<TELC:description>Number of times a given TCSS IP rejected VccSTTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_GENX" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_GENX">
+			<TELC:description>Number of times a given TCSS IP rejected VccSTTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_35" sampleID="35" sampleGroupID="Container_35">
+		<TELC:description>Groupname 0x1518</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_GENT" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_GENT">
+			<TELC:description>Number of times a given TCSS IP rejected VccSTTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_USB4HR" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_VCCSTTPC_REMOVAL_NACK_USB4HR">
+			<TELC:description>Number of times a given TCSS IP rejected VccSTTPC removal request during TCState entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_VCC_REMOVAL_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_36" sampleID="36" sampleGroupID="Container_36">
+		<TELC:description>Groupname 0x1520</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_BLOCK_NACK_PCIE_0" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_BLOCK_NACK_PCIE_0">
+			<TELC:description>Number of times a given TCSS IP rejected the block request during TC0B entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_BLK_NACK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_BLOCK_NACK_PCIE_1" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_BLOCK_NACK_PCIE_1">
+			<TELC:description>Number of times a given TCSS IP rejected the block request during TC0B entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_BLK_NACK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_37" sampleID="37" sampleGroupID="Container_37">
+		<TELC:description>Groupname 0x1528</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_BLOCK_NACK_PCIE_2" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_BLOCK_NACK_PCIE_2">
+			<TELC:description>Number of times a given TCSS IP rejected the block request during TC0B entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_BLK_NACK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_BLOCK_NACK_PCIE_3" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_BLOCK_NACK_PCIE_3">
+			<TELC:description>Number of times a given TCSS IP rejected the block request during TC0B entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_BLK_NACK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_38" sampleID="38" sampleGroupID="Container_38">
+		<TELC:description>Groupname 0x1530</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_BLOCK_NACK_PCIE_GENX" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_BLOCK_NACK_PCIE_GENX">
+			<TELC:description>Number of times a given TCSS IP rejected the block request during TC0B entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_BLK_NACK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PMRSP_COUNT_BLOCK_NACK_PCIE_GENT" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_BLOCK_NACK_PCIE_GENT">
+			<TELC:description>Number of times a given TCSS IP rejected the block request during TC0B entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_BLK_NACK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_39" sampleID="39" sampleGroupID="Container_39">
+		<TELC:description>Groupname 0x1538</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMRSP_COUNT_BLOCK_NACK_PCIE_USB4HR" datatypeIDREF="tgeneric_sample" sampleID="PMRSP_COUNT_BLOCK_NACK_PCIE_USB4HR">
+			<TELC:description>Number of times a given TCSS IP rejected the block request during TC0B entry</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_BLK_NACK_TCSTATE_LATENCY_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_LATENCY_ENTRY_TC0B" datatypeIDREF="tgeneric_sample" sampleID="TCSTATE_LATENCY_ENTRY_TC0B">
+			<TELC:description>Maximal recorded time during which IOM FW executes entry flow to a given TCState.Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>PMRSP_CNT_BLK_NACK_TCSTATE_LATENCY_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_40" sampleID="40" sampleGroupID="Container_40">
+		<TELC:description>Groupname 0x1540</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_LATENCY_ENTRY_TC0GB" datatypeIDREF="tgeneric_sample" sampleID="TCSTATE_LATENCY_ENTRY_TC0GB">
+			<TELC:description>Maximal recorded time during which IOM FW executes entry flow to a given TCState.Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_LATENCY_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_LATENCY_ENTRY_TC1" datatypeIDREF="tgeneric_sample" sampleID="TCSTATE_LATENCY_ENTRY_TC1">
+			<TELC:description>Maximal recorded time during which IOM FW executes entry flow to a given TCState.Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_LATENCY_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_41" sampleID="41" sampleGroupID="Container_41">
+		<TELC:description>Groupname 0x1548</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_LATENCY_ENTRY_TC7" datatypeIDREF="tgeneric_sample" sampleID="TCSTATE_LATENCY_ENTRY_TC7">
+			<TELC:description>Maximal recorded time during which IOM FW executes entry flow to a given TCState.Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_LATENCY_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_LATENCY_ENTRY_TC10" datatypeIDREF="tgeneric_sample" sampleID="TCSTATE_LATENCY_ENTRY_TC10">
+			<TELC:description>Maximal recorded time during which IOM FW executes entry flow to a given TCState.Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_LATENCY_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_42" sampleID="42" sampleGroupID="Container_42">
+		<TELC:description>Groupname 0x1550</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_LATENCY_EXIT_TC0B" datatypeIDREF="tgeneric_sample" sampleID="TCSTATE_LATENCY_EXIT_TC0B">
+			<TELC:description>Maximal recorded time during which IOM FW executes exit flow from a given TCState.Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_LATENCY_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_LATENCY_EXIT_TC0GB" datatypeIDREF="tgeneric_sample" sampleID="TCSTATE_LATENCY_EXIT_TC0GB">
+			<TELC:description>Maximal recorded time during which IOM FW executes exit flow from a given TCState.Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_LATENCY_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_43" sampleID="43" sampleGroupID="Container_43">
+		<TELC:description>Groupname 0x1558</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_LATENCY_EXIT_TC1" datatypeIDREF="tgeneric_sample" sampleID="TCSTATE_LATENCY_EXIT_TC1">
+			<TELC:description>Maximal recorded time during which IOM FW executes exit flow from a given TCState.Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_LATENCY_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_LATENCY_EXIT_TC7" datatypeIDREF="tgeneric_sample" sampleID="TCSTATE_LATENCY_EXIT_TC7">
+			<TELC:description>Maximal recorded time during which IOM FW executes exit flow from a given TCState.Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_LATENCY_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_44" sampleID="44" sampleGroupID="Container_44">
+		<TELC:description>Groupname 0x1560</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_LATENCY_EXIT_TC10" datatypeIDREF="tgeneric_sample" sampleID="TCSTATE_LATENCY_EXIT_TC10">
+			<TELC:description>Maximal recorded time during which IOM FW executes exit flow from a given TCState.Units are XTAL clocks.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_LATENCY_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_ENTRY_TC0B" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ENTRY_TC0B">
+			<TELC:description>Number of times TCSS entered a given TCState state.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ENTRY_TC0B</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_45" sampleID="45" sampleGroupID="Container_45">
+		<TELC:description>Groupname 0x1568</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_ENTRY_TC0GB" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ENTRY_TC0GB">
+			<TELC:description>Number of times TCSS entered a given TCState state.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ENTRY_TC0GB</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_ENTRY_TC1" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ENTRY_TC1">
+			<TELC:description>Number of times TCSS entered a given TCState state.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ENTRY_TC1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_46" sampleID="46" sampleGroupID="Container_46">
+		<TELC:description>Groupname 0x1570</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_ENTRY_TC7" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ENTRY_TC7">
+			<TELC:description>Number of times TCSS entered a given TCState state.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ENTRY_TC7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_ENTRY_TC10" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ENTRY_TC10">
+			<TELC:description>Number of times TCSS entered a given TCState state.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ENTRY_TC10</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_47" sampleID="47" sampleGroupID="Container_47">
+		<TELC:description>Groupname 0x1578</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_WAKE_PCIE_0" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_WAKE_PCIE_0">
+			<TELC:description>Number of times given TCSS IP issued a wake request towards IOM.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_WAKE_PCIE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_WAKE_PCIE_1" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_WAKE_PCIE_1">
+			<TELC:description>Number of times given TCSS IP issued a wake request towards IOM.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_WAKE_PCIE_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_48" sampleID="48" sampleGroupID="Container_48">
+		<TELC:description>Groupname 0x1580</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_WAKE_PCIE_2" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_WAKE_PCIE_2">
+			<TELC:description>Number of times given TCSS IP issued a wake request towards IOM.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_WAKE_PCIE_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_WAKE_PCIE_3" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_WAKE_PCIE_3">
+			<TELC:description>Number of times given TCSS IP issued a wake request towards IOM.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_WAKE_PCIE_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_49" sampleID="49" sampleGroupID="Container_49">
+		<TELC:description>Groupname 0x1588</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_WAKE_GENX" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_WAKE_GENX">
+			<TELC:description>Number of times given TCSS IP issued a wake request towards IOM.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_WAKE_GENX</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_WAKE_GENT" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_WAKE_GENT">
+			<TELC:description>Number of times given TCSS IP issued a wake request towards IOM.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_WAKE_GENT</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_50" sampleID="50" sampleGroupID="Container_50">
+		<TELC:description>Groupname 0x1590</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_WAKE_USB4HR" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_WAKE_USB4HR">
+			<TELC:description>Number of times given TCSS IP issued a wake request towards IOM.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_WAKE_USB4HR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_DEMOTION_VCCTPC_NEEDED" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_DEMOTION_VCCTPC_NEEDED">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple demotion causes coexist, IOM FW reports only the most impactful one.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_DEMOTION_VCCTPC_NEEDED</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_51" sampleID="51" sampleGroupID="Container_51">
+		<TELC:description>Groupname 0x1598</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_DEMOTION_VCCSTTPC_NEEDED" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_DEMOTION_VCCSTTPC_NEEDED">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple demotion causes coexist, IOM FW reports only the most impactful one.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_DEMOTION_VCCSTTPC_NEEDED</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_DEMOTION_DEVICE_ATTACHED" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_DEMOTION_DEVICE_ATTACHED">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple demotion causes coexist, IOM FW reports only the most impactful one.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_DEMOTION_DEVICE_ATTACHED</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_52" sampleID="52" sampleGroupID="Container_52">
+		<TELC:description>Groupname 0x15a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_DEMOTION_LTR_TOO_LOW" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_DEMOTION_LTR_TOO_LOW">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple demotion causes coexist, IOM FW reports only the most impactful one.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_DEMOTION_LTR_TOO_LOW</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_DEMOTION_NDE_TOO_CLOSE" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_DEMOTION_NDE_TOO_CLOSE">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple demotion causes coexist, IOM FW reports only the most impactful one.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_DEMOTION_NDE_TOO_CLOSE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_53" sampleID="53" sampleGroupID="Container_53">
+		<TELC:description>Groupname 0x15a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_DEMOTION_LIMITED_BY_SOC" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_DEMOTION_LIMITED_BY_SOC">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple demotion causes coexist, IOM FW reports only the most impactful one.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_DEMOTION_LIMITED_BY_SOC</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_DEMOTION_DISPLAY_STREAMING" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_DEMOTION_DISPLAY_STREAMING">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple demotion causes coexist, IOM FW reports only the most impactful one.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_DEMOTION_DISPLAY_STREAMING</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_54" sampleID="54" sampleGroupID="Container_54">
+		<TELC:description>Groupname 0x15b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_DEMOTION_OTHERS" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_DEMOTION_OTHERS">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple demotion causes coexist, IOM FW reports only the most impactful one.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_DEMOTION_OTHERS</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_DEMOTION_RSVD0" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_DEMOTION_RSVD0">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple demotion causes coexist, IOM FW reports only the most impactful one.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_DEMOTION_RSVD0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_55" sampleID="55" sampleGroupID="Container_55">
+		<TELC:description>Groupname 0x15b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_ABORT_IPS_NOT_BLOCKED" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ABORT_IPS_NOT_BLOCKED">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple abort causes coexist, IOM FW reports only the one that was detected first.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ABORT_IPS_NOT_BLOCKED</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_PSF_NOT_IDLE" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_PSF_NOT_IDLE">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple abort causes coexist, IOM FW reports only the one that was detected first.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_PSF_NOT_IDLE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_56" sampleID="56" sampleGroupID="Container_56">
+		<TELC:description>Groupname 0x15c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_ABORT_WAKE_PENDING" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ABORT_WAKE_PENDING">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple abort causes coexist, IOM FW reports only the one that was detected first.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ABORT_WAKE_PENDING</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_ABORT_IOM_EVENTS_PENDING" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ABORT_IOM_EVENTS_PENDING">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple abort causes coexist, IOM FW reports only the one that was detected first.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ABORT_IOM_EVENTS_PENDING</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_57" sampleID="57" sampleGroupID="Container_57">
+		<TELC:description>Groupname 0x15c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_ABORT_CRASHLOG_REQUEST" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ABORT_CRASHLOG_REQUEST">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple abort causes coexist, IOM FW reports only the one that was detected first.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ABORT_CRASHLOG_REQUEST</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_ABORT_SPURIOUS_REQ" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ABORT_SPURIOUS_REQ">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple abort causes coexist, IOM FW reports only the one that was detected first.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ABORT_SPURIOUS_REQ</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_58" sampleID="58" sampleGroupID="Container_58">
+		<TELC:description>Groupname 0x15d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_ABORT_IPS_RAIL_USAGE_CHANGE" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ABORT_IPS_RAIL_USAGE_CHANGE">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple abort causes coexist, IOM FW reports only the one that was detected first.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ABORT_IPS_RAIL_USAGE_CHANGE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_ABORT_AET_DECREASE" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ABORT_AET_DECREASE">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple abort causes coexist, IOM FW reports only the one that was detected first.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ABORT_AET_DECREASE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_59" sampleID="59" sampleGroupID="Container_59">
+		<TELC:description>Groupname 0x15d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_ABORT_LTR_DECREASE" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ABORT_LTR_DECREASE">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple abort causes coexist, IOM FW reports only the one that was detected first.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ABORT_LTR_DECREASE</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_ABORT_OTHERS" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ABORT_OTHERS">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple abort causes coexist, IOM FW reports only the one that was detected first.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ABORT_OTHERS</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_60" sampleID="60" sampleGroupID="Container_60">
+		<TELC:description>Groupname 0x15e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="TCSTATE_COUNT_ABORT_RSVD0" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_ABORT_RSVD0">
+			<TELC:description>Number of times when either TC0_Blocked entry flow or TCX entry flow was aborted.The measurement broken down into all supported abort causes.If multiple abort causes coexist, IOM FW reports only the one that was detected first.</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_ABORT_RSVD0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TCSTATE_COUNT_NDE_VIOLATION" datatypeIDREF="tgeneric_counter" sampleID="TCSTATE_COUNT_NDE_VIOLATION">
+			<TELC:description>Count time when IOM failed to wake a TCSS IP before NDE expiration</TELC:description>
+			<TELC:sampleSubGroup>TCSTATE_COUNT_NDE_VIOLATION</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

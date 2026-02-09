@@ -1,24 +1,23 @@
 # Get Started
 
-The **Smart Traffic Intersection Agent (STIA)** provides comprehensive traffic analysis capabilities including real-time intersection monitoring, directional traffic density analysis, and VLM-powered traffic insights. This guide provides step-by-step instructions to:
+The **Smart Traffic Intersection Agent (STIA)** provides analytics that include, but not limited to, real-time intersection, directional traffic density, and VLM-powered traffic. This section shows you how to:
 
 - Set up the agent using the automated setup script for quick deployment.
-- Run predefined tasks to explore its functionality.
-- Learn how to modify configurations to suit specific requirements.
+- Run predefined tasks to explore the agent's functionality.
+- Edit configurations to suit specific requirements.
 
 ## Prerequisites
 
 Before you begin, ensure the following:
 
-- **System Requirements**: Verify that your system meets the [minimum requirements](./system-requirements.md).
-- **Docker Installed**: Install Docker. For installation instructions, see [Get Docker](https://docs.docker.com/get-docker/).
-- **MQTT Broker**: Ensure access to an MQTT broker for traffic data streaming (or use the included broker).
-
-This guide assumes basic familiarity with Docker commands and terminal usage. If you are new to Docker, see [Docker Documentation](https://docs.docker.com/) for an introduction.
+- **System requirements**: Verify that your system meets the [minimum requirements](./system-requirements.md).
+- **Docker platform**: Install Docker platform. For installation instructions, see [Get Docker](https://docs.docker.com/get-docker/).
+- **Message Queuing Telemetry Transport (MQTT) Broker**: Ensure access to an MQTT broker for traffic data streaming, or use the included broker.
+- **Docker commands and terminal usage**: You are familiar with Docker commands and using the terminal. If you are new to Docker, see [Docker Documentation](https://docs.docker.com/) for an introduction.
 
 ## Quick Start with Setup Script
 
-The Smart Traffic Intersection Agent includes an automated setup script that handles environment configuration, submodule and dependencies setup, secrets generation, building, and deployment. This is the **recommended approach** for getting started.
+Intel recommends using the automated setup script that handles environment configuration, submodule and dependencies setup, secrets generation, building, and deployment of the Smart Traffic Intersection Agent.
 
 ### 1. Clone the Repository
 
@@ -29,7 +28,7 @@ cd metro-ai-suite/smart-traffic-intersection-agent/
 
 ### 2. Run the Complete Setup
 
-Easiest way to setup the service is to use the default configurations without making any changes. Run the setup script with --setup option for quick setup of the application with default configuration :
+The easiest way to set up the service is to use default configurations without making any changes. Run the setup script with the --setup option to set up the agent quickly with default configurations:
 
 ```bash
 source setup.sh --setup
@@ -37,26 +36,28 @@ source setup.sh --setup
 
 This single command will:
 
-- Set all required environment variables with default values
-- Setup all dependencies and submodules required for Traffic Intersection Agent
-- Generate required TLS certificates and authentication files
+- Set required environment variables with default values
+- Set up dependencies and submodules required for Smart Traffic Intersection Agent
+- Generate the required TLS certificates and authentication files
 - Download demo video files for testing
 - Build Docker images
-- Start all services in the Traffic Intersection Agent application stack
+- Start services in the Smart Traffic Intersection Agent's application stack
 
 ### 3. Access Services
 
-Once the script is completed successfully, it will show the URLs to access the services. Head to these URLs for the respective services to access them in a web browser.
+When the script completes, it will show the URLs to access the services. Go to these URLs so that the respective services can access them in a web browser.
 
-## Running Multiple Instances (Test/Dev Only)
+## Running Multiple Instances (Test or Development Only)
 
-For testing or development purposes, you might want to run multiple instances of the Smart Traffic Intersection Agent to simulate multiple intersections on the same development machine/node. Easiest way to do this is to clone and setup the application `n times` in n different locations on the same machine for `n` required instances. Please note that in production environments, only a single Traffic Intersection Agent instance is deployed on a given node.
+For testing or development purposes, you can run multiple instances of the Smart Traffic Intersection Agent to simulate multiple intersections on the same development machine or node. The easiest way to do this is to clone and set up the application `n times` in n different locations on the same machine for `n` required instances. 
 
-> **Recommendation**: The number of instances you can run on a single machine, depends on available resources. Systems with higher resources can support more instances.
+> **Note**: In production environments, only a single Traffic Intersection Agent instance is deployed on a given node.
 
-### Setting up Instance #1
+> **Intel's recommendation**: The number of instances you can run on a single machine depends on available resources. Systems with higher resources can support more instances.
 
-#### 1. Clone the repository into a new directory:
+### Set up Instance #1
+
+1. Clone the repository into a new directory:
 
 ```bash
 # First instance
@@ -64,7 +65,7 @@ git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edg
 cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
-#### 2. Edit deployment config file for Instance #1
+2. Edit the deployment configuration file for instance #1:
 
 ```bash
 nano src/config/deployment_instance.json
@@ -82,15 +83,15 @@ Update the `latitude` and `longitude` values as required. If not required, use t
 }
 ```
 
-#### 3. Run Setup for Instance #1
+3. Run the setup for instance #1:
 
 ```bash
 source setup.sh --setup
 ```
 
-### Setting up Instance #2
+### Set up Instance #2
 
-#### 1. Clone the repository into a new directory:
+1. Clone the repository into a new directory:
 
 Open a new terminal window and move to different directory and run the following.
 
@@ -99,13 +100,13 @@ git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edg
 cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
-#### 2. Edit deployment config for Instance #2
+2. Edit the deployment configuration for instance #2:
 
 ```bash
 nano src/config/deployment_instance.json
 ```
 
-Following is a sample value for the Instance #2 deployment config:
+The following is a sample value for instance #2 deployment configuration:
 
 ```json
 {
@@ -116,30 +117,30 @@ Following is a sample value for the Instance #2 deployment config:
     "agent_ui_port": "7861"
 }
 ```
-#### 3. Run Setup for Instance #2
+3. Run Setup for Instance #2
 
 ```bash
 source setup.sh --setup
 ```
 
-> __**NOTE**__ : Keep `agent_backend_port` and `agent_ui_port` values empty to use random ephemeral ports and avoid port conflicts.
+> **Note**: Keep the `agent_backend_port` and `agent_ui_port` values empty to use random ephemeral ports and avoid port conflicts.
 
 
 Ensure each instance has their `deployment_instance.json` updated with:
 - A unique value for `name` field
 - Unique latitude and longitude co-ordinates
-- Different `agent_backend_port` and `agent_ui_port` values to avoid port conflicts (optional — if not specified, an ephemeral port is picked automatically)
+- Different `agent_backend_port` and `agent_ui_port` values to avoid port conflicts. This is optional. If not specified, an ephemeral port is picked automatically.
 
-### Deploying more instances
+### Deploying More Instances
 
-There are functionally no limits on number of instances which you can spin-up to simulate multi-node setup using the provided script. However, the machine on which the multiple deployment is being done, will likely start throttling these instances if resource limits are reached. Hence, deploy new instances only if you have the required resource bandwidth.
+There are functionally no limits on the number of instances that you can spin up to simulate a multi-node setup using the provided script. However, the machine on which the multiple deployments are deployed to, will likely start throttling these instances if resource limits are reached. Hence, deploy new instances only if you have the required resource bandwidth.
 
-To spin-up more instances - say `n number of new instances`, repeat the steps mentioned to [Setting up Instance #2](#setting-up-instance-2), by changing to a new directory `n` times.
+To spin-up more instances - say `n number of new instances`, repeat the steps mentioned in [Setting up Instance #2](#setting-up-instance-2), by changing to a new directory `n` times.
 
 
 ## Advanced Environment Configuration
 
-For advanced users who need more control over the configuration, following environment variables can be configured before running the setup script to override the default behaviour.
+For advanced users who need more control over the configuration, you can configure the following environment variables before running the setup script to override the default behaviour:
  
 ```bash
 # Set log level to debug to help in debugging issues, default value is info
@@ -163,9 +164,9 @@ export TRAFFIC_BUFFER_DURATION=20      # Default value 30; Analysis window of tr
 
 ## Accessing the Services
 
-As the setup process, as mentioned above, completes successfully, the URLs for all services are displayed on the terminal. We can get the URL for **Traffic Intersection Agent UI** and **Traffic Intersection Agent API Docs** from the response and access it in a web browser.
+After the setup process completes, the URLs for all services are displayed on the terminal. You can get the URL for **Traffic Intersection Agent UI** and **Traffic Intersection Agent API Docs** from the response, and access it in a web browser.
 
-Following is a sample response you might get at the completion of script, which displays all the URLs to access the relevant services:
+The following is a sample response that you might get at script completion, which displays the URLs for accessing the relevant services:
 
 ![alt text](./_images/service_endpoints.png)
 
@@ -174,7 +175,7 @@ Following is a sample response you might get at the completion of script, which 
 
 ### Port Conflicts for Traffic Intersection Agent Backend or UI
 
-Please make sure the the config file at `src/config/deployment_instance.json` for all instances (deployed from different directories, in case of multiple deployment on same machine) has empty values for following fields `agent_backend_port`, `agent_ui_port` as follows: 
+Ensure that the config file at `src/config/deployment_instance.json` for all instances (deployed from different directories, in case of multiple deployment on same machine) has empty values for the `agent_backend_port` and `agent_ui_port` fields: 
 
 ```bash
     ...
@@ -183,5 +184,5 @@ Please make sure the the config file at `src/config/deployment_instance.json` fo
     ...
 ```
 
-It is recommended to keep these values empty and let Docker use ephemeral ports for minimal hassle. However, if it is required to provide a explicit port, then make sure all such port values for all instances are unique. Also, make sure no other external services are running on these ports.
+Intel recommends to keep these values empty and let the Docker engine use ephemeral ports for minimal hassle. However, if you need to provide an explicit port, ensure port values for all instances are unique. Also, ensure no other external services are running on these ports.
 
