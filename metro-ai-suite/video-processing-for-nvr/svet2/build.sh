@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 topdir=`pwd`
 if [ ! -d "/opt/intel/vppsdk" ]

@@ -42,7 +42,6 @@ This guide is designed to help developers understand the architecture, setup, an
 :hidden:
 
 get-started
-how-to-deploy-helm
 how-it-works
 how-to-use-gpu-for-inference
 application-security-enablement

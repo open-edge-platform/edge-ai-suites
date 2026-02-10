@@ -168,7 +168,7 @@ After the setup process completes, the URLs for all services are displayed on th
 
 The following is a sample response that you might get at script completion, which displays the URLs for accessing the relevant services:
 
-![alt text](./_images/service_endpoints.png)
+![alt text](./_assets/service_endpoints.png)
 
 
 ## Troubleshooting

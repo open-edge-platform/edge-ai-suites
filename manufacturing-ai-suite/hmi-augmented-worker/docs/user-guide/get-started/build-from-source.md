@@ -1,6 +1,6 @@
-# How to Build from Source
+# Build from Source
 
-This document provides step-by-step instructions for building the `ChatQnA Core` sample application and File Watcher service from source. Refer to the [prerequisites section](./get-started.md/#prerequisites) in the guide to install the appropriate software dependencies.
+This document provides step-by-step instructions for building the `ChatQnA Core` sample application and File Watcher service from source. Refer to the [prerequisites section](../get-started.md/#prerequisites) in the guide to install the appropriate software dependencies.
 
 ## Build ChatQnA Core from Source
 
@@ -10,7 +10,6 @@ For detailed instructions on building from source, visit the [Build from Source 
 
 For docker compose deployment instructions, visit the [Running Application Container Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md#running-the-application-container).
 
-
 ## Build File Watcher Service from Source
 
 In the Windows® environment, the File Watcher Service works with the HMI application to continuously monitor file system activities such as creation, modification, and deletion. When it detects any changes, it sends the relevant file data over the network to the `ChatQnA Core` service for ingestion and contextual processing, supporting Retrieval-Augmented Generation (RAG) workflows.
@@ -19,13 +18,14 @@ In the Windows® environment, the File Watcher Service works with the HMI applic
 
 - **Python Installer**: Visit the [official Python website](https://www.python.org/downloads/windows/). Select the latest version available under the "Python Releases for Windows" section.
 
-- **Git[OPTIONAL]**: Visit the [official GIT website](https://git-scm.com/download/win) to download the executable
+- **Git \[OPTIONAL]**: Visit the [official GIT website](https://git-scm.com/download/win) to download the executable
 
 ### Build File Watcher Service in Windows
 
 To build the File Watcher executable binary, follow these steps:
 
 1. Clone and download the source code by either using Git clone or downloading the source code as a ZIP file directly from the [repository](https://github.com/open-edge-platform/edge-ai-suites).
+
    ```bash
    git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
    ```
@@ -51,7 +51,7 @@ To build the File Watcher executable binary, follow these steps:
 
    Once it's activated, the environment name appears in parentheses as follows:
 
-   ```
+   ```text
    (venv_name) C:\Users\YourName\project>
    ```
 
@@ -73,17 +73,23 @@ To build the File Watcher executable binary, follow these steps:
    # Replace <your_proxy> and <port> to your network proxy and port number
    pip install -r requirements.txt --no-cache-dir --proxy <your_proxy>:<port>
    ```
+
    On Windows®, typically, proxy information can be fetched using the command,
+
    ```sh
    netsh winhttp show proxy
    ```
+
    This will output one of the following two outputs:
-   ```sh
+
+   ```text
    Current WinHTTP proxy settings:
         Direct access (no proxy server).
    ```
+
    or
-   ```sh
+
+   ```text
    Current WinHTTP proxy settings:
         Proxy Server:  <your_proxy>:<port>
         Bypass List:   <bypass_list>
@@ -91,7 +97,7 @@ To build the File Watcher executable binary, follow these steps:
 
 6. Set up Environment Variables using `.bat`.
 
-   To configure the file watcher service, you need to set up the environment variables using the [`set_env_vars.bat`](../../file_watcher/set_env_vars.bat) file provided. Follow the steps below to ensure proper configuration:
+   To configure the file watcher service, you need to set up the environment variables using the [`set_env_vars.bat`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/hmi-augmented-worker/file_watcher/set_env_vars.bat) file provided. Follow the steps below to ensure proper configuration:
 
    - Open and edit the values for the variables with your corresponding setup.
 

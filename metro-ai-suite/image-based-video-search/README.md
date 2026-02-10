@@ -12,7 +12,7 @@ You can use this foundation to build solutions for diverse use cases, including 
 ## How it Works
 The application workflow has three stages: inputs, processing, and outputs.
 
-![Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.](docs/user-guide/_images/architecture.svg)
+![Diagram illustrating the components and interactions within the Image-Based Video Search system, including inputs, processing, and outputs.](./docs/user-guide/_assets/architecture.svg)
 
 ### Inputs
 
@@ -33,14 +33,15 @@ The application includes a demonstration video for testing. The video loops cont
 
 - Matched search results, including metadata, timestamps, confidence scores, and frames
 
-![Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results](docs/user-guide/_images/imagesearch2.png)
+![Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results](./docs/user-guide/_assets/imagesearch2.png)
 
 ### Learn More
-- [System Requirements](docs/user-guide/system-requirements.md)
-- [Get Started](docs/user-guide/get-started.md)
-- [Architecture Overview](docs/user-guide/overview-architecture.md)
-- [How to Deploy with Helm](docs/user-guide/how-to-deploy-helm.md)
-- [Release Notes](docs/user-guide/release-notes.md)
+- [Get Started](./docs/user-guide/get-started.md)
+- [System Requirements](./docs/user-guide/system-requirements.md)
+- [How It Works](./docs/user-guide/how-it-works.md)
+- [How to Deploy with Helm](./docs/user-guide/how-to-deploy-helm.md)
+- [How to Deploy with Edge Orchestrator](./docs/user-guide/how-to-deploy-with-edge-orchestrator.md)
+- [Release Notes](./docs/user-guide/release-notes.md)
 
 ## Important Notice
 
