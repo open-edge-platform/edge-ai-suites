@@ -1,52 +1,72 @@
-// src/redux/slices/metricsSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface MetricsState {
-  cpu_utilization: Array<[string, number]>;
-  gpu_utilization: Array<[string, number]>;
-  memory: Array<[string, number, number, number, number]>; // [timestamp, total, used, free, percent]
-  power: Array<[string, ...number[]]>;
-  npu_utilization: Array<[string, number]>;
+  platform: {
+    Processor?: string;    // Was: processor
+    NPU?: string;          // Was: npu
+    iGPU?: string;         // Was: igpu
+    Memory?: string;       // Was: memory
+    Storage?: string;      // Was: storage
+    OS?: string;           // Was: os
+  } | null;
+  
+  // ADD THIS:
+  workloadDevices: {
+    workloads: {
+      rppg?: { env_key: string; configured_device: string; resolved_detail: string };
+      ai_ecg?: { env_key: string; configured_device: string; resolved_detail: string };
+      mdpnp?: { env_key: string; configured_device: string; resolved_detail: string };
+      pose_3d?: { env_key: string; configured_device: string; resolved_detail: string };
+    };
+  } | null;
+  resources: {
+    cpu_utilization: Array<[string, number]>;
+    gpu_utilization: Array<[string, number]>;
+    memory: Array<[string, number, number, number, number]>;
+    power: Array<[string, ...number[]]>;
+    npu_utilization: Array<[string, number]>;
+  };
+  lastUpdated: number | null;
 }
 
 const initialState: MetricsState = {
-  cpu_utilization: [],
-  gpu_utilization: [],
-  memory: [],
-  power: [],
-  npu_utilization: [],
+  platform: null,
+  workloadDevices: null, // ADD THIS
+  resources: {
+    cpu_utilization: [],
+    gpu_utilization: [],
+    memory: [],
+    power: [],
+    npu_utilization: [],
+  },
+  lastUpdated: null,
 };
 
 const metricsSlice = createSlice({
   name: 'metrics',
   initialState,
   reducers: {
-    setMetrics: (state, action: PayloadAction<Partial<MetricsState>>) => {
-      if (action.payload.cpu_utilization) {
-        state.cpu_utilization = action.payload.cpu_utilization;
-      }
-      if (action.payload.gpu_utilization) {
-        state.gpu_utilization = action.payload.gpu_utilization;
-      }
-      if (action.payload.memory) {
-        state.memory = action.payload.memory;
-      }
-      if (action.payload.power) {
-        state.power = action.payload.power;
-      }
-      if (action.payload.npu_utilization) {
-        state.npu_utilization = action.payload.npu_utilization;
-      }
+    setPlatformInfo: (state, action: PayloadAction<any>) => {
+      state.platform = action.payload;
+    },
+    // ADD THIS:
+    setWorkloadDevices: (state, action: PayloadAction<any>) => {
+      state.workloadDevices = action.payload;
+    },
+    setMetrics: (state, action: PayloadAction<any>) => {
+      state.resources = {
+        ...state.resources,
+        ...action.payload,
+      };
+      state.lastUpdated = Date.now();
     },
     clearMetrics: (state) => {
-      state.cpu_utilization = [];
-      state.gpu_utilization = [];
-      state.memory = [];
-      state.power = [];
-      state.npu_utilization = [];
+      state.resources = initialState.resources;
+      state.lastUpdated = null;
     },
   },
 });
 
-export const { setMetrics, clearMetrics } = metricsSlice.actions;
+// ADD setWorkloadDevices to exports:
+export const { setPlatformInfo, setWorkloadDevices, setMetrics, clearMetrics } = metricsSlice.actions;
 export default metricsSlice.reducer;
