@@ -97,6 +97,7 @@ controller_server:
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
+    enable_stamped_cmd_vel: False
     failure_tolerance: 0.3
     progress_checker_plugins: ["progress_checker"]
     goal_checker_plugins: ["general_goal_checker"]
@@ -311,7 +312,7 @@ planner_server:
     planner_plugins: ["GridBased"]
     costmap_update_timeout: 1.0
     GridBased:
-      plugin: "its_planner/ITSPlanner"
+      plugin: "its_planner::ITSPlanner"
       interpolation_resolution: 0.05
       catmull_spline: False
       smoothing_window: 15
@@ -319,7 +320,7 @@ planner_server:
       build_road_map_once: True
       enable_k: False
       min_samples: 250
-      roadmap: "PROBABLISTIC"
+      roadmap: "PROBABILISTIC"
       w: 32
       h: 32
       n: 2
@@ -339,6 +340,7 @@ smoother_server:
 behavior_server:
   ros__parameters:
     use_sim_time: True
+    enable_stamped_cmd_vel: False
     local_costmap_topic: local_costmap/costmap_raw
     global_costmap_topic: global_costmap/costmap_raw
     local_footprint_topic: local_costmap/published_footprint
@@ -407,6 +409,7 @@ route_server:
 velocity_smoother:
   ros__parameters:
     use_sim_time: True
+    enable_stamped_cmd_vel: False
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
@@ -423,6 +426,7 @@ velocity_smoother:
 collision_monitor:
   ros__parameters:
     use_sim_time: True
+    enable_stamped_cmd_vel: False
     base_frame_id: "base_footprint"
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
@@ -454,6 +458,7 @@ collision_monitor:
 docking_server:
   ros__parameters:
     use_sim_time: True
+    enable_stamped_cmd_vel: False
     controller_frequency: 50.0
     initial_perception_timeout: 5.0
     wait_charge_timeout: 5.0

@@ -31,13 +31,15 @@ Prepare the target system following the [official documentation](https://docs.op
 
 ### Build
 
-To build the ITS Planner packages, export `ROS_DISTRO` env variable to desired platform (`jazzy` or `humble`) and run `make build` command:
+To build the ITS Planner packages, set `ROS_DISTRO` to one of the supported ROS 2 distributions (`humble` or `jazzy`) and run `make build`:
 
 ```bash
+ROS_DISTRO=humble make build
+# or
 ROS_DISTRO=jazzy make build
 ```
 
-This will build the following packages:
+This will build the following packages (using the selected ROS distribution prefix):
 - `ros-${ROS_DISTRO}-its-planner`
 - `ros-${ROS_DISTRO}-its-relocalization`
 - `ros-${ROS_DISTRO}-its-send-localization`
@@ -53,10 +55,10 @@ make clean
 
 ### Install
 
-Depending on selected `ROS_DISTRO` run:
+If Ubuntu 22.04 with Humble or Ubuntu 24.04 with Jazzy is used, source the matching ROS setup:
 
 ```bash
-source /opt/ros/${ROS_DISTRO}/setup.bash
+source /opt/ros/$ROS_DISTRO/setup.bash   # ROS_DISTRO=humble or jazzy
 ```
 
 Install the ``ros-${ROS_DISTRO}-its-planner`` Debian package from the Intel Robotics AI Suite APT repo:
@@ -108,36 +110,72 @@ source-package       Create source package tarball
 
 ### Configuration Parameters
 
-The ROS 2 navigation bring-up application is started using the TurtleBot 3 Gazebo simulation which
-gets parameters from either `nav2_params_jazzy.yaml` or `nav2_params_humble.yaml` configuration file.
+To use this plugin, add the following parameters to the distro-specific nav2 params file (e.g., `nav2_params_${ROS_DISTRO}.yaml`):
 
-More information about parameter configuration can be found in
-[its-customization](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/its-customization.html).
-
-### Set environment variables
-
-
-Run the following script to set environment variables, based on `ROS_DISTRO` used:
-
-```bash
-source /opt/ros/${ROS_DISTRO}/setup.bash
-export TURTLEBOT3_MODEL=waffle_pi
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/${ROS_DISTRO}/share/turtlebot3_gazebo/models
+```yaml
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 0.01
+    use_sim_time: True
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "its_planner::ITSPlanner"
+      interpolation_resolution: 0.05
+      catmull_spline: False
+      smoothing_window: 15
+      buffer_size: 10
+      build_road_map_once: True
+      min_samples: 250
+      roadmap: "PROBABILISTIC"
+      w: 32
+      h: 32
+      n: 2
 ```
+
+**Parameter Descriptions:**
+
+- `catmull_spline`: if true, the generated path from the ITS will be interpolated with catmull spline method; otherwise smoothing filter will be used to smooth the path
+- `smoothing_window`: window size for the smoothing filter; unit is grid size
+- `buffer_size`: during the roadmap generation, the samples are generated away from obstacles. The buffer size dictates how far the roadmap samples should be away from obstacles
+- `build_road_map_once`: If true, the roadmap will be loaded from the saved file, otherwise a new roadmap will be generated
+- `min_samples`: minimum number of samples required to generate the roadmap
+- `roadmap`: can be either `PROBABILISTIC` or `DETERMINISTIC`
+- `w`: the width of the window for intelligent sampling
+- `h`: the height of the window for intelligent sampling
+- `n`: the minimum number of samples that is required in an area defined by `w` and `h`
 
 ### Running ITS Planner
 
-
-To launch the `default ITS planner` which is based on differential drive robot, run:
+Run the following script to set environment variables (select your distro):
 
 ```bash
-ros2 launch its_planner its_differential_launch.py use_sim_time:=true
+source /opt/ros/$ROS_DISTRO/setup.bash        # ROS_DISTRO=humble or jazzy
+export TURTLEBOT3_MODEL=waffle
+
+# Set Gazebo model path (variable name differs between distributions)
+if [ "$ROS_DISTRO" = "jazzy" ]; then
+    export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/opt/ros/$ROS_DISTRO/share/turtlebot3_gazebo/models
+else
+    export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/$ROS_DISTRO/share/turtlebot3_gazebo/models
+fi
 ```
 
 ITS Planner also supports Ackermann steering; to launch the `Ackermann ITS planner` run:
 
 ```bash
-ros2 launch its_planner its_ackermann_launch.py use_sim_time:=true
+ros2 launch nav2_bringup tb3_simulation_launch.py \
+  headless:=False \
+  params_file:=/opt/ros/$ROS_DISTRO/share/its_planner/nav2_params_${ROS_DISTRO}.yaml \
+  default_bt_xml_filename:=/opt/ros/$ROS_DISTRO/share/its_planner/navigate_w_recovery_${ROS_DISTRO}.xml
+```
+
+ITS Planner also supports Ackermann steering; to launch the Ackermann ITS planner run:
+
+```bash
+ros2 launch nav2_bringup tb3_simulation_launch.py \
+  headless:=False \
+  params_file:=/opt/ros/$ROS_DISTRO/share/its_planner/nav2_params_dubins_${ROS_DISTRO}.yaml \
+  default_bt_xml_filename:=/opt/ros/$ROS_DISTRO/share/its_planner/navigate_w_recovery_${ROS_DISTRO}.xml
 ```
 
 ### Navigation Usage
@@ -156,9 +194,41 @@ For detailed instructions, follow the ROS2 Navigation usage guide: [Navigation u
 
 This plugin also supports a global path planner based on ITS for Ackermann steering vehicles, which maneuver with car-like controls and a limited turning radius. This version of the planner is based on the concept of [Dubins Paths](https://en.wikipedia.org/wiki/Dubins_path), and uses an adapted version of [AndrewWalker's Dubins Curves implementation](https://github.com/AndrewWalker/Dubins-Curves).
 
-The Ackermann steering version of this plugin utilizes some additional parameters. More information about them can be found in
-[its-customization](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/its-customization.html).
+The Ackermann steering version of this plugin utilizes some additional parameters which can be found in `nav2_params_dubins_${ROS_DISTRO}.yaml`:
 
+<!-- markdownlint-disable MD033 -->
+<pre><code>planner_server:
+  ros__parameters:
+    expected_planner_frequency: 0.01
+    use_sim_time: True
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "its_planner::ITSPlanner"
+      interpolation_resolution: 0.05
+      catmull_spline: False
+      smoothing_window: 15
+      buffer_size: 10
+      build_road_map_once: True
+      min_samples: 250
+      roadmap: "PROBABILISTIC"
+      w: 32
+      h: 32
+      n: 2
+    <b>-- Dubins Specific --
+      dubins_path: True
+      turn_radius: .22
+      robot_radius: .25
+      yaw_tolerance: .125
+      use_final_heading: True</b>
+</code></pre>
+
+**Dubins-Specific Parameters:**
+
+- `dubins_path`: If true, the ITS algorithm will utilize Dubins Paths to form a global path that can be followed by an Ackermann steering vehicle.
+- `turn_radius`: The minimum turning radius of the robot, in world scale.
+- `robot_radius`: The radius of the robot, in world scale.
+- `yaw_tolerance`: The amount (+/-) by which the heading angles of the end positions of the intermediate Dubins curves may vary, in radians. Does not apply to the final Goal heading.
+- `use_final_heading`: Whether to use the goal heading specified by the `geometry_msgs::msg::PoseStamped` message or not.
 
 ## Documentation
 
