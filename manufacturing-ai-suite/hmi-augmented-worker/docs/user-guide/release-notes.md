@@ -1,7 +1,7 @@
 # Release Notes
 
-
 ## Current Release
+
 **Version**: RC1 \
 **Release Date**: 14 July 2025
 

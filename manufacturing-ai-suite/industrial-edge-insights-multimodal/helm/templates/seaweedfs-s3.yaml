@@ -1,0 +1,82 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.config.seaweedfs_s3.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: seaweedfs-s3
+  ports:
+  - port: 8333
+    name: s3-server-port
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: seaweedfs-s3
+  name: deployment-seaweedfs-s3
+  namespace: {{ .Values.namespace }}
+
+spec:
+  selector:
+    matchLabels:
+      app: seaweedfs-s3
+  template:
+    metadata:
+      labels:
+        app: seaweedfs-s3
+    spec:
+      securityContext:
+        fsGroup: 65534
+        runAsUser: 65534
+        runAsGroup: 65534
+      containers:
+      - name: seaweedfs-s3
+        image: {{ .Values.images.seaweedfs_image }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          readOnlyRootFilesystem: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+        volumeMounts:
+        - name: seaweedfs-s3-config-template
+          mountPath: /etc/seaweedfs/s3_config.json.template
+          subPath: seaweedfs_s3_config.json.template
+        - name: seaweedfs-s3-init
+          mountPath: /usr/local/bin/s3-init-buckets.sh
+          subPath: s3-init-buckets.sh
+        - name: tmp-volume
+          mountPath: /tmp
+        command: ["/usr/local/bin/s3-init-buckets.sh"]
+        args: ["s3", "-filer={{ .Values.config.seaweedfs_filer.name }}:8888", "-ip.bind=0.0.0.0", "-config=/tmp/s3_config.json"]
+        env:
+        - name: NO_PROXY
+          value: "localhost,127.0.0.1,{{ .Values.config.seaweedfs_filer.name }},{{ .Values.config.seaweedfs_volume.name }},{{ .Values.config.seaweedfs_master.name }},{{ .Values.config.seaweedfs_s3.name }},172.18.0.0/16"
+        - name: no_proxy
+          value: "localhost,127.0.0.1,{{ .Values.config.seaweedfs_master.name }},{{ .Values.config.seaweedfs_volume.name }},{{ .Values.config.seaweedfs_filer.name }},{{ .Values.config.seaweedfs_s3.name }},172.18.0.0/16"
+        - name: DEFAULT_S3_BUCKETS
+          value: dlstreamer-pipeline-results
+        - name: S3_STORAGE_USER
+          value: {{ .Values.env.S3_STORAGE_USERNAME }}
+        - name: S3_STORAGE_PASS
+          value: {{ .Values.env.S3_STORAGE_PASSWORD }}
+      volumes:
+      - name: seaweedfs-s3-config-template
+        configMap:
+          name: seaweedfs-s3-config-template
+      - name: seaweedfs-s3-init
+        configMap:
+          name: seaweedfs-s3-init
+          defaultMode: 0755
+      - name: tmp-volume
+        emptyDir: {}

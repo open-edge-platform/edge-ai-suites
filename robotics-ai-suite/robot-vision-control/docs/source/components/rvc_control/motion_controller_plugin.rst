@@ -35,22 +35,6 @@ The configuration of this plugin is explained in :ref:`Moveit2 Servo pose tracki
 The reason is that the plugin isn't running its own ROS 2 node, but it runs in the main use case node, so the
 configuration of the motion controller and the grasp plugin is provided to the main node.
 
-Dobby Motion Controller
--------------------------------
-
-RVC is providing a real-time motion planning framework for robot manipulators called Dobby.
-
-Dobby is a real-time motion planning framework with a high success rate in complex environments:
-
-- An efficient map representation that allows for a fast collision checking.
-
-- A geometric path planner based on Rapidly-Exploring Random Trees with minimum distance as the cost function.
-
-- An efficient trajectory generation method that allows selecting the optimization criteria, e.g., minimum acceleration, minimum jerk, etc.
-
-- A novel cartesian trajectory generation algorithm that allows tracking time-dependent trajectories in cartesian space while avoiding self-collisions and avoiding obstacles mapped, providing dynamically feasible trajectories.
-
-
 Direct Universal Robot Pendant Controller
 -----------------------------------------
 

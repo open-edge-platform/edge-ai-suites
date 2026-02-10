@@ -23,6 +23,7 @@
     "react-dom": "^19.1.0",
     "react-i18next": "^15.7.2",
     "react-markdown": "^10.1.0",
+    "react-player": "^3.4.0",
     "react-redux": "^9.2.0"
   },
   "devDependencies": {

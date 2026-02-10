@@ -1,33 +1,8 @@
-<!--
-# How to Use This Template
-
-1. **Purpose**:
-   - Summarize new features, improvements, bug fixes, and known issues for each release.
-   - Help developers quickly understand updates and adapt workflows accordingly.
-
-2. **Content Customization**:
-   - Replace placeholders (e.g., `[Version X.X.X]`, `[YYYY-MM-DD]`, `<description>`) with specific release details.
-   - Refer to the user stories in comments to understand what information developers expect to find.
-
-3. **Style Guidelines**:
-   - Use bullet points and concise descriptions for clarity.
-   - Organize changes by category: New Features, Improvements, Bug Fixes, and Known Issues.
-   - Use active voice and developer-focused language.
-   - Follow the **Microsoft Developer Writing Style Guide**.
-
-4. **GitHub Copilot Can Help**:
-   - **For Style Adherence**:
-     - This template specifys the style guide to be followed, ask Copilot to check.
-     - Copilot can generate suggestions in line with the specified writing style.
-   - **To Validate Content Completeness**:
-     - The template includes in comments the user stories and acceptance criteria to be fulfilled by its content in each section. Copilot can check if you included all required information.
-5. **Validation**:
-   - Verify all details, links, and formatting before publishing.
-   - Ensure that descriptions are accurate and actionable.
-
--->
-
 # Release Notes
+
+- [Version 1.1.0](#version-110)
+- [Version 1.0.1](#version-101)
+- [Version 1.0.0](#version-100)
 
 Details about the changes, improvements, and known issues in this release of the
 application.
@@ -40,7 +15,7 @@ application.
 
 ## Version 1.0.1
 
-**Release Date**: [2025-08-20]
+**Release Date**: 2025-08-20
 
 - DL Streamer version upgraded to 2025.1.2
 - DL Streamer Pipeline Server version upgraded to 3.1.0
@@ -48,18 +23,7 @@ application.
 
 ## Version 1.0.0
 
-**Release Date**: [2025-03-31]
-<!--
-**Guidelines for New Features**:
-1. **What to Include**:
-   - Summarize new capabilities introduced in this release.
-   - Highlight how these features help developers or solve common challenges.
-   - Link to relevant guides or instructions for using the feature.
-2. **Example**:
-   - **Feature**: Added multi-camera configuration support.
-     - **Benefit**: Enables developers to monitor larger areas in real-time.
-     - [Learn More](./how-to-customize.md)
--->
+**Release Date**: 2025-03-31
 
 - **MediaMTX**: This third-party microservice simulates remote video cameras
   placed in various geographical locations. The service can replay videos from

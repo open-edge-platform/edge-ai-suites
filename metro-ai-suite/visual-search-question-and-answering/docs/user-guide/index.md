@@ -38,7 +38,7 @@ questions based on the context.
 
 The high-level architecture is shown below
 
-![architecture diagram](./_images/visual_search_qa_design.png)
+![architecture diagram](./_assets/visual_search_qa_design.png)
 
 ### Dataprep
 
@@ -97,30 +97,27 @@ The UI, built with `streamlit`, allows users to:
 
 #### Visual Search and QA UI Initial Interface
 
-![initial web UI image](./_images/web_ui.png)
-
-   Figure 1: Initial Web UI
+![initial web UI image](./_assets/web_ui.png)\
+*Figure 1: Initial Web UI*
 
 #### Visual Search and QA UI Example
 
-![web UI with example](./_images/web_ui_res.png)
-
-   Figure 2: Web UI with an example
+![web UI with example](./_assets/web_ui_res.png)\
+*Figure 2: Web UI with an example*
 
 ## Learn More
 
-- Check the [System requirements](./system-requirements.md).
+- Check the [System requirements](./get-started/system-requirements.md).
 - Start with the [Get Started](./get-started.md).
-- Deploy with [Helm chart](./deploy-with-helm.md).
+- Deploy with [Helm chart](./get-started/deploy-with-helm.md).
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
-system-requirements
 get-started
-deploy-with-helm
 tutorials
+troubleshooting
 release-notes
 
 :::

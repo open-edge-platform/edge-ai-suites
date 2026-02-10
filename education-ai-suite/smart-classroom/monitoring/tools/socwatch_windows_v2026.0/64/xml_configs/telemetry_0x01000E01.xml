@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "nvl_pch_pmc_slp_s0_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>NVL</TELEM:name>
+	<TELEM:description>NVL PCH PMC SLP_S0</TELEM:description>
+	<TELEM:uniqueid>0x01000E01</TELEM:uniqueid>
+	<TELEM:productid>NVL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x1938</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RESERVED" datatypeIDREF="tpch_time_s" sampleID="RESERVED">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>RESERVED</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="SLP_S0_RESIDENCY" datatypeIDREF="tpch_time_s" sampleID="SLP_S0_RESIDENCY">
+			<TELC:description>HWDRIPS RESIDENCY</TELC:description>
+			<TELC:sampleSubGroup>SLP_S0_RESIDENCY</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

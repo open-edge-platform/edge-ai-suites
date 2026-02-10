@@ -7,7 +7,7 @@ This page provides detailed hardware, software, and platform requirements to hel
 
 | Component           | Specification                                                                                   |
 |---------------------|-------------------------------------------------------------------------------------------------|
-| **Processor**       | 13th Gen Intel® Core™ or Intel® Xeon® processor with Intel® HD Graphics                         |
+| **Processor**       | 13th Gen Intel® Core™ or Intel® Xeon® processor                                                 |
 | **RAM**             | Minimum 16 GB                                                                                   |
 | **Storage**         | Minimum 64 GB (128 GB recommended)                                                              |
 

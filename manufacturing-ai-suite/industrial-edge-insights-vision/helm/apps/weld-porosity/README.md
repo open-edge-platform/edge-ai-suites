@@ -187,4 +187,5 @@
 
 
 ## Troubleshooting
-- [Troubleshooting Guide](../../../docs/user-guide/weld-porosity/troubleshooting-guide.md)
+
+- [Troubleshooting](../../../docs/user-guide/weld-porosity/troubleshooting.md)

@@ -23,8 +23,9 @@ using namespace dnn;
 using namespace ov::preprocess;
 
 const std::string inference_device = "GPU";
-std::map<std::thread::id, std::deque<int>> thread_deques;
-std::vector<int> current_ids(8, 0);
+
+size_t origin_height = 1088;
+size_t origin_width = 1920;
 
 std::shared_ptr<ov::Model> loadAndPreprocessModel(std::string model_path) {
     ov::Core core;
@@ -37,7 +38,7 @@ std::shared_ptr<ov::Model> loadAndPreprocessModel(std::string model_path) {
     .set_element_type(ov::element::u8)
     .set_color_format(ov::preprocess::ColorFormat::NV12_TWO_PLANES, {"y", "uv"})
     .set_memory_type(ov::intel_gpu::memory_type::surface)
-    .set_spatial_static_shape(1088, 1920);
+    .set_spatial_static_shape(origin_height, origin_width);
     input_info.preprocess()
     .convert_color(ColorFormat::RGB)
     .resize(ResizeAlgorithm::RESIZE_NEAREST, 640, 640);
@@ -115,10 +116,8 @@ int main(int argc, char* argv[])
         usleep(1'000'000);
         int i = 0;
         int frame_counter = 0;
-        int skip_frames = 4;
+        int skip_frames = 3;
         bool isFirstRun = true;
-        size_t origin_height = 1088;
-        size_t origin_width = 1920;
         float scale_x = origin_width / 640.0;
         float scale_y = origin_height / 640.0;
         while (1) {
@@ -131,7 +130,7 @@ int main(int argc, char* argv[])
             vppSurfExport.Type = VPP_SURFACE_EXPORT_TYPE_VA;
             VPP_SYS_ExportSurface(hdl, &vppSurfExport);
             frame_counter++;
-            if (frame_counter % skip_frames == 0 && id < 8){
+            if (frame_counter % skip_frames == 0 && id < 16){
                 if (!compiled_model) {
                     VADisplay disp = vppSurfExport.VADisplay;
                         if (!ptr_context) {

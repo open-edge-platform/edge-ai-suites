@@ -94,7 +94,7 @@ def example_multiple_pipelines():
         print("Reading first 20 JSON objects from content_results.txt...\n")
 
         count = 0
-        for json_obj in service.monitor_pipeline("content", "content_results.txt"):
+        for json_obj in service.monitor_pipeline_result("content", "content_results.txt"):
             count += 1
             print(f"[{count}] Frame: {json_obj.get('frame', {}).get('number', 'N/A')}")
 

@@ -108,7 +108,6 @@ You can also check the [system requirements](./get-started/system-requirements.m
 :hidden:
 
 get-started
-how-to-build-from-source
 release-notes
 
 :::

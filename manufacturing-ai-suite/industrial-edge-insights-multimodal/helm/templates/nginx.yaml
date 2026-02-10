@@ -57,9 +57,9 @@ spec:
         command: ["/bin/bash", "-c", "/usr/local/bin/nginx-cert-gen.sh && exec nginx -g 'daemon off;'"]
         env:
         - name: no_proxy
-          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.timeseries_no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }},dlstreamer-pipeline-server"
+          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.timeseries_no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }},dlstreamer-pipeline-server,seaweedfs-filer"
         - name: NO_PROXY
-          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.timeseries_no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }},dlstreamer-pipeline-server"
+          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.timeseries_no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }},dlstreamer-pipeline-server,seaweedfs-filer"
         - name: HOST_IP
           value: "{{ .Values.env.HOST_IP }}"
         - name: MEDIAMTX_SERVER
