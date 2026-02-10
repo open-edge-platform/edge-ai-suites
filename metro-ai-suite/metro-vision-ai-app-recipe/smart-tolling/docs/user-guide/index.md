@@ -4,7 +4,7 @@ The **Metro Smart Tolling Application** is a high-precision Edge AI solution des
 
 Enabling such use cases across multiple viewpoints helps in understanding the object interaction with the real world in 3-D space. All the components used run on a single system enabling low latency, simplified deployment and cost efficiency.
 
-![Smart Tolling System Architecture](./docs/user-guide/_assets/smart_tolling_architecture.png)
+![Smart Tolling System Architecture](./_assets/smart_tolling_architecture.png)
 
 ## Use Cases
 
@@ -28,15 +28,23 @@ The system uses the **Metro Edge Architecture** based on three key principles:
 2. **Control**: SceneScape Controller aggregates metadata.
 3. **Analytics**: Node-RED transforms events into traffic insights (Traffic Volume, Flow Efficiency, Tariffing).
 
-For more details, refer to [How it Works](docs/user-guide/how-it-works.md).
+For more details, refer to [How it Works](./how-it-works.md).
 
 ## Learn More
 
-- [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware, OS and Software Prerequisites.
-- [Get Started](docs/user-guide/get-started.md): Installation, Configuration and Launch steps.
-- [Technical Reference](./docs/user-guide/technical-reference.md): Engineering Specs, Zero-Copy Pipeline and API usage.
-- [Troubleshooting](./docs/user-guide/troubleshooting.md): Solutions to common issues.
+- [System Requirements](./get-started/system-requirements.md): Hardware, OS and Software Prerequisites.
+- [Get Started](./get-started.md): Installation, Configuration and Launch steps.
+- [Technical Reference](./technical-reference.md): Engineering Specs, Zero-Copy Pipeline and API usage.
+- [Troubleshooting](./troubleshooting.md): Solutions to common issues.
 
-## License
+<!--hide_directive
+:::{toctree}
+:hidden:
 
-Metro Vision AI - Internal Use Only.
+get-started
+how-it-works
+technical-reference
+troubleshooting
+
+:::
+hide_directive-->
