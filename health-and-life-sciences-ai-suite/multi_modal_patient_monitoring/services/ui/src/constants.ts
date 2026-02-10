@@ -22,7 +22,7 @@ export const WORKLOADS = [
     name: 'AI-ECG',
     color: '#0071c5',
     description: 'AI-powered ECG Analysis with 12-lead classification',
-    dataKeys: ['prediction', 'confidence'] as const, // AI prediction keys
+    dataKeys: ['prediction', 'filename'] as const, // AI prediction keys
     hasWaveform: true,
   },
   {
