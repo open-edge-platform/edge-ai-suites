@@ -345,30 +345,6 @@ model = train_model(X, y)
 df_combined = df  # Use all turbines together
 model = train_model(df_combined)
 ```
-
-### External Datasets
-
-**Public datasets you can use**:
-1. **Kaggle Wind Turbine SCADA** (current): https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset
-2. **NREL Wind Dataset**: https://www.nrel.gov/grid/wind-toolkit.html
-3. **Penmanshiel Wind Farm**: https://zenodo.org/record/2325548
-4. **EDP Open Data**: https://opendata.edp.com/
-
-**Using external datasets**:
-```bash
-# 1. Download dataset
-cd training/
-wget your-dataset-url -O external_dataset.csv
-
-# 2. Update notebook to load it
-df = pd.read_csv('external_dataset.csv')
-
-# 3. Inspect and adapt
-print(df.columns)
-print(df.head())
-print(df.describe())
-```
-
 ---
 
 ## Testing Checklist
@@ -439,56 +415,6 @@ def evaluate(model, X_test, y_test):
 **Version Control**: `windturbine_anomaly_detector_vX.Y.<format>`
 - X = algorithm change
 - Y = retrain same algorithm
-
----
-
-## Model Selection Decision Tree
-
-Use this decision tree to select the appropriate model:
-
-```
-START
-│
-├─ Do you have <10,000 samples?
-│  ├─ YES → Consider Polynomial Regression or SVR
-│  └─ NO → Continue
-│
-├─ Is inference latency critical (<5ms)?
-│  ├─ YES → Consider Polynomial Regression (degree 2-3)
-│  └─ NO → Continue
-│
-├─ Do you need maximum accuracy (R² > 0.97)?
-│  ├─ YES → Test options:
-│  │        1. Gradient Boosting with GPU (LightGBM/XGBoost)
-│  │        2. Neural Networks with GPU (if >50k samples)
-│  └─ NO → Continue
-│
-├─ Do you want to capture temporal patterns?
-│  ├─ YES → LSTM/Neural Network with GPU (needs >50k samples)
-│  └─ NO → Continue
-│
-├─ Is model interpretability important?
-│  ├─ YES → Random Forest (feature importance) or Polynomial
-│  └─ NO → Continue
-│
-├─ Is model size constrained (<20 MB)?
-│  ├─ YES → Polynomial Regression or optimized Random Forest
-│  └─ NO → Continue
-│
-├─ Want to leverage GPU acceleration?
-│  ├─ YES → Consider XGBoost/LightGBM with GPU or Neural Networks
-│  └─ NO → Continue
-│
-└─ DEFAULT → Random Forest Regressor ✓ (Current Choice - Balanced)
-              Alternative: XGBoost with GPU (Better accuracy)
-```
-
-**GPU-Enabled Quick Selection Guide**:
-- **Best Accuracy + GPU**: Neural Network (LSTM/MLP) or XGBoost GPU
-- **Best Balance**: Random Forest or LightGBM GPU  
-- **Fastest Inference**: Polynomial Regression
-- **Most Interpretable**: Random Forest or Polynomial
-- **Temporal Patterns**: LSTM with GPU
 
 ---
 
