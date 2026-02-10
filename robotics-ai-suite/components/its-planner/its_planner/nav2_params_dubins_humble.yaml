@@ -280,7 +280,7 @@ planner_server:
     use_sim_time: True
     planner_plugins: ["GridBased"]
     GridBased:
-      plugin: "its_planner/ITSPlanner"
+      plugin: "its_planner::ITSPlanner"
       interpolation_resolution: 0.05
       catmull_spline: False
       smoothing_window: 15
@@ -288,7 +288,7 @@ planner_server:
       build_road_map_once: True
       enable_k: False
       min_samples: 250
-      roadmap: "PROBABLISTIC"
+      roadmap: "PROBABILISTIC"
       w: 40
       h: 40
       n: 2
