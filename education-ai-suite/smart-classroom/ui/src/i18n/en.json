@@ -36,9 +36,10 @@
       "noVideoConfigured": "No video configured",
       "videoReady": "Video ready",
       "videoAnalyticsFailed": "Video analytics failed",
-      "videoProcessingComplete": "Video processing complete",
       "audio": "Audio",
-      "video": "Video"
+      "video": "Video",
+      "videoStreamingComplete": "Streaming completed",
+      "playbackReady": "Streaming Playback Video"
     },
     "tooltips": {
       "checkingAudioDevices": "Checking audio devices...",
@@ -158,7 +159,11 @@
     "noStreamsAvailable": "Video analytics attempted but no streams available",
     "checkCameraConfigurations": "Check camera configurations or backend video service",
     "audioRecordingContinues": "Audio recording continues normally",
-    "streamingIconAlt": "Streaming Icon"
+    "streamingIconAlt": "Streaming Icon",
+    "noStream": "No video streams",
+    "videoFailed":"Video Failed",
+    "continuingAudioOnly":"Continuing with audio-only processing",
+    "loadingvideo": "Loading video stream"
   },
   "classStatistics": {
     "studentCount": "Student Count",

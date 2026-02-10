@@ -28,7 +28,10 @@ import {
   setAudioStatus,
   setVideoStatus,
   startTranscription,
-  setMonitoringActive
+  setMonitoringActive,
+  setUploadedVideoFiles,
+  setHasUploadedVideoFiles,
+  setVideoPlaybackMode,
 } from '../../redux/slices/uiSlice';
 import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
@@ -86,9 +89,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const audioDevicesLoading = useAppSelector((s) => s.ui.audioDevicesLoading);
   const isRecording = useAppSelector((s) => s.ui.isRecording);
   const justStoppedRecording = useAppSelector((s) => s.ui.justStoppedRecording);
-  const videoAnalyticsStopping = useAppSelector((s) => s.ui.videoAnalyticsStopping);
   const hasUploadedVideoFiles = useAppSelector((s) => s.ui.hasUploadedVideoFiles);
   const [isUploading, setIsUploading] = useState(false);
+  const isPlaybackMode = useAppSelector((s) => s.ui.videoPlaybackMode);
 
   useEffect(() => {
     dispatch(loadCameraSettingsFromStorage());
@@ -268,7 +271,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         setVideoNotification(t('notifications.videoAnalyticsFailed'));
         break;
       case 'completed':
-        setVideoNotification(t('notifications.videoProcessingComplete'));
+        setVideoNotification(
+          isPlaybackMode
+            ? t('notifications.playbackReady')
+            : t('notifications.videoStreamingComplete')
+        );
         break;
       default:
         setVideoNotification(hasVideoCapability ? t('notifications.videoReady') : t('notifications.noVideoConfigured'));
@@ -402,6 +409,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         });
         
         if (hasSuccessfulStreams) {
+          dispatch(setVideoPlaybackMode(false));
           dispatch(setVideoAnalyticsActive(true));
           dispatch(setActiveStream('all'));
           dispatch(setVideoStatus('streaming'));
@@ -549,7 +557,13 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
             dispatch(setBoardCameraStream(''));
             dispatch(setActiveStream(null));
             dispatch(setVideoAnalyticsActive(false));
-            dispatch(setVideoStatus(hasVideoCapability ? 'ready' : 'no-config'));
+            dispatch(setVideoStatus('completed'));
+            dispatch(setHasUploadedVideoFiles(false));
+            dispatch(setUploadedVideoFiles({
+              front: null,
+              back: null,
+              board: null,
+            }));
             
           } catch (videoError) {
             console.warn('Failed to stop video analytics (non-critical):', videoError);

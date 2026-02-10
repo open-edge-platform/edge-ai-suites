@@ -33,12 +33,13 @@
     "audioProcessingComplete": "音频处理完成",
     "audioProcessingError": "音频处理错误",
     "videoStreamingStopped": "视频流已停止",
-    "noVideoConfigured": "未配置视频",
+    "noVideoConfigured": "未配置视频", 
     "videoReady": "视频准备就绪",
     "videoAnalyticsFailed": "视频分析失败",
-    "videoProcessingComplete": "视频处理完成",
     "audio": "音频",
-    "video": "视频"
+    "video": "视频",
+    "videoStreamingComplete": "串流完成",
+    "playbackReady": "流媒体播放视频"
   },
   "tooltips": {
     "checkingAudioDevices": "正在检查音频设备…",
@@ -158,7 +159,11 @@
     "noStreamsAvailable": "尝试视频分析但没有可用视频流",
     "checkCameraConfigurations": "检查摄像头配置或后端视频服务",
     "audioRecordingContinues": "音频录制正常继续",
-    "streamingIconAlt": "视频流图标"
+    "streamingIconAlt": "视频流图标",
+    "noStream": "无视频流",
+    "videoFailed":"视频失败",
+    "continuingAudioOnly":"继续进行纯音频处理",
+    "loadingvideo": "正在加载视频流"
   },
   "classStatistics": {
     "studentCount": "学生人数",

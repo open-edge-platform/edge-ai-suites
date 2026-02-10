@@ -1,9 +1,9 @@
-import { typewriterStream } from '../utils/typewriterStream';
-import type { StreamEvent, StreamOptions, Segment, TranscriptChunk, FinalEvent } from './streamSimulator';
+import type { StreamEvent, StreamOptions } from './streamSimulator';
 import { store } from "../redux/store";
 import { 
   setVideoStatus,
-  setVideoAnalyticsActive
+  setVideoAnalyticsActive,
+  setVideoPlaybackMode
 } from "../redux/slices/uiSlice";
 
 export type ProjectConfig = { 
@@ -37,6 +37,53 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     promise,
     new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
   ]);
+}
+
+export async function startPipelineMonitoring(sessionId: string) {
+  const controller = new AbortController();
+  try {
+    for await (const event of monitorVideoAnalyticsPipelines(
+      sessionId,
+      controller.signal
+    )) {
+      if (!event?.pipelines) continue;
+      let anyRunning = false;
+      let allCompleted = true;
+
+      for (const pipeline of event.pipelines) {
+
+        if (pipeline.status === "running") {
+          anyRunning = true;
+        }
+
+        if (
+          pipeline.status !== "completed" &&
+          pipeline.status !== "stopped"
+        ) {
+          allCompleted = false;
+        }
+      }
+
+      if (anyRunning) {
+        store.dispatch(setVideoAnalyticsActive(true));
+        store.dispatch(setVideoStatus("streaming"));
+        store.dispatch(setVideoPlaybackMode(false));
+      }
+
+      if (allCompleted && !anyRunning) {
+        console.log("✅ All pipelines completed");
+        store.dispatch(setVideoAnalyticsActive(false));
+        store.dispatch(setVideoStatus("completed"));
+        store.dispatch(setVideoPlaybackMode(true));
+        break;
+      }
+    }
+
+  }
+  catch (err) {
+    console.error("Monitor error:", err);
+  }
+  return controller;
 }
 
 export async function pingBackend(): Promise<boolean> {
@@ -504,10 +551,20 @@ export async function* monitorVideoAnalyticsPipelines(
 
     for (const line of lines) {
       if (!line.trim()) continue;
-      yield JSON.parse(line);
+      const parsed = JSON.parse(line);
+
+    if (parsed.results) {
+      parsed.results = parsed.results.map((r: any) => ({
+        ...r,
+        hls_stream: r.hls_stream
+          ? `${r.hls_stream}/index.m3u8`
+          : null
+      }));
     }
-  }
-}
+    yield parsed;
+        }
+      }
+    }
 
 export async function getPlatformInfo(): Promise<any> {
   return safeApiCall(async () => {
