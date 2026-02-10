@@ -147,7 +147,7 @@ multi-node setup using the provided script. However, the machine on which the mu
 deployments are deployed to, will likely start throttling these instances if resource limits
 are reached. Hence, deploy new instances only if you have the required resource bandwidth.
 
-To spin-up more instances - say `n number of new instances`, repeat the steps mentioned in [Setting up Instance #2](#set-up-instance-2), by changing to a new directory `n` times.
+To spin-up more instances - say `n number of new instances`, repeat the steps mentioned in [Set up Instance #2](#set-up-instance-2), by changing to a new directory `n` times.
 
 ## Advanced Environment Configuration
 
