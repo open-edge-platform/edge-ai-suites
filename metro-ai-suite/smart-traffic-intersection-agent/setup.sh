@@ -180,6 +180,16 @@ fi
 # END Dependencies
 # ============================================================================
 
+# Export required environment variables (HOST_IP already set above)
+export TAG=${TAG:-latest}
+# Construct registry path properly to avoid double slashes
+if [[ -n "$REGISTRY" ]]; then
+    export REGISTRY="${REGISTRY%/}/"
+fi
+
+# Traffic Intersection Agent Configuration
+export TRAFFIC_INTELLIGENCE_PORT=${TRAFFIC_INTELLIGENCE_PORT:-8081}
+export TRAFFIC_INTELLIGENCE_UI_PORT=${TRAFFIC_INTELLIGENCE_UI_PORT:-7860}
 # Export environment variables required by application (HOST_IP already set above)
 export LOG_LEVEL=${LOG_LEVEL:-INFO}
 export REFRESH_INTERVAL=${REFRESH_INTERVAL:-15}

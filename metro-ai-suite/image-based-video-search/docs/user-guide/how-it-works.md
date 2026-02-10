@@ -1,4 +1,4 @@
-# Architecture Overview
+# How It Works
 
 The Image-Based Video Search Application is a modular reference implementation
 designed to help developers create vision-based search systems utilizing Vision
@@ -18,8 +18,8 @@ The Image-Based Video Search Application is designed to:
 
 ### Technical Architecture Diagram
 
-![Technical Architecture Diagram](_images/architecture.svg) *Figure 1: Detailed
-Architecture of the Image-Based Video Search Application.*
+![Technical Architecture Diagram](./_assets/architecture.svg)
+*Figure 1: Detailed Architecture of the Image-Based Video Search Application.*
 
 ### Data Flow
 
@@ -30,7 +30,7 @@ Architecture of the Image-Based Video Search Application.*
    - **User-provided images for search**: Allows users to upload images or for
      searching within the video streams.
 
-1. **Video Analysis Pipeline**:
+2. **Video Analysis Pipeline**:
 
    - **Deep Learning Streamer Pipeline Server**:
      - Consumes RTSP streams for object detection and feature extraction.
@@ -40,16 +40,19 @@ Architecture of the Image-Based Video Search Application.*
        (Vector DB).
      - Stores frames for display in search results.
 
-1. **Video Search Pipeline**:
+3. **Video Search Pipeline**:
 
    - **Feature Matching Microservice**:
      - Queries DL Streamer Pipeline Server for feature vectors of user-provided
        images.
      - Searches MilvusDB to find matching frames.
 
-1. **Output Generation**:
+4. **Output Generation**:
 
    - Displays matched frames and metadata in the web application.
+
+![application interface screenshot](./_assets/imagesearch2.png)
+*Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results*
 
 ## Key Components and Their Roles
 

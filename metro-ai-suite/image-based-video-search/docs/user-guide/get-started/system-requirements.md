@@ -13,7 +13,6 @@ help you set up and run the application efficiently.
 **Hardware Platforms**
 - 12th Generation Intel® Core™ processor or above with Intel® HD Graphics or , or Intel® Xeon® processor
 
-
 ## Minimum Requirements
 | **Component**      | **Minimum Requirement**   | **Recommended**         |
 |---------------------|---------------------------|--------------------------|
@@ -38,4 +37,4 @@ help you set up and run the application efficiently.
 ## Validation
 
 - Ensure all dependencies are installed and configured before proceeding to
-  [Get Started](./get-started.md).
+  [Get Started](../get-started.md).

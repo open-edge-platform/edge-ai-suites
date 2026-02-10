@@ -16,7 +16,7 @@ The `HMI Augmented Worker` sample application show cases how RAG pipelines can b
   - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Requirements include hardware and software to deploy the sample application.
 
 - **Advanced**
-  - [Build From Source](./docs/user-guide/how-to-build-from-source.md): Guide to build the file watcher service on Windows® OS and how it can be interfaced with RAG pipeline that executes on the Ubuntu or Edge Microvisor Toolkit side.
+  - [Build From Source](./docs/user-guide/get-started/build-from-source.md): Guide to build the file watcher service on Windows® OS and how it can be interfaced with RAG pipeline that executes on the Ubuntu or Edge Microvisor Toolkit side.
 
 - **Release Notes**
   - [Release Notes](./docs/user-guide/release-notes.md): Notes on the latest releases, updates, improvements, and bug fixes.

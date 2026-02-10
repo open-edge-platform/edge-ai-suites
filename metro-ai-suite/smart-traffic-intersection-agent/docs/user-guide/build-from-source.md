@@ -1,4 +1,4 @@
-# How It Works
+# Build from Source
 
 This section shows how to build the Smart Traffic Intersection Agent from source to customize or extend its functionality.
 

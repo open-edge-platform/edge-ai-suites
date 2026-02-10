@@ -8,7 +8,7 @@ The Smart Traffic Intersection Agent application analyzes various traffic scenar
 
 ## How It Works
   - [Overview](docs/user-guide/index.md): A high-level introduction to the agent.
-  - [How It Works](docs/user-guide/how-it-works.md): Instructions for building the agent from source code.
+  - [Build from Source](docs/user-guide/build-from-source.md): Instructions for building the agent from source code.
  
 ## Learn More
 - [Release Notes](docs/user-guide/release-notes.md): Information on the latest updates, improvements, and bug fixes.

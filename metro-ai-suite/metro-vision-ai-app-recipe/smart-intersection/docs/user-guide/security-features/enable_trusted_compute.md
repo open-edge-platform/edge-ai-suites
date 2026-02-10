@@ -93,7 +93,7 @@ deployment YAML file.
 
 Follow the steps mentioned in the official documentation to run the Helm chart:
 
-[Steps to Deploy the Helm Chart](../how-to-deploy-helm.md)
+[Steps to Deploy the Helm Chart](../get-started/deploy-with-helm.md#steps-to-deploy)
 
 ### Step 6: Verify DL Streamer Launch
 

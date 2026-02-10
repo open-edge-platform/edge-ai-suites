@@ -34,7 +34,7 @@ Traffic is calculated using predefined region mappings:
 ```python
 TRAFFIC_FORMULAS = {
     'northbound': ['NBLANE', 'WBNBRTLANE', 'EBNBLTLANE'],
-    'southbound': ['SBLANE', 'WBSBLTLANE', 'EBSBRTLANE'],  
+    'southbound': ['SBLANE', 'WBSBLTLANE', 'EBSBRTLANE'],
     'eastbound': ['EBLANE', 'NBEBRTLANE', 'SBEBLTLANE'],
     'westbound': ['WBLANE', 'NBWBLTLANE']
 }
@@ -166,7 +166,7 @@ Release Semaphore Slot
 ```python
 # Hardcoded values optimized for traffic scenarios
 traffic_window_duration_seconds = 15    # 15-second sliding window
-sustained_threshold_seconds = 3         # 3-second sustained requirement  
+sustained_threshold_seconds = 3         # 3-second sustained requirement
 analysis_display_duration_minutes = 20  # Analysis visibility period
 ```
 
@@ -254,7 +254,7 @@ Scene Intelligence Service           VLM Microservice (4 Workers)
 
 ```
 T=00s: Intersection-1 triggers VLM (acquires semaphore slot 1)
-T=05s: Intersection-3 triggers VLM (acquires semaphore slot 2)  
+T=05s: Intersection-3 triggers VLM (acquires semaphore slot 2)
 T=10s: Intersection-2 triggers VLM (acquires semaphore slot 3)
 T=15s: Intersection-4 triggers VLM (acquires semaphore slot 4)
 T=20s: Worker-1 completes → Intersection-1 pending_analysis=False
@@ -272,7 +272,7 @@ T=25s: Worker-2 completes → Intersection-3 pending_analysis=False
 VLM_BASE_URL=http://vlm-openvino-serving:8000          # VLM service endpoint
 VLM_MODEL=Qwen/Qwen2.5-VL-3B-Instruct                # Model name for analysis
 
-# Concurrency control  
+# Concurrency control
 VLM_WORKERS=4                                          # Max concurrent VLM calls
 VLM_TIMEOUT_SECONDS=10                                 # VLM API timeout
 
@@ -396,13 +396,13 @@ class VLMAnalysisResult:
     timestamp: datetime                  # When analysis completed
     high_density_directions: List[str]   # Directions that triggered analysis
     confidence: Optional[float]          # VLM confidence score
-    
+
     # Traffic context from windowed analysis
     analysis_period_start: datetime      # When sustained traffic started
-    analysis_period_end: datetime        # When sustained traffic ended  
+    analysis_period_end: datetime        # When sustained traffic ended
     avg_densities: Dict[str, float]      # Average densities during period
     peak_densities: Dict[str, float]     # Peak densities during period
-    
+
     # Camera images used for analysis
     camera_images: Dict[str, Any]        # Images stored with analysis
 ```
@@ -422,7 +422,7 @@ class VLMAnalysisResult:
 camera_images = {
     "north_camera": {
         "camera_id": "intersection-1_north",
-        "direction": "north", 
+        "direction": "north",
         "timestamp": "2025-08-20T10:30:00Z",
         "image_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
         "image_size_bytes": 45231
@@ -472,7 +472,7 @@ All traffic endpoints include VLM analysis when available:
     "traffic_context": {
       "analysis_period": {
         "start": "2025-08-20T10:29:15Z",
-        "end": "2025-08-20T10:29:45Z", 
+        "end": "2025-08-20T10:29:45Z",
         "duration_seconds": 30
       },
       "avg_densities": {
@@ -498,7 +498,7 @@ All traffic endpoints include VLM analysis when available:
 ### Image Serving Priority
 
 1. **VLM-Stored Images**: Serve images stored with VLM analysis
-2. **Fresh Images**: For high-density intersections without VLM analysis  
+2. **Fresh Images**: For high-density intersections without VLM analysis
 3. **No Images**: For normal-density intersections without VLM analysis
 
 ## Troubleshooting
@@ -518,7 +518,7 @@ docker logs scene-intelligence | grep "Traffic state changed"
 # 3. Persistence requirement
 echo "Minimum duration: $MINIMUM_DURATION_FOR_CONSISTENTLY_HIGH_TRAFFIC_SECONDS seconds"
 
-# 4. Cooldown period  
+# 4. Cooldown period
 echo "Cooldown: $VLM_COOLDOWN_MINUTES minutes"
 docker logs scene-intelligence | grep "cooldown"
 

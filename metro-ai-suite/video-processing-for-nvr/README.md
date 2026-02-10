@@ -14,8 +14,7 @@ The sample application depends on VPP SDK, OpenVINO and live555
 
   * [License](#license)
   * [System requirements](#system-requirements)
-  * [How to build](#how-to-build)
-  * [Known limitations](#known-limitations)
+  * [How to run](#how-to-run-in-docker-container)
 
 ## License
 The sample application is licensed under [APACHE 2.0](https://github.com/open-edge-platform/edge-ai-suites/blob/main/LICENSE).
@@ -31,7 +30,10 @@ The sample application is licensed under [APACHE 2.0](https://github.com/open-ed
 **Hardware:** 
 * Intel® platforms with iGPU and dGPU
 
-## How to install
+## How to run in docker container
+Please refer to [docker guide](./docker/README.md) to run the video analytic workflow  
+
+## How to install VPPSDK in bare metal
 
 1. Install VPPSDK and dependencies
 ```
@@ -40,7 +42,7 @@ echo "deb [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.in
 echo "deb-src [signed-by=/usr/share/keyrings/sed-archive-keyring.gpg] https://eci.intel.com/sed-repos/$(source /etc/os-release && echo $VERSION_CODENAME) sed main" | sudo tee -a /etc/apt/sources.list.d/sed.list
 sudo bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/sed'
 sudo apt update
-sudo apt install intel-vppsdk
+sudo apt -y install intel-vppsdk
 
 sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
 source /opt/intel/vppsdk/env.sh
@@ -50,10 +52,7 @@ source /opt/intel/vppsdk/env.sh
 
 3. Run `svet2/live555_install.sh` to install live555  
 
-4. Run `build.sh` in sub-folerds to build each component  
-
-## How to run
-Please refer to [docker guide](./docker/README.md) to run the video analytic workflow  
+4. Run `build.sh` in sub-folerds to build specific component depending on use case 
 
 ## Known limitations
 

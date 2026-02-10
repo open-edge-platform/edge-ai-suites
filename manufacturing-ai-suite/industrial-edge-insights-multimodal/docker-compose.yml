@@ -418,6 +418,10 @@ services:
     image: ${SEAWEEDFS_IMAGE}
     hostname: seaweedfs-master
     container_name: seaweedfs-master
+    read_only: true
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    security_opt:
+    - no-new-privileges
     networks:
       - timeseries_network
     volumes:
@@ -431,6 +435,10 @@ services:
     image: ${SEAWEEDFS_IMAGE}
     hostname: seaweedfs-volume
     container_name: seaweedfs-volume
+    read_only: true
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    security_opt:
+    - no-new-privileges
     networks:
       - timeseries_network
     volumes:
@@ -446,6 +454,10 @@ services:
     image: ${SEAWEEDFS_IMAGE}
     hostname: seaweedfs-filer
     container_name: seaweedfs-filer
+    read_only: true
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    security_opt:
+    - no-new-privileges
     networks:
       - timeseries_network
     volumes:
@@ -469,6 +481,10 @@ services:
     image: ${SEAWEEDFS_IMAGE}
     hostname: seaweedfs-s3
     container_name: seaweedfs-s3
+    read_only: true
+    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    security_opt:
+    - no-new-privileges
     networks:
       - timeseries_network
     environment:
@@ -497,6 +513,7 @@ services:
     volumes:
       - ./configs/seaweedfs-s3/seaweedfs_s3_config.json.template:/etc/seaweedfs/s3_config.json.template:ro
       - ./configs/seaweedfs-s3/s3-init-buckets.sh:/s3-init-buckets.sh:ro
+      - "vol_temp_seaweed_s3:/tmp"
 
   coturn:
     image: coturn/coturn:4.7.0
@@ -550,12 +567,27 @@ volumes:
       device: tmpfs
   seaweed_master_data:
     driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
   seaweed_volume_data:
     driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
   seaweed_filer_data:
     driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
   vol_temp_seaweed_filer:
     name: "seaweed_filer_vol"
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_temp_seaweed_s3:
+    name: "seaweed_s3_vol"
     driver: local
     driver_opts:
       type: tmpfs
