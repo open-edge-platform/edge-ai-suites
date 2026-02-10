@@ -52,9 +52,9 @@ services:
       - no_proxy=${NO_PROXY}
     network_mode: "host"
     
-  patient-monitoring-metrics:
+  metrics-collector:
     build:
-      context: ./services/patient-monitoring-metrics
+      context: ./services/metrics-collector
       dockerfile: Dockerfile
       args:
         HTTP_PROXY: ${HTTP_PROXY}
@@ -63,8 +63,8 @@ services:
         http_proxy: ${HTTP_PROXY}
         https_proxy: ${HTTPS_PROXY}
         no_proxy: ${NO_PROXY}
-    image: intel/hl-ai-patient-monitoring-metrics:1.0.0
-    container_name: patient-monitoring-metrics
+    image: intel/hl-ai-metrics-collector:1.0.0
+    container_name: metrics-collector
     privileged: true
     pid: host
     network_mode: "host"

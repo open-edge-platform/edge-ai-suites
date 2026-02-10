@@ -285,9 +285,9 @@ def build_gpu_series() -> List[List[float]]:
             ]
         }
 
-    For each state we aggregate engine utilizations (compute, render,
-    copy, video, video-enhance, ...) by taking the maximum value across
-    engines as a single "GPU busy" percentage. Timestamps are
+    For each state we aggregate per-process engine utilizations from
+    `clis_stats[*].eng_usage.compute` by summing compute usage across
+    all pids as a single "GPU busy" percentage. Timestamps are
     approximated using the sampling interval (args.ms_interval, in
     milliseconds), counting backwards from the current time, similar to
     how CPU and memory series are built.
@@ -324,25 +324,38 @@ def build_gpu_series() -> List[List[float]]:
             if not devs_state:
                 continue
             dev = devs_state[0]
-            dev_stats = dev.get("dev_stats") or {}
-            eng_usage = dev_stats.get("eng_usage") or {}
-            if not isinstance(eng_usage, dict) or not eng_usage:
-                continue
+
+            # Prefer per-process engine usage from clis_stats when available.
+            clis_stats = dev.get("clis_stats") or []
 
             values: List[float] = []
-            for _, arr in eng_usage.items():
-                if not arr:
-                    continue
-                try:
-                    values.append(float(arr[-1]))
-                except Exception:
-                    continue
+            if clis_stats:
+                for cli in clis_stats:
+                    eng_usage = (cli.get("eng_usage") or {}).get("compute") or []
+                    if not eng_usage:
+                        continue
+                    try:
+                        values.append(float(eng_usage[-1]))
+                    except Exception:
+                        continue
+            else:
+                # Fallback to device-level eng_usage if clis_stats is missing.
+                dev_stats = dev.get("dev_stats") or {}
+                eng_usage = dev_stats.get("eng_usage") or {}
+                if isinstance(eng_usage, dict) and eng_usage:
+                    for _, arr in eng_usage.items():
+                        if not arr:
+                            continue
+                        try:
+                            values.append(float(arr[-1]))
+                        except Exception:
+                            continue
 
             if not values:
                 continue
 
-            # Single utilization value for this sample: max across engines
-            gpu_busy = max(values)
+            # Single utilization value for this sample: sum across all pids/engines
+            gpu_busy = sum(values)
             samples.append(max(0.0, min(100.0, gpu_busy)))
         except Exception:
             continue
