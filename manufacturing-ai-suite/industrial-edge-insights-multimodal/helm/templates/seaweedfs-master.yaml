@@ -1,0 +1,64 @@
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.config.seaweedfs_master.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: seaweedfs-master
+  ports:
+  - port: 9333
+    name: master-server-port
+  - port: 19333
+    name: master-grpc-port
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: seaweedfs-master
+  name: deployment-seaweedfs-master
+  namespace: {{ .Values.namespace }}
+
+spec:
+  selector:
+    matchLabels:
+      app: seaweedfs-master
+  template:
+    metadata:
+      labels:
+        app: seaweedfs-master
+    spec:
+      securityContext:
+        fsGroup: 65534
+        runAsUser: 65534
+        runAsGroup: 65534
+      containers:
+      - name: seaweedfs-master
+        image: {{ .Values.images.seaweedfs_image }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          readOnlyRootFilesystem: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+        volumeMounts:
+        - name: vol-seaweed-master-data
+          mountPath: /data
+        args: ["master", "-ip={{ .Values.config.seaweedfs_master.name }}", "-ip.bind=0.0.0.0"]
+        env:
+        - name: NO_PROXY
+          value: "localhost,127.0.0.1,{{ .Values.config.seaweedfs_filer.name }},{{ .Values.config.seaweedfs_volume.name }},{{ .Values.config.seaweedfs_master.name }},{{ .Values.config.seaweedfs_s3.name }},172.18.0.0/16"
+        - name: no_proxy
+          value: "localhost,127.0.0.1,{{ .Values.config.seaweedfs_master.name }},{{ .Values.config.seaweedfs_volume.name }},{{ .Values.config.seaweedfs_filer.name }},{{ .Values.config.seaweedfs_s3.name }},172.18.0.0/16"
+      volumes:
+      - name: vol-seaweed-master-data
+        emptyDir: {}

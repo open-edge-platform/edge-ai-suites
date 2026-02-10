@@ -1,4 +1,4 @@
-# Change the Input Video Source
+# Change Video Source
 
 Typically, a pipeline is started with a cURL request with JSON payload containing source, destination and parameters. For example, the following cURL request start an AI pipeline on a file inferencing on PCB anomaly detection model.
 

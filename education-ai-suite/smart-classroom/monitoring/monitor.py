@@ -15,6 +15,7 @@ INTERVAL_SECONDS = config.monitoring.interval
 OUTPUT_DIR = config.monitoring.logs_dir
 monitoring_threads=[]
 os_name = platform.system()
+stop_event = None
 
 collector_scripts = {
     "cpu_collector": start_cpu_monitoring,
@@ -63,8 +64,18 @@ def monitor_logs(metrics_logs):
             logger.warning(f"Log file {file_path} does not exist.")
     return latest_utilization
 
-def start_monitoring(metrics_logs="./logs"):
+def is_monitoring_active():
+    """Check if monitoring is currently active"""
     global stop_event
+    return stop_event is not None and not stop_event.is_set()
+
+def start_monitoring(metrics_logs="./logs"):
+    global stop_event,monitoring_threads
+
+    if is_monitoring_active():
+        logger.info("Stopping existing monitoring before starting new one...")
+        stop_monitoring()
+
     stop_event = threading.Event()
     logger.info("Starting monitoring processes")
     monitoring_threads=[]
@@ -79,10 +90,15 @@ def start_monitoring(metrics_logs="./logs"):
             logger.error(f"Error starting {mt.name}:{e}")
 
 def stop_monitoring():
-    stop_event.set()
+    global stop_event, monitoring_threads
+
+    if stop_event is not None:
+        stop_event.set()
     for mt in monitoring_threads:
-        mt.join()
-    logger.info("Stopped monitoring processes")
+        if mt.is_alive():
+            mt.join()
+    stop_event = None
+    monitoring_threads = []
 
 def get_metrics(metrics_logs="./logs"):
     latest_utilization = monitor_logs(metrics_logs)

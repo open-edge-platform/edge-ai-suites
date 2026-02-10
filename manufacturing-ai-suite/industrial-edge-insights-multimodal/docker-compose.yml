@@ -242,8 +242,8 @@ services:
     command: >
      /bin/sh -c "/usr/local/bin/nginx-cert-gen.sh && exec nginx -g 'daemon off;'"
     environment:
-      no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP}"
-      NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP}"
+      no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP},seaweedfs-filer"
+      NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP},seaweedfs-filer"
       MEDIAMTX_SERVER: mediamtx
       WHIP_SERVER_PORT: ${WHIP_SERVER_PORT}
     ports:
@@ -264,6 +264,7 @@ services:
       - ia-mqtt-broker
       - mediamtx
       - coturn
+      - seaweedfs-filer
   ia-fusion-analytics:
     build:
       context: $PWD/fusion-analytics
@@ -445,8 +446,6 @@ services:
     image: ${SEAWEEDFS_IMAGE}
     hostname: seaweedfs-filer
     container_name: seaweedfs-filer
-    ports:
-      - "8887:8888"  # Filer HTTP port
     networks:
       - timeseries_network
     volumes:

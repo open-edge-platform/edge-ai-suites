@@ -1,0 +1,29 @@
+# ********************************************************************************
+# INTEL CONFIDENTIAL
+# Copyright 2019 Intel Corporation.
+
+# This software and the related documents are Intel copyrighted materials, and
+# your use of them is governed by the express license under which they were
+# provided to you (License). Unless the License provides otherwise, you may not
+# use, modify, copy, publish, distribute, disclose or transmit this software or
+# the related documents without Intel's prior written permission.
+
+# This software and the related documents are provided as is, with no express
+# or implied warranties, other than those that are expressly stated in the
+# License.
+# ********************************************************************************
+
+ALL_EPU-DSTATE_TAG_TABLE_ORDER=EPU-DSTATE-REPORT
+
+ALL_EPU-DSTATE_EPU-DSTATE-REPORT_NUMBER-OF-OCCURENCES_TABLE=YES
+ALL_EPU-DSTATE_EPU-DSTATE-REPORT_NUMBER-OF-OCCURENCES_TRANSPOSE=YES
+ALL_EPU-DSTATE_EPU-DSTATE-REPORT_NUMBER-OF-OCCURENCES_PRE-TABLE-TEXT=Note: D2 state applies only for ADP (Accelerated Data Path) blocks in Lightning Mountain.
+ALL_EPU-DSTATE_EPU-DSTATE-REPORT_APPROXIMATED-RESIDENCY_TABLE=YES
+ALL_EPU-DSTATE_EPU-DSTATE-REPORT_APPROXIMATED-RESIDENCY_TITLE=EPU D-state Approximated Residency
+ALL_EPU-DSTATE_EPU-DSTATE-REPORT_APPROXIMATED-RESIDENCY_TRANSPOSE=YES
+ALL_EPU-DSTATE_EPU-DSTATE-REPORT_RELATIVE-FREQUENCY-PERCENTAGE_TABLE=NO
+ALL_EPU-DSTATE_EPU-DSTATE-REPORT_RELATIVE-FREQUENCY-PERCENTAGE_TRANSPOSE=NO
+ALL_EPU-DSTATE_EPU-DSTATE-REPORT_SAMPLE-COUNT_TABLE=NO
+ALL_EPU-DSTATE_EPU-DSTATE-REPORT_SAMPLE-COUNT_TRANSPOSE=YES
+ALL_EPU-DSTATE_EPU-DSTATE-REPORT_MIN-MAX-AVG_TABLE=NO
+ALL_EPU-DSTATE_EPU-DSTATE-REPORT_MIN-MAX_TABLE=NO
