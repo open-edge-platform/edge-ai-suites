@@ -79,29 +79,16 @@ const servicesSlice = createSlice({
         // AI-ECG sends: inference object
         console.log('[Redux] 🔬 AI-ECG raw payload:', JSON.stringify(payload, null, 2));
         
-        if (payload.inference) {
-          workload.latestData.prediction = payload.inference.prediction || payload.inference.label || 'Unknown';
-          workload.latestData.confidence = payload.inference.confidence ?? 0;
-          
-          console.log(`[Redux] ✓ AI-ECG stored:`, {
-            prediction: workload.latestData.prediction,
-            confidence: workload.latestData.confidence,
-            latestDataKeys: Object.keys(workload.latestData)
-          });
-        } 
-        // Fallback: check if inference data is directly in payload
-        else if (payload.prediction !== undefined) {
+        if (payload.prediction !== undefined) {
           workload.latestData.prediction = payload.prediction;
-          workload.latestData.confidence = payload.confidence ?? 0;
-          
-          console.log(`[Redux] ✓ AI-ECG stored (direct):`, {
-            prediction: workload.latestData.prediction,
-            confidence: workload.latestData.confidence
-          });
-        } 
-        else {
-          console.warn('[Redux] ⚠️ AI-ECG payload missing inference:', payload);
         }
+
+        // Store filename
+        if (payload.filename !== undefined) {
+          workload.latestData.filename = payload.filename;
+        }
+        console.log('[Redux] ✅ AI-ECG stored:', workload.latestData);
+
       } else if (workloadId === 'mdpnp') {
         // MDPNP sends: metric + value (numeric) or waveform
         console.log('[Redux] 🏥 MDPNP raw payload:', JSON.stringify(payload, null, 2));

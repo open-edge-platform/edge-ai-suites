@@ -6,7 +6,6 @@ import '../../assets/css/WorkloadCard.css';
 interface WorkloadConfig {
   id: string;
   name: string;
-  // icon: string;
   color: string;
   description: string;
   dataKeys: readonly string[];
@@ -34,6 +33,8 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   onExpand,
   waveform,
 }) => {
+
+
   const statusColors = {
     idle: '#6c757d',
     running: '#28a745',
@@ -43,25 +44,18 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
 
   const formatValue = (key: string, value: any) => {
     if (value === undefined || value === null) return '--';
-    
-    // ✅ AI-ECG: Handle prediction/confidence
-    if (key === 'prediction') {
-      return String(value);
-    }
-    
-    if (key === 'confidence') {
-      return typeof value === 'number' ? (value * 100).toFixed(1) + '%' : '--';
-    }
-    
-    // ✅ rPPG: Handle vitals
+
+    if (key === 'prediction') return String(value);
+    if (key === 'filename') return String(value);
+
     if (key === 'HR' || key === 'RR' || key === 'SpO2' || key === 'CO2_ET' || key === 'BP_DIA') {
       return typeof value === 'number' ? value.toFixed(1) : '--';
     }
-    
+
     if (typeof value === 'number') {
       return value.toFixed(1);
     }
-    
+
     return String(value);
   };
 
@@ -70,10 +64,9 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
       HR: 'bpm',
       RR: 'rpm',
       SpO2: '%',
-      CO2_ET: 'mmHg',      // ← Add this
-      BP_DIA: 'mmHg',      // ← Add this
+      CO2_ET: 'mmHg',
+      BP_DIA: 'mmHg',
       BP_SYS: 'mmHg',
-      confidence: '',
       prediction: '',
       joints: '',
     };
@@ -91,7 +84,6 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
     onExpand();
   };
 
-  // ✅ Render waveform with proper scaling
   const renderWaveform = (canvas: HTMLCanvasElement | null) => {
     if (!canvas || !waveform || waveform.length === 0) return;
 
@@ -101,10 +93,9 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
     const width = canvas.width;
     const height = canvas.height;
 
-    // Clear canvas
     ctx.clearRect(0, 0, width, height);
 
-    // Draw baseline
+    // Baseline
     ctx.strokeStyle = '#e0e0e0';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -112,29 +103,16 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
     ctx.lineTo(width, height / 2);
     ctx.stroke();
 
-    // ✅ Calculate scaling based on workload type
     let min = Math.min(...waveform);
     let max = Math.max(...waveform);
     let range = max - min || 1;
 
-    // ✅ AI-ECG: Use full range (-200 to 1400)
     if (config.id === 'ai-ecg') {
       min = -200;
       max = 1400;
       range = max - min;
     }
-    // ✅ rPPG: Use normalized range
-    else if (config.id === 'rppg') {
-      // Already good, keep as-is
-    }
-    else if (config.id === 'mdpnp') {
-      // ECG_LEAD_II: range ~100-600
-      // CO2: range ~0-15
-      // BP: range ~350-600
-      // Auto-scaling works well for all
-    }
 
-    // Draw waveform
     ctx.strokeStyle = config.color;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -142,12 +120,9 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
     waveform.forEach((value, i) => {
       const x = (i / waveform.length) * width;
       const y = height - ((value - min) / range) * height;
-      
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
+
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
     });
 
     ctx.stroke();
@@ -161,9 +136,6 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
     >
       {/* Header */}
       <div className="workload-card-header">
-        {/* <div className="workload-icon" style={{ backgroundColor: config.color }}>
-          {config.icon}
-        </div> */}
         <div className="workload-info">
           <h3 className="workload-name">{config.name}</h3>
           <p className="workload-description">{config.description}</p>
@@ -188,18 +160,13 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
           <div className="vitals-list">
             {config.dataKeys.map((key) => {
               const value = latestVitals[key];
-              
-              // ✅ Debug log to see what we're getting
+
               if (config.id === 'ai-ecg') {
                 console.log(`[WorkloadCard] AI-ECG rendering ${key}:`, value);
               }
-              
-              // ✅ Skip undefined values
-              if (value === undefined || value === null) {
-                console.warn(`[WorkloadCard] ${config.id} missing key: ${key}`);
-                return null; // Skip this row instead of showing '--'
-              }
-              
+
+              if (value === undefined || value === null) return null;
+
               return (
                 <div key={key} className="vital-item">
                   <span className="vital-label">{key}:</span>
@@ -221,13 +188,15 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
         )}
       </div>
 
-      {/* ✅ Waveform (show in both collapsed and expanded views) */}
+      {/* Waveform */}
       {config.hasWaveform && waveform && waveform.length > 0 && (
         <div className="waveform-preview" style={{ marginTop: '12px' }}>
           <h4 style={{ fontSize: '12px', marginBottom: '8px', color: '#6A6D75' }}>
-            {config.id === 'rppg' ? `Respiratory Waveform (${waveform.length} samples @ 30Hz)` : 
-             config.id === 'ai-ecg' ? `ECG Waveform (${waveform.length} samples @ 360Hz)` : 
-             'Waveform'}
+            {config.id === 'rppg'
+              ? `Respiratory Waveform (${waveform.length} samples @ 30Hz)`
+              : config.id === 'ai-ecg'
+              ? `ECG Waveform (${waveform.length} samples @ 360Hz)`
+              : 'Waveform'}
           </h4>
           <canvas
             ref={renderWaveform}
@@ -238,7 +207,7 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
               height: isExpanded ? '150px' : '100px',
               background: '#f8f9fa',
               borderRadius: '4px',
-              border: '1px solid #e0e0e0'
+              border: '1px solid #e0e0e0',
             }}
           />
         </div>
